@@ -1,6 +1,6 @@
 import { C } from '../data/config';
 import { ENEMIES, type EnemyId } from '../data/enemies';
-import { TOWERS, type TowerDef, type TowerId } from '../data/towers';
+import { TOWERS, accentFor, type BranchIndex, type TowerDef, type TowerId } from '../data/towers';
 import { hexA } from './glow';
 
 /** Vorgebackene Bilder.
@@ -159,9 +159,10 @@ export function getShadow(radius: number): HTMLCanvasElement {
 
 /** Sockel samt Schatten und Stufenpunkten. Aendert sich nur beim Bauen,
  *  Ausbauen oder Verkaufen. */
-export function getTowerBase(id: TowerId, level: number): HTMLCanvasElement {
+export function getTowerBase(id: TowerId, branch: BranchIndex, level: number): HTMLCanvasElement {
   const def = TOWERS[id];
-  return bake(`base:${id}:${level}`, 78, 78, (g) => {
+  const accent = accentFor(def, branch);
+  return bake(`base:${id}:${branch}:${level}`, 78, 78, (g) => {
     const grow = 1 + (level - 1) * 0.12;
     g.fillStyle = hexA(C.ink, 0.4);
     g.beginPath(); g.ellipse(0, 21, 27, 10, 0, 0, Math.PI * 2); g.fill();
@@ -180,7 +181,7 @@ export function getTowerBase(id: TowerId, level: number): HTMLCanvasElement {
       roundRect(g, 17, -20, 9, 12, 3); g.fill();
     }
     if (level >= 3) {
-      g.fillStyle = def.accent;
+      g.fillStyle = accent;
       roundRect(g, -5, -26, 10, 10, 3); g.fill();
     }
     g.restore();
@@ -188,7 +189,7 @@ export function getTowerBase(id: TowerId, level: number): HTMLCanvasElement {
     for (let i = 0; i < 3; i++) {
       g.beginPath();
       g.arc(-14 + i * 14, 13, 3.2, 0, Math.PI * 2);
-      g.fillStyle = i < level ? def.accent : hexA(C.ink, 0.35);
+      g.fillStyle = i < level ? accent : hexA(C.ink, 0.35);
       g.fill();
     }
   });
@@ -196,30 +197,30 @@ export function getTowerBase(id: TowerId, level: number): HTMLCanvasElement {
 
 /** Waffe, nach rechts zeigend gebacken. Drehung und Rueckstoss kommen beim
  *  Zeichnen dazu. */
-export function getTowerWeapon(id: TowerId, level: number): HTMLCanvasElement {
+export function getTowerWeapon(id: TowerId, branch: BranchIndex, level: number): HTMLCanvasElement {
   const def = TOWERS[id];
   const grow = 1 + (level - 1) * 0.12;
-  return bake(`weapon:${id}:${level}`, 64 * grow, 64 * grow, (g) => {
+  return bake(`weapon:${id}:${branch}:${level}`, 64 * grow, 64 * grow, (g) => {
     g.scale(grow, grow);
-    paintWeapon(g, def);
+    paintWeapon(g, def, accentFor(def, branch));
   });
 }
 
-function paintWeapon(g: CanvasRenderingContext2D, def: TowerDef): void {
+function paintWeapon(g: CanvasRenderingContext2D, def: TowerDef, accent: string): void {
   if (def.attack === 'single') {
     g.fillStyle = def.color;
     roundRect(g, -10, -5, 34, 10, 5); g.fill();
-    g.fillStyle = def.accent;
+    g.fillStyle = accent;
     roundRect(g, 14, -3.5, 12, 7, 3.5); g.fill();
   } else if (def.attack === 'splash') {
     g.fillStyle = C.stoneDark;
     roundRect(g, -14, -9, 30, 18, 6); g.fill();
-    g.fillStyle = def.accent;
+    g.fillStyle = accent;
     roundRect(g, 8, -6, 16, 12, 4); g.fill();
     g.fillStyle = hexA(C.ink, 0.5);
     g.beginPath(); g.arc(22, 0, 4.5, 0, Math.PI * 2); g.fill();
   } else if (def.attack === 'aura') {
-    g.fillStyle = def.accent;
+    g.fillStyle = accent;
     for (let i = 0; i < 3; i++) {
       g.rotate((Math.PI * 2) / 3);
       g.beginPath();
@@ -227,7 +228,7 @@ function paintWeapon(g: CanvasRenderingContext2D, def: TowerDef): void {
       g.closePath(); g.fill();
     }
   } else {
-    g.fillStyle = def.accent;
+    g.fillStyle = accent;
     g.beginPath();
     g.moveTo(0, -13); g.lineTo(9, 0); g.lineTo(0, 13); g.lineTo(-9, 0);
     g.closePath(); g.fill();

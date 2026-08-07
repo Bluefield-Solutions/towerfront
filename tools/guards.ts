@@ -81,23 +81,54 @@ for (const id of TOWER_ORDER) {
   const t = TOWERS[id];
   if (t.id !== id) fail(`Turm ${id}: id stimmt nicht mit dem Schluessel ueberein.`);
   if (!isHex(t.color) || !isHex(t.accent)) fail(`Turm ${id}: ungueltige Farbe.`);
-  if (t.levels.length !== 3) fail(`Turm ${id}: es muessen genau 3 Stufen sein.`);
   if (!t.role || !t.blurb) fail(`Turm ${id}: Rolle oder Beschreibung fehlt.`);
+  if (t.branches.length !== 2) fail(`Turm ${id}: es muessen genau zwei Zweige sein.`);
 
-  for (let i = 0; i < t.levels.length; i++) {
-    const l = t.levels[i];
-    if (l.cost <= 0 || l.damage <= 0 || l.range <= 0 || l.cooldown <= 0) {
-      fail(`Turm ${id} Stufe ${i + 1}: Wert kleiner oder gleich null.`);
-    }
-    if (i > 0) {
-      const p = t.levels[i - 1];
-      if (l.damage <= p.damage) fail(`Turm ${id} Stufe ${i + 1}: Schaden steigt nicht.`);
-      if (l.range < p.range) fail(`Turm ${id} Stufe ${i + 1}: Reichweite sinkt.`);
-      if (l.cooldown > p.cooldown) fail(`Turm ${id} Stufe ${i + 1}: Takt wird langsamer.`);
+  const chain = (br: 0 | 1) => [t.base, ...t.branches[br].levels];
+  for (const br of [0, 1] as const) {
+    const b = t.branches[br];
+    if (!isHex(b.color)) fail(`Turm ${id}, Zweig ${b.id}: ungueltige Farbe.`);
+    if (!b.name || !b.blurb) fail(`Turm ${id}, Zweig ${b.id}: Name oder Beschreibung fehlt.`);
+    if (b.levels.length !== 2) fail(`Turm ${id}, Zweig ${b.id}: es muessen genau 2 Stufen sein.`);
+    const lv = chain(br);
+    for (let i = 0; i < lv.length; i++) {
+      const l = lv[i];
+      if (l.cost <= 0 || l.damage <= 0 || l.range <= 0 || l.cooldown <= 0) {
+        fail(`Turm ${id}, Zweig ${b.id}, Stufe ${i + 1}: Wert kleiner oder gleich null.`);
+      }
+      if (i > 0) {
+        const p = lv[i - 1];
+        // Schaden pro Sekunde muss steigen - einzelne Werte duerfen fallen,
+        // sonst waeren Zweige wie "Salve" (weniger Wucht, mehr Takt) unmoeglich.
+        if (l.damage / l.cooldown <= p.damage / p.cooldown) {
+          fail(`Turm ${id}, Zweig ${b.id}, Stufe ${i + 1}: Schaden je Sekunde steigt nicht.`);
+        }
+        if (l.range < p.range * 0.9) {
+          fail(`Turm ${id}, Zweig ${b.id}, Stufe ${i + 1}: Reichweite faellt um mehr als ein Zehntel.`);
+        }
+      }
     }
   }
-  // Der Angriffstyp muss zu den Werten passen, sonst laeuft er ins Leere.
-  const l0 = t.levels[0];
+
+  // Die beiden Zweige muessen sich wirklich unterscheiden - sonst ist die
+  // Wahl keine. Geprueft an Stufe 2, wo die Entscheidung faellt.
+  {
+    const a = t.branches[0].levels[0], b = t.branches[1].levels[0];
+    const rel = (x: number, y: number) => (x + y === 0 ? 0 : Math.abs(x - y) / ((x + y) / 2));
+    const spread = Math.max(
+      rel(a.damage / a.cooldown, b.damage / b.cooldown),
+      rel(a.range, b.range),
+      rel(a.splash ?? 0, b.splash ?? 0),
+      rel(a.chains ?? 0, b.chains ?? 0),
+      rel(a.slow ?? 0, b.slow ?? 0),
+      rel(a.pierce ?? 0, b.pierce ?? 0),
+    );
+    if (spread < 0.25) {
+      fail(`Turm ${id}: die beiden Zweige unterscheiden sich um weniger als ein Viertel - das ist keine Wahl.`);
+    }
+  }
+
+  const l0 = t.base;
   if (t.attack === 'aura' && !l0.slow) fail(`Turm ${id}: Umkreisturm ohne Bremswert.`);
   if (t.attack === 'splash' && !l0.splash) fail(`Turm ${id}: Flaechenturm ohne Radius.`);
   if (t.attack === 'chain' && !l0.chains) fail(`Turm ${id}: Kettenturm ohne Spruenge.`);
@@ -106,8 +137,55 @@ for (const id of TOWER_ORDER) {
   }
 }
 
+// --------------------------------------------------------------- Zweig-Waage
+//
+// Der Simulationsbot baut rund hundert Tuerme und ueberdeckt damit jeden
+// Unterschied zwischen zwei Ausbauzweigen - ein toter Zweig faellt dort nicht
+// auf. Deshalb wird hier direkt gerechnet: Wirkung je investiertem Gold auf
+// der Endstufe, ueber ein Modell mit den tatsaechlichen Gegnerwerten.
+//
+// Das ist ausdruecklich ein Modell und kein Beweis. Es soll grobe Schieflagen
+// finden, nicht die letzten fuenf Prozent.
+{
+  const roster = Object.values(ENEMIES);
+  const avgArmor = roster.reduce((a, e) => a + e.armor, 0) / roster.length;
+  const airShare = roster.filter((e) => e.flying).length / roster.length;
+
+  const worth = (id: typeof TOWER_ORDER[number], br: 0 | 1): number => {
+    const t = TOWERS[id];
+    const l = t.branches[br].levels[1];
+    const invest = t.base.cost + t.branches[br].levels[0].cost + l.cost;
+    // Panzerung frisst pro Treffer, nicht pro Sekunde - schnelle Tuerme
+    // verlieren dadurch mehr.
+    const perHit = Math.max(1, l.damage - Math.max(0, avgArmor - (l.pierce ?? 0)));
+    let dps = perHit / l.cooldown;
+    if (l.splash) dps *= 1 + l.splash / 90;
+    if (l.chains) dps *= 1 + l.chains * 0.5 * (l.falloff ?? 0.6);
+    if (t.attack === 'aura') dps *= 1 + l.range / 260;   // trifft alles im Umkreis
+    if (l.slow) dps *= 1 + l.slow * 1.3;                 // Bremsen ist Schaden fuer andere
+    dps *= 1 + l.range / 900;                            // Reichweite = mehr Zeit am Ziel
+    if (!t.hitsAir) dps *= 1 - airShare * 0.7;
+    return dps / invest;
+  };
+
+  for (const id of TOWER_ORDER) {
+    const a = worth(id, 0), b = worth(id, 1);
+    const ratio = a > b ? a / b : b / a;
+    const better = a > b ? TOWERS[id].branches[0].name : TOWERS[id].branches[1].name;
+    const line = `${TOWERS[id].name}: ${TOWERS[id].branches[0].name} ${(a * 1000).toFixed(1)} ` +
+      `gegen ${TOWERS[id].branches[1].name} ${(b * 1000).toFixed(1)} (Faktor ${ratio.toFixed(2)})`;
+    if (ratio > 1.7) {
+      fail(`Zweig-Waage ${line} - "${better}" ist die offensichtlich bessere Wahl.`);
+    } else if (ratio > 1.4) {
+      warn(`Zweig-Waage ${line} - schief, aber noch vertretbar.`);
+    } else {
+      console.log(`  Zweig-Waage ${line}`);
+    }
+  }
+}
+
 // Mindestens ein Turm muss vom Start weg bezahlbar sein.
-if (!TOWER_ORDER.some((id) => TOWERS[id].levels[0].cost <= START_GOLD)) {
+if (!TOWER_ORDER.some((id) => TOWERS[id].base.cost <= START_GOLD)) {
   fail(`Kein Turm ist mit dem Startgold von ${START_GOLD} bezahlbar.`);
 }
 
@@ -122,7 +200,7 @@ for (const [id, e] of Object.entries(ENEMIES)) {
   if (e.bounty <= 0) fail(`Gegner ${id}: keine Belohnung.`);
   if (e.slowResist < 0 || e.slowResist > 1) fail(`Gegner ${id}: Bremsresistenz ausserhalb 0..1.`);
   // Panzerung darf schwache Tuerme nicht voellig aussperren.
-  const bestFirst = Math.max(...TOWER_ORDER.map((t) => TOWERS[t].levels[0].damage));
+  const bestFirst = Math.max(...TOWER_ORDER.map((t) => TOWERS[t].base.damage));
   if (e.armor >= bestFirst) warn(`Gegner ${id}: Panzerung ${e.armor} entwertet alle Stufe-1-Tuerme.`);
 }
 
@@ -177,10 +255,8 @@ if (new Set(ABILITY_ORDER.map((id) => ABILITIES[id].key)).size !== ABILITY_ORDER
 // Eine Faehigkeit darf eine Welle nicht im Alleingang entscheiden.
 {
   const meteor = ABILITIES.meteor;
-  const strongest = Math.max(...TOWER_ORDER.map((t) => {
-    const l = TOWERS[t].levels[2];
-    return (l.damage / l.cooldown) * 8;
-  }));
+  const strongest = Math.max(...TOWER_ORDER.flatMap((t) =>
+    TOWERS[t].branches.map((b) => (b.levels[1].damage / b.levels[1].cooldown) * 8)));
   if ((meteor.damage ?? 0) > strongest * 2) {
     warn(`Meteor schlaegt mit ${meteor.damage} zu - mehr als das Doppelte dessen, ` +
       'was der staerkste Turm in acht Sekunden schafft.');

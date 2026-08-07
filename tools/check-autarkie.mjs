@@ -50,7 +50,7 @@ if (!/\[hidden\][^{]*\{[^}]*display\s*:\s*none\s*!important/.test(html)) {
 const REQUIRED_IDS = [
   'view', 'v-gold', 'v-lives', 'v-wave', 'b-sound', 'b-speed', 'b-pause',
   'b-wave', 'b-wave-t', 'b-wave-b', 'next', 'n-list', 'build',
-  'skills', 'inspector', 'i-name', 'i-stats', 'i-hint', 'i-up', 'i-sell', 'i-close',
+  'skills', 'inspector', 'i-name', 'i-stats', 'i-hint', 'i-ups', 'i-sell', 'i-close',
   'screen', 's-eyebrow', 's-title', 's-text', 's-best', 's-stats', 's-action',
   's-resume', 's-perf', 's-tut', 'perf', 'coach', 'coach-text', 'coach-skip',
 ];

@@ -87,7 +87,7 @@ g.cancelAnimationFrame = (id: number) => win.clearTimeout(id);
 const { GameState } = await import('../src/game/state');
 const { Renderer } = await import('../src/gfx/renderer');
 const { COLS, ROWS } = await import('../src/data/config');
-const { TOWERS, TOWER_ORDER } = await import('../src/data/towers');
+const { MAX_LEVEL, TOWER_ORDER } = await import('../src/data/towers');
 const { WAVES } = await import('../src/data/waves');
 
 const canvas = win.document.getElementById('view') as unknown as HTMLCanvasElement;
@@ -108,7 +108,7 @@ for (let y = 0; y < ROWS; y++) {
     const id = TOWER_ORDER[i++ % TOWER_ORDER.length];
     if (s.build(x, y, id)) {
       const t = s.towerOn(x, y)!;
-      while (t.level < TOWERS[t.def].levels.length) s.upgrade(t);
+      while (t.level < MAX_LEVEL) s.upgrade(t, (i % 2) as 0 | 1);
     }
   }
 }

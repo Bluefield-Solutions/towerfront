@@ -78,7 +78,7 @@ const { GameState } = await import('../src/game/state');
 const { Renderer } = await import('../src/gfx/renderer');
 const { UI } = await import('../src/ui/ui');
 const { bindInput } = await import('../src/core/input');
-const { TOWERS, TOWER_ORDER } = await import('../src/data/towers');
+const { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor } = await import('../src/data/towers');
 const { COLS, ROWS } = await import('../src/data/config');
 const { TUTORIAL } = await import('../src/game/tutorial');
 
@@ -133,7 +133,7 @@ for (const step of TUTORIAL) {
     pick: () => { probe.buildChoice = 'arrow'; },
     place: () => { probe.build(probe.map.hint.x, probe.map.hint.y, 'arrow'); },
     start: () => probe.startWave(),
-    upgrade: () => { probe.gold += 2000; probe.upgrade(probe.towers[0]); },
+    upgrade: () => { probe.gold += 2000; probe.upgrade(probe.towers[0], 0); },
     early: () => { probe.waveIndex = 1; probe.waveActive = false; probe.startWave(); },
     meteor: () => { probe.cast('meteor', probe.goal.x, probe.goal.y); },
     end: () => { probe.waveIndex = 3; },
@@ -164,15 +164,16 @@ const DT = 1 / 60;
 step('Partie durchspielen', () => {
   while (state.phase === 'playing' && frames < 60 * 60 * 12) {
     const id = plan[si % plan.length];
-    if (spotIdx < spots.length && state.gold >= TOWERS[id].levels[0].cost) {
+    if (spotIdx < spots.length && state.gold >= TOWERS[id].base.cost) {
       const sp = spots[spotIdx++];
       if (state.build(sp.x, sp.y, id)) si++;
     }
-    const up = state.towers.find(
-      (t) => t.level < TOWERS[t.def].levels.length &&
-        state.gold >= TOWERS[t.def].levels[t.level].cost + 80,
-    );
-    if (up) state.upgrade(up);
+    const up = state.towers.find((t) => {
+      if (t.level >= MAX_LEVEL) return false;
+      const n = nextFor(TOWERS[t.def], t.branch ?? ((t.id % 2) as 0 | 1), t.level);
+      return !!n && state.gold >= n.cost + 80;
+    });
+    if (up) state.upgrade(up, (up.branch ?? ((up.id % 2) as 0 | 1)) as 0 | 1);
     if (state.canStartWave) state.startWave();
     // Faehigkeiten mitlaufen lassen - Zielhilfe und Einschlag zeichnen eigene Wege.
     if (frames % 300 === 0) state.chooseAbility('meteor');
@@ -206,6 +207,40 @@ step('Partie durchspielen', () => {
 // Wenn die Partie in zwoelf Minuten Spielzeit nicht endet, haengt etwas -
 // zum Beispiel eine Welle, die auf einen Gegner wartet, der nie stirbt.
 if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenger in der Wellenlogik.');
+
+// Verzweigter Ausbau: auf Stufe 1 muessen zwei Zweige zur Wahl stehen, und
+// die Wahl muss endgueltig sein.
+{
+  const probe = new GameState();
+  probe.reset();
+  probe.gold = 5000;
+  probe.build(probe.map.hint.x, probe.map.hint.y, 'arrow');
+  const t = probe.towers[0];
+  if (t.branch !== null) problems.push('Zweige: ein frisch gebauter Turm hat schon einen Zweig.');
+  if (probe.upgrade(t)) problems.push('Zweige: Ausbau ohne Zweigwahl war moeglich.');
+  if (!probe.upgrade(t, 1)) problems.push('Zweige: Ausbau mit Zweigwahl schlug fehl.');
+  if (t.branch !== 1) problems.push('Zweige: der gewaehlte Zweig wurde nicht uebernommen.');
+  if (!probe.upgrade(t, 0)) problems.push('Zweige: zweiter Ausbau schlug fehl.');
+  if (t.branch !== 1) problems.push('Zweige: der Zweig liess sich nachtraeglich wechseln.');
+  if (t.level !== 3) problems.push(`Zweige: Stufe ${t.level} statt 3 nach zwei Ausbauten.`);
+  if (probe.upgrade(t, 0)) problems.push('Zweige: Ausbau ueber die Endstufe hinaus war moeglich.');
+
+  // Und die Oberflaeche muss die Wahl auch anbieten - geprueft am echten
+  // Zustand, an dem die Oberflaeche haengt.
+  const live = state.towers[0];
+  if (live) {
+    const keepLevel = live.level, keepBranch = live.branch;
+    live.level = 1; live.branch = null;
+    state.selectedTower = live;
+    state.gold = 5000;
+    ui.sync();
+    const ups = win.document.getElementById('i-ups')?.querySelectorAll('button').length ?? 0;
+    if (ups !== 2) problems.push(`Zweige: ${ups} Auswahlknoepfe statt 2 auf Stufe 1.`);
+    live.level = keepLevel; live.branch = keepBranch;
+    state.selectedTower = null;
+    ui.sync();
+  }
+}
 
 // Genre-Kriterium F4: vor dem Kauf muessen die Werte sichtbar sein.
 {

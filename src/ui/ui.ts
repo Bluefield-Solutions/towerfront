@@ -1,7 +1,10 @@
 import { SPEEDS, VERSION } from '../data/config';
 import { ENEMIES } from '../data/enemies';
 import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
-import { TOWERS, TOWER_ORDER, sellValue, type TowerId } from '../data/towers';
+import {
+  TOWERS, TOWER_ORDER, MAX_LEVEL, accentFor, nextFor, sellValue,
+  type TowerId,
+} from '../data/towers';
 import { Sfx } from '../core/audio';
 import { getBest, getSettings, saveSettings } from '../core/storage';
 import { spriteCount } from '../gfx/sprites';
@@ -30,7 +33,7 @@ export class UI {
   private iStats = $('i-stats');
   private iHint = $('i-hint');
   private iActions = document.querySelector('.insp-actions') as HTMLElement;
-  private iUp = $<HTMLButtonElement>('i-up');
+  private iUps = $('i-ups');
   private iSell = $<HTMLButtonElement>('i-sell');
   private screen = $('screen');
   private sEyebrow = $('s-eyebrow');
@@ -63,7 +66,7 @@ export class UI {
       b.title = def.blurb;
       b.innerHTML =
         `<span class="n">${def.name}</span>` +
-        `<span class="c">${def.levels[0].cost} Gold</span>` +
+        `<span class="c">${def.base.cost} Gold</span>` +
         `<span class="r">${def.role}</span>`;
       b.addEventListener('click', () => {
         Sfx.unlock(); Sfx.play('tap');
@@ -113,8 +116,15 @@ export class UI {
       this.s.selectedTower = null;
       this.s.buildChoice = null;
     });
-    this.iUp.addEventListener('click', () => {
-      if (this.s.selectedTower) this.s.upgrade(this.s.selectedTower);
+    // Die Ausbauknoepfe entstehen je nach Stufe neu - auf Stufe 1 sind es
+    // zwei sich ausschliessende Zweige, danach einer.
+    this.iUps.addEventListener('click', (ev) => {
+      const b = (ev.target as HTMLElement).closest('button');
+      if (!b || !this.s.selectedTower) return;
+      const br = b.dataset.branch;
+      Sfx.unlock();
+      this.s.upgrade(this.s.selectedTower, br === '0' ? 0 : br === '1' ? 1 : undefined);
+      this.lastSig = '';
     });
     this.iSell.addEventListener('click', () => {
       if (this.s.selectedTower) this.s.sell(this.s.selectedTower);
@@ -362,7 +372,7 @@ export class UI {
     const sig = [
       s.gold, s.lives, s.waveNumber, s.waveActive, s.speed, s.paused,
       s.buildChoice, s.phase, getSettings().sound,
-      sel ? `${sel.id}:${sel.level}` : '-',
+      sel ? `${sel.id}:${sel.level}:${sel.branch}` : '-',
     ].join('|');
 
     this.updateTutorial();
@@ -410,14 +420,14 @@ export class UI {
 
     for (const [id, b] of this.btns) {
       b.dataset.on = s.buildChoice === id ? '1' : '0';
-      b.dataset.poor = s.gold < TOWERS[id].levels[0].cost ? '1' : '0';
+      b.dataset.poor = s.gold < TOWERS[id].base.cost ? '1' : '0';
     }
 
     // Vor dem Kauf zeigen, was der Turm kann. Ohne Werte laesst sich nicht
     // planen - und Planen ist der ganze Reiz des Genres.
     if (!sel && s.buildChoice) {
       const def = TOWERS[s.buildChoice];
-      const l1 = def.levels[0];
+      const l1 = def.base;
       this.insp.hidden = false;
       this.iName.textContent = `${def.name} · ${def.role}`;
       this.iStats.innerHTML = [
@@ -442,9 +452,10 @@ export class UI {
     if (sel) {
       const def = TOWERS[sel.def];
       const st = s.towerStats(sel);
-      const nx = def.levels[sel.level];
+      const nx = nextFor(def, sel.branch, sel.level);
       this.insp.hidden = false;
-      this.iName.textContent = `${def.name} · Stufe ${sel.level}`;
+      const branchName = sel.branch === null ? '' : ` · ${def.branches[sel.branch].name}`;
+      this.iName.textContent = `${def.name}${branchName} · Stufe ${sel.level}`;
       this.iStats.innerHTML = [
         row('Schaden', st.damage, nx?.damage),
         row('Reichweite', Math.round(st.range), nx ? Math.round(nx.range) : undefined),
@@ -453,14 +464,48 @@ export class UI {
         st.chains ? row('Sprünge', st.chains, nx?.chains) : '',
         st.slow ? row('Bremse', pct(st.slow), nx?.slow ? pct(nx.slow) : undefined) : '',
         def.hitsAir ? '' : row('Luftziele', 'nein'),
+        st.pierce ? row('Durchschlag', st.pierce, nx?.pierce) : '',
         row('Erledigt', sel.kills),
       ].join('');
-      this.iUp.disabled = !nx || s.gold < nx.cost;
-      this.iUp.textContent = nx ? `Ausbauen · ${nx.cost}` : 'Maximal';
-      this.iSell.textContent = `Verkaufen · ${sellValue(def, sel.level)}`;
+      this.renderUpgrades();
+      this.iSell.textContent = `Verkaufen · ${sellValue(def, sel.branch, sel.level)}`;
     } else {
       this.insp.hidden = true;
     }
+  }
+
+  /** Auf Stufe 1 stehen zwei Zweige zur Wahl, die sich ausschliessen. Danach
+   *  gibt es nur noch den einen Weg innerhalb des gewaehlten Zweiges. */
+  private renderUpgrades(): void {
+    const s = this.s;
+    const sel = s.selectedTower;
+    if (!sel) { this.iUps.innerHTML = ''; return; }
+    const def = TOWERS[sel.def];
+
+    if (sel.level >= MAX_LEVEL) {
+      this.iUps.innerHTML = '<p class="ups-max">Voll ausgebaut</p>';
+      return;
+    }
+
+    if (sel.branch === null) {
+      this.iUps.innerHTML = def.branches.map((br, i) => {
+        const l = br.levels[0];
+        const poor = s.gold < l.cost;
+        return `<button class="branch" data-branch="${i}" style="--tone:${br.color}"` +
+          `${poor ? ' disabled' : ''}>` +
+          `<span class="br-n">${br.name}</span>` +
+          `<span class="br-b">${br.blurb}</span>` +
+          `<span class="br-c">${l.cost} Gold</span></button>`;
+      }).join('');
+      return;
+    }
+
+    const nx = nextFor(def, sel.branch, sel.level);
+    if (!nx) { this.iUps.innerHTML = '<p class="ups-max">Voll ausgebaut</p>'; return; }
+    const poor = s.gold < nx.cost;
+    this.iUps.innerHTML =
+      `<button class="up" data-branch="keep" style="--tone:${accentFor(def, sel.branch)}"` +
+      `${poor ? ' disabled' : ''}>Ausbauen · ${nx.cost}</button>`;
   }
 
   /** Was in der naechsten Welle kommt - Planung braucht Vorwissen. */

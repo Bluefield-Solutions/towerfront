@@ -57,7 +57,7 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
       const choice = s.buildChoice;
       if (s.build(c.x, c.y, choice)) {
         // Reicht das Gold nicht mehr fuer den naechsten Turm, Auswahl loesen.
-        if (s.gold < TOWERS[choice].levels[0].cost) s.buildChoice = null;
+        if (s.gold < TOWERS[choice].base.cost) s.buildChoice = null;
       }
       return;
     }
@@ -80,7 +80,12 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
     if (ev.key === '2') s.buildChoice = 'frost';
     if (ev.key === '3') s.buildChoice = 'mortar';
     if (ev.key === '4') s.buildChoice = 'prism';
-    if ((ev.key === 'u' || ev.key === 'U') && s.selectedTower) s.upgrade(s.selectedTower);
+    // Am Schreibtisch: U baut im gewaehlten Zweig aus, auf Stufe 1 waehlen
+    // Y und U den Zweig.
+    if ((ev.key === 'y' || ev.key === 'Y') && s.selectedTower) s.upgrade(s.selectedTower, 0);
+    if ((ev.key === 'u' || ev.key === 'U') && s.selectedTower) {
+      s.upgrade(s.selectedTower, s.selectedTower.branch ?? 1);
+    }
     if ((ev.key === 'x' || ev.key === 'X') && s.selectedTower) s.sell(s.selectedTower);
   });
 

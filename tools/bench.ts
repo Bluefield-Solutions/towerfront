@@ -9,7 +9,7 @@
  *  Aufruf: npx tsx tools/bench.ts */
 import { GameState } from '../src/game/state';
 import { COLS, ROWS } from '../src/data/config';
-import { TOWERS, TOWER_ORDER } from '../src/data/towers';
+import { MAX_LEVEL, TOWER_ORDER } from '../src/data/towers';
 import { WAVES } from '../src/data/waves';
 
 const DT = 1 / 60;
@@ -27,7 +27,7 @@ for (let y = 0; y < ROWS; y++) {
     const id = TOWER_ORDER[i++ % TOWER_ORDER.length];
     if (s.build(x, y, id)) {
       const t = s.towerOn(x, y)!;
-      while (t.level < TOWERS[t.def].levels.length) s.upgrade(t);
+      while (t.level < MAX_LEVEL) s.upgrade(t, (i % 2) as 0 | 1);
     }
   }
 }

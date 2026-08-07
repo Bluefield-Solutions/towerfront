@@ -107,7 +107,7 @@ const CRITERIA: Criterion[] = [
     id: 'R3', area: 'Rollen', from: 'Bloons TD 6 (drei Pfade je Turm)',
     text: 'Ausbau verzweigt sich - die Platzierung ist auch eine Bauentscheidung.',
     measured: true, weight: 3,
-    check: () => false,
+    check: () => TOWER_ORDER.every((id) => TOWERS[id].branches.length === 2),
     gap: 'Ab Stufe 2 zwei sich ausschliessende Zweige je Turm.',
   },
   {

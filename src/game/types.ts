@@ -1,5 +1,5 @@
 import type { EnemyId } from '../data/enemies';
-import type { TowerId } from '../data/towers';
+import type { BranchIndex, TowerId } from '../data/towers';
 
 export interface Enemy {
   id: number;
@@ -23,6 +23,7 @@ export interface Tower {
   cx: number; cy: number; // Gitterzelle
   x: number; y: number;   // Weltmitte
   level: number;          // 1..3
+  branch: BranchIndex;    // null solange Stufe 1, danach endgueltig
   cooldownLeft: number;
   angle: number;
   recoil: number;
@@ -47,6 +48,7 @@ export interface Projectile {
   slow: number;
   slowTime: number;
   splash: number;
+  pierce: number;
   color: string;
   t: number;               // 0..1 Fortschritt bei ballistisch
   dur: number;

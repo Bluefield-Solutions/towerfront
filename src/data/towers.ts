@@ -18,6 +18,20 @@ export interface TowerLevel {
   splash?: number;    // Radius in Pixeln
   chains?: number;    // zusaetzliche Spruenge
   falloff?: number;   // Schadensfaktor je Sprung
+  pierce?: number;    // Panzerung, die durchschlagen wird
+}
+
+/** Ein Ausbauzweig. Ab Stufe 2 entscheidet man sich fuer genau einen von
+ *  zweien - und die Entscheidung ist endgueltig. Damit ist jede Platzierung
+ *  auch eine Bauentscheidung und nicht nur eine Positionsentscheidung; das ist
+ *  der Kern, aus dem Bloons TD 6 seine Tiefe bezieht. */
+export interface TowerBranch {
+  id: string;
+  name: string;
+  blurb: string;
+  color: string;
+  /** Werte fuer Stufe 2 und Stufe 3. */
+  levels: [TowerLevel, TowerLevel];
 }
 
 export interface TowerDef {
@@ -28,65 +42,146 @@ export interface TowerDef {
   color: string;
   accent: string;
   attack: AttackKind;
-  /** Erreicht der Turm fliegende Gegner? Der Moerser wirft im Bogen auf den
-   *  Boden - was in der Luft haengt, trifft er nicht. */
   hitsAir: boolean;
   projectileSpeed: number;
-  levels: TowerLevel[];
+  /** Stufe 1 - vor der Verzweigung. */
+  base: TowerLevel;
+  branches: [TowerBranch, TowerBranch];
 }
+
+export const MAX_LEVEL = 3;
 
 export const TOWERS: Record<TowerId, TowerDef> = {
   arrow: {
     id: 'arrow', name: 'Bogenturm', role: 'Dauerfeuer',
-    blurb: 'Guenstig und schnell. Traegt die fruehen Wellen, verliert spaeter gegen Panzerung.',
+    blurb: 'Guenstig und schnell. Traegt die fruehen Wellen.',
     color: '#D8DCE8', accent: '#F2C14E',
     attack: 'single', hitsAir: true, projectileSpeed: 700,
-    levels: [
-      { cost: 55, damage: 8, range: 200, cooldown: 0.55 },
-      { cost: 60, damage: 13, range: 222, cooldown: 0.50 },
-      { cost: 105, damage: 21, range: 248, cooldown: 0.44 },
+    base: { cost: 55, damage: 8, range: 200, cooldown: 0.55 },
+    branches: [
+      {
+        id: 'sniper', name: 'Scharfschuetze', color: '#F2C14E',
+        blurb: 'Weite Reichweite, harter Einzelschuss, durchschlaegt Panzerung.',
+        levels: [
+          { cost: 70, damage: 24, range: 275, cooldown: 0.8, pierce: 2 },
+          { cost: 130, damage: 52, range: 340, cooldown: 0.75, pierce: 4 },
+        ],
+      },
+      {
+        id: 'volley', name: 'Salve', color: '#FF9B54',
+        blurb: 'Halbe Wucht, doppelte Schlagzahl. Gegen Masse, nicht gegen Panzer.',
+        levels: [
+          { cost: 70, damage: 10, range: 205, cooldown: 0.28 },
+          { cost: 130, damage: 16, range: 215, cooldown: 0.20 },
+        ],
+      },
     ],
   },
   frost: {
     id: 'frost', name: 'Frostturm', role: 'Umkreis-Bremse',
-    blurb: 'Kein Geschoss. Pulst im Umkreis, bremst alles gleichzeitig und kratzt an der Huelle.',
+    blurb: 'Kein Geschoss. Pulst im Umkreis und bremst alles gleichzeitig.',
     color: '#BFE9F2', accent: '#7FE7E0',
     attack: 'aura', hitsAir: true, projectileSpeed: 0,
-    levels: [
-      { cost: 85, damage: 4, range: 148, cooldown: 0.85, slow: 0.34, slowTime: 1.5 },
-      { cost: 95, damage: 7, range: 166, cooldown: 0.78, slow: 0.44, slowTime: 1.8 },
-      { cost: 165, damage: 12, range: 188, cooldown: 0.70, slow: 0.54, slowTime: 2.2 },
+    base: { cost: 85, damage: 4, range: 148, cooldown: 0.85, slow: 0.34, slowTime: 1.5 },
+    branches: [
+      {
+        id: 'eternal', name: 'Ewiges Eis', color: '#7FE7E0',
+        blurb: 'Weiter Umkreis, harte Bremse, kaum Schaden. Reine Kontrolle.',
+        levels: [
+          { cost: 90, damage: 9, range: 195, cooldown: 0.7, slow: 0.5, slowTime: 2.2 },
+          { cost: 150, damage: 18, range: 245, cooldown: 0.6, slow: 0.68, slowTime: 3.2 },
+        ],
+      },
+      {
+        id: 'shard', name: 'Splitterfrost', color: '#9FD4FF',
+        blurb: 'Bremst weniger, schneidet dafuer. Ein Schadenspuls statt einer Fessel.',
+        levels: [
+          { cost: 105, damage: 16, range: 160, cooldown: 0.7, slow: 0.24, slowTime: 1.2 },
+          { cost: 190, damage: 32, range: 175, cooldown: 0.62, slow: 0.3, slowTime: 1.4 },
+        ],
+      },
     ],
   },
   mortar: {
     id: 'mortar', name: 'Moerser', role: 'Flaeche, nur Boden',
-    blurb: 'Langsam und teuer, trifft eine ganze Traube auf einmal. Erreicht keine Flieger.',
+    blurb: 'Langsam und teuer, trifft eine ganze Traube. Erreicht keine Flieger.',
     color: '#C3B39A', accent: '#F08A3C',
     attack: 'splash', hitsAir: false, projectileSpeed: 320,
-    levels: [
-      { cost: 130, damage: 30, range: 250, cooldown: 1.9, splash: 62 },
-      { cost: 140, damage: 48, range: 272, cooldown: 1.75, splash: 70 },
-      { cost: 230, damage: 78, range: 300, cooldown: 1.6, splash: 82 },
+    base: { cost: 130, damage: 30, range: 250, cooldown: 1.9, splash: 62 },
+    branches: [
+      {
+        id: 'cluster', name: 'Streubombe', color: '#F08A3C',
+        blurb: 'Weiter Wirkradius, schnellere Folge, weniger Wucht je Treffer.',
+        levels: [
+          { cost: 140, damage: 42, range: 275, cooldown: 1.35, splash: 96 },
+          { cost: 235, damage: 66, range: 300, cooldown: 1.1, splash: 124 },
+        ],
+      },
+      {
+        id: 'breaker', name: 'Brecher', color: '#D6564A',
+        blurb: 'Enger Radius, gewaltige Wucht, durchschlaegt schwere Panzerung.',
+        levels: [
+          { cost: 160, damage: 95, range: 265, cooldown: 2.1, splash: 52, pierce: 4 },
+          { cost: 280, damage: 200, range: 290, cooldown: 2.0, splash: 58, pierce: 8 },
+        ],
+      },
     ],
   },
   prism: {
     id: 'prism', name: 'Prisma', role: 'Kettenblitz',
-    blurb: 'Sofortstrahl, springt auf Nachbarn ueber. Stark gegen dichte Ketten, teuer im Aufbau.',
+    blurb: 'Sofortstrahl, springt auf Nachbarn ueber.',
     color: '#E4D3FF', accent: '#B07CFF',
     attack: 'chain', hitsAir: true, projectileSpeed: 0,
-    levels: [
-      { cost: 155, damage: 13, range: 185, cooldown: 0.95, chains: 2, falloff: 0.65 },
-      { cost: 165, damage: 20, range: 205, cooldown: 0.88, chains: 3, falloff: 0.7 },
-      { cost: 275, damage: 32, range: 228, cooldown: 0.8, chains: 4, falloff: 0.75 },
+    base: { cost: 155, damage: 13, range: 185, cooldown: 0.95, chains: 2, falloff: 0.65 },
+    branches: [
+      {
+        id: 'fork', name: 'Verzweigung', color: '#B07CFF',
+        blurb: 'Mehr Spruenge, kaum Abfall. Legt sich ueber eine ganze Kette.',
+        levels: [
+          { cost: 165, damage: 19, range: 205, cooldown: 0.85, chains: 5, falloff: 0.85 },
+          { cost: 285, damage: 29, range: 230, cooldown: 0.75, chains: 8, falloff: 0.92 },
+        ],
+      },
+      {
+        id: 'lens', name: 'Buendelung', color: '#FF7ADF',
+        blurb: 'Ein Sprung weniger, dafuer ein Strahl, der wirklich wehtut.',
+        levels: [
+          { cost: 175, damage: 48, range: 215, cooldown: 0.9, chains: 1, falloff: 0.5 },
+          { cost: 300, damage: 96, range: 240, cooldown: 0.85, chains: 1, falloff: 0.5, pierce: 3 },
+        ],
+      },
     ],
   },
 };
 
 export const TOWER_ORDER: TowerId[] = ['arrow', 'frost', 'mortar', 'prism'];
 
+/** Zweig 0 oder 1, oder null solange der Turm auf Stufe 1 steht. */
+export type BranchIndex = 0 | 1 | null;
+
+/** Werte eines Turms auf einer bestimmten Stufe. */
+export function statsFor(def: TowerDef, branch: BranchIndex, level: number): TowerLevel {
+  if (level <= 1 || branch === null) return def.base;
+  return def.branches[branch].levels[Math.min(level, MAX_LEVEL) - 2];
+}
+
+/** Werte der naechsten Stufe innerhalb eines Zweiges, oder null am Ende. */
+export function nextFor(def: TowerDef, branch: BranchIndex, level: number): TowerLevel | null {
+  if (level >= MAX_LEVEL) return null;
+  if (branch === null) return null; // Der Zweig muss erst gewaehlt werden.
+  return def.branches[branch].levels[level - 1];
+}
+
+/** Farbe, die den gewaehlten Zweig sichtbar macht. */
+export function accentFor(def: TowerDef, branch: BranchIndex): string {
+  return branch === null ? def.accent : def.branches[branch].color;
+}
+
 /** Rueckgabewert beim Verkauf: 70 % der bisher investierten Summe. */
-export function sellValue(def: TowerDef, level: number): number {
-  let spent = 0;
-  for (let i = 0; i < level; i++) spent += def.levels[i].cost;
+export function sellValue(def: TowerDef, branch: BranchIndex, level: number): number {
+  let spent = def.base.cost;
+  if (branch !== null) {
+    for (let i = 0; i < level - 1; i++) spent += def.branches[branch].levels[i].cost;
+  }
   return Math.floor(spent * 0.7);
 }

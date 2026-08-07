@@ -1,6 +1,9 @@
 import { C, COLS, ROWS, TILE, WORLD_H, WORLD_W, START_LIVES } from '../data/config';
 import { ENEMIES } from '../data/enemies';
-import { TOWERS, type TowerDef, type TowerId, type TowerLevel } from '../data/towers';
+import {
+  TOWERS, accentFor, statsFor,
+  type BranchIndex, type TowerDef, type TowerId, type TowerLevel,
+} from '../data/towers';
 import { ABILITIES } from '../data/abilities';
 import { makeRng } from '../core/math';
 import type { GameState } from '../game/state';
@@ -116,7 +119,7 @@ export class Renderer {
     const g = this.towerLayer.getContext('2d')!;
     g.clearRect(0, 0, WORLD_W, WORLD_H);
     for (const t of s.towers) {
-      drawSprite(g, getTowerBase(t.def, t.level), t.x, t.y);
+      drawSprite(g, getTowerBase(t.def, t.branch, t.level), t.x, t.y);
     }
     this.towerLayerVersion = s.towersVersion;
   }
@@ -145,7 +148,7 @@ export class Renderer {
     if (!s.buildChoice) return;
     const ctx = this.ctx;
     const def = TOWERS[s.buildChoice];
-    const affordable = s.gold >= def.levels[0].cost;
+    const affordable = s.gold >= def.base.cost;
     ctx.save();
     ctx.lineWidth = 2;
     ctx.fillStyle = affordable ? hexA(def.accent, 0.09) : hexA(C.danger, 0.07);
@@ -167,7 +170,7 @@ export class Renderer {
     if (!cell || !s.buildChoice) return;
     const ctx = this.ctx;
     const def = TOWERS[s.buildChoice];
-    const lvl = def.levels[0];
+    const lvl = def.base;
     const ok = s.canBuild(cell.x, cell.y) && s.gold >= lvl.cost;
     const cx = cell.x * TILE + TILE / 2, cy = cell.y * TILE + TILE / 2;
     const tone = ok ? def.accent : C.danger;
@@ -262,23 +265,24 @@ export class Renderer {
     const sel = s.selectedTower;
     if (sel) {
       const def = TOWERS[sel.def];
-      const st = s.towerStats(sel);
-      ctx.fillStyle = hexA(def.accent, 0.12);
+      const st = statsFor(def, sel.branch, sel.level);
+      const tone = accentFor(def, sel.branch);
+      ctx.fillStyle = hexA(tone, 0.12);
       ctx.beginPath(); ctx.arc(sel.x, sel.y, st.range, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = hexA(def.accent, 0.75); ctx.lineWidth = 3;
+      ctx.strokeStyle = hexA(tone, 0.75); ctx.lineWidth = 3;
       ctx.beginPath(); ctx.arc(sel.x, sel.y, st.range, 0, Math.PI * 2); ctx.stroke();
     }
 
     for (const t of s.towers) {
       const def = TOWERS[t.def];
       if (def.attack === 'aura' && t.pulse > 0) {
-        ctx.strokeStyle = hexA(def.accent, t.pulse * 0.5);
+        ctx.strokeStyle = hexA(accentFor(def, t.branch), t.pulse * 0.5);
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(t.x, t.y, s.towerStats(t).range * (1 - t.pulse * 0.15), 0, Math.PI * 2);
         ctx.stroke();
       }
-      this.paintWeapon(t.def, t.level, t.x, t.y, t.angle, t.recoil, t.pulse, s.crystalPulse);
+      this.paintWeapon(t.def, t.branch, t.level, t.x, t.y, t.angle, t.recoil, t.pulse, s.crystalPulse);
     }
 
     if (hi) {
@@ -286,7 +290,7 @@ export class Renderer {
       for (const t of s.towers) {
         const def = TOWERS[t.def];
         if (def.attack === 'aura' || def.attack === 'chain') {
-          stampGlowFast(ctx, def.accent, t.x, t.y - 8, 36, 0.5);
+          stampGlowFast(ctx, accentFor(def, t.branch), t.x, t.y - 8, 36, 0.5);
         }
       }
       endGlowBatch(ctx);
@@ -296,12 +300,12 @@ export class Renderer {
   /** Ein gebackenes Waffenbild, gedreht und um den Rueckstoss versetzt.
    *  Statt eines Dutzends Pfadbefehle bleibt ein `drawImage`. */
   private paintWeapon(
-    id: TowerId, level: number, x: number, y: number,
+    id: TowerId, branch: BranchIndex, level: number, x: number, y: number,
     angle: number, recoil: number, pulse: number, time: number,
   ): void {
     const ctx = this.ctx;
     const def = TOWERS[id];
-    const sprite = getTowerWeapon(id, level);
+    const sprite = getTowerWeapon(id, branch, level);
     ctx.save();
     ctx.translate(x, y);
     if (def.attack === 'single') {
@@ -325,8 +329,8 @@ export class Renderer {
 
   /** Nur fuer die Bauvorschau: Sockel und Waffe eines noch nicht gebauten Turms. */
   private paintTower(def: TowerDef, level: number, x: number, y: number, time: number): void {
-    drawSprite(this.ctx, getTowerBase(def.id, level), x, y);
-    this.paintWeapon(def.id, level, x, y, -Math.PI / 2, 0, 0, time);
+    drawSprite(this.ctx, getTowerBase(def.id, null, level), x, y);
+    this.paintWeapon(def.id, null, level, x, y, -Math.PI / 2, 0, 0, time);
   }
 
   /** Flughoehe eines Schwaermers: der Koerper schwebt ueber seinem Schatten,

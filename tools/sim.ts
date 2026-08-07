@@ -5,7 +5,7 @@
  *  Aufruf: npx tsx tools/sim.ts */
 import { GameState } from '../src/game/state';
 import { COLS, ROWS, START_LIVES } from '../src/data/config';
-import { TOWERS, type TowerId } from '../src/data/towers';
+import { TOWERS, MAX_LEVEL, nextFor, type TowerId } from '../src/data/towers';
 import { WAVES } from '../src/data/waves';
 import { ABILITIES } from '../src/data/abilities';
 
@@ -34,7 +34,7 @@ interface Result {
   leakByWave: number[];
 }
 
-function play(strategy: TowerId[]): Result {
+function play(strategy: TowerId[], branch: 0 | 1 = 0): Result {
   const s = new GameState();
   s.reset();
   const spots = buildSpots(s);
@@ -49,21 +49,22 @@ function play(strategy: TowerId[]): Result {
       // Ist der geplante Turm zu teuer, nimmt der Bot den naechsten
       // bezahlbaren aus dem Plan - so wuerde ein Mensch es auch machen.
       let id = strategy[si % strategy.length];
-      if (s.gold < TOWERS[id].levels[0].cost) {
-        const affordable = strategy.filter((c) => s.gold >= TOWERS[c].levels[0].cost);
+      if (s.gold < TOWERS[id].base.cost) {
+        const affordable = strategy.filter((c) => s.gold >= TOWERS[c].base.cost);
         if (affordable.length) id = affordable[0];
       }
-      const up = s.towers.find(
-        (tw) => tw.level < TOWERS[tw.def].levels.length &&
-          s.gold >= TOWERS[tw.def].levels[tw.level].cost + 70,
-      );
-      if (spotIdx < spots.length && s.gold >= TOWERS[id].levels[0].cost) {
+      const up = s.towers.find((tw) => {
+        if (tw.level >= MAX_LEVEL) return false;
+        const n = nextFor(TOWERS[tw.def], tw.branch ?? branch, tw.level);
+        return !!n && s.gold >= n.cost + 70;
+      });
+      if (spotIdx < spots.length && s.gold >= TOWERS[id].base.cost) {
         const sp = spots[spotIdx];
         if (s.build(sp.x, sp.y, id)) { spotIdx++; si++; continue; }
         spotIdx++;
         continue;
       }
-      if (up && s.upgrade(up)) continue;
+      if (up && s.upgrade(up, (up.branch ?? branch) as 0 | 1)) continue;
       break;
     }
     useAbilities(s);
@@ -124,6 +125,17 @@ for (const [name, plan] of Object.entries(strategies)) {
 
 const mixed = results.get('gemischt')!;
 
+// Kein toter Zweig: beide Ausbaurichtungen muessen tragen. Sonst waere die
+// Wahl auf Stufe 2 nur scheinbar eine - und genau das ist der Fehler, den
+// verzweigte Ausbaubaeume am haeufigsten machen.
+const mixedPlan: TowerId[] = ['arrow', 'arrow', 'mortar', 'frost', 'prism'];
+const branchA = play(mixedPlan, 0);
+const branchB = play(mixedPlan, 1);
+console.log(
+  `Zweig A -> ${branchA.won ? `gewonnen, Kristall ${branchA.lives}/${START_LIVES}` : `verloren in Welle ${branchA.wave}`}   ` +
+  `Zweig B -> ${branchB.won ? `gewonnen, Kristall ${branchB.lives}/${START_LIVES}` : `verloren in Welle ${branchB.wave}`}`,
+);
+
 // 1. Die gemischte Strategie muss gewinnen, sonst ist die Kurve zu steil.
 if (!mixed.won) errors.push('Gemischt muss gewinnen - die Kurve ist zu steil.');
 
@@ -145,6 +157,16 @@ for (const [name, r] of results) {
   if (r.won && r.lives > START_LIVES * 0.85) {
     errors.push(`"${name}" gewinnt allein mit ${r.lives}/${START_LIVES} - dominiert das Feld.`);
   }
+}
+
+// 4b. Beide Zweige muessen gewinnen und duerfen nicht weit auseinanderliegen.
+if (!branchA.won) errors.push('Zweig A gewinnt nicht - toter Ausbaupfad.');
+if (!branchB.won) errors.push('Zweig B gewinnt nicht - toter Ausbaupfad.');
+if (branchA.won && branchB.won && Math.abs(branchA.lives - branchB.lives) > 8) {
+  errors.push(
+    `Zweige liegen ${Math.abs(branchA.lives - branchB.lives)} Kristall auseinander - ` +
+    'einer der beiden ist die offensichtlich bessere Wahl.',
+  );
 }
 
 // 5. Effektbudget: was die Simulation erzeugt, muss der Browser zeichnen koennen.

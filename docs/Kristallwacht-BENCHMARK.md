@@ -1,6 +1,8 @@
 # Kristallwacht — Genre-Abgleich
 
-Stand: v11 · 07.08.2026 · Aktueller Wert: **18 von 27 Kriterien, gewichtet 69 %**
+Stand: v12 · 07.08.2026 · Aktueller Wert: **19 von 27 Kriterien, gewichtet 73 %**
+
+*Verlauf: v11 = 18/27 (69 %) → v12 = 19/27 (73 %), R3 erfüllt.*
 
 Dieses Dokument ist die Grundlage für `npm run benchmark`. Es hält fest, *woher*
 jedes Kriterium stammt — jeder Punkt im Katalog geht auf ein Spiel zurück, das
@@ -53,7 +55,7 @@ reichen für einen Prototyp. *Diesen Fehler haben wir bisher vermieden.*
 | Bereich | Erfüllt | Kommentar |
 |---|---|---|
 | Fokus & Klarheit | 4/4 | Karte ohne Scrollen, Pause mit Baumöglichkeit, Tempo 1×/2×/3×, Werte vor dem Kauf |
-| Rollen & Entscheidungen | 4/6 | Vier Türme mit vier Wirkungsweisen, Fähigkeiten, Luftlücke — aber linearer Ausbau, kein Blocker |
+| Rollen & Entscheidungen | 5/6 | Vier Türme, vier Wirkungsweisen, **verzweigter Ausbau**, Fähigkeiten, Luftlücke — es fehlt der Blocker |
 | Gegner | 5/6 | Masse, Tempo, Panzerung, Luft, Zerfall, Boss — es fehlen unterstützende Gegner |
 | Karten & Wiederspielwert | **0/6** | **Die eine große Lücke.** Eine Karte, ein Schwierigkeitsgrad, kein Endlosmodus, keine Bewertung, kein Fortschritt |
 | Politur | 5/5 | Ton, Auswertung, Einführung, Spielstand, Inspektor |
@@ -71,7 +73,6 @@ Gegenteil —, aber ab hier liegt der Hebel eindeutig bei Bereich „Karten".
 
 | # | Fehlt | Vorbild | Nächster Schritt |
 |---|---|---|---|
-| R3 ●●● | Verzweigter Ausbau | Bloons TD 6 | Ab Stufe 2 zwei sich ausschließende Zweige je Turm |
 | K1 ●●● | Mehr als eine Karte | Kingdom Rush, Defense Grid | Karte 2 und 3 mit eigenem Biom und eigener Pfadform |
 | K2 ●●● | Gabelung oder zwei Zugänge | Kingdom Rush Frontiers | Zweiter Pfad, der sich mit dem ersten vereint |
 | R4 ●● | Etwas, das aufhält statt tötet | Kingdom Rush (Kaserne) | Blockturm, der Gegner bindet |
@@ -81,9 +82,9 @@ Gegenteil —, aber ab hier liegt der Hebel eindeutig bei Bereich „Karten".
 | K5 ●● | Bewertung je Karte | Kingdom Rush (Sterne) | Sterne nach verbleibendem Kristall |
 | K6 ●● | Fortschritt zwischen Partien | Kingdom Rush (Sternpunkte) | Punkte, die Türme dauerhaft verbessern |
 
-**R3 ist der stärkste einzelne Hebel.** Er kostet keine neue Karte und keinen
-neuen Inhalt, sondern macht aus jedem der vier vorhandenen Türme faktisch zwei.
-Genau daher bezieht Bloons TD 6 seine Tiefe.
+**R3 ist seit v12 erfüllt.** Jeder Turm verzweigt auf Stufe 2 in zwei sich
+ausschließende Richtungen — aus vier Türmen sind faktisch acht geworden, ohne
+eine Zeile neuen Inhalt.
 
 **K1 und K2 zusammen sind der größte Sprung**, weil sie die restlichen
 K-Kriterien mitziehen: Sterne, Fortschritt und Schwierigkeitsgrade ergeben erst
@@ -105,6 +106,9 @@ Fair bleiben gehört zum Abgleich dazu.
 - **Auswertung nach der Partie mit Schadensanteil je Quelle.** In den
   Referenzen selten so konkret; sie beantwortet die Frage „was hat eigentlich
   getragen".
+- **Die Zweig-Waage.** Wir rechnen nach, ob beide Ausbaurichtungen eines Turms
+  ähnlich viel Wirkung je Gold bringen. Der klassische Fehler verzweigter
+  Ausbaubäume ist der tote Zweig — die Wahl, die keine ist.
 - **Der Kristall zeigt seinen Zustand.** Verluste stehen nicht nur als Zahl im
   HUD, der Kristall bekommt sichtbare Risse.
 

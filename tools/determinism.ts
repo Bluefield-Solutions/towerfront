@@ -11,7 +11,7 @@
  *  Aufruf: npx tsx tools/determinism.ts */
 import { GameState } from '../src/game/state';
 import { COLS, ROWS } from '../src/data/config';
-import { TOWERS, TOWER_ORDER, type TowerId } from '../src/data/towers';
+import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, type TowerId } from '../src/data/towers';
 
 // Der Browser-Speicher fehlt hier - eine Attrappe genuegt, die Sicherung
 // schreibt beim Zuruecksetzen hinein.
@@ -31,14 +31,19 @@ function scriptedStep(s: GameState, frame: number, spots: { x: number; y: number
     const idx = (frame / 20) % spots.length;
     const id: TowerId = TOWER_ORDER[(frame / 20) % TOWER_ORDER.length];
     const sp = spots[idx];
-    if (s.gold >= TOWERS[id].levels[0].cost) s.build(sp.x, sp.y, id);
+    if (s.gold >= TOWERS[id].base.cost) s.build(sp.x, sp.y, id);
   }
   if (frame % 137 === 0) {
-    const t = s.towers.find(
-      (tw) => tw.level < TOWERS[tw.def].levels.length &&
-        s.gold >= TOWERS[tw.def].levels[tw.level].cost,
-    );
-    if (t) s.upgrade(t);
+    // Zweige abwechselnd waehlen, damit beide im Fingerabdruck landen.
+    // Die Regel muss an der Feldposition haengen, nicht an der laufenden
+    // Nummer: beim Laden werden die Nummern neu vergeben, die Position nicht.
+    const branchOf = (tw: { cx: number; cy: number }): 0 | 1 => ((tw.cx + tw.cy) % 2) as 0 | 1;
+    const t = s.towers.find((tw) => {
+      if (tw.level >= MAX_LEVEL) return false;
+      const n = nextFor(TOWERS[tw.def], tw.branch ?? branchOf(tw), tw.level);
+      return !!n && s.gold >= n.cost;
+    });
+    if (t) s.upgrade(t, (t.branch ?? branchOf(t)) as 0 | 1);
   }
   // Faehigkeiten gehoeren mit ins Drehbuch - sie greifen auf den Zufall zu
   // und muessen deshalb beim Fortsetzen genauso wirken.
@@ -70,7 +75,7 @@ function fingerprint(s: GameState): string {
   mix(s.abilityCd.meteor * 10); mix(s.abilityCd.freeze * 10);
   mix(s.stats.damage); mix(s.stats.goldSpent); mix(s.stats.kills); mix(s.stats.duration);
   for (const e of s.enemies) { mix(e.x); mix(e.y); mix(e.hp); mix(e.travelled); }
-  for (const t of s.towers) { mix(t.cx); mix(t.cy); mix(t.level); mix(t.kills); }
+  for (const t of s.towers) { mix(t.cx); mix(t.cy); mix(t.level); mix(t.branch ?? -1); mix(t.kills); }
   return (h >>> 0).toString(16);
 }
 
@@ -85,7 +90,8 @@ function run(frames: number, pauseAt = -1): Run {
     // An dieser Stelle wird gesichert und sofort wieder geladen. Wenn die
     // Sicherung vollstaendig ist, darf sich danach nichts unterscheiden.
     if (f === pauseAt) {
-      const snap = s.snapshot();
+      // Ueber JSON, damit auch ein Fehler beim Schreiben oder Lesen auffaellt.
+      const snap = JSON.parse(JSON.stringify(s.snapshot()));
       if (!s.restore(snap)) throw new Error('Spielstand liess sich nicht laden.');
     }
     scriptedStep(s, f, spots);

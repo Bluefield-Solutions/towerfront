@@ -1,6 +1,9 @@
 import { COLS, ROWS, TILE, WORLD_W, WORLD_H, START_GOLD, START_LIVES, C } from '../data/config';
 import { ENEMIES, type EnemyId } from '../data/enemies';
-import { TOWERS, sellValue, type TowerId } from '../data/towers';
+import {
+  TOWERS, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor,
+  type BranchIndex, type TowerId,
+} from '../data/towers';
 import { WAVES, WAVE_HP_RAMP, EARLY_BONUS_MAX, EARLY_BONUS_WINDOW } from '../data/waves';
 import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
 import { MAP_SPIRALHAIN, cellCenter, cellKey, pathCells, pathLength, pathPoints } from '../data/maps';
@@ -112,7 +115,7 @@ export class GameState {
   }), 900);
   private projectilePool = new Pool<Projectile>(() => ({
     kind: 'homing', x: 0, y: 0, sx: 0, sy: 0, tx: 0, ty: 0, target: null, owner: null,
-    speed: 0, damage: 0, slow: 0, slowTime: 0, splash: 0, color: '#fff',
+    speed: 0, damage: 0, slow: 0, slowTime: 0, splash: 0, pierce: 0, color: '#fff',
     t: 0, dur: 1, life: 0, dead: true,
   }), 200);
   private ringPool = new Pool<Ring>(() => ({
@@ -147,14 +150,14 @@ export class GameState {
 
   build(cx: number, cy: number, id: TowerId): boolean {
     const def = TOWERS[id];
-    if (!this.canBuild(cx, cy) || this.gold < def.levels[0].cost) return false;
-    this.gold -= def.levels[0].cost;
-    this.stats.goldSpent += def.levels[0].cost;
+    if (!this.canBuild(cx, cy) || this.gold < def.base.cost) return false;
+    this.gold -= def.base.cost;
+    this.stats.goldSpent += def.base.cost;
     this.stats.towersBuilt++;
     const c = cellCenter(cx, cy);
     const t: Tower = {
       id: this.nextId++, def: id, cx, cy, x: c.x, y: c.y,
-      level: 1, cooldownLeft: 0, angle: -Math.PI / 2, recoil: 0, pulse: 0,
+      level: 1, branch: null, cooldownLeft: 0, angle: -Math.PI / 2, recoil: 0, pulse: 0,
       target: null, retargetIn: 0, kills: 0, damageDone: 0,
     };
     this.towers.push(t);
@@ -165,23 +168,28 @@ export class GameState {
     return true;
   }
 
-  upgrade(t: Tower): boolean {
+  /** Ausbau. Auf Stufe 1 muss zugleich ein Zweig gewaehlt werden; danach ist
+   *  die Entscheidung endgueltig und der Zweig steht fest. */
+  upgrade(t: Tower, branch?: 0 | 1): boolean {
     const def = TOWERS[t.def];
-    if (t.level >= def.levels.length) return false;
-    const cost = def.levels[t.level].cost;
-    if (this.gold < cost) return false;
-    this.gold -= cost;
-    this.stats.goldSpent += cost;
+    if (t.level >= MAX_LEVEL) return false;
+    const chosen: BranchIndex = t.branch ?? (branch ?? null);
+    if (chosen === null) return false;
+    const next = nextFor(def, chosen, t.level);
+    if (!next || this.gold < next.cost) return false;
+    this.gold -= next.cost;
+    this.stats.goldSpent += next.cost;
+    t.branch = chosen;
     t.level++;
     this.towersVersion++;
-    this.ring(t.x, t.y, 66, def.accent, 0.45, 4);
+    this.ring(t.x, t.y, 66, accentFor(def, t.branch), 0.45, 4);
     Sfx.play('upgrade');
     return true;
   }
 
   sell(t: Tower): void {
     const def = TOWERS[t.def];
-    const value = sellValue(def, t.level);
+    const value = sellValue(def, t.branch, t.level);
     this.gold += value;
     t.target = null;
     compact(this.towers, (o) => o === t);
@@ -194,7 +202,7 @@ export class GameState {
   }
 
   /** Werte der aktuellen Ausbaustufe eines Turms. */
-  towerStats(t: Tower) { return TOWERS[t.def].levels[t.level - 1]; }
+  towerStats(t: Tower) { return statsFor(TOWERS[t.def], t.branch, t.level); }
 
   // ---------------------------------------------------------------- Wellen
 
@@ -506,7 +514,8 @@ export class GameState {
         this.ring(t.x, t.y, st.range, def.accent, 0.45, 3);
         Sfx.play('frost');
         for (let i = 0; i < targets.length; i++) {
-          this.damage(targets[i], st.damage, t, def.accent, st.slow ?? 0, st.slowTime ?? 0);
+          this.damage(targets[i], st.damage, t, accentFor(def, t.branch),
+            st.slow ?? 0, st.slowTime ?? 0, st.pierce ?? 0);
         }
         continue;
       }
@@ -541,20 +550,21 @@ export class GameState {
 
       if (def.attack === 'single') {
         Sfx.play('arrow');
-        this.projectiles.push(this.makeProjectile('homing', t, target, aim, st, def.accent, def.projectileSpeed));
+        this.projectiles.push(this.makeProjectile('homing', t, target, aim, st, accentFor(def, t.branch), def.projectileSpeed));
       } else if (def.attack === 'splash') {
         Sfx.play('mortar');
-        this.projectiles.push(this.makeProjectile('ballistic', t, null, aim, st, def.accent, def.projectileSpeed));
+        this.projectiles.push(this.makeProjectile('ballistic', t, null, aim, st, accentFor(def, t.branch), def.projectileSpeed));
       } else {
         Sfx.play('prism');
-        this.chain(t, target, st.damage, st.chains ?? 0, st.falloff ?? 0.6, st.range, def.accent);
+        this.chain(t, target, st.damage, st.chains ?? 0, st.falloff ?? 0.6, st.range,
+          accentFor(def, t.branch), st.pierce ?? 0);
       }
     }
   }
 
   private makeProjectile(
     kind: 'homing' | 'ballistic', t: Tower, target: Enemy | null,
-    aim: Vec, st: { damage: number; slow?: number; slowTime?: number; splash?: number },
+    aim: Vec, st: { damage: number; slow?: number; slowTime?: number; splash?: number; pierce?: number },
     color: string, speed: number,
   ): Projectile {
     const d = dist(t.x, t.y, aim.x, aim.y);
@@ -563,6 +573,7 @@ export class GameState {
     p.x = t.x; p.y = t.y; p.sx = t.x; p.sy = t.y; p.tx = aim.x; p.ty = aim.y;
     p.target = target; p.owner = t; p.speed = speed; p.damage = st.damage;
     p.slow = st.slow ?? 0; p.slowTime = st.slowTime ?? 0; p.splash = st.splash ?? 0;
+    p.pierce = st.pierce ?? 0;
     p.color = color; p.t = 0; p.dur = Math.max(0.12, d / speed);
     p.life = 3; p.dead = false;
     return p;
@@ -583,7 +594,7 @@ export class GameState {
 
   private chain(
     t: Tower, first: Enemy, damage: number, jumps: number,
-    falloff: number, range: number, color: string,
+    falloff: number, range: number, color: string, pierce: number,
   ): void {
     const seen = this.chainSeen;
     seen.clear();
@@ -596,7 +607,7 @@ export class GameState {
     for (let i = 0; i <= jumps && cur; i++) {
       seen.add(cur.id);
       pts.push({ x: cur.x, y: cur.y });
-      this.damage(cur, dmg, t, color, 0, 0);
+      this.damage(cur, dmg, t, color, 0, 0, pierce);
       dmg *= falloff;
       let next: Enemy | null = null;
       let bestD = jumpRange * jumpRange;
@@ -672,7 +683,7 @@ export class GameState {
       const d = Math.hypot(dx, dy) || 1;
       const step = p.speed * dt;
       if (d <= step + ENEMIES[tgt.def].radius * 0.6) {
-        this.damage(tgt, p.damage, p.owner, p.color, p.slow, p.slowTime);
+        this.damage(tgt, p.damage, p.owner, p.color, p.slow, p.slowTime, p.pierce);
         p.dead = true; any = true;
       } else {
         p.x += (dx / d) * step;
@@ -701,17 +712,17 @@ export class GameState {
       if (d2 > r2) continue;
       // Am Rand der Explosion nur die Haelfte.
       const f = 1 - 0.5 * Math.sqrt(d2) / p.splash;
-      this.damage(e, p.damage * f, p.owner, p.color, 0, 0);
+      this.damage(e, p.damage * f, p.owner, p.color, 0, 0, p.pierce);
     }
   }
 
   private damage(
     e: Enemy, raw: number, owner: Tower | null, color: string,
-    slow: number, slowTime: number,
+    slow: number, slowTime: number, pierce = 0,
   ): void {
     if (e.dead) return;
     const def = ENEMIES[e.def];
-    const dmg = Math.max(1, Math.round(raw) - def.armor);
+    const dmg = Math.max(1, Math.round(raw) - Math.max(0, def.armor - pierce));
     e.hp -= dmg;
     e.hitFlash = 1;
     if (owner) owner.damageDone += dmg;
@@ -835,7 +846,7 @@ export class GameState {
   /** Nur das, was den Verlauf bestimmt. Reine Darstellung bleibt draussen. */
   snapshot(): SaveGame {
     return {
-      v: 3,
+      v: 4,
       seed: this.seed,
       rng: this.rng.state,
       gold: this.gold,
@@ -852,9 +863,16 @@ export class GameState {
       abilityCd: ABILITY_ORDER.map((id) => [id, this.abilityCd[id]] as [AbilityId, number]),
       meteors: this.meteors.map((m) => [m.x, m.y, m.t, m.dur, m.radius, m.damage]) as
         [number, number, number, number, number, number][],
+      shots: this.projectiles.map((p) => [
+        p.kind, p.x, p.y, p.sx, p.sy, p.tx, p.ty,
+        p.target ? this.enemies.indexOf(p.target) : -1,
+        p.owner ? this.towers.indexOf(p.owner) : -1,
+        p.speed, p.damage, p.slow, p.slowTime, p.splash, p.pierce, p.t, p.dur, p.life, p.color,
+      ]) as unknown as SaveGame['shots'],
       pending: this.pending.map((p) => [p.time, p.enemy, p.hpMul]),
       towers: this.towers.map((t) => [
-        t.def, t.cx, t.cy, t.level, t.kills, t.damageDone, t.cooldownLeft, t.retargetIn,
+        t.def, t.cx, t.cy, t.level, t.kills, t.damageDone, t.cooldownLeft, t.retargetIn, t.branch,
+        t.target ? this.enemies.indexOf(t.target) : -1,
       ]) as SaveGame['towers'],
       enemies: this.enemies.map((e) => [
         e.def, e.x, e.y, e.hp, e.hpMax, e.seg, e.travelled, e.slowFactor, e.slowLeft, e.wobble,
@@ -866,7 +884,7 @@ export class GameState {
    *  Stand nicht zu den aktuellen Daten passt - dann wird er verworfen statt
    *  halb geladen. */
   restore(save: SaveGame): boolean {
-    if (save.v !== 3) return false;
+    if (save.v !== 4) return false;
     if (save.waveIndex < 0 || save.waveIndex > WAVES.length) return false;
     for (const [id] of save.towers) if (!(id in TOWERS)) return false;
     for (const [id] of save.enemies) if (!(id in ENEMIES)) return false;
@@ -893,11 +911,15 @@ export class GameState {
       this.meteors.push({ x, y, t, dur, radius, damage });
     }
 
-    for (const [def, cx, cy, level, kills, damageDone, cooldownLeft, retargetIn] of save.towers) {
+    const targetIdx: number[] = [];
+    for (const [def, cx, cy, level, kills, damageDone, cooldownLeft, retargetIn, branch, tIdx]
+      of save.towers) {
+      targetIdx.push(tIdx ?? -1);
       const c = cellCenter(cx, cy);
       const t: Tower = {
         id: this.nextId++, def, cx, cy, x: c.x, y: c.y,
-        level, cooldownLeft: cooldownLeft ?? 0, angle: -Math.PI / 2, recoil: 0, pulse: 0,
+        level, branch: branch ?? null,
+        cooldownLeft: cooldownLeft ?? 0, angle: -Math.PI / 2, recoil: 0, pulse: 0,
         target: null, retargetIn: retargetIn ?? 0, kills, damageDone,
       };
       this.towers.push(t);
@@ -912,6 +934,29 @@ export class GameState {
         slowFactor, slowLeft, hitFlash: 0, wobble,
         dead: false, leaked: false,
       });
+    }
+    for (const sh of save.shots ?? []) {
+      const [kind, x, y, sx, sy, tx, ty, tIdx, oIdx,
+        speed, damage, slow, slowTime, splash, pierce, t, dur, life, color] =
+        sh as unknown as [
+          'homing' | 'ballistic', number, number, number, number, number, number,
+          number, number, number, number, number, number, number, number,
+          number, number, number, string,
+        ];
+      const p = this.projectilePool.obtain();
+      p.kind = kind; p.x = x; p.y = y; p.sx = sx; p.sy = sy; p.tx = tx; p.ty = ty;
+      p.target = tIdx >= 0 && tIdx < this.enemies.length ? this.enemies[tIdx] : null;
+      p.owner = oIdx >= 0 && oIdx < this.towers.length ? this.towers[oIdx] : null;
+      p.speed = speed; p.damage = damage; p.slow = slow; p.slowTime = slowTime;
+      p.splash = splash; p.pierce = pierce; p.t = t; p.dur = dur; p.life = life;
+      p.color = color; p.dead = false;
+      this.projectiles.push(p);
+    }
+
+    // Ziele erst jetzt verknuepfen - die Gegner gibt es vorher noch nicht.
+    for (let i = 0; i < this.towers.length; i++) {
+      const idx = targetIdx[i];
+      this.towers[i].target = idx >= 0 && idx < this.enemies.length ? this.enemies[idx] : null;
     }
     this.rebuildGrid();
     this.phase = 'playing';

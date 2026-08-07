@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v11 · 07.08.2026
+Stand: v12 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -306,6 +306,35 @@ Abend.
 
 ---
 
+### 3.12 Zwei Funde beim verzweigten Ausbau
+
+**Der Simulationsbot ist zu stark, um Zweige zu unterscheiden.** Die naheliegende
+Prüfung — beide Zweige einmal durchspielen und verlangen, dass beide gewinnen —
+schlug nicht an, als ich einen Zweig absichtlich wertlos machte. Der Bot baut
+rund hundert Türme; bei der Übermacht fällt ein schwacher Zweig nicht auf.
+
+Ersatz ist die **Zweig-Waage** im Datenwächter: eine direkte Rechnung, Wirkung je
+investiertem Gold auf der Endstufe, über ein Modell mit den tatsächlichen
+Gegnerwerten — Panzerung frisst pro Treffer und benachteiligt schnelle Türme,
+Bremsen zählt als Schaden für andere, Flächenschaden und Sprünge werden
+gewichtet. Zwei Zweige dürfen um höchstens den Faktor 1,4 auseinanderliegen.
+
+Beim ersten Lauf fand sie sofort zwei Schieflagen: **Splitterfrost war je Gold
+mehr als doppelt so wirksam wie Ewiges Eis** (Faktor 2,14), und die Salve lag
+45 % vor dem Scharfschützen. Nach dem Nachjustieren liegen alle vier Paare
+zwischen 1,04 und 1,26. Das ist ein Modell und kein Beweis — es findet grobe
+Schieflagen, nicht die letzten fünf Prozent.
+
+**Und der Spielstand war doch nicht vollständig.** Die Determinismus-Prüfung fiel
+durch. Zwei Ursachen: das zwischengespeicherte Ziel jedes Turms fehlte — nach dem
+Laden zielte jeder Turm sofort neu, statt bis zu 120 ms an seinem Ziel zu
+bleiben. Und die Geschosse im Flug.
+
+Letztere hatte ich in v5 ausdrücklich weggelassen, mit der Begründung, ein
+Geschoss unterwegs sei „ein halber Treffer und keine Entscheidung". Die Prüfung
+hat gezeigt, dass diese Begründung bequem war und nicht richtig: der Verlauf
+wird messbar anders. Sie werden jetzt mitgesichert.
+
 ### 3.11 Eine Auswertung, die auch stimmt
 
 Eine Statistik, die schöne Zahlen zeigt, aber die falschen, ist schlimmer als
@@ -489,7 +518,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v11
+## 5. Stand v12
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -549,6 +578,23 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v12 — verzweigter Ausbau.** Jeder Turm steht auf Stufe 1 vor einer
+Entscheidung, die nicht zurückgenommen werden kann:
+
+| Turm | Zweig A | Zweig B |
+|---|---|---|
+| Bogenturm | **Scharfschütze** — weite Reichweite, harter Einzelschuss, durchschlägt Panzerung | **Salve** — halbe Wucht, dreifache Schlagzahl |
+| Frostturm | **Ewiges Eis** — weiter Umkreis, 68 % Bremse, kaum Schaden | **Splitterfrost** — bremst wenig, schneidet dafür |
+| Mörser | **Streubombe** — doppelter Wirkradius, schnellere Folge | **Brecher** — enger Radius, gewaltige Wucht, Durchschlag 8 |
+| Prisma | **Verzweigung** — bis zu acht Sprünge, kaum Abfall | **Bündelung** — ein Sprung, dafür ein Strahl, der wehtut |
+
+Neu ist damit auch **Panzerdurchschlag**: Scharfschütze, Brecher und Bündelung
+ziehen die Panzerung des Ziels teilweise ab. Der Leerentitan mit Panzerung 6 ist
+damit nicht mehr nur eine Frage der Masse.
+
+Aus vier Türmen sind faktisch acht geworden, ohne eine Zeile neuen Inhalt — das
+ist genau der Mechanismus, aus dem Bloons TD 6 seine Tiefe bezieht.
 
 **Neu in v11 — Genre-Abgleich in der Pipeline und volle Turmwerte vor dem Kauf.**
 Sobald eine Turmart gewählt ist, zeigt der Inspektor Kosten, Schaden, Reichweite,

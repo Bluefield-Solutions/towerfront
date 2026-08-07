@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v1 · 07.08.2026
+Stand: v2 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -130,12 +130,41 @@ kleinen Änderungen.
 
 ### 3.2 Die Qualitätstore
 
-| Tor | Befehl | Bricht ab bei |
-|---|---|---|
-| Typen | `npm run tsc` | jedem Typfehler, ungenutzten Variablen |
-| Build | `npm run build` | Bündelfehler |
-| Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster |
-| Balance | `npm run sim` | wenn die gemischte Strategie nicht mehr gewinnt |
+Ein Befehl fährt alles: `npm run gate`
+
+| # | Tor | Befehl | Bricht ab bei |
+|---|---|---|---|
+| 1 | Typen | `npm run tsc` | Typfehler, ungenutzte Variablen, fehlende Fälle |
+| 2 | Datenwächter | `npm run guards` | widersprüchlichen Inhaltsdaten (siehe unten) |
+| 3 | Balance | `npm run sim` | kaputter Schwierigkeitskurve (siehe unten) |
+| 4 | Build | `npm run build` | Bündelfehler |
+| 5 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id |
+
+**Der Datenwächter** liest Karten, Türme, Gegner und Wellen und prüft, was
+TypeScript nicht sehen kann: Kreuzt sich der Pfad? Liegt eine Deko-Zelle darauf?
+Gibt es genug Bauplätze? Steigt bei jedem Turm der Schaden mit der Stufe und
+sinkt der Takt? Hat ein Umkreisturm überhaupt einen Bremswert? Verweist eine
+Welle auf einen Gegner, den es nicht gibt? Ist mindestens ein Turm mit dem
+Startgold bezahlbar? Bricht der Druck zwischen zwei Wellen ein? Fehler stoppen
+den Build, Hinweise werden nur gemeldet.
+
+**Die Balance-Simulation** lässt einen Bot alle fünfzehn Wellen mit fünf
+Strategien durchspielen — ohne Browser, in Millisekunden. Vier Bedingungen
+müssen halten:
+
+1. Die gemischte Strategie muss gewinnen. Sonst ist die Kurve zu steil.
+2. Sie darf nicht ohne einen einzigen Verlust gewinnen. Sonst fehlt die Spannung.
+3. Keine einzelne Turmsorte darf allein mit mehr als 85 % Kristall gewinnen.
+   Das ist die Regel, die verhindert, dass ein Turm alle anderen überflüssig macht.
+4. Die Effektspitze muss unter 900 gleichzeitigen Objekten bleiben — was die
+   Simulation erzeugt, muss das iPhone auch zeichnen können.
+
+Zusätzlich meldet sie, in welchen Wellen Kristall verloren geht. Das ist die
+Landkarte für die nächste Feinjustierung.
+
+**Der Autarkie-Check** prüft außerdem, ob jede DOM-Id, die die Oberfläche
+anspricht, im HTML wirklich existiert. Eine umbenannte Schaltfläche fällt damit
+beim Build auf statt erst beim Antippen.
 
 Die Balance-Simulation ist das eigentlich Ungewöhnliche daran: ein Bot spielt
 alle zehn Wellen mit drei verschiedenen Strategien durch, ohne Browser, in
@@ -146,10 +175,17 @@ Spielen.
 Aktueller Stand der Simulation:
 
 ```
-nur Bogen    -> gewonnen, Kristall 20/20     ← zu stark, Befund für Welle 2
-nur Frost    -> verloren in Welle 3          ← korrekt, Frost allein soll nicht tragen
-gemischt     -> gewonnen, Kristall 11/20     ← Zielkorridor
+nur Bogen    -> gewonnen, Kristall 5/20     ← knapp, kein Selbstläufer mehr
+nur Frost    -> verloren in Welle 5
+nur Moerser  -> verloren in Welle 3         ← zu teuer für die Eröffnung, korrekt
+nur Prisma   -> verloren in Welle 3         ← ebenso
+gemischt     -> gewonnen, Kristall 5/20
+Verluste (gemischt): W10:5  W15:10          ← beide Titanenwellen, wie gewollt
 ```
+
+Die Kurve sitzt jetzt dort, wo sie hingehört: Die Verluste passieren an den
+beiden Bosswellen, nicht verteilt über das ganze Spiel. Das heißt, das Spiel
+ist da schwer, wo es dramatisch sein soll.
 
 ### 3.3 Die Ausbaustufen
 
@@ -162,12 +198,12 @@ zehn Wellen, Gold, Leben, Sieg, Niederlage. Nichts davon ist fertig, aber alles
 davon existiert.
 *Abnahme: Man kann gewinnen und man kann verlieren.*
 
-**Phase B — Spielgefühl**
+**Phase B — Spielgefühl** *(v2, weitgehend erledigt)*
 Der Moment des Treffens, des Bauens, des Verkaufens muss sich gut anfühlen. Ton,
 Trefferrückmeldung, Bildschirmzittern, Wellenankündigung, flüssige Bedienung
 mit dem Daumen. Hier entsteht der Unterschied zwischen "funktioniert" und
 "macht Spaß".
-*Abnahme: Zehn Wellen am Stück auf dem iPhone, ohne dass etwas hakt.*
+*Abnahme: Fünfzehn Wellen am Stück auf dem iPhone, ohne dass etwas hakt.*
 
 **Phase C — Tiefe**
 Mehr Türme mit echten Rollen statt Zahlenvarianten. Mehr Gegnertypen mit echten
@@ -214,16 +250,55 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v1
+## 5. Stand v2
 
-Was läuft: Karte "Spiralhain" mit gewundenem Pfad um den Kristall.
-Zwei Türme (Bogen, Frost) mit je drei Ausbaustufen, Verkauf mit 70 % Rückgabe.
-Drei Gegnerarten (Schleicher, Husche, Koloss) mit Panzerung und
-Bremsanfälligkeit. Zehn Wellen mit ansteigender Lebenspunktkurve.
-Tempo 1×/2×/3×, Pause. Turm-Inspektor mit Vorschau der nächsten Stufe.
-Titel-, Sieg- und Niederlagebildschirm. Partikel, Trefferblitze, Bildschirmzittern.
-Kristall mit Rissen. Tastatur am Desktop: Leertaste startet die Welle, 1/2 wählen
-den Turm, P pausiert, Esc hebt die Auswahl auf.
+**Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
+Angriffstyp trennt sie, nicht die Schadenshöhe:
 
-Was noch fehlt: Ton. Wellenvorschau. Mehr als eine Karte. Speicherstand.
-Das komplette Rückstandsverzeichnis steht in der zweiten Datei.
+| Turm | Rolle | Wie er angreift |
+|---|---|---|
+| Bogenturm | Dauerfeuer | Einzelziel, zielsuchendes Geschoss |
+| Frostturm | Umkreis-Bremse | kein Geschoss, pulst im Radius auf alle gleichzeitig |
+| Mörser | Flächenschlag | ballistische Granate mit Vorhalten, Schaden fällt zum Rand ab |
+| Prisma | Kettenblitz | Sofortstrahl, springt auf bis zu vier Nachbarn über |
+
+**Vier Gegnerarten**, jede mit einer eigenen Gegenfrage: der Schleicher als
+Masse, die Husche als Tempo, der Koloss mit Panzerung 3, der Leerentitan mit
+Panzerung 6 und 55 % Bremsresistenz — der Grund, warum reines Bremsen nicht
+reicht.
+
+**Fünfzehn Wellen** mit Titanen in Welle 10 und 15.
+
+**Frühstart-Bonus:** Wer die nächste Welle startet, bevor die 22 Sekunden
+abgelaufen sind, bekommt bis zu 40 Gold extra. Das belohnt Entschlossenheit,
+ohne Zögern zu bestrafen — und schafft die Spannung, die einer reinen
+Aufbaupause fehlt.
+
+**Bedienung am Daumen:** Drücken zeigt den Turm halbtransparent samt Reichweite
+auf der Zelle, erst das Loslassen baut. Ein Fehltipp kostet kein Gold.
+
+**Ton**, komplett synthetisch über Web Audio erzeugt — keine Audiodateien, die
+Datei bleibt bei 48 KB. Jede Turmsorte klingt anders, gleichartige Geräusche
+werden pro Frame begrenzt, damit es bei dreifachem Tempo keine Geräuschwand gibt.
+
+**Wellenvorschau** über dem Baumenü: was kommt, wie viele, und ein Hinweis bei
+besonderen Wellen.
+
+**Spürbarkeit:** Kurzes Stocken beim Tod schwerer Gegner, Bildschirmzittern,
+Explosionsringe, Trefferblitze, Turmsilhouetten, die mit der Ausbaustufe sichtbar
+wachsen.
+
+**Technik:** Bildrate wird gemessen, die Effektdichte passt sich automatisch an
+(herunter nach 2 s unter 48 fps, herauf erst nach 8 s über 57 fps — die
+unterschiedlichen Schwellen verhindern Hin- und Herspringen). Einstellungen und
+bester Lauf werden lokal gespeichert. Beim Wechsel in eine andere App pausiert
+das Spiel.
+
+**Tastatur am Desktop:** Leertaste startet die Welle, 1–4 wählen den Turm,
+U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
+
+Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
+sichtbar, welcher Stand gerade geladen ist.
+
+Was noch fehlt: mehr als eine Karte, fliegende Gegner, Fähigkeiten auf Abruf,
+Endlosmodus. Das komplette Rückstandsverzeichnis steht in der zweiten Datei.

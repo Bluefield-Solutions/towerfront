@@ -24,6 +24,18 @@ if (/drawImage\(\s*(this\.)?canvas/.test(html) && /filter\s*=\s*["'`]blur/.test(
   problems.push('Safari-Falle: drawImage(canvas) zusammen mit filter=blur gefunden.');
 }
 
+// Die UI greift Elemente ueber feste IDs. Fehlt eine, faellt das erst zur
+// Laufzeit auf - hier faellt es beim Build auf.
+const REQUIRED_IDS = [
+  'view', 'v-gold', 'v-lives', 'v-wave', 'b-sound', 'b-speed', 'b-pause',
+  'b-wave', 'b-wave-t', 'b-wave-b', 'next', 'n-list', 'build',
+  'inspector', 'i-name', 'i-stats', 'i-up', 'i-sell', 'i-close',
+  'screen', 's-eyebrow', 's-title', 's-text', 's-best', 's-action',
+];
+for (const id of REQUIRED_IDS) {
+  if (!new RegExp(`id=["']${id}["']`).test(html)) problems.push(`Element mit id="${id}" fehlt im HTML.`);
+}
+
 const kb = (statSync(file).size / 1024).toFixed(0);
 
 if (problems.length) {

@@ -1,19 +1,20 @@
 /** Kopflose Balance-Simulation.
- *  Ein simpler Bot baut und baut aus, spielt alle Wellen und meldet,
- *  wie viele Kristallpunkte uebrig bleiben. Laeuft ohne Browser.
+ *  Ein Bot spielt alle Wellen mit verschiedenen Turmstrategien durch, ohne
+ *  Browser, in Millisekunden. Jede Aenderung an Schaden, Kosten, Reichweite
+ *  oder Gegnerwerten wird sofort daran gemessen.
  *  Aufruf: npx tsx tools/sim.ts */
 import { GameState } from '../src/game/state';
-import { COLS, ROWS } from '../src/data/config';
+import { COLS, ROWS, START_LIVES } from '../src/data/config';
 import { TOWERS, type TowerId } from '../src/data/towers';
+import { WAVES } from '../src/data/waves';
 
 const DT = 1 / 60;
 
-function buildSpots(s: GameState): { x: number; y: number; score: number }[] {
+function buildSpots(s: GameState) {
   const spots: { x: number; y: number; score: number }[] = [];
   for (let y = 0; y < ROWS; y++) {
     for (let x = 0; x < COLS; x++) {
       if (!s.canBuild(x, y)) continue;
-      // Naehe zum Pfad = gute Position
       let best = 1e9;
       for (const k of s.pathSet) {
         const px = k % COLS, py = Math.floor(k / COLS);
@@ -26,54 +27,109 @@ function buildSpots(s: GameState): { x: number; y: number; score: number }[] {
   return spots.sort((a, b) => a.score - b.score);
 }
 
-function play(strategy: TowerId[]): { lives: number; wave: number; won: boolean } {
+interface Result {
+  lives: number; wave: number; won: boolean;
+  towers: number; peakEnemies: number; peakFx: number;
+  leakByWave: number[];
+}
+
+function play(strategy: TowerId[]): Result {
   const s = new GameState();
   s.reset();
   const spots = buildSpots(s);
-  let spotIdx = 0;
-  let si = 0;
-  let t = 0;
+  let spotIdx = 0, si = 0, t = 0;
+  let peakEnemies = 0, peakFx = 0;
+  const leakByWave = new Array(WAVES.length).fill(0);
+  let lastLives = s.lives;
 
-  while (s.phase === 'playing' && t < 60 * 30) {
-    // Bot: kauft, sobald es geht; baut ab und zu aus.
+  while (s.phase === 'playing' && t < 60 * 45) {
     let guard = 0;
-    while (guard++ < 8) {
-      const upgradable = s.towers.find(
+    while (guard++ < 10) {
+      // Ist der geplante Turm zu teuer, nimmt der Bot den naechsten
+      // bezahlbaren aus dem Plan - so wuerde ein Mensch es auch machen.
+      let id = strategy[si % strategy.length];
+      if (s.gold < TOWERS[id].levels[0].cost) {
+        const affordable = strategy.filter((c) => s.gold >= TOWERS[c].levels[0].cost);
+        if (affordable.length) id = affordable[0];
+      }
+      const up = s.towers.find(
         (tw) => tw.level < TOWERS[tw.def].levels.length &&
-          s.gold >= TOWERS[tw.def].levels[tw.level].cost + 60,
+          s.gold >= TOWERS[tw.def].levels[tw.level].cost + 70,
       );
-      const id = strategy[si % strategy.length];
       if (spotIdx < spots.length && s.gold >= TOWERS[id].levels[0].cost) {
         const sp = spots[spotIdx];
         if (s.build(sp.x, sp.y, id)) { spotIdx++; si++; continue; }
         spotIdx++;
         continue;
       }
-      if (upgradable && s.upgrade(upgradable)) continue;
+      if (up && s.upgrade(up)) continue;
       break;
     }
+    const wi = Math.min(s.waveIndex, WAVES.length - 1);
     if (s.canStartWave) s.startWave();
     s.update(DT);
     t += DT;
+    if (s.lives < lastLives) { leakByWave[wi] += lastLives - s.lives; lastLives = s.lives; }
+    if (s.enemies.length > peakEnemies) peakEnemies = s.enemies.length;
+    const fx = s.particles.length + s.projectiles.length + s.rings.length;
+    if (fx > peakFx) peakFx = fx;
   }
-  return { lives: s.lives, wave: s.waveNumber, won: s.phase === 'won' };
+  return {
+    lives: s.lives, wave: s.waveNumber, won: s.phase === 'won',
+    towers: s.towers.length, peakEnemies, peakFx, leakByWave,
+  };
 }
 
 const strategies: Record<string, TowerId[]> = {
   'nur Bogen': ['arrow'],
   'nur Frost': ['frost'],
-  'gemischt': ['arrow', 'arrow', 'frost'],
+  'nur Moerser': ['mortar'],
+  'nur Prisma': ['prism'],
+  'gemischt': ['arrow', 'arrow', 'mortar', 'frost', 'prism'],
 };
 
-let fail = 0;
+const errors: string[] = [];
+const results = new Map<string, Result>();
+
 for (const [name, plan] of Object.entries(strategies)) {
   const r = play(plan);
-  const verdict = r.won ? 'gewonnen' : `verloren in Welle ${r.wave}`;
-  console.log(`${name.padEnd(12)} -> ${verdict}, Kristall ${r.lives}/20`);
-  if (name === 'gemischt' && !r.won) fail++;
-  if (name === 'nur Frost' && r.won) {
-    console.log('  WARNUNG: reine Frosttuerme gewinnen - zu wenig Druck auf Schadensvielfalt.');
+  results.set(name, r);
+  const verdict = r.won ? `gewonnen, Kristall ${r.lives}/${START_LIVES}` : `verloren in Welle ${r.wave}`;
+  console.log(`${name.padEnd(12)} -> ${verdict}  (${r.towers} Tuerme, max ${r.peakEnemies} Gegner, max ${r.peakFx} Effekte)`);
+}
+
+const mixed = results.get('gemischt')!;
+
+// 1. Die gemischte Strategie muss gewinnen, sonst ist die Kurve zu steil.
+if (!mixed.won) errors.push('Gemischt muss gewinnen - die Kurve ist zu steil.');
+
+// 2. Sie darf nicht muehelos gewinnen, sonst fehlt die Spannung.
+if (mixed.won && mixed.lives === START_LIVES) {
+  errors.push('Gemischt gewinnt ohne einen einzigen Verlust - zu einfach.');
+}
+
+// 3. Keine einzelne Turmsorte darf das Spiel allein tragen.
+for (const [name, r] of results) {
+  if (name === 'gemischt') continue;
+  if (r.won && r.lives > START_LIVES * 0.85) {
+    errors.push(`"${name}" gewinnt allein mit ${r.lives}/${START_LIVES} - dominiert das Feld.`);
   }
 }
-if (fail) { console.error('BALANCE-CHECK: gemischte Strategie muss gewinnen.'); process.exit(1); }
+
+// 4. Effektbudget: was die Simulation erzeugt, muss der Browser zeichnen koennen.
+if (mixed.peakFx > 900) errors.push(`Effektspitze ${mixed.peakFx} ist zu hoch fuer das Handy.`);
+
+// Wo tut es weh - Grundlage fuer die naechste Feinjustierung.
+const hot = mixed.leakByWave
+  .map((v, i) => ({ w: i + 1, v }))
+  .filter((o) => o.v > 0);
+if (hot.length) {
+  console.log('Verluste (gemischt): ' + hot.map((o) => `W${o.w}:${o.v}`).join('  '));
+}
+
+if (errors.length) {
+  console.error('BALANCE-CHECK: nicht bestanden');
+  for (const e of errors) console.error('  - ' + e);
+  process.exit(1);
+}
 console.log('BALANCE-CHECK: bestanden.');

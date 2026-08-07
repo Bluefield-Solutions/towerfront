@@ -1,6 +1,10 @@
 /** Zentrale Konstanten. Alles, was Balancing oder Look betrifft, gehoert hierher
  *  oder in eine data/-Datei - niemals verstreut in die Systeme. */
 
+/** Wird auf dem Titelbildschirm angezeigt - so ist immer sichtbar,
+ *  welcher Stand gerade im Browser liegt. */
+export const VERSION = 'v2';
+
 export const TILE = 80;
 export const COLS = 20;
 export const ROWS = 11;

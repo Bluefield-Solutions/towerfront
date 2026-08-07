@@ -7,11 +7,12 @@ export interface Enemy {
   x: number; y: number;
   hp: number; hpMax: number;
   speed: number;
-  seg: number;      // Index des aktuellen Pfadsegments
+  seg: number;       // Index des aktuellen Pfadsegments
   travelled: number; // Zurueckgelegte Strecke - Basis fuer "vorderstes Ziel"
   slowFactor: number;
   slowLeft: number;
   hitFlash: number;
+  wobble: number;
   dead: boolean;
   leaked: boolean;
 }
@@ -25,20 +26,46 @@ export interface Tower {
   cooldownLeft: number;
   angle: number;
   recoil: number;
+  pulse: number;          // Sichtbarer Umkreispuls beim Frostturm
   kills: number;
+  damageDone: number;
 }
 
+export type ProjectileKind = 'homing' | 'ballistic';
+
 export interface Projectile {
+  kind: ProjectileKind;
   x: number; y: number;
-  vx: number; vy: number;
-  target: Enemy | null;
+  sx: number; sy: number;  // Startpunkt (fuer die Wurfbahn)
+  tx: number; ty: number;  // Zielpunkt bei ballistisch
+  target: Enemy | null;    // Ziel bei zielsuchend
+  owner: Tower | null;
   speed: number;
   damage: number;
   slow: number;
   slowTime: number;
+  splash: number;
   color: string;
+  t: number;               // 0..1 Fortschritt bei ballistisch
+  dur: number;
   life: number;
   dead: boolean;
+}
+
+/** Kettenblitz: nur Darstellung, der Schaden faellt sofort an. */
+export interface Bolt {
+  pts: { x: number; y: number }[];
+  color: string;
+  life: number;
+  maxLife: number;
+}
+
+export interface Ring {
+  x: number; y: number;
+  r: number; rMax: number;
+  color: string;
+  life: number; maxLife: number;
+  width: number;
 }
 
 export interface Particle {
@@ -47,6 +74,7 @@ export interface Particle {
   life: number; maxLife: number;
   size: number;
   color: string;
+  gravity: number;
 }
 
 export interface FloatText {
@@ -54,6 +82,8 @@ export interface FloatText {
   text: string;
   color: string;
   life: number;
+  size: number;
 }
 
 export type Phase = 'title' | 'playing' | 'won' | 'lost';
+export type Quality = 'hoch' | 'niedrig';

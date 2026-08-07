@@ -168,3 +168,45 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* ------------------------------------------------------- Wellenvorschau */
+
+.next {
+  position: absolute; left: calc(12px + var(--sal)); bottom: calc(72px + var(--sab));
+  display: flex; align-items: center; gap: 10px;
+  max-width: min(66%, 560px);
+  padding: 7px 12px; border-radius: 11px;
+  background: var(--panel); border: 1px solid var(--edge);
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+.next-lab {
+  flex: none; font-size: 9px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--muted);
+}
+.next-list {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.next-list i { font-style: normal; display: inline-flex; align-items: center; gap: 5px; }
+.next-list b { display: inline-block; width: 9px; height: 9px; border-radius: 3px; }
+.next-note { color: var(--gold); font-weight: 600; font-size: 11.5px; }
+
+.go { display: flex; flex-direction: column; align-items: center; gap: 1px; line-height: 1.15; }
+.go-bonus { font-size: 10px; font-weight: 700; opacity: 0.72; letter-spacing: 0.04em; }
+.go-bonus:empty { display: none; }
+
+.best { margin: -12px 0 20px; font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
+.best:empty { display: none; }
+
+.tower-btn .r {
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); margin-top: 1px;
+}
+.tower-btn { min-width: 92px; padding: 7px 10px; }
+
+@media (max-width: 780px) {
+  .tower-btn { min-width: 78px; padding: 6px 8px; }
+  .tower-btn .n { font-size: 11.5px; }
+  .next { max-width: 58%; bottom: calc(66px + var(--sab)); }
+}

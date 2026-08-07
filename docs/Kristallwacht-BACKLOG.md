@@ -1,70 +1,64 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v1 · 07.08.2026
+Stand: nach v2 · 07.08.2026
 
 Legende Nutzen: ●●● hoch · ●● mittel · ● gering
 Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 
 ---
 
-## Phase B — Spielgefühl
+## Offen — Phase B (Spielgefühl)
 
-| # | Punkt | Nutzen | Aufw. | Status |
-|---|---|---|---|---|
-| B1 | Ton: Schuss, Treffer, Tod, Bauen, Welle, Leck. Web-Audio synthetisch, keine Dateien | ●●● | M | offen |
-| B2 | Wellenvorschau: Was kommt als Nächstes, wie viele, welche Art | ●●● | S | offen |
-| B3 | Trefferrückmeldung schärfen: Aufprallblitz, Rückstoß, kurzes Zeitstocken beim Kolosstod | ●●● | S | offen |
-| B4 | Bauvorschau am Finger: Turm halbtransparent auf der Zelle unter dem Daumen | ●●● | S | offen |
-| B5 | Wellenübergang: Countdown, Ankündigung, Bonus-Einblendung | ●● | S | offen |
-| B6 | Ziellogik wählbar pro Turm: vorderster, stärkster, nächster | ●● | M | offen |
-| B7 | Turmreichweite dauerhaft anzeigen, solange gebaut wird | ●● | S | offen |
-| B8 | Kein Verlust bei Fehltipp: Bauen erst bestätigen, wenn der Finger losgelassen wird | ●● | S | offen |
-| B9 | Spielstand sichern (Bestwelle, Gold, Einstellungen) via localStorage | ●● | S | offen |
-| B10 | Bildrate messen und Effektdichte automatisch drosseln | ●● | M | offen |
+| # | Punkt | Nutzen | Aufw. |
+|---|---|---|---|
+| B6 | Ziellogik pro Turm wählbar: vorderster, stärkster, nächster, schwächster | ●●● | M |
+| B11 | Turm per Ziehen auf eine andere Zelle versetzen (gegen Fehlplatzierung) | ●● | M |
+| B12 | Kurze Einführung in Welle 1 und 2, die das Bauen erklärt | ●●● | M |
+| B13 | Reichweiten aller Türme gleichzeitig einblenden (Halten auf leerer Fläche) | ●● | S |
+| B14 | Warnmarkierung am Kristall, wenn ein Gegner die letzten Meter erreicht | ●● | S |
 
-## Phase C — Tiefe
+## Offen — Phase C (Tiefe)
 
-| # | Punkt | Nutzen | Aufw. | Status |
-|---|---|---|---|---|
-| C1 | Turm 3: Mörser — Flächenschaden, langsam, trifft nur Bodeneinheiten | ●●● | M | offen |
-| C2 | Turm 4: Prisma — Kettenblitz auf mehrere Ziele | ●●● | M | offen |
-| C3 | Turm 5: Bannturm — kein Schaden, verstärkt Nachbartürme | ●● | M | offen |
-| C4 | Gegner: Flieger, ignoriert den Pfad, fliegt die Luftlinie | ●●● | M | offen |
-| C5 | Gegner: Teiler, zerfällt beim Tod in zwei kleine | ●●● | S | offen |
-| C6 | Gegner: Heiler, regeneriert Umstehende | ●● | M | offen |
-| C7 | Gegner: Schild, absorbiert die ersten n Treffer | ●● | S | offen |
-| C8 | Bosswelle alle fünf Wellen, eigene Silhouette, eigener Auftritt | ●●● | M | offen |
-| C9 | Karte 2 und 3 mit eigenem Biom und eigener Pfadform | ●●● | L | offen |
-| C10 | Zwei Pfade, die sich vereinen — echte Prioritätsentscheidung | ●●● | M | offen |
-| C11 | Wellen 11 bis 30, Kurve über die Simulation kalibriert | ●●● | M | offen |
-| C12 | Endlosmodus nach der letzten Welle | ●● | S | offen |
-| C13 | Fähigkeit auf Abruf: Frostschlag oder Meteor mit Abklingzeit | ●● | M | offen |
-| C14 | Kartenauswahl mit Sternebewertung nach verbleibendem Kristall | ●● | M | offen |
+| # | Punkt | Nutzen | Aufw. |
+|---|---|---|---|
+| C3 | Bannturm: kein Schaden, verstärkt benachbarte Türme | ●● | M |
+| C4 | Flieger, ignoriert den Pfad und fliegt die Luftlinie — Mörser trifft ihn nicht | ●●● | M |
+| C5 | Teiler, zerfällt beim Tod in zwei kleine | ●●● | S |
+| C6 | Heiler, regeneriert Umstehende | ●● | M |
+| C7 | Schildgegner, absorbiert die ersten n Treffer | ●● | S |
+| C9 | Karte 2 und 3 mit eigenem Biom und eigener Pfadform | ●●● | L |
+| C10 | Zwei Pfade, die sich vereinen — echte Prioritätsentscheidung | ●●● | M |
+| C12 | Endlosmodus nach Welle 15 mit fortlaufender Skalierung | ●● | S |
+| C13 | Fähigkeit auf Abruf: Frostschlag oder Meteor mit Abklingzeit | ●●● | M |
+| C14 | Kartenauswahl mit Sternebewertung nach verbleibendem Kristall | ●● | M |
+| C15 | Schwierigkeitsgrade (Ruhig / Normal / Erbarmungslos) über Startwerte | ●● | S |
 
-## Phase D — Politur
+## Offen — Phase D (Politur)
 
-| # | Punkt | Nutzen | Aufw. | Status |
-|---|---|---|---|---|
-| D1 | Parallaxe-Hintergrund hinter dem Feld, ferne Silhouetten | ●● | M | offen |
-| D2 | Wetter und Tageszeit je Karte als Stimmungsschicht | ●● | M | offen |
-| D3 | Turmsilhouetten pro Stufe sichtbar unterschiedlich, nicht nur Punkte | ●●● | M | offen |
-| D4 | Gegner-Todesanimation statt reiner Partikel | ●● | M | offen |
-| D5 | Menüübergänge, Einblenden statt hartem Umschalten | ●● | S | offen |
-| D6 | Einstellungen: Ton, Effektdichte, Bewegungsreduktion respektieren | ●● | S | offen |
-| D7 | Statistik nach der Partie: Schaden pro Turm, effizienteste Platzierung | ●● | M | offen |
-| D8 | Tastaturbedienung vollständig, sichtbarer Fokus | ● | S | offen |
-| D9 | Kurze Einführung in den ersten beiden Wellen | ●●● | M | offen |
+| # | Punkt | Nutzen | Aufw. |
+|---|---|---|---|
+| D1 | Parallaxe-Hintergrund hinter dem Feld, ferne Silhouetten | ●● | M |
+| D2 | Wetter und Tageszeit je Karte als Stimmungsschicht | ●● | M |
+| D4 | Gegner-Todesanimation statt reiner Partikel | ●● | M |
+| D5 | Menüübergänge, Einblenden statt hartem Umschalten | ●● | S |
+| D6 | Einstellungsdialog: Lautstärke, Effektdichte, Bewegungsreduktion | ●● | S |
+| D7 | Statistik nach der Partie: Schaden pro Turm, beste Platzierung | ●●● | M |
+| D8 | Tastaturbedienung vollständig, sichtbarer Fokus | ● | S |
+| D10 | Eigene Turm- und Gegnernamen in der Wellenvorschau antippbar für Details | ● | S |
 
-## Befunde aus der Simulation
+## Befunde aus der Simulation (v2)
 
 | # | Befund | Konsequenz |
 |---|---|---|
-| S1 | Reine Bogentürme gewinnen mit 20/20 — zu dominant | Kosten oder Takt anziehen, sobald Turm 3 und 4 da sind |
-| S2 | Frost trägt in der Simulation kaum bei | Bremse muss Flächenwirkung bekommen (Umkreis statt Einzelziel) |
-| S3 | Die Lebenspunktkurve ist mit 12 % pro Welle gesetzt, aber nur gegen zwei Türme geprüft | Nach jedem neuen Turm neu kalibrieren |
+| S4 | Mörser und Prisma verlieren allein in Welle 3 | Korrekt — sie sind Ausbautürme, keine Eröffnung. Nicht anfassen. |
+| S5 | Frost allein hält bis Welle 5 | Als reine Stützrolle gewollt. Beobachten, wenn C4 (Flieger) kommt. |
+| S6 | Kristallverluste liegen ausschließlich in Welle 10 und 15 | Die Kurve sitzt. Bei neuen Wellen darauf achten, dass das so bleibt. |
+| S7 | Der Bot baut bis zu 86 Türme | 119 Bauplätze sind viel. Bei Karte 2 knapper planen — Platz ist eine Ressource. |
+| S8 | Hinweis des Wächters: Druck fällt in Welle 4 gegenüber Welle 3 | Bewusst: Welle 4 ist eine reine Tempowelle. Beim nächsten Balancing prüfen. |
 
 ## Erledigt
 
 | Version | Inhalt |
 |---|---|
 | v1 | Grundgerüst: Karte, Pfad, zwei Türme mit drei Stufen, drei Gegner, zehn Wellen, Gold, Leben, Sieg/Niederlage, HUD, Inspektor, Partikel, Kristall mit Rissen, Pipeline mit vier Toren |
+| v2 | Ton (synthetisch, budgetiert) · Mörser und Prisma als dritter und vierter Turm mit eigenen Angriffstypen · Leerentitan als Boss · fünfzehn Wellen · Frühstart-Bonus · Bauvorschau am Finger mit Bestätigung beim Loslassen · Wellenvorschau · Explosionsringe, Kettenblitze, Trefferstocken · Turmsilhouetten wachsen mit der Stufe · automatische Effektdrosselung nach Bildrate · Speicherstand für Einstellungen und besten Lauf · Tonschalter · Pause beim App-Wechsel · Versionsstempel · Datenwächter und erweiterte Balance-Simulation in der Pipeline |

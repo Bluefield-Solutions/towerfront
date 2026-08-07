@@ -25,13 +25,19 @@
       <span class="val" id="v-wave">0/0</span>
     </div>
     <div class="spacer"></div>
+    <button class="chip" id="b-sound" aria-label="Ton an oder aus">Ton</button>
     <button class="chip" id="b-speed" aria-label="Spieltempo">1×</button>
     <button class="chip" id="b-pause" aria-label="Pause">Pause</button>
   </header>
 
+  <div class="next" id="next">
+    <span class="next-lab" id="n-lab">Als Nächstes</span>
+    <span class="next-list" id="n-list"></span>
+  </div>
+
   <div class="dock" id="dock">
     <div class="build" id="build"></div>
-    <button class="go" id="b-wave">Welle starten</button>
+    <button class="go" id="b-wave"><span id="b-wave-t">Welle starten</span><span class="go-bonus" id="b-wave-b"></span></button>
   </div>
 
   <aside class="inspector" id="inspector" hidden>
@@ -51,6 +57,7 @@
       <p class="eyebrow" id="s-eyebrow">Kapitel eins</p>
       <h1 id="s-title">Kristallwacht</h1>
       <p class="lead" id="s-text"></p>
+      <p class="best" id="s-best"></p>
       <button class="primary" id="s-action">Beginnen</button>
     </div>
   </section>

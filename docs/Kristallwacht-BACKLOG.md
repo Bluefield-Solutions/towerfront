@@ -1,6 +1,8 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v10 · 07.08.2026
+Stand: nach v11 · 07.08.2026
+
+Das gewichtete Delta gegen die Genre-Referenzen steht in `Kristallwacht-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
 Legende Nutzen: ●●● hoch · ●● mittel · ● gering
 Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
@@ -22,6 +24,10 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | # | Punkt | Nutzen | Aufw. |
 |---|---|---|---|
 | C3 | Bannturm: kein Schaden, verstärkt benachbarte Türme | ●● | M |
+| C19 | **R3** Verzweigter Ausbau ab Stufe 2, zwei sich ausschließende Zweige je Turm (Bloons TD 6) | ●●● | M |
+| C20 | **R4** Blockturm, der Gegner bindet statt sie zu töten (Kingdom Rush Kaserne) | ●● | M |
+| C21 | **G5** Heiler oder Schildträger, der die Zielreihenfolge erzwingt | ●● | M |
+| C22 | **K5/K6** Sterne je Karte und Fortschritt zwischen den Partien | ●● | M |
 | C16 | Turm, der ausschließlich Luftziele trifft (Gegenstück zum Mörser) | ●● | M |
 | C6 | Heiler, regeneriert Umstehende | ●● | M |
 | C7 | Schildgegner, absorbiert die ersten n Treffer | ●● | S |
@@ -72,6 +78,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S21 | Erster Genre-Abgleich: 18/27 Kriterien, gewichtet 69 %. Bereich „Karten" steht bei **0/6** | Die Kernschleife ist auf Genre-Niveau, der Wiederspielwert nicht. Ab hier liegt der Hebel eindeutig bei mehreren Karten, Schwierigkeitsgraden und Fortschritt. |
+| S22 | Turmwerte waren vor dem Kauf nicht sichtbar — der häufigste Vorwurf an schwächere Genre-Vertreter | In v11 behoben, vom Rauchtest geprüft (Kosten, Schaden, Reichweite, Luftziele müssen im Panel stehen). |
 | S20 | Statistikwerte mussten in den Spielstand, sonst beginnt die Auswertung nach dem Fortsetzen bei null | Von Anfang an im Fingerabdruck der Determinismus-Prüfung — dieselbe Lehre wie S16, diesmal vorher berücksichtigt. |
 | S19 | `.screen { display: grid }` schlug das `hidden`-Attribut — die Titelkarte lag unsichtbar über allem und machte das Spiel auf dem Handy unbedienbar. Neun grüne Tore haben es nicht gefunden | Behoben mit `[hidden] { display: none !important }`, vom Autarkie-Check erzwungen. Grundsätzlich: die Tore prüfen Verhalten, nicht Darstellung. Stapelreihenfolge, Kaskade und Berührungsflächen brauchen weiter den Blick aufs Gerät. |
 | S18 | Einführung kann auf zwei Arten kaputtgehen: Satz zeigt auf einen entfernten Knopf, oder ein Schritt ist unerfüllbar | Beides prüft jetzt der Rauchtest, beide Gegenproben schlagen an. Neue Schritte brauchen einen hinterlegten Handgriff, sonst meldet er es. |
@@ -87,6 +95,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | Version | Inhalt |
 |---|---|
 | v1 | Grundgerüst: Karte, Pfad, zwei Türme mit drei Stufen, drei Gegner, zehn Wellen, Gold, Leben, Sieg/Niederlage, HUD, Inspektor, Partikel, Kristall mit Rissen, Pipeline mit vier Toren |
+| v11 | Genre-Abgleich als zehntes (nicht abbrechendes) Tor: 27 Kriterien aus Kingdom Rush, Bloons TD 6, Plants vs. Zombies, Defense Grid und Defender's Quest, wo möglich gemessen statt behauptet · Dokument `Kristallwacht-BENCHMARK.md` mit Herkunft jedes Kriteriums · feste Dreierstruktur je Runde (Abgleich → Prozess → Spiel) · volle Turmwerte im Inspektor vor dem Kauf, vom Rauchtest geprüft |
 | v10 | Auswertung nach der Partie: Kennzahlen, Schadensanteil je Quelle als Balken, stärkster Turm mit Feldposition, Wellen mit Kristallverlust, Fähigkeitsnutzung · Werte wandern im Spielstand mit · Rauchtest prüft vier Gleichungen der Auswertung · `stats()` in `towerStats()` umbenannt |
 | v9 | Fehlerbehebung: `[hidden] { display: none !important }` — versteckte Ebenen fingen zuvor jeden Tipp ab und machten das Spiel auf dem Handy unbedienbar · Autarkie-Check erzwingt die Regel · `-webkit-backdrop-filter` · `color-mix` durch festen Wert ersetzt |
 | v8 | Einführung im Spiel: sieben kontextbezogene Sätze über die ersten drei Wellen, das gemeinte Bedienelement pulsiert, auf dem Feld zeigt ein Pfeil auf den empfohlenen Bauplatz · überspringbar und auf dem Titelbildschirm wieder einschaltbar · läuft beim Fortsetzen nie an · Rauchtest prüft, dass jeder Schritt ein existierendes Element trifft und erfüllbar ist · Wächter prüft den empfohlenen Bauplatz |

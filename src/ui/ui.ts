@@ -28,6 +28,8 @@ export class UI {
   private insp = $('inspector');
   private iName = $('i-name');
   private iStats = $('i-stats');
+  private iHint = $('i-hint');
+  private iActions = document.querySelector('.insp-actions') as HTMLElement;
   private iUp = $<HTMLButtonElement>('i-up');
   private iSell = $<HTMLButtonElement>('i-sell');
   private screen = $('screen');
@@ -107,7 +109,10 @@ export class UI {
     });
     this.bPause.addEventListener('click', () => { this.s.paused = !this.s.paused; });
     this.bWave.addEventListener('click', () => { Sfx.unlock(); this.s.startWave(); });
-    $('i-close').addEventListener('click', () => { this.s.selectedTower = null; });
+    $('i-close').addEventListener('click', () => {
+      this.s.selectedTower = null;
+      this.s.buildChoice = null;
+    });
     this.iUp.addEventListener('click', () => {
       if (this.s.selectedTower) this.s.upgrade(this.s.selectedTower);
     });
@@ -407,6 +412,32 @@ export class UI {
       b.dataset.on = s.buildChoice === id ? '1' : '0';
       b.dataset.poor = s.gold < TOWERS[id].levels[0].cost ? '1' : '0';
     }
+
+    // Vor dem Kauf zeigen, was der Turm kann. Ohne Werte laesst sich nicht
+    // planen - und Planen ist der ganze Reiz des Genres.
+    if (!sel && s.buildChoice) {
+      const def = TOWERS[s.buildChoice];
+      const l1 = def.levels[0];
+      this.insp.hidden = false;
+      this.iName.textContent = `${def.name} · ${def.role}`;
+      this.iStats.innerHTML = [
+        row('Kosten', `${l1.cost} Gold`),
+        row('Schaden', l1.damage),
+        row('Reichweite', Math.round(l1.range)),
+        row('Takt', `${l1.cooldown.toFixed(2)} s`),
+        row('Schaden/s', (l1.damage / l1.cooldown).toFixed(1)),
+        l1.splash ? row('Radius', Math.round(l1.splash)) : '',
+        l1.chains ? row('Sprünge', l1.chains) : '',
+        l1.slow ? row('Bremse', pct(l1.slow)) : '',
+        row('Luftziele', def.hitsAir ? 'ja' : 'nein'),
+      ].join('');
+      this.iHint.hidden = false;
+      this.iHint.textContent = def.blurb;
+      this.iActions.hidden = true;
+      return;
+    }
+    this.iHint.hidden = true;
+    this.iActions.hidden = false;
 
     if (sel) {
       const def = TOWERS[sel.def];

@@ -95,7 +95,7 @@ sizeCanvas(canvas, 844, 390);
 
 const state = new GameState();
 const renderer = new Renderer(canvas);
-let ui: InstanceType<typeof UI>;
+let ui!: InstanceType<typeof UI>;
 
 step('Oberflaeche aufbauen', () => { ui = new UI(state); });
 step('Groesse berechnen', () => renderer.resize());
@@ -206,6 +206,25 @@ step('Partie durchspielen', () => {
 // Wenn die Partie in zwoelf Minuten Spielzeit nicht endet, haengt etwas -
 // zum Beispiel eine Welle, die auf einen Gegner wartet, der nie stirbt.
 if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenger in der Wellenlogik.');
+
+// Genre-Kriterium F4: vor dem Kauf muessen die Werte sichtbar sein.
+{
+  state.selectedTower = null;
+  state.buildChoice = 'mortar';
+  ui.sync();
+  const panel = win.document.getElementById('inspector');
+  const text = panel?.textContent ?? '';
+  if (panel?.hasAttribute('hidden')) {
+    problems.push('Bauvorschau: der Inspektor bleibt verborgen, obwohl eine Turmart gewaehlt ist.');
+  }
+  for (const needle of ['Kosten', 'Schaden', 'Reichweite', 'Luftziele']) {
+    if (!text.includes(needle)) {
+      problems.push(`Bauvorschau: "${needle}" fehlt in den Werten vor dem Kauf.`);
+    }
+  }
+  state.buildChoice = null;
+  ui.sync();
+}
 
 // Die Auswertung darf nicht nur hübsch sein, sie muss stimmen.
 {

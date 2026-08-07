@@ -374,3 +374,7 @@ html, body {
 }
 .note-line b { color: var(--text); font-weight: 700; }
 .note-line + .note-line { margin-top: 5px; }
+
+.insp-hint {
+  margin: 0 0 2px; font-size: 11px; line-height: 1.45; color: var(--muted);
+}

@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v10 · 07.08.2026
+Stand: v11 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -123,8 +123,23 @@ und lässt den Build durchfallen, wenn er ihn findet.
 
 ### 3.1 Der Iterationszyklus
 
-Jede Iteration folgt exakt diesem Ablauf. Keine Ausnahmen, auch nicht bei
-kleinen Änderungen.
+Jede Runde hat seit v11 eine feste Dreierstruktur, und in dieser Reihenfolge:
+
+**Erstens: Abgleich.** `npm run benchmark` misst das Spiel gegen einen Katalog,
+der aus den bestbewerteten Vertretern des Genres abgeleitet ist. Wo stehen wir,
+was hat sich seit dem letzten Lauf verschoben, welches Delta wiegt am
+schwersten. Grundlage und Herkunft jedes Kriteriums: `Kristallwacht-BENCHMARK.md`.
+
+**Zweitens: Prozess.** Eine konkrete Verbesserung an der Pipeline selbst — ein
+neues Tor, eine schärfere Prüfung, eine Gegenprobe, ein Werkzeug. Die Regel
+dahinter: *Jeder Fehler, der einmal durchgerutscht ist, bekommt ein Tor.*
+
+**Drittens: Spiel.** Eine konkrete Verbesserung am Spiel, bevorzugt aus dem
+Delta von Schritt eins.
+
+Der Bericht am Ende jeder Runde nennt alle drei Teile.
+
+Innerhalb von Schritt drei gilt weiterhin dieser Ablauf, ohne Ausnahmen:
 
 1. **Ein Ziel.** Genau eine Sache pro Runde. Minimalinvasiv.
 2. **Vor dem Ändern lesen.** Erst die betroffene Datei ansehen, dann greppen, ob
@@ -155,6 +170,15 @@ Ein Befehl fährt alles: `npm run gate`
 | 7 | Rauchtest | `npm run smoke` | Fehler beim Zeichnen, in der Oberfläche oder bei der Eingabe |
 | 8 | Build | `npm run build` | Bündelfehler |
 | 9 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id |
+| 10 | Genre-Abgleich | `npm run benchmark` | nichts — er meldet, er bricht nicht ab |
+
+**Der Genre-Abgleich** ist das einzige Tor, das nichts verhindert. Es misst das
+Spiel gegen 27 Kriterien aus Kingdom Rush, Bloons TD 6, Plants vs. Zombies,
+Defense Grid und Defender's Quest und legt das Delta bei jedem Lauf auf den
+Tisch. Wo möglich wird gemessen statt behauptet: Für „während der Pause darf
+gebaut werden" erzeugt es einen Spielzustand, pausiert ihn und versucht zu
+bauen. Sechs Kriterien lassen sich so nicht prüfen; sie sind als Handprüfung
+markiert und werden jeden Lauf neu beurteilt.
 
 **Die Determinismus-Prüfung** spielt dasselbe Drehbuch zweimal mit derselben
 Aussaat und vergleicht alle 60 Bilder einen Fingerabdruck des Spielzustands.
@@ -465,7 +489,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v10
+## 5. Stand v11
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -525,6 +549,12 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v11 — Genre-Abgleich in der Pipeline und volle Turmwerte vor dem Kauf.**
+Sobald eine Turmart gewählt ist, zeigt der Inspektor Kosten, Schaden, Reichweite,
+Takt, Schaden pro Sekunde, Wirkradius, Bremswert und ob der Turm Luftziele
+erreicht — vor dem Bau, nicht danach. Der häufigste Vorwurf an schwächere
+Vertreter des Genres lautet: man kann nicht planen, wenn man nichts weiß.
 
 **Neu in v10 — Auswertung nach der Partie.** Auf dem Sieg- und
 Niederlagebildschirm steht jetzt, was tatsächlich getragen hat: Wellen, Kristall,

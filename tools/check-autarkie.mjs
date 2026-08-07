@@ -24,6 +24,27 @@ if (/drawImage\(\s*(this\.)?canvas/.test(html) && /filter\s*=\s*["'`]blur/.test(
   problems.push('Safari-Falle: drawImage(canvas) zusammen mit filter=blur gefunden.');
 }
 
+// Versteckte Ebenen muessen wirklich verschwinden.
+//
+// Das hidden-Attribut setzt display:none nur ueber die Standardregeln des
+// Browsers. Eine eigene Regel wie ".screen { display: grid }" schlaegt sie -
+// die Ebene bleibt sichtbar, liegt ueber dem Spielfeld und faengt jeden Tipp
+// ab. Von aussen sieht das aus, als reagiere kein einziger Knopf mehr. Genau
+// dieser Fehler steckte bis v8 im Spiel und machte es auf dem Handy
+// unbedienbar.
+//
+// Der berechnete Stil laesst sich hier nicht befragen: jsdom wertet den
+// Vorrang von !important in eigenen Stilvorlagen nicht richtig aus und meldet
+// auch dann display:grid, wenn ein Browser display:none berechnet. Geprueft
+// wird deshalb die Regel selbst - sie ist die Zusage, auf der alle versteckten
+// Ebenen beruhen.
+if (!/\[hidden\][^{]*\{[^}]*display\s*:\s*none\s*!important/.test(html)) {
+  problems.push(
+    'Die Regel [hidden] { display: none !important } fehlt. Ohne sie bleiben ' +
+    'versteckte Ebenen sichtbar und fangen jeden Tipp ab.',
+  );
+}
+
 // Die UI greift Elemente ueber feste IDs. Fehlt eine, faellt das erst zur
 // Laufzeit auf - hier faellt es beim Build auf.
 const REQUIRED_IDS = [

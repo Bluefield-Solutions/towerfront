@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v8 · 07.08.2026
+Stand: v9 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -282,6 +282,46 @@ Abend.
 
 ---
 
+### 3.10 Der Fehler, den neun Tore nicht gefunden haben
+
+Bis v8 war das Spiel auf dem Handy unbedienbar. Nach dem Tippen auf „Beginnen"
+reagierte kein einziger Knopf mehr.
+
+Die Ursache war eine Zeile CSS:
+
+```css
+.screen { position: absolute; inset: 0; display: grid; ... }
+```
+
+Das `hidden`-Attribut setzt `display: none` nur über die Standardregeln des
+Browsers. Jede eigene Regel schlägt sie. Die Titelkarte galt also als
+versteckt, lag aber weiter bildschirmfüllend über allem und fing jeden Tipp ab.
+Dasselbe galt für die Wellenvorschau.
+
+Bemerkenswert ist, was das über die Pipeline sagt. Neun Tore liefen grün: Typen,
+Daten, Determinismus, Balance, zwei Messungen, Rauchtest, Build, Autarkie. Der
+Rauchtest ruft `ui.hideScreen()` auf, das Attribut wird korrekt gesetzt, alles
+verhält sich wie vorgesehen — **nur der Browser zeigt die Ebene trotzdem an.**
+Kein Test hat je den berechneten Stil betrachtet, weil bis dahin kein Test etwas
+über Aussehen wusste.
+
+Die Lehre ist nicht „mehr Tests", sondern: *Die Tore prüfen Verhalten, nicht
+Darstellung.* Alles, was nur im echten Browser sichtbar wird — Stapelreihenfolge,
+Kaskade, Sicherheitsabstände, Berührungsflächen —, braucht weiterhin einen Blick
+auf dem Gerät. Ein Tor ersetzt das nicht, es entlastet es nur.
+
+Behoben ist es mit einer Regel, die ganz oben steht und `!important` trägt:
+
+```css
+[hidden] { display: none !important; }
+```
+
+Der Autarkie-Check verlangt sie ab jetzt. Fehlt sie, bricht der Build ab —
+Gegenprobe gemacht, sie schlägt an. Den berechneten Stil kann er nicht befragen:
+jsdom wertet den Vorrang von `!important` in eigenen Stilvorlagen falsch aus und
+meldet `display: grid`, wo ein Browser `display: none` berechnet. Geprüft wird
+deshalb die Zusage selbst, auf der alle versteckten Ebenen beruhen.
+
 ### 3.9 Wie eine Einführung geprüft wird
 
 Eine Einführung kann auf zwei Arten kaputtgehen, und beide merkt man erst, wenn
@@ -405,7 +445,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v8
+## 5. Stand v9
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -465,6 +505,11 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v9 — Fehlerbehebung Bedienbarkeit.** Versteckte Ebenen verschwinden
+jetzt wirklich; bis v8 lag die Titelkarte unsichtbar über dem Spielfeld und fing
+jeden Tipp ab. Dazu `-webkit-`-Präfixe für den Weichzeichner und ein Ersatz für
+`color-mix`, das ältere Safari-Fassungen nicht kennen.
 
 **Neu in v8 — die Einführung.** Sie erklärt nichts vorab. Sie zeigt jeweils
 einen Satz zum richtigen Zeitpunkt, hebt hervor, was gemeint ist, und

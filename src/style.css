@@ -16,6 +16,14 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+/* MUSS ganz oben stehen und !important tragen.
+   Das hidden-Attribut setzt display:none nur ueber die Standardregeln des
+   Browsers. Jede eigene Regel wie ".screen { display: grid }" schlaegt sie -
+   das Element bleibt sichtbar, obwohl es als versteckt gilt. Bei einer
+   bildschirmfuellenden Ebene bedeutet das: sie faengt jeden Tipp ab, und das
+   ganze Spiel wirkt tot. Genau das ist bis v8 passiert. */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0; height: 100%; overflow: hidden;
   background: var(--void); color: var(--text);
@@ -56,6 +64,7 @@ html, body {
   color: var(--text); background: var(--panel);
   border: 1px solid var(--edge); border-radius: 999px;
   padding: 8px 14px; min-width: 52px; cursor: pointer;
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
 }
 .chip:active { transform: scale(0.95); }
@@ -76,6 +85,7 @@ html, body {
   min-width: 98px; padding: 8px 12px; text-align: left; cursor: pointer;
   background: var(--panel); border: 1px solid var(--edge);
   border-radius: 12px; color: var(--text); font-family: var(--ui);
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
 }
 .tower-btn .n { font-size: 12.5px; font-weight: 700; letter-spacing: 0.01em; }
@@ -177,6 +187,7 @@ html, body {
   max-width: min(66%, 560px);
   padding: 7px 12px; border-radius: 11px;
   background: var(--panel); border: 1px solid var(--edge);
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   pointer-events: none;
 }
@@ -254,6 +265,7 @@ html, body {
   min-width: 74px; padding: 8px 10px; cursor: pointer; text-align: left;
   background: var(--panel); border: 1px solid var(--edge);
   border-radius: 12px; color: var(--text); font-family: var(--ui);
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
 }
 .s-fill {
@@ -270,7 +282,7 @@ html, body {
 .skill-btn[data-ready="1"] .s-cd { color: var(--tone); }
 .skill-btn[data-ready="0"] { opacity: 0.65; }
 .skill-btn[data-on="1"] {
-  background: color-mix(in srgb, var(--tone) 22%, transparent);
+  background: rgba(127, 231, 224, 0.2);
   border-color: var(--tone);
 }
 .skill-btn:active { transform: scale(0.96); }

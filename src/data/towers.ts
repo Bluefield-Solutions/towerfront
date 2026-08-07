@@ -28,6 +28,9 @@ export interface TowerDef {
   color: string;
   accent: string;
   attack: AttackKind;
+  /** Erreicht der Turm fliegende Gegner? Der Moerser wirft im Bogen auf den
+   *  Boden - was in der Luft haengt, trifft er nicht. */
+  hitsAir: boolean;
   projectileSpeed: number;
   levels: TowerLevel[];
 }
@@ -37,7 +40,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     id: 'arrow', name: 'Bogenturm', role: 'Dauerfeuer',
     blurb: 'Guenstig und schnell. Traegt die fruehen Wellen, verliert spaeter gegen Panzerung.',
     color: '#D8DCE8', accent: '#F2C14E',
-    attack: 'single', projectileSpeed: 700,
+    attack: 'single', hitsAir: true, projectileSpeed: 700,
     levels: [
       { cost: 55, damage: 8, range: 200, cooldown: 0.55 },
       { cost: 60, damage: 13, range: 222, cooldown: 0.50 },
@@ -48,7 +51,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     id: 'frost', name: 'Frostturm', role: 'Umkreis-Bremse',
     blurb: 'Kein Geschoss. Pulst im Umkreis, bremst alles gleichzeitig und kratzt an der Huelle.',
     color: '#BFE9F2', accent: '#7FE7E0',
-    attack: 'aura', projectileSpeed: 0,
+    attack: 'aura', hitsAir: true, projectileSpeed: 0,
     levels: [
       { cost: 85, damage: 4, range: 148, cooldown: 0.85, slow: 0.34, slowTime: 1.5 },
       { cost: 95, damage: 7, range: 166, cooldown: 0.78, slow: 0.44, slowTime: 1.8 },
@@ -56,10 +59,10 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     ],
   },
   mortar: {
-    id: 'mortar', name: 'Moerser', role: 'Flaechenschlag',
-    blurb: 'Langsam und teuer, trifft eine ganze Traube auf einmal. Zielt vorausschauend.',
+    id: 'mortar', name: 'Moerser', role: 'Flaeche, nur Boden',
+    blurb: 'Langsam und teuer, trifft eine ganze Traube auf einmal. Erreicht keine Flieger.',
     color: '#C3B39A', accent: '#F08A3C',
-    attack: 'splash', projectileSpeed: 320,
+    attack: 'splash', hitsAir: false, projectileSpeed: 320,
     levels: [
       { cost: 130, damage: 30, range: 250, cooldown: 1.9, splash: 62 },
       { cost: 140, damage: 48, range: 272, cooldown: 1.75, splash: 70 },
@@ -70,7 +73,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     id: 'prism', name: 'Prisma', role: 'Kettenblitz',
     blurb: 'Sofortstrahl, springt auf Nachbarn ueber. Stark gegen dichte Ketten, teuer im Aufbau.',
     color: '#E4D3FF', accent: '#B07CFF',
-    attack: 'chain', projectileSpeed: 0,
+    attack: 'chain', hitsAir: true, projectileSpeed: 0,
     levels: [
       { cost: 155, damage: 13, range: 185, cooldown: 0.95, chains: 2, falloff: 0.65 },
       { cost: 165, damage: 20, range: 205, cooldown: 0.88, chains: 3, falloff: 0.7 },

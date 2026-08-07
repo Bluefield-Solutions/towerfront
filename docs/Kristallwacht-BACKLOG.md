@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v5 · 07.08.2026
+Stand: nach v6 · 07.08.2026
 
 Legende Nutzen: ●●● hoch · ●● mittel · ● gering
 Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
@@ -22,8 +22,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | # | Punkt | Nutzen | Aufw. |
 |---|---|---|---|
 | C3 | Bannturm: kein Schaden, verstärkt benachbarte Türme | ●● | M |
-| C4 | Flieger, ignoriert den Pfad und fliegt die Luftlinie — Mörser trifft ihn nicht | ●●● | M |
-| C5 | Teiler, zerfällt beim Tod in zwei kleine | ●●● | S |
+| C16 | Turm, der ausschließlich Luftziele trifft (Gegenstück zum Mörser) | ●● | M |
 | C6 | Heiler, regeneriert Umstehende | ●● | M |
 | C7 | Schildgegner, absorbiert die ersten n Treffer | ●● | S |
 | C9 | Karte 2 und 3 mit eigenem Biom und eigener Pfadform | ●●● | L |
@@ -70,6 +69,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S14 | Erste Fassung setzte die Schwärmer in Welle 4 — der Bot verlor dort 6 Kristall | Zu früh für einen Gegner, der ein Umbauen erzwingt. Jetzt Welle 7. Neue Gegnertypen kommen ab jetzt frühestens ab Welle 6. |
+| S15 | Ein mörserlastiges Feld verliert in Welle 15, gemischt gewinnt | Die Schwärmer stellen eine echte Frage. Als vierte Bedingung in der Balance-Simulation festgeschrieben. |
 | S13 | Determinismus-Prüfung schlägt an, wenn beim Laden der Zufallszustand fehlt oder die Wellenuhr um ein Zehnmillionstel verschoben ist | Die Prüfung hat Zähne. Jedes neue Feld im Spielzustand gehört in `snapshot()`, sonst fällt sie durch. |
 | S12 | `rect` ist mit 594 je Bild jetzt der größte Posten (Partikel) | Erwartungsgemäß — sie liegen in acht Bündeln statt 626 Einzelbefehlen. Erst anfassen, wenn es messbar stört. |
 
@@ -78,6 +79,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | Version | Inhalt |
 |---|---|
 | v1 | Grundgerüst: Karte, Pfad, zwei Türme mit drei Stufen, drei Gegner, zehn Wellen, Gold, Leben, Sieg/Niederlage, HUD, Inspektor, Partikel, Kristall mit Rissen, Pipeline mit vier Toren |
+| v6 | Schwärmer (fliegt die Luftlinie, Mörser erreicht ihn nicht) · Spalter (zerfällt beim Tod in zwei Späne an derselben Pfadstelle) · Span als Bruchstück · Turmeigenschaft „trifft Luft" · Wellenplan neu aufgebaut, neue Typen ab Welle 6 · Flughöhe sichtbar über eigenem Schatten · Markierungen in der Wellenvorschau · Wächterprüfungen für Luft und Zerfallsketten · vierte Bedingung in der Balance-Simulation |
 | v5 | Spielstand und Determinismus: eigener Zufall mit Aussaat und sicherbarem Zustand (xorshift32) statt `Math.random` · Sicherung einer laufenden Partie alle zwei Sekunden, beim App-Wechsel und beim Schließen · „Partie fortsetzen" auf dem Titelbildschirm · Versionsprüfung, unpassende Stände werden verworfen · Determinismus-Prüfung als drittes Tor (gleiche Aussaat und Sichern/Laden dürfen den Verlauf nicht verändern) · Aussaat in der Technikanzeige |
 | v4 | Zeichen-Runde: eigene Schicht für alle Turmsockel · vorgebackene Bilder für Gegner, Trefferblitze, Bodenschatten, Turmsockel und Turmwaffen · gebündelte Partikel, Lebensbalken, Leuchtscheiben und Wurfschatten · Zeichenmessung (Befehle je Bild, maschinenunabhängig) als achtes Tor · 19.206 → 2.502 Befehle je Bild |
 | v3 | Technik-Runde: Raster für alle Umkreisabfragen (Zielsuche, Frostpuls, Explosion, Kettenblitz) · zwischengespeicherte Turmziele statt Suche in jedem Bild · Objektlager für Partikel, Geschosse, Ringe, Blitze · Listen werden an Ort und Stelle zusammengeschoben · zuschaltbare Technikanzeige mit Bildrate und Objektzahlen · kopfloser Rauchtest (jsdom) und Leistungsmessung als neue Tore · TypeScript prüft jetzt auch `tools/` |

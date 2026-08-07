@@ -2,7 +2,7 @@ import { COLS, ROWS, TILE, WORLD_W, WORLD_H, START_GOLD, START_LIVES, C } from '
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import { TOWERS, sellValue, type TowerId } from '../data/towers';
 import { WAVES, WAVE_HP_RAMP, EARLY_BONUS_MAX, EARLY_BONUS_WINDOW } from '../data/waves';
-import { MAP_SPIRALHAIN, cellCenter, cellKey, pathCells, pathPoints } from '../data/maps';
+import { MAP_SPIRALHAIN, cellCenter, cellKey, pathCells, pathLength, pathPoints } from '../data/maps';
 import type { Vec } from '../core/math';
 import { dist, dist2 } from '../core/math';
 import { Sfx } from '../core/audio';
@@ -23,6 +23,11 @@ export class GameState {
   readonly pathSet = new Set<number>();
   readonly blockedSet = new Set<number>();
   readonly goal: Vec;
+  /** Gesamtlaenge des Pfades. Dient als gemeinsamer Massstab, damit fliegende
+   *  und laufende Gegner beim Zielen "vorderster zuerst" vergleichbar sind. */
+  readonly pathTotal = pathLength(this.points);
+  /** Luftlinie vom Eintrittspunkt zum Kristall - der Massstab der Flieger. */
+  readonly airTotal: number;
 
   phase: Phase = 'title';
   gold = START_GOLD;
@@ -107,6 +112,7 @@ export class GameState {
     for (const b of this.map.blocked) this.blockedSet.add(cellKey(b.x, b.y));
     const last = this.map.waypoints[this.map.waypoints.length - 1];
     this.goal = cellCenter(last.x, last.y);
+    this.airTotal = dist(this.points[0].x, this.points[0].y, this.goal.x, this.goal.y);
   }
 
   // ---------------------------------------------------------------- Bauen
@@ -270,12 +276,35 @@ export class GameState {
     const p0 = this.points[0];
     const ramp = 1 + this.waveIndex * WAVE_HP_RAMP;
     const hp = Math.round(def.hp * hpMul * ramp);
+    // Flieger starten leicht versetzt, damit ein Schwarm nicht als eine Linie
+    // uebereinander liegt.
+    const off = def.flying ? (this.rng.next() - 0.5) * TILE * 2.2 : 0;
     this.enemies.push({
-      id: this.nextId++, def: id, x: p0.x, y: p0.y,
+      id: this.nextId++, def: id, x: p0.x, y: p0.y + off,
       hp, hpMax: hp, speed: def.speed, seg: 0, travelled: 0,
       slowFactor: 1, slowLeft: 0, hitFlash: 0, wobble: this.rng.next() * 9,
       dead: false, leaked: false,
     });
+  }
+
+  /** Bruchstuecke eines zerfallenden Gegners. Sie erben Pfadposition und
+   *  Fortschritt - sonst wuerden sie am Anfang wieder auftauchen. */
+  private splitEnemy(parent: Enemy, rule: { into: EnemyId; count: number; hpFactor: number }): void {
+    const child = ENEMIES[rule.into];
+    const hp = Math.max(1, Math.round(parent.hpMax * rule.hpFactor));
+    for (let i = 0; i < rule.count; i++) {
+      const spread = (i - (rule.count - 1) / 2) * 14;
+      this.enemies.push({
+        id: this.nextId++, def: rule.into,
+        x: parent.x + spread, y: parent.y + (this.rng.next() - 0.5) * 10,
+        hp, hpMax: hp, speed: child.speed,
+        seg: parent.seg, travelled: Math.max(0, parent.travelled - 6),
+        slowFactor: parent.slowFactor, slowLeft: parent.slowLeft,
+        hitFlash: 0, wobble: this.rng.next() * 9,
+        dead: false, leaked: false,
+      });
+    }
+    this.ring(parent.x, parent.y, 46, child.trim, 0.3, 3);
   }
 
   private updateEnemies(dt: number): void {
@@ -286,6 +315,26 @@ export class GameState {
         if (e.slowLeft <= 0) e.slowFactor = 1;
       }
       if (e.hitFlash > 0) e.hitFlash = Math.max(0, e.hitFlash - dt * 5);
+
+      const edef = ENEMIES[e.def];
+      if (edef.flying) {
+        // Luftlinie zum Herzkristall - kein Pfad, keine Kurven.
+        const dx = this.goal.x - e.x, dy = this.goal.y - e.y;
+        const d = Math.hypot(dx, dy) || 1;
+        const step = e.speed * e.slowFactor * dt;
+        // Fortschritt auf denselben Massstab wie am Boden bringen, damit
+        // "vorderstes Ziel" fuer beide dasselbe bedeutet.
+        e.travelled = this.pathTotal * (1 - d / (this.airTotal || d));
+        if (d <= step + 6) {
+          e.x = this.goal.x; e.y = this.goal.y;
+          this.leak(e, edef);
+          leaked = true;
+        } else {
+          e.x += (dx / d) * step;
+          e.y += (dy / d) * step;
+        }
+        continue;
+      }
 
       let move = e.speed * e.slowFactor * dt;
       while (move > 0 && e.seg < this.points.length - 1) {
@@ -302,14 +351,7 @@ export class GameState {
         }
       }
       if (e.seg >= this.points.length - 1) {
-        e.leaked = true; e.dead = true;
-        const def = ENEMIES[e.def];
-        this.lives -= def.leak;
-        this.leakedTotal++;
-        this.crystalHit = 1;
-        this.shake = Math.min(1, this.shake + 0.55);
-        this.float(this.goal.x, this.goal.y - 44, `-${def.leak}`, C.danger, 28);
-        this.ring(this.goal.x, this.goal.y, 120, C.danger, 0.5, 5);
+        this.leak(e, edef);
         leaked = true;
       }
     }
@@ -328,6 +370,17 @@ export class GameState {
     for (let i = 0; i < this.enemies.length; i++) this.grid.insert(this.enemies[i]);
   }
 
+  /** Ein Gegner erreicht den Kristall. */
+  private leak(e: Enemy, def: typeof ENEMIES[EnemyId]): void {
+    e.leaked = true; e.dead = true;
+    this.lives -= def.leak;
+    this.leakedTotal++;
+    this.crystalHit = 1;
+    this.shake = Math.min(1, this.shake + 0.55);
+    this.float(this.goal.x, this.goal.y - 44, `-${def.leak}`, C.danger, 28);
+    this.ring(this.goal.x, this.goal.y, 120, C.danger, 0.5, 5);
+  }
+
   private updateTowers(dt: number): void {
     for (const t of this.towers) {
       const def = TOWERS[t.def];
@@ -338,7 +391,7 @@ export class GameState {
 
       if (def.attack === 'aura') {
         if (t.cooldownLeft > 0) continue;
-        const targets = this.enemiesInRange(t.x, t.y, st.range, this.qArea);
+        const targets = this.enemiesInRange(t.x, t.y, st.range, this.qArea, def.hitsAir);
         if (!targets.length) continue;
         t.cooldownLeft = st.cooldown;
         t.pulse = 1;
@@ -359,7 +412,7 @@ export class GameState {
       if (target && (target.dead || dist2(t.x, t.y, target.x, target.y) > r2)) target = null;
       t.retargetIn -= dt;
       if (!target || t.retargetIn <= 0) {
-        target = this.findTarget(t.x, t.y, st.range);
+        target = this.findTarget(t.x, t.y, st.range, def.hitsAir);
         t.retargetIn = 0.12;
       }
       t.target = target;
@@ -457,7 +510,7 @@ export class GameState {
 
   /** Alle lebenden Gegner im Umkreis, geschrieben in die uebergebene
    *  Kratzflaeche - kein neues Array pro Aufruf. */
-  private enemiesInRange(x: number, y: number, range: number, out: Enemy[]): Enemy[] {
+  private enemiesInRange(x: number, y: number, range: number, out: Enemy[], airOk: boolean): Enemy[] {
     const cand = this.grid.query(x, y, range, this.qRaw);
     const r2 = range * range;
     const keep: Enemy[] = out;
@@ -465,19 +518,21 @@ export class GameState {
     for (let i = 0; i < cand.length; i++) {
       const e = cand[i];
       if (e.dead) continue;
+      if (!airOk && ENEMIES[e.def].flying) continue;
       if (dist2(x, y, e.x, e.y) <= r2) keep.push(e);
     }
     return keep;
   }
 
   /** Vorderstes Ziel in Reichweite - Standardstrategie in Tower Defense. */
-  private findTarget(x: number, y: number, range: number): Enemy | null {
+  private findTarget(x: number, y: number, range: number, airOk: boolean): Enemy | null {
     const cand = this.grid.query(x, y, range, this.qTarget);
     let best: Enemy | null = null;
     const r2 = range * range;
     for (let i = 0; i < cand.length; i++) {
       const e = cand[i];
       if (e.dead) continue;
+      if (!airOk && ENEMIES[e.def].flying) continue;
       if (dist2(x, y, e.x, e.y) > r2) continue;
       if (!best || e.travelled > best.travelled) best = e;
     }
@@ -533,7 +588,7 @@ export class GameState {
     const cand = this.grid.query(p.x, p.y, p.splash, this.qRaw);
     for (let i = 0; i < cand.length; i++) {
       const e = cand[i];
-      if (e.dead) continue;
+      if (e.dead || ENEMIES[e.def].flying) continue;
       const d2 = dist2(p.x, p.y, e.x, e.y);
       if (d2 > r2) continue;
       // Am Rand der Explosion nur die Haelfte.
@@ -566,6 +621,7 @@ export class GameState {
       this.float(e.x, e.y - 12, `+${def.bounty}`, C.gold, def.boss ? 30 : 20);
       this.spark(e.x, e.y, def.body, this.quality === 'hoch' ? (def.boss ? 44 : 12) : 6, def.boss ? 320 : 180);
       Sfx.play('kill');
+      if (def.split) this.splitEnemy(e, def.split);
       if (def.boss || def.radius >= 24) {
         // Kurzes Stocken macht den Tod schwerer Gegner spuerbar.
         this.hitstop = def.boss ? 0.16 : 0.05;

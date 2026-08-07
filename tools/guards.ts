@@ -114,6 +114,35 @@ for (const [id, e] of Object.entries(ENEMIES)) {
   if (e.armor >= bestFirst) warn(`Gegner ${id}: Panzerung ${e.armor} entwertet alle Stufe-1-Tuerme.`);
 }
 
+// Fliegende Gegner brauchen mindestens einen Turm, der sie erreicht -
+// sonst waere die Welle nicht loesbar, sondern kaputt.
+const airTowers = TOWER_ORDER.filter((id) => TOWERS[id].hitsAir);
+if (Object.values(ENEMIES).some((e) => e.flying) && airTowers.length === 0) {
+  fail('Es gibt fliegende Gegner, aber keinen Turm, der sie erreicht.');
+}
+if (airTowers.length === TOWER_ORDER.length && Object.values(ENEMIES).some((e) => e.flying)) {
+  warn('Alle Tuerme treffen Flieger - der Gegnertyp stellt damit keine Frage.');
+}
+
+// Zerfall darf nicht endlos sein.
+for (const [id, e] of Object.entries(ENEMIES)) {
+  if (!e.split) continue;
+  const child = ENEMIES[e.split.into];
+  if (!child) { fail(`Gegner ${id}: zerfaellt in unbekanntes "${e.split.into}".`); continue; }
+  if (e.split.into === id) fail(`Gegner ${id}: zerfaellt in sich selbst - endlose Kette.`);
+  if (child.split) fail(`Gegner ${id}: Bruchstueck ${child.id} zerfaellt erneut - Kette zu tief.`);
+  if (e.split.count < 2) fail(`Gegner ${id}: Zerfall in weniger als zwei Teile ergibt keinen Sinn.`);
+  if (e.split.hpFactor <= 0 || e.split.hpFactor >= 1) {
+    fail(`Gegner ${id}: Zerfallsanteil ${e.split.hpFactor} muss zwischen 0 und 1 liegen.`);
+  }
+  // Der Zerfall darf die Gesamtlebenspunkte nicht ueber das Original heben.
+  const total = e.split.count * e.split.hpFactor;
+  if (total >= 1) warn(`Gegner ${id}: Bruchstuecke haben zusammen ${Math.round(total * 100)} % der Huelle.`);
+  if (child.leak * e.split.count > e.leak * 2) {
+    warn(`Gegner ${id}: die Bruchstuecke richten zusammen mehr Schaden am Kristall an als das Original.`);
+  }
+}
+
 // ------------------------------------------------------------------ Wellen
 
 let prevPressure = 0;
@@ -127,8 +156,9 @@ WAVES.forEach((w, i) => {
     if (g.gap <= 0) fail(`Welle ${i + 1}: Abstand muss groesser als null sein.`);
     if (g.delay < 0) fail(`Welle ${i + 1}: negative Verzoegerung.`);
     const e = ENEMIES[g.enemy];
-    pressure += g.count * e.hp * (g.hpMul ?? 1);
-    maxLeak += g.count * e.leak;
+    const split = e.split ? e.split.count * e.split.hpFactor : 0;
+    pressure += g.count * e.hp * (1 + split) * (g.hpMul ?? 1);
+    maxLeak += g.count * (e.leak + (e.split ? e.split.count * ENEMIES[e.split.into].leak : 0));
     dur = Math.max(dur, g.delay + g.count * g.gap);
   }
   if (dur > 90) warn(`Welle ${i + 1}: dauert rechnerisch ${Math.round(dur)} s - sehr lang.`);

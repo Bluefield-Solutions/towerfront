@@ -237,3 +237,9 @@ html, body {
   background: transparent; color: var(--muted);
   border: 1px solid var(--edge); box-shadow: none;
 }
+
+.next-list .tag {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--void); background: var(--crystal);
+  padding: 1px 5px; border-radius: 4px; vertical-align: 1px;
+}

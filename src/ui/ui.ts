@@ -212,6 +212,7 @@ export class UI {
         st.splash ? row('Radius', Math.round(st.splash), nx?.splash ? Math.round(nx.splash) : undefined) : '',
         st.chains ? row('Sprünge', st.chains, nx?.chains) : '',
         st.slow ? row('Bremse', pct(st.slow), nx?.slow ? pct(nx.slow) : undefined) : '',
+        def.hitsAir ? '' : row('Luftziele', 'nein'),
         row('Erledigt', sel.kills),
       ].join('');
       this.iUp.disabled = !nx || s.gold < nx.cost;
@@ -233,7 +234,11 @@ export class UI {
     const parts: string[] = [];
     for (const [id, n] of counts) {
       const d = ENEMIES[id as keyof typeof ENEMIES];
-      parts.push(`<i><b style="background:${d.body}"></b>${n}× ${d.name}</i>`);
+      // Flieger und Zerfaller bekommen einen Zusatz - man soll vor dem Start
+      // wissen, wogegen man baut.
+      const mark = d.flying ? ' <span class="tag">Luft</span>'
+        : d.split ? ' <span class="tag">zerfällt</span>' : '';
+      parts.push(`<i><b style="background:${d.body}"></b>${n}× ${d.name}${mark}</i>`);
     }
     if (w.note) parts.push(`<i class="next-note">${w.note}</i>`);
     this.nList.innerHTML = parts.join('');

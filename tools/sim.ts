@@ -85,6 +85,7 @@ const strategies: Record<string, TowerId[]> = {
   'nur Frost': ['frost'],
   'nur Moerser': ['mortar'],
   'nur Prisma': ['prism'],
+  'moerserlastig': ['mortar', 'mortar', 'arrow'],
   'gemischt': ['arrow', 'arrow', 'mortar', 'frost', 'prism'],
 };
 
@@ -108,7 +109,14 @@ if (mixed.won && mixed.lives === START_LIVES) {
   errors.push('Gemischt gewinnt ohne einen einzigen Verlust - zu einfach.');
 }
 
-// 3. Keine einzelne Turmsorte darf das Spiel allein tragen.
+// 3. Ein Feld mit Uebergewicht am Boden muss an den Schwaermern scheitern -
+//    sonst waere der fliegende Gegner nur Dekoration.
+const ground = results.get('moerserlastig');
+if (ground && ground.won && ground.lives >= mixed.lives) {
+  errors.push('Moerserlastig kommt genauso weit wie gemischt - Flieger stellen keine Frage.');
+}
+
+// 4. Keine einzelne Turmsorte darf das Spiel allein tragen.
 for (const [name, r] of results) {
   if (name === 'gemischt') continue;
   if (r.won && r.lives > START_LIVES * 0.85) {
@@ -116,7 +124,7 @@ for (const [name, r] of results) {
   }
 }
 
-// 4. Effektbudget: was die Simulation erzeugt, muss der Browser zeichnen koennen.
+// 5. Effektbudget: was die Simulation erzeugt, muss der Browser zeichnen koennen.
 if (mixed.peakFx > 900) errors.push(`Effektspitze ${mixed.peakFx} ist zu hoch fuer das Handy.`);
 
 // Wo tut es weh - Grundlage fuer die naechste Feinjustierung.

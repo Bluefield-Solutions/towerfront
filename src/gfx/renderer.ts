@@ -323,6 +323,12 @@ export class Renderer {
     this.paintWeapon(def.id, level, x, y, -Math.PI / 2, 0, 0, time);
   }
 
+  /** Flughoehe eines Schwaermers: der Koerper schwebt ueber seinem Schatten,
+   *  damit sofort lesbar ist, warum der Moerser ihn nicht erwischt. */
+  private altitude(e: { wobble: number }, t: number, flying: boolean): number {
+    return flying ? 30 + Math.sin(t * 6 + e.wobble) * 3 : 0;
+  }
+
   private drawEnemies(s: GameState, hi: boolean): void {
     const ctx = this.ctx;
     const list = s.enemies;
@@ -331,7 +337,13 @@ export class Renderer {
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
       const def = ENEMIES[e.def];
-      drawSprite(ctx, getShadow(def.radius), e.x, e.y + def.radius * 0.85);
+      if (def.flying) {
+        ctx.globalAlpha = 0.55;
+        drawSprite(ctx, getShadow(def.radius), e.x, e.y + 6, 0.8);
+        ctx.globalAlpha = 1;
+      } else {
+        drawSprite(ctx, getShadow(def.radius), e.x, e.y + def.radius * 0.85);
+      }
     }
 
     if (hi) {
@@ -352,12 +364,15 @@ export class Renderer {
       const e = list[i];
       const def = ENEMIES[e.def];
       const wob = Math.sin(s.time * 9 + e.wobble) * 2;
-      const rotating = e.def === 'runner';
+      const alt = this.altitude(e, s.time, !!def.flying);
+      const rotating = e.def === 'runner' || !!def.flying;
 
       if (rotating || def.boss) {
         ctx.save();
-        ctx.translate(e.x, e.y);
-        if (rotating) {
+        ctx.translate(e.x, e.y - alt);
+        if (def.flying) {
+          ctx.rotate(Math.atan2(s.goal.y - e.y, s.goal.x - e.x));
+        } else if (rotating) {
           const nx = s.points[Math.min(e.seg + 1, s.points.length - 1)];
           ctx.rotate(Math.atan2(nx.y - e.y, nx.x - e.x));
         }
@@ -385,7 +400,7 @@ export class Renderer {
       if (e.slowLeft > 0) {
         ctx.strokeStyle = hexA(C.crystal, 0.7);
         ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(e.x, e.y, def.radius + 4, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(e.x, e.y - alt, def.radius + 4, 0, Math.PI * 2); ctx.stroke();
       }
     }
 
@@ -408,7 +423,8 @@ export class Renderer {
       const def = ENEMIES[e.def];
       const w = Math.max(def.radius * 2.1, def.boss ? 90 : 0);
       const h = def.boss ? 7 : 4;
-      ctx.fillRect(e.x - w / 2 - 1, e.y - def.radius - 13, w + 2, h + 2);
+      const a = this.altitude(e, s.time, !!def.flying);
+      ctx.fillRect(e.x - w / 2 - 1, e.y - a - def.radius - 13, w + 2, h + 2);
     }
     const tones = ['#5FD08A', C.gold, C.danger];
     for (let band = 0; band < 3; band++) {
@@ -423,7 +439,8 @@ export class Renderer {
         const def = ENEMIES[e.def];
         const w = Math.max(def.radius * 2.1, def.boss ? 90 : 0);
         const h = def.boss ? 7 : 4;
-        ctx.fillRect(e.x - w / 2, e.y - def.radius - 12, w * p, h);
+        const a = this.altitude(e, s.time, !!def.flying);
+        ctx.fillRect(e.x - w / 2, e.y - a - def.radius - 12, w * p, h);
       }
     }
   }

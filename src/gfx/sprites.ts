@@ -79,6 +79,50 @@ function paintEnemyBody(g: CanvasRenderingContext2D, id: EnemyId): void {
     g.beginPath(); g.arc(r * 0.4, 0, r * 0.28, 0, Math.PI * 2); g.fill();
     return;
   }
+  if (id === 'flyer') {
+    // Nach rechts zeigend: schmaler Rumpf mit zurueckgepfeilten Fluegeln.
+    g.fillStyle = def.trim;
+    g.beginPath();
+    g.moveTo(-r * 0.2, 0);
+    g.lineTo(-r * 1.2, -r * 1.05); g.lineTo(r * 0.35, -r * 0.3);
+    g.lineTo(r * 0.35, r * 0.3); g.lineTo(-r * 1.2, r * 1.05);
+    g.closePath(); g.fill();
+    g.fillStyle = def.body;
+    g.beginPath();
+    g.moveTo(r * 1.25, 0); g.lineTo(-r * 0.5, r * 0.5);
+    g.lineTo(-r * 0.75, 0); g.lineTo(-r * 0.5, -r * 0.5);
+    g.closePath(); g.fill();
+    g.fillStyle = '#FFFFFF';
+    g.beginPath(); g.arc(r * 0.5, 0, r * 0.18, 0, Math.PI * 2); g.fill();
+    return;
+  }
+  if (id === 'splitter') {
+    // Der Riss in der Mitte kuendigt an, was beim Tod passiert.
+    g.fillStyle = def.body;
+    g.beginPath();
+    for (let i = 0; i < 7; i++) {
+      const a = (i / 7) * Math.PI * 2 - Math.PI / 2;
+      const px = Math.cos(a) * r, py = Math.sin(a) * r;
+      if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
+    }
+    g.closePath(); g.fill();
+    g.strokeStyle = def.trim; g.lineWidth = 3; g.stroke();
+    g.strokeStyle = C.ink; g.lineWidth = 4;
+    g.beginPath();
+    g.moveTo(-r * 0.15, -r); g.lineTo(r * 0.12, -r * 0.2);
+    g.lineTo(-r * 0.12, r * 0.25); g.lineTo(r * 0.1, r);
+    g.stroke();
+    return;
+  }
+  if (id === 'splitling') {
+    g.fillStyle = def.body;
+    g.beginPath();
+    g.moveTo(0, -r); g.lineTo(r * 0.9, r * 0.7); g.lineTo(-r * 0.9, r * 0.7);
+    g.closePath(); g.fill();
+    g.fillStyle = def.trim;
+    g.beginPath(); g.arc(0, r * 0.05, r * 0.28, 0, Math.PI * 2); g.fill();
+    return;
+  }
   if (id === 'brute' || id === 'titan') {
     const sides = def.boss ? 8 : 6;
     g.fillStyle = def.body;

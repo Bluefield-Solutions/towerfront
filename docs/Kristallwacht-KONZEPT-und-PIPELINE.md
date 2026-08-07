@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v5 · 07.08.2026
+Stand: v6 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -201,9 +201,11 @@ müssen halten:
 
 1. Die gemischte Strategie muss gewinnen. Sonst ist die Kurve zu steil.
 2. Sie darf nicht ohne einen einzigen Verlust gewinnen. Sonst fehlt die Spannung.
-3. Keine einzelne Turmsorte darf allein mit mehr als 85 % Kristall gewinnen.
+3. Ein Feld mit Übergewicht am Boden muss an den Schwärmern scheitern. Sonst
+   wäre der fliegende Gegner nur Dekoration.
+4. Keine einzelne Turmsorte darf allein mit mehr als 85 % Kristall gewinnen.
    Das ist die Regel, die verhindert, dass ein Turm alle anderen überflüssig macht.
-4. Die Effektspitze muss unter 900 gleichzeitigen Objekten bleiben — was die
+5. Die Effektspitze muss unter 900 gleichzeitigen Objekten bleiben — was die
    Simulation erzeugt, muss das iPhone auch zeichnen können.
 
 Zusätzlich meldet sie, in welchen Wellen Kristall verloren geht. Das ist die
@@ -367,7 +369,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v5
+## 5. Stand v6
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -379,10 +381,21 @@ Angriffstyp trennt sie, nicht die Schadenshöhe:
 | Mörser | Flächenschlag | ballistische Granate mit Vorhalten, Schaden fällt zum Rand ab |
 | Prisma | Kettenblitz | Sofortstrahl, springt auf bis zu vier Nachbarn über |
 
-**Vier Gegnerarten**, jede mit einer eigenen Gegenfrage: der Schleicher als
+**Sieben Gegnerarten**, jede mit einer eigenen Gegenfrage: der Schleicher als
 Masse, die Husche als Tempo, der Koloss mit Panzerung 3, der Leerentitan mit
 Panzerung 6 und 55 % Bremsresistenz — der Grund, warum reines Bremsen nicht
-reicht.
+reicht. Dazu seit v6:
+
+- **Schwärmer** fliegen die Luftlinie zum Kristall, ohne dem Pfad zu folgen.
+  Der Mörser wirft im Bogen auf den Boden und erreicht sie nicht. Wer sein Feld
+  auf Flächenschaden gebaut hat, muss umbauen statt nachrüsten — die Simulation
+  bestätigt es: ein mörserlastiges Feld scheitert in Welle 15, während dasselbe
+  Feld gemischt gewinnt. Die Flughöhe ist sichtbar: der Körper schwebt über
+  seinem eigenen Schatten.
+- **Spalter** zerfallen beim Tod in zwei Späne, die an derselben Pfadstelle
+  weiterlaufen — schneller, kleiner, unbeschädigt. Der Riss im Panzer kündigt
+  es an, bevor es passiert. Ein Mörser, der einen Pulk Spalter auf einmal
+  erledigt, erzeugt sofort den doppelten Pulk.
 
 **Fünfzehn Wellen** mit Titanen in Welle 10 und 15.
 
@@ -416,6 +429,15 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v6:** Schwärmer und Spalter samt Wellenplan, der sie einführt.
+Türme tragen jetzt die Eigenschaft, ob sie Luftziele erreichen; der Datenwächter
+verlangt, dass es mindestens einen solchen Turm gibt, und warnt, wenn *alle*
+Türme Flieger treffen — dann stellt der Gegnertyp keine Frage mehr. Er prüft
+außerdem, dass eine Zerfallskette nicht endlos ist, nicht in sich selbst führt
+und die Bruchstücke zusammen nicht mehr Hülle mitbringen als das Original. In
+der Wellenvorschau sind Flieger und Zerfaller markiert, im Turm-Inspektor steht
+beim Mörser „Luftziele: nein".
 
 **Neu in v5 (Spielstand und Determinismus):** Eine laufende Partie wird alle
 zwei Sekunden gesichert, zusätzlich beim Wechsel in eine andere App und beim

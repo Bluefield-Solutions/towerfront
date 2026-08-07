@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
+<meta name="theme-color" content="#080B18" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Kristallwacht</title>
+</head>
+<body>
+<div id="app">
+  <canvas id="view"></canvas>
+
+  <header class="hud" id="hud">
+    <div class="stat">
+      <span class="lab">Gold</span>
+      <span class="val" id="v-gold">0</span>
+    </div>
+    <div class="stat">
+      <span class="lab">Kristall</span>
+      <span class="val danger" id="v-lives">0</span>
+    </div>
+    <div class="stat">
+      <span class="lab">Welle</span>
+      <span class="val" id="v-wave">0/0</span>
+    </div>
+    <div class="spacer"></div>
+    <button class="chip" id="b-speed" aria-label="Spieltempo">1×</button>
+    <button class="chip" id="b-pause" aria-label="Pause">Pause</button>
+  </header>
+
+  <div class="dock" id="dock">
+    <div class="build" id="build"></div>
+    <button class="go" id="b-wave">Welle starten</button>
+  </div>
+
+  <aside class="inspector" id="inspector" hidden>
+    <div class="insp-head">
+      <span class="insp-name" id="i-name">Turm</span>
+      <button class="x" id="i-close" aria-label="Schliessen">✕</button>
+    </div>
+    <dl class="insp-stats" id="i-stats"></dl>
+    <div class="insp-actions">
+      <button class="up" id="i-up">Ausbauen</button>
+      <button class="sell" id="i-sell">Verkaufen</button>
+    </div>
+  </aside>
+
+  <section class="screen" id="screen" hidden>
+    <div class="card">
+      <p class="eyebrow" id="s-eyebrow">Kapitel eins</p>
+      <h1 id="s-title">Kristallwacht</h1>
+      <p class="lead" id="s-text"></p>
+      <button class="primary" id="s-action">Beginnen</button>
+    </div>
+  </section>
+
+  <p class="rotate">Bitte das Gerät quer halten.</p>
+</div>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

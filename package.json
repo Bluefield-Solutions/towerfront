@@ -1,0 +1,24 @@
+{
+  "name": "kristallwacht",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "tsc": "tsc --noEmit",
+    "autarkie": "node tools/check-autarkie.mjs",
+    "sim": "tsx tools/sim.ts",
+    "gate": "npm run tsc && npm run build && npm run autarkie && npm run sim"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tsx": "^4.23.11",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21",
+    "vite-plugin-singlefile": "^2.3.3"
+  },
+  "type": "module"
+}

@@ -21,10 +21,12 @@ let lastPhase = state.phase;
  *  Herunter nach 2 s unter 48 fps, herauf erst nach 8 s ueber 57 fps.
  *  Die unterschiedlichen Schwellen verhindern ein Hin- und Herspringen. */
 let slowFor = 0, fastFor = 0;
+let fpsAvg = 60;
 function adaptQuality(dt: number): void {
+  const fps = 1 / Math.max(dt, 0.0001);
+  fpsAvg += (fps - fpsAvg) * 0.08; // geglaettet, damit die Anzeige nicht flackert
   const setting = getSettings().quality;
   if (setting !== 'auto') { state.quality = setting; return; }
-  const fps = 1 / Math.max(dt, 0.0001);
   if (fps < 48) { slowFor += dt; fastFor = 0; } else if (fps > 57) { fastFor += dt; slowFor = 0; }
   if (slowFor > 2 && state.quality === 'hoch') { state.quality = 'niedrig'; slowFor = 0; }
   if (fastFor > 8 && state.quality === 'niedrig') { state.quality = 'hoch'; fastFor = 0; }
@@ -40,6 +42,7 @@ const loop = new Loop(
       else ui.showScreen(state.phase);
     }
     ui.sync();
+    ui.perf(fpsAvg);
   },
   () => renderer.draw(state),
 );
@@ -48,6 +51,9 @@ const onResize = () => renderer.resize();
 window.addEventListener('resize', onResize);
 window.addEventListener('orientationchange', () => setTimeout(onResize, 250));
 window.addEventListener('pointerdown', () => Sfx.unlock(), { once: true });
+window.addEventListener('keydown', (ev) => {
+  if (ev.key === 'f' || ev.key === 'F') ui.togglePerf();
+});
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && state.phase === 'playing') state.paused = true;
 });

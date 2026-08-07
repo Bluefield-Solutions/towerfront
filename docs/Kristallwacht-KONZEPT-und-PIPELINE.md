@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v2 · 07.08.2026
+Stand: v3 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -99,6 +99,18 @@ Offscreen-Canvas gezeichnet und danach nur noch als Bild kopiert. Leuchteffekte
 sind vorgerenderte Scheiben, keine live berechneten Verläufe. Auf dem iPhone ist
 das der Unterschied zwischen flüssig und ruckelig.
 
+**Viertens: Umkreisabfragen laufen über ein Raster.** Zielsuche, Umkreispuls,
+Explosionsradius und Kettenblitz fragen nicht mehr jeden Gegner einzeln ab,
+sondern nur die Rasterzellen, die der Suchkreis berührt. Und jeder Turm merkt
+sich sein Ziel für 120 ms, statt es jedes Bild neu zu suchen — auch während er
+nachlädt und gar nicht schießen kann.
+
+**Fünftens: kurzlebige Objekte werden wiederverwendet.** Partikel, Geschosse,
+Ringe und Blitze kommen aus einem Lager und gehen dorthin zurück; Listen werden
+an Ort und Stelle zusammengeschoben statt bei jedem Bild neu angelegt. Die
+Aufräumläufe der Laufzeitumgebung sind genau die kurzen Hänger, die man auf dem
+Handy als Ruckeln wahrnimmt.
+
 **Drittens: die Safari-Falle bleibt zu.** Ein Canvas darf sich niemals selbst
 mit `drawImage` und `filter='blur'` oder `globalCompositeOperation='lighter'`
 zeichnen. Auf dem Desktop sieht das gut aus, auf iOS Safari wird das Bild nach
@@ -134,11 +146,26 @@ Ein Befehl fährt alles: `npm run gate`
 
 | # | Tor | Befehl | Bricht ab bei |
 |---|---|---|---|
-| 1 | Typen | `npm run tsc` | Typfehler, ungenutzte Variablen, fehlende Fälle |
+| 1 | Typen | `npm run tsc` | Typfehler, ungenutzte Variablen, fehlende Fälle — in `src` **und** `tools` |
 | 2 | Datenwächter | `npm run guards` | widersprüchlichen Inhaltsdaten (siehe unten) |
 | 3 | Balance | `npm run sim` | kaputter Schwierigkeitskurve (siehe unten) |
-| 4 | Build | `npm run build` | Bündelfehler |
-| 5 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id |
+| 4 | Messung | `npm run bench` | mehr als 4 ms Simulationszeit je Bild |
+| 5 | Rauchtest | `npm run smoke` | Fehler beim Zeichnen, in der Oberfläche oder bei der Eingabe |
+| 6 | Build | `npm run build` | Bündelfehler |
+| 7 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id |
+
+**Der Rauchtest** baut das echte `index.html` in einer jsdom-Umgebung auf,
+ersetzt den Zeichenkontext durch eine Attrappe und lässt Renderer, Oberfläche
+und Eingabe eine komplette Partie lang laufen — rund 33.000 gezeichnete Bilder,
+inklusive Bauvorschau, Turmauswahl, Endbildschirm, Neustart und Größenwechsel.
+Damit fällt beim Build auf, was bisher erst beim Antippen im Browser aufgefallen
+wäre. Er prüft außerdem, dass eine Partie überhaupt endet: hängt eine Welle,
+weil sie auf einen Gegner wartet, der nie stirbt, bricht das Tor ab.
+
+**Die Messung** baut den schlimmsten Fall — jeder Bauplatz belegt und voll
+ausgebaut, die letzte Welle unterwegs — und misst die reine Simulationszeit je
+Bild. Bei 60 Bildern pro Sekunde stehen 16,7 ms zur Verfügung, das Zeichnen
+braucht davon den größeren Teil; 4 ms sind die Obergrenze für die Simulation.
 
 **Der Datenwächter** liest Karten, Türme, Gegner und Wellen und prüft, was
 TypeScript nicht sehen kann: Kreuzt sich der Pfad? Liegt eine Deko-Zelle darauf?
@@ -233,6 +260,34 @@ Abend.
 
 ---
 
+### 3.5 Was die Messung über v3 ergeben hat
+
+Die erste Fassung des Rasters war **langsamer** als die naive Schleife: 0,164 ms
+gegenüber 0,145 ms. Bei 55 Gegnern sind 9.405 Distanzrechnungen auf einem
+flachen Array für die Laufzeitumgebung nichts, während das Raster Verwaltung
+kostet. Die Messung hat also eine Optimierung widerlegt, die auf dem Papier
+richtig aussah.
+
+Der eigentliche Gewinn lag woanders: **jeder Turm hat jedes Bild ein Ziel
+gesucht, auch während er nachlud.** Mit zwischengespeichertem Ziel fiel die Zeit
+auf 0,120 ms — ein Sechstel weniger als vorher, ohne dass sich am Spielgefühl
+etwas ändert.
+
+Das Raster bleibt trotzdem drin, aber aus einem anderen Grund als geplant: bei
+320 Gegnern ist es 15 % schneller als die Vollprüfung, und die Kurve öffnet sich
+weiter, je größer die Karten werden. Es kauft Luft für Phase C, keinen Gewinn
+für heute.
+
+| Messpunkt | ohne Raster | mit Raster |
+|---|---|---|
+| 171 Türme, 55 Gegner | 0,113 ms | 0,116 ms |
+| 171 Türme, 320 Gegner | 0,397 ms | 0,338 ms |
+
+Das ist der Sinn der Messung im Tor: Sie verhindert, dass Optimierungen aus
+dem Bauch heraus als Verbesserung durchgehen.
+
+---
+
 ## 4. Die Arbeitsteilung
 
 **Ich übernehme:** Konzeption, Architektur, gesamten Code, Grafik, Balance,
@@ -247,10 +302,12 @@ Nach jeder Lieferung bekommst du:
 - die vollständige, testbare HTML-Datei
 - vier nächste Schritte, nach Nutzen sortiert, als antippbare Auswahl **und**
   als nummerierte Liste zum Abtippen
+- darunter **immer mindestens einen rein technischen Schritt** — Leistung,
+  Architektur, Aufräumen, Testautomatisierung, Ausbau der Pipeline
 
 ---
 
-## 5. Stand v2
+## 5. Stand v3
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -299,6 +356,13 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v3 (Technik):** Raster für alle Umkreisabfragen, zwischengespeicherte
+Turmziele, Objektlager für Partikel, Geschosse, Ringe und Blitze, Listen werden
+an Ort und Stelle zusammengeschoben. Dazu eine zuschaltbare Technikanzeige
+(Titelbildschirm oder Taste F) mit Bildrate, Qualitätsstufe und Objektzahlen —
+ausgeschaltet kostet sie nichts. Und zwei neue Tore in der Pipeline: der
+kopflose Rauchtest und die Leistungsmessung.
 
 Was noch fehlt: mehr als eine Karte, fliegende Gegner, Fähigkeiten auf Abruf,
 Endlosmodus. Das komplette Rückstandsverzeichnis steht in der zweiten Datei.

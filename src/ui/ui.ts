@@ -31,6 +31,8 @@ export class UI {
   private sText = $('s-text');
   private sBest = $('s-best');
   private sAction = $<HTMLButtonElement>('s-action');
+  private sPerf = $<HTMLButtonElement>('s-perf');
+  private perfBox = $('perf');
 
   private btns = new Map<TowerId, HTMLButtonElement>();
   private lastSig = '';
@@ -79,7 +81,12 @@ export class UI {
       if (this.s.selectedTower) this.s.sell(this.s.selectedTower);
     });
     this.sAction.addEventListener('click', () => { Sfx.unlock(); this.s.reset(); });
+    this.sPerf.addEventListener('click', () => this.togglePerf());
 
+    if (getSettings().perf) {
+      this.sPerf.textContent = 'Technikanzeige ausschalten';
+      this.perfBox.hidden = false;
+    }
     this.showScreen('title');
   }
 
@@ -113,6 +120,26 @@ export class UI {
   }
 
   hideScreen(): void { this.screen.hidden = true; }
+
+  togglePerf(): void {
+    const on = !getSettings().perf;
+    saveSettings({ perf: on });
+    this.sPerf.textContent = on ? 'Technikanzeige ausschalten' : 'Technikanzeige einschalten';
+    this.perfBox.hidden = !on;
+  }
+
+  /** Kleine Technikanzeige. Wird nur beschrieben, wenn sie sichtbar ist -
+   *  ausgeschaltet kostet sie nichts. */
+  perf(fps: number): void {
+    if (!getSettings().perf) { if (!this.perfBox.hidden) this.perfBox.hidden = true; return; }
+    this.perfBox.hidden = false;
+    const s = this.s;
+    const warn = fps < 50 ? ' warn' : '';
+    this.perfBox.innerHTML =
+      `<b class="${warn.trim()}">${fps.toFixed(0)} fps</b>   Qualitaet ${s.quality}\n` +
+      `Gegner ${s.enemies.length}   Tuerme ${s.towers.length}\n` +
+      `Geschosse ${s.projectiles.length}   Partikel ${s.particles.length}`;
+  }
 
   /** Jeden Frame gerufen, schreibt aber nur bei echten Aenderungen ins DOM. */
   sync(): void {

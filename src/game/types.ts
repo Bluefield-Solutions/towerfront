@@ -27,6 +27,8 @@ export interface Tower {
   angle: number;
   recoil: number;
   pulse: number;          // Sichtbarer Umkreispuls beim Frostturm
+  target: Enemy | null;   // Zwischengespeichertes Ziel
+  retargetIn: number;     // Sekunden bis zur naechsten Zielsuche
   kills: number;
   damageDone: number;
 }

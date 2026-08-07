@@ -3,6 +3,8 @@ const KEY = 'kristallwacht.v1';
 export interface Settings {
   sound: boolean;
   quality: 'auto' | 'hoch' | 'niedrig';
+  /** Kleine Technikanzeige: Bildrate, Objektzahlen, Qualitaetsstufe. */
+  perf: boolean;
 }
 
 export interface Best {
@@ -13,7 +15,7 @@ export interface Best {
 interface Store { settings: Settings; best: Best; }
 
 const DEFAULTS: Store = {
-  settings: { sound: true, quality: 'auto' },
+  settings: { sound: true, quality: 'auto', perf: false },
   best: { wave: 0, lives: 0 },
 };
 

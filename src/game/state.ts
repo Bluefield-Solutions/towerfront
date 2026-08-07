@@ -1,4 +1,4 @@
-import { COLS, ROWS, TILE, START_GOLD, START_LIVES, C } from '../data/config';
+import { COLS, ROWS, TILE, WORLD_W, WORLD_H, START_GOLD, START_LIVES, C } from '../data/config';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import { TOWERS, sellValue, type TowerId } from '../data/towers';
 import { WAVES, WAVE_HP_RAMP, EARLY_BONUS_MAX, EARLY_BONUS_WINDOW } from '../data/waves';
@@ -7,6 +7,8 @@ import type { Vec } from '../core/math';
 import { dist, dist2 } from '../core/math';
 import { Sfx } from '../core/audio';
 import { recordRun } from '../core/storage';
+import { SpatialGrid } from '../core/spatialgrid';
+import { Pool, compact } from '../core/pool';
 import type {
   Bolt, Enemy, FloatText, Particle, Phase, Projectile, Quality, Ring, Tower,
 } from './types';
@@ -56,6 +58,39 @@ export class GameState {
   private nextId = 1;
   private towerAt = new Map<number, Tower>();
 
+  /** Raster fuer alle Umkreisabfragen. Zellenkante = Kachelgroesse.
+   *  Wird einmal pro Simulationsschritt neu befuellt. */
+  private grid = new SpatialGrid<Enemy>(160, WORLD_W, WORLD_H);
+  /** Getrennte Kratzflaechen, damit sich verschachtelte Abfragen nicht
+   *  gegenseitig ueberschreiben. */
+  private qRaw: Enemy[] = [];
+  private qTarget: Enemy[] = [];
+  private qArea: Enemy[] = [];
+  private qChain: Enemy[] = [];
+  private chainSeen = new Set<number>();
+  private chainPts: Vec[] = [];
+
+  /** Objektlager fuer kurzlebige Dinge. Gegner werden bewusst NICHT gelagert:
+   *  Geschosse halten Verweise auf ihr Ziel, ein wiederverwendeter Gegner
+   *  koennte von einem alten Geschoss faelschlich als lebendig gelesen werden. */
+  private particlePool = new Pool<Particle>(() => ({
+    x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 1, size: 2, color: '#fff', gravity: 0,
+  }), 900);
+  private projectilePool = new Pool<Projectile>(() => ({
+    kind: 'homing', x: 0, y: 0, sx: 0, sy: 0, tx: 0, ty: 0, target: null, owner: null,
+    speed: 0, damage: 0, slow: 0, slowTime: 0, splash: 0, color: '#fff',
+    t: 0, dur: 1, life: 0, dead: true,
+  }), 200);
+  private ringPool = new Pool<Ring>(() => ({
+    x: 0, y: 0, r: 0, rMax: 1, color: '#fff', life: 0, maxLife: 1, width: 1,
+  }), 120);
+  private floatPool = new Pool<FloatText>(() => ({
+    x: 0, y: 0, text: '', color: '#fff', life: 0, size: 20,
+  }), 80);
+  private boltPool = new Pool<Bolt>(() => ({
+    pts: [], color: '#fff', life: 0, maxLife: 1,
+  }), 40);
+
   constructor() {
     for (const c of pathCells(this.map)) this.pathSet.add(cellKey(c.x, c.y));
     for (const b of this.map.blocked) this.blockedSet.add(cellKey(b.x, b.y));
@@ -83,7 +118,7 @@ export class GameState {
     const t: Tower = {
       id: this.nextId++, def: id, cx, cy, x: c.x, y: c.y,
       level: 1, cooldownLeft: 0, angle: -Math.PI / 2, recoil: 0, pulse: 0,
-      kills: 0, damageDone: 0,
+      target: null, retargetIn: 0, kills: 0, damageDone: 0,
     };
     this.towers.push(t);
     this.towerAt.set(cellKey(cx, cy), t);
@@ -108,7 +143,8 @@ export class GameState {
     const def = TOWERS[t.def];
     const value = sellValue(def, t.level);
     this.gold += value;
-    this.towers = this.towers.filter((o) => o !== t);
+    t.target = null;
+    compact(this.towers, (o) => o === t);
     this.towerAt.delete(cellKey(t.cx, t.cy));
     if (this.selectedTower === t) this.selectedTower = null;
     this.float(t.x, t.y - 10, `+${value}`, C.gold, 22);
@@ -200,6 +236,7 @@ export class GameState {
     }
 
     this.updateEnemies(dt);
+    this.rebuildGrid();
     this.updateTowers(dt);
     this.updateProjectiles(dt);
     this.decayFx(dt);
@@ -261,9 +298,18 @@ export class GameState {
       }
     }
     if (leaked) Sfx.play('leak');
-    if (this.enemies.some((e) => e.dead)) {
-      this.enemies = this.enemies.filter((e) => !e.dead);
+    if (compact(this.enemies, (e) => e.dead) > 0) {
+      // Verweise auf entfernte Gegner loesen.
+      for (let i = 0; i < this.towers.length; i++) {
+        const tw = this.towers[i];
+        if (tw.target && tw.target.dead) tw.target = null;
+      }
     }
+  }
+
+  private rebuildGrid(): void {
+    this.grid.clear();
+    for (let i = 0; i < this.enemies.length; i++) this.grid.insert(this.enemies[i]);
   }
 
   private updateTowers(dt: number): void {
@@ -276,17 +322,31 @@ export class GameState {
 
       if (def.attack === 'aura') {
         if (t.cooldownLeft > 0) continue;
-        const targets = this.enemiesInRange(t.x, t.y, st.range);
+        const targets = this.enemiesInRange(t.x, t.y, st.range, this.qArea);
         if (!targets.length) continue;
         t.cooldownLeft = st.cooldown;
         t.pulse = 1;
         this.ring(t.x, t.y, st.range, def.accent, 0.45, 3);
         Sfx.play('frost');
-        for (const e of targets) this.damage(e, st.damage, t, def.accent, st.slow ?? 0, st.slowTime ?? 0);
+        for (let i = 0; i < targets.length; i++) {
+          this.damage(targets[i], st.damage, t, def.accent, st.slow ?? 0, st.slowTime ?? 0);
+        }
         continue;
       }
 
-      const target = this.findTarget(t.x, t.y, st.range);
+      // Die Zielsuche lief bisher jedes Bild fuer jeden Turm - auch waehrend
+      // der Turm nachlaedt und gar nicht schiessen kann. Das Ziel wird nun
+      // zwischengespeichert und nur alle 120 ms neu gesucht, oder sofort,
+      // wenn es tot oder aus der Reichweite gelaufen ist.
+      const r2 = st.range * st.range;
+      let target = t.target;
+      if (target && (target.dead || dist2(t.x, t.y, target.x, target.y) > r2)) target = null;
+      t.retargetIn -= dt;
+      if (!target || t.retargetIn <= 0) {
+        target = this.findTarget(t.x, t.y, st.range);
+        t.retargetIn = 0.12;
+      }
+      t.target = target;
       if (!target) continue;
 
       const aim = def.attack === 'splash'
@@ -321,12 +381,14 @@ export class GameState {
     color: string, speed: number,
   ): Projectile {
     const d = dist(t.x, t.y, aim.x, aim.y);
-    return {
-      kind, x: t.x, y: t.y, sx: t.x, sy: t.y, tx: aim.x, ty: aim.y,
-      target, owner: t, speed, damage: st.damage,
-      slow: st.slow ?? 0, slowTime: st.slowTime ?? 0, splash: st.splash ?? 0,
-      color, t: 0, dur: Math.max(0.12, d / speed), life: 3, dead: false,
-    };
+    const p = this.projectilePool.obtain();
+    p.kind = kind;
+    p.x = t.x; p.y = t.y; p.sx = t.x; p.sy = t.y; p.tx = aim.x; p.ty = aim.y;
+    p.target = target; p.owner = t; p.speed = speed; p.damage = st.damage;
+    p.slow = st.slow ?? 0; p.slowTime = st.slowTime ?? 0; p.splash = st.splash ?? 0;
+    p.color = color; p.t = 0; p.dur = Math.max(0.12, d / speed);
+    p.life = 3; p.dead = false;
+    return p;
   }
 
   /** Vorhalten: wohin laeuft der Gegner in der Flugzeit des Geschosses. */
@@ -346,8 +408,11 @@ export class GameState {
     t: Tower, first: Enemy, damage: number, jumps: number,
     falloff: number, range: number, color: string,
   ): void {
-    const pts: Vec[] = [{ x: t.x, y: t.y }];
-    const seen = new Set<number>();
+    const seen = this.chainSeen;
+    seen.clear();
+    const pts = this.chainPts;
+    pts.length = 0;
+    pts.push({ x: t.x, y: t.y });
     let cur: Enemy | null = first;
     let dmg = damage;
     const jumpRange = range * 0.62;
@@ -358,31 +423,44 @@ export class GameState {
       dmg *= falloff;
       let next: Enemy | null = null;
       let bestD = jumpRange * jumpRange;
-      for (const e of this.enemies) {
+      const cand = this.grid.query(cur.x, cur.y, jumpRange, this.qChain);
+      for (let k = 0; k < cand.length; k++) {
+        const e = cand[k];
         if (e.dead || seen.has(e.id)) continue;
         const d = dist2(cur.x, cur.y, e.x, e.y);
         if (d < bestD) { bestD = d; next = e; }
       }
       cur = next;
     }
-    this.bolts.push({ pts, color, life: 0.14, maxLife: 0.14 });
+    const bolt = this.boltPool.obtain();
+    bolt.pts.length = 0;
+    for (let i = 0; i < pts.length; i++) bolt.pts.push(pts[i]);
+    bolt.color = color; bolt.life = 0.14; bolt.maxLife = 0.14;
+    this.bolts.push(bolt);
   }
 
-  private enemiesInRange(x: number, y: number, range: number): Enemy[] {
+  /** Alle lebenden Gegner im Umkreis, geschrieben in die uebergebene
+   *  Kratzflaeche - kein neues Array pro Aufruf. */
+  private enemiesInRange(x: number, y: number, range: number, out: Enemy[]): Enemy[] {
+    const cand = this.grid.query(x, y, range, this.qRaw);
     const r2 = range * range;
-    const out: Enemy[] = [];
-    for (const e of this.enemies) {
+    const keep: Enemy[] = out;
+    keep.length = 0;
+    for (let i = 0; i < cand.length; i++) {
+      const e = cand[i];
       if (e.dead) continue;
-      if (dist2(x, y, e.x, e.y) <= r2) out.push(e);
+      if (dist2(x, y, e.x, e.y) <= r2) keep.push(e);
     }
-    return out;
+    return keep;
   }
 
   /** Vorderstes Ziel in Reichweite - Standardstrategie in Tower Defense. */
   private findTarget(x: number, y: number, range: number): Enemy | null {
+    const cand = this.grid.query(x, y, range, this.qTarget);
     let best: Enemy | null = null;
     const r2 = range * range;
-    for (const e of this.enemies) {
+    for (let i = 0; i < cand.length; i++) {
+      const e = cand[i];
       if (e.dead) continue;
       if (dist2(x, y, e.x, e.y) > r2) continue;
       if (!best || e.travelled > best.travelled) best = e;
@@ -422,7 +500,12 @@ export class GameState {
         p.y += (dy / d) * step;
       }
     }
-    if (any) this.projectiles = this.projectiles.filter((p) => !p.dead);
+    if (any) {
+      compact(this.projectiles, (p) => p.dead, (p) => {
+        p.target = null; p.owner = null;
+        this.projectilePool.release(p);
+      });
+    }
   }
 
   private explode(p: Projectile): void {
@@ -431,7 +514,9 @@ export class GameState {
     this.spark(p.x, p.y, p.color, this.quality === 'hoch' ? 16 : 7, 220);
     this.shake = Math.min(1, this.shake + 0.18);
     const r2 = p.splash * p.splash;
-    for (const e of this.enemies) {
+    const cand = this.grid.query(p.x, p.y, p.splash, this.qRaw);
+    for (let i = 0; i < cand.length; i++) {
+      const e = cand[i];
       if (e.dead) continue;
       const d2 = dist2(p.x, p.y, e.x, e.y);
       if (d2 > r2) continue;
@@ -484,41 +569,47 @@ export class GameState {
         p.x += p.vx * dt; p.y += p.vy * dt;
         p.vx *= 0.93; p.vy *= 0.93;
       }
-      this.particles = this.particles.filter((p) => p.life > 0);
+      compact(this.particles, (p) => p.life <= 0, (p) => this.particlePool.release(p));
     }
     if (this.floats.length) {
       for (const f of this.floats) { f.life -= dt; f.y -= 28 * dt; }
-      this.floats = this.floats.filter((f) => f.life > 0);
+      compact(this.floats, (f) => f.life <= 0, (f) => this.floatPool.release(f));
     }
     if (this.rings.length) {
       for (const r of this.rings) { r.life -= dt; r.r = r.rMax * (1 - r.life / r.maxLife); }
-      this.rings = this.rings.filter((r) => r.life > 0);
+      compact(this.rings, (r) => r.life <= 0, (r) => this.ringPool.release(r));
     }
     if (this.bolts.length) {
       for (const b of this.bolts) b.life -= dt;
-      this.bolts = this.bolts.filter((b) => b.life > 0);
+      compact(this.bolts, (b) => b.life <= 0, (b) => this.boltPool.release(b));
     }
   }
 
   float(x: number, y: number, text: string, color: string, size: number): void {
-    this.floats.push({ x, y, text, color, life: 1.1, size });
+    const f = this.floatPool.obtain();
+    f.x = x; f.y = y; f.text = text; f.color = color; f.life = 1.1; f.size = size;
+    this.floats.push(f);
   }
 
   ring(x: number, y: number, rMax: number, color: string, life: number, width: number): void {
     if (this.quality === 'niedrig' && this.rings.length > 12) return;
-    this.rings.push({ x, y, r: 0, rMax, color, life, maxLife: life, width });
+    const r = this.ringPool.obtain();
+    r.x = x; r.y = y; r.r = 0; r.rMax = rMax; r.color = color;
+    r.life = life; r.maxLife = life; r.width = width;
+    this.rings.push(r);
   }
 
   spark(x: number, y: number, color: string, n: number, spread: number): void {
     if (this.quality === 'niedrig' && this.particles.length > 160) return;
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2;
-      const s = spread * (0.3 + Math.random() * 0.7);
-      this.particles.push({
-        x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s,
-        life: 0.35 + Math.random() * 0.35, maxLife: 0.7,
-        size: 2 + Math.random() * 3, color, gravity: 120,
-      });
+      const sp = spread * (0.3 + Math.random() * 0.7);
+      const p = this.particlePool.obtain();
+      p.x = x; p.y = y;
+      p.vx = Math.cos(a) * sp; p.vy = Math.sin(a) * sp;
+      p.life = 0.35 + Math.random() * 0.35; p.maxLife = 0.7;
+      p.size = 2 + Math.random() * 3; p.color = color; p.gravity = 120;
+      this.particles.push(p);
     }
   }
 
@@ -529,8 +620,10 @@ export class GameState {
     this.lives = START_LIVES;
     this.waveIndex = 0;
     this.waveActive = false;
-    this.enemies = []; this.towers = []; this.projectiles = [];
-    this.particles = []; this.floats = []; this.rings = []; this.bolts = [];
+    this.enemies.length = 0; this.towers.length = 0; this.projectiles.length = 0;
+    this.particles.length = 0; this.floats.length = 0;
+    this.rings.length = 0; this.bolts.length = 0;
+    this.grid.clear();
     this.towerAt.clear();
     this.pending = [];
     this.selectedTower = null;

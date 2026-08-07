@@ -210,3 +210,24 @@ html, body {
   .tower-btn .n { font-size: 11.5px; }
   .next { max-width: 58%; bottom: calc(66px + var(--sab)); }
 }
+
+/* ------------------------------------------------------- Technikanzeige */
+
+.perf {
+  position: absolute; top: calc(52px + var(--sat)); left: calc(12px + var(--sal));
+  padding: 6px 10px; border-radius: 9px;
+  background: rgba(6, 9, 20, 0.78); border: 1px solid rgba(127, 231, 224, 0.18);
+  font-size: 10.5px; line-height: 1.5; color: var(--muted);
+  font-variant-numeric: tabular-nums; white-space: pre;
+  pointer-events: none;
+}
+.perf b { color: var(--crystal); font-weight: 700; }
+.perf b.warn { color: var(--danger); }
+
+.link {
+  display: block; margin: 14px auto 0; padding: 6px 10px; cursor: pointer;
+  background: none; border: none; font-family: var(--ui);
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); text-decoration: underline; text-underline-offset: 4px;
+}
+.link:hover { color: var(--text); }

@@ -13,10 +13,18 @@ import { clearGame, type SaveGame } from './save';
 import { SpatialGrid } from '../core/spatialgrid';
 import { Pool, compact } from '../core/pool';
 import type {
-  Bolt, Enemy, FloatText, Meteor, Particle, Phase, Projectile, Quality, Ring, Tower,
+  Bolt, Enemy, FloatText, Meteor, Particle, Phase, Projectile, Quality,
+  Ring, RunStats, Tower,
 } from './types';
 
 interface PendingSpawn { time: number; enemy: EnemyId; hpMul: number; }
+
+function emptyStats(): RunStats {
+  return {
+    goldEarned: 0, goldSpent: 0, damage: 0, damageBy: {},
+    kills: 0, leaksByWave: [], abilityUses: {}, duration: 0, towersBuilt: 0,
+  };
+}
 
 export class GameState {
   readonly map = MAP_SPIRALHAIN;
@@ -67,6 +75,9 @@ export class GameState {
 
   /** Zaehler fuer die Turmschicht. Aendert er sich, wird sie neu gebacken. */
   towersVersion = 0;
+
+  /** Zahlen der laufenden Partie. */
+  stats: RunStats = emptyStats();
 
   crystalPulse = 0;
   crystalHit = 0;
@@ -138,6 +149,8 @@ export class GameState {
     const def = TOWERS[id];
     if (!this.canBuild(cx, cy) || this.gold < def.levels[0].cost) return false;
     this.gold -= def.levels[0].cost;
+    this.stats.goldSpent += def.levels[0].cost;
+    this.stats.towersBuilt++;
     const c = cellCenter(cx, cy);
     const t: Tower = {
       id: this.nextId++, def: id, cx, cy, x: c.x, y: c.y,
@@ -158,6 +171,7 @@ export class GameState {
     const cost = def.levels[t.level].cost;
     if (this.gold < cost) return false;
     this.gold -= cost;
+    this.stats.goldSpent += cost;
     t.level++;
     this.towersVersion++;
     this.ring(t.x, t.y, 66, def.accent, 0.45, 4);
@@ -179,7 +193,8 @@ export class GameState {
     Sfx.play('sell');
   }
 
-  stats(t: Tower) { return TOWERS[t.def].levels[t.level - 1]; }
+  /** Werte der aktuellen Ausbaustufe eines Turms. */
+  towerStats(t: Tower) { return TOWERS[t.def].levels[t.level - 1]; }
 
   // ---------------------------------------------------------------- Wellen
 
@@ -200,6 +215,7 @@ export class GameState {
     const bonus = this.earlyBonus;
     if (bonus > 0) {
       this.gold += bonus;
+      this.stats.goldEarned += bonus;
       this.float(this.goal.x, this.goal.y - 70, `Frueh gestartet  +${bonus}`, C.gold, 22);
     }
     const wave = WAVES[this.waveIndex];
@@ -219,6 +235,7 @@ export class GameState {
   private finishWave(): void {
     const wave = WAVES[this.waveIndex];
     this.gold += wave.bonus;
+    this.stats.goldEarned += wave.bonus;
     this.float(this.goal.x, this.goal.y - 56, `Welle geschafft  +${wave.bonus}`, C.gold, 26);
     this.waveIndex++;
     this.waveActive = false;
@@ -251,6 +268,7 @@ export class GameState {
     if (!this.ready(id)) return false;
     const def = ABILITIES[id];
     this.abilityCd[id] = def.cooldown;
+    this.stats.abilityUses[id] = (this.stats.abilityUses[id] ?? 0) + 1;
     this.aiming = null;
 
     if (id === 'meteor') {
@@ -321,6 +339,7 @@ export class GameState {
 
     const dt = dtReal * this.speed;
     this.time += dt;
+    this.stats.duration += dt;
     this.crystalPulse += dt;
     if (this.shake > 0) this.shake = Math.max(0, this.shake - dtReal * 3);
     if (this.crystalHit > 0) this.crystalHit = Math.max(0, this.crystalHit - dtReal * 2);
@@ -462,6 +481,8 @@ export class GameState {
     e.leaked = true; e.dead = true;
     this.lives -= def.leak;
     this.leakedTotal++;
+    this.stats.leaksByWave[this.waveIndex] =
+      (this.stats.leaksByWave[this.waveIndex] ?? 0) + def.leak;
     this.crystalHit = 1;
     this.shake = Math.min(1, this.shake + 0.55);
     this.float(this.goal.x, this.goal.y - 44, `-${def.leak}`, C.danger, 28);
@@ -471,7 +492,7 @@ export class GameState {
   private updateTowers(dt: number): void {
     for (const t of this.towers) {
       const def = TOWERS[t.def];
-      const st = this.stats(t);
+      const st = this.towerStats(t);
       if (t.recoil > 0) t.recoil = Math.max(0, t.recoil - dt * 6);
       if (t.pulse > 0) t.pulse = Math.max(0, t.pulse - dt * 2.2);
       t.cooldownLeft -= dt;
@@ -694,6 +715,9 @@ export class GameState {
     e.hp -= dmg;
     e.hitFlash = 1;
     if (owner) owner.damageDone += dmg;
+    this.stats.damage += dmg;
+    const src = owner ? owner.def : 'meteor';
+    this.stats.damageBy[src] = (this.stats.damageBy[src] ?? 0) + dmg;
     if (slow > 0) {
       const eff = slow * (1 - def.slowResist);
       e.slowFactor = Math.min(e.slowFactor, 1 - eff);
@@ -704,6 +728,8 @@ export class GameState {
     if (e.hp <= 0) {
       e.dead = true;
       this.gold += def.bounty;
+      this.stats.goldEarned += def.bounty;
+      this.stats.kills++;
       if (owner) owner.kills++;
       this.float(e.x, e.y - 12, `+${def.bounty}`, C.gold, def.boss ? 30 : 20);
       this.spark(e.x, e.y, def.body, this.quality === 'hoch' ? (def.boss ? 44 : 12) : 6, def.boss ? 320 : 180);
@@ -800,6 +826,7 @@ export class GameState {
     this.leakedTotal = 0;
     this.hitstop = 0;
     this.shake = 0;
+    this.stats = emptyStats();
     this.phase = 'playing';
   }
 
@@ -808,7 +835,7 @@ export class GameState {
   /** Nur das, was den Verlauf bestimmt. Reine Darstellung bleibt draussen. */
   snapshot(): SaveGame {
     return {
-      v: 2,
+      v: 3,
       seed: this.seed,
       rng: this.rng.state,
       gold: this.gold,
@@ -821,6 +848,7 @@ export class GameState {
       time: this.time,
       speed: this.speed,
       hitstop: this.hitstop,
+      stats: this.stats,
       abilityCd: ABILITY_ORDER.map((id) => [id, this.abilityCd[id]] as [AbilityId, number]),
       meteors: this.meteors.map((m) => [m.x, m.y, m.t, m.dur, m.radius, m.damage]) as
         [number, number, number, number, number, number][],
@@ -838,7 +866,7 @@ export class GameState {
    *  Stand nicht zu den aktuellen Daten passt - dann wird er verworfen statt
    *  halb geladen. */
   restore(save: SaveGame): boolean {
-    if (save.v !== 2) return false;
+    if (save.v !== 3) return false;
     if (save.waveIndex < 0 || save.waveIndex > WAVES.length) return false;
     for (const [id] of save.towers) if (!(id in TOWERS)) return false;
     for (const [id] of save.enemies) if (!(id in ENEMIES)) return false;
@@ -854,6 +882,7 @@ export class GameState {
     this.idleTime = save.idleTime;
     this.leakedTotal = save.leaked;
     this.hitstop = save.hitstop ?? 0;
+    if (save.stats) this.stats = { ...emptyStats(), ...save.stats };
     this.time = save.time;
     this.speed = save.speed === 2 || save.speed === 3 ? save.speed : 1;
     this.pending = save.pending.map(([time, enemy, hpMul]) => ({ time, enemy, hpMul }));

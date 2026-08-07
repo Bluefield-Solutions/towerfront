@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v9 · 07.08.2026
+Stand: nach v10 · 07.08.2026
 
 Legende Nutzen: ●●● hoch · ●● mittel · ● gering
 Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
@@ -54,7 +54,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | D4 | Gegner-Todesanimation statt reiner Partikel | ●● | M |
 | D5 | Menüübergänge, Einblenden statt hartem Umschalten | ●● | S |
 | D6 | Einstellungsdialog: Lautstärke, Effektdichte, Bewegungsreduktion | ●● | S |
-| D7 | Statistik nach der Partie: Schaden pro Turm, beste Platzierung | ●●● | M |
+| D12 | Auswertung auch zwischen den Wellen abrufbar, nicht nur am Ende | ●● | S |
+| D13 | Schadensverlauf über die Wellen als kleine Kurve in der Auswertung | ●● | M |
 | D8 | Tastaturbedienung vollständig, sichtbarer Fokus | ● | S |
 | D11 | Einstellungsdialog mit fester Qualitätsstufe statt nur Automatik | ● | S |
 | D10 | Eigene Turm- und Gegnernamen in der Wellenvorschau antippbar für Details | ● | S |
@@ -71,6 +72,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S20 | Statistikwerte mussten in den Spielstand, sonst beginnt die Auswertung nach dem Fortsetzen bei null | Von Anfang an im Fingerabdruck der Determinismus-Prüfung — dieselbe Lehre wie S16, diesmal vorher berücksichtigt. |
 | S19 | `.screen { display: grid }` schlug das `hidden`-Attribut — die Titelkarte lag unsichtbar über allem und machte das Spiel auf dem Handy unbedienbar. Neun grüne Tore haben es nicht gefunden | Behoben mit `[hidden] { display: none !important }`, vom Autarkie-Check erzwungen. Grundsätzlich: die Tore prüfen Verhalten, nicht Darstellung. Stapelreihenfolge, Kaskade und Berührungsflächen brauchen weiter den Blick aufs Gerät. |
 | S18 | Einführung kann auf zwei Arten kaputtgehen: Satz zeigt auf einen entfernten Knopf, oder ein Schritt ist unerfüllbar | Beides prüft jetzt der Rauchtest, beide Gegenproben schlagen an. Neue Schritte brauchen einen hinterlegten Handgriff, sonst meldet er es. |
 | S16 | Determinismus-Prüfung fiel beim Einbau der Fähigkeiten durch: Meteor im Anflug, Nachladestand der Türme und Trefferpause fehlten im Spielstand | Drei Felder, die man beim Schreiben übersieht. Faustregel: alles, was eine bereits bezahlte Entscheidung oder eine laufende Uhr ist, gehört in `snapshot()`. |
@@ -85,6 +87,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | Version | Inhalt |
 |---|---|
 | v1 | Grundgerüst: Karte, Pfad, zwei Türme mit drei Stufen, drei Gegner, zehn Wellen, Gold, Leben, Sieg/Niederlage, HUD, Inspektor, Partikel, Kristall mit Rissen, Pipeline mit vier Toren |
+| v10 | Auswertung nach der Partie: Kennzahlen, Schadensanteil je Quelle als Balken, stärkster Turm mit Feldposition, Wellen mit Kristallverlust, Fähigkeitsnutzung · Werte wandern im Spielstand mit · Rauchtest prüft vier Gleichungen der Auswertung · `stats()` in `towerStats()` umbenannt |
 | v9 | Fehlerbehebung: `[hidden] { display: none !important }` — versteckte Ebenen fingen zuvor jeden Tipp ab und machten das Spiel auf dem Handy unbedienbar · Autarkie-Check erzwingt die Regel · `-webkit-backdrop-filter` · `color-mix` durch festen Wert ersetzt |
 | v8 | Einführung im Spiel: sieben kontextbezogene Sätze über die ersten drei Wellen, das gemeinte Bedienelement pulsiert, auf dem Feld zeigt ein Pfeil auf den empfohlenen Bauplatz · überspringbar und auf dem Titelbildschirm wieder einschaltbar · läuft beim Fortsetzen nie an · Rauchtest prüft, dass jeder Schritt ein existierendes Element trifft und erfüllbar ist · Wächter prüft den empfohlenen Bauplatz |
 | v7 | Zwei Fähigkeiten auf Abruf: Meteor (gezielt, 40 s, trifft Boden und Luft, sichtbarer Anflug mit Zielring) und Frostschlag (sofort, 32 s, bremst das ganze Feld drei Sekunden) · Fähigkeitsleiste mit Abklingbalken · Tasten Q und W · Wächterprüfungen für Fähigkeiten · Simulationsbot nutzt sie wie ein aufmerksamer Spieler · Spielstand um Meteore im Anflug, Nachladestand und Trefferpause ergänzt |

@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v9 · 07.08.2026
+Stand: v10 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -282,6 +282,26 @@ Abend.
 
 ---
 
+### 3.11 Eine Auswertung, die auch stimmt
+
+Eine Statistik, die schöne Zahlen zeigt, aber die falschen, ist schlimmer als
+keine — man trifft Entscheidungen danach. Der Rauchtest prüft deshalb nach jeder
+Partie vier Gleichungen:
+
+- Es wurde überhaupt Schaden und Gold verbucht.
+- Es stehen nicht mehr Türme im Feld, als gebaut wurden.
+- Die Summe der Schadensquellen ergibt den Gesamtschaden.
+- Die verbuchten Kristallverluste je Welle ergeben zusammen den fehlenden
+  Kristall.
+
+Gegenprobe: Bucht man den Meteorschaden absichtlich nicht mit, meldet er
+*„Schaden nach Quelle (16.256) passt nicht zur Summe (18.198)."*
+
+Und weil die Zahlen im Spielstand mitwandern müssen — sonst fängt die
+Auswertung nach dem Fortsetzen bei null an —, stehen sie jetzt auch im
+Fingerabdruck der Determinismus-Prüfung. Lässt man sie beim Sichern weg, fällt
+sie durch. Dieselbe Lehre wie in v7, diesmal von Anfang an berücksichtigt.
+
 ### 3.10 Der Fehler, den neun Tore nicht gefunden haben
 
 Bis v8 war das Spiel auf dem Handy unbedienbar. Nach dem Tippen auf „Beginnen"
@@ -445,7 +465,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v9
+## 5. Stand v10
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -505,6 +525,15 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v10 — Auswertung nach der Partie.** Auf dem Sieg- und
+Niederlagebildschirm steht jetzt, was tatsächlich getragen hat: Wellen, Kristall,
+Dauer, gebaute Türme, erledigte Gegner, verbautes Gold. Darunter ein Balken je
+Schadensquelle mit Anteil in Prozent, der stärkste Turm mit Stufe und Feldposition,
+die Wellen, in denen Kristall verloren ging, und wie oft die Fähigkeiten liefen.
+
+Das kostet fast nichts: die Türme führten Abschüsse und Schaden ohnehin schon.
+Neu ist nur, dass die Zahlen an einer Stelle zusammenlaufen und lesbar werden.
 
 **Neu in v9 — Fehlerbehebung Bedienbarkeit.** Versteckte Ebenen verschwinden
 jetzt wirklich; bis v8 lag die Titelkarte unsichtbar über dem Spielfeld und fing

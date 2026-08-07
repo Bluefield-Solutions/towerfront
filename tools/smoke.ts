@@ -207,6 +207,25 @@ step('Partie durchspielen', () => {
 // zum Beispiel eine Welle, die auf einen Gegner wartet, der nie stirbt.
 if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenger in der Wellenlogik.');
 
+// Die Auswertung darf nicht nur hübsch sein, sie muss stimmen.
+{
+  const st = state.stats;
+  if (st.damage <= 0) problems.push('Auswertung: kein Schaden mitgeschrieben.');
+  if (st.goldSpent <= 0) problems.push('Auswertung: kein ausgegebenes Gold mitgeschrieben.');
+  if (st.towersBuilt < state.towers.length) {
+    problems.push(`Auswertung: ${st.towersBuilt} gebaute Tuerme, aber ${state.towers.length} stehen im Feld.`);
+  }
+  const bySource = Object.values(st.damageBy).reduce((a, b) => a + b, 0);
+  if (Math.abs(bySource - st.damage) > 1) {
+    problems.push(`Auswertung: Schaden nach Quelle (${Math.round(bySource)}) passt nicht zur Summe (${Math.round(st.damage)}).`);
+  }
+  const leaked = st.leaksByWave.reduce((a, b) => a + (b ?? 0), 0);
+  const lost = 20 - state.lives;
+  if (state.phase !== 'playing' && leaked < lost) {
+    problems.push(`Auswertung: ${leaked} Kristallverlust verbucht, aber ${lost} fehlen.`);
+  }
+}
+
 // Endbildschirm und Neustart muessen ebenfalls durchlaufen.
 step('Endbildschirm', () => {
   ui.showScreen(state.phase === 'won' ? 'won' : 'lost');

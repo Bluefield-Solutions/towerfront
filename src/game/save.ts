@@ -1,6 +1,7 @@
 import type { EnemyId } from '../data/enemies';
 import type { TowerId } from '../data/towers';
 import type { AbilityId } from '../data/abilities';
+import type { RunStats } from './types';
 
 /** Spielstand einer laufenden Partie.
  *
@@ -11,7 +12,7 @@ import type { AbilityId } from '../data/abilities';
  *  reine Darstellung. Ein Geschoss, das beim Sichern unterwegs war, geht beim
  *  Fortsetzen verloren; das ist ein halber Treffer und keine Entscheidung. */
 export interface SaveGame {
-  v: 2;
+  v: 3;
   seed: number;
   rng: number;
   gold: number;
@@ -35,6 +36,9 @@ export interface SaveGame {
   /** Rest der Trefferpause - sie haelt die Simulation an und gehoert deshalb
    *  in den Stand, obwohl sie sich wie ein Effekt anfuehlt. */
   hitstop: number;
+  /** Die mitgeschriebenen Zahlen. Ohne sie faengt die Auswertung nach dem
+   *  Fortsetzen bei null an - der Lauf waere derselbe, der Bericht nicht. */
+  stats: RunStats;
   /** [Turmart, Spalte, Zeile, Stufe, Abschuesse, Schaden, Nachladerest, Zielsuche] */
   towers: [TowerId, number, number, number, number, number, number, number][];
   /** [Gegnerart, x, y, hp, hpMax, Segment, Strecke, Bremsfaktor, Bremsrest, Wackeln] */
@@ -53,7 +57,7 @@ export function loadGame(): SaveGame | null {
     if (!raw) return null;
     const p = JSON.parse(raw) as SaveGame;
     // Ein Stand aus einer aelteren Fassung wird verworfen statt halb geladen.
-    if (p.v !== 2 || !Array.isArray(p.towers) || !Array.isArray(p.enemies)) return null;
+    if (p.v !== 3 || !Array.isArray(p.towers) || !Array.isArray(p.enemies)) return null;
     return p;
   } catch {
     return null;

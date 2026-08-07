@@ -68,6 +68,7 @@ function fingerprint(s: GameState): string {
   mix(s.gold); mix(s.lives); mix(s.waveIndex); mix(s.rng.state / 1000);
   mix(s.enemies.length); mix(s.towers.length); mix(s.meteors.length);
   mix(s.abilityCd.meteor * 10); mix(s.abilityCd.freeze * 10);
+  mix(s.stats.damage); mix(s.stats.goldSpent); mix(s.stats.kills); mix(s.stats.duration);
   for (const e of s.enemies) { mix(e.x); mix(e.y); mix(e.hp); mix(e.travelled); }
   for (const t of s.towers) { mix(t.cx); mix(t.cy); mix(t.level); mix(t.kills); }
   return (h >>> 0).toString(16);

@@ -262,7 +262,7 @@ export class Renderer {
     const sel = s.selectedTower;
     if (sel) {
       const def = TOWERS[sel.def];
-      const st = s.stats(sel);
+      const st = s.towerStats(sel);
       ctx.fillStyle = hexA(def.accent, 0.12);
       ctx.beginPath(); ctx.arc(sel.x, sel.y, st.range, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = hexA(def.accent, 0.75); ctx.lineWidth = 3;
@@ -275,7 +275,7 @@ export class Renderer {
         ctx.strokeStyle = hexA(def.accent, t.pulse * 0.5);
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(t.x, t.y, s.stats(t).range * (1 - t.pulse * 0.15), 0, Math.PI * 2);
+        ctx.arc(t.x, t.y, s.towerStats(t).range * (1 - t.pulse * 0.15), 0, Math.PI * 2);
         ctx.stroke();
       }
       this.paintWeapon(t.def, t.level, t.x, t.y, t.angle, t.recoil, t.pulse, s.crystalPulse);

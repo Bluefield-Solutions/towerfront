@@ -35,6 +35,7 @@ export class UI {
   private sTitle = $('s-title');
   private sText = $('s-text');
   private sBest = $('s-best');
+  private sStats = $('s-stats');
   private sAction = $<HTMLButtonElement>('s-action');
   private sResume = $<HTMLButtonElement>('s-resume');
   private sPerf = $<HTMLButtonElement>('s-perf');
@@ -162,6 +163,8 @@ export class UI {
       this.sResume.hidden = true;
     }
 
+    if (kind === 'title') this.sStats.hidden = true; else this.renderStats();
+
     if (kind === 'title') {
       this.sEyebrow.textContent = `Spiralhain · Karte 1 · ${VERSION}`;
       this.sTitle.textContent = 'Kristallwacht';
@@ -184,6 +187,66 @@ export class UI {
   }
 
   hideScreen(): void { this.screen.hidden = true; }
+
+  /** Auswertung nach der Partie. Alle Zahlen wurden waehrend des Spiels
+   *  ohnehin mitgeschrieben - hier werden sie nur lesbar gemacht. */
+  private renderStats(): void {
+    const s = this.s;
+    const st = s.stats;
+    if (!st.damage) { this.sStats.hidden = true; return; }
+    this.sStats.hidden = false;
+
+    const mins = Math.floor(st.duration / 60);
+    const secs = Math.floor(st.duration % 60);
+    const figs = [
+      ['Wellen', `${s.phase === 'won' ? s.totalWaves : Math.max(0, s.waveNumber - 1)}/${s.totalWaves}`],
+      ['Kristall', `${s.lives}/20`],
+      ['Dauer', `${mins}:${String(secs).padStart(2, '0')}`],
+      ['Türme', String(st.towersBuilt)],
+      ['Erledigt', String(st.kills)],
+      ['Gold verbaut', String(st.goldSpent)],
+    ].map(([l, v]) => `<div class="fig"><span>${l}</span><strong>${v}</strong></div>`).join('');
+
+    // Woran der Schaden hing - die eigentlich interessante Zahl.
+    const sources: [string, string, number][] = TOWER_ORDER.map(
+      (id) => [TOWERS[id].name, TOWERS[id].accent, st.damageBy[id] ?? 0],
+    );
+    if (st.damageBy.meteor) sources.push(['Meteor', '#F08A3C', st.damageBy.meteor]);
+    sources.sort((a, b) => b[2] - a[2]);
+    const bars = sources
+      .filter(([, , v]) => v > 0)
+      .map(([name, tone, v]) => {
+        const pct = Math.round((v / st.damage) * 100);
+        return `<dt>${name}</dt>` +
+          `<div class="track"><i style="width:${pct}%;background:${tone}"></i></div>` +
+          `<dd>${pct} %</dd>`;
+      }).join('');
+
+    // Der Turm mit dem meisten Schaden - meist verrät seine Lage mehr als er selbst.
+    let best = s.towers[0] ?? null;
+    for (const t of s.towers) if (t.damageDone > (best?.damageDone ?? 0)) best = t;
+    const bestLine = best && best.damageDone > 0
+      ? `<p class="note-line">Stärkster Turm: <b>${TOWERS[best.def].name} Stufe ${best.level}</b> ` +
+        `auf Feld ${best.cx + 1}/${best.cy + 1} — ${Math.round(best.damageDone)} Schaden, ` +
+        `${best.kills} erledigt.</p>`
+      : '';
+
+    const leaks = st.leaksByWave
+      .map((v, i) => (v > 0 ? `Welle ${i + 1} (−${v})` : ''))
+      .filter(Boolean);
+    const leakLine = leaks.length
+      ? `<p class="note-line">Kristall verloren in: <b>${leaks.join(', ')}</b>.</p>`
+      : `<p class="note-line">Kein einziger Gegner ist durchgekommen.</p>`;
+
+    const uses = (st.abilityUses.meteor ?? 0) + (st.abilityUses.freeze ?? 0);
+    const abilityLine = `<p class="note-line">Fähigkeiten eingesetzt: <b>${uses}</b> ` +
+      `(Meteor ${st.abilityUses.meteor ?? 0}, Frostschlag ${st.abilityUses.freeze ?? 0}).</p>`;
+
+    this.sStats.innerHTML =
+      `<div class="figs">${figs}</div>` +
+      (bars ? `<h2>Schaden nach Quelle</h2><dl class="bars">${bars}</dl>` : '') +
+      bestLine + leakLine + abilityLine;
+  }
 
   /** Die Einfuehrung ruecht weiter, sobald der Handgriff gemacht wurde.
    *  Sie blockiert nichts und wartet auf nichts ausser auf den Spieler. */
@@ -347,7 +410,7 @@ export class UI {
 
     if (sel) {
       const def = TOWERS[sel.def];
-      const st = s.stats(sel);
+      const st = s.towerStats(sel);
       const nx = def.levels[sel.level];
       this.insp.hidden = false;
       this.iName.textContent = `${def.name} · Stufe ${sel.level}`;

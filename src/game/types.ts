@@ -97,5 +97,22 @@ export interface Meteor {
   damage: number;
 }
 
+/** Mitgeschriebene Zahlen einer Partie. Sie kosten fast nichts - die Tuerme
+ *  fuehrten Abschuesse und Schaden ohnehin schon - und ergeben am Ende eine
+ *  Auswertung, die zeigt, was tatsaechlich getragen hat. */
+export interface RunStats {
+  goldEarned: number;
+  goldSpent: number;
+  damage: number;
+  /** Schaden nach Quelle: Turmart oder 'meteor'. */
+  damageBy: Record<string, number>;
+  kills: number;
+  /** Kristallverlust je Welle, Index = Wellennummer minus eins. */
+  leaksByWave: number[];
+  abilityUses: Record<string, number>;
+  duration: number;
+  towersBuilt: number;
+}
+
 export type Phase = 'title' | 'playing' | 'won' | 'lost';
 export type Quality = 'hoch' | 'niedrig';

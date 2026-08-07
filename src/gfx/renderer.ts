@@ -22,6 +22,8 @@ export class Renderer {
   /** Partikel werden nach Farbe und Deckkraft gebuendelt, damit nicht fuer
    *  jedes einzelne die Zeichenfarbe neu gesetzt werden muss. */
   private pBatch = new Map<string, number[]>();
+  /** Markierung der Einfuehrung auf dem Spielfeld. */
+  coachHint: 'build' | 'tower' | null = null;
   scale = 1; offX = 0; offY = 0;
   private cssW = 0; private cssH = 0;
 
@@ -78,6 +80,7 @@ export class Renderer {
     this.drawMeteors(s, hi);
     this.drawGhost(s);
     this.drawAim(s);
+    this.drawCoach(s);
     this.drawFloats(s);
 
     ctx.restore();
@@ -587,6 +590,38 @@ export class Renderer {
     ctx.moveTo(x - 16, y); ctx.lineTo(x + 16, y);
     ctx.moveTo(x, y - 16); ctx.lineTo(x, y + 16);
     ctx.stroke();
+    ctx.restore();
+  }
+
+  /** Zeigt auf den empfohlenen Bauplatz oder auf den ersten Turm. Ein Pfeil,
+   *  der sich bewegt - der Satz in der Blase braucht eine Adresse im Bild. */
+  private drawCoach(s: GameState): void {
+    if (!this.coachHint) return;
+    let x: number, y: number, r: number;
+    if (this.coachHint === 'build') {
+      const h = s.map.hint;
+      if (!s.canBuild(h.x, h.y)) return;
+      x = h.x * TILE + TILE / 2; y = h.y * TILE + TILE / 2; r = TILE * 0.52;
+    } else {
+      const t = s.towers[0];
+      if (!t) return;
+      x = t.x; y = t.y; r = TILE * 0.5;
+    }
+    const ctx = this.ctx;
+    const beat = 0.5 + 0.5 * Math.sin(s.crystalPulse * 4);
+    ctx.save();
+    ctx.strokeStyle = hexA(C.crystal, 0.5 + beat * 0.5);
+    ctx.lineWidth = 4;
+    ctx.setLineDash([12, 9]);
+    ctx.lineDashOffset = -s.crystalPulse * 30;
+    ctx.beginPath(); ctx.arc(x, y, r + beat * 4, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+
+    const ay = y - r - 26 - beat * 8;
+    ctx.fillStyle = hexA(C.crystal, 0.85 + beat * 0.15);
+    ctx.beginPath();
+    ctx.moveTo(x, ay + 20); ctx.lineTo(x - 13, ay); ctx.lineTo(x + 13, ay);
+    ctx.closePath(); ctx.fill();
     ctx.restore();
   }
 

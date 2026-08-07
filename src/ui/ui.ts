@@ -6,6 +6,7 @@ import { Sfx } from '../core/audio';
 import { getBest, getSettings, saveSettings } from '../core/storage';
 import { spriteCount } from '../gfx/sprites';
 import { clearGame, loadGame } from '../game/save';
+import { TUTORIAL, type TutorialStep } from '../game/tutorial';
 import type { GameState } from '../game/state';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -38,10 +39,15 @@ export class UI {
   private sResume = $<HTMLButtonElement>('s-resume');
   private sPerf = $<HTMLButtonElement>('s-perf');
   private perfBox = $('perf');
+  private sTut = $<HTMLButtonElement>('s-tut');
+  private coach = $('coach');
+  private coachText = $('coach-text');
 
   private btns = new Map<TowerId, HTMLButtonElement>();
   private skillBtns = new Map<AbilityId, HTMLButtonElement>();
   private lastSkillSig = '';
+  private tutStep = -1;
+  private tutTarget: HTMLElement | null = null;
   private lastSig = '';
   private lastBonus = -1;
 
@@ -50,6 +56,7 @@ export class UI {
       const def = TOWERS[id];
       const b = document.createElement('button');
       b.className = 'tower-btn';
+      b.id = `tb-${id}`;
       b.title = def.blurb;
       b.innerHTML =
         `<span class="n">${def.name}</span>` +
@@ -68,6 +75,7 @@ export class UI {
       const def = ABILITIES[id];
       const b = document.createElement('button');
       b.className = 'skill-btn';
+      b.id = `sk-${id}`;
       b.title = def.blurb;
       b.style.setProperty('--tone', def.color);
       b.innerHTML =
@@ -105,8 +113,21 @@ export class UI {
     this.iSell.addEventListener('click', () => {
       if (this.s.selectedTower) this.s.sell(this.s.selectedTower);
     });
-    this.sAction.addEventListener('click', () => { Sfx.unlock(); this.s.reset(); });
+    this.sAction.addEventListener('click', () => {
+      Sfx.unlock();
+      this.s.reset();
+      // Die Einfuehrung laeuft nur bei einem neuen Spiel, nie beim Fortsetzen.
+      this.tutStep = getSettings().tutorial ? 0 : -1;
+    });
     this.sPerf.addEventListener('click', () => this.togglePerf());
+    this.sTut.addEventListener('click', () => {
+      const on = !getSettings().tutorial;
+      saveSettings({ tutorial: on });
+      this.sTut.textContent = on
+        ? 'Einführung beim nächsten Spiel zeigen'
+        : 'Einführung ist ausgeschaltet';
+    });
+    $('coach-skip').addEventListener('click', () => this.endTutorial());
     this.sResume.addEventListener('click', () => {
       Sfx.unlock();
       const save = loadGame();
@@ -115,6 +136,7 @@ export class UI {
       if (!save || !this.s.restore(save)) { clearGame(); this.sResume.hidden = true; }
     });
 
+    if (!getSettings().tutorial) this.sTut.textContent = 'Einführung ist ausgeschaltet';
     if (getSettings().perf) {
       this.sPerf.textContent = 'Technikanzeige ausschalten';
       this.perfBox.hidden = false;
@@ -163,6 +185,87 @@ export class UI {
 
   hideScreen(): void { this.screen.hidden = true; }
 
+  /** Die Einfuehrung ruecht weiter, sobald der Handgriff gemacht wurde.
+   *  Sie blockiert nichts und wartet auf nichts ausser auf den Spieler. */
+  private updateTutorial(): void {
+    if (this.tutStep < 0) return;
+    if (this.s.phase !== 'playing') { this.hideCoach(); return; }
+
+    while (this.tutStep < TUTORIAL.length && TUTORIAL[this.tutStep].done(this.s)) {
+      this.tutStep++;
+    }
+    if (this.tutStep >= TUTORIAL.length) { this.endTutorial(); return; }
+
+    const step = TUTORIAL[this.tutStep];
+    if (step.wait?.(this.s)) { this.hideCoach(); return; }
+    this.showCoach(step);
+  }
+
+  private showCoach(step: TutorialStep): void {
+    if (this.coachText.dataset.step !== step.id) {
+      this.coachText.dataset.step = step.id;
+      this.coachText.textContent = step.text;
+      this.coach.hidden = false;
+      this.markTarget(step.target);
+    }
+    this.placeCoach(step.target);
+  }
+
+  private markTarget(target: string): void {
+    if (this.tutTarget) delete this.tutTarget.dataset.coach;
+    this.tutTarget = target === 'world' ? null : document.getElementById(target);
+    if (this.tutTarget) this.tutTarget.dataset.coach = '1';
+  }
+
+  /** Die Blase legt sich ueber das gemeinte Element: bei der Leiste unten
+   *  darueber, sonst mittig unter die Kopfzeile. */
+  private placeCoach(target: string): void {
+    const el = target === 'world' ? null : document.getElementById(target);
+    const w = this.coach.offsetWidth || 280;
+    if (!el) {
+      this.coach.style.left = `${Math.max(12, (window.innerWidth - w) / 2)}px`;
+      this.coach.style.top = '64px';
+      this.coach.style.bottom = 'auto';
+      return;
+    }
+    const r = el.getBoundingClientRect();
+    const left = Math.min(
+      Math.max(12, r.left + r.width / 2 - w / 2),
+      Math.max(12, window.innerWidth - w - 12),
+    );
+    this.coach.style.left = `${left}px`;
+    if (r.top > window.innerHeight / 2) {
+      this.coach.style.bottom = `${window.innerHeight - r.top + 10}px`;
+      this.coach.style.top = 'auto';
+    } else {
+      this.coach.style.top = `${r.bottom + 10}px`;
+      this.coach.style.bottom = 'auto';
+    }
+  }
+
+  private hideCoach(): void {
+    if (!this.coach.hidden) this.coach.hidden = true;
+    this.coachText.dataset.step = '';
+    if (this.tutTarget) { delete this.tutTarget.dataset.coach; this.tutTarget = null; }
+  }
+
+  private endTutorial(): void {
+    this.tutStep = -1;
+    this.hideCoach();
+    saveSettings({ tutorial: false });
+    this.sTut.textContent = 'Einführung ist ausgeschaltet';
+  }
+
+  /** Worauf die Einfuehrung gerade auf dem Spielfeld zeigt. Der Renderer
+   *  setzt daraufhin eine Markierung - im HTML liesse sie sich nicht auf eine
+   *  Gitterzelle legen. */
+  get coachHint(): 'build' | 'tower' | null {
+    if (this.tutStep < 0 || this.coach.hidden) return null;
+    const step = TUTORIAL[this.tutStep];
+    if (!step || step.target !== 'world') return null;
+    return step.id === 'place' ? 'build' : 'tower';
+  }
+
   togglePerf(): void {
     const on = !getSettings().perf;
     saveSettings({ perf: on });
@@ -193,6 +296,8 @@ export class UI {
       s.buildChoice, s.phase, getSettings().sound,
       sel ? `${sel.id}:${sel.level}` : '-',
     ].join('|');
+
+    this.updateTutorial();
 
     // Abklingzeiten laufen fortlaufend - eigene, gröbere Prüfung.
     const skillSig = ABILITY_ORDER

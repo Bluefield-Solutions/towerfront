@@ -5,6 +5,8 @@ export interface Settings {
   quality: 'auto' | 'hoch' | 'niedrig';
   /** Kleine Technikanzeige: Bildrate, Objektzahlen, Qualitaetsstufe. */
   perf: boolean;
+  /** Einfuehrung beim naechsten neuen Spiel zeigen. */
+  tutorial: boolean;
 }
 
 export interface Best {
@@ -15,7 +17,7 @@ export interface Best {
 interface Store { settings: Settings; best: Best; }
 
 const DEFAULTS: Store = {
-  settings: { sound: true, quality: 'auto', perf: false },
+  settings: { sound: true, quality: 'auto', perf: false, tutorial: true },
   best: { wave: 0, lives: 0 },
 };
 

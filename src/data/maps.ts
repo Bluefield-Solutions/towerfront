@@ -8,6 +8,8 @@ export interface GameMap {
   waypoints: Vec[];
   /** Zellen, auf denen nicht gebaut werden darf (Deko/Felsen). */
   blocked: Vec[];
+  /** Empfohlener erster Bauplatz - die Einfuehrung zeigt darauf. */
+  hint: Vec;
 }
 
 /** Karte 1 "Spiralhain": Der Pfad windet sich einmal um den Herzkristall,
@@ -23,6 +25,7 @@ export const MAP_SPIRALHAIN: GameMap = {
     { x: 3, y: 4 },
     { x: 11, y: 4 },
   ],
+  hint: { x: 12, y: 2 },
   blocked: [
     { x: 16, y: 1 }, { x: 17, y: 2 },
     { x: 0, y: 5 }, { x: 1, y: 8 },

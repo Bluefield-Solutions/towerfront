@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v7 · 07.08.2026
+Stand: v8 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -282,6 +282,26 @@ Abend.
 
 ---
 
+### 3.9 Wie eine Einführung geprüft wird
+
+Eine Einführung kann auf zwei Arten kaputtgehen, und beide merkt man erst, wenn
+ein Spieler feststeckt: Der Satz zeigt auf einen Knopf, den es nicht mehr gibt.
+Oder ein Schritt verlangt etwas, das gar nicht eintreten kann.
+
+Der Rauchtest prüft beides. Er sucht für jeden Schritt das genannte
+Bedienelement im echten HTML. Und er führt für jeden Schritt genau den
+Handgriff aus, den der Satz verlangt, und verlangt, dass der Schritt danach als
+erledigt gilt.
+
+Gegenproben: Benennt man den Meteor-Knopf um, meldet er
+*„Einführung `meteor` zeigt auf `sk-meteorX` — das Element fehlt."* Macht man
+den Ausbau-Schritt unerfüllbar, meldet er *„Einführung `upgrade` gilt nach dem
+verlangten Handgriff nicht als erledigt."*
+
+Dazu prüft der Datenwächter, dass der empfohlene Bauplatz auf der Karte
+überhaupt bebaubar ist und am Pfad liegt — ein Pfeil auf eine unbrauchbare
+Zelle wäre schlimmer als kein Pfeil.
+
 ### 3.8 Was die Determinismus-Prüfung in v7 gefunden hat
 
 Beim Einbau der Fähigkeiten fiel das Tor sofort durch: Sichern und Laden mitten
@@ -385,7 +405,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v7
+## 5. Stand v8
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -445,6 +465,20 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v8 — die Einführung.** Sie erklärt nichts vorab. Sie zeigt jeweils
+einen Satz zum richtigen Zeitpunkt, hebt hervor, was gemeint ist, und
+verschwindet, sobald der Handgriff gemacht wurde. Kein Weiter-Knopf, keine
+Textwand, kein Modus, der das Spiel anhält — sieben Sätze über die ersten drei
+Wellen verteilt:
+
+Bogenturm wählen → auf eine helle Fläche drücken (mit Pfeil auf einen
+empfohlenen Platz am Pfad) → Welle starten → Turm ausbauen statt einen zweiten
+danebenzustellen → Frühstart-Bonus → Meteor gegen Flieger → Wellenvorschau lesen.
+
+Wer sie nicht braucht, tippt „Einführung überspringen"; sie kommt dann nicht
+wieder und lässt sich auf dem Titelbildschirm wieder einschalten. Beim
+Fortsetzen einer gesicherten Partie läuft sie nie an.
 
 **Neu in v7 — zwei Fähigkeiten auf Abruf.** Bisher war die Welle selbst reine
 Zuschauerzeit: gebaut wurde davor, danach lief es ohne dich. Zwei Fähigkeiten

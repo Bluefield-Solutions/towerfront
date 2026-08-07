@@ -54,6 +54,17 @@ for (const map of MAPS) {
     if (pathKeys.has(cellKey(b.x, b.y))) fail(`${map.id}: Deko-Zelle ${b.x}/${b.y} liegt auf dem Pfad.`);
     if (b.x < 0 || b.y < 0 || b.x >= COLS || b.y >= ROWS) fail(`${map.id}: Deko-Zelle ${b.x}/${b.y} ausserhalb.`);
   }
+  const hk = cellKey(map.hint.x, map.hint.y);
+  if (pathKeys.has(hk) || blockKeys.has(hk)) {
+    fail(`${map.id}: der empfohlene Bauplatz ${map.hint.x}/${map.hint.y} ist nicht bebaubar.`);
+  }
+  // Er soll auch etwas taugen: mindestens eine Pfadzelle direkt daneben.
+  let touches = false;
+  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    if (pathKeys.has(cellKey(map.hint.x + dx, map.hint.y + dy))) touches = true;
+  }
+  if (!touches) warn(`${map.id}: der empfohlene Bauplatz liegt nicht am Pfad.`);
+
   let build = 0;
   for (let y = 0; y < ROWS; y++) {
     for (let x = 0; x < COLS; x++) {

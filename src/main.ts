@@ -54,6 +54,7 @@ const loop = new Loop(
     }
     ui.sync();
     ui.perf(fpsAvg);
+    renderer.coachHint = ui.coachHint;
   },
   () => renderer.draw(state),
 );

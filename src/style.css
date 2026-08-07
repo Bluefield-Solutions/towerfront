@@ -279,3 +279,44 @@ html, body {
   .skill-btn { min-width: 62px; padding: 6px 8px; }
   .skill-btn .s-n { font-size: 11px; }
 }
+
+/* ------------------------------------------------------------- Einfuehrung */
+
+.coach {
+  position: absolute; z-index: 12; max-width: 300px;
+  padding: 11px 13px 9px; border-radius: 12px;
+  background: rgba(10, 15, 32, 0.94);
+  border: 1px solid var(--crystal);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: coach-in 0.24s ease-out;
+}
+@keyframes coach-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.coach-text {
+  margin: 0 0 7px; font-size: 12.5px; line-height: 1.45; color: var(--text);
+}
+.coach-skip {
+  pointer-events: auto; cursor: pointer;
+  background: none; border: none; padding: 2px 0;
+  font-family: var(--ui); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted);
+  text-decoration: underline; text-underline-offset: 3px;
+}
+
+/* Das gemeinte Bedienelement pulsiert, damit der Satz eine Adresse hat. */
+[data-coach="1"] {
+  outline: 2px solid var(--crystal);
+  outline-offset: 2px;
+  animation: coach-pulse 1.5s ease-in-out infinite;
+}
+@keyframes coach-pulse {
+  0%, 100% { outline-color: rgba(127, 231, 224, 0.35); }
+  50% { outline-color: rgba(127, 231, 224, 1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .coach { animation: none; }
+  [data-coach="1"] { animation: none; outline-color: var(--crystal); }
+}

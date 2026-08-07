@@ -80,6 +80,7 @@ const { UI } = await import('../src/ui/ui');
 const { bindInput } = await import('../src/core/input');
 const { TOWERS, TOWER_ORDER } = await import('../src/data/towers');
 const { COLS, ROWS } = await import('../src/data/config');
+const { TUTORIAL } = await import('../src/game/tutorial');
 
 // ---------------------------------------------------------------- Ablauf
 
@@ -113,8 +114,44 @@ if (towerButtons !== TOWER_ORDER.length) {
   problems.push(`Baumenue zeigt ${towerButtons} statt ${TOWER_ORDER.length} Tuerme.`);
 }
 
+// Jede Einfuehrung zeigt auf ein Bedienelement. Fehlt eines - etwa weil ein
+// Knopf umbenannt wurde -, zeigt der Satz ins Leere.
+for (const step of TUTORIAL) {
+  if (step.target === 'world') continue;
+  if (!win.document.getElementById(step.target)) {
+    problems.push(`Einfuehrung "${step.id}" zeigt auf "${step.target}" - das Element fehlt.`);
+  }
+}
+
+// Jeder Schritt muss auch erfuellbar sein. Ein Schritt, dessen Bedingung nie
+// eintritt, wuerde den Spieler in der Blase festhalten. Hier wird genau der
+// Handgriff ausgefuehrt, den der Satz verlangt - und geprueft, ob er zaehlt.
+{
+  const probe = new GameState();
+  probe.reset();
+  const doStep: Record<string, () => void> = {
+    pick: () => { probe.buildChoice = 'arrow'; },
+    place: () => { probe.build(probe.map.hint.x, probe.map.hint.y, 'arrow'); },
+    start: () => probe.startWave(),
+    upgrade: () => { probe.gold += 2000; probe.upgrade(probe.towers[0]); },
+    early: () => { probe.waveIndex = 1; probe.waveActive = false; probe.startWave(); },
+    meteor: () => { probe.cast('meteor', probe.goal.x, probe.goal.y); },
+    end: () => { probe.waveIndex = 3; },
+  };
+  for (const step of TUTORIAL) {
+    const act = doStep[step.id];
+    if (!act) { problems.push(`Einfuehrung "${step.id}": kein Handgriff im Rauchtest hinterlegt.`); continue; }
+    act();
+    if (!step.done(probe)) {
+      problems.push(`Einfuehrung "${step.id}" gilt nach dem verlangten Handgriff nicht als erledigt.`);
+    }
+  }
+}
+
 // Eine echte Partie: bauen, ausbauen, Wellen starten, jedes Bild zeichnen.
-state.reset();
+// Ueber den Knopf starten statt direkt zuruecksetzen - so laeuft auch die
+// Einfuehrung mit und ihre Positionsrechnung wird ausgefuehrt.
+(win.document.getElementById('s-action') as unknown as HTMLButtonElement).click();
 const spots: { x: number; y: number }[] = [];
 for (let y = 0; y < ROWS; y++) {
   for (let x = 0; x < COLS; x++) if (state.canBuild(x, y)) spots.push({ x, y });

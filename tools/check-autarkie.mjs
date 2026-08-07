@@ -31,7 +31,7 @@ const REQUIRED_IDS = [
   'b-wave', 'b-wave-t', 'b-wave-b', 'next', 'n-list', 'build',
   'skills', 'inspector', 'i-name', 'i-stats', 'i-up', 'i-sell', 'i-close',
   'screen', 's-eyebrow', 's-title', 's-text', 's-best', 's-action',
-  's-resume', 's-perf', 'perf',
+  's-resume', 's-perf', 's-tut', 'perf', 'coach', 'coach-text', 'coach-skip',
 ];
 for (const id of REQUIRED_IDS) {
   if (!new RegExp(`id=["']${id}["']`).test(html)) problems.push(`Element mit id="${id}" fehlt im HTML.`);

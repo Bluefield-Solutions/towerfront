@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v7 · 07.08.2026
+Stand: nach v8 · 07.08.2026
 
 Legende Nutzen: ●●● hoch · ●● mittel · ● gering
 Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
@@ -13,7 +13,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 |---|---|---|---|
 | B6 | Ziellogik pro Turm wählbar: vorderster, stärkster, nächster, schwächster | ●●● | M |
 | B11 | Turm per Ziehen auf eine andere Zelle versetzen (gegen Fehlplatzierung) | ●● | M |
-| B12 | Kurze Einführung in Welle 1 und 2, die das Bauen erklärt | ●●● | M |
+| B15 | Zweite, kürzere Einführung beim ersten Besuch einer neuen Karte | ●● | S |
 | B13 | Reichweiten aller Türme gleichzeitig einblenden (Halten auf leerer Fläche) | ●● | S |
 | B14 | Warnmarkierung am Kristall, wenn ein Gegner die letzten Meter erreicht | ●● | S |
 
@@ -70,6 +70,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S18 | Einführung kann auf zwei Arten kaputtgehen: Satz zeigt auf einen entfernten Knopf, oder ein Schritt ist unerfüllbar | Beides prüft jetzt der Rauchtest, beide Gegenproben schlagen an. Neue Schritte brauchen einen hinterlegten Handgriff, sonst meldet er es. |
 | S16 | Determinismus-Prüfung fiel beim Einbau der Fähigkeiten durch: Meteor im Anflug, Nachladestand der Türme und Trefferpause fehlten im Spielstand | Drei Felder, die man beim Schreiben übersieht. Faustregel: alles, was eine bereits bezahlte Entscheidung oder eine laufende Uhr ist, gehört in `snapshot()`. |
 | S17 | Fähigkeiten ändern das Simulationsergebnis nicht (5/20 mit und ohne) | Sie helfen gegen Schwärme, nicht gegen Titanen. Gewollt — sonst würden sie die Bosswellen entwerten. |
 | S14 | Erste Fassung setzte die Schwärmer in Welle 4 — der Bot verlor dort 6 Kristall | Zu früh für einen Gegner, der ein Umbauen erzwingt. Jetzt Welle 7. Neue Gegnertypen kommen ab jetzt frühestens ab Welle 6. |
@@ -82,6 +83,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | Version | Inhalt |
 |---|---|
 | v1 | Grundgerüst: Karte, Pfad, zwei Türme mit drei Stufen, drei Gegner, zehn Wellen, Gold, Leben, Sieg/Niederlage, HUD, Inspektor, Partikel, Kristall mit Rissen, Pipeline mit vier Toren |
+| v8 | Einführung im Spiel: sieben kontextbezogene Sätze über die ersten drei Wellen, das gemeinte Bedienelement pulsiert, auf dem Feld zeigt ein Pfeil auf den empfohlenen Bauplatz · überspringbar und auf dem Titelbildschirm wieder einschaltbar · läuft beim Fortsetzen nie an · Rauchtest prüft, dass jeder Schritt ein existierendes Element trifft und erfüllbar ist · Wächter prüft den empfohlenen Bauplatz |
 | v7 | Zwei Fähigkeiten auf Abruf: Meteor (gezielt, 40 s, trifft Boden und Luft, sichtbarer Anflug mit Zielring) und Frostschlag (sofort, 32 s, bremst das ganze Feld drei Sekunden) · Fähigkeitsleiste mit Abklingbalken · Tasten Q und W · Wächterprüfungen für Fähigkeiten · Simulationsbot nutzt sie wie ein aufmerksamer Spieler · Spielstand um Meteore im Anflug, Nachladestand und Trefferpause ergänzt |
 | v6 | Schwärmer (fliegt die Luftlinie, Mörser erreicht ihn nicht) · Spalter (zerfällt beim Tod in zwei Späne an derselben Pfadstelle) · Span als Bruchstück · Turmeigenschaft „trifft Luft" · Wellenplan neu aufgebaut, neue Typen ab Welle 6 · Flughöhe sichtbar über eigenem Schatten · Markierungen in der Wellenvorschau · Wächterprüfungen für Luft und Zerfallsketten · vierte Bedingung in der Balance-Simulation |
 | v5 | Spielstand und Determinismus: eigener Zufall mit Aussaat und sicherbarem Zustand (xorshift32) statt `Math.random` · Sicherung einer laufenden Partie alle zwei Sekunden, beim App-Wechsel und beim Schließen · „Partie fortsetzen" auf dem Titelbildschirm · Versionsprüfung, unpassende Stände werden verworfen · Determinismus-Prüfung als drittes Tor (gleiche Aussaat und Sichern/Laden dürfen den Verlauf nicht verändern) · Aussaat in der Technikanzeige |

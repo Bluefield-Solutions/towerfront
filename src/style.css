@@ -231,3 +231,9 @@ html, body {
   color: var(--muted); text-decoration: underline; text-underline-offset: 4px;
 }
 .link:hover { color: var(--text); }
+
+#s-resume { margin-bottom: 10px; }
+#s-resume + .primary {
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--edge); box-shadow: none;
+}

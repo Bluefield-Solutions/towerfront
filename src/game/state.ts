@@ -7,6 +7,8 @@ import type { Vec } from '../core/math';
 import { dist, dist2 } from '../core/math';
 import { Sfx } from '../core/audio';
 import { recordRun } from '../core/storage';
+import { Rng, newSeed } from '../core/rng';
+import { clearGame, type SaveGame } from './save';
 import { SpatialGrid } from '../core/spatialgrid';
 import { Pool, compact } from '../core/pool';
 import type {
@@ -44,6 +46,12 @@ export class GameState {
   hoverCell: Vec | null = null;
   /** Zelle unter dem gedrueckten Finger. Gebaut wird erst beim Loslassen. */
   pendingCell: Vec | null = null;
+
+  /** Aussaat und Zufallszustand. Beides wandert in den Spielstand, damit eine
+   *  fortgesetzte Partie exakt so weiterlaeuft wie eine ununterbrochene - und
+   *  damit ein gemeldeter Fehler nachgestellt werden kann. */
+  seed = newSeed();
+  readonly rng = new Rng(this.seed);
 
   /** Zaehler fuer die Turmschicht. Aendert er sich, wird sie neu gebacken. */
   towersVersion = 0;
@@ -204,6 +212,7 @@ export class GameState {
     this.idleTime = 0;
     if (this.waveIndex >= WAVES.length) {
       this.phase = 'won';
+      clearGame();
       recordRun(WAVES.length, this.lives);
       Sfx.play('win');
     }
@@ -250,6 +259,7 @@ export class GameState {
     if (this.lives <= 0) {
       this.lives = 0;
       this.phase = 'lost';
+      clearGame();
       recordRun(this.waveNumber - 1, 0);
       Sfx.play('lose');
     }
@@ -263,7 +273,7 @@ export class GameState {
     this.enemies.push({
       id: this.nextId++, def: id, x: p0.x, y: p0.y,
       hp, hpMax: hp, speed: def.speed, seg: 0, travelled: 0,
-      slowFactor: 1, slowLeft: 0, hitFlash: 0, wobble: Math.random() * 9,
+      slowFactor: 1, slowLeft: 0, hitFlash: 0, wobble: this.rng.next() * 9,
       dead: false, leaked: false,
     });
   }
@@ -608,20 +618,23 @@ export class GameState {
   spark(x: number, y: number, color: string, n: number, spread: number): void {
     if (this.quality === 'niedrig' && this.particles.length > 160) return;
     for (let i = 0; i < n; i++) {
-      const a = Math.random() * Math.PI * 2;
-      const sp = spread * (0.3 + Math.random() * 0.7);
+      const a = this.rng.next() * Math.PI * 2;
+      const sp = spread * (0.3 + this.rng.next() * 0.7);
       const p = this.particlePool.obtain();
       p.x = x; p.y = y;
       p.vx = Math.cos(a) * sp; p.vy = Math.sin(a) * sp;
-      p.life = 0.35 + Math.random() * 0.35; p.maxLife = 0.7;
-      p.size = 2 + Math.random() * 3; p.color = color; p.gravity = 120;
+      p.life = 0.35 + this.rng.next() * 0.35; p.maxLife = 0.7;
+      p.size = 2 + this.rng.next() * 3; p.color = color; p.gravity = 120;
       this.particles.push(p);
     }
   }
 
   // ---------------------------------------------------------------- Steuerung
 
-  reset(): void {
+  reset(seed = newSeed()): void {
+    this.seed = seed;
+    this.rng.state = seed;
+    clearGame();
     this.gold = START_GOLD;
     this.lives = START_LIVES;
     this.waveIndex = 0;
@@ -643,6 +656,79 @@ export class GameState {
     this.hitstop = 0;
     this.shake = 0;
     this.phase = 'playing';
+  }
+
+  // ------------------------------------------------------------- Spielstand
+
+  /** Nur das, was den Verlauf bestimmt. Reine Darstellung bleibt draussen. */
+  snapshot(): SaveGame {
+    return {
+      v: 1,
+      seed: this.seed,
+      rng: this.rng.state,
+      gold: this.gold,
+      lives: this.lives,
+      waveIndex: this.waveIndex,
+      waveActive: this.waveActive,
+      waveTime: this.waveTime,
+      idleTime: this.idleTime,
+      leaked: this.leakedTotal,
+      time: this.time,
+      speed: this.speed,
+      pending: this.pending.map((p) => [p.time, p.enemy, p.hpMul]),
+      towers: this.towers.map((t) => [t.def, t.cx, t.cy, t.level, t.kills, t.damageDone]),
+      enemies: this.enemies.map((e) => [
+        e.def, e.x, e.y, e.hp, e.hpMax, e.seg, e.travelled, e.slowFactor, e.slowLeft, e.wobble,
+      ]),
+    };
+  }
+
+  /** Setzt die Partie aus einem Spielstand fort. Gibt false zurueck, wenn der
+   *  Stand nicht zu den aktuellen Daten passt - dann wird er verworfen statt
+   *  halb geladen. */
+  restore(save: SaveGame): boolean {
+    if (save.v !== 1) return false;
+    if (save.waveIndex < 0 || save.waveIndex > WAVES.length) return false;
+    for (const [id] of save.towers) if (!(id in TOWERS)) return false;
+    for (const [id] of save.enemies) if (!(id in ENEMIES)) return false;
+    for (const [, id] of save.pending) if (!(id in ENEMIES)) return false;
+
+    this.reset(save.seed);
+    this.rng.state = save.rng;
+    this.gold = save.gold;
+    this.lives = save.lives;
+    this.waveIndex = save.waveIndex;
+    this.waveActive = save.waveActive;
+    this.waveTime = save.waveTime;
+    this.idleTime = save.idleTime;
+    this.leakedTotal = save.leaked;
+    this.time = save.time;
+    this.speed = save.speed === 2 || save.speed === 3 ? save.speed : 1;
+    this.pending = save.pending.map(([time, enemy, hpMul]) => ({ time, enemy, hpMul }));
+
+    for (const [def, cx, cy, level, kills, damageDone] of save.towers) {
+      const c = cellCenter(cx, cy);
+      const t: Tower = {
+        id: this.nextId++, def, cx, cy, x: c.x, y: c.y,
+        level, cooldownLeft: 0, angle: -Math.PI / 2, recoil: 0, pulse: 0,
+        target: null, retargetIn: 0, kills, damageDone,
+      };
+      this.towers.push(t);
+      this.towerAt.set(cellKey(cx, cy), t);
+    }
+    this.towersVersion++;
+
+    for (const [def, x, y, hp, hpMax, seg, travelled, slowFactor, slowLeft, wobble] of save.enemies) {
+      this.enemies.push({
+        id: this.nextId++, def, x, y, hp, hpMax,
+        speed: ENEMIES[def].speed, seg, travelled,
+        slowFactor, slowLeft, hitFlash: 0, wobble,
+        dead: false, leaked: false,
+      });
+    }
+    this.rebuildGrid();
+    this.phase = 'playing';
+    return true;
   }
 
   worldToCell(wx: number, wy: number): Vec {

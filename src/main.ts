@@ -4,6 +4,7 @@ import { bindInput } from './core/input';
 import { Sfx } from './core/audio';
 import { getSettings } from './core/storage';
 import { GameState } from './game/state';
+import { saveGame } from './game/save';
 import { Renderer } from './gfx/renderer';
 import { UI } from './ui/ui';
 
@@ -20,6 +21,15 @@ let lastPhase = state.phase;
 /** Bildrate beobachten und die Effektdichte anpassen.
  *  Herunter nach 2 s unter 48 fps, herauf erst nach 8 s ueber 57 fps.
  *  Die unterschiedlichen Schwellen verhindern ein Hin- und Herspringen. */
+/** Alle zwei Sekunden sichern. Ein Anruf, ein App-Wechsel oder ein
+ *  Neuladen kostet damit hoechstens zwei Sekunden Spielzeit. */
+let saveIn = 0;
+function autoSave(dt: number): void {
+  if (state.phase !== 'playing') { saveIn = 0; return; }
+  saveIn -= dt;
+  if (saveIn <= 0) { saveIn = 2; saveGame(state.snapshot()); }
+}
+
 let slowFor = 0, fastFor = 0;
 let fpsAvg = 60;
 function adaptQuality(dt: number): void {
@@ -36,6 +46,7 @@ const loop = new Loop(
   (dt) => {
     adaptQuality(dt);
     state.update(dt);
+    autoSave(dt);
     if (state.phase !== lastPhase) {
       lastPhase = state.phase;
       if (state.phase === 'playing') ui.hideScreen();
@@ -54,8 +65,12 @@ window.addEventListener('pointerdown', () => Sfx.unlock(), { once: true });
 window.addEventListener('keydown', (ev) => {
   if (ev.key === 'f' || ev.key === 'F') ui.togglePerf();
 });
+const saveNow = (): void => { if (state.phase === 'playing') saveGame(state.snapshot()); };
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && state.phase === 'playing') state.paused = true;
+  if (!document.hidden) return;
+  saveNow();
+  if (state.phase === 'playing') state.paused = true;
 });
+window.addEventListener('pagehide', saveNow);
 
 loop.start();

@@ -4,6 +4,7 @@ import { TOWERS, TOWER_ORDER, sellValue, type TowerId } from '../data/towers';
 import { Sfx } from '../core/audio';
 import { getBest, getSettings, saveSettings } from '../core/storage';
 import { spriteCount } from '../gfx/sprites';
+import { clearGame, loadGame } from '../game/save';
 import type { GameState } from '../game/state';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -32,6 +33,7 @@ export class UI {
   private sText = $('s-text');
   private sBest = $('s-best');
   private sAction = $<HTMLButtonElement>('s-action');
+  private sResume = $<HTMLButtonElement>('s-resume');
   private sPerf = $<HTMLButtonElement>('s-perf');
   private perfBox = $('perf');
 
@@ -83,6 +85,13 @@ export class UI {
     });
     this.sAction.addEventListener('click', () => { Sfx.unlock(); this.s.reset(); });
     this.sPerf.addEventListener('click', () => this.togglePerf());
+    this.sResume.addEventListener('click', () => {
+      Sfx.unlock();
+      const save = loadGame();
+      // Passt der Stand nicht mehr zu den aktuellen Daten, wird er verworfen -
+      // lieber ein neuer Anlauf als eine halb geladene Partie.
+      if (!save || !this.s.restore(save)) { clearGame(); this.sResume.hidden = true; }
+    });
 
     if (getSettings().perf) {
       this.sPerf.textContent = 'Technikanzeige ausschalten';
@@ -99,12 +108,22 @@ export class UI {
       ? `Bester Lauf: Welle ${best.wave}${best.lives ? `, Kristall ${best.lives}` : ''}`
       : '';
 
+    const save = kind === 'title' ? loadGame() : null;
+    if (save) {
+      this.sResume.hidden = false;
+      this.sResume.textContent =
+        `Partie fortsetzen · Welle ${Math.min(save.waveIndex + 1, s.totalWaves)}, Kristall ${save.lives}`;
+      this.sAction.textContent = 'Neu beginnen';
+    } else {
+      this.sResume.hidden = true;
+    }
+
     if (kind === 'title') {
       this.sEyebrow.textContent = `Spiralhain · Karte 1 · ${VERSION}`;
       this.sTitle.textContent = 'Kristallwacht';
       this.sText.textContent =
         'Der Herzkristall liegt am Ende des Pfades. Baue Türme auf das Gras, halte die Leere auf, überstehe fünfzehn Wellen. Früh gestartete Wellen bringen zusätzliches Gold.';
-      this.sAction.textContent = 'Beginnen';
+      if (!save) this.sAction.textContent = 'Beginnen';
     } else if (kind === 'won') {
       this.sEyebrow.textContent = 'Alle Wellen überstanden';
       this.sTitle.textContent = 'Der Kristall hält';
@@ -140,7 +159,7 @@ export class UI {
       `<b class="${warn.trim()}">${fps.toFixed(0)} fps</b>   Qualitaet ${s.quality}\n` +
       `Gegner ${s.enemies.length}   Tuerme ${s.towers.length}\n` +
       `Geschosse ${s.projectiles.length}   Partikel ${s.particles.length}\n` +
-      `Gebackene Bilder ${spriteCount()}`;
+      `Gebackene Bilder ${spriteCount()}   Aussaat ${s.seed.toString(16)}`;
   }
 
   /** Jeden Frame gerufen, schreibt aber nur bei echten Aenderungen ins DOM. */

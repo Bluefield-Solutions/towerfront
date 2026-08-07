@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v4 · 07.08.2026
+Stand: v5 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -148,12 +148,21 @@ Ein Befehl fährt alles: `npm run gate`
 |---|---|---|---|
 | 1 | Typen | `npm run tsc` | Typfehler, ungenutzte Variablen, fehlende Fälle — in `src` **und** `tools` |
 | 2 | Datenwächter | `npm run guards` | widersprüchlichen Inhaltsdaten (siehe unten) |
-| 3 | Balance | `npm run sim` | kaputter Schwierigkeitskurve (siehe unten) |
-| 4 | Messung Simulation | `npm run bench` | mehr als 4 ms Simulationszeit je Bild |
-| 5 | Messung Zeichnen | `npm run bench-draw` | mehr als 3.000 Zeichenbefehle je Bild |
-| 6 | Rauchtest | `npm run smoke` | Fehler beim Zeichnen, in der Oberfläche oder bei der Eingabe |
-| 7 | Build | `npm run build` | Bündelfehler |
-| 8 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id |
+| 3 | Determinismus | `npm run determinism` | abweichendem Verlauf bei gleicher Aussaat oder nach Sichern/Laden |
+| 4 | Balance | `npm run sim` | kaputter Schwierigkeitskurve (siehe unten) |
+| 5 | Messung Simulation | `npm run bench` | mehr als 4 ms Simulationszeit je Bild |
+| 6 | Messung Zeichnen | `npm run bench-draw` | mehr als 3.000 Zeichenbefehle je Bild |
+| 7 | Rauchtest | `npm run smoke` | Fehler beim Zeichnen, in der Oberfläche oder bei der Eingabe |
+| 8 | Build | `npm run build` | Bündelfehler |
+| 9 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id |
+
+**Die Determinismus-Prüfung** spielt dasselbe Drehbuch zweimal mit derselben
+Aussaat und vergleicht alle 60 Bilder einen Fingerabdruck des Spielzustands.
+Dann spielt sie es ein drittes Mal, sichert mitten in Welle 10 und lädt sofort
+wieder — und verlangt, dass danach **kein einziger** Fingerabdruck abweicht.
+Das ist der eigentliche Test für die Spielstandsicherung: nicht „lädt ohne
+Absturz", sondern „ändert nichts". Vergisst jemand künftig ein Feld im
+Spielstand, fällt es hier auf und nicht beim Spieler.
 
 **Der Rauchtest** baut das echte `index.html` in einer jsdom-Umgebung auf,
 ersetzt den Zeichenkontext durch eine Attrappe und lässt Renderer, Oberfläche
@@ -271,6 +280,22 @@ Abend.
 
 ---
 
+### 3.7 Warum der Zufall eine Aussaat hat
+
+`Math.random` lässt sich weder aussäen noch sichern. Solange der Zufall so
+entsteht, kann ein gemeldeter Fehler nur beschrieben, nicht nachgestellt werden
+— und ein Spielstand läuft nach dem Laden anders weiter als vorher.
+
+Deshalb hat das Spiel jetzt einen eigenen Zufall mit sichtbarem Zustand
+(xorshift32, der gesamte Zustand passt in eine 32-Bit-Zahl). Die Aussaat steht
+in der Technikanzeige und wandert in jeden Spielstand. Zwei Läufe mit derselben
+Aussaat sind Bild für Bild identisch.
+
+Wie ernst das gemeint ist, zeigen zwei Gegenproben. Lässt man beim Laden den
+Zufallszustand weg, meldet die Prüfung: Abweichung ab Sekunde 95. Verschiebt man
+die Wellenuhr um ein Zehnmillionstel, meldet sie: Abweichung ab Sekunde 96. Die
+Prüfung hat also Zähne.
+
 ### 3.6 Was die Zeichenmessung über v4 ergeben hat
 
 Im schlimmsten Fall — 171 Türme, 62 Gegner, 626 Partikel — schickte der Renderer
@@ -342,7 +367,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v4
+## 5. Stand v5
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -391,6 +416,16 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v5 (Spielstand und Determinismus):** Eine laufende Partie wird alle
+zwei Sekunden gesichert, zusätzlich beim Wechsel in eine andere App und beim
+Schließen der Seite. Auf dem Titelbildschirm erscheint dann „Partie fortsetzen"
+mit Welle und Kristallstand. Gesichert wird nur, was den Verlauf bestimmt —
+Aussaat, Zufallszustand, Gold, Leben, Wellenuhr, ausstehende Spawns, Türme,
+Gegner. Fliegende Geschosse und Partikel bleiben draußen: das ist reine
+Darstellung, und ein Geschoss unterwegs ist ein halber Treffer, keine
+Entscheidung. Passt ein Stand nicht mehr zu den aktuellen Daten, wird er
+verworfen statt halb geladen.
 
 **Neu in v4 (Zeichnen):** eigene Schicht für alle Turmsockel, die nur bei
 Bestandsänderungen neu entsteht · vorgebackene Bilder für Gegner, Trefferblitze,

@@ -7,7 +7,7 @@ type Wave = OscillatorType;
 export type SfxName =
   | 'arrow' | 'mortar' | 'prism' | 'frost'
   | 'hit' | 'kill' | 'boom' | 'build' | 'upgrade' | 'sell'
-  | 'wave' | 'leak' | 'win' | 'lose' | 'tap';
+  | 'wave' | 'leak' | 'win' | 'lose' | 'tap' | 'meteor' | 'freeze' | 'ready';
 
 class AudioEngine {
   private ctx: AudioContext | null = null;
@@ -138,6 +138,17 @@ class AudioEngine {
       case 'lose':
         [392, 330, 262, 196].forEach((f, i) =>
           this.tone(f, f, 0.4, 'sawtooth', 0.12, i * 0.16)); break;
+      case 'meteor':
+        // Anflug: ein langer Abwaertsstrich, dann der Aufschlag.
+        this.tone(1200, 180, 0.55, 'sawtooth', 0.09);
+        this.noise(0.5, 0.3, 2400, 90);
+        this.tone(90, 34, 0.5, 'sine', 0.24, 0.05); break;
+      case 'freeze':
+        [880, 1174, 1568].forEach((f, i) => this.tone(f, f * 1.5, 0.5, 'sine', 0.09, i * 0.05));
+        this.noise(0.4, 0.08, 6000, 1200); break;
+      case 'ready':
+        this.tone(1320, 1320, 0.05, 'triangle', 0.06);
+        this.tone(1760, 1760, 0.08, 'triangle', 0.06, 0.05); break;
       case 'tap':
         this.tone(1100, 900, 0.03, 'square', 0.04); break;
     }

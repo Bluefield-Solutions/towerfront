@@ -1,5 +1,6 @@
 import { SPEEDS, VERSION } from '../data/config';
 import { ENEMIES } from '../data/enemies';
+import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
 import { TOWERS, TOWER_ORDER, sellValue, type TowerId } from '../data/towers';
 import { Sfx } from '../core/audio';
 import { getBest, getSettings, saveSettings } from '../core/storage';
@@ -22,6 +23,7 @@ export class UI {
   private next = $('next');
   private nList = $('n-list');
   private build = $('build');
+  private skills = $('skills');
   private insp = $('inspector');
   private iName = $('i-name');
   private iStats = $('i-stats');
@@ -38,6 +40,8 @@ export class UI {
   private perfBox = $('perf');
 
   private btns = new Map<TowerId, HTMLButtonElement>();
+  private skillBtns = new Map<AbilityId, HTMLButtonElement>();
+  private lastSkillSig = '';
   private lastSig = '';
   private lastBonus = -1;
 
@@ -58,6 +62,24 @@ export class UI {
       });
       this.build.appendChild(b);
       this.btns.set(id, b);
+    }
+
+    for (const id of ABILITY_ORDER) {
+      const def = ABILITIES[id];
+      const b = document.createElement('button');
+      b.className = 'skill-btn';
+      b.title = def.blurb;
+      b.style.setProperty('--tone', def.color);
+      b.innerHTML =
+        `<span class="s-fill"></span>` +
+        `<span class="s-n">${def.name}</span>` +
+        `<span class="s-cd">bereit</span>`;
+      b.addEventListener('click', () => {
+        Sfx.unlock();
+        this.s.chooseAbility(id);
+      });
+      this.skills.appendChild(b);
+      this.skillBtns.set(id, b);
     }
 
     Sfx.setEnabled(getSettings().sound);
@@ -171,6 +193,25 @@ export class UI {
       s.buildChoice, s.phase, getSettings().sound,
       sel ? `${sel.id}:${sel.level}` : '-',
     ].join('|');
+
+    // Abklingzeiten laufen fortlaufend - eigene, gröbere Prüfung.
+    const skillSig = ABILITY_ORDER
+      .map((id) => `${Math.ceil(this.s.abilityCd[id])}${this.s.aiming === id ? 'a' : ''}`)
+      .join(',');
+    if (skillSig !== this.lastSkillSig) {
+      this.lastSkillSig = skillSig;
+      for (const [id, b] of this.skillBtns) {
+        const def = ABILITIES[id];
+        const cd = this.s.abilityCd[id];
+        const ready = cd <= 0;
+        b.dataset.ready = ready ? '1' : '0';
+        b.dataset.on = this.s.aiming === id ? '1' : '0';
+        (b.querySelector('.s-cd') as HTMLElement).textContent =
+          ready ? (def.kind === 'aimed' ? 'zielen' : 'bereit') : `${Math.ceil(cd)} s`;
+        (b.querySelector('.s-fill') as HTMLElement).style.transform =
+          `scaleY(${ready ? 0 : cd / def.cooldown})`;
+      }
+    }
 
     // Der Frühstart-Bonus tickt eigenstaendig herunter.
     const bonus = s.earlyBonus;

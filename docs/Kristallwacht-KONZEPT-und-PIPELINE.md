@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v6 · 07.08.2026
+Stand: v7 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -282,6 +282,22 @@ Abend.
 
 ---
 
+### 3.8 Was die Determinismus-Prüfung in v7 gefunden hat
+
+Beim Einbau der Fähigkeiten fiel das Tor sofort durch: Sichern und Laden mitten
+in Welle 10 kostete plötzlich fünf Kristall mehr. Die Ursache war eine
+Unterscheidung, die im Konzept schon stand, aber im Code fehlte.
+
+Ein Geschoss unterwegs ist ein halber Treffer — es darf beim Fortsetzen
+verschwinden. Ein **Meteor** im Anflug ist etwas anderes: die Abklingzeit von
+40 Sekunden läuft bereits, die Entscheidung ist bezahlt. Ihn verschwinden zu
+lassen wäre ein echter Verlust. Ebenso fehlten der Nachladestand der Türme und
+die Trefferpause — letztere fühlt sich wie ein Effekt an, hält aber die
+Simulation an und gehört damit in den Zustand.
+
+Drei Felder, die man beim Schreiben der Sicherung übersieht, und ein Test, der
+sie in einem Lauf findet. Das ist der Grund, warum das Tor existiert.
+
 ### 3.7 Warum der Zufall eine Aussaat hat
 
 `Math.random` lässt sich weder aussäen noch sichern. Solange der Zufall so
@@ -369,7 +385,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v6
+## 5. Stand v7
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -429,6 +445,23 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v7 — zwei Fähigkeiten auf Abruf.** Bisher war die Welle selbst reine
+Zuschauerzeit: gebaut wurde davor, danach lief es ohne dich. Zwei Fähigkeiten
+mit Abklingzeit geben dir während der Welle etwas zu entscheiden, bewusst mit
+zwei verschiedenen Handgriffen:
+
+- **Meteor** (40 s) wird gezielt: antippen, eine Stelle wählen, der Brocken
+  fällt mit dreiviertel Sekunden Anflug ein. Der Ring zieht sich zusammen,
+  damit man den Zeitpunkt sieht und nicht nur das Ergebnis. Trifft Boden
+  **und** Luft — das einzige im Spiel, das beides erreicht.
+- **Frostschlag** (32 s) wirkt sofort auf das ganze Feld: drei Sekunden lang
+  alles bei einem Drittel Tempo. Der Notknopf, wenn eine Kette durchbricht.
+
+Die Simulation nutzt sie jetzt so, wie ein aufmerksamer Spieler es täte — den
+Meteor auf die dichteste Traube, den Frostschlag, wenn vier Gegner die letzten
+25 % des Weges erreicht haben. Das Ergebnis bleibt bei 5 von 20 Kristall: die
+Fähigkeiten helfen gegen Schwärme, nicht gegen die Titanen. Genau so soll es sein.
 
 **Neu in v6:** Schwärmer und Spalter samt Wellenplan, der sie einführt.
 Türme tragen jetzt die Eigenschaft, ob sie Luftziele erreichen; der Datenwächter

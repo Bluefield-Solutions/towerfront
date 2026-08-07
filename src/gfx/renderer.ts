@@ -1,6 +1,7 @@
 import { C, COLS, ROWS, TILE, WORLD_H, WORLD_W, START_LIVES } from '../data/config';
 import { ENEMIES } from '../data/enemies';
 import { TOWERS, type TowerDef, type TowerId, type TowerLevel } from '../data/towers';
+import { ABILITIES } from '../data/abilities';
 import { makeRng } from '../core/math';
 import type { GameState } from '../game/state';
 import type { Tower } from '../game/types';
@@ -74,7 +75,9 @@ export class Renderer {
     this.drawProjectiles(s, hi);
     this.drawBolts(s);
     this.drawParticles(s);
+    this.drawMeteors(s, hi);
     this.drawGhost(s);
+    this.drawAim(s);
     this.drawFloats(s);
 
     ctx.restore();
@@ -533,6 +536,58 @@ export class Renderer {
       ctx.fill();
     }
     ctx.globalAlpha = 1;
+  }
+
+  /** Anflug und Einschlagmarke. Der Ring zieht sich zusammen, damit man den
+   *  Zeitpunkt sieht und nicht nur das Ergebnis. */
+  private drawMeteors(s: GameState, hi: boolean): void {
+    if (!s.meteors.length) return;
+    const ctx = this.ctx;
+    const tone = ABILITIES.meteor.color;
+    for (const m of s.meteors) {
+      const t = Math.min(1, m.t);
+      ctx.strokeStyle = hexA(tone, 0.35 + t * 0.5);
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(m.x, m.y, m.radius, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(m.x, m.y, m.radius * (1 - t * 0.9), 0, Math.PI * 2); ctx.stroke();
+
+      // Der Brocken faellt von oben rechts ins Ziel.
+      const fx = m.x + 340 * (1 - t);
+      const fy = m.y - 620 * (1 - t);
+      if (hi) stampGlow(ctx, tone, fx, fy, 46, 0.8);
+      ctx.strokeStyle = hexA(tone, 0.75);
+      ctx.lineWidth = 7 * t + 2;
+      ctx.beginPath();
+      ctx.moveTo(fx + 46, fy - 84); ctx.lineTo(fx, fy);
+      ctx.stroke();
+      ctx.fillStyle = '#FFF3E2';
+      ctx.beginPath(); ctx.arc(fx, fy, 11, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  /** Zielhilfe fuer eine angewaehlte Faehigkeit. */
+  private drawAim(s: GameState): void {
+    if (!s.aiming) return;
+    const def = ABILITIES[s.aiming];
+    if (def.kind !== 'aimed' || !def.radius) return;
+    const cell = s.pendingCell ?? s.hoverCell;
+    if (!cell) return;
+    const ctx = this.ctx;
+    const x = cell.x * TILE + TILE / 2, y = cell.y * TILE + TILE / 2;
+    ctx.save();
+    ctx.fillStyle = hexA(def.color, 0.16);
+    ctx.beginPath(); ctx.arc(x, y, def.radius, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = hexA(def.color, 0.9);
+    ctx.lineWidth = 3;
+    ctx.setLineDash([10, 8]);
+    ctx.beginPath(); ctx.arc(x, y, def.radius, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - 16, y); ctx.lineTo(x + 16, y);
+    ctx.moveTo(x, y - 16); ctx.lineTo(x, y + 16);
+    ctx.stroke();
+    ctx.restore();
   }
 
   private drawFloats(s: GameState): void {

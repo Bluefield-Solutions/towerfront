@@ -40,6 +40,13 @@ function scriptedStep(s: GameState, frame: number, spots: { x: number; y: number
     );
     if (t) s.upgrade(t);
   }
+  // Faehigkeiten gehoeren mit ins Drehbuch - sie greifen auf den Zufall zu
+  // und muessen deshalb beim Fortsetzen genauso wirken.
+  if (frame % 401 === 0 && s.ready('meteor') && s.enemies.length) {
+    const e = s.enemies[0];
+    s.cast('meteor', e.x, e.y);
+  }
+  if (frame % 733 === 0 && s.ready('freeze')) s.cast('freeze', 0, 0);
   if (s.canStartWave) s.startWave();
 }
 
@@ -59,7 +66,8 @@ function fingerprint(s: GameState): string {
     h = Math.imul(h, 16777619);
   };
   mix(s.gold); mix(s.lives); mix(s.waveIndex); mix(s.rng.state / 1000);
-  mix(s.enemies.length); mix(s.towers.length);
+  mix(s.enemies.length); mix(s.towers.length); mix(s.meteors.length);
+  mix(s.abilityCd.meteor * 10); mix(s.abilityCd.freeze * 10);
   for (const e of s.enemies) { mix(e.x); mix(e.y); mix(e.hp); mix(e.travelled); }
   for (const t of s.towers) { mix(t.cx); mix(t.cy); mix(t.level); mix(t.kills); }
   return (h >>> 0).toString(16);

@@ -137,6 +137,13 @@ step('Partie durchspielen', () => {
     );
     if (up) state.upgrade(up);
     if (state.canStartWave) state.startWave();
+    // Faehigkeiten mitlaufen lassen - Zielhilfe und Einschlag zeichnen eigene Wege.
+    if (frames % 300 === 0) state.chooseAbility('meteor');
+    if (frames % 300 === 60 && state.enemies.length) {
+      const e = state.enemies[0];
+      state.cast('meteor', e.x, e.y);
+    }
+    if (frames % 500 === 0) state.chooseAbility('freeze');
 
     // Auswahl und Bauvorschau mitlaufen lassen - beide zeichnen eigene Wege.
     if (frames % 180 === 0) {

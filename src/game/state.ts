@@ -2,6 +2,7 @@ import { COLS, ROWS, TILE, WORLD_W, WORLD_H, START_GOLD, START_LIVES, C } from '
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import { TOWERS, sellValue, type TowerId } from '../data/towers';
 import { WAVES, WAVE_HP_RAMP, EARLY_BONUS_MAX, EARLY_BONUS_WINDOW } from '../data/waves';
+import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
 import { MAP_SPIRALHAIN, cellCenter, cellKey, pathCells, pathLength, pathPoints } from '../data/maps';
 import type { Vec } from '../core/math';
 import { dist, dist2 } from '../core/math';
@@ -12,7 +13,7 @@ import { clearGame, type SaveGame } from './save';
 import { SpatialGrid } from '../core/spatialgrid';
 import { Pool, compact } from '../core/pool';
 import type {
-  Bolt, Enemy, FloatText, Particle, Phase, Projectile, Quality, Ring, Tower,
+  Bolt, Enemy, FloatText, Meteor, Particle, Phase, Projectile, Quality, Ring, Tower,
 } from './types';
 
 interface PendingSpawn { time: number; enemy: EnemyId; hpMul: number; }
@@ -45,6 +46,12 @@ export class GameState {
   rings: Ring[] = [];
   particles: Particle[] = [];
   floats: FloatText[] = [];
+
+  meteors: Meteor[] = [];
+  /** Restliche Abklingzeit je Faehigkeit. Null heisst einsatzbereit. */
+  abilityCd: Record<AbilityId, number> = { meteor: 0, freeze: 0 };
+  /** Gezielte Faehigkeit, die auf einen Tipp aufs Feld wartet. */
+  aiming: AbilityId | null = null;
 
   buildChoice: TowerId | null = null;
   selectedTower: Tower | null = null;
@@ -224,6 +231,78 @@ export class GameState {
     }
   }
 
+  // ----------------------------------------------------------- Faehigkeiten
+
+  ready(id: AbilityId): boolean {
+    return this.phase === 'playing' && this.abilityCd[id] <= 0;
+  }
+
+  /** Waehlt eine gezielte Faehigkeit an oder loest eine sofortige aus. */
+  chooseAbility(id: AbilityId): void {
+    if (!this.ready(id)) return;
+    const def = ABILITIES[id];
+    if (def.kind === 'instant') { this.cast(id, 0, 0); return; }
+    this.aiming = this.aiming === id ? null : id;
+    this.buildChoice = null;
+    this.selectedTower = null;
+  }
+
+  cast(id: AbilityId, x: number, y: number): boolean {
+    if (!this.ready(id)) return false;
+    const def = ABILITIES[id];
+    this.abilityCd[id] = def.cooldown;
+    this.aiming = null;
+
+    if (id === 'meteor') {
+      this.meteors.push({
+        x, y, t: 0, dur: def.delay ?? 0.7,
+        radius: def.radius ?? 100, damage: def.damage ?? 100,
+      });
+      Sfx.play('meteor');
+      return true;
+    }
+
+    // Frostschlag: legt sich ueber das ganze Feld.
+    const eff = def.slow ?? 0.6;
+    for (const e of this.enemies) {
+      if (e.dead) continue;
+      const r = 1 - ENEMIES[e.def].slowResist;
+      e.slowFactor = Math.min(e.slowFactor, 1 - eff * r);
+      e.slowLeft = Math.max(e.slowLeft, def.slowTime ?? 3);
+      this.ring(e.x, e.y, ENEMIES[e.def].radius * 2.4, def.color, 0.35, 2);
+    }
+    this.ring(this.goal.x, this.goal.y, WORLD_W, def.color, 0.7, 6);
+    this.float(this.goal.x, this.goal.y - 90, 'Frostschlag', def.color, 26);
+    Sfx.play('freeze');
+    return true;
+  }
+
+  private updateMeteors(dt: number): void {
+    if (!this.meteors.length) return;
+    for (const m of this.meteors) {
+      m.t += dt / m.dur;
+      if (m.t < 1) continue;
+      // Einschlag: trifft Boden und Luft, am Rand halber Schaden.
+      const r2 = m.radius * m.radius;
+      const cand = this.grid.query(m.x, m.y, m.radius, this.qRaw);
+      for (let i = 0; i < cand.length; i++) {
+        const e = cand[i];
+        if (e.dead) continue;
+        const d2 = dist2(m.x, m.y, e.x, e.y);
+        if (d2 > r2) continue;
+        const f = 1 - 0.5 * Math.sqrt(d2) / m.radius;
+        this.damage(e, m.damage * f, null, ABILITIES.meteor.color, 0, 0);
+      }
+      this.ring(m.x, m.y, m.radius, ABILITIES.meteor.color, 0.5, 7);
+      this.ring(m.x, m.y, m.radius * 1.5, '#FFFFFF', 0.3, 3);
+      this.spark(m.x, m.y, ABILITIES.meteor.color, this.quality === 'hoch' ? 40 : 14, 340);
+      this.shake = Math.min(1, this.shake + 0.8);
+      this.hitstop = Math.max(this.hitstop, 0.07);
+      Sfx.play('boom');
+    }
+    compact(this.meteors, (m) => m.t >= 1);
+  }
+
   // ---------------------------------------------------------------- Update
 
   update(dtReal: number): void {
@@ -256,10 +335,18 @@ export class GameState {
       if (!this.pending.length && !this.enemies.length) this.finishWave();
     }
 
+    for (const id of ABILITY_ORDER) {
+      if (this.abilityCd[id] > 0) {
+        this.abilityCd[id] = Math.max(0, this.abilityCd[id] - dt);
+        if (this.abilityCd[id] === 0) Sfx.play('ready');
+      }
+    }
+
     this.updateEnemies(dt);
     this.rebuildGrid();
     this.updateTowers(dt);
     this.updateProjectiles(dt);
+    this.updateMeteors(dt);
     this.decayFx(dt);
 
     if (this.lives <= 0) {
@@ -697,7 +784,9 @@ export class GameState {
     this.waveActive = false;
     this.enemies.length = 0; this.towers.length = 0; this.projectiles.length = 0;
     this.particles.length = 0; this.floats.length = 0;
-    this.rings.length = 0; this.bolts.length = 0;
+    this.rings.length = 0; this.bolts.length = 0; this.meteors.length = 0;
+    this.abilityCd = { meteor: 0, freeze: 0 };
+    this.aiming = null;
     this.grid.clear();
     this.towerAt.clear();
     this.towersVersion++;
@@ -719,7 +808,7 @@ export class GameState {
   /** Nur das, was den Verlauf bestimmt. Reine Darstellung bleibt draussen. */
   snapshot(): SaveGame {
     return {
-      v: 1,
+      v: 2,
       seed: this.seed,
       rng: this.rng.state,
       gold: this.gold,
@@ -731,8 +820,14 @@ export class GameState {
       leaked: this.leakedTotal,
       time: this.time,
       speed: this.speed,
+      hitstop: this.hitstop,
+      abilityCd: ABILITY_ORDER.map((id) => [id, this.abilityCd[id]] as [AbilityId, number]),
+      meteors: this.meteors.map((m) => [m.x, m.y, m.t, m.dur, m.radius, m.damage]) as
+        [number, number, number, number, number, number][],
       pending: this.pending.map((p) => [p.time, p.enemy, p.hpMul]),
-      towers: this.towers.map((t) => [t.def, t.cx, t.cy, t.level, t.kills, t.damageDone]),
+      towers: this.towers.map((t) => [
+        t.def, t.cx, t.cy, t.level, t.kills, t.damageDone, t.cooldownLeft, t.retargetIn,
+      ]) as SaveGame['towers'],
       enemies: this.enemies.map((e) => [
         e.def, e.x, e.y, e.hp, e.hpMax, e.seg, e.travelled, e.slowFactor, e.slowLeft, e.wobble,
       ]),
@@ -743,7 +838,7 @@ export class GameState {
    *  Stand nicht zu den aktuellen Daten passt - dann wird er verworfen statt
    *  halb geladen. */
   restore(save: SaveGame): boolean {
-    if (save.v !== 1) return false;
+    if (save.v !== 2) return false;
     if (save.waveIndex < 0 || save.waveIndex > WAVES.length) return false;
     for (const [id] of save.towers) if (!(id in TOWERS)) return false;
     for (const [id] of save.enemies) if (!(id in ENEMIES)) return false;
@@ -758,16 +853,23 @@ export class GameState {
     this.waveTime = save.waveTime;
     this.idleTime = save.idleTime;
     this.leakedTotal = save.leaked;
+    this.hitstop = save.hitstop ?? 0;
     this.time = save.time;
     this.speed = save.speed === 2 || save.speed === 3 ? save.speed : 1;
     this.pending = save.pending.map(([time, enemy, hpMul]) => ({ time, enemy, hpMul }));
+    for (const [id, cd] of save.abilityCd ?? []) {
+      if (id in this.abilityCd) this.abilityCd[id] = Math.max(0, cd);
+    }
+    for (const [x, y, t, dur, radius, damage] of save.meteors ?? []) {
+      this.meteors.push({ x, y, t, dur, radius, damage });
+    }
 
-    for (const [def, cx, cy, level, kills, damageDone] of save.towers) {
+    for (const [def, cx, cy, level, kills, damageDone, cooldownLeft, retargetIn] of save.towers) {
       const c = cellCenter(cx, cy);
       const t: Tower = {
         id: this.nextId++, def, cx, cy, x: c.x, y: c.y,
-        level, cooldownLeft: 0, angle: -Math.PI / 2, recoil: 0, pulse: 0,
-        target: null, retargetIn: 0, kills, damageDone,
+        level, cooldownLeft: cooldownLeft ?? 0, angle: -Math.PI / 2, recoil: 0, pulse: 0,
+        target: null, retargetIn: retargetIn ?? 0, kills, damageDone,
       };
       this.towers.push(t);
       this.towerAt.set(cellKey(cx, cy), t);

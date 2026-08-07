@@ -1,4 +1,5 @@
 import { TOWERS } from '../data/towers';
+import { ABILITIES, ABILITY_ORDER } from '../data/abilities';
 import { Sfx } from './audio';
 import type { GameState } from '../game/state';
 import type { Renderer } from '../gfx/renderer';
@@ -31,7 +32,7 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
     down = true;
     const c = toCell(ev);
     s.hoverCell = c;
-    s.pendingCell = s.buildChoice ? c : null;
+    s.pendingCell = s.buildChoice || s.aiming ? c : null;
   });
 
   const finish = (ev: PointerEvent) => {
@@ -41,6 +42,14 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
     s.pendingCell = null;
     if (s.phase !== 'playing') return;
     const c = cell ?? toCell(ev);
+
+    // Eine angewaehlte Faehigkeit hat Vorrang: der Tipp zielt, er baut nicht.
+    if (s.aiming) {
+      const rect = canvas.getBoundingClientRect();
+      const w = r.screenToWorld(ev.clientX - rect.left, ev.clientY - rect.top);
+      s.cast(s.aiming, w.x, w.y);
+      return;
+    }
 
     const existing = s.towerOn(c.x, c.y);
     if (s.buildChoice) {
@@ -63,7 +72,10 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
     Sfx.unlock();
     if (ev.key === ' ') { ev.preventDefault(); s.startWave(); }
     if (ev.key === 'p' || ev.key === 'P') s.paused = !s.paused;
-    if (ev.key === 'Escape') { s.buildChoice = null; s.selectedTower = null; }
+    if (ev.key === 'Escape') { s.buildChoice = null; s.selectedTower = null; s.aiming = null; }
+    for (const id of ABILITY_ORDER) {
+      if (ev.key.toLowerCase() === ABILITIES[id].key) s.chooseAbility(id);
+    }
     if (ev.key === '1') s.buildChoice = 'arrow';
     if (ev.key === '2') s.buildChoice = 'frost';
     if (ev.key === '3') s.buildChoice = 'mortar';

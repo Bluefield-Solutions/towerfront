@@ -1,5 +1,6 @@
 import type { EnemyId } from '../data/enemies';
 import type { TowerId } from '../data/towers';
+import type { AbilityId } from '../data/abilities';
 
 /** Spielstand einer laufenden Partie.
  *
@@ -10,7 +11,7 @@ import type { TowerId } from '../data/towers';
  *  reine Darstellung. Ein Geschoss, das beim Sichern unterwegs war, geht beim
  *  Fortsetzen verloren; das ist ein halber Treffer und keine Entscheidung. */
 export interface SaveGame {
-  v: 1;
+  v: 2;
   seed: number;
   rng: number;
   gold: number;
@@ -22,10 +23,20 @@ export interface SaveGame {
   leaked: number;
   time: number;
   speed: number;
+  /** Restliche Abklingzeit je Faehigkeit. */
+  abilityCd: [AbilityId, number][];
+  /** Meteore im Anflug: [x, y, Fortschritt, Dauer, Radius, Schaden].
+   *  Anders als ein Geschoss ist ein Meteor eine bereits bezahlte
+   *  Entscheidung - die Abklingzeit laeuft schon. Ihn beim Fortsetzen
+   *  verschwinden zu lassen waere ein echter Verlust, kein halber Treffer. */
+  meteors: [number, number, number, number, number, number][];
   /** [Zeit, Gegnerart, Lebenspunktfaktor] */
   pending: [number, EnemyId, number][];
-  /** [Turmart, Spalte, Zeile, Stufe, Abschuesse, Schaden] */
-  towers: [TowerId, number, number, number, number, number][];
+  /** Rest der Trefferpause - sie haelt die Simulation an und gehoert deshalb
+   *  in den Stand, obwohl sie sich wie ein Effekt anfuehlt. */
+  hitstop: number;
+  /** [Turmart, Spalte, Zeile, Stufe, Abschuesse, Schaden, Nachladerest, Zielsuche] */
+  towers: [TowerId, number, number, number, number, number, number, number][];
   /** [Gegnerart, x, y, hp, hpMax, Segment, Strecke, Bremsfaktor, Bremsrest, Wackeln] */
   enemies: [EnemyId, number, number, number, number, number, number, number, number, number][];
 }
@@ -42,7 +53,7 @@ export function loadGame(): SaveGame | null {
     if (!raw) return null;
     const p = JSON.parse(raw) as SaveGame;
     // Ein Stand aus einer aelteren Fassung wird verworfen statt halb geladen.
-    if (p.v !== 1 || !Array.isArray(p.towers) || !Array.isArray(p.enemies)) return null;
+    if (p.v !== 2 || !Array.isArray(p.towers) || !Array.isArray(p.enemies)) return null;
     return p;
   } catch {
     return null;

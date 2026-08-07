@@ -87,5 +87,15 @@ export interface FloatText {
   size: number;
 }
 
+/** Ein anfliegender Meteor. Die kurze Verzoegerung macht den Einschlag
+ *  sichtbar - ohne sie waere die Faehigkeit ein unsichtbarer Zahlenabzug. */
+export interface Meteor {
+  x: number; y: number;
+  t: number;      // 0..1
+  dur: number;
+  radius: number;
+  damage: number;
+}
+
 export type Phase = 'title' | 'playing' | 'won' | 'lost';
 export type Quality = 'hoch' | 'niedrig';

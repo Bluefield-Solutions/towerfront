@@ -6,6 +6,7 @@ import { MAPS, cellKey, pathCells } from '../src/data/maps';
 import { TOWERS, TOWER_ORDER } from '../src/data/towers';
 import { ENEMIES } from '../src/data/enemies';
 import { WAVES } from '../src/data/waves';
+import { ABILITIES, ABILITY_ORDER } from '../src/data/abilities';
 
 const errors: string[] = [];
 const warnings: string[] = [];
@@ -140,6 +141,38 @@ for (const [id, e] of Object.entries(ENEMIES)) {
   if (total >= 1) warn(`Gegner ${id}: Bruchstuecke haben zusammen ${Math.round(total * 100)} % der Huelle.`);
   if (child.leak * e.split.count > e.leak * 2) {
     warn(`Gegner ${id}: die Bruchstuecke richten zusammen mehr Schaden am Kristall an als das Original.`);
+  }
+}
+
+// ------------------------------------------------------------ Faehigkeiten
+
+for (const id of ABILITY_ORDER) {
+  const a = ABILITIES[id];
+  if (a.id !== id) fail(`Faehigkeit ${id}: id stimmt nicht mit dem Schluessel ueberein.`);
+  if (!isHex(a.color)) fail(`Faehigkeit ${id}: ungueltige Farbe.`);
+  if (a.cooldown < 10) fail(`Faehigkeit ${id}: Abklingzeit ${a.cooldown} s ist zu kurz.`);
+  if (!a.key || a.key.length !== 1) fail(`Faehigkeit ${id}: Tastenkuerzel fehlt.`);
+  if (a.kind === 'aimed' && (!a.radius || !a.delay)) {
+    fail(`Faehigkeit ${id}: gezielte Faehigkeit braucht Radius und Anflugzeit.`);
+  }
+  if (!a.damage && !a.slow) fail(`Faehigkeit ${id}: wirkt weder ueber Schaden noch ueber Bremsen.`);
+  if (a.slow !== undefined && (a.slow <= 0 || a.slow >= 1)) {
+    fail(`Faehigkeit ${id}: Bremswert ${a.slow} muss zwischen 0 und 1 liegen.`);
+  }
+}
+if (new Set(ABILITY_ORDER.map((id) => ABILITIES[id].key)).size !== ABILITY_ORDER.length) {
+  fail('Zwei Faehigkeiten teilen sich dasselbe Tastenkuerzel.');
+}
+// Eine Faehigkeit darf eine Welle nicht im Alleingang entscheiden.
+{
+  const meteor = ABILITIES.meteor;
+  const strongest = Math.max(...TOWER_ORDER.map((t) => {
+    const l = TOWERS[t].levels[2];
+    return (l.damage / l.cooldown) * 8;
+  }));
+  if ((meteor.damage ?? 0) > strongest * 2) {
+    warn(`Meteor schlaegt mit ${meteor.damage} zu - mehr als das Doppelte dessen, ` +
+      'was der staerkste Turm in acht Sekunden schafft.');
   }
 }
 

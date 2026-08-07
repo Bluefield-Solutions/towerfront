@@ -7,6 +7,7 @@ import { GameState } from '../src/game/state';
 import { COLS, ROWS, START_LIVES } from '../src/data/config';
 import { TOWERS, type TowerId } from '../src/data/towers';
 import { WAVES } from '../src/data/waves';
+import { ABILITIES } from '../src/data/abilities';
 
 const DT = 1 / 60;
 
@@ -65,6 +66,7 @@ function play(strategy: TowerId[]): Result {
       if (up && s.upgrade(up)) continue;
       break;
     }
+    useAbilities(s);
     const wi = Math.min(s.waveIndex, WAVES.length - 1);
     if (s.canStartWave) s.startWave();
     s.update(DT);
@@ -78,6 +80,27 @@ function play(strategy: TowerId[]): Result {
     lives: s.lives, wave: s.waveNumber, won: s.phase === 'won',
     towers: s.towers.length, peakEnemies, peakFx, leakByWave,
   };
+}
+
+/** Der Bot nutzt die Faehigkeiten so, wie ein aufmerksamer Spieler es taete:
+ *  den Meteor auf die dichteste Traube, den Frostschlag, wenn es eng wird. */
+function useAbilities(s: GameState): void {
+  if (s.ready('meteor') && s.enemies.length >= 5) {
+    const r2 = (ABILITIES.meteor.radius ?? 100) ** 2;
+    let best = null, bestN = 0;
+    for (const a of s.enemies) {
+      let n = 0;
+      for (const b of s.enemies) {
+        if ((a.x - b.x) ** 2 + (a.y - b.y) ** 2 <= r2) n++;
+      }
+      if (n > bestN) { bestN = n; best = a; }
+    }
+    if (best && bestN >= 4) s.cast('meteor', best.x, best.y);
+  }
+  if (s.ready('freeze')) {
+    const near = s.enemies.filter((e) => e.travelled > s.pathTotal * 0.75).length;
+    if (near >= 4) s.cast('freeze', 0, 0);
+  }
 }
 
 const strategies: Record<string, TowerId[]> = {

@@ -29,7 +29,7 @@ if (/drawImage\(\s*(this\.)?canvas/.test(html) && /filter\s*=\s*["'`]blur/.test(
 const REQUIRED_IDS = [
   'view', 'v-gold', 'v-lives', 'v-wave', 'b-sound', 'b-speed', 'b-pause',
   'b-wave', 'b-wave-t', 'b-wave-b', 'next', 'n-list', 'build',
-  'inspector', 'i-name', 'i-stats', 'i-up', 'i-sell', 'i-close',
+  'skills', 'inspector', 'i-name', 'i-stats', 'i-up', 'i-sell', 'i-close',
   'screen', 's-eyebrow', 's-title', 's-text', 's-best', 's-action',
   's-resume', 's-perf', 'perf',
 ];

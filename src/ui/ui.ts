@@ -3,6 +3,7 @@ import { ENEMIES } from '../data/enemies';
 import { TOWERS, TOWER_ORDER, sellValue, type TowerId } from '../data/towers';
 import { Sfx } from '../core/audio';
 import { getBest, getSettings, saveSettings } from '../core/storage';
+import { spriteCount } from '../gfx/sprites';
 import type { GameState } from '../game/state';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -138,7 +139,8 @@ export class UI {
     this.perfBox.innerHTML =
       `<b class="${warn.trim()}">${fps.toFixed(0)} fps</b>   Qualitaet ${s.quality}\n` +
       `Gegner ${s.enemies.length}   Tuerme ${s.towers.length}\n` +
-      `Geschosse ${s.projectiles.length}   Partikel ${s.particles.length}`;
+      `Geschosse ${s.projectiles.length}   Partikel ${s.particles.length}\n` +
+      `Gebackene Bilder ${spriteCount()}`;
   }
 
   /** Jeden Frame gerufen, schreibt aber nur bei echten Aenderungen ins DOM. */

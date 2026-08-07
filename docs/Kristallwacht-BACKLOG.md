@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v3 · 07.08.2026
+Stand: nach v4 · 07.08.2026
 
 Legende Nutzen: ●●● hoch · ●● mittel · ● gering
 Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
@@ -37,9 +37,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 
 | # | Punkt | Nutzen | Aufw. |
 |---|---|---|---|
-| T1 | Zeichnen in Schichten: statischer Untergrund, Welt, Effekte getrennt puffern | ●●● | M |
-| T2 | Gegner-Zeichnung über vorgebackene Sprites statt Vektorpfaden je Bild | ●●● | M |
-| T3 | Messung um eine Zeichenmessung ergänzen (aktuell nur Simulation) | ●● | M |
+| T8 | Kristall je Rissstufe backen (letztes Objekt mit Pfaden in jedem Bild) | ● | S |
+| T9 | Bildpuffer bei Größenwechsel gezielt verwerfen statt alles neu zu backen | ● | S |
 | T4 | Spielstand einer laufenden Partie sichern und fortsetzen | ●● | M |
 | T5 | Deterministischer Zufall im Spielverlauf, damit ein Lauf exakt wiederholbar ist | ●● | M |
 | T6 | Rauchtest auch auf dem Endlosmodus und auf jeder Karte laufen lassen | ●● | S |
@@ -70,11 +69,14 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S8 | Hinweis des Wächters: Druck fällt in Welle 4 gegenüber Welle 3 | Bewusst: Welle 4 ist eine reine Tempowelle. Beim nächsten Balancing prüfen. |
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
+| S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S12 | `rect` ist mit 594 je Bild jetzt der größte Posten (Partikel) | Erwartungsgemäß — sie liegen in acht Bündeln statt 626 Einzelbefehlen. Erst anfassen, wenn es messbar stört. |
 
 ## Erledigt
 
 | Version | Inhalt |
 |---|---|
 | v1 | Grundgerüst: Karte, Pfad, zwei Türme mit drei Stufen, drei Gegner, zehn Wellen, Gold, Leben, Sieg/Niederlage, HUD, Inspektor, Partikel, Kristall mit Rissen, Pipeline mit vier Toren |
+| v4 | Zeichen-Runde: eigene Schicht für alle Turmsockel · vorgebackene Bilder für Gegner, Trefferblitze, Bodenschatten, Turmsockel und Turmwaffen · gebündelte Partikel, Lebensbalken, Leuchtscheiben und Wurfschatten · Zeichenmessung (Befehle je Bild, maschinenunabhängig) als achtes Tor · 19.206 → 2.502 Befehle je Bild |
 | v3 | Technik-Runde: Raster für alle Umkreisabfragen (Zielsuche, Frostpuls, Explosion, Kettenblitz) · zwischengespeicherte Turmziele statt Suche in jedem Bild · Objektlager für Partikel, Geschosse, Ringe, Blitze · Listen werden an Ort und Stelle zusammengeschoben · zuschaltbare Technikanzeige mit Bildrate und Objektzahlen · kopfloser Rauchtest (jsdom) und Leistungsmessung als neue Tore · TypeScript prüft jetzt auch `tools/` |
 | v2 | Ton (synthetisch, budgetiert) · Mörser und Prisma als dritter und vierter Turm mit eigenen Angriffstypen · Leerentitan als Boss · fünfzehn Wellen · Frühstart-Bonus · Bauvorschau am Finger mit Bestätigung beim Loslassen · Wellenvorschau · Explosionsringe, Kettenblitze, Trefferstocken · Turmsilhouetten wachsen mit der Stufe · automatische Effektdrosselung nach Bildrate · Speicherstand für Einstellungen und besten Lauf · Tonschalter · Pause beim App-Wechsel · Versionsstempel · Datenwächter und erweiterte Balance-Simulation in der Pipeline |

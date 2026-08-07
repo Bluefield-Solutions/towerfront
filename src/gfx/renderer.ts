@@ -1,16 +1,26 @@
 import { C, COLS, ROWS, TILE, WORLD_H, WORLD_W, START_LIVES } from '../data/config';
 import { ENEMIES } from '../data/enemies';
-import { TOWERS, type TowerDef, type TowerLevel } from '../data/towers';
+import { TOWERS, type TowerDef, type TowerId, type TowerLevel } from '../data/towers';
 import { makeRng } from '../core/math';
 import type { GameState } from '../game/state';
 import type { Tower } from '../game/types';
-import { hexA, stampGlow } from './glow';
+import { beginGlowBatch, endGlowBatch, hexA, stampGlow, stampGlowFast } from './glow';
 import { bakeTerrain } from './terrain';
+import {
+  drawSprite, getEnemySprite, getShadow, getTowerBase, getTowerWeapon,
+} from './sprites';
 
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
   private terrain: HTMLCanvasElement | null = null;
   private sky: HTMLCanvasElement | null = null;
+  /** Alle Turmsockel in einem Bild. Wird nur neu gebacken, wenn sich am
+   *  Bestand etwas aendert - nicht in jedem Bild. */
+  private towerLayer: HTMLCanvasElement | null = null;
+  private towerLayerVersion = -1;
+  /** Partikel werden nach Farbe und Deckkraft gebuendelt, damit nicht fuer
+   *  jedes einzelne die Zeichenfarbe neu gesetzt werden muss. */
+  private pBatch = new Map<string, number[]>();
   scale = 1; offX = 0; offY = 0;
   private cssW = 0; private cssH = 0;
 
@@ -91,6 +101,20 @@ export class Renderer {
     return cv;
   }
 
+  private bakeTowerLayer(s: GameState): void {
+    if (!this.towerLayer) {
+      const cv = document.createElement('canvas');
+      cv.width = WORLD_W; cv.height = WORLD_H;
+      this.towerLayer = cv;
+    }
+    const g = this.towerLayer.getContext('2d')!;
+    g.clearRect(0, 0, WORLD_W, WORLD_H);
+    for (const t of s.towers) {
+      drawSprite(g, getTowerBase(t.def, t.level), t.x, t.y);
+    }
+    this.towerLayerVersion = s.towersVersion;
+  }
+
   // ------------------------------------------------------------- Welt
 
   private drawPortal(s: GameState, hi: boolean): void {
@@ -151,7 +175,7 @@ export class Renderer {
     ctx.strokeRect(cell.x * TILE + 4, cell.y * TILE + 4, TILE - 8, TILE - 8);
     ctx.setLineDash([]);
     ctx.globalAlpha = ok ? 0.65 : 0.3;
-    this.paintTower(def, 1, cx, cy, -Math.PI / 2, 0, 0, s.crystalPulse);
+    this.paintTower(def, 1, cx, cy, s.crystalPulse);
     ctx.restore();
   }
 
@@ -225,190 +249,217 @@ export class Renderer {
 
   private drawTowers(s: GameState, hi: boolean): void {
     const ctx = this.ctx;
+    if (this.towerLayerVersion !== s.towersVersion) this.bakeTowerLayer(s);
+    if (this.towerLayer) ctx.drawImage(this.towerLayer, 0, 0);
+
+    // Reichweite und Umkreispuls sind Ausnahmen und betreffen wenige Tuerme.
+    const sel = s.selectedTower;
+    if (sel) {
+      const def = TOWERS[sel.def];
+      const st = s.stats(sel);
+      ctx.fillStyle = hexA(def.accent, 0.12);
+      ctx.beginPath(); ctx.arc(sel.x, sel.y, st.range, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = hexA(def.accent, 0.75); ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(sel.x, sel.y, st.range, 0, Math.PI * 2); ctx.stroke();
+    }
+
     for (const t of s.towers) {
       const def = TOWERS[t.def];
-      const st = s.stats(t);
-      if (s.selectedTower === t) {
-        ctx.fillStyle = hexA(def.accent, 0.12);
-        ctx.beginPath(); ctx.arc(t.x, t.y, st.range, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = hexA(def.accent, 0.75); ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.arc(t.x, t.y, st.range, 0, Math.PI * 2); ctx.stroke();
-      }
       if (def.attack === 'aura' && t.pulse > 0) {
         ctx.strokeStyle = hexA(def.accent, t.pulse * 0.5);
         ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(t.x, t.y, st.range * (1 - t.pulse * 0.15), 0, Math.PI * 2);
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, s.stats(t).range * (1 - t.pulse * 0.15), 0, Math.PI * 2);
         ctx.stroke();
       }
-      this.paintTower(def, t.level, t.x, t.y, t.angle, t.recoil, t.pulse, s.crystalPulse);
-      if (hi && (def.attack === 'aura' || def.attack === 'chain')) {
-        stampGlow(ctx, def.accent, t.x, t.y - 8, 36, 0.5);
+      this.paintWeapon(t.def, t.level, t.x, t.y, t.angle, t.recoil, t.pulse, s.crystalPulse);
+    }
+
+    if (hi) {
+      beginGlowBatch(ctx);
+      for (const t of s.towers) {
+        const def = TOWERS[t.def];
+        if (def.attack === 'aura' || def.attack === 'chain') {
+          stampGlowFast(ctx, def.accent, t.x, t.y - 8, 36, 0.5);
+        }
       }
+      endGlowBatch(ctx);
     }
   }
 
-  /** Eine Silhouette pro Turmsorte, die mit der Stufe sichtbar waechst. */
-  private paintTower(
-    def: TowerDef, level: number, x: number, y: number,
+  /** Ein gebackenes Waffenbild, gedreht und um den Rueckstoss versetzt.
+   *  Statt eines Dutzends Pfadbefehle bleibt ein `drawImage`. */
+  private paintWeapon(
+    id: TowerId, level: number, x: number, y: number,
     angle: number, recoil: number, pulse: number, time: number,
   ): void {
     const ctx = this.ctx;
-    const grow = 1 + (level - 1) * 0.12;
+    const def = TOWERS[id];
+    const sprite = getTowerWeapon(id, level);
     ctx.save();
     ctx.translate(x, y);
-    ctx.fillStyle = hexA(C.ink, 0.4);
-    ctx.beginPath(); ctx.ellipse(0, 21, 27, 10, 0, 0, Math.PI * 2); ctx.fill();
-
-    ctx.save();
-    ctx.scale(grow, grow);
-    ctx.fillStyle = C.stoneDark;
-    roundRect(ctx, -24, -8, 48, 28, 8); ctx.fill();
-    ctx.fillStyle = def.color;
-    roundRect(ctx, -22, -14, 44, 20, 7); ctx.fill();
-    ctx.fillStyle = hexA(C.ink, 0.25);
-    roundRect(ctx, -22, 0, 44, 6, 3); ctx.fill();
-    // Stufe 2 und 3 bekommen zusaetzliche Ecktuermchen.
-    if (level >= 2) {
-      ctx.fillStyle = def.color;
-      roundRect(ctx, -26, -20, 9, 12, 3); ctx.fill();
-      roundRect(ctx, 17, -20, 9, 12, 3); ctx.fill();
-    }
-    if (level >= 3) {
-      ctx.fillStyle = def.accent;
-      roundRect(ctx, -5, -26, 10, 10, 3); ctx.fill();
-    }
-    ctx.restore();
-
-    for (let i = 0; i < 3; i++) {
-      ctx.beginPath();
-      ctx.arc(-14 + i * 14, 13, 3.2, 0, Math.PI * 2);
-      ctx.fillStyle = i < level ? def.accent : hexA(C.ink, 0.35);
-      ctx.fill();
-    }
-
-    ctx.scale(grow, grow);
-    const rec = recoil * 6;
     if (def.attack === 'single') {
       ctx.rotate(angle);
-      ctx.fillStyle = def.color;
-      roundRect(ctx, -10 - rec, -5, 34, 10, 5); ctx.fill();
-      ctx.fillStyle = def.accent;
-      roundRect(ctx, 14 - rec, -3.5, 12, 7, 3.5); ctx.fill();
+      ctx.translate(-recoil * 6, 0);
+      drawSprite(ctx, sprite, 0, 0);
     } else if (def.attack === 'splash') {
       ctx.rotate(angle);
-      ctx.fillStyle = C.stoneDark;
-      roundRect(ctx, -14 - rec * 1.6, -9, 30, 18, 6); ctx.fill();
-      ctx.fillStyle = def.accent;
-      roundRect(ctx, 8 - rec * 1.6, -6, 16, 12, 4); ctx.fill();
-      ctx.fillStyle = hexA(C.ink, 0.5);
-      ctx.beginPath(); ctx.arc(22 - rec * 1.6, 0, 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.translate(-recoil * 10, 0);
+      drawSprite(ctx, sprite, 0, 0);
     } else if (def.attack === 'aura') {
       ctx.rotate(time * 1.5);
-      ctx.fillStyle = def.accent;
-      for (let i = 0; i < 3; i++) {
-        ctx.rotate((Math.PI * 2) / 3);
-        ctx.beginPath();
-        ctx.moveTo(0, -6); ctx.lineTo(19 + pulse * 4, 0); ctx.lineTo(0, 6);
-        ctx.closePath(); ctx.fill();
-      }
+      drawSprite(ctx, sprite, 0, 0, 1 + pulse * 0.08);
     } else {
-      const bob = Math.sin(time * 2.2) * 3;
-      ctx.translate(0, -20 + bob);
+      ctx.translate(0, -20 + Math.sin(time * 2.2) * 3);
       ctx.rotate(time * 0.9);
-      ctx.fillStyle = def.accent;
-      ctx.beginPath();
-      ctx.moveTo(0, -13); ctx.lineTo(9, 0); ctx.lineTo(0, 13); ctx.lineTo(-9, 0);
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle = hexA('#FFFFFF', 0.55);
-      ctx.beginPath();
-      ctx.moveTo(0, -13); ctx.lineTo(9, 0); ctx.lineTo(0, 0);
-      ctx.closePath(); ctx.fill();
+      drawSprite(ctx, sprite, 0, 0);
     }
     ctx.restore();
+  }
+
+  /** Nur fuer die Bauvorschau: Sockel und Waffe eines noch nicht gebauten Turms. */
+  private paintTower(def: TowerDef, level: number, x: number, y: number, time: number): void {
+    drawSprite(this.ctx, getTowerBase(def.id, level), x, y);
+    this.paintWeapon(def.id, level, x, y, -Math.PI / 2, 0, 0, time);
   }
 
   private drawEnemies(s: GameState, hi: boolean): void {
     const ctx = this.ctx;
-    for (const e of s.enemies) {
+    const list = s.enemies;
+
+    // Schatten zuerst, alle mit demselben gebackenen Bild.
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
       const def = ENEMIES[e.def];
-      const r = def.radius;
-      const wob = Math.sin(s.time * 9 + e.wobble) * 2;
+      drawSprite(ctx, getShadow(def.radius), e.x, e.y + def.radius * 0.85);
+    }
 
-      if (def.boss && hi) stampGlow(ctx, def.trim, e.x, e.y, r * 2.4, 0.6);
-
-      ctx.save();
-      ctx.translate(e.x, e.y);
-      ctx.fillStyle = hexA(C.ink, 0.35);
-      ctx.beginPath(); ctx.ellipse(0, r * 0.85, r * 0.9, r * 0.35, 0, 0, Math.PI * 2); ctx.fill();
-      const body = e.hitFlash > 0.01 ? mix(def.body, '#FFFFFF', e.hitFlash * 0.7) : def.body;
-
-      if (e.def === 'runner') {
-        const nx = s.points[Math.min(e.seg + 1, s.points.length - 1)];
-        ctx.rotate(Math.atan2(nx.y - e.y, nx.x - e.x));
-        ctx.fillStyle = body;
-        ctx.beginPath();
-        ctx.moveTo(r * 1.3, 0); ctx.lineTo(-r * 0.8, r * 0.8);
-        ctx.lineTo(-r * 0.3, 0); ctx.lineTo(-r * 0.8, -r * 0.8);
-        ctx.closePath(); ctx.fill();
-        ctx.fillStyle = def.trim;
-        ctx.beginPath(); ctx.arc(r * 0.4, 0, r * 0.28, 0, Math.PI * 2); ctx.fill();
-      } else if (e.def === 'brute' || e.def === 'titan') {
-        const sides = def.boss ? 8 : 6;
-        ctx.fillStyle = body;
-        ctx.beginPath();
-        for (let i = 0; i < sides; i++) {
-          const a = (i / sides) * Math.PI * 2 + Math.PI / sides;
-          const px = Math.cos(a) * r, py = Math.sin(a) * r + wob * 0.3;
-          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    if (hi) {
+      let boss = false;
+      for (let i = 0; i < list.length; i++) if (ENEMIES[list[i].def].boss) { boss = true; break; }
+      if (boss) {
+        beginGlowBatch(ctx);
+        for (let i = 0; i < list.length; i++) {
+          const e = list[i];
+          const def = ENEMIES[e.def];
+          if (def.boss) stampGlowFast(ctx, def.trim, e.x, e.y, def.radius * 2.4, 0.6);
         }
-        ctx.closePath(); ctx.fill();
-        ctx.strokeStyle = def.trim; ctx.lineWidth = def.boss ? 5 : 3; ctx.stroke();
-        ctx.fillStyle = def.trim;
-        ctx.fillRect(-r * 0.5, -r * 0.15, r, r * 0.3);
+        endGlowBatch(ctx);
+      }
+    }
+
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      const def = ENEMIES[e.def];
+      const wob = Math.sin(s.time * 9 + e.wobble) * 2;
+      const rotating = e.def === 'runner';
+
+      if (rotating || def.boss) {
+        ctx.save();
+        ctx.translate(e.x, e.y);
+        if (rotating) {
+          const nx = s.points[Math.min(e.seg + 1, s.points.length - 1)];
+          ctx.rotate(Math.atan2(nx.y - e.y, nx.x - e.x));
+        }
+        drawSprite(ctx, getEnemySprite(e.def, false), 0, 0);
+        if (e.hitFlash > 0.01) {
+          ctx.globalAlpha = e.hitFlash * 0.7;
+          drawSprite(ctx, getEnemySprite(e.def, true), 0, 0);
+          ctx.globalAlpha = 1;
+        }
         if (def.boss) {
           ctx.rotate(s.time * 0.8);
           ctx.strokeStyle = hexA(def.trim, 0.7); ctx.lineWidth = 3;
-          ctx.beginPath(); ctx.arc(0, 0, r * 1.35, 0, Math.PI * 1.3); ctx.stroke();
+          ctx.beginPath(); ctx.arc(0, 0, def.radius * 1.35, 0, Math.PI * 1.3); ctx.stroke();
         }
+        ctx.restore();
       } else {
-        ctx.fillStyle = body;
-        ctx.beginPath(); ctx.ellipse(0, wob * 0.4, r, r * 0.92, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = def.trim;
-        ctx.beginPath(); ctx.arc(-r * 0.32, -r * 0.15, r * 0.2, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(r * 0.32, -r * 0.15, r * 0.2, 0, Math.PI * 2); ctx.fill();
+        drawSprite(ctx, getEnemySprite(e.def, false), e.x, e.y + wob * 0.4);
+        if (e.hitFlash > 0.01) {
+          ctx.globalAlpha = e.hitFlash * 0.7;
+          drawSprite(ctx, getEnemySprite(e.def, true), e.x, e.y + wob * 0.4);
+          ctx.globalAlpha = 1;
+        }
       }
-      ctx.restore();
 
       if (e.slowLeft > 0) {
         ctx.strokeStyle = hexA(C.crystal, 0.7);
         ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(e.x, e.y, r + 4, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(e.x, e.y, def.radius + 4, 0, Math.PI * 2); ctx.stroke();
       }
+    }
 
-      if (e.hp < e.hpMax) {
-        const w = Math.max(r * 2.1, def.boss ? 90 : 0), hgt = def.boss ? 7 : 4;
-        const bx = e.x - w / 2, by = e.y - r - 12;
-        ctx.fillStyle = hexA(C.ink, 0.6);
-        ctx.fillRect(bx - 1, by - 1, w + 2, hgt + 2);
+    this.drawHealthBars(s);
+  }
+
+  /** Lebensbalken gesammelt: erst alle Hintergruende, dann die Fuellungen nach
+   *  Farbe gruppiert. Spart pro Balken zwei Farbwechsel. */
+  private drawHealthBars(s: GameState): void {
+    const ctx = this.ctx;
+    const list = s.enemies;
+    let any = false;
+    for (let i = 0; i < list.length; i++) if (list[i].hp < list[i].hpMax) { any = true; break; }
+    if (!any) return;
+
+    ctx.fillStyle = hexA(C.ink, 0.6);
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      if (e.hp >= e.hpMax) continue;
+      const def = ENEMIES[e.def];
+      const w = Math.max(def.radius * 2.1, def.boss ? 90 : 0);
+      const h = def.boss ? 7 : 4;
+      ctx.fillRect(e.x - w / 2 - 1, e.y - def.radius - 13, w + 2, h + 2);
+    }
+    const tones = ['#5FD08A', C.gold, C.danger];
+    for (let band = 0; band < 3; band++) {
+      let drew = false;
+      for (let i = 0; i < list.length; i++) {
+        const e = list[i];
+        if (e.hp >= e.hpMax) continue;
         const p = e.hp / e.hpMax;
-        ctx.fillStyle = p > 0.5 ? '#5FD08A' : p > 0.25 ? C.gold : C.danger;
-        ctx.fillRect(bx, by, w * p, hgt);
+        const b = p > 0.5 ? 0 : p > 0.25 ? 1 : 2;
+        if (b !== band) continue;
+        if (!drew) { ctx.fillStyle = tones[band]; drew = true; }
+        const def = ENEMIES[e.def];
+        const w = Math.max(def.radius * 2.1, def.boss ? 90 : 0);
+        const h = def.boss ? 7 : 4;
+        ctx.fillRect(e.x - w / 2, e.y - def.radius - 12, w * p, h);
       }
     }
   }
 
   private drawProjectiles(s: GameState, hi: boolean): void {
     const ctx = this.ctx;
-    for (const p of s.projectiles) {
-      let px = p.x, py = p.y;
-      if (p.kind === 'ballistic') py -= Math.sin(p.t * Math.PI) * 46;
-      if (hi) stampGlow(ctx, p.color, px, py, p.splash ? 24 : 16, 0.6);
-      if (p.kind === 'ballistic') {
-        ctx.fillStyle = hexA(C.ink, 0.28);
+    const list = s.projectiles;
+    if (!list.length) return;
+
+    if (hi) {
+      beginGlowBatch(ctx);
+      for (let i = 0; i < list.length; i++) {
+        const p = list[i];
+        const py = p.kind === 'ballistic' ? p.y - Math.sin(p.t * Math.PI) * 46 : p.y;
+        stampGlowFast(ctx, p.color, p.x, py, p.splash ? 24 : 16, 0.6);
+      }
+      endGlowBatch(ctx);
+    }
+
+    // Bodenschatten der Wurfgeschosse zusammen.
+    let ballistic = false;
+    for (let i = 0; i < list.length; i++) if (list[i].kind === 'ballistic') { ballistic = true; break; }
+    if (ballistic) {
+      ctx.fillStyle = hexA(C.ink, 0.28);
+      for (let i = 0; i < list.length; i++) {
+        const p = list[i];
+        if (p.kind !== 'ballistic') continue;
         ctx.beginPath(); ctx.ellipse(p.x, p.y, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
       }
+    }
+
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i];
+      const py = p.kind === 'ballistic' ? p.y - Math.sin(p.t * Math.PI) * 46 : p.y;
       ctx.fillStyle = p.color;
-      ctx.beginPath(); ctx.arc(px, py, p.splash ? 7 : 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(p.x, py, p.splash ? 7 : 4.5, 0, Math.PI * 2); ctx.fill();
     }
   }
 
@@ -435,12 +486,34 @@ export class Renderer {
     }
   }
 
+  /** Partikel nach Farbe und Deckkraftstufe gebuendelt. Vorher kostete jedes
+   *  einzelne Teilchen einen Deckkraft- und einen Farbwechsel; jetzt fallen
+   *  beide nur noch je Buendel an. */
   private drawParticles(s: GameState): void {
     const ctx = this.ctx;
-    for (const p of s.particles) {
-      ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
-      ctx.fillStyle = p.color;
-      ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+    const list = s.particles;
+    if (!list.length) return;
+    const batch = this.pBatch;
+    for (const arr of batch.values()) arr.length = 0;
+
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i];
+      const a = p.life / p.maxLife;
+      const bucket = a > 0.75 ? 3 : a > 0.5 ? 2 : a > 0.25 ? 1 : 0;
+      const key = `${p.color}|${bucket}`;
+      let arr = batch.get(key);
+      if (!arr) { arr = []; batch.set(key, arr); }
+      arr.push(p.x - p.size / 2, p.y - p.size / 2, p.size);
+    }
+
+    for (const [key, arr] of batch) {
+      if (!arr.length) continue;
+      const bar = key.lastIndexOf('|');
+      ctx.fillStyle = key.slice(0, bar);
+      ctx.globalAlpha = (Number(key.slice(bar + 1)) + 0.5) / 4;
+      ctx.beginPath();
+      for (let i = 0; i < arr.length; i += 3) ctx.rect(arr[i], arr[i + 1], arr[i + 2], arr[i + 2]);
+      ctx.fill();
     }
     ctx.globalAlpha = 1;
   }
@@ -459,24 +532,6 @@ export class Renderer {
     }
     ctx.globalAlpha = 1;
   }
-}
-
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-}
-
-function mix(a: string, b: string, t: number): string {
-  const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
-  const r = Math.round((((pa >> 16) & 255) * (1 - t)) + (((pb >> 16) & 255) * t));
-  const g = Math.round((((pa >> 8) & 255) * (1 - t)) + (((pb >> 8) & 255) * t));
-  const bl = Math.round(((pa & 255) * (1 - t)) + ((pb & 255) * t));
-  return `rgb(${r},${g},${bl})`;
 }
 
 export type { Tower, TowerLevel };

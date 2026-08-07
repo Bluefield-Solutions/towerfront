@@ -27,6 +27,27 @@ export function getGlowDisc(color: string, radius: number): HTMLCanvasElement {
   return cv;
 }
 
+/** Viele Leuchtscheiben hintereinander: der Mischmodus wird einmal gesetzt
+ *  statt bei jeder Scheibe. Zwischen `beginGlowBatch` und `endGlowBatch` darf
+ *  nur `stampGlowFast` verwendet werden. */
+export function beginGlowBatch(ctx: CanvasRenderingContext2D): void {
+  ctx.globalCompositeOperation = 'lighter';
+}
+
+export function endGlowBatch(ctx: CanvasRenderingContext2D): void {
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+}
+
+export function stampGlowFast(
+  ctx: CanvasRenderingContext2D,
+  color: string, x: number, y: number, radius: number, alpha = 1,
+): void {
+  const disc = getGlowDisc(color, radius);
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(disc, x - radius, y - radius, radius * 2, radius * 2);
+}
+
 export function stampGlow(
   ctx: CanvasRenderingContext2D,
   color: string, x: number, y: number, radius: number, alpha = 1,

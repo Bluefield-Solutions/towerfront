@@ -45,6 +45,9 @@ export class GameState {
   /** Zelle unter dem gedrueckten Finger. Gebaut wird erst beim Loslassen. */
   pendingCell: Vec | null = null;
 
+  /** Zaehler fuer die Turmschicht. Aendert er sich, wird sie neu gebacken. */
+  towersVersion = 0;
+
   crystalPulse = 0;
   crystalHit = 0;
   shake = 0;
@@ -122,6 +125,7 @@ export class GameState {
     };
     this.towers.push(t);
     this.towerAt.set(cellKey(cx, cy), t);
+    this.towersVersion++;
     this.ring(c.x, c.y, 54, def.accent, 0.4, 3);
     Sfx.play('build');
     return true;
@@ -134,6 +138,7 @@ export class GameState {
     if (this.gold < cost) return false;
     this.gold -= cost;
     t.level++;
+    this.towersVersion++;
     this.ring(t.x, t.y, 66, def.accent, 0.45, 4);
     Sfx.play('upgrade');
     return true;
@@ -145,6 +150,7 @@ export class GameState {
     this.gold += value;
     t.target = null;
     compact(this.towers, (o) => o === t);
+    this.towersVersion++;
     this.towerAt.delete(cellKey(t.cx, t.cy));
     if (this.selectedTower === t) this.selectedTower = null;
     this.float(t.x, t.y - 10, `+${value}`, C.gold, 22);
@@ -625,6 +631,7 @@ export class GameState {
     this.rings.length = 0; this.bolts.length = 0;
     this.grid.clear();
     this.towerAt.clear();
+    this.towersVersion++;
     this.pending = [];
     this.selectedTower = null;
     this.buildChoice = null;

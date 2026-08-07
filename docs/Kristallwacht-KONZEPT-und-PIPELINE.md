@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v3 · 07.08.2026
+Stand: v4 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -149,10 +149,11 @@ Ein Befehl fährt alles: `npm run gate`
 | 1 | Typen | `npm run tsc` | Typfehler, ungenutzte Variablen, fehlende Fälle — in `src` **und** `tools` |
 | 2 | Datenwächter | `npm run guards` | widersprüchlichen Inhaltsdaten (siehe unten) |
 | 3 | Balance | `npm run sim` | kaputter Schwierigkeitskurve (siehe unten) |
-| 4 | Messung | `npm run bench` | mehr als 4 ms Simulationszeit je Bild |
-| 5 | Rauchtest | `npm run smoke` | Fehler beim Zeichnen, in der Oberfläche oder bei der Eingabe |
-| 6 | Build | `npm run build` | Bündelfehler |
-| 7 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id |
+| 4 | Messung Simulation | `npm run bench` | mehr als 4 ms Simulationszeit je Bild |
+| 5 | Messung Zeichnen | `npm run bench-draw` | mehr als 3.000 Zeichenbefehle je Bild |
+| 6 | Rauchtest | `npm run smoke` | Fehler beim Zeichnen, in der Oberfläche oder bei der Eingabe |
+| 7 | Build | `npm run build` | Bündelfehler |
+| 8 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id |
 
 **Der Rauchtest** baut das echte `index.html` in einer jsdom-Umgebung auf,
 ersetzt den Zeichenkontext durch eine Attrappe und lässt Renderer, Oberfläche
@@ -162,7 +163,17 @@ Damit fällt beim Build auf, was bisher erst beim Antippen im Browser aufgefalle
 wäre. Er prüft außerdem, dass eine Partie überhaupt endet: hängt eine Welle,
 weil sie auf einen Gegner wartet, der nie stirbt, bricht das Tor ab.
 
-**Die Messung** baut den schlimmsten Fall — jeder Bauplatz belegt und voll
+**Die Zeichenmessung** zählt nicht Millisekunden, sondern Befehle. Echtes
+Zeichnen lässt sich ohne Browser nicht sinnvoll in Zeit messen, und Zeit wäre
+ohnehin von der Maschine abhängig. Gezählt wird stattdessen, wie viele Befehle
+der Renderer je Bild an die Leinwand schickt — jeder Farbwechsel, jeder Pfad,
+jeder Deckkraftwechsel. Diese Zahl ist deterministisch und maschinenunabhängig,
+und sie fängt genau die Regression ab, die man sonst erst auf dem iPhone merkt:
+eine Zeichnung, die wieder in die innere Schleife gerutscht ist. Nur die
+sichtbare Leinwand wird gezählt; was einmal in ein Zwischenbild gebacken wird,
+kostet im Spiel nichts mehr.
+
+**Die Simulationsmessung** baut den schlimmsten Fall — jeder Bauplatz belegt und voll
 ausgebaut, die letzte Welle unterwegs — und misst die reine Simulationszeit je
 Bild. Bei 60 Bildern pro Sekunde stehen 16,7 ms zur Verfügung, das Zeichnen
 braucht davon den größeren Teil; 4 ms sind die Obergrenze für die Simulation.
@@ -260,7 +271,31 @@ Abend.
 
 ---
 
-### 3.5 Was die Messung über v3 ergeben hat
+### 3.6 Was die Zeichenmessung über v4 ergeben hat
+
+Im schlimmsten Fall — 171 Türme, 62 Gegner, 626 Partikel — schickte der Renderer
+**19.206 Befehle je Bild** an die Leinwand. Die Spitzenreiter verrieten sofort,
+woher sie kamen: 4.792 `arcTo`, 2.427 `beginPath`, 2.348 `fill`. Jede Turmform
+und jeder Gegner wurde in jedem einzelnen Bild als Vektorpfad neu gezeichnet.
+
+Nach dem Umbau sind es **2.502** — ein Siebtel:
+
+| | v3 | v4 |
+|---|---|---|
+| Befehle je Bild | 19.206 | 2.502 |
+| `arcTo` | 4.792 | 0 |
+| `fill` | 2.348 | 8 |
+| `set fillStyle` | 1.495 | 9 |
+
+Drei Eingriffe haben das bewirkt. **Turmsockel liegen in einer eigenen Schicht**,
+die nur beim Bauen, Ausbauen oder Verkaufen neu entsteht — 171 Türme kosten
+jetzt einen einzigen Kopierbefehl statt tausender Pfadbefehle. **Gegner und
+Turmwaffen sind vorgebackene Bilder**, gedreht wird beim Zeichnen, nicht beim
+Backen. **Partikel, Lebensbalken und Leuchtscheiben werden gebündelt**: statt
+für jedes Teilchen Farbe und Deckkraft neu zu setzen, fällt beides nur noch je
+Bündel an.
+
+### 3.5 Was die Simulationsmessung über v3 ergeben hat
 
 Die erste Fassung des Rasters war **langsamer** als die naive Schleife: 0,164 ms
 gegenüber 0,145 ms. Bei 55 Gegnern sind 9.405 Distanzrechnungen auf einem
@@ -307,7 +342,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v3
+## 5. Stand v4
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -356,6 +391,12 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v4 (Zeichnen):** eigene Schicht für alle Turmsockel, die nur bei
+Bestandsänderungen neu entsteht · vorgebackene Bilder für Gegner, Trefferblitze,
+Bodenschatten, Turmsockel und Turmwaffen · gebündelte Partikel, Lebensbalken und
+Leuchtscheiben · Zeichenmessung als achtes Tor. Ergebnis: ein Siebtel der
+Zeichenbefehle je Bild.
 
 **Neu in v3 (Technik):** Raster für alle Umkreisabfragen, zwischengespeicherte
 Turmziele, Objektlager für Partikel, Geschosse, Ringe und Blitze, Listen werden

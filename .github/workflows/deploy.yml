@@ -1,0 +1,51 @@
+# Auslieferung nach GitHub Pages.
+#
+# Der wichtigste Satz steht in Zeile "Torkette": gebaut und veroeffentlicht
+# wird nur, wenn alle elf Pruefungen gruen sind. Ein rotes Tor darf nie live
+# gehen - sonst waere die ganze Kette Zierrat.
+name: Bauen und ausliefern
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Laeuft ein Durchgang noch, wird er abgebrochen: der neuere Stand gilt.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  tor:
+    name: Torkette
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      # Die vollstaendige Kette. Sie baut auch, deshalb liegt dist danach
+      # bereit und muss nicht ein zweites Mal erzeugt werden.
+      - name: Torkette
+        run: npm run gate
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  ausliefern:
+    name: Ausliefern
+    needs: tor
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - id: pages
+        uses: actions/deploy-pages@v4

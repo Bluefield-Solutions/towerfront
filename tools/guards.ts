@@ -201,6 +201,37 @@ for (const map of MAPS) {
     );
   }
 
+  // Auf dem Weg darf nichts stehen.
+  //
+  // Diese Pruefung fehlte, und die Gegenprobe hat es gefunden: setzt man den
+  // Mindestabstand auf einen negativen Wert, duerfte man Tuerme mitten auf die
+  // Strasse bauen - und kein Tor sagte etwas. Die Flaechenkennzahl merkt es
+  // nicht, weil mehr Baugrund fuer sie nach mehr Freiheit aussieht.
+  {
+    const probe2 = new GameState(map.id);
+    let drauf = 0, geprueft = 0;
+    for (const p of paths) {
+      for (let k = 0; k < p.pts.length; k += 4) {
+        geprueft++;
+        if (probe2.canPlace('arrow', p.pts[k].x, p.pts[k].y)) drauf++;
+      }
+    }
+    if (drauf > 0) {
+      fail(`${map.id}: an ${drauf} von ${geprueft} Stellen liesse sich mitten auf den Weg bauen.`);
+    }
+    // Und knapp daneben ebenfalls nicht - der Weg hat eine Breite.
+    let amRand = 0;
+    for (const p of paths) {
+      for (let k = 0; k < p.pts.length; k += 8) {
+        const e = p.edgesAt(k);
+        if (probe2.canPlace('arrow', e.lx, e.ly) || probe2.canPlace('arrow', e.rx, e.ry)) amRand++;
+      }
+    }
+    if (amRand > 0) {
+      fail(`${map.id}: an ${amRand} Stellen liesse sich direkt auf den Wegrand bauen.`);
+    }
+  }
+
   // Unwegsames Gelaende darf nicht auf dem Weg liegen - dort waere es unsichtbar.
   for (const gr of map.rough) {
     if (Math.min(...paths.map((p) => p.distanceTo(gr.x, gr.y))) < gr.r) {

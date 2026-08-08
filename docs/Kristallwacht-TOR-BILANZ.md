@@ -1,6 +1,6 @@
 # Kristallwacht — Bilanz über alle Tore
 
-*Stand: v31 · 08.08.2026 · nach 31 Versionen und 57 festgehaltenen Befunden*
+*Stand: v35 · 08.08.2026 · Messung entstand bei v31, Ergebnisse gelten unverändert*
 
 Die Frage dieser Runde: **Welches Tor hat tatsächlich Fehler verhindert, und
 welches erzeugt nur Arbeit?** Nicht geschätzt, sondern gemessen — Laufzeit

@@ -3,6 +3,20 @@
 *Version 1.0 · 07.08.2026 · Umstieg von prozeduraler auf gerenderte Optik*
 *Zielspiel: Tower Defense, Aufsicht, eine autarke HTML-Datei*
 
+> ## ACHTUNG — in drei Punkten überholt, bitte zuerst lesen
+>
+> Diese Fassung stammt aus der Zeit des Kachelrasters. **Konzept 2.0**
+> (`Kristallwacht-KONZEPT-2.0.md`) ändert drei Vorgaben. Alles Übrige —
+> Lichteinfall, Freistellen, Standlinie, kein eingebackener Schatten,
+> Dateinamen, Budget — gilt unverändert.
+>
+> | Punkt | Diese Fassung | Gültig ab Konzept 2.0 |
+> |---|---|---|
+> | Hintergründe | 2400 × 1320 (20:11), **ohne Weg** | **3840 × 2160 (16:9), Weg im Bild gemalt**, dazu `_pfad.png` und `_plaetze.png` |
+> | Drehbare Teile | ein Bild, zeigt nach rechts | **acht Richtungen**, `_00` bis `_07` im Uhrzeigersinn ab Osten |
+> | Bauplätze | ergaben sich aus dem Raster | **gestaltete Orte im Bild**, ungleich verteilt, mit Häufungen |
+
+
 ---
 
 ## 0. So arbeiten wir zusammen

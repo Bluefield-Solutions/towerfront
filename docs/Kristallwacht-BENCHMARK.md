@@ -1,6 +1,6 @@
 # Kristallwacht — Genre-Abgleich
 
-Stand: v20 · 07.08.2026 · Aktueller Wert: **27 von 30 Kriterien, gewichtet 93 %**
+Stand: v35 · 08.08.2026 · Aktueller Wert: **27 von 30 Kriterien, gewichtet 93 %**
 
 *Verlauf: v11 = 18/27 (69 %) → v12 = 19/27 (73 %) → v15 = 21/30 (74 %) → v17 = 22/30 (76 %) → v18 = 24/30 (85 %) → v20 = 27/30 (93 %), K4, K5 und K6 erfüllt.
 In v15 kamen drei Grafik-Kriterien in den Katalog; zwei davon sind erfüllt.*

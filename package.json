@@ -24,7 +24,8 @@
     "eichen": "node tools/calibrate.mjs",
     "bildtor": "tsx tools/shots.mjs --tor",
     "doku": "node tools/docs.mjs",
-    "beruehrung": "tsx tools/touch.mjs"
+    "beruehrung": "tsx tools/touch.mjs",
+    "proben": "node tools/probes.mjs"
   },
   "keywords": [],
   "author": "",

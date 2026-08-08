@@ -1,0 +1,14 @@
+{
+  "comment": "Untergrundbilder der Karten. Reiner Boden - Weg, Bauplaetze und Felsen zeichnet die Engine darueber.",
+  "source": "roh/untergrund",
+  "output": "backgrounds.ts",
+  "exportName": "MAP_BACKGROUNDS",
+  "mode": "background",
+  "budgetKb": 520,
+  "defaults": { "width": 2000, "height": 1100, "quality": 60 },
+  "items": {
+    "spiralhain": "01_mooswald.webp",
+    "ascheschlucht": "05_herbstwald.webp",
+    "frostspalte": "04_winterboden.webp"
+  }
+}

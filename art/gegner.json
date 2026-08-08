@@ -1,0 +1,44 @@
+{
+  "comment": "Gegnerbilder. Seitenansicht nach links, im Spiel nach Laufrichtung gespiegelt.",
+  "source": "roh/gegner",
+  "output": "enemies.ts",
+  "exportName": "ENEMY_ART",
+  "budgetKb": 220,
+  "defaults": {
+    "size": 256,
+    "fill": 0.78,
+    "baseline": 0.84,
+    "quality": 82
+  },
+  "items": {
+    "crawler": {
+      "file": "enemy_light_tank_01.png",
+      "fill": 0.78
+    },
+    "runner": {
+      "file": "enemy_armored_scout_01.png",
+      "fill": 0.7
+    },
+    "brute": {
+      "file": "enemy_heavy_tank_01.png",
+      "fill": 0.98
+    },
+    "flyer": {
+      "file": "enemy_energy_tank_01.png",
+      "fill": 0.78
+    },
+    "splitter": {
+      "file": "enemy_medium_tank_01.png",
+      "fill": 0.92
+    },
+    "splitling": {
+      "file": "enemy_light_tank_02.png",
+      "fill": 0.59
+    },
+    "titan": {
+      "file": "enemy_siege_tank_01.png",
+      "size": 320,
+      "fill": 0.94
+    }
+  }
+}

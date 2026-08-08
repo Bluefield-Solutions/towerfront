@@ -1,0 +1,22 @@
+{
+  "comment": "Turmbilder. Dreiviertelansicht, deshalb nicht gedreht sondern gespiegelt.",
+  "source": "roh/tuerme",
+  "output": "towers.ts",
+  "exportName": "TOWER_ART",
+  "budgetKb": 260,
+  "defaults": { "size": 256, "fill": 0.86, "baseline": 0.86, "quality": 82 },
+  "items": {
+    "arrow_1": "aa_turret_frame_10.png",
+    "arrow_sniper": "aa_turret_frame_04.png",
+    "arrow_volley": "aa_turret_frame_02.png",
+    "frost_1": "aa_turret_frame_17.png",
+    "frost_eternal": "aa_turret_frame_18.png",
+    "frost_shard": "aa_turret_frame_24.png",
+    "mortar_1": "aa_turret_frame_25.png",
+    "mortar_cluster": "aa_turret_frame_27.png",
+    "mortar_breaker": "aa_turret_frame_28.png",
+    "prism_1": "aa_turret_frame_29.png",
+    "prism_fork": "aa_turret_frame_32.png",
+    "prism_lens": "aa_turret_frame_31.png"
+  }
+}

@@ -26,7 +26,8 @@
     "doku": "node tools/docs.mjs",
     "beruehrung": "tsx tools/touch.mjs",
     "proben": "node tools/probes.mjs",
-    "kritik": "node tools/review.mjs"
+    "kritik": "node tools/review.mjs",
+    "grafik": "node tools/artaudit.mjs"
   },
   "keywords": [],
   "author": "",

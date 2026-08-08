@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v30 · 08.08.2026
+Stand: v31 · 08.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -305,6 +305,44 @@ jederzeit wiederherstellbar. Ein Fehlversuch kostet eine Minute, nicht einen
 Abend.
 
 ---
+
+### 3.28 Warum der Bildvorrat ein Werkzeug braucht
+
+Drei Lieferungen von Hand eingebaut, drei Dinge dabei schiefgegangen — und
+jedes davon wäre prüfbar gewesen:
+
+- **Abgeschnittene Reste am Bildrand.** Sie bestimmen beim Zuschneiden die
+  Bildgrenze, und das eigentliche Objekt wird beim Skalieren winzig. Beim
+  Gegnersatz ist mir das aufgefallen, bei den Türmen nicht — das Werkzeug
+  findet dort nachträglich **acht Bruchstücke**, die ich stehen gelassen hatte.
+- **Uneinheitliche Standlinien.** Ein Turm schwebt, der nächste versinkt.
+- **Das Größenbudget** fiel erst auf, als die Datei schon gewachsen war.
+
+`tools/pack-art.mjs` macht daraus einen reproduzierbaren Schritt. Es liest eine
+Beschreibung je Gruppe (`art/tuerme.json` und so weiter), verarbeitet die
+Rohbilder und schreibt die eingebetteten Module.
+
+Was es tut: einfarbige Hintergründe freistellen · **nur den größten
+zusammenhängenden Bereich behalten** · auf den Rest zuschneiden · auf eine
+gemeinsame Breite und Standlinie setzen · komprimieren · als Datenadresse in ein
+TypeScript-Modul schreiben.
+
+Was es prüft, und was beim Verstoß passiert:
+
+| Prüfung | Verhalten |
+|---|---|
+| Objekt berührt den Bildrand | **Fehler.** Angeschnitten lässt sich nicht reparieren, nur melden. |
+| Seitenverhältnis der Untergründe | **Fehler**, wenn es nicht exakt zum Spielfeld passt |
+| Budget je Gruppe | **Fehler** bei Überschreitung |
+| Frische | **Fehler**, wenn das eingebettete Modul nicht mehr zu den Rohbildern passt |
+
+Die letzte Regel ist die wichtigste: Wer ein Assetmodul von Hand nachbessert,
+fliegt im Tor auf. Gegenprobe gemacht — eine einzige angehängte Zeile in
+`enemies.ts` meldet *„passt nicht mehr zu den Rohbildern — neu erzeugen mit
+npm run pack-art"*. Und ein absichtlich angeschnittenes Testbild meldet
+*„Objekt berührt den Bildrand (rechts, unten) — angeschnitten."*
+
+Der Schritt läuft als zweites Tor, direkt nach dem Datenwächter.
 
 ### 3.27 Vom eingepassten Brett zur Kamera
 
@@ -1045,7 +1083,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v30
+## 5. Stand v31
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -1105,6 +1143,11 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v31 — der Bildvorrat ist ein Werkzeug geworden.** Dreimal habe ich
+Lieferungen von Hand eingebaut; ab jetzt macht das `tools/pack-art.mjs`, und das
+Tor prüft, dass die eingebetteten Bilder noch zu den Rohdateien passen. Siehe
+Abschnitt 3.28.
 
 **Neu in v30 — echtes Vollbild mit Kamera.** Das Spielfeld füllt jetzt den
 Bildschirm, statt zwischen zwei Bänder gequetscht zu werden; die Bedienung

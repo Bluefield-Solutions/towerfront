@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v12 · 07.08.2026
+Stand: v13 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -306,12 +306,55 @@ Abend.
 
 ---
 
+### 3.13 Was ein besserer Bot über das Spiel verriet
+
+Der alte Simulationsbot baute auf jeden freien Platz — rund hundert Türme,
+alle auf Stufe 1, alle in der Nähe des Pfades. Das ist kein Spieler, das ist
+eine Wand. Der neue baut höchstens **16 Türme**, entscheidet alle halbe Sekunde
+statt sechzigmal je Sekunde, wählt Plätze nach **Pfaddeckung** (wie viele
+Pfadzellen liegen in Reichweite) statt nach bloßer Nähe, investiert in den
+Turm, der bisher am meisten geleistet hat, und hält 40 Gold Reserve.
+
+Das Ergebnis war unangenehm und lehrreich: **das Spiel war viel zu leicht.**
+16 gut gesetzte, voll ausgebaute Türme hielten alles — 20 von 20 Kristall, kein
+einziger Verlust. Die alte Schwierigkeit sah nur deshalb richtig aus, weil der
+alte Bot schlecht spielte.
+
+Der Weg dorthin führte über drei falsche Fährten:
+
+**Erstens: mehr Lebenspunkte helfen nicht.** Ramp von 0,11 auf 0,28 erhöht —
+das Ergebnis blieb 20/20. Der Bot baut sein Feld ja mit.
+
+**Zweitens: weniger Gold hilft kaum.** Einkommen um ein Drittel gekürzt — immer
+noch 20/20, nur mit weniger Restgold. Solange 16 Türme voll ausbaubar sind,
+hält das Feld.
+
+**Drittens: dichtere Wellen allein reichen auch nicht.** Ein voll ausgebautes
+Feld leistet etwa dreimal so viel Schaden je Sekunde wie ankommt. Verdichtung
+verschiebt nur, wann es ankommt.
+
+Der eigentliche Fehler saß in der Form der Kurve: sie stieg **linear** und traf
+damit die Mitte genauso hart wie das Ende. Stellt man sie flach genug für die
+Mitte, ist das Ende belanglos; stellt man sie steil genug für das Ende, ist die
+Mitte unspielbar. Genau dort saß die Wand in Welle 8 — zähe Gegner, während das
+Feld noch nicht steht.
+
+Ersetzt durch eine **Potenzkurve**: `1 + (i/n)^2,2 × 10`. Fast unverändert am
+Anfang, Faktor 11 auf der letzten Welle. Dazu eine **Verdichtungsrampe** (der
+Abstand zwischen zwei Gegnern schrumpft um 12 % je Welle) und ein um 15 %
+gekürztes Einkommen.
+
+Stand danach: gemischt gewinnt mit **17 von 20**, jede einzelne Turmsorte allein
+verliert, ein bodenlastiges Feld verliert in Welle 12.
+
 ### 3.12 Zwei Funde beim verzweigten Ausbau
 
-**Der Simulationsbot ist zu stark, um Zweige zu unterscheiden.** Die naheliegende
+**Der Simulationsbot war zu stark, um Zweige zu unterscheiden.** Die naheliegende
 Prüfung — beide Zweige einmal durchspielen und verlangen, dass beide gewinnen —
-schlug nicht an, als ich einen Zweig absichtlich wertlos machte. Der Bot baut
-rund hundert Türme; bei der Übermacht fällt ein schwacher Zweig nicht auf.
+schlug nicht an, als ich einen Zweig absichtlich wertlos machte. *(In v13 behoben,
+siehe 3.13. Die Prüfung selbst wurde außerdem verfeinert: nicht mehr das ganze
+Feld in einen Zweig, sondern ein gemischtes Feld, in dem genau ein Turmtyp
+umgestellt wird. Damit fällt auf, **welcher** Zweig nicht trägt.)*
 
 Ersatz ist die **Zweig-Waage** im Datenwächter: eine direkte Rechnung, Wirkung je
 investiertem Gold auf der Endstufe, über ein Modell mit den tatsächlichen
@@ -518,7 +561,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v12
+## 5. Stand v13
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -578,6 +621,13 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v13 — die Schwierigkeit stimmt jetzt gegen einen Spieler, der weiß
+was er tut.** Der Simulationsbot spielt nicht mehr wie ein Anfänger: höchstens
+16 Türme, eine Entscheidung alle halbe Sekunde, Bauplätze nach Pfaddeckung
+gewählt statt nach Nähe, Ausbau in den Turm mit der bisher größten Leistung,
+40 Gold Reserve. Die Kurve wurde daraufhin von Grund auf neu gestellt — siehe
+Abschnitt 3.13.
 
 **Neu in v12 — verzweigter Ausbau.** Jeder Turm steht auf Stufe 1 vor einer
 Entscheidung, die nicht zurückgenommen werden kann:

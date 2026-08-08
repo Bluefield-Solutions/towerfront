@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v12 · 07.08.2026
+Stand: nach v13 · 07.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Kristallwacht-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
@@ -42,7 +42,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 
 | # | Punkt | Nutzen | Aufw. |
 |---|---|---|---|
-| T13 | Simulationsbot begrenzen (Turmzahl, Baurhythmus), damit die Balance-Simulation überhaupt trennscharf wird | ●●● | M |
+| T14 | Zweiten Bot mit anderem Spielstil (früh viele billige Türme statt wenige starke) — die Kurve sollte für beide funktionieren | ●● | M |
 | T12 | Sichtprüfung im Tor: gebaute Datei in einem echten Browser laden und ein Bild vergleichen (jsdom kann die Kaskade nicht) | ●●● | L |
 | T8 | Kristall je Rissstufe backen (letztes Objekt mit Pfaden in jedem Bild) | ● | S |
 | T9 | Bildpuffer bei Größenwechsel gezielt verwerfen statt alles neu zu backen | ● | S |
@@ -78,6 +78,9 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S26 | Mit einem kompetenten Bot (16 gut gesetzte, voll ausgebaute Türme) war das Spiel **20/20** — viel zu leicht. Die alte Schwierigkeit sah nur richtig aus, weil der alte Bot schlecht spielte | Kurve von Grund auf neu: Potenzkurve statt linear, Verdichtungsrampe, Einkommen −15 %. Jetzt 17/20 für gemischt. |
+| S27 | Drei falsche Fährten: mehr Lebenspunkte (0,11→0,28 ohne Wirkung), weniger Gold (nur weniger Restgold), dichtere Wellen (Feld ist 3× überversorgt) | Der Fehler saß in der **Form** der Kurve, nicht in ihrer Höhe. Linear trifft die Mitte genauso hart wie das Ende. |
+| S28 | Die Zweig-Waage rechnete mit *durchschnittlicher* Panzerung und ließ zwei tote Zweige durch (Salve, Splitterfrost) | Panzerung wird jetzt nach später Präsenz gewichtet. Außerdem wog das Modell Bremsen mit 1,3 statt 2,4 — die Simulation hatte recht, das Modell nicht. |
 | S23 | Der Simulationsbot baut ~100 Türme und überdeckt damit jeden Zweigunterschied — ein absichtlich wertloser Zweig fiel nicht auf | Ersetzt durch die rechnerische Zweig-Waage im Datenwächter. Offen: den Bot begrenzen, damit die Simulation überhaupt trennschärfer wird (siehe T13). |
 | S24 | Zweig-Waage fand beim ersten Lauf: Splitterfrost je Gold Faktor 2,14 vor Ewigem Eis, Salve 1,45 vor Scharfschütze | Beide nachjustiert, alle vier Paare liegen jetzt zwischen 1,04 und 1,26. |
 | S25 | Spielstand war doch unvollständig: zwischengespeichertes Turmziel und Geschosse im Flug fehlten | Beide ergänzt. Die Begründung aus v5 („ein halber Treffer") war bequem statt richtig — der Verlauf wird messbar anders. |
@@ -98,6 +101,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | Version | Inhalt |
 |---|---|
 | v1 | Grundgerüst: Karte, Pfad, zwei Türme mit drei Stufen, drei Gegner, zehn Wellen, Gold, Leben, Sieg/Niederlage, HUD, Inspektor, Partikel, Kristall mit Rissen, Pipeline mit vier Toren |
+| v13 | Simulationsbot auf menschliches Maß begrenzt (16 Türme, Entscheidung alle 0,5 s, Bauplätze nach Pfaddeckung, Reserve, Ausbau in den stärksten Turm) · Schwierigkeitskurve neu: Potenzkurve `1+(i/n)^2,2×10` statt linear, Verdichtungsrampe 12 % je Welle, Einkommen −15 % · Zweig-Prüfung verfeinert: ein gemischtes Feld mit genau einem umgestellten Turmtyp · Zweig-Waage gewichtet Panzerung nach später Präsenz und Bremsen mit 2,4 · Salve und Splitterfrost als tote Zweige erkannt und behoben |
 | v12 | Verzweigter Ausbau (R3): zwei sich ausschließende Zweige je Turm ab Stufe 2, acht Endausbauten statt vier · Panzerdurchschlag als neue Eigenschaft · Zweigfarbe sichtbar an Sockel, Waffe und Reichweitenring · Zweig-Waage im Datenwächter (Wirkung je Gold, Faktor höchstens 1,4) · Rauchtest prüft Endgültigkeit der Zweigwahl und die zwei Auswahlknöpfe · Spielstand um Turmziel und Geschosse im Flug ergänzt · Genre-Abgleich 18/27 → 19/27 |
 | v11 | Genre-Abgleich als zehntes (nicht abbrechendes) Tor: 27 Kriterien aus Kingdom Rush, Bloons TD 6, Plants vs. Zombies, Defense Grid und Defender's Quest, wo möglich gemessen statt behauptet · Dokument `Kristallwacht-BENCHMARK.md` mit Herkunft jedes Kriteriums · feste Dreierstruktur je Runde (Abgleich → Prozess → Spiel) · volle Turmwerte im Inspektor vor dem Kauf, vom Rauchtest geprüft |
 | v10 | Auswertung nach der Partie: Kennzahlen, Schadensanteil je Quelle als Balken, stärkster Turm mit Feldposition, Wellen mit Kristallverlust, Fähigkeitsnutzung · Werte wandern im Spielstand mit · Rauchtest prüft vier Gleichungen der Auswertung · `stats()` in `towerStats()` umbenannt |

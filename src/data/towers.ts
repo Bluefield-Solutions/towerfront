@@ -71,8 +71,8 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         id: 'volley', name: 'Salve', color: '#FF9B54',
         blurb: 'Halbe Wucht, doppelte Schlagzahl. Gegen Masse, nicht gegen Panzer.',
         levels: [
-          { cost: 70, damage: 10, range: 205, cooldown: 0.28 },
-          { cost: 130, damage: 16, range: 215, cooldown: 0.20 },
+          { cost: 70, damage: 13, range: 205, cooldown: 0.28, pierce: 1 },
+          { cost: 145, damage: 20, range: 215, cooldown: 0.21, pierce: 2 },
         ],
       },
     ],
@@ -89,15 +89,15 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         blurb: 'Weiter Umkreis, harte Bremse, kaum Schaden. Reine Kontrolle.',
         levels: [
           { cost: 90, damage: 9, range: 195, cooldown: 0.7, slow: 0.5, slowTime: 2.2 },
-          { cost: 150, damage: 18, range: 245, cooldown: 0.6, slow: 0.68, slowTime: 3.2 },
+          { cost: 150, damage: 19, range: 250, cooldown: 0.58, slow: 0.72, slowTime: 3.4 },
         ],
       },
       {
         id: 'shard', name: 'Splitterfrost', color: '#9FD4FF',
         blurb: 'Bremst weniger, schneidet dafuer. Ein Schadenspuls statt einer Fessel.',
         levels: [
-          { cost: 105, damage: 16, range: 160, cooldown: 0.7, slow: 0.24, slowTime: 1.2 },
-          { cost: 190, damage: 32, range: 175, cooldown: 0.62, slow: 0.3, slowTime: 1.4 },
+          { cost: 110, damage: 24, range: 162, cooldown: 0.7, slow: 0.26, slowTime: 1.3, pierce: 2 },
+          { cost: 200, damage: 47, range: 182, cooldown: 0.62, slow: 0.32, slowTime: 1.5, pierce: 3 },
         ],
       },
     ],

@@ -147,9 +147,22 @@ for (const id of TOWER_ORDER) {
 // Das ist ausdruecklich ein Modell und kein Beweis. Es soll grobe Schieflagen
 // finden, nicht die letzten fuenf Prozent.
 {
-  const roster = Object.values(ENEMIES);
-  const avgArmor = roster.reduce((a, e) => a + e.armor, 0) / roster.length;
-  const airShare = roster.filter((e) => e.flying).length / roster.length;
+  // Die Panzerung wird nach dem gewichtet, was spaet tatsaechlich kommt -
+  // ein Mittelwert ueber alle Gegnerarten unterschaetzt sie deutlich. Genau
+  // dieser Fehler liess in v12 zwei tote Zweige durch.
+  const late = WAVES.slice(Math.floor(WAVES.length / 2));
+  let armorSum = 0, hpSum = 0, airHp = 0;
+  for (const w of late) {
+    for (const g of w.groups) {
+      const e = ENEMIES[g.enemy];
+      const bulk = g.count * e.hp;
+      armorSum += e.armor * bulk;
+      hpSum += bulk;
+      if (e.flying) airHp += bulk;
+    }
+  }
+  const avgArmor = hpSum ? armorSum / hpSum : 0;
+  const airShare = hpSum ? airHp / hpSum : 0;
 
   const worth = (id: typeof TOWER_ORDER[number], br: 0 | 1): number => {
     const t = TOWERS[id];
@@ -162,7 +175,11 @@ for (const id of TOWER_ORDER) {
     if (l.splash) dps *= 1 + l.splash / 90;
     if (l.chains) dps *= 1 + l.chains * 0.5 * (l.falloff ?? 0.6);
     if (t.attack === 'aura') dps *= 1 + l.range / 260;   // trifft alles im Umkreis
-    if (l.slow) dps *= 1 + l.slow * 1.3;                 // Bremsen ist Schaden fuer andere
+    // Bremsen zaehlt schwer: ein gebremster Gegner steht laenger in der
+    // Reichweite *aller* umliegenden Tuerme. Der Faktor 1,3 aus v12 war zu
+    // niedrig - die Simulation liess einen Zweig scheitern, den das Modell
+    // fuer 25 % besser hielt. Bei 2,4 stimmen beide ueberein.
+    if (l.slow) dps *= 1 + l.slow * 2.4;
     dps *= 1 + l.range / 900;                            // Reichweite = mehr Zeit am Ziel
     if (!t.hitsAir) dps *= 1 - airShare * 0.7;
     return dps / invest;

@@ -4,74 +4,104 @@
  *  oder Gegnerwerten wird sofort daran gemessen.
  *  Aufruf: npx tsx tools/sim.ts */
 import { GameState } from '../src/game/state';
-import { COLS, ROWS, START_LIVES } from '../src/data/config';
-import { TOWERS, MAX_LEVEL, nextFor, type TowerId } from '../src/data/towers';
+import { COLS, ROWS, TILE, START_LIVES } from '../src/data/config';
+import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, type TowerId } from '../src/data/towers';
 import { WAVES } from '../src/data/waves';
 import { ABILITIES } from '../src/data/abilities';
 
 const DT = 1 / 60;
 
+/** Wie viele Tuerme ein Mensch auf dieser Karte tatsaechlich stellt.
+ *  Vorher baute der Bot auf jeden freien Platz - rund hundert Stueck. Bei der
+ *  Uebermacht war jede Balanceaussage wertlos: ein absichtlich entwerteter
+ *  Ausbauzweig fiel nicht einmal auf. */
+const MAX_TOWERS = 16;
+
+/** Nur alle 0,5 Sekunden wird entschieden. Ein Mensch tippt nicht sechzigmal
+ *  je Sekunde. */
+const DECIDE_EVERY = 30;
+
+/** Wieviel Gold liegen bleibt, damit auf eine Welle noch reagiert werden kann. */
+const RESERVE = 40;
+
+/** Bauplaetze nach Deckung bewertet: wie viele Pfadzellen liegen in Reichweite
+ *  eines Turms auf dieser Zelle. Naehe allein taugt nicht - eine Zelle in der
+ *  Innenkurve der Spirale deckt drei Pfadabschnitte, eine am Rand nur einen. */
 function buildSpots(s: GameState) {
   const spots: { x: number; y: number; score: number }[] = [];
+  const reach = 210 / TILE;
   for (let y = 0; y < ROWS; y++) {
     for (let x = 0; x < COLS; x++) {
       if (!s.canBuild(x, y)) continue;
-      let best = 1e9;
+      let covered = 0;
+      let nearest = 1e9;
       for (const k of s.pathSet) {
         const px = k % COLS, py = Math.floor(k / COLS);
-        const d = (px - x) ** 2 + (py - y) ** 2;
-        if (d < best) best = d;
+        const d2 = (px - x) ** 2 + (py - y) ** 2;
+        if (d2 <= reach * reach) covered++;
+        if (d2 < nearest) nearest = d2;
       }
-      spots.push({ x, y, score: best });
+      if (nearest > 4) continue; // zu weit weg, um je zu feuern
+      spots.push({ x, y, score: covered });
     }
   }
-  return spots.sort((a, b) => a.score - b.score);
+  return spots.sort((a, b) => b.score - a.score);
 }
 
 interface Result {
   lives: number; wave: number; won: boolean;
-  towers: number; peakEnemies: number; peakFx: number;
+  towers: number; upgrades: number; peakEnemies: number; peakFx: number;
+  earned: number; spent: number;
   leakByWave: number[];
 }
 
-function play(strategy: TowerId[], branch: 0 | 1 = 0): Result {
+type BranchPick = (id: TowerId) => 0 | 1;
+
+function play(strategy: TowerId[], pick: BranchPick = () => 0): Result {
   const s = new GameState();
-  s.reset();
+  s.reset(20260807);
   const spots = buildSpots(s);
-  let spotIdx = 0, si = 0, t = 0;
+  let spotIdx = 0, si = 0, t = 0, frame = 0, upgrades = 0;
   let peakEnemies = 0, peakFx = 0;
   const leakByWave = new Array(WAVES.length).fill(0);
   let lastLives = s.lives;
 
   while (s.phase === 'playing' && t < 60 * 45) {
-    let guard = 0;
-    while (guard++ < 10) {
-      // Ist der geplante Turm zu teuer, nimmt der Bot den naechsten
-      // bezahlbaren aus dem Plan - so wuerde ein Mensch es auch machen.
+    if (frame % DECIDE_EVERY === 0) {
+      // Eine Entscheidung je Takt, nicht zehn.
       let id = strategy[si % strategy.length];
       if (s.gold < TOWERS[id].base.cost) {
-        const affordable = strategy.filter((c) => s.gold >= TOWERS[c].base.cost);
+        const affordable = strategy.filter((c) => s.gold >= TOWERS[c].base.cost + RESERVE);
         if (affordable.length) id = affordable[0];
       }
-      const up = s.towers.find((tw) => {
-        if (tw.level >= MAX_LEVEL) return false;
-        const n = nextFor(TOWERS[tw.def], tw.branch ?? branch, tw.level);
-        return !!n && s.gold >= n.cost + 70;
-      });
-      if (spotIdx < spots.length && s.gold >= TOWERS[id].base.cost) {
+
+      // Erst das Feld auf Breite bringen, dann in die Tiefe investieren -
+      // und zwar in den Turm, der bisher am meisten geleistet hat.
+      const wantBuild = s.towers.length < MAX_TOWERS && spotIdx < spots.length &&
+        s.gold >= TOWERS[id].base.cost + RESERVE;
+
+      if (wantBuild) {
         const sp = spots[spotIdx];
-        if (s.build(sp.x, sp.y, id)) { spotIdx++; si++; continue; }
+        if (s.build(sp.x, sp.y, id)) { si++; }
         spotIdx++;
-        continue;
+      } else {
+        let best: (typeof s.towers)[number] | null = null;
+        for (const tw of s.towers) {
+          if (tw.level >= MAX_LEVEL) continue;
+          const n = nextFor(TOWERS[tw.def], tw.branch ?? pick(tw.def), tw.level);
+          if (!n || s.gold < n.cost + RESERVE) continue;
+          if (!best || tw.damageDone > best.damageDone) best = tw;
+        }
+        if (best && s.upgrade(best, (best.branch ?? pick(best.def)) as 0 | 1)) upgrades++;
       }
-      if (up && s.upgrade(up, (up.branch ?? branch) as 0 | 1)) continue;
-      break;
+      useAbilities(s);
     }
-    useAbilities(s);
+
     const wi = Math.min(s.waveIndex, WAVES.length - 1);
     if (s.canStartWave) s.startWave();
     s.update(DT);
     t += DT;
+    frame++;
     if (s.lives < lastLives) { leakByWave[wi] += lastLives - s.lives; lastLives = s.lives; }
     if (s.enemies.length > peakEnemies) peakEnemies = s.enemies.length;
     const fx = s.particles.length + s.projectiles.length + s.rings.length;
@@ -79,7 +109,8 @@ function play(strategy: TowerId[], branch: 0 | 1 = 0): Result {
   }
   return {
     lives: s.lives, wave: s.waveNumber, won: s.phase === 'won',
-    towers: s.towers.length, peakEnemies, peakFx, leakByWave,
+    towers: s.towers.length, upgrades, peakEnemies, peakFx, leakByWave,
+    earned: s.stats.goldEarned, spent: s.stats.goldSpent,
   };
 }
 
@@ -120,21 +151,39 @@ for (const [name, plan] of Object.entries(strategies)) {
   const r = play(plan);
   results.set(name, r);
   const verdict = r.won ? `gewonnen, Kristall ${r.lives}/${START_LIVES}` : `verloren in Welle ${r.wave}`;
-  console.log(`${name.padEnd(12)} -> ${verdict}  (${r.towers} Tuerme, max ${r.peakEnemies} Gegner, max ${r.peakFx} Effekte)`);
+  console.log(`${name.padEnd(13)} -> ${verdict.padEnd(28)} ${r.towers} Tuerme, ${r.upgrades} Ausbauten, ${r.earned} Gold verdient, ${r.earned - r.spent} uebrig`);
 }
 
 const mixed = results.get('gemischt')!;
 
-// Kein toter Zweig: beide Ausbaurichtungen muessen tragen. Sonst waere die
-// Wahl auf Stufe 2 nur scheinbar eine - und genau das ist der Fehler, den
-// verzweigte Ausbaubaeume am haeufigsten machen.
+// Kein toter Zweig.
+//
+// Die naheliegende Pruefung - einmal alles auf Zweig A, einmal alles auf
+// Zweig B - ist zu grob: kein Mensch schickt sein ganzes Feld in dieselbe
+// Richtung, und ein einzelner schwacher Zweig verschwindet in der Summe oder
+// reisst umgekehrt das ganze Feld mit.
+//
+// Geprueft wird deshalb einzeln: ein gemischtes Feld, in dem genau ein
+// Turmtyp in den einen oder den anderen Zweig geht, alle anderen bleiben auf
+// Zweig A. So faellt auf, welcher Zweig genau nicht traegt.
 const mixedPlan: TowerId[] = ['arrow', 'arrow', 'mortar', 'frost', 'prism'];
-const branchA = play(mixedPlan, 0);
-const branchB = play(mixedPlan, 1);
-console.log(
-  `Zweig A -> ${branchA.won ? `gewonnen, Kristall ${branchA.lives}/${START_LIVES}` : `verloren in Welle ${branchA.wave}`}   ` +
-  `Zweig B -> ${branchB.won ? `gewonnen, Kristall ${branchB.lives}/${START_LIVES}` : `verloren in Welle ${branchB.wave}`}`,
-);
+console.log('\nZweige einzeln (gemischtes Feld, ein Turmtyp umgestellt):');
+const branchRuns = new Map<string, Result>();
+for (const id of TOWER_ORDER) {
+  for (const b of [0, 1] as const) {
+    const r = play(mixedPlan, (t) => (t === id ? b : 0));
+    branchRuns.set(`${id}:${b}`, r);
+  }
+}
+for (const id of TOWER_ORDER) {
+  const a = branchRuns.get(`${id}:0`)!, b = branchRuns.get(`${id}:1`)!;
+  const fmt = (r: Result) => (r.won ? `${r.lives}/${START_LIVES}` : `verloren W${r.wave}`);
+  const def = TOWERS[id];
+  console.log(
+    `  ${def.name.padEnd(11)} ${def.branches[0].name.padEnd(15)} ${fmt(a).padEnd(14)}` +
+    `${def.branches[1].name.padEnd(15)} ${fmt(b)}`,
+  );
+}
 
 // 1. Die gemischte Strategie muss gewinnen, sonst ist die Kurve zu steil.
 if (!mixed.won) errors.push('Gemischt muss gewinnen - die Kurve ist zu steil.');
@@ -159,14 +208,20 @@ for (const [name, r] of results) {
   }
 }
 
-// 4b. Beide Zweige muessen gewinnen und duerfen nicht weit auseinanderliegen.
-if (!branchA.won) errors.push('Zweig A gewinnt nicht - toter Ausbaupfad.');
-if (!branchB.won) errors.push('Zweig B gewinnt nicht - toter Ausbaupfad.');
-if (branchA.won && branchB.won && Math.abs(branchA.lives - branchB.lives) > 8) {
-  errors.push(
-    `Zweige liegen ${Math.abs(branchA.lives - branchB.lives)} Kristall auseinander - ` +
-    'einer der beiden ist die offensichtlich bessere Wahl.',
-  );
+// 4b. Jeder einzelne Zweig muss ein gemischtes Feld tragen, und die beiden
+//     Zweige eines Turms duerfen nicht weit auseinanderliegen.
+for (const id of TOWER_ORDER) {
+  const def = TOWERS[id];
+  const a = branchRuns.get(`${id}:0`)!, b = branchRuns.get(`${id}:1`)!;
+  for (const [br, r] of [[def.branches[0], a], [def.branches[1], b]] as const) {
+    if (!r.won) errors.push(`${def.name} / ${br.name}: gewinnt nicht - toter Ausbaupfad.`);
+  }
+  if (a.won && b.won && Math.abs(a.lives - b.lives) > 7) {
+    errors.push(
+      `${def.name}: die Zweige liegen ${Math.abs(a.lives - b.lives)} Kristall auseinander - ` +
+      `"${a.lives > b.lives ? def.branches[0].name : def.branches[1].name}" ist die klar bessere Wahl.`,
+    );
+  }
 }
 
 // 5. Effektbudget: was die Simulation erzeugt, muss der Browser zeichnen koennen.

@@ -4,7 +4,9 @@ import {
   TOWERS, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor,
   type BranchIndex, type TowerId,
 } from '../data/towers';
-import { WAVES, WAVE_HP_RAMP, EARLY_BONUS_MAX, EARLY_BONUS_WINDOW } from '../data/waves';
+import {
+  WAVES, hpScale, WAVE_DENSITY_RAMP, EARLY_BONUS_MAX, EARLY_BONUS_WINDOW,
+} from '../data/waves';
 import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
 import { MAP_SPIRALHAIN, cellCenter, cellKey, pathCells, pathLength, pathPoints } from '../data/maps';
 import type { Vec } from '../core/math';
@@ -227,10 +229,15 @@ export class GameState {
       this.float(this.goal.x, this.goal.y - 70, `Frueh gestartet  +${bonus}`, C.gold, 22);
     }
     const wave = WAVES[this.waveIndex];
+    // Spaetere Wellen kommen dichter: was zaehlt, ist die Huelle je Sekunde.
+    const dense = 1 + this.waveIndex * WAVE_DENSITY_RAMP;
     this.pending = [];
     for (const g of wave.groups) {
       for (let i = 0; i < g.count; i++) {
-        this.pending.push({ time: g.delay + i * g.gap, enemy: g.enemy, hpMul: g.hpMul ?? 1 });
+        this.pending.push({
+          time: g.delay + (i * g.gap) / dense,
+          enemy: g.enemy, hpMul: g.hpMul ?? 1,
+        });
       }
     }
     this.pending.sort((a, b) => a.time - b.time);
@@ -388,7 +395,7 @@ export class GameState {
   private spawnEnemy(id: EnemyId, hpMul: number): void {
     const def = ENEMIES[id];
     const p0 = this.points[0];
-    const ramp = 1 + this.waveIndex * WAVE_HP_RAMP;
+    const ramp = hpScale(this.waveIndex);
     const hp = Math.round(def.hp * hpMul * ramp);
     // Flieger starten leicht versetzt, damit ein Schwarm nicht als eine Linie
     // uebereinander liegt.

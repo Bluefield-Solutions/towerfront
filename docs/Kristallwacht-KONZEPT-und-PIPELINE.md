@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v13 · 07.08.2026
+Stand: v14 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -306,6 +306,32 @@ Abend.
 
 ---
 
+### 3.14 Warum nur ein Spielstil funktionierte
+
+Mit drei Bots statt einem fiel sofort auf: **nur der Meister kam durch.** Der
+breite Stil verlor in Welle 11, der sparsame in Welle 13.
+
+Die Ursache war keine Zahl, sondern eine Rückkopplung. Das Einkommen hing fast
+ganz am Abschuss: ein besseres Feld tötet mehr, verdient mehr, wird noch besser
+— und ein schwächeres fällt immer weiter zurück. Der Meister verdiente 5.106
+Gold, der breite Stil 2.082. Die Schere geht auf, nicht zu.
+
+Behoben durch eine Verlagerung: **Abschussprämien auf 40 %, Wellenbonus auf das
+4,4-fache.** Der Wellenbonus fällt auch dann an, wenn etwas durchgekommen ist —
+er flacht die Spirale ab, ohne das gute Spiel zu bestrafen.
+
+Das riss prompt eine neue Lücke auf: mit gekürzten Abschussprämien fehlte das
+Geld für die Eröffnung, und plötzlich standen Verluste in **Welle 1**. Das
+Startkapital musste von 140 auf 220 steigen.
+
+Danach war noch einmal die Form der Kurve dran. Endfaktor und Verdichtung
+prallten am voll ausgebauten Meisterfeld schlicht ab — bei Endfaktor 13 wie bei
+Endfaktor 28 gewann er identisch mit 18 von 20, bis aufs Goldstück gleich. Was
+half, war der steilere Exponent: von 2,2 auf 2,6, Endfaktor von 10 auf 13.
+
+Stand danach: Meister **15/20**, Breite **10/20**, Sparsam verliert in Welle 15.
+Zwei von drei Stilen kommen durch, keiner ohne Verlust.
+
 ### 3.13 Was ein besserer Bot über das Spiel verriet
 
 Der alte Simulationsbot baute auf jeden freien Platz — rund hundert Türme,
@@ -561,7 +587,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v13
+## 5. Stand v14
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -621,6 +647,14 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v14 — die Kurve trägt jetzt mehr als einen Spielstil.** Die
+Balance-Simulation misst gegen drei Bots: *Meister* (16 Stellungen, tief
+ausgebaut), *Breite* (26 Stellungen, erst in die Breite, dann in die Tiefe) und
+*Sparsam* (11 Stellungen, früh tief, viel Gold in der Hand). Mindestens zwei
+müssen durchkommen, keiner ohne Verlust. Dafür wurde das Einkommen umgebaut:
+der größere Teil kommt jetzt aus dem Wellenbonus statt aus dem einzelnen
+Abschuss — siehe Abschnitt 3.14.
 
 **Neu in v13 — die Schwierigkeit stimmt jetzt gegen einen Spieler, der weiß
 was er tut.** Der Simulationsbot spielt nicht mehr wie ein Anfänger: höchstens

@@ -11,18 +11,44 @@ import { ABILITIES } from '../src/data/abilities';
 
 const DT = 1 / 60;
 
-/** Wie viele Tuerme ein Mensch auf dieser Karte tatsaechlich stellt.
- *  Vorher baute der Bot auf jeden freien Platz - rund hundert Stueck. Bei der
- *  Uebermacht war jede Balanceaussage wertlos: ein absichtlich entwerteter
- *  Ausbauzweig fiel nicht einmal auf. */
-const MAX_TOWERS = 16;
+/** Spielstile.
+ *
+ *  Ein einzelner Bot ist ein einzelner Blickwinkel. Eine Kurve, die nur gegen
+ *  "wenige starke Tuerme" stimmt, kann gegen "viele billige" voellig anders
+ *  aussehen - und ein Mensch spielt mal so, mal so. Deshalb wird jede Runde
+ *  gegen mehrere Stile gemessen. */
+interface Bot {
+  name: string;
+  /** Wie viele Tuerme dieser Stil hoechstens stellt. */
+  maxTowers: number;
+  /** Bis zu welcher Stufe ausgebaut wird. */
+  maxLevel: number;
+  /** Wieviel Gold liegen bleibt, um auf eine Welle reagieren zu koennen. */
+  reserve: number;
+  /** Bilder zwischen zwei Entscheidungen - ein Mensch tippt nicht 60-mal je Sekunde. */
+  decideEvery: number;
+  /** Ab welchem Anteil der Turmzahl in die Tiefe statt in die Breite investiert wird. */
+  deepenAt: number;
+}
 
-/** Nur alle 0,5 Sekunden wird entschieden. Ein Mensch tippt nicht sechzigmal
- *  je Sekunde. */
-const DECIDE_EVERY = 30;
+/** Die Stile bilden unterschiedliche *Entscheidungen* ab, keine Fehler.
+ *  "Nie ueber Stufe 2 ausbauen" waere kein Stil, sondern schlechtes Spiel -
+ *  dass ein schlecht gespieltes Feld verliert, ist gewollt. */
+const BOTS: Bot[] = [
+  {
+    name: 'Meister', maxTowers: 16, maxLevel: 3, reserve: 40, decideEvery: 30, deepenAt: 1,
+  },
+  {
+    // Erst in die Breite, dann in die Tiefe: viele Stellungen, spaeter ausgebaut.
+    name: 'Breite', maxTowers: 26, maxLevel: 3, reserve: 15, decideEvery: 20, deepenAt: 0.85,
+  },
+  {
+    // Wenige Stellungen, frueh tief ausgebaut, viel Gold in der Hand.
+    name: 'Sparsam', maxTowers: 11, maxLevel: 3, reserve: 140, decideEvery: 30, deepenAt: 0.6,
+  },
+];
 
-/** Wieviel Gold liegen bleibt, damit auf eine Welle noch reagiert werden kann. */
-const RESERVE = 40;
+const MEISTER = BOTS[0];
 
 /** Bauplaetze nach Deckung bewertet: wie viele Pfadzellen liegen in Reichweite
  *  eines Turms auf dieser Zelle. Naehe allein taugt nicht - eine Zelle in der
@@ -57,7 +83,7 @@ interface Result {
 
 type BranchPick = (id: TowerId) => 0 | 1;
 
-function play(strategy: TowerId[], pick: BranchPick = () => 0): Result {
+function play(strategy: TowerId[], pick: BranchPick = () => 0, bot: Bot = MEISTER): Result {
   const s = new GameState();
   s.reset(20260807);
   const spots = buildSpots(s);
@@ -67,32 +93,36 @@ function play(strategy: TowerId[], pick: BranchPick = () => 0): Result {
   let lastLives = s.lives;
 
   while (s.phase === 'playing' && t < 60 * 45) {
-    if (frame % DECIDE_EVERY === 0) {
-      // Eine Entscheidung je Takt, nicht zehn.
+    if (frame % bot.decideEvery === 0) {
       let id = strategy[si % strategy.length];
       if (s.gold < TOWERS[id].base.cost) {
-        const affordable = strategy.filter((c) => s.gold >= TOWERS[c].base.cost + RESERVE);
+        const affordable = strategy.filter((c) => s.gold >= TOWERS[c].base.cost + bot.reserve);
         if (affordable.length) id = affordable[0];
       }
 
-      // Erst das Feld auf Breite bringen, dann in die Tiefe investieren -
-      // und zwar in den Turm, der bisher am meisten geleistet hat.
-      const wantBuild = s.towers.length < MAX_TOWERS && spotIdx < spots.length &&
-        s.gold >= TOWERS[id].base.cost + RESERVE;
+      const wantBuild = s.towers.length < bot.maxTowers * bot.deepenAt &&
+        spotIdx < spots.length && s.gold >= TOWERS[id].base.cost + bot.reserve;
 
       if (wantBuild) {
         const sp = spots[spotIdx];
         if (s.build(sp.x, sp.y, id)) { si++; }
         spotIdx++;
       } else {
+        // In die Tiefe: immer in den Turm, der bisher am meisten geleistet hat.
         let best: (typeof s.towers)[number] | null = null;
         for (const tw of s.towers) {
-          if (tw.level >= MAX_LEVEL) continue;
+          if (tw.level >= Math.min(bot.maxLevel, MAX_LEVEL)) continue;
           const n = nextFor(TOWERS[tw.def], tw.branch ?? pick(tw.def), tw.level);
-          if (!n || s.gold < n.cost + RESERVE) continue;
+          if (!n || s.gold < n.cost + bot.reserve) continue;
           if (!best || tw.damageDone > best.damageDone) best = tw;
         }
         if (best && s.upgrade(best, (best.branch ?? pick(best.def)) as 0 | 1)) upgrades++;
+        else if (s.towers.length < bot.maxTowers && spotIdx < spots.length &&
+          s.gold >= TOWERS[id].base.cost + bot.reserve) {
+          const sp = spots[spotIdx];
+          if (s.build(sp.x, sp.y, id)) si++;
+          spotIdx++;
+        }
       }
       useAbilities(s);
     }
@@ -155,6 +185,20 @@ for (const [name, plan] of Object.entries(strategies)) {
 }
 
 const mixed = results.get('gemischt')!;
+const mixedPlanBase: TowerId[] = ['arrow', 'arrow', 'mortar', 'frost', 'prism'];
+
+// Mehrere Spielstile: die Kurve muss fuer mehr als einen Blickwinkel stimmen.
+console.log('\nSpielstile (gemischtes Feld):');
+const styleRuns = new Map<string, Result>();
+for (const bot of BOTS) {
+  const r = play(mixedPlanBase, () => 0, bot);
+  styleRuns.set(bot.name, r);
+  const verdict = r.won ? `gewonnen, Kristall ${r.lives}/${START_LIVES}` : `verloren in Welle ${r.wave}`;
+  console.log(
+    `  ${bot.name.padEnd(9)} ${verdict.padEnd(30)}` +
+    `${r.towers} Tuerme, ${r.upgrades} Ausbauten, ${r.earned} Gold`,
+  );
+}
 
 // Kein toter Zweig.
 //
@@ -166,7 +210,7 @@ const mixed = results.get('gemischt')!;
 // Geprueft wird deshalb einzeln: ein gemischtes Feld, in dem genau ein
 // Turmtyp in den einen oder den anderen Zweig geht, alle anderen bleiben auf
 // Zweig A. So faellt auf, welcher Zweig genau nicht traegt.
-const mixedPlan: TowerId[] = ['arrow', 'arrow', 'mortar', 'frost', 'prism'];
+const mixedPlan = mixedPlanBase;
 console.log('\nZweige einzeln (gemischtes Feld, ein Turmtyp umgestellt):');
 const branchRuns = new Map<string, Result>();
 for (const id of TOWER_ORDER) {
@@ -221,6 +265,22 @@ for (const id of TOWER_ORDER) {
       `${def.name}: die Zweige liegen ${Math.abs(a.lives - b.lives)} Kristall auseinander - ` +
       `"${a.lives > b.lives ? def.branches[0].name : def.branches[1].name}" ist die klar bessere Wahl.`,
     );
+  }
+}
+
+// 4c. Mehr als ein Spielstil muss durchkommen, und keiner muehelos.
+{
+  const won = BOTS.filter((b) => styleRuns.get(b.name)!.won);
+  if (won.length < 2) {
+    errors.push(
+      `Nur ${won.length} von ${BOTS.length} Spielstilen kommt durch - die Kurve ist zu eng gestellt.`,
+    );
+  }
+  for (const b of BOTS) {
+    const r = styleRuns.get(b.name)!;
+    if (r.won && r.lives >= START_LIVES) {
+      errors.push(`Spielstil "${b.name}" gewinnt ohne einen einzigen Verlust - zu einfach.`);
+    }
   }
 }
 

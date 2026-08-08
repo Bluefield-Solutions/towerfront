@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v13 · 07.08.2026
+Stand: nach v14 · 07.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Kristallwacht-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
@@ -42,7 +42,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 
 | # | Punkt | Nutzen | Aufw. |
 |---|---|---|---|
-| T14 | Zweiten Bot mit anderem Spielstil (früh viele billige Türme statt wenige starke) — die Kurve sollte für beide funktionieren | ●● | M |
+| T15 | Die Verluste liegen fast nur in Welle 15 — Wellen 10 bis 14 sind für ein gutes Feld zu bequem. Mittlere Spitzen einbauen | ●●● | M |
 | T12 | Sichtprüfung im Tor: gebaute Datei in einem echten Browser laden und ein Bild vergleichen (jsdom kann die Kaskade nicht) | ●●● | L |
 | T8 | Kristall je Rissstufe backen (letztes Objekt mit Pfaden in jedem Bild) | ● | S |
 | T9 | Bildpuffer bei Größenwechsel gezielt verwerfen statt alles neu zu backen | ● | S |
@@ -78,6 +78,9 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S29 | Mit drei Spielstilen statt einem kam **nur einer** durch. Ursache war eine Rückkopplung: abschusslastiges Einkommen lässt die Schere zwischen gutem und schwachem Feld immer weiter aufgehen (5.106 gegen 2.082 Gold) | Einkommen verlagert: Abschussprämien 40 %, Wellenbonus 4,4×. Der Bonus fällt auch bei Durchkommen an. |
+| S30 | Die Verlagerung riss sofort eine neue Lücke: ohne Abschussgold fehlte die Eröffnung, Verluste in **Welle 1** | Startkapital 140 → 220. |
+| S31 | Endfaktor und Verdichtung prallen am voll ausgebauten Feld ab — Endfaktor 13 und 28 ergaben dasselbe Ergebnis bis aufs Goldstück | Der Exponent ist der Hebel, nicht die Höhe: 2,2 → 2,6. |
 | S26 | Mit einem kompetenten Bot (16 gut gesetzte, voll ausgebaute Türme) war das Spiel **20/20** — viel zu leicht. Die alte Schwierigkeit sah nur richtig aus, weil der alte Bot schlecht spielte | Kurve von Grund auf neu: Potenzkurve statt linear, Verdichtungsrampe, Einkommen −15 %. Jetzt 17/20 für gemischt. |
 | S27 | Drei falsche Fährten: mehr Lebenspunkte (0,11→0,28 ohne Wirkung), weniger Gold (nur weniger Restgold), dichtere Wellen (Feld ist 3× überversorgt) | Der Fehler saß in der **Form** der Kurve, nicht in ihrer Höhe. Linear trifft die Mitte genauso hart wie das Ende. |
 | S28 | Die Zweig-Waage rechnete mit *durchschnittlicher* Panzerung und ließ zwei tote Zweige durch (Salve, Splitterfrost) | Panzerung wird jetzt nach später Präsenz gewichtet. Außerdem wog das Modell Bremsen mit 1,3 statt 2,4 — die Simulation hatte recht, das Modell nicht. |

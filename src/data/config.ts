@@ -3,7 +3,7 @@
 
 /** Wird auf dem Titelbildschirm angezeigt - so ist immer sichtbar,
  *  welcher Stand gerade im Browser liegt. */
-export const VERSION = 'v13';
+export const VERSION = 'v14';
 
 export const TILE = 80;
 export const COLS = 20;
@@ -33,7 +33,7 @@ export const C = {
 } as const;
 
 /** Spielstart */
-export const START_GOLD = 140;
+export const START_GOLD = 220;
 export const START_LIVES = 20;
 
 /** Rendering / Performance */

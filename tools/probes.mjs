@@ -33,7 +33,14 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 /** Das Verzeichnis der stehenden Gegenproben.
  *
  *  `suche` muss im Baum genau einmal vorkommen — sonst ist nicht klar, was
- *  verändert wurde. `tor` ist der Befehl, der anschlagen soll. */
+ *  verändert wurde. `tor` ist der Befehl, der anschlagen soll.
+ *
+ *  Statt `suche` kann auch `regel` stehen: ein regulärer Ausdruck mit
+ *  Ersetzung. Das ist der wichtigere Weg, und der Grund dafür ist Erfahrung:
+ *  Proben, die auf feste Zahlen zeigen — eine Wegkoordinate, ein
+ *  Kurvenwert — veralten bei jeder Balance-Runde. Zweimal hat das Verzeichnis
+ *  deshalb "Muster fehlt" gemeldet, ohne dass an den Toren etwas falsch war.
+ *  Eine Regel wie `hpEnd: [0-9.]+, hpCurve: 2\.4` überlebt das. */
 const PROBEN = [
   {
     name: 'Weg knickt scharf ab',
@@ -170,14 +177,19 @@ for (const p of liste) {
   // Greift der Eingriff überhaupt? Drei von zehn Proben sind daran einmal
   // gescheitert, und ein nicht angekommener Eingriff sieht aus wie ein
   // bestandenes Tor.
-  const treffer = vorher.split(p.suche).length - 1;
-  if (treffer !== 1) {
+  const nachher = p.regel
+    ? vorher.replace(p.regel, p.ersatz)
+    : vorher.split(p.suche).length - 1 === 1
+      ? vorher.replace(p.suche, p.ersatz)
+      : null;
+  if (nachher === null || nachher === vorher) {
+    const treffer = p.regel ? 0 : vorher.split(p.suche).length - 1;
     console.log(`  ${p.name.padEnd(42)} MUSTER ${treffer === 0 ? 'FEHLT' : `${treffer}x`} in ${p.datei}`);
-    fehler.push(`${p.name}: Muster kommt ${treffer}x vor, erwartet genau einmal.`);
+    fehler.push(`${p.name}: Eingriff kam nicht an (${p.regel ? 'Regel' : `Muster ${treffer}x`}).`);
     continue;
   }
 
-  writeFileSync(pfad, vorher.replace(p.suche, p.ersatz));
+  writeFileSync(pfad, nachher);
   let schlaegtAn = false;
   try {
     execSync(`npm run ${p.tor}`, { cwd: ROOT, stdio: 'pipe' });

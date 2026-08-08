@@ -45,8 +45,11 @@ const PROBEN = [
   {
     name: 'Weg knickt scharf ab',
     datei: 'src/data/maps.ts',
-    suche: '{ x: -80, y: 210, w: 88 }, { x: 210, y: 226, w: 82 }',
-    ersatz: '{ x: -80, y: 210, w: 88 }, { x: 210, y: 950, w: 82 }',
+    // Der zweite Stuetzpunkt der ersten Bahn wird weit nach unten gezogen.
+    // Als Regel, nicht als fester Wert: Wegkoordinaten aendern sich mit jeder
+    // neuen Karte, und eine Probe, die daran haengt, veraltet lautlos.
+    regel: /(lanes: \[\n\s*\[\n\s*\{[^}]*\}, \{ x: \d+, y: )(\d+)/,
+    ersatz: '$1950',
     tor: 'guards',
   },
   {
@@ -143,7 +146,7 @@ const PROBEN = [
   {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
-    suche: 'hpEnd: 9.9, hpCurve: 2.4',
+    regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,
     ersatz: 'hpEnd: 40, hpCurve: 2.4',
     tor: 'guards',
   },

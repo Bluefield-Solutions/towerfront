@@ -72,6 +72,10 @@ const { MAPS } = await import('../src/data/maps.ts');
 const { TOWERS, TOWER_ORDER } = await import('../src/data/towers.ts');
 const { candidateSpots } = await import('./spots.ts');
 const { Menu } = await import('../src/game/menu.ts');
+const { hasBackground } = await import('../src/gfx/backgrounds.ts');
+const { hasTowerArt } = await import('../src/gfx/towerart.ts');
+const { hasEnemyArt } = await import('../src/gfx/enemyart.ts');
+const { ENEMIES } = await import('../src/data/enemies.ts');
 
 const DT = 1 / 60;
 
@@ -99,6 +103,25 @@ async function shot(name, w, h, build) {
   // Einmal zeichnen fordert alle Bilder an, dann warten.
   r.draw(s);
   await settle();
+
+  // Sind die eingebetteten Bilder wirklich angekommen?
+  //
+  // Die Farbzaehlung taugt dafuer nicht - das hat die Gegenprobe gezeigt:
+  // ohne dekodierte Bilder malt die Ersatzschicht Verlaeufe, und die bringen
+  // genug Farben mit, um jede Schwelle zu passieren. Also wird direkt
+  // gefragt, statt geraten.
+  if (!r.menu) {
+    const fehlt = [];
+    if (!hasBackground(s.map.id)) fehlt.push(`Untergrund ${s.map.id}`);
+    for (const id of TOWER_ORDER) if (!hasTowerArt(id, null)) fehlt.push(`Turm ${id}`);
+    for (const id of Object.keys(ENEMIES)) if (!hasEnemyArt(id)) fehlt.push(`Gegner ${id}`);
+    if (fehlt.length) {
+      throw new Error(
+        `Bilder nicht dekodiert (${fehlt.length}): ${fehlt.slice(0, 4).join(', ')}` +
+        `${fehlt.length > 4 ? ' ...' : ''}`,
+      );
+    }
+  }
 
   // Simulieren ist billig, Zeichnen ist teuer: 200 Simulationsschritte kosten
   // 10 Millisekunden, ein gezeichnetes Bild 180. Frueher wurde jedes Bild

@@ -18,6 +18,7 @@ import { WAVES } from '../src/data/waves';
 import { ABILITY_ORDER } from '../src/data/abilities';
 import { MAPS } from '../src/data/maps';
 import { SPEEDS } from '../src/data/config';
+import { DIFFICULTY_ORDER } from '../src/data/difficulty';
 
 const mem = new Map<string, string>();
 (globalThis as unknown as Record<string, unknown>).localStorage = {
@@ -188,7 +189,7 @@ const CRITERIA: Criterion[] = [
     id: 'K3', area: 'Karten', from: 'Bloons TD 6 (CHIMPS), Kingdom Rush (Eisen/Unmoeglich)',
     text: 'Schwierigkeitsgrade.',
     measured: true, weight: 2,
-    check: () => false,
+    check: () => DIFFICULTY_ORDER.length >= 3,
     gap: 'Ruhig / Normal / Erbarmungslos ueber Startwerte und Lebenspunktkurve.',
   },
   {

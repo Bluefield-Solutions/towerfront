@@ -1,12 +1,13 @@
-import { COLS, ROWS, TILE, WORLD_W, WORLD_H, START_GOLD, START_LIVES, C } from '../data/config';
+import { COLS, ROWS, TILE, WORLD_W, WORLD_H, C } from '../data/config';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import {
   TOWERS, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor,
   type BranchIndex, type TowerId,
 } from '../data/towers';
+import { WAVES, EARLY_BONUS_MAX, EARLY_BONUS_WINDOW } from '../data/waves';
 import {
-  WAVES, hpScale, WAVE_DENSITY_RAMP, EARLY_BONUS_MAX, EARLY_BONUS_WINDOW,
-} from '../data/waves';
+  DIFFICULTIES, hpScale, type DifficultyDef, type DifficultyId,
+} from '../data/difficulty';
 import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
 import { MAP_SPIRALHAIN, cellCenter, cellKey, pathCells, pathLength, pathPoints } from '../data/maps';
 import type { Vec } from '../core/math';
@@ -44,8 +45,12 @@ export class GameState {
   readonly airTotal: number;
 
   phase: Phase = 'title';
-  gold = START_GOLD;
-  lives = START_LIVES;
+  /** Der gewaehlte Schwierigkeitsgrad. Er verstellt Startwerte, Kurvenform,
+   *  Wellendichte und Einkommen gemeinsam. */
+  difficulty: DifficultyId = 'normal';
+  gold = DIFFICULTIES.normal.startGold;
+  lives = DIFFICULTIES.normal.startLives;
+  maxLives = DIFFICULTIES.normal.startLives;
   waveIndex = 0;
   waveActive = false;
   speed = 1;
@@ -233,7 +238,7 @@ export class GameState {
     }
     const wave = WAVES[this.waveIndex];
     // Spaetere Wellen kommen dichter: was zaehlt, ist die Huelle je Sekunde.
-    const dense = 1 + this.waveIndex * WAVE_DENSITY_RAMP;
+    const dense = 1 + this.waveIndex * this.diff.densityRamp;
     this.pending = [];
     for (const g of wave.groups) {
       for (let i = 0; i < g.count; i++) {
@@ -252,16 +257,17 @@ export class GameState {
 
   private finishWave(): void {
     const wave = WAVES[this.waveIndex];
-    this.gold += wave.bonus;
-    this.stats.goldEarned += wave.bonus;
-    this.float(this.goal.x, this.goal.y - 56, `Welle geschafft  +${wave.bonus}`, C.gold, 26);
+    const payout = Math.round(wave.bonus * this.diff.bonusMul);
+    this.gold += payout;
+    this.stats.goldEarned += payout;
+    this.float(this.goal.x, this.goal.y - 56, `Welle geschafft  +${payout}`, C.gold, 26);
     this.waveIndex++;
     this.waveActive = false;
     this.idleTime = 0;
     if (this.waveIndex >= WAVES.length) {
       this.phase = 'won';
       clearGame();
-      recordRun(WAVES.length, this.lives);
+      recordRun(this.difficulty, WAVES.length, this.lives);
       Sfx.play('win');
     }
   }
@@ -393,7 +399,7 @@ export class GameState {
       this.lives = 0;
       this.phase = 'lost';
       clearGame();
-      recordRun(this.waveNumber - 1, 0);
+      recordRun(this.difficulty, this.waveNumber - 1, 0);
       Sfx.play('lose');
     }
   }
@@ -401,7 +407,7 @@ export class GameState {
   private spawnEnemy(id: EnemyId, hpMul: number): void {
     const def = ENEMIES[id];
     const p0 = this.points[0];
-    const ramp = hpScale(this.waveIndex);
+    const ramp = hpScale(this.diff, this.waveIndex, WAVES.length);
     const hp = Math.round(def.hp * hpMul * ramp);
     // Flieger starten leicht versetzt, damit ein Schwarm nicht als eine Linie
     // uebereinander liegt.
@@ -756,11 +762,12 @@ export class GameState {
     Sfx.play('hit');
     if (e.hp <= 0) {
       e.dead = true;
-      this.gold += def.bounty;
-      this.stats.goldEarned += def.bounty;
+      const bounty = Math.max(1, Math.round(def.bounty * this.diff.bountyMul));
+      this.gold += bounty;
+      this.stats.goldEarned += bounty;
       this.stats.kills++;
       if (owner) owner.kills++;
-      this.float(e.x, e.y - 12, `+${def.bounty}`, C.gold, def.boss ? 30 : 20);
+      this.float(e.x, e.y - 12, `+${bounty}`, C.gold, def.boss ? 30 : 20);
       this.spark(e.x, e.y, def.body, this.quality === 'hoch' ? (def.boss ? 44 : 12) : 6, def.boss ? 320 : 180);
       Sfx.play('kill');
       this.husks.push({
@@ -895,12 +902,17 @@ export class GameState {
 
   // ---------------------------------------------------------------- Steuerung
 
-  reset(seed = newSeed()): void {
+  get diff(): DifficultyDef { return DIFFICULTIES[this.difficulty]; }
+
+  reset(seed = newSeed(), difficulty: DifficultyId = this.difficulty): void {
     this.seed = seed;
     this.rng.state = seed;
+    this.difficulty = difficulty;
     clearGame();
-    this.gold = START_GOLD;
-    this.lives = START_LIVES;
+    const d = DIFFICULTIES[difficulty];
+    this.gold = d.startGold;
+    this.lives = d.startLives;
+    this.maxLives = d.startLives;
     this.waveIndex = 0;
     this.waveActive = false;
     this.enemies.length = 0; this.towers.length = 0; this.projectiles.length = 0;
@@ -932,7 +944,8 @@ export class GameState {
   /** Nur das, was den Verlauf bestimmt. Reine Darstellung bleibt draussen. */
   snapshot(): SaveGame {
     return {
-      v: 4,
+      v: 5,
+      difficulty: this.difficulty,
       seed: this.seed,
       rng: this.rng.state,
       gold: this.gold,
@@ -970,13 +983,14 @@ export class GameState {
    *  Stand nicht zu den aktuellen Daten passt - dann wird er verworfen statt
    *  halb geladen. */
   restore(save: SaveGame): boolean {
-    if (save.v !== 4) return false;
+    if (save.v !== 5) return false;
+    if (!(save.difficulty in DIFFICULTIES)) return false;
     if (save.waveIndex < 0 || save.waveIndex > WAVES.length) return false;
     for (const [id] of save.towers) if (!(id in TOWERS)) return false;
     for (const [id] of save.enemies) if (!(id in ENEMIES)) return false;
     for (const [, id] of save.pending) if (!(id in ENEMIES)) return false;
 
-    this.reset(save.seed);
+    this.reset(save.seed, save.difficulty);
     this.rng.state = save.rng;
     this.gold = save.gold;
     this.lives = save.lives;

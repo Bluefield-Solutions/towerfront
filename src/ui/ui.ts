@@ -7,6 +7,7 @@ import {
 } from '../data/towers';
 import { Sfx } from '../core/audio';
 import { getBest, getSettings, saveSettings } from '../core/storage';
+import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../data/difficulty';
 import { spriteCount } from '../gfx/sprites';
 import { clearGame, loadGame } from '../game/save';
 import { TUTORIAL, type TutorialStep } from '../game/tutorial';
@@ -40,6 +41,7 @@ export class UI {
   private sTitle = $('s-title');
   private sText = $('s-text');
   private sBest = $('s-best');
+  private sGrades = $('s-grades');
   private sStats = $('s-stats');
   private sAction = $<HTMLButtonElement>('s-action');
   private sResume = $<HTMLButtonElement>('s-resume');
@@ -96,6 +98,16 @@ export class UI {
       this.skillBtns.set(id, b);
     }
 
+    // Schwierigkeitsgrad waehlbar, bevor es losgeht.
+    this.sGrades.addEventListener('click', (ev) => {
+      const b = (ev.target as HTMLElement).closest('button');
+      if (!b?.dataset.grade) return;
+      Sfx.unlock(); Sfx.play('tap');
+      saveSettings({ difficulty: b.dataset.grade as DifficultyId });
+      this.renderGrades();
+      this.showScreen('title');
+    });
+
     Sfx.setEnabled(getSettings().sound);
     this.bSound.addEventListener('click', () => {
       Sfx.unlock();
@@ -131,7 +143,7 @@ export class UI {
     });
     this.sAction.addEventListener('click', () => {
       Sfx.unlock();
-      this.s.reset();
+      this.s.reset(undefined, getSettings().difficulty);
       // Die Einfuehrung laeuft nur bei einem neuen Spiel, nie beim Fortsetzen.
       this.tutStep = getSettings().tutorial ? 0 : -1;
     });
@@ -163,10 +175,15 @@ export class UI {
   showScreen(kind: 'title' | 'won' | 'lost'): void {
     const s = this.s;
     this.screen.hidden = false;
-    const best = getBest();
+    const shown = kind === 'title' ? getSettings().difficulty : s.difficulty;
+    const best = getBest(shown);
+    const gradeName = DIFFICULTIES[shown].name;
     this.sBest.textContent = best.wave > 0
-      ? `Bester Lauf: Welle ${best.wave}${best.lives ? `, Kristall ${best.lives}` : ''}`
+      ? `Bester Lauf auf ${gradeName}: Welle ${best.wave}${best.lives ? `, Kristall ${best.lives}` : ''}`
       : '';
+
+    this.sGrades.hidden = kind !== 'title';
+    if (kind === 'title') this.renderGrades();
 
     const save = kind === 'title' ? loadGame() : null;
     if (save) {
@@ -190,7 +207,8 @@ export class UI {
       this.sEyebrow.textContent = 'Alle Wellen überstanden';
       this.sTitle.textContent = 'Der Kristall hält';
       this.sText.textContent =
-        `Fünfzehn Wellen abgewehrt, ${s.lives} von 20 Kristallpunkten übrig, ${s.towers.length} Türme im Feld.`;
+        `Fünfzehn Wellen abgewehrt auf ${gradeName}, ${s.lives} von ${s.maxLives} ` +
+        `Kristallpunkten übrig, ${s.towers.length} Türme im Feld.`;
       this.sAction.textContent = 'Noch einmal';
     } else {
       this.sEyebrow.textContent = `Welle ${s.waveNumber} von ${s.totalWaves}`;
@@ -202,6 +220,15 @@ export class UI {
   }
 
   hideScreen(): void { this.screen.hidden = true; }
+
+  private renderGrades(): void {
+    const cur = getSettings().difficulty;
+    this.sGrades.innerHTML = DIFFICULTY_ORDER.map((id) => {
+      const d = DIFFICULTIES[id];
+      return `<button class="grade" data-grade="${id}" data-on="${id === cur ? 1 : 0}">` +
+        `<b>${d.name}</b><span>${d.blurb}</span></button>`;
+    }).join('');
+  }
 
   /** Auswertung nach der Partie. Alle Zahlen wurden waehrend des Spiels
    *  ohnehin mitgeschrieben - hier werden sie nur lesbar gemacht. */
@@ -215,7 +242,7 @@ export class UI {
     const secs = Math.floor(st.duration % 60);
     const figs = [
       ['Wellen', `${s.phase === 'won' ? s.totalWaves : Math.max(0, s.waveNumber - 1)}/${s.totalWaves}`],
-      ['Kristall', `${s.lives}/20`],
+      ['Kristall', `${s.lives}/${s.maxLives}`],
       ['Dauer', `${mins}:${String(secs).padStart(2, '0')}`],
       ['Türme', String(st.towersBuilt)],
       ['Erledigt', String(st.kills)],

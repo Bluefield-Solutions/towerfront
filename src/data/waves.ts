@@ -16,35 +16,6 @@ export interface Wave {
 
 /** Zusaetzliche Lebenspunkte pro Welle, kumulativ ab Welle 1 = 0 %.
  *  Haelt die Kurve steigend, ohne jede Welle einzeln nachziehen zu muessen. */
-/** Lebenspunkt-Kurve.
- *
- *  Vorher stieg sie linear - und traf damit die Mitte genauso hart wie das
- *  Ende. Genau dort entstand die Wand in Welle 8: die Gegner waren schon zaeh,
- *  das Feld aber noch nicht gebaut. Wird die Kurve flach genug fuer die Mitte
- *  gestellt, ist das Ende belanglos; wird sie steil genug fuer das Ende
- *  gestellt, ist die Mitte unspielbar.
- *
- *  Eine Potenzkurve loest beides: fast unveraendert am Anfang, steil am Ende.
- *  WAVE_HP_END ist der Faktor auf der letzten Welle. */
-export const WAVE_HP_END = 13;
-export const WAVE_HP_CURVE = 2.6;
-
-/** Verdichtung je Welle: der Abstand zwischen zwei Gegnern schrumpft.
- *
- *  Die Lebenspunkt-Rampe allein reicht nicht. Ein voll ausgebautes Feld hat
- *  eine feste Schadensleistung je Sekunde; entscheidend ist deshalb, wieviel
- *  Huelle je Sekunde ankommt - nicht, wieviel je Gegner. Ohne diese Schraube
- *  ist die Kurve zweiwertig: entweder das Feld haelt alles oder es bricht. */
-/** Der groessere Teil des Einkommens kommt aus dem Ueberstehen einer Welle,
- *  nicht aus dem einzelnen Abschuss.
- *
- *  Mit abschusslastigem Einkommen entsteht eine Rueckkopplung: ein besseres
- *  Feld toetet mehr, verdient mehr, wird noch besser - und ein schwaecheres
- *  faellt immer weiter zurueck. Dadurch war nur ein einziger Spielstil
- *  tragfaehig. Der Wellenbonus flacht diese Spirale ab: er faellt auch dann
- *  an, wenn etwas durchgekommen ist. */
-export const WAVE_DENSITY_RAMP = 0.16;
-
 /** Gold-Sofortbonus fuer frueh gestartete Wellen. Faellt linear auf 0. */
 export const EARLY_BONUS_MAX = 30;
 export const EARLY_BONUS_WINDOW = 22; // Sekunden
@@ -101,9 +72,3 @@ export const WAVES: Wave[] = [
     { enemy: 'flyer', count: 11, gap: 0.8, delay: 12 },
     { enemy: 'runner', count: 24, gap: 0.3, delay: 16 } ] },
 ];
-
-/** Lebenspunktfaktor der Welle mit dem Index i (0-basiert). */
-export function hpScale(i: number): number {
-  const t = i / Math.max(1, WAVES.length - 1);
-  return 1 + Math.pow(t, WAVE_HP_CURVE) * WAVE_HP_END;
-}

@@ -4,7 +4,10 @@
  *  oder Gegnerwerten wird sofort daran gemessen.
  *  Aufruf: npx tsx tools/sim.ts */
 import { GameState } from '../src/game/state';
-import { COLS, ROWS, TILE, START_LIVES } from '../src/data/config';
+import { COLS, ROWS, TILE } from '../src/data/config';
+import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../src/data/difficulty';
+
+const START_LIVES = DIFFICULTIES.normal.startLives;
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, type TowerId } from '../src/data/towers';
 import { WAVES } from '../src/data/waves';
 import { ABILITIES } from '../src/data/abilities';
@@ -77,15 +80,19 @@ function buildSpots(s: GameState) {
 interface Result {
   lives: number; wave: number; won: boolean;
   towers: number; upgrades: number; peakEnemies: number; peakFx: number;
+  maxLives: number;
   earned: number; spent: number;
   leakByWave: number[];
 }
 
 type BranchPick = (id: TowerId) => 0 | 1;
 
-function play(strategy: TowerId[], pick: BranchPick = () => 0, bot: Bot = MEISTER): Result {
+function play(
+  strategy: TowerId[], pick: BranchPick = () => 0,
+  bot: Bot = MEISTER, difficulty: DifficultyId = 'normal',
+): Result {
   const s = new GameState();
-  s.reset(20260807);
+  s.reset(20260807, difficulty);
   const spots = buildSpots(s);
   let spotIdx = 0, si = 0, t = 0, frame = 0, upgrades = 0;
   let peakEnemies = 0, peakFx = 0;
@@ -139,7 +146,7 @@ function play(strategy: TowerId[], pick: BranchPick = () => 0, bot: Bot = MEISTE
   }
   return {
     lives: s.lives, wave: s.waveNumber, won: s.phase === 'won',
-    towers: s.towers.length, upgrades, peakEnemies, peakFx, leakByWave,
+    towers: s.towers.length, upgrades, peakEnemies, peakFx, leakByWave, maxLives: s.maxLives,
     earned: s.stats.goldEarned, spent: s.stats.goldSpent,
   };
 }
@@ -198,6 +205,21 @@ for (const bot of BOTS) {
     `  ${bot.name.padEnd(9)} ${verdict.padEnd(30)}` +
     `${r.towers} Tuerme, ${r.upgrades} Ausbauten, ${r.earned} Gold`,
   );
+}
+
+// Jeder Schwierigkeitsgrad bekommt eine eigene Pruefung. Ein Grad, den kein
+// Spielstil schafft, ist kein Grad, sondern ein Fehler - und einer, der jeden
+// Stil muehelos durchlaesst, ebenso.
+console.log('\nSchwierigkeitsgrade (gemischtes Feld, alle Stile):');
+const diffRuns = new Map<string, Result>();
+for (const id of DIFFICULTY_ORDER) {
+  const line: string[] = [];
+  for (const bot of BOTS) {
+    const r = play(mixedPlanBase, () => 0, bot, id);
+    diffRuns.set(`${id}:${bot.name}`, r);
+    line.push(`${bot.name} ${r.won ? `${r.lives}/${r.maxLives}` : `W${r.wave}`}`);
+  }
+  console.log(`  ${DIFFICULTIES[id].name.padEnd(15)} ${line.join('   ')}`);
 }
 
 // Kein toter Zweig.
@@ -281,6 +303,26 @@ for (const id of TOWER_ORDER) {
     if (r.won && r.lives >= START_LIVES) {
       errors.push(`Spielstil "${b.name}" gewinnt ohne einen einzigen Verlust - zu einfach.`);
     }
+  }
+}
+
+// 4d. Die Grade muessen sich unterscheiden und jeder muss Sinn ergeben.
+{
+  const wonCount = (id: DifficultyId) => BOTS.filter((b) => diffRuns.get(`${id}:${b.name}`)!.won).length;
+  if (wonCount('ruhig') < BOTS.length) {
+    errors.push('Ruhig: nicht jeder Spielstil kommt durch - der leichteste Grad muss verzeihen.');
+  }
+  if (wonCount('erbarmungslos') < 1) {
+    errors.push('Erbarmungslos: kein Spielstil kommt durch - das ist kein Grad, sondern eine Wand.');
+  }
+  const hard = diffRuns.get('erbarmungslos:Meister')!;
+  if (hard.won && hard.lives > hard.maxLives * 0.6) {
+    errors.push(
+      `Erbarmungslos: der Meister gewinnt mit ${hard.lives}/${hard.maxLives} - zu bequem fuer den haertesten Grad.`,
+    );
+  }
+  if (wonCount('ruhig') <= wonCount('erbarmungslos')) {
+    errors.push('Ruhig ist nicht leichter als Erbarmungslos - die Grade unterscheiden sich nicht.');
   }
 }
 

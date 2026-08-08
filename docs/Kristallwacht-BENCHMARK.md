@@ -1,8 +1,8 @@
 # Kristallwacht — Genre-Abgleich
 
-Stand: v15 · 07.08.2026 · Aktueller Wert: **21 von 30 Kriterien, gewichtet 74 %**
+Stand: v17 · 07.08.2026 · Aktueller Wert: **22 von 30 Kriterien, gewichtet 76 %**
 
-*Verlauf: v11 = 18/27 (69 %) → v12 = 19/27 (73 %) → v15 = 21/30 (74 %).
+*Verlauf: v11 = 18/27 (69 %) → v12 = 19/27 (73 %) → v15 = 21/30 (74 %) → v17 = 22/30 (76 %), K3 erfüllt.
 In v15 kamen drei Grafik-Kriterien in den Katalog; zwei davon sind erfüllt.*
 
 Dieses Dokument ist die Grundlage für `npm run benchmark`. Es hält fest, *woher*
@@ -58,7 +58,7 @@ reichen für einen Prototyp. *Diesen Fehler haben wir bisher vermieden.*
 | Fokus & Klarheit | 4/4 | Karte ohne Scrollen, Pause mit Baumöglichkeit, Tempo 1×/2×/3×, Werte vor dem Kauf |
 | Rollen & Entscheidungen | 5/6 | Vier Türme, vier Wirkungsweisen, **verzweigter Ausbau**, Fähigkeiten, Luftlücke — es fehlt der Blocker |
 | Gegner | 5/6 | Masse, Tempo, Panzerung, Luft, Zerfall, Boss — es fehlen unterstützende Gegner |
-| Karten & Wiederspielwert | **0/6** | **Die eine große Lücke.** Eine Karte, ein Schwierigkeitsgrad, kein Endlosmodus, keine Bewertung, kein Fortschritt |
+| Karten & Wiederspielwert | **1/6** | **Die eine große Lücke.** Eine Karte, ein Schwierigkeitsgrad, kein Endlosmodus, keine Bewertung, kein Fortschritt |
 | Politur | 7/8 | Ton, Auswertung, Einführung, Spielstand, Inspektor, animierte Gegner, lebende Welt — es fehlen antippbare Kleinigkeiten in der Karte |
 
 Das Bild ist eindeutig: **Die Kernschleife ist auf Genre-Niveau, der
@@ -78,7 +78,6 @@ Gegenteil —, aber ab hier liegt der Hebel eindeutig bei Bereich „Karten".
 | K2 ●●● | Gabelung oder zwei Zugänge | Kingdom Rush Frontiers | Zweiter Pfad, der sich mit dem ersten vereint |
 | R4 ●● | Etwas, das aufhält statt tötet | Kingdom Rush (Kaserne) | Blockturm, der Gegner bindet |
 | G5 ●● | Unterstützende Gegner | Kingdom Rush, PvZ | Heiler oder Schildträger, der die Zielreihenfolge erzwingt |
-| K3 ●● | Schwierigkeitsgrade | Bloons (CHIMPS), Kingdom Rush | Ruhig / Normal / Erbarmungslos |
 | K4 ●● | Endlosmodus | Kingdom Rush | Nach Welle 15 fortlaufend skalierend |
 | K5 ●● | Bewertung je Karte | Kingdom Rush (Sterne) | Sterne nach verbleibendem Kristall |
 | K6 ●● | Fortschritt zwischen Partien | Kingdom Rush (Sternpunkte) | Punkte, die Türme dauerhaft verbessern |

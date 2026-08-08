@@ -1,4 +1,4 @@
-import { C, COLS, ROWS, TILE, WORLD_H, WORLD_W, START_LIVES } from '../data/config';
+import { C, COLS, ROWS, TILE, WORLD_H, WORLD_W } from '../data/config';
 import { ENEMIES } from '../data/enemies';
 import {
   TOWERS, accentFor, statsFor,
@@ -207,7 +207,7 @@ export class Renderer {
     const ctx = this.ctx;
     const { x, y } = s.goal;
     const t = s.crystalPulse;
-    const health = Math.max(0, s.lives) / START_LIVES;
+    const health = Math.max(0, s.lives) / Math.max(1, s.maxLives);
     const pulse = 1 + Math.sin(t * 2) * 0.04;
     const glowR = (95 + Math.sin(t * 2) * 8) * (0.55 + health * 0.45);
 

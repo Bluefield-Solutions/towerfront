@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v16 · 07.08.2026
+Stand: nach v17 · 07.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Kristallwacht-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
@@ -36,7 +36,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | C17 | Dritte Fähigkeit, die Gold statt Schaden bringt (Ernte mit Abklingzeit) | ●● | S |
 | C18 | Fähigkeiten zwischen Karten freischalten statt von Anfang an verfügbar | ●● | M |
 | C14 | Kartenauswahl mit Sternebewertung nach verbleibendem Kristall | ●● | M |
-| C15 | Schwierigkeitsgrade (Ruhig / Normal / Erbarmungslos) über Startwerte | ●● | S |
+| C23 | Vierter Grad „Unmöglich" mit eigenen Regeln statt nur härteren Zahlen (kein Verkaufen, keine Fähigkeiten) | ●● | M |
 
 ## Offen — Technik
 
@@ -79,6 +79,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S35 | Erbarmungslos war zunächst mit 15 % weniger Einkommen angesetzt — **kein** Spielstil kam durch, auch nicht mit mehr Kristall und milderer Kurve | Das Einkommen ist die empfindlichste Schraube im Spiel: 15 % weniger brechen den Lauf, 30 % mehr Lebenspunkte ändern kaum etwas. Der harte Grad läuft jetzt mit 95 % Einkommen. |
 | S34 | Aussehen lässt sich nicht automatisch beurteilen — *Gleichheit* aber schon, und die ist der eigentliche Fehler | Wächter prüft eindeutige Zweig-Bezeichner (daran hängt die Form), Rauchtest prüft, dass für jeden Zweig ein eigenes Bild entsteht. Beide Gegenproben schlagen an. |
 | S32 | Vor der Grafikrunde standen 2.874 von 3.000 Zeichenbefehlen — zu eng für Politur. Größter Posten: 907 Teilchen-Rechtecke | Obergrenze für Teilchen eingeführt (620/180). Danach passte mehr Grafik in *weniger* Befehle: 2.576. |
 | S33 | Gebackene Bilder kosten Speicher, und mit sechs Laufphasen je Gegner wächst der Vorrat schnell | Backbudget als zweite Zahl im Zeichen-Tor: 71 Bilder, 5,8 MB, Obergrenze 24 MB. |

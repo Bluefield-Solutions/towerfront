@@ -1,7 +1,12 @@
 /** Datenwaechter. Laeuft vor jedem Build und prueft die Inhaltsdateien auf
  *  Widersprueche, die im Spiel erst spaet oder gar nicht auffallen wuerden.
  *  Aufruf: npx tsx tools/guards.ts */
-import { COLS, ROWS, START_GOLD, START_LIVES } from '../src/data/config';
+import { COLS, ROWS } from '../src/data/config';
+import { DIFFICULTIES, DIFFICULTY_ORDER, hpScale } from '../src/data/difficulty';
+
+const NORMAL = DIFFICULTIES.normal;
+const START_GOLD = NORMAL.startGold;
+const START_LIVES = NORMAL.startLives;
 import { MAPS, cellKey, pathCells } from '../src/data/maps';
 import { TOWERS, TOWER_ORDER } from '../src/data/towers';
 import { ENEMIES } from '../src/data/enemies';
@@ -266,6 +271,36 @@ for (const [id, e] of Object.entries(ENEMIES)) {
       const other = seen.get(b.id);
       if (other) fail(`Zweig-Bezeichner "${b.id}" kommt bei ${other} und ${id} vor.`);
       seen.set(b.id, id);
+    }
+  }
+}
+
+// ------------------------------------------------------ Schwierigkeitsgrade
+//
+// Die Grade muessen eine Reihenfolge bilden. Ein "Ruhig", das an einer Stelle
+// haerter ist als "Normal", verwirrt mehr, als es hilft.
+{
+  for (let i = 1; i < DIFFICULTY_ORDER.length; i++) {
+    const a = DIFFICULTIES[DIFFICULTY_ORDER[i - 1]];
+    const b = DIFFICULTIES[DIFFICULTY_ORDER[i]];
+    if (b.startLives > a.startLives) fail(`${b.name} gibt mehr Kristall als ${a.name}.`);
+    if (b.startGold > a.startGold) fail(`${b.name} gibt mehr Startgold als ${a.name}.`);
+    if (b.hpEnd <= a.hpEnd) fail(`${b.name} hat keine haertere Lebenspunktkurve als ${a.name}.`);
+    if (b.bountyMul > a.bountyMul) fail(`${b.name} zahlt mehr je Abschuss als ${a.name}.`);
+    if (b.densityRamp < a.densityRamp) fail(`${b.name} schickt duennere Wellen als ${a.name}.`);
+  }
+  for (const id of DIFFICULTY_ORDER) {
+    const d = DIFFICULTIES[id];
+    if (!d.name || !d.blurb) fail(`Schwierigkeitsgrad ${id}: Name oder Beschreibung fehlt.`);
+    if (d.startLives < 5) fail(`Schwierigkeitsgrad ${id}: unter 5 Kristall ist kein Spiel mehr.`);
+    if (d.hpCurve < 1.5) {
+      warn(`Schwierigkeitsgrad ${id}: flacher Exponent ${d.hpCurve} - die Mitte wird haerter als das Ende.`);
+    }
+    // Die erste Welle darf nirgends schon skaliert sein.
+    const first = hpScale(d, 0, WAVES.length);
+    if (Math.abs(first - 1) > 1e-9) fail(`Schwierigkeitsgrad ${id}: Welle 1 startet nicht bei Faktor 1.`);
+    if (!TOWER_ORDER.some((t) => TOWERS[t].base.cost <= d.startGold)) {
+      fail(`Schwierigkeitsgrad ${id}: kein Turm ist mit ${d.startGold} Startgold bezahlbar.`);
     }
   }
 }

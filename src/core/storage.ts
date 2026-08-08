@@ -7,6 +7,8 @@ export interface Settings {
   perf: boolean;
   /** Einfuehrung beim naechsten neuen Spiel zeigen. */
   tutorial: boolean;
+  /** Zuletzt gewaehlter Schwierigkeitsgrad. */
+  difficulty: 'ruhig' | 'normal' | 'erbarmungslos';
 }
 
 export interface Best {
@@ -14,11 +16,15 @@ export interface Best {
   lives: number;
 }
 
-interface Store { settings: Settings; best: Best; }
+/** Bestleistung je Schwierigkeitsgrad - ein einziger Bestwert waere
+ *  irrefuehrend, wenn er auf "Ruhig" entstanden ist. */
+type BestMap = Partial<Record<string, Best>>;
+
+interface Store { settings: Settings; best: BestMap; }
 
 const DEFAULTS: Store = {
-  settings: { sound: true, quality: 'auto', perf: false, tutorial: true },
-  best: { wave: 0, lives: 0 },
+  settings: { sound: true, quality: 'auto', perf: false, tutorial: true, difficulty: 'normal' },
+  best: {},
 };
 
 function read(): Store {
@@ -28,7 +34,7 @@ function read(): Store {
     const p = JSON.parse(raw) as Partial<Store>;
     return {
       settings: { ...DEFAULTS.settings, ...(p.settings ?? {}) },
-      best: { ...DEFAULTS.best, ...(p.best ?? {}) },
+      best: typeof p.best === 'object' && p.best ? { ...p.best } : {},
     };
   } catch {
     return structuredCloneSafe(DEFAULTS);
@@ -46,18 +52,19 @@ function structuredCloneSafe(s: Store): Store {
 let store = read();
 
 export const getSettings = (): Settings => store.settings;
-export const getBest = (): Best => store.best;
+export const getBest = (difficulty: string): Best =>
+  store.best[difficulty] ?? { wave: 0, lives: 0 };
 
 export function saveSettings(patch: Partial<Settings>): void {
   store.settings = { ...store.settings, ...patch };
   write(store);
 }
 
-/** Merkt sich den besten Lauf: weiter gekommen schlaegt mehr Kristall. */
-export function recordRun(wave: number, lives: number): void {
-  const b = store.best;
+/** Merkt sich den besten Lauf je Grad: weiter gekommen schlaegt mehr Kristall. */
+export function recordRun(difficulty: string, wave: number, lives: number): void {
+  const b = store.best[difficulty] ?? { wave: 0, lives: 0 };
   if (wave > b.wave || (wave === b.wave && lives > b.lives)) {
-    store.best = { wave, lives };
+    store.best[difficulty] = { wave, lives };
     write(store);
   }
 }

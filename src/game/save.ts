@@ -2,6 +2,7 @@ import type { EnemyId } from '../data/enemies';
 import type { BranchIndex, TowerId } from '../data/towers';
 import type { AbilityId } from '../data/abilities';
 import type { RunStats } from './types';
+import type { DifficultyId } from '../data/difficulty';
 
 /** Spielstand einer laufenden Partie.
  *
@@ -15,7 +16,8 @@ import type { RunStats } from './types';
  *  wegzulassen war bequem, aber falsch: die Determinismus-Pruefung hat gezeigt,
  *  dass eine fortgesetzte Partie dadurch messbar anders verlaeuft. */
 export interface SaveGame {
-  v: 4;
+  v: 5;
+  difficulty: DifficultyId;
   seed: number;
   rng: number;
   gold: number;
@@ -72,7 +74,7 @@ export function loadGame(): SaveGame | null {
     if (!raw) return null;
     const p = JSON.parse(raw) as SaveGame;
     // Ein Stand aus einer aelteren Fassung wird verworfen statt halb geladen.
-    if (p.v !== 4 || !Array.isArray(p.towers) || !Array.isArray(p.enemies)) return null;
+    if (p.v !== 5 || !Array.isArray(p.towers) || !Array.isArray(p.enemies)) return null;
     return p;
   } catch {
     return null;

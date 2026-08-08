@@ -3,7 +3,7 @@
 
 /** Wird auf dem Titelbildschirm angezeigt - so ist immer sichtbar,
  *  welcher Stand gerade im Browser liegt. */
-export const VERSION = 'v16';
+export const VERSION = 'v17';
 
 export const TILE = 80;
 export const COLS = 20;
@@ -32,9 +32,7 @@ export const C = {
   ink: '#05070F',
 } as const;
 
-/** Spielstart */
-export const START_GOLD = 220;
-export const START_LIVES = 20;
+/** Startwerte stehen im Schwierigkeitsgrad, siehe data/difficulty.ts. */
 
 /** Rendering / Performance */
 export const MAX_DT = 1 / 20; // Ein Frame simuliert nie mehr als 50 ms

@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v16 · 07.08.2026
+Stand: v17 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -305,6 +305,39 @@ jederzeit wiederherstellbar. Ein Fehlversuch kostet eine Minute, nicht einen
 Abend.
 
 ---
+
+### 3.17 Jeder Grad bekommt eine eigene Prüfung
+
+Ein Schwierigkeitsgrad, den kein Spielstil schafft, ist kein Grad, sondern eine
+Wand. Einer, der jeden Stil mühelos durchlässt, ist kein Grad, sondern ein
+Menüpunkt. Die Balance-Simulation prüft deshalb je Grad:
+
+- **Ruhig:** *jeder* Spielstil muss durchkommen. Der leichteste Grad muss
+  verzeihen.
+- **Erbarmungslos:** mindestens einer muss durchkommen — und der Meister darf
+  nicht mit mehr als 60 % Kristall gewinnen.
+- **Ruhig muss messbar leichter sein als Erbarmungslos**, sonst unterscheiden
+  sich die Grade nicht.
+
+Dazu verlangt der Datenwächter eine echte Reihenfolge: kein Grad darf an
+irgendeiner Stelle milder sein als der leichtere vor ihm — nicht bei Kristall,
+Startgold, Kurve, Einkommen oder Dichte. Und jeder Grad muss bei Welle 1 mit
+Faktor 1 starten; eine schon skalierte erste Welle wäre ein Rechenfehler.
+
+Aktueller Stand:
+
+```
+Ruhig           Meister 25/25   Breite 25/25   Sparsam 20/25
+Normal          Meister 15/20   Breite 15/20   Sparsam  6/20
+Erbarmungslos   Meister  3/14   Breite W12     Sparsam W13
+```
+
+**Ein Befund am Rande:** Erbarmungslos war zunächst mit 15 % weniger Einkommen
+angesetzt — und *kein* Spielstil kam durch, auch nicht mit mehr Kristall und
+milderer Kurve. Das Einkommen ist die empfindlichste Schraube im ganzen Spiel;
+15 % weniger brechen den Lauf, während 30 % mehr Lebenspunkte kaum etwas ändern.
+Der harte Grad läuft jetzt mit 95 % Einkommen und holt seine Härte aus Kristall,
+Kurve und Dichte.
 
 ### 3.16 Wie man prüft, ob zwei Türme verschieden aussehen
 
@@ -620,7 +653,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v16
+## 5. Stand v17
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -680,6 +713,20 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v17 — drei Schwierigkeitsgrade, wählbar auf dem Titelbildschirm.**
+Nicht ein einzelner Regler, sondern ein ganzer Satz Kurvenparameter — die
+Erfahrung aus v13 und v14 war eindeutig: Höhe allein ändert nichts, weil ein
+voll ausgebautes Feld eine feste Leistung hat.
+
+| | Kristall | Startgold | Endfaktor | Exponent | Dichte | Gold |
+|---|---|---|---|---|---|---|
+| Ruhig | 25 | 300 | 9 | 2,4 | 11 % | +30 % |
+| Normal | 20 | 220 | 13 | 2,6 | 16 % | — |
+| Erbarmungslos | 14 | 190 | 17 | 2,7 | 20 % | −5 % |
+
+Der Bestwert wird je Grad getrennt geführt — ein einziger wäre irreführend,
+wenn er auf „Ruhig" entstanden ist.
 
 **Neu in v16 — jeder Zweig hat jetzt eine eigene Gestalt.** Bis v15 unterschied
 nur die Farbe, was man gebaut hatte. Im Gewühl erkennt man einen Umriss aber

@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v31 · 08.08.2026
+Stand: nach v32 · 08.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Kristallwacht-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
@@ -82,6 +82,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S61 | **Drei von zehn Fehlerinjektionen meldeten „schlägt nicht an" — alle drei waren Fehler in der Probe, nicht im Tor** | Ein Wert traf nur die erste Ausbaustufe; eine Schleife landete in der falschen Methode; eine Änderung wurde in der Quelldatei geprüft statt in der gebauten. Erst prüfen, ob der Eingriff angekommen ist. |
+| S62 | Die Prüfumgebung sicherte den Quellbaum mit `cp -r src /tmp/src.bak` — das Verzeichnis existierte schon, die Kopie landete darin, beim Zurückspielen war der Baum beschädigt | Aufgefallen nur, weil eine Karte plötzlich anders aussah. Wiederherstellung läuft jetzt über `git checkout`. |
 | S60 | Beim Einbau der Türme hatte ich acht Bruchstücke in den Vorlagen übersehen — sie schrumpften die Türme beim Skalieren | Von Hand eingebaute Bilder sind nicht überprüfbar. Seit v31 macht das `tools/pack-art.mjs`, und das Tor prüft, dass die eingebetteten Module noch zu den Rohbildern passen. |
 | S58 | Das Spielfeld lag als Insel zwischen zwei reservierten Bändern — auf dem Handy quer ging ein Drittel des Bildschirms an die Bedienung | Umgekehrt gelöst wie im Genre-Vorbild: Karte füllt den Bildschirm, Bedienung schwebt darüber und klappt weg. Kamera mit Verschieben, Kneifen, Doppeltipp. |
 | S59 | Ohne Schwelle zwischen Tippen und Schieben setzt jedes Verschieben am Ende einen Turm | Ab elf Punkten Fingerweg gilt es als Schieben; beim Loslassen passiert dann nichts. |

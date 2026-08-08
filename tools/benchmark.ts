@@ -277,7 +277,7 @@ const total = CRITERIA.reduce((a, c) => a + c.weight, 0);
 const score = met.reduce((a, c) => a + c.weight, 0);
 
 console.log(
-  `GENRE-ABGLEICH: ${met.length}/${CRITERIA.length} Kriterien erfuellt ` +
+  `GENRE-BERICHT (kein Tor): ${met.length}/${CRITERIA.length} Kriterien erfuellt ` +
   `(gewichtet ${Math.round((score / total) * 100)} %)`,
 );
 

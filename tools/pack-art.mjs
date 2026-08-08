@@ -21,6 +21,7 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import sharp from 'sharp';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -29,7 +30,32 @@ const OUT = join(ROOT, 'src', 'gfx', 'assets');
 
 const args = process.argv.slice(2);
 const checkOnly = args.includes('--check');
+/** Erzwingt das Neuerzeugen, auch wenn der Abdruck stimmt. */
+const force = args.includes('--force');
 const only = args.filter((a) => !a.startsWith('--'));
+
+/** Abdruck über Beschreibung und Rohbilder.
+ *
+ *  Die Prüfung kostete 62 Sekunden je Lauf - mehr als die Hälfte der gesamten
+ *  Torkette - nur um festzustellen, dass sich nichts geändert hat. Sie
+ *  dekodierte und komprimierte dafür 22 Bilder neu.
+ *
+ *  Jetzt steht der Abdruck im erzeugten Modul. Stimmt er, ist nichts zu tun.
+ *  Der Abdruck geht über die Beschreibung *und* jede Rohdatei - ändert sich
+ *  eine Zahl in der JSON oder ein Bild auf der Platte, fällt es auf. */
+function fingerprint(spec, srcDir) {
+  const h = createHash('sha256');
+  h.update(JSON.stringify(spec));
+  for (const [key, entry] of Object.entries(spec.items)) {
+    const file = typeof entry === 'string' ? entry : entry.file;
+    const p = join(srcDir, file);
+    h.update(key);
+    h.update(existsSync(p) ? readFileSync(p) : 'fehlt');
+  }
+  return h.digest('hex').slice(0, 32);
+}
+
+const STAMP = '// abdruck:';
 
 /** Zusammenhängende Bereiche im Alphakanal finden.
  *
@@ -169,6 +195,15 @@ async function packGroup(name) {
   let total = 0;
   const problems = [];
 
+  const stamp = fingerprint(spec, srcDir);
+  const target = join(OUT, spec.output);
+  const existing = existsSync(target) ? readFileSync(target, 'utf8') : '';
+  const stampLine = `${STAMP}${stamp}`;
+  if (existing.includes(stampLine) && !force) {
+    console.log(`  unverändert (Abdruck ${stamp.slice(0, 8)}) - nichts zu tun.`);
+    return [];
+  }
+
   for (const [key, entry] of Object.entries(spec.items)) {
     const file = typeof entry === 'string' ? entry : entry.file;
     const item = { ...spec.defaults, ...(typeof entry === 'string' ? {} : entry) };
@@ -209,15 +244,15 @@ async function packGroup(name) {
     lines.push(`  '${r.key}': 'data:image/webp;base64,${r.buffer.toString('base64')}',`);
   }
   lines.push('};', '');
+  lines.push(stampLine, '');
   const text = lines.join('\n');
-  const target = join(OUT, spec.output);
 
   if (checkOnly) {
     // Frischepruefung: das eingebettete Modul muss zu den Rohbildern passen.
     // Sonst liegt im Spiel eine Fassung, die niemand mehr nachvollziehen kann -
     // etwa weil jemand von Hand nachgebessert hat.
     if (!problems.length) {
-      const have = existsSync(target) ? readFileSync(target, 'utf8') : '';
+      const have = existing;
       if (have !== text) {
         problems.push(
           `Gruppe "${name}": ${spec.output} passt nicht mehr zu den Rohbildern - ` +

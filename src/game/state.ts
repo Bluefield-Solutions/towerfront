@@ -18,7 +18,7 @@ import { clearGame, type SaveGame } from './save';
 import { SpatialGrid } from '../core/spatialgrid';
 import { Pool, compact } from '../core/pool';
 import type {
-  Bolt, Enemy, FloatText, Meteor, Particle, Phase, Projectile, Quality,
+  Bolt, Enemy, FloatText, Husk, Meteor, Particle, Phase, Projectile, Quality,
   Ring, RunStats, Tower,
 } from './types';
 
@@ -57,6 +57,9 @@ export class GameState {
   projectiles: Projectile[] = [];
   bolts: Bolt[] = [];
   rings: Ring[] = [];
+  husks: Husk[] = [];
+  /** Kurzes Aufleuchten des ganzen Feldes, etwa beim Meteoreinschlag. */
+  flashT = 0;
   particles: Particle[] = [];
   floats: FloatText[] = [];
 
@@ -159,7 +162,7 @@ export class GameState {
     const c = cellCenter(cx, cy);
     const t: Tower = {
       id: this.nextId++, def: id, cx, cy, x: c.x, y: c.y,
-      level: 1, branch: null, cooldownLeft: 0, angle: -Math.PI / 2, recoil: 0, pulse: 0,
+      level: 1, branch: null, cooldownLeft: 0, angle: -Math.PI / 2, recoil: 0, flash: 0, pulse: 0,
       target: null, retargetIn: 0, kills: 0, damageDone: 0,
     };
     this.towers.push(t);
@@ -331,6 +334,7 @@ export class GameState {
       this.spark(m.x, m.y, ABILITIES.meteor.color, this.quality === 'hoch' ? 40 : 14, 340);
       this.shake = Math.min(1, this.shake + 0.8);
       this.hitstop = Math.max(this.hitstop, 0.07);
+      this.flashT = 1;
       Sfx.play('boom');
     }
     compact(this.meteors, (m) => m.t >= 1);
@@ -509,6 +513,7 @@ export class GameState {
       const def = TOWERS[t.def];
       const st = this.towerStats(t);
       if (t.recoil > 0) t.recoil = Math.max(0, t.recoil - dt * 6);
+      if (t.flash > 0) t.flash = Math.max(0, t.flash - dt * 9);
       if (t.pulse > 0) t.pulse = Math.max(0, t.pulse - dt * 2.2);
       t.cooldownLeft -= dt;
 
@@ -518,6 +523,7 @@ export class GameState {
         if (!targets.length) continue;
         t.cooldownLeft = st.cooldown;
         t.pulse = 1;
+        t.flash = 1;
         this.ring(t.x, t.y, st.range, def.accent, 0.45, 3);
         Sfx.play('frost');
         for (let i = 0; i < targets.length; i++) {
@@ -554,6 +560,7 @@ export class GameState {
       if (t.cooldownLeft > 0) continue;
       t.cooldownLeft = st.cooldown;
       t.recoil = 1;
+      t.flash = 1;
 
       if (def.attack === 'single') {
         Sfx.play('arrow');
@@ -752,6 +759,13 @@ export class GameState {
       this.float(e.x, e.y - 12, `+${def.bounty}`, C.gold, def.boss ? 30 : 20);
       this.spark(e.x, e.y, def.body, this.quality === 'hoch' ? (def.boss ? 44 : 12) : 6, def.boss ? 320 : 180);
       Sfx.play('kill');
+      this.husks.push({
+        def: e.def, x: e.x, y: e.y,
+        alt: def.flying ? 30 : 0,
+        angle: 0, spin: (this.rng.next() - 0.5) * 7,
+        frame: Math.floor(e.wobble),
+        t: 0, dur: def.boss ? 0.9 : 0.45,
+      });
       if (def.split) this.splitEnemy(e, def.split);
       if (def.boss || def.radius >= 24) {
         // Kurzes Stocken macht den Tod schwerer Gegner spuerbar.
@@ -782,6 +796,16 @@ export class GameState {
       for (const r of this.rings) { r.life -= dt; r.r = r.rMax * (1 - r.life / r.maxLife); }
       compact(this.rings, (r) => r.life <= 0, (r) => this.ringPool.release(r));
     }
+    if (this.husks.length) {
+      for (const h of this.husks) {
+        h.t += dt / h.dur;
+        h.angle += h.spin * dt;
+        h.alt = Math.max(0, h.alt - 70 * dt);
+        h.y += 14 * dt;
+      }
+      compact(this.husks, (h) => h.t >= 1);
+    }
+    if (this.flashT > 0) this.flashT = Math.max(0, this.flashT - dt * 4);
     if (this.bolts.length) {
       for (const b of this.bolts) b.life -= dt;
       compact(this.bolts, (b) => b.life <= 0, (b) => this.boltPool.release(b));
@@ -802,8 +826,14 @@ export class GameState {
     this.rings.push(r);
   }
 
+  /** Obergrenze fuer Teilchen. Ohne sie waechst der teuerste Posten beim
+   *  Zeichnen unbegrenzt - und genau der frisst auf dem Handy den Spielraum
+   *  fuer alles andere. */
+  private get particleCap(): number { return this.quality === 'hoch' ? 620 : 180; }
+
   spark(x: number, y: number, color: string, n: number, spread: number): void {
-    if (this.quality === 'niedrig' && this.particles.length > 160) return;
+    if (this.particles.length >= this.particleCap) return;
+    n = Math.min(n, this.particleCap - this.particles.length);
     for (let i = 0; i < n; i++) {
       const a = this.rng.next() * Math.PI * 2;
       const sp = spread * (0.3 + this.rng.next() * 0.7);
@@ -829,6 +859,8 @@ export class GameState {
     this.enemies.length = 0; this.towers.length = 0; this.projectiles.length = 0;
     this.particles.length = 0; this.floats.length = 0;
     this.rings.length = 0; this.bolts.length = 0; this.meteors.length = 0;
+    this.husks.length = 0;
+    this.flashT = 0;
     this.abilityCd = { meteor: 0, freeze: 0 };
     this.aiming = null;
     this.grid.clear();
@@ -926,7 +958,7 @@ export class GameState {
       const t: Tower = {
         id: this.nextId++, def, cx, cy, x: c.x, y: c.y,
         level, branch: branch ?? null,
-        cooldownLeft: cooldownLeft ?? 0, angle: -Math.PI / 2, recoil: 0, pulse: 0,
+        cooldownLeft: cooldownLeft ?? 0, angle: -Math.PI / 2, recoil: 0, flash: 0, pulse: 0,
         target: null, retargetIn: retargetIn ?? 0, kills, damageDone,
       };
       this.towers.push(t);

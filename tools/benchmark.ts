@@ -239,6 +239,27 @@ const CRITERIA: Criterion[] = [
     check: () => true,
   },
   {
+    id: 'P6', area: 'Politur', from: 'Kingdom Rush ("spectacular detail, color and animation")',
+    text: 'Gegner sind animiert, nicht starr.',
+    measured: false, weight: 3,
+    check: () => true, // seit v15: sechs Einzelbilder je Gegnerart
+    gap: 'Laufzyklus je Gegnerart backen.',
+  },
+  {
+    id: 'P7', area: 'Politur', from: 'Kingdom Rush, Defense Grid',
+    text: 'Die Welt lebt auch dann, wenn gerade keine Welle laeuft.',
+    measured: false, weight: 2,
+    check: () => true, // seit v15: Bodennebel, Polarlicht, Lichtschacht
+    gap: 'Stimmungsschichten mit eigener Bewegung.',
+  },
+  {
+    id: 'P8', area: 'Politur', from: 'Kingdom Rush (antippbare Kleinigkeiten in der Karte)',
+    text: 'Kleinigkeiten in der Karte, die auf Beruehrung reagieren.',
+    measured: false, weight: 1,
+    check: () => false,
+    gap: 'Deko-Elemente, die bei Beruehrung reagieren - Voegel, Fackeln, Steine.',
+  },
+  {
     id: 'P5', area: 'Politur', from: 'Kingdom Rush (Turm-Infofenster)',
     text: 'Turm-Inspektor mit Vorschau der naechsten Stufe.',
     measured: false, weight: 2,

@@ -89,6 +89,7 @@ const { Renderer } = await import('../src/gfx/renderer');
 const { COLS, ROWS } = await import('../src/data/config');
 const { MAX_LEVEL, TOWER_ORDER } = await import('../src/data/towers');
 const { WAVES } = await import('../src/data/waves');
+const { spriteCount, spriteBytes } = await import('../src/gfx/sprites');
 
 const canvas = win.document.getElementById('view') as unknown as HTMLCanvasElement;
 mainCanvas = canvas;
@@ -145,6 +146,15 @@ console.log(
 );
 console.log(`                ${perFrame.toFixed(0)} Befehle je Bild (Budget ${BUDGET})`);
 console.log('                ' + top.map(([k, v]) => `${k} ${v.toFixed(0)}`).join('  ·  '));
+
+// Backbudget: gebackene Bilder sparen Zeichenbefehle, kosten aber Speicher.
+const SPRITE_BUDGET_MB = 24;
+const mb = spriteBytes() / (1024 * 1024);
+console.log(`                ${spriteCount()} gebackene Bilder, ${mb.toFixed(1)} MB (Budget ${SPRITE_BUDGET_MB} MB)`);
+if (mb > SPRITE_BUDGET_MB) {
+  console.error(`ZEICHENMESSUNG: Backbudget ueberschritten - ${mb.toFixed(1)} MB statt hoechstens ${SPRITE_BUDGET_MB} MB.`);
+  process.exit(1);
+}
 
 if (perFrame > BUDGET) {
   console.error(`ZEICHENMESSUNG: ueber Budget - ${perFrame.toFixed(0)} statt hoechstens ${BUDGET}.`);

@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v14 · 07.08.2026
+Stand: v15 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -166,7 +166,7 @@ Ein Befehl fährt alles: `npm run gate`
 | 3 | Determinismus | `npm run determinism` | abweichendem Verlauf bei gleicher Aussaat oder nach Sichern/Laden |
 | 4 | Balance | `npm run sim` | kaputter Schwierigkeitskurve (siehe unten) |
 | 5 | Messung Simulation | `npm run bench` | mehr als 4 ms Simulationszeit je Bild |
-| 6 | Messung Zeichnen | `npm run bench-draw` | mehr als 3.000 Zeichenbefehle je Bild |
+| 6 | Messung Zeichnen | `npm run bench-draw` | mehr als 3.000 Zeichenbefehle **oder** 24 MB gebackene Bilder |
 | 7 | Rauchtest | `npm run smoke` | Fehler beim Zeichnen, in der Oberfläche oder bei der Eingabe |
 | 8 | Build | `npm run build` | Bündelfehler |
 | 9 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id |
@@ -305,6 +305,22 @@ jederzeit wiederherstellbar. Ein Fehlversuch kostet eine Minute, nicht einen
 Abend.
 
 ---
+
+### 3.15 Grafik gegen ein Budget
+
+Politur ohne Messung wird schnell zu Ruckeln auf dem Handy. Diese Runde lief
+deshalb gegen zwei Zahlen.
+
+**Zeichenbefehle je Bild.** Vor der Runde standen 2.874 von 3.000 — zu eng, um
+noch etwas hinzuzufügen. Der größte Posten waren Teilchen: 907 Rechtecke. Also
+zuerst eine Obergrenze (620 bei hoher Qualität, 180 bei niedriger), dann die
+Politur. Ergebnis: 2.576 mit *mehr* Grafik als vorher.
+
+**Backbudget.** Vorgebackene Bilder sind der Preis für wenige Zeichenbefehle —
+und auf einem Handy ist Speicher die knappere Ware. Mit sechs Laufphasen je
+Gegner, jeweils auch in einer weißen Trefferfassung, wächst der Vorrat schnell.
+Deshalb misst das Tor jetzt auch, wie viele Bilder im Speicher liegen und wie
+groß sie zusammen sind: 71 Bilder, 5,8 MB, Obergrenze 24 MB.
 
 ### 3.14 Warum nur ein Spielstil funktionierte
 
@@ -587,7 +603,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v14
+## 5. Stand v15
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -647,6 +663,36 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v15 — die große Grafikrunde.**
+
+**Gegner laufen.** Sechs Einzelbilder je Gegnerart, vorgebacken: der Schleicher
+staucht und streckt sich und setzt drei Füße, der Koloss verlagert das Gewicht
+von Bein zu Bein, der Schwärmer schlägt mit den Flügeln, dem Spalter pulsiert
+der Riss, die Husche zieht Streifen hinter sich her. Die Laufphase hängt an der
+zurückgelegten Strecke, nicht an der Uhr — ein gebremster Gegner bewegt die
+Beine langsamer.
+
+**Der Tod hat jetzt ein Ende.** Vorher verschwand ein Gegner ohne Übergang.
+Jetzt kippt seine Hülle, schrumpft und verblasst.
+
+**Licht.** Der Herzkristall wirft eine Lichtpfütze auf den Boden statt nur
+selbst zu leuchten. Jeder Schuss erzeugt einen Mündungsblitz, der die Stellung
+und den Boden davor kurz erhellt. Der Meteoreinschlag lässt das ganze Feld
+aufleuchten — als gefülltes Rechteck, ausdrücklich nicht als Kopie der Leinwand
+auf sich selbst; letzteres lässt iOS Safari nach kurzer Zeit schwarz werden.
+
+**Die Welt lebt.** Das Feld scrollt nicht, klassische Parallaxe gibt es hier
+also nicht. Tiefe entsteht über Schichten mit eigener Bewegung: ein ruhender
+Mondlichtschacht von oben links, acht Bodennebelscheiben in verschiedenen
+Tempi, ein Polarlicht, das darüber zieht.
+
+**Terrain.** Kachelfasen mit heller Lippe oben und Schatten unten, Steine und
+Risse, dreilagiger Pfad mit dunklem Saum und ausgetretener Mitte, Fußabdrücke.
+
+Kosten: **2.576 Zeichenbefehle je Bild** statt 2.874 vorher — die Politur ist
+*billiger* geworden, weil zugleich die Partikelzahl gedeckelt wurde. Dazu
+71 gebackene Bilder mit 5,8 MB.
 
 **Neu in v14 — die Kurve trägt jetzt mehr als einen Spielstil.** Die
 Balance-Simulation misst gegen drei Bots: *Meister* (16 Stellungen, tief

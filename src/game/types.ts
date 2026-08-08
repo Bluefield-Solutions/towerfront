@@ -27,6 +27,8 @@ export interface Tower {
   cooldownLeft: number;
   angle: number;
   recoil: number;
+  /** Muendungsblitz, klingt nach dem Schuss ab. */
+  flash: number;
   pulse: number;          // Sichtbarer Umkreispuls beim Frostturm
   target: Enemy | null;   // Zwischengespeichertes Ziel
   retargetIn: number;     // Sekunden bis zur naechsten Zielsuche
@@ -62,6 +64,18 @@ export interface Bolt {
   color: string;
   life: number;
   maxLife: number;
+}
+
+/** Die Huelle eines gefallenen Gegners: sie kippt, schrumpft und verblasst.
+ *  Vorher verschwand ein Gegner ohne Uebergang - der Treffer hatte kein Ende. */
+export interface Husk {
+  def: EnemyId;
+  x: number; y: number;
+  alt: number;
+  angle: number;
+  spin: number;
+  frame: number;
+  t: number; dur: number;
 }
 
 export interface Ring {

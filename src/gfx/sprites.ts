@@ -48,13 +48,18 @@ export function drawSprite(
 
 // ------------------------------------------------------------------ Gegner
 
-/** Ein Bild je Gegnerart, plus eine weisse Fassung fuer den Trefferblitz. */
-export function getEnemySprite(id: EnemyId, flash: boolean): HTMLCanvasElement {
+/** Wie viele Einzelbilder ein Laufzyklus hat. Mehr Bilder kosten nur
+ *  Speicher beim Backen, im Spiel bleibt es ein einziger Zeichenbefehl. */
+export const ENEMY_FRAMES = 6;
+
+/** Ein Bild je Gegnerart, Laufphase und Trefferblitz. */
+export function getEnemySprite(id: EnemyId, flash: boolean, frame = 0): HTMLCanvasElement {
   const def = ENEMIES[id];
   const r = def.radius;
-  const box = r * 2.8;
-  return bake(`enemy:${id}:${flash ? 'f' : 'n'}`, box, box, (g) => {
-    paintEnemyBody(g, id);
+  const box = r * 3.1;
+  const f = ((frame % ENEMY_FRAMES) + ENEMY_FRAMES) % ENEMY_FRAMES;
+  return bake(`enemy:${id}:${flash ? 'f' : 'n'}:${f}`, box, box, (g) => {
+    paintEnemyBody(g, id, f / ENEMY_FRAMES);
     if (flash) {
       // Weiss ueber die vorhandene Form legen - die Silhouette bleibt exakt.
       g.globalCompositeOperation = 'source-atop';
@@ -65,9 +70,12 @@ export function getEnemySprite(id: EnemyId, flash: boolean): HTMLCanvasElement {
   });
 }
 
-function paintEnemyBody(g: CanvasRenderingContext2D, id: EnemyId): void {
+/** `phase` laeuft von 0 bis 1 durch den Bewegungszyklus. */
+function paintEnemyBody(g: CanvasRenderingContext2D, id: EnemyId, phase: number): void {
   const def = ENEMIES[id];
   const r = def.radius;
+  const sw = Math.sin(phase * Math.PI * 2);      // -1..1, weich
+  const st = Math.sin(phase * Math.PI * 4);      // doppelt so schnell (Schritte)
   if (id === 'runner') {
     // Nach rechts zeigend gebacken, im Spiel wird gedreht.
     g.fillStyle = def.body;
@@ -80,13 +88,21 @@ function paintEnemyBody(g: CanvasRenderingContext2D, id: EnemyId): void {
     return;
   }
   if (id === 'flyer') {
-    // Nach rechts zeigend: schmaler Rumpf mit zurueckgepfeilten Fluegeln.
+    // Fluegelschlag: die Spannweite atmet, der Rumpf bleibt ruhig.
+    const beat = 0.62 + 0.38 * (0.5 + 0.5 * sw);
     g.fillStyle = def.trim;
     g.beginPath();
     g.moveTo(-r * 0.2, 0);
-    g.lineTo(-r * 1.2, -r * 1.05); g.lineTo(r * 0.35, -r * 0.3);
-    g.lineTo(r * 0.35, r * 0.3); g.lineTo(-r * 1.2, r * 1.05);
+    g.lineTo(-r * 1.2, -r * 1.05 * beat); g.lineTo(r * 0.35, -r * 0.3 * beat);
+    g.lineTo(r * 0.35, r * 0.3 * beat); g.lineTo(-r * 1.2, r * 1.05 * beat);
     g.closePath(); g.fill();
+    g.globalAlpha = 0.35;
+    g.beginPath();
+    g.moveTo(-r * 0.2, 0);
+    g.lineTo(-r * 1.1, -r * 1.3 * (1.4 - beat)); g.lineTo(r * 0.2, 0);
+    g.lineTo(-r * 1.1, r * 1.3 * (1.4 - beat));
+    g.closePath(); g.fill();
+    g.globalAlpha = 1;
     g.fillStyle = def.body;
     g.beginPath();
     g.moveTo(r * 1.25, 0); g.lineTo(-r * 0.5, r * 0.5);
@@ -107,14 +123,18 @@ function paintEnemyBody(g: CanvasRenderingContext2D, id: EnemyId): void {
     }
     g.closePath(); g.fill();
     g.strokeStyle = def.trim; g.lineWidth = 3; g.stroke();
-    g.strokeStyle = C.ink; g.lineWidth = 4;
+    const gap = 1 + 0.5 * (0.5 + 0.5 * sw);
+    g.strokeStyle = C.ink; g.lineWidth = 3 * gap;
     g.beginPath();
-    g.moveTo(-r * 0.15, -r); g.lineTo(r * 0.12, -r * 0.2);
-    g.lineTo(-r * 0.12, r * 0.25); g.lineTo(r * 0.1, r);
+    g.moveTo(-r * 0.15 * gap, -r); g.lineTo(r * 0.12 * gap, -r * 0.2);
+    g.lineTo(-r * 0.12 * gap, r * 0.25); g.lineTo(r * 0.1 * gap, r);
     g.stroke();
+    g.strokeStyle = hexA(def.trim, 0.5); g.lineWidth = 1.5;
+    g.beginPath(); g.arc(0, 0, r * 0.78, Math.PI * 1.1, Math.PI * 1.9); g.stroke();
     return;
   }
   if (id === 'splitling') {
+    g.rotate(phase * Math.PI * 2);
     g.fillStyle = def.body;
     g.beginPath();
     g.moveTo(0, -r); g.lineTo(r * 0.9, r * 0.7); g.lineTo(-r * 0.9, r * 0.7);
@@ -124,6 +144,14 @@ function paintEnemyBody(g: CanvasRenderingContext2D, id: EnemyId): void {
     return;
   }
   if (id === 'brute' || id === 'titan') {
+    // Zwei Beine, die abwechselnd tragen - dazu wiegt sich der Koerper.
+    g.fillStyle = hexA(C.ink, 0.55);
+    g.fillRect(-r * 0.62, r * 0.55 + st * r * 0.14, r * 0.42, r * 0.5);
+    g.fillRect(r * 0.2, r * 0.55 - st * r * 0.14, r * 0.42, r * 0.5);
+
+    g.save();
+    g.translate(0, -Math.abs(st) * r * 0.09);
+    g.rotate(sw * 0.05);
     const sides = def.boss ? 8 : 6;
     g.fillStyle = def.body;
     g.beginPath();
@@ -133,16 +161,37 @@ function paintEnemyBody(g: CanvasRenderingContext2D, id: EnemyId): void {
       if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
     }
     g.closePath(); g.fill();
+    // Lichtkante oben, Schattenkante unten - das gibt der Flaeche Koerper.
     g.strokeStyle = def.trim; g.lineWidth = def.boss ? 5 : 3; g.stroke();
+    g.strokeStyle = hexA('#FFFFFF', 0.3); g.lineWidth = 2;
+    g.beginPath(); g.arc(0, 0, r * 0.82, Math.PI * 1.15, Math.PI * 1.85); g.stroke();
+    const core = 0.8 + 0.2 * (0.5 + 0.5 * sw);
     g.fillStyle = def.trim;
-    g.fillRect(-r * 0.5, -r * 0.15, r, r * 0.3);
+    g.fillRect(-r * 0.5 * core, -r * 0.15 * core, r * core, r * 0.3 * core);
+    g.restore();
     return;
   }
+  // Kriechen: der Koerper staucht und streckt, drei Fuesse laufen mit.
+  const squash = 1 + sw * 0.11;
+  g.fillStyle = hexA(C.ink, 0.5);
+  for (let i = 0; i < 3; i++) {
+    const px = (i - 1) * r * 0.6;
+    const lift = Math.sin(phase * Math.PI * 2 + i * 2.1) * r * 0.16;
+    g.beginPath(); g.ellipse(px, r * 0.78 - lift, r * 0.17, r * 0.12, 0, 0, Math.PI * 2); g.fill();
+  }
+  g.save();
+  g.scale(1 / squash, squash);
   g.fillStyle = def.body;
   g.beginPath(); g.ellipse(0, 0, r, r * 0.92, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = hexA('#FFFFFF', 0.16);
+  g.beginPath(); g.ellipse(0, -r * 0.32, r * 0.72, r * 0.34, 0, 0, Math.PI * 2); g.fill();
   g.fillStyle = def.trim;
   g.beginPath(); g.arc(-r * 0.32, -r * 0.15, r * 0.2, 0, Math.PI * 2); g.fill();
   g.beginPath(); g.arc(r * 0.32, -r * 0.15, r * 0.2, 0, Math.PI * 2); g.fill();
+  g.fillStyle = C.ink;
+  g.beginPath(); g.arc(-r * 0.3, -r * 0.13, r * 0.09, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.arc(r * 0.34, -r * 0.13, r * 0.09, 0, Math.PI * 2); g.fill();
+  g.restore();
 }
 
 /** Bodenschatten, nach Radius gestaffelt - so teilen sich viele Gegner
@@ -253,3 +302,12 @@ export function roundRect(
 
 /** Wie viele Bilder gerade im Speicher liegen - fuer die Technikanzeige. */
 export const spriteCount = (): number => cache.size;
+
+/** Grober Speicherbedarf aller gebackenen Bilder in Byte (4 Byte je Bildpunkt).
+ *  Gebackene Bilder sind der Preis fuer wenige Zeichenbefehle - und auf einem
+ *  Handy ist Speicher die knappere Ware. Deshalb wird auch das gemessen. */
+export function spriteBytes(): number {
+  let total = 0;
+  for (const cv of cache.values()) total += cv.width * cv.height * 4;
+  return total;
+}

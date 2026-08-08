@@ -1,8 +1,9 @@
 # Kristallwacht — Genre-Abgleich
 
-Stand: v12 · 07.08.2026 · Aktueller Wert: **19 von 27 Kriterien, gewichtet 73 %**
+Stand: v15 · 07.08.2026 · Aktueller Wert: **21 von 30 Kriterien, gewichtet 74 %**
 
-*Verlauf: v11 = 18/27 (69 %) → v12 = 19/27 (73 %), R3 erfüllt.*
+*Verlauf: v11 = 18/27 (69 %) → v12 = 19/27 (73 %) → v15 = 21/30 (74 %).
+In v15 kamen drei Grafik-Kriterien in den Katalog; zwei davon sind erfüllt.*
 
 Dieses Dokument ist die Grundlage für `npm run benchmark`. Es hält fest, *woher*
 jedes Kriterium stammt — jeder Punkt im Katalog geht auf ein Spiel zurück, das
@@ -58,7 +59,7 @@ reichen für einen Prototyp. *Diesen Fehler haben wir bisher vermieden.*
 | Rollen & Entscheidungen | 5/6 | Vier Türme, vier Wirkungsweisen, **verzweigter Ausbau**, Fähigkeiten, Luftlücke — es fehlt der Blocker |
 | Gegner | 5/6 | Masse, Tempo, Panzerung, Luft, Zerfall, Boss — es fehlen unterstützende Gegner |
 | Karten & Wiederspielwert | **0/6** | **Die eine große Lücke.** Eine Karte, ein Schwierigkeitsgrad, kein Endlosmodus, keine Bewertung, kein Fortschritt |
-| Politur | 5/5 | Ton, Auswertung, Einführung, Spielstand, Inspektor |
+| Politur | 7/8 | Ton, Auswertung, Einführung, Spielstand, Inspektor, animierte Gegner, lebende Welt — es fehlen antippbare Kleinigkeiten in der Karte |
 
 Das Bild ist eindeutig: **Die Kernschleife ist auf Genre-Niveau, der
 Wiederspielwert ist es nicht.** Wir haben ein sehr gutes einzelnes Spielbrett
@@ -106,6 +107,9 @@ Fair bleiben gehört zum Abgleich dazu.
 - **Auswertung nach der Partie mit Schadensanteil je Quelle.** In den
   Referenzen selten so konkret; sie beantwortet die Frage „was hat eigentlich
   getragen".
+- **Gemessene Grafik.** Zeichenbefehle je Bild *und* Speicherbedarf der
+  gebackenen Bilder stehen als Budget im Tor. Politur, die das Handy ausbremst,
+  fällt beim Build durch statt beim Spieler.
 - **Die Zweig-Waage.** Wir rechnen nach, ob beide Ausbaurichtungen eines Turms
   ähnlich viel Wirkung je Gold bringen. Der klassische Fehler verzweigter
   Ausbaubäume ist der tote Zweig — die Wahl, die keine ist.

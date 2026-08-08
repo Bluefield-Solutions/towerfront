@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v14 · 07.08.2026
+Stand: nach v15 · 07.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Kristallwacht-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
@@ -55,9 +55,10 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 
 | # | Punkt | Nutzen | Aufw. |
 |---|---|---|---|
-| D1 | Parallaxe-Hintergrund hinter dem Feld, ferne Silhouetten | ●● | M |
-| D2 | Wetter und Tageszeit je Karte als Stimmungsschicht | ●● | M |
-| D4 | Gegner-Todesanimation statt reiner Partikel | ●● | M |
+| D2 | Wetter je Karte als eigene Stimmungsschicht (Regen, Schneetreiben, Asche) | ●● | M |
+| D14 | **P8** Antippbare Kleinigkeiten in der Karte — Vögel, Fackeln, Steine, die reagieren | ● | S |
+| D15 | Turmsilhouetten je Zweig deutlicher unterscheiden (aktuell nur die Farbe) | ●●● | M |
+| D16 | Trümmer und Rauch bei Explosionen statt reiner Funken | ●● | S |
 | D5 | Menüübergänge, Einblenden statt hartem Umschalten | ●● | S |
 | D6 | Einstellungsdialog: Lautstärke, Effektdichte, Bewegungsreduktion | ●● | S |
 | D12 | Auswertung auch zwischen den Wellen abrufbar, nicht nur am Ende | ●● | S |
@@ -78,6 +79,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S32 | Vor der Grafikrunde standen 2.874 von 3.000 Zeichenbefehlen — zu eng für Politur. Größter Posten: 907 Teilchen-Rechtecke | Obergrenze für Teilchen eingeführt (620/180). Danach passte mehr Grafik in *weniger* Befehle: 2.576. |
+| S33 | Gebackene Bilder kosten Speicher, und mit sechs Laufphasen je Gegner wächst der Vorrat schnell | Backbudget als zweite Zahl im Zeichen-Tor: 71 Bilder, 5,8 MB, Obergrenze 24 MB. |
 | S29 | Mit drei Spielstilen statt einem kam **nur einer** durch. Ursache war eine Rückkopplung: abschusslastiges Einkommen lässt die Schere zwischen gutem und schwachem Feld immer weiter aufgehen (5.106 gegen 2.082 Gold) | Einkommen verlagert: Abschussprämien 40 %, Wellenbonus 4,4×. Der Bonus fällt auch bei Durchkommen an. |
 | S30 | Die Verlagerung riss sofort eine neue Lücke: ohne Abschussgold fehlte die Eröffnung, Verluste in **Welle 1** | Startkapital 140 → 220. |
 | S31 | Endfaktor und Verdichtung prallen am voll ausgebauten Feld ab — Endfaktor 13 und 28 ergaben dasselbe Ergebnis bis aufs Goldstück | Der Exponent ist der Hebel, nicht die Höhe: 2,2 → 2,6. |

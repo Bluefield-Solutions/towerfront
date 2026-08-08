@@ -30,10 +30,39 @@ export function bakeTerrain(pathSet: Set<number>, blockedSet: Set<number>): HTML
     }
   }
 
+  // Kachelfasen: eine helle Lippe oben, ein Schatten unten. Erst dadurch
+  // bekommt die Flaeche ueberhaupt Relief statt bloss Farbe.
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const k = cellKey(x, y);
+      if (pathSet.has(k)) continue;
+      const px = x * TILE, py = y * TILE;
+      g.fillStyle = 'rgba(255,255,255,0.045)';
+      g.fillRect(px, py, TILE, 2);
+      g.fillStyle = 'rgba(0,0,0,0.07)';
+      g.fillRect(px, py + TILE - 2, TILE, 2);
+      g.fillStyle = 'rgba(255,255,255,0.02)';
+      g.fillRect(px, py, 2, TILE);
+      g.fillStyle = 'rgba(0,0,0,0.04)';
+      g.fillRect(px + TILE - 2, py, 2, TILE);
+    }
+  }
+
+  // Steine und Risse - kleine Unruhe, damit die Flaeche nicht gedruckt wirkt.
+  for (let i = 0; i < 150; i++) {
+    const x = rnd() * WORLD_W, y = rnd() * WORLD_H;
+    if (pathSet.has(cellKey(Math.floor(x / TILE), Math.floor(y / TILE)))) continue;
+    const r = 2 + rnd() * 4;
+    g.fillStyle = 'rgba(0,0,0,0.16)';
+    g.beginPath(); g.ellipse(x, y + 1.5, r, r * 0.6, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = 'rgba(190,205,205,0.14)';
+    g.beginPath(); g.ellipse(x, y, r, r * 0.6, 0, 0, Math.PI * 2); g.fill();
+  }
+
   // Grasbueschel als kleine Striche - sparsam, nur Silhouette.
   g.strokeStyle = hexA(C.terrainHi, 0.5);
   g.lineWidth = 2;
-  for (let i = 0; i < 420; i++) {
+  for (let i = 0; i < 620; i++) {
     const x = rnd() * WORLD_W, y = rnd() * WORLD_H;
     const k = cellKey(Math.floor(x / TILE), Math.floor(y / TILE));
     if (pathSet.has(k)) continue;
@@ -44,21 +73,35 @@ export function bakeTerrain(pathSet: Set<number>, blockedSet: Set<number>): HTML
     g.stroke();
   }
 
-  // Pfad: warmer Knochenton, weiche Kanten, damit er wie ausgetreten wirkt.
-  const pad = 9;
+  // Pfad: warmer Knochenton in drei Lagen - dunkler Saum, Rand, ausgetretene
+  // Mitte. Der Uebergang traegt den groessten Teil der Wirkung.
+  g.fillStyle = 'rgba(8,14,22,0.35)';
+  paintCells(g, pathSet, -3);
   g.fillStyle = C.pathEdge;
-  paintCells(g, pathSet, 0);
+  paintCells(g, pathSet, 2);
   g.fillStyle = C.path;
-  paintCells(g, pathSet, pad);
+  paintCells(g, pathSet, 11);
+  g.fillStyle = 'rgba(255,246,220,0.10)';
+  paintCells(g, pathSet, 22);
 
   // Trittspuren
-  for (let i = 0; i < 260; i++) {
+  for (let i = 0; i < 420; i++) {
     const x = rnd() * WORLD_W, y = rnd() * WORLD_H;
     const cx = Math.floor(x / TILE), cy = Math.floor(y / TILE);
     if (!pathSet.has(cellKey(cx, cy))) continue;
-    g.fillStyle = rnd() > 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
+    g.fillStyle = rnd() > 0.5 ? 'rgba(255,255,255,0.055)' : 'rgba(0,0,0,0.07)';
     const r = 3 + rnd() * 9;
     g.beginPath(); g.ellipse(x, y, r, r * 0.6, 0, 0, Math.PI * 2); g.fill();
+    // Fussabdruecke: kleine paarweise Vertiefungen.
+    if (rnd() > 0.72) {
+      g.fillStyle = 'rgba(0,0,0,0.09)';
+      const a = rnd() * Math.PI;
+      for (const o of [-4, 4]) {
+        g.beginPath();
+        g.ellipse(x + Math.cos(a) * o, y + Math.sin(a) * o, 3.2, 2.1, a, 0, Math.PI * 2);
+        g.fill();
+      }
+    }
   }
 
   // Deko-Felsen auf gesperrten Zellen

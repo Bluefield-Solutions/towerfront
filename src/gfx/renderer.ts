@@ -11,8 +11,9 @@ import type { Tower } from '../game/types';
 import { beginGlowBatch, endGlowBatch, hexA, stampGlow, stampGlowFast } from './glow';
 import { bakeTerrain } from './terrain';
 import {
-  drawSprite, getEnemySprite, getShadow, getTowerBase, getTowerWeapon,
+  drawSprite, getEnemySprite, getShadow, getTowerBase, getTowerWeapon, ENEMY_FRAMES,
 } from './sprites';
+import { drawAurora, drawGroundFog, getMoodLayer } from './atmosphere';
 
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
@@ -70,21 +71,35 @@ export class Renderer {
     ctx.scale(this.scale, this.scale);
 
     ctx.drawImage(this.terrain!, 0, 0);
+    ctx.drawImage(getMoodLayer(), 0, 0);
+    if (hi) drawAurora(ctx, s.crystalPulse);
 
     this.drawPortal(s, hi);
     this.drawBuildOverlay(s);
     this.drawCrystal(s, hi);
     this.drawRings(s);
     this.drawTowers(s, hi);
+    this.drawHusks(s);
     this.drawEnemies(s, hi);
     this.drawProjectiles(s, hi);
     this.drawBolts(s);
     this.drawParticles(s);
+    drawGroundFog(ctx, s.crystalPulse, hi);
     this.drawMeteors(s, hi);
     this.drawGhost(s);
     this.drawAim(s);
     this.drawCoach(s);
     this.drawFloats(s);
+
+    // Kurzes Aufleuchten des ganzen Feldes. Bewusst ein gefuelltes Rechteck
+    // und kein Kopieren der Leinwand auf sich selbst - letzteres laesst
+    // iOS Safari nach kurzer Zeit schwarz werden.
+    if (s.flashT > 0) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = hexA('#FFD8A8', s.flashT * 0.22);
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+      ctx.globalCompositeOperation = 'source-over';
+    }
 
     ctx.restore();
   }
@@ -196,7 +211,16 @@ export class Renderer {
     const pulse = 1 + Math.sin(t * 2) * 0.04;
     const glowR = (95 + Math.sin(t * 2) * 8) * (0.55 + health * 0.45);
 
-    stampGlow(ctx, C.crystal, x, y, glowR, hi ? 0.85 : 0.55);
+    // Lichtpfuetze auf dem Boden - der Kristall beleuchtet seine Umgebung,
+    // statt nur selbst zu leuchten.
+    if (hi) {
+      ctx.save();
+      ctx.translate(x, y + 26);
+      ctx.scale(1, 0.42);
+      stampGlow(ctx, C.crystal, 0, 0, glowR * 2.1, 0.4);
+      ctx.restore();
+    }
+    stampGlow(ctx, C.crystal, x, y, glowR, hi ? 0.9 : 0.55);
     if (s.crystalHit > 0) stampGlow(ctx, C.danger, x, y, 125, s.crystalHit * 0.8);
 
     ctx.save();
@@ -244,6 +268,23 @@ export class Renderer {
     ctx.restore();
   }
 
+  /** Die Huellen gefallener Gegner: kippen, schrumpfen, verblassen. */
+  private drawHusks(s: GameState): void {
+    if (!s.husks.length) return;
+    const ctx = this.ctx;
+    for (const h of s.husks) {
+      const k = 1 - h.t;
+      ctx.save();
+      ctx.globalAlpha = k * 0.85;
+      ctx.translate(h.x, h.y - h.alt);
+      ctx.rotate(h.angle);
+      const shrink = 0.5 + k * 0.5;
+      drawSprite(ctx, getEnemySprite(h.def, false, h.frame), 0, 0, shrink);
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+  }
+
   private drawRings(s: GameState): void {
     const ctx = this.ctx;
     for (const r of s.rings) {
@@ -289,8 +330,18 @@ export class Renderer {
       beginGlowBatch(ctx);
       for (const t of s.towers) {
         const def = TOWERS[t.def];
+        const tone = accentFor(def, t.branch);
         if (def.attack === 'aura' || def.attack === 'chain') {
-          stampGlowFast(ctx, accentFor(def, t.branch), t.x, t.y - 8, 36, 0.5);
+          stampGlowFast(ctx, tone, t.x, t.y - 8, 36, 0.5);
+        }
+        // Muendungsblitz: erhellt kurz die Stellung und den Boden davor.
+        if (t.flash > 0.02) {
+          const st = s.towerStats(t);
+          const reach = def.attack === 'aura' ? 0 : 26;
+          stampGlowFast(ctx, tone,
+            t.x + Math.cos(t.angle) * reach, t.y + Math.sin(t.angle) * reach,
+            44 + t.flash * 16, t.flash * 0.75);
+          void st;
         }
       }
       endGlowBatch(ctx);
@@ -376,6 +427,10 @@ export class Renderer {
       const wob = Math.sin(s.time * 9 + e.wobble) * 2;
       const alt = this.altitude(e, s.time, !!def.flying);
       const rotating = e.def === 'runner' || !!def.flying;
+      // Die Laufphase haengt an der zurueckgelegten Strecke, nicht an der Uhr:
+      // ein gebremster Gegner bewegt die Beine langsamer.
+      const cycle = def.flying ? s.time * 7 + e.wobble : e.travelled / 26 + e.wobble;
+      const frame = Math.floor(cycle) % ENEMY_FRAMES;
 
       if (rotating || def.boss) {
         ctx.save();
@@ -386,10 +441,10 @@ export class Renderer {
           const nx = s.points[Math.min(e.seg + 1, s.points.length - 1)];
           ctx.rotate(Math.atan2(nx.y - e.y, nx.x - e.x));
         }
-        drawSprite(ctx, getEnemySprite(e.def, false), 0, 0);
+        drawSprite(ctx, getEnemySprite(e.def, false, frame), 0, 0);
         if (e.hitFlash > 0.01) {
           ctx.globalAlpha = e.hitFlash * 0.7;
-          drawSprite(ctx, getEnemySprite(e.def, true), 0, 0);
+          drawSprite(ctx, getEnemySprite(e.def, true, frame), 0, 0);
           ctx.globalAlpha = 1;
         }
         if (def.boss) {
@@ -399,10 +454,10 @@ export class Renderer {
         }
         ctx.restore();
       } else {
-        drawSprite(ctx, getEnemySprite(e.def, false), e.x, e.y + wob * 0.4);
+        drawSprite(ctx, getEnemySprite(e.def, false, frame), e.x, e.y + wob * 0.4);
         if (e.hitFlash > 0.01) {
           ctx.globalAlpha = e.hitFlash * 0.7;
-          drawSprite(ctx, getEnemySprite(e.def, true), e.x, e.y + wob * 0.4);
+          drawSprite(ctx, getEnemySprite(e.def, true, frame), e.x, e.y + wob * 0.4);
           ctx.globalAlpha = 1;
         }
       }

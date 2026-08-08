@@ -116,7 +116,7 @@ export class GameState {
    *  Geschosse halten Verweise auf ihr Ziel, ein wiederverwendeter Gegner
    *  koennte von einem alten Geschoss faelschlich als lebendig gelesen werden. */
   private particlePool = new Pool<Particle>(() => ({
-    x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 1, size: 2, color: '#fff', gravity: 0,
+    x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 1, size: 2, color: '#fff', gravity: 0, grow: 0,
   }), 900);
   private projectilePool = new Pool<Projectile>(() => ({
     kind: 'homing', x: 0, y: 0, sx: 0, sy: 0, tx: 0, ty: 0, target: null, owner: null,
@@ -331,7 +331,9 @@ export class GameState {
       }
       this.ring(m.x, m.y, m.radius, ABILITIES.meteor.color, 0.5, 7);
       this.ring(m.x, m.y, m.radius * 1.5, '#FFFFFF', 0.3, 3);
-      this.spark(m.x, m.y, ABILITIES.meteor.color, this.quality === 'hoch' ? 40 : 14, 340);
+      this.spark(m.x, m.y, ABILITIES.meteor.color, this.quality === 'hoch' ? 34 : 12, 340);
+      this.smoke(m.x, m.y, 16, 150);
+      this.debris(m.x, m.y, '#6B5B44', this.quality === 'hoch' ? 14 : 4, 320);
       this.shake = Math.min(1, this.shake + 0.8);
       this.hitstop = Math.max(this.hitstop, 0.07);
       this.flashT = 1;
@@ -715,7 +717,9 @@ export class GameState {
   private explode(p: Projectile): void {
     Sfx.play('boom');
     this.ring(p.x, p.y, p.splash, p.color, 0.35, 5);
-    this.spark(p.x, p.y, p.color, this.quality === 'hoch' ? 16 : 7, 220);
+    this.spark(p.x, p.y, p.color, this.quality === 'hoch' ? 14 : 6, 220);
+    this.smoke(p.x, p.y, 7, 90);
+    this.debris(p.x, p.y, '#6B5B44', this.quality === 'hoch' ? 6 : 2, 190);
     this.shake = Math.min(1, this.shake + 0.18);
     const r2 = p.splash * p.splash;
     const cand = this.grid.query(p.x, p.y, p.splash, this.qRaw);
@@ -767,11 +771,13 @@ export class GameState {
         t: 0, dur: def.boss ? 0.9 : 0.45,
       });
       if (def.split) this.splitEnemy(e, def.split);
+      if (def.radius >= 22) this.debris(e.x, e.y, def.trim, def.boss ? 10 : 4, 180);
       if (def.boss || def.radius >= 24) {
         // Kurzes Stocken macht den Tod schwerer Gegner spuerbar.
         this.hitstop = def.boss ? 0.16 : 0.05;
         this.shake = Math.min(1, this.shake + (def.boss ? 0.9 : 0.22));
         this.ring(e.x, e.y, def.boss ? 190 : 80, def.trim, 0.5, 5);
+        if (def.boss) this.smoke(e.x, e.y, 14, 120);
       }
     }
   }
@@ -783,6 +789,7 @@ export class GameState {
       for (const p of this.particles) {
         p.life -= dt;
         p.vy += p.gravity * dt;
+        if (p.grow) p.size += p.grow * dt;
         p.x += p.vx * dt; p.y += p.vy * dt;
         p.vx *= 0.93; p.vy *= 0.93;
       }
@@ -831,6 +838,46 @@ export class GameState {
    *  fuer alles andere. */
   private get particleCap(): number { return this.quality === 'hoch' ? 620 : 180; }
 
+  /** Rauch: dunkle Ballen, die aufsteigen, wachsen und verwehen.
+   *  Eine Explosion ohne Rauch ist ein Blitz, kein Einschlag. */
+  smoke(x: number, y: number, n: number, spread: number): void {
+    if (this.quality !== 'hoch') return;
+    if (this.particles.length >= this.particleCap) return;
+    n = Math.min(n, this.particleCap - this.particles.length);
+    for (let i = 0; i < n; i++) {
+      const a = this.rng.next() * Math.PI * 2;
+      const sp = spread * (0.2 + this.rng.next() * 0.6);
+      const p = this.particlePool.obtain();
+      p.x = x + Math.cos(a) * 6; p.y = y + Math.sin(a) * 6;
+      p.vx = Math.cos(a) * sp; p.vy = Math.sin(a) * sp - 26;
+      p.life = 0.7 + this.rng.next() * 0.6; p.maxLife = 1.4;
+      p.size = 5 + this.rng.next() * 6;
+      p.color = '#2A3348';
+      p.gravity = -18;
+      p.grow = 22;
+      this.particles.push(p);
+    }
+  }
+
+  /** Truemmer: wenige groessere Brocken, die hochgeschleudert werden und fallen. */
+  debris(x: number, y: number, color: string, n: number, spread: number): void {
+    if (this.particles.length >= this.particleCap) return;
+    n = Math.min(n, this.particleCap - this.particles.length);
+    for (let i = 0; i < n; i++) {
+      const a = this.rng.next() * Math.PI * 2;
+      const sp = spread * (0.5 + this.rng.next() * 0.8);
+      const p = this.particlePool.obtain();
+      p.x = x; p.y = y;
+      p.vx = Math.cos(a) * sp; p.vy = Math.sin(a) * sp - 90;
+      p.life = 0.6 + this.rng.next() * 0.5; p.maxLife = 1.1;
+      p.size = 4 + this.rng.next() * 4;
+      p.color = color;
+      p.gravity = 620;
+      p.grow = -3;
+      this.particles.push(p);
+    }
+  }
+
   spark(x: number, y: number, color: string, n: number, spread: number): void {
     if (this.particles.length >= this.particleCap) return;
     n = Math.min(n, this.particleCap - this.particles.length);
@@ -841,7 +888,7 @@ export class GameState {
       p.x = x; p.y = y;
       p.vx = Math.cos(a) * sp; p.vy = Math.sin(a) * sp;
       p.life = 0.35 + this.rng.next() * 0.35; p.maxLife = 0.7;
-      p.size = 2 + this.rng.next() * 3; p.color = color; p.gravity = 120;
+      p.size = 2 + this.rng.next() * 3; p.color = color; p.gravity = 120; p.grow = 0;
       this.particles.push(p);
     }
   }

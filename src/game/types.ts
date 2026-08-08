@@ -93,6 +93,8 @@ export interface Particle {
   size: number;
   color: string;
   gravity: number;
+  /** Groessenaenderung je Sekunde - Rauch waechst, Funken bleiben. */
+  grow: number;
 }
 
 export interface FloatText {

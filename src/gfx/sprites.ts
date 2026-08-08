@@ -211,7 +211,8 @@ export function getShadow(radius: number): HTMLCanvasElement {
 export function getTowerBase(id: TowerId, branch: BranchIndex, level: number): HTMLCanvasElement {
   const def = TOWERS[id];
   const accent = accentFor(def, branch);
-  return bake(`base:${id}:${branch}:${level}`, 78, 78, (g) => {
+  const bid = branch === null ? '' : def.branches[branch].id;
+  return bake(`base:${id}:${branch}:${level}`, 86, 86, (g) => {
     const grow = 1 + (level - 1) * 0.12;
     g.fillStyle = hexA(C.ink, 0.4);
     g.beginPath(); g.ellipse(0, 21, 27, 10, 0, 0, Math.PI * 2); g.fill();
@@ -224,14 +225,72 @@ export function getTowerBase(id: TowerId, branch: BranchIndex, level: number): H
     roundRect(g, -22, -14, 44, 20, 7); g.fill();
     g.fillStyle = hexA(C.ink, 0.25);
     roundRect(g, -22, 0, 44, 6, 3); g.fill();
+    // Ab Stufe 2 bekommt jeder Zweig einen eigenen Aufbau. Die Farbe allein
+    // reicht nicht - im Gewuehl erkennt man einen Umriss schneller als einen
+    // Farbton, und auf dem Handy ist der Turm keine 45 Bildpunkte gross.
     if (level >= 2) {
       g.fillStyle = def.color;
-      roundRect(g, -26, -20, 9, 12, 3); g.fill();
-      roundRect(g, 17, -20, 9, 12, 3); g.fill();
+      switch (bid) {
+        case 'sniper': // schlanker hoher Turm mit Ausguck
+          roundRect(g, -7, -34, 14, 26, 4); g.fill();
+          g.fillStyle = accent;
+          roundRect(g, -10, -36, 20, 6, 3); g.fill();
+          break;
+        case 'volley': // breite Zinnen, drei Scharten
+          for (let i = -1; i <= 1; i++) { roundRect(g, i * 13 - 5, -24, 10, 14, 2); g.fill(); }
+          break;
+        case 'eternal': // Eisring auf Saeulen
+          g.strokeStyle = accent; g.lineWidth = 3;
+          g.beginPath(); g.arc(0, -20, 17, Math.PI * 0.15, Math.PI * 0.85, true); g.stroke();
+          roundRect(g, -20, -22, 6, 14, 2); g.fill();
+          roundRect(g, 14, -22, 6, 14, 2); g.fill();
+          break;
+        case 'shard': // aufgestellte Klingen
+          g.fillStyle = accent;
+          for (const o of [-14, 0, 14]) {
+            g.beginPath();
+            g.moveTo(o, -34); g.lineTo(o + 5, -12); g.lineTo(o - 5, -12);
+            g.closePath(); g.fill();
+          }
+          break;
+        case 'cluster': // flacher breiter Kasten mit Klappen
+          roundRect(g, -25, -22, 50, 14, 4); g.fill();
+          g.fillStyle = accent;
+          roundRect(g, -22, -26, 10, 6, 2); g.fill();
+          roundRect(g, 12, -26, 10, 6, 2); g.fill();
+          break;
+        case 'breaker': // massiver Bunker mit Baendern
+          roundRect(g, -20, -26, 40, 18, 3); g.fill();
+          g.fillStyle = accent;
+          g.fillRect(-20, -20, 40, 3);
+          g.fillRect(-20, -12, 40, 3);
+          break;
+        case 'fork': // drei kleine Traeger
+          g.fillStyle = accent;
+          for (const o of [-16, 0, 16]) {
+            g.beginPath(); g.arc(o, -22, 5, 0, Math.PI * 2); g.fill();
+          }
+          break;
+        case 'lens': // ein grosser Ring
+          g.strokeStyle = accent; g.lineWidth = 4;
+          g.beginPath(); g.arc(0, -22, 15, 0, Math.PI * 2); g.stroke();
+          break;
+        default:
+          roundRect(g, -26, -20, 9, 12, 3); g.fill();
+          roundRect(g, 17, -20, 9, 12, 3); g.fill();
+      }
     }
     if (level >= 3) {
+      // Stufe 3 setzt eine Krone auf, deren Form ebenfalls am Zweig haengt.
       g.fillStyle = accent;
-      roundRect(g, -5, -26, 10, 10, 3); g.fill();
+      if (bid === 'sniper' || bid === 'shard' || bid === 'lens') {
+        g.beginPath();
+        g.moveTo(0, -48); g.lineTo(7, -36); g.lineTo(-7, -36);
+        g.closePath(); g.fill();
+      } else {
+        roundRect(g, -9, -40, 18, 8, 3); g.fill();
+        g.fillRect(-2, -46, 4, 8);
+      }
     }
     g.restore();
 
@@ -249,26 +308,103 @@ export function getTowerBase(id: TowerId, branch: BranchIndex, level: number): H
 export function getTowerWeapon(id: TowerId, branch: BranchIndex, level: number): HTMLCanvasElement {
   const def = TOWERS[id];
   const grow = 1 + (level - 1) * 0.12;
-  return bake(`weapon:${id}:${branch}:${level}`, 64 * grow, 64 * grow, (g) => {
+  const bid = branch === null ? '' : def.branches[branch].id;
+  return bake(`weapon:${id}:${branch}:${level}`, 86 * grow, 86 * grow, (g) => {
     g.scale(grow, grow);
-    paintWeapon(g, def, accentFor(def, branch));
+    paintWeapon(g, def, accentFor(def, branch), bid);
   });
 }
 
-function paintWeapon(g: CanvasRenderingContext2D, def: TowerDef, accent: string): void {
+/** Die Waffe traegt die Zweig-Identitaet. Ein Scharfschuetze muss auch als
+ *  Umriss anders aussehen als eine Salve - nicht nur anders gefaerbt. */
+function paintWeapon(
+  g: CanvasRenderingContext2D, def: TowerDef, accent: string, bid: string,
+): void {
   if (def.attack === 'single') {
+    if (bid === 'sniper') {
+      // Ein langer duenner Lauf mit Zweibein und Zielrohr.
+      g.fillStyle = C.stoneDark;
+      roundRect(g, -6, -3, 46, 6, 3); g.fill();
+      g.fillStyle = accent;
+      roundRect(g, 30, -2.5, 14, 5, 2.5); g.fill();
+      g.fillStyle = def.color;
+      roundRect(g, 2, -8, 16, 5, 2); g.fill();   // Zielrohr
+      g.fillRect(6, 2, 3, 9); g.fillRect(14, 2, 3, 9); // Zweibein
+      return;
+    }
+    if (bid === 'volley') {
+      // Drei kurze Laeufe im Faecher.
+      g.fillStyle = def.color;
+      for (const a of [-0.22, 0, 0.22]) {
+        g.save(); g.rotate(a);
+        roundRect(g, -8, -3.5, 26, 7, 3.5); g.fill();
+        g.restore();
+      }
+      g.fillStyle = accent;
+      g.beginPath(); g.arc(-4, 0, 7, 0, Math.PI * 2); g.fill();
+      return;
+    }
     g.fillStyle = def.color;
     roundRect(g, -10, -5, 34, 10, 5); g.fill();
     g.fillStyle = accent;
     roundRect(g, 14, -3.5, 12, 7, 3.5); g.fill();
-  } else if (def.attack === 'splash') {
+    return;
+  }
+
+  if (def.attack === 'splash') {
+    if (bid === 'cluster') {
+      // Vier kurze weite Rohre nebeneinander.
+      g.fillStyle = C.stoneDark;
+      roundRect(g, -14, -12, 24, 24, 6); g.fill();
+      g.fillStyle = accent;
+      for (const o of [-8, -2.5, 3, 8.5]) {
+        roundRect(g, 8, o - 2, 14, 4, 2); g.fill();
+      }
+      return;
+    }
+    if (bid === 'breaker') {
+      // Ein einziges massives Rohr mit Verstaerkungsringen.
+      g.fillStyle = C.stoneDark;
+      roundRect(g, -16, -11, 40, 22, 5); g.fill();
+      g.fillStyle = accent;
+      roundRect(g, 18, -13, 12, 26, 4); g.fill();
+      g.fillStyle = hexA(C.ink, 0.45);
+      g.fillRect(-6, -11, 4, 22);
+      g.fillRect(6, -11, 4, 22);
+      return;
+    }
     g.fillStyle = C.stoneDark;
     roundRect(g, -14, -9, 30, 18, 6); g.fill();
     g.fillStyle = accent;
     roundRect(g, 8, -6, 16, 12, 4); g.fill();
-    g.fillStyle = hexA(C.ink, 0.5);
-    g.beginPath(); g.arc(22, 0, 4.5, 0, Math.PI * 2); g.fill();
-  } else if (def.attack === 'aura') {
+    return;
+  }
+
+  if (def.attack === 'aura') {
+    if (bid === 'eternal') {
+      // Sechs lange schmale Zapfen - ein weiter, ruhiger Ring.
+      g.fillStyle = accent;
+      for (let i = 0; i < 6; i++) {
+        g.rotate(Math.PI / 3);
+        g.beginPath();
+        g.moveTo(0, -4); g.lineTo(26, 0); g.lineTo(0, 4);
+        g.closePath(); g.fill();
+      }
+      g.fillStyle = hexA('#FFFFFF', 0.6);
+      g.beginPath(); g.arc(0, 0, 5, 0, Math.PI * 2); g.fill();
+      return;
+    }
+    if (bid === 'shard') {
+      // Drei breite, gezackte Klingen - aggressiv statt ruhig.
+      g.fillStyle = accent;
+      for (let i = 0; i < 3; i++) {
+        g.rotate((Math.PI * 2) / 3);
+        g.beginPath();
+        g.moveTo(0, -9); g.lineTo(12, -5); g.lineTo(20, 0); g.lineTo(12, 5); g.lineTo(0, 9);
+        g.closePath(); g.fill();
+      }
+      return;
+    }
     g.fillStyle = accent;
     for (let i = 0; i < 3; i++) {
       g.rotate((Math.PI * 2) / 3);
@@ -276,16 +412,46 @@ function paintWeapon(g: CanvasRenderingContext2D, def: TowerDef, accent: string)
       g.moveTo(0, -6); g.lineTo(19, 0); g.lineTo(0, 6);
       g.closePath(); g.fill();
     }
-  } else {
+    return;
+  }
+
+  // Kettenblitz
+  if (bid === 'fork') {
+    // Drei kleine Splitter im Kreis - die Ladung verteilt sich.
+    g.fillStyle = accent;
+    for (let i = 0; i < 3; i++) {
+      g.save();
+      g.rotate((Math.PI * 2 * i) / 3);
+      g.translate(0, -12);
+      g.beginPath();
+      g.moveTo(0, -8); g.lineTo(6, 0); g.lineTo(0, 8); g.lineTo(-6, 0);
+      g.closePath(); g.fill();
+      g.restore();
+    }
+    return;
+  }
+  if (bid === 'lens') {
+    // Ein einziger grosser Kristall in einer Fassung.
+    g.strokeStyle = hexA(accent, 0.8); g.lineWidth = 3;
+    g.beginPath(); g.arc(0, 0, 18, 0, Math.PI * 2); g.stroke();
     g.fillStyle = accent;
     g.beginPath();
-    g.moveTo(0, -13); g.lineTo(9, 0); g.lineTo(0, 13); g.lineTo(-9, 0);
+    g.moveTo(0, -17); g.lineTo(12, 0); g.lineTo(0, 17); g.lineTo(-12, 0);
     g.closePath(); g.fill();
-    g.fillStyle = hexA('#FFFFFF', 0.55);
+    g.fillStyle = hexA('#FFFFFF', 0.7);
     g.beginPath();
-    g.moveTo(0, -13); g.lineTo(9, 0); g.lineTo(0, 0);
+    g.moveTo(0, -17); g.lineTo(12, 0); g.lineTo(0, 0);
     g.closePath(); g.fill();
+    return;
   }
+  g.fillStyle = accent;
+  g.beginPath();
+  g.moveTo(0, -13); g.lineTo(9, 0); g.lineTo(0, 13); g.lineTo(-9, 0);
+  g.closePath(); g.fill();
+  g.fillStyle = hexA('#FFFFFF', 0.55);
+  g.beginPath();
+  g.moveTo(0, -13); g.lineTo(9, 0); g.lineTo(0, 0);
+  g.closePath(); g.fill();
 }
 
 export function roundRect(

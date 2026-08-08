@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v15 · 07.08.2026
+Stand: v16 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -306,6 +306,23 @@ Abend.
 
 ---
 
+### 3.16 Wie man prüft, ob zwei Türme verschieden aussehen
+
+Aussehen lässt sich nicht sinnvoll automatisch beurteilen — aber *Gleichheit*
+schon, und die ist der eigentliche Fehler. Zwei Prüfungen greifen ineinander:
+
+Der **Datenwächter** verlangt, dass die beiden Zweige eines Turms
+unterschiedliche Bezeichner tragen und dass kein Bezeichner zweimal im Spiel
+vorkommt. An diesem Bezeichner hängt die Zeichenroutine; gleicher Bezeichner
+hieße zwangsläufig gleicher Umriss. Gegenprobe: benennt man die Salve in
+`sniper` um, meldet er *„beide Zweige heißen `sniper` — sie bekämen denselben
+Umriss."*
+
+Der **Rauchtest** fordert für jeden Turm, jede Stufe und beide Zweige ein
+eigenes gebackenes Bild an und verlangt, dass es nicht dasselbe Objekt ist.
+Damit fällt auf, wenn eine neue Zweigform im Code vergessen wurde und still auf
+die Standardform zurückfällt.
+
 ### 3.15 Grafik gegen ein Budget
 
 Politur ohne Messung wird schnell zu Ruckeln auf dem Handy. Diese Runde lief
@@ -603,7 +620,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v15
+## 5. Stand v16
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -663,6 +680,30 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v16 — jeder Zweig hat jetzt eine eigene Gestalt.** Bis v15 unterschied
+nur die Farbe, was man gebaut hatte. Im Gewühl erkennt man einen Umriss aber
+schneller als einen Farbton, und auf dem Handy ist ein Turm keine 45 Bildpunkte
+groß.
+
+| Zweig | Woran man ihn erkennt |
+|---|---|
+| Scharfschütze | schlanker hoher Turm, langer dünner Lauf mit Zielrohr und Zweibein |
+| Salve | breite Zinnen, drei kurze Läufe im Fächer |
+| Ewiges Eis | Eisring auf zwei Säulen, sechs lange schmale Zapfen |
+| Splitterfrost | aufgestellte Klingen, drei breite gezackte Schneiden |
+| Streubombe | flacher breiter Kasten, vier kurze weite Rohre |
+| Brecher | massiver Bunker mit Verstärkungsbändern, ein einziges dickes Rohr |
+| Verzweigung | drei kleine Träger, drei umlaufende Splitter |
+| Bündelung | ein großer Ring, ein einzelner Kristall in der Fassung |
+
+Auf Stufe 3 setzt jeder Zweig zusätzlich eine eigene Krone auf: eine Spitze bei
+Scharfschütze, Splitterfrost und Bündelung, eine Zinne bei den übrigen.
+
+**Explosionen haben Gewicht bekommen.** Rauch, der aufsteigt und wächst, dazu
+Trümmer, die hochgeschleudert werden und fallen. Eine Explosion ohne Rauch ist
+ein Blitz, kein Einschlag. Schwere Gegner hinterlassen beim Tod ebenfalls
+Trümmer.
 
 **Neu in v15 — die große Grafikrunde.**
 

@@ -242,6 +242,21 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Jeder Zweig braucht einen eigenen Umriss. Geprueft wird nicht das Aussehen,
+// sondern dass ueberhaupt unterschiedliche Bilder entstehen: gleiche Bildpunkte
+// hiessen gleicher Turm, und dann verrieten nur noch die Farben, was da steht.
+{
+  const { getTowerBase, getTowerWeapon } = await import('../src/gfx/sprites');
+  for (const id of TOWER_ORDER) {
+    for (const level of [2, 3]) {
+      const a = getTowerBase(id, 0, level), b = getTowerBase(id, 1, level);
+      if (a === b) problems.push(`Umriss: ${id} Stufe ${level} liefert fuer beide Zweige dasselbe Bild.`);
+      const wa = getTowerWeapon(id, 0, level), wb = getTowerWeapon(id, 1, level);
+      if (wa === wb) problems.push(`Umriss: ${id} Waffe Stufe ${level} ist fuer beide Zweige gleich.`);
+    }
+  }
+}
+
 // Genre-Kriterium F4: vor dem Kauf muessen die Werte sichtbar sein.
 {
   state.selectedTower = null;

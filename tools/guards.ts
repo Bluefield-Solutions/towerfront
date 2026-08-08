@@ -110,6 +110,13 @@ for (const id of TOWER_ORDER) {
     }
   }
 
+  // Zwei Zweige duerfen nicht denselben Bezeichner tragen: an ihm haengt die
+  // gezeichnete Form. Gleicher Bezeichner hiesse gleicher Umriss - und dann
+  // sieht man im Feld nicht, was man gebaut hat.
+  if (t.branches[0].id === t.branches[1].id) {
+    fail(`Turm ${id}: beide Zweige heissen "${t.branches[0].id}" - sie bekaemen denselben Umriss.`);
+  }
+
   // Die beiden Zweige muessen sich wirklich unterscheiden - sonst ist die
   // Wahl keine. Geprueft an Stufe 2, wo die Entscheidung faellt.
   {
@@ -247,6 +254,19 @@ for (const [id, e] of Object.entries(ENEMIES)) {
   if (total >= 1) warn(`Gegner ${id}: Bruchstuecke haben zusammen ${Math.round(total * 100)} % der Huelle.`);
   if (child.leak * e.split.count > e.leak * 2) {
     warn(`Gegner ${id}: die Bruchstuecke richten zusammen mehr Schaden am Kristall an als das Original.`);
+  }
+}
+
+// Jeder Zweig-Bezeichner muss im ganzen Spiel eindeutig sein - die
+// Zeichenroutine unterscheidet die Umrisse allein daran.
+{
+  const seen = new Map<string, string>();
+  for (const id of TOWER_ORDER) {
+    for (const b of TOWERS[id].branches) {
+      const other = seen.get(b.id);
+      if (other) fail(`Zweig-Bezeichner "${b.id}" kommt bei ${other} und ${id} vor.`);
+      seen.set(b.id, id);
+    }
   }
 }
 

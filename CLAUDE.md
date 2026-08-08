@@ -44,6 +44,7 @@ npm run eichen      einen Wert durchprobieren, alle Kennzahlen nebeneinander
 npm run doku        prüft die Dokumente gegen die Wirklichkeit
 npm run beruehrung  prüft, ob alles mit dem Daumen zu treffen ist
 npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen
+npm run kritik      Wertung nach Testerkategorien, Ziel über 90
 ```
 
 Die Torkette: `tsc` → `guards` → `doku` → `art` → `determinism` → `sim` → `bench` →
@@ -73,17 +74,21 @@ zweites Mal kosten.
    trägt dort eine Probe nach. Jede Probe prüft zuerst, ob ihr Eingriff
    überhaupt angekommen ist — drei von zehn sind daran einmal gescheitert,
    und ein nicht angekommener Eingriff sieht aus wie ein bestandenes Tor.
-6. **Kein Tor ersetzt den Blick — und kein Blick die Tore.** Elf von 57
+6. **Vor jeder Lieferung die vier Aufnahmen aus `npm run kritik` ansehen.**
+   In v50 lag die Turmleiste über der Landkarte, man kam nicht ins Spiel, und
+   alle vierzehn Tore waren grün. Ein Tor prüft, ob etwas funktioniert — nicht,
+   ob man es spielen kann.
+7. **Kein Tor ersetzt den Blick — und kein Blick die Tore.** Elf von 57
    Befunden kamen aus Bildschirmfotos. Seit v47 prüft `bildtor` wenigstens
    das Mechanische: einfarbige Fläche, falsche Helligkeit, nicht dekodierte
    Bilder. Ob es *gut aussieht*, sagt es weiterhin nicht.
-7. **Vor dem Justieren den Raum ansehen.** `npm run eichen` probiert einen
+8. **Vor dem Justieren den Raum ansehen.** `npm run eichen` probiert einen
    Wert durch und legt alle Kennzahlen nebeneinander. Blind nachjustieren
    heisst, durch ein Schlüsselloch zu schauen: T15 scheiterte so an drei
    Runden und gelang im zweiten Anlauf in einer.
-8. **Das Soll kommt aus der Referenz, nicht aus mir.** Sonst wandert es mit
+9. **Das Soll kommt aus der Referenz, nicht aus mir.** Sonst wandert es mit
    der eigenen Leistung mit. Deshalb Schritt 0.
-9. **Safari-Falle:** nie `drawImage(self)` mit `filter: blur` oder
+10. **Safari-Falle:** nie `drawImage(self)` mit `filter: blur` oder
    `globalCompositeOperation: 'lighter'`. Auf iOS schwarzes Bild nach etwa
    einer Sekunde, auf dem Schreibtisch unauffällig. Alles Leuchten wird
    gebacken.

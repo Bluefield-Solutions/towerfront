@@ -25,7 +25,8 @@
     "bildtor": "tsx tools/shots.mjs --tor",
     "doku": "node tools/docs.mjs",
     "beruehrung": "tsx tools/touch.mjs",
-    "proben": "node tools/probes.mjs"
+    "proben": "node tools/probes.mjs",
+    "kritik": "node tools/review.mjs"
   },
   "keywords": [],
   "author": "",

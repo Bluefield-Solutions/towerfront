@@ -39,6 +39,42 @@ Führt aus, was sich rechnen lässt — `npm run schleife`. Er urteilt nicht, er
 misst. Ergebnis: `schleife/bericht.md` mit Torausgabe, Kennzahlen,
 Änderungsumfang und Aufnahmen.
 
+### Kritiker
+
+Neu seit v51, und der Grund dafür ist unangenehm: **In v50 lag die Turmleiste
+quer über der Landkarte, man kam nicht ins Spiel — und alle vierzehn Tore
+waren grün.** Kein einziges davon stellt die Frage, die ein Käufer als erstes
+stellt.
+
+Der Kritiker nimmt den Blick eines Testers ein und bewertet in fünf
+Kategorien mit Gewicht:
+
+| Kategorie | Gewicht |
+|---|---|
+| Einstieg und Bedienung | 20 % |
+| Spielmechanik und Tiefe | 30 % |
+| Balance und Fortschritt | 20 % |
+| Grafik und Präsentation | 20 % |
+| Technik und Stabilität | 10 % |
+
+**Ziel: über 90.** `npm run kritik` rechnet den messbaren Teil aus und bricht
+ab, wenn die Wertung darunter liegt.
+
+**Und der zweite Teil ist der wichtigere.** Das Werkzeug listet vier Fragen
+auf, die es nicht beantworten kann, jede mit der Aufnahme, an der sie zu
+beantworten ist:
+
+```
+[einstieg]       Findet sich jemand ohne Erklärung im Menü zurecht?
+[spiel]          Fühlt sich eine Welle spannend an oder zäh?
+[praesentation]  Wirkt das Feld wie ein Ort oder wie ein Diagramm?
+[praesentation]  Passen Menü und Spiel stilistisch zusammen?
+```
+
+**Diese vier Bilder müssen angesehen werden. Jede Runde. Vom Arbeiter selbst,
+bevor geliefert wird.** Eine Wertung ohne diesen Teil ist wertlos — der
+Beweis steht oben: 96 von 100 für ein Spiel, das sich nicht starten ließ.
+
 ### Inspektor
 
 **Sieht nur den Bericht und die Bilder. Nicht den Code, nicht die Absicht.**
@@ -55,6 +91,11 @@ Er entscheidet zwischen:
 ---
 
 ## Was den Ausschlag gibt
+
+**Angesehen** (entscheidet nur der Blick, und er ist Pflicht):
+
+- Die vier Aufnahmen aus `npm run kritik`, jede einzeln.
+- Wer liefert, ohne sie angesehen zu haben, liefert blind.
 
 **Rechenbar** (entscheidet das Werkzeug, nicht ich):
 

@@ -12,6 +12,79 @@ gegengeprobt.**
 
 ---
 
+# Zweiter Durchgang · v49 bis v59 · Grafikblock
+
+**Sechs Befunde, alle behoben. Zwei davon sind Wiederholungstäter.**
+
+### B12 — `props` war totes Feld
+
+Jede Karte trug eine Liste dekorativer Felsen; die Frostspalte 49 Stück. **Kein
+Codepfad las sie mehr** — seit die Kartenbilder ihre Deko selbst mitbringen,
+zeichnet die Engine nichts davon. Der Wächter prüfte trotzdem, dass keine Deko
+auf dem Weg liegt: eine Prüfung auf Daten, die niemand benutzt.
+
+Entfernt: Feld, Daten, Prüfung.
+
+### B13 — Die Laubschlucht hatte kein einziges Hindernis
+
+Die Auslesung trennt über die Sättigung — auf dem ockernen Laubboden liegen
+Stämme und Farne aber im selben Bereich. Ergebnis: **null Hindernisse, 61 %
+bebaubare Fläche**, die höchste aller Karten. Die Karte sah aus, als hätte sie
+Deckung, und hatte keine.
+
+Behoben über eine zweite Trennung: dunkle *und* grüne Flächen, zusammengewachsen
+und nach Größe gefiltert. 13 Hindernisse, bebaubare Fläche von 61 auf 44 %.
+
+### B14 — Proben an festen Werten veralten *(zweiter Vorfall)*
+
+Zwei Gegenproben zeigten auf eine Wegkoordinate und einen Kurvenwert. Beide
+ändern sich bei jeder Balance-Runde — und beide meldeten „Muster fehlt", ohne
+dass an den Toren etwas falsch war. **Schon das zweite Mal.**
+
+Behoben an der Wurzel: Proben können jetzt eine **Regel** statt eines festen
+Musters verwenden. `hpEnd: [0-9.]+, hpCurve: 2\.4` überlebt jede Umeichung.
+
+Nebenbefund: Mein Skript, das diese Umstellung vornehmen sollte, lief selbst ins
+Leere, weil es auf die alten Werte zeigte. Dieselbe Fehlerklasse im
+Behebungsversuch.
+
+### B15 — Die Wegschwäche war unsichtbar geworden
+
+In v57 habe ich die Umwegprüfung für Bildkarten von einem Fehler zu einem
+Hinweis herabgestuft — mit der Begründung, ein gemaltes Bild lasse sich nicht
+nachbessern. Das stimmt, aber die Folge war: **alle drei Karten liegen bei
+Umwegfaktor 1,0 bis 1,3 statt 1,8, und niemand sieht es.**
+
+Ein gerader Weg lässt sich mit vier Türmen abdecken und verlangt keine
+Entscheidung. Das ist keine Kleinigkeit, sondern der Kern des Spiels.
+
+Behoben: Die Kritik zählt es jetzt als Kriterium. Die Wertung fiel dadurch von
+96 auf **93** — mit benanntem Grund statt stiller Warnung. Und die Anforderung
+steht jetzt im Bildauftrag.
+
+### B16 — Zwei Dokumentabschnitte widersprachen sich
+
+Der Grafik-Audit forderte in Abschnitt 4 flache Vektorzeichnungen und in
+Abschnitt 5 gerenderte Bilder. Abschnitt 4 entstand vor dem Zielbild und ist
+hinfällig — jetzt mit Warnkasten gekennzeichnet.
+
+Der Bodenauftrag verlangte zwei Hilfsbilder je Karte, die inzwischen
+überflüssig sind. Nachtrag ergänzt, dazu die zwei neuen Anforderungen: Der Weg
+muss sich vom Boden abheben, und er muss winden.
+
+### Was geprüft wurde und in Ordnung war
+
+- Strenge Typprüfung ohne Meldung.
+- Alle neun Kombinationen aus drei Karten und drei Graden: gestartet, gespielt,
+  gesichert, geladen — sauber.
+- Kein Hindernis liegt auf einem Weg (geprüft über alle drei Karten).
+- Keine Reste im Baum, keine Wegwerfdateien.
+- Alle 15 Gegenproben schlagen an.
+
+---
+
+## Erster Durchgang · v35
+
 ## 1 · Fehler im Spiel
 
 ### B1 — Ein Spielstand konnte Türme mitten ins Gelände setzen

@@ -145,7 +145,13 @@ einer Vorschrift.** Das ist keine Kapitulation, sondern der Weg, den die
 Referenz gegangen ist — dort ist die Palette *vor* dem ersten Bild geplant
 worden.
 
-### 4.1 Die Vorschrift, messbar
+> **ÜBERHOLT.** Abschnitt 4 entstand vor deinem Zielbild und ging von einem
+> flachen Zeichentrickstil aus. Das Zielbild ist gerendert — damit sind 4.1
+> und 4.2 hinfällig. **Gültig sind die Zahlen und die Bildbeschreibung aus
+> Abschnitt 5.4.** Abschnitt 4.3 (Reihenfolge) und 4.4 (Abnahmeprüfung) gelten
+> weiter.
+
+### 4.1 Die Vorschrift, messbar *(überholt, siehe 5.4)*
 
 Jedes neue Bild muss diese Werte treffen. `npm run grafik` prüft sie.
 
@@ -162,7 +168,7 @@ Jedes neue Bild muss diese Werte treffen. `npm run grafik` prüft sie.
 Die entscheidenden drei Zeilen: Figuren **heller** als der Boden, Figuren
 **gesättigter** als der Boden, Detaildichte auf **einem Niveau**.
 
-### 4.2 Was das für die Bilderzeugung heißt
+### 4.2 Was das für die Bilderzeugung heißt *(überholt, siehe 5.4)*
 
 Die bisherigen Bestellungen liefen auf „gerendert, realistisch, Aufsicht". Das
 war der Fehler. Die neue Vorgabe je Bild:

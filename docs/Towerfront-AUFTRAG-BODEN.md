@@ -19,6 +19,19 @@ entfällt, weil er Teil des Bildes wird.
 
 ---
 
+> **Nachtrag nach der ersten Lieferung.** Die Hilfsbilder werden **nicht mehr
+> gebraucht**: `tools/mapread.mjs` liest Weg und Gelände direkt aus dem
+> Kartenbild aus — über die Sättigung bei farbigem Boden, über die Helligkeit
+> bei Schnee. Geprüft an allen drei Karten.
+>
+> Zwei Anforderungen sind dafür dazugekommen:
+> - **Der Weg muss sich vom Boden abheben** — in der Sättigung *oder* in der
+>   Helligkeit. Ein grauer Weg auf grauem Beton gleicher Helligkeit wäre der
+>   Grenzfall.
+> - **Der Weg muss deutlich winden.** Gemessen liegt der Umwegfaktor aller
+>   drei gelieferten Karten bei 1,0 bis 1,3; nötig sind 1,8. Ein gerader Weg
+>   lässt sich mit vier Türmen abdecken und verlangt keine Entscheidung.
+
 ## Was geliefert werden soll
 
 Drei Kartenbilder, dazu je zwei Hilfsbilder. **Die Hilfsbilder sind der

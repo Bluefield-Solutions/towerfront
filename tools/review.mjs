@@ -96,6 +96,20 @@ console.log('Kritik — Wertung nach Kategorien einer Spielezeitschrift\n');
   werte('spiel', 'Mindestens vier Türme mit je zwei Zweigen',
     (towers.match(/branches: \[/g) ?? []).length >= 4);
   werte('spiel', 'Ausbau geht tief genug', Number(stufen) >= 5, `${stufen} Stufen`);
+
+  // Wie verwinkelt sind die Wege?
+  //
+  // Das ist die Frage, an der ein Tester eine Karte misst: ein gerader Weg
+  // laesst sich mit vier Tuermen abdecken, ein verwinkelter verlangt eine
+  // Entscheidung. Der Waechter meldet es seit v57 nur als Hinweis, weil sich
+  // ein gemaltes Bild nicht nachbessern laesst - damit war die Schwaeche
+  // unsichtbar geworden. Hier zaehlt sie wieder.
+  const wachen = lauf('npm run guards');
+  const umwege = [...wachen.out.matchAll(/Umweg ([0-9.]+)x/g)].map((m) => Number(m[1]));
+  const schnitt = umwege.length ? umwege.reduce((a, b) => a + b, 0) / umwege.length : 0;
+  werte('spiel', 'Wege sind verwinkelt genug', schnitt >= 1.8,
+    `Umwegfaktor im Mittel ${schnitt.toFixed(1)}, Ziel 1,8`);
+  fragen.push(['spiel', 'Zwingt der Wegverlauf zu einer Entscheidung?', 'welle15.png']);
   fragen.push(['spiel', 'Fühlt sich eine Welle spannend an oder zäh?', 'welle15.png']);
 }
 

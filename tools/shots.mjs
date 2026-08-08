@@ -75,6 +75,9 @@ const { Menu } = await import('../src/game/menu.ts');
 
 const DT = 1 / 60;
 
+const TOR = ['menu-karte', 'menu-einweisung', 'menu-sieg', 'welle8'];
+const nurTor = process.argv.includes('--tor');
+
 /** Eine Aufnahme: Zustand herstellen, ein paar Bilder laufen lassen, ausgeben.
  *
  *  Die Vorlaufbilder sind wichtig: Partikel, Federn und Nachlauf brauchen
@@ -89,17 +92,74 @@ async function shot(name, w, h, build) {
   const s = new GameState();
   const r = new Renderer(canvas);
   r.menu = null;
+  // Im Torlauf wird kuerzer simuliert: es geht um "sieht es richtig aus",
+  // nicht um einen bestimmten Spielstand. Das halbiert die Laufzeit.
   const frames = build(s, r) ?? 0;
   r.resize();
-  // Einmal zeichnen fordert alle Bilder an, dann warten, dann richtig laufen.
+  // Einmal zeichnen fordert alle Bilder an, dann warten.
   r.draw(s);
   await settle();
-  for (let i = 0; i < frames; i++) { s.update(DT); if (r.menu) r.menu.time += DT; r.draw(s); }
+
+  // Simulieren ist billig, Zeichnen ist teuer: 200 Simulationsschritte kosten
+  // 10 Millisekunden, ein gezeichnetes Bild 180. Frueher wurde jedes Bild
+  // gezeichnet, um am Ende genau eines zu behalten - das allein machte die
+  // Bildabnahme von Sekunden auf Minuten lang. Jetzt laeuft die Simulation
+  // durch und gezeichnet werden nur die letzten beiden Bilder: eines, damit
+  // sich Schweife und Federn einschwingen, und das, was gespeichert wird.
+  for (let i = 0; i < frames; i++) {
+    s.update(DT);
+    if (r.menu) { r.menu.time += DT; r.menu.resultAge += DT; }
+  }
+  r.draw(s);
+  s.update(DT);
   r.draw(s);
 
   const file = join(OUT, `${name}.png`);
   writeFileSync(file, canvas.toBuffer('image/png'));
-  return { name, file, w, h };
+  return { name, file, w, h, befund: pruefen(name, canvas) };
+}
+
+/** Was auf dem Bild zu sehen ist - als Zahlen.
+ *
+ *  Eine Aufnahme im Tor nuetzt nichts, wenn niemand hinsieht. Deshalb rechnet
+ *  das Werkzeug drei Dinge aus, die ohne Auge auskommen und genau die Faelle
+ *  fangen, die uns schon getroffen haben:
+ *
+ *   - Streuung der Helligkeit. Nahe null heisst: einfarbige Flaeche. Das ist
+ *     der schwarze Bildschirm, den die Safari-Falle erzeugt hat.
+ *   - Mittlere Helligkeit. Zu dunkel oder zu hell heisst: da ist etwas
+ *     grundlegend schief.
+ *   - Zahl verschiedener Farben. Zu wenige heisst: die Bilder wurden nicht
+ *     dekodiert und es sind nur die gemalten Ersatzformen zu sehen.
+ */
+function pruefen(name, canvas) {
+  const g = canvas.getContext('2d');
+  const { data, width, height } = g.getImageData(0, 0, canvas.width, canvas.height);
+  let sum = 0, sum2 = 0, n = 0;
+  const farben = new Set();
+  // Jeder achte Bildpunkt reicht und kostet fast nichts.
+  for (let i = 0; i < data.length; i += 4 * 8) {
+    const l = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+    sum += l; sum2 += l * l; n++;
+    farben.add(((data[i] >> 3) << 10) | ((data[i + 1] >> 3) << 5) | (data[i + 2] >> 3));
+  }
+  const mittel = sum / n;
+  const streuung = Math.sqrt(Math.max(0, sum2 / n - mittel * mittel));
+  void width; void height;
+  const probleme = [];
+  if (streuung < 8) probleme.push(`fast einfarbig (Streuung ${streuung.toFixed(1)})`);
+  if (mittel < 12) probleme.push(`fast schwarz (Helligkeit ${mittel.toFixed(0)})`);
+  if (mittel > 235) probleme.push(`fast weiss (Helligkeit ${mittel.toFixed(0)})`);
+  // Die Farbschwelle haengt davon ab, was zu sehen sein SOLL. Eine Menuetafel
+  // ist von Hand gezeichnet und flach - 167 Farben sind dort richtig. Ein
+  // Spielfeld zeigt ein Foto; bleiben dort die Farben aus, wurden die
+  // eingebetteten Bilder nicht dekodiert, und die Aufnahme zeigt ein anderes
+  // Spiel als der Browser.
+  const mindestens = name.startsWith('menu') ? 90 : 900;
+  if (farben.size < mindestens) {
+    probleme.push(`nur ${farben.size} Farben, erwartet ${mindestens} - Bilder vermutlich nicht dekodiert`);
+  }
+  return { mittel, streuung, farben: farben.size, probleme };
 }
 
 /** Ein Feld aufbauen, wie es ein Spieler in dieser Welle haette. */
@@ -115,6 +175,9 @@ function stock(s, count, plan = TOWER_ORDER) {
 }
 
 const wanted = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+// Fuer die Torkette: nur ein Querschnitt, damit die Kette nicht auf das
+// Dreifache waechst. Die Bildabnahme von Hand nimmt weiterhin alles auf.
+
 const takes = [];
 
 // --- Handy quer, das wichtigste Format
@@ -234,11 +297,26 @@ takes.push(['nah', () => shot('nah', 844, 390, (s, r) => {
   return 60 * 6;
 })]);
 
-const list = wanted.length ? takes.filter(([n]) => wanted.includes(n)) : takes;
+const auswahl = nurTor ? TOR : wanted;
+const list = auswahl.length ? takes.filter(([n]) => auswahl.includes(n)) : takes;
 console.log(`Bildabnahme: ${list.length} Aufnahme(n)\n`);
+const probleme = [];
 for (const [, run] of list) {
   const t0 = Date.now();
   const r = await run();
-  console.log(`  ${r.name.padEnd(14)} ${r.w}x${r.h}  ${((Date.now() - t0) / 1000).toFixed(1)} s  bilder/${r.name}.png`);
+  const b = r.befund;
+  console.log(
+    `  ${r.name.padEnd(16)} ${r.w}x${r.h}  ${((Date.now() - t0) / 1000).toFixed(1)} s  ` +
+    `Helligkeit ${b.mittel.toFixed(0).padStart(3)}  Streuung ${b.streuung.toFixed(0).padStart(3)}  ` +
+    `${String(b.farben).padStart(4)} Farben` +
+    (b.probleme.length ? `   ${b.probleme.join(', ')}` : ''),
+  );
+  for (const p of b.probleme) probleme.push(`${r.name}: ${p}`);
 }
-console.log('\nBILDABNAHME: fertig.');
+
+if (probleme.length) {
+  console.error(`\nBILDABNAHME: ${probleme.length} Problem(e)`);
+  for (const p of probleme) console.error(`  - ${p}`);
+  process.exit(1);
+}
+console.log('\nBILDABNAHME: alle Aufnahmen plausibel.');

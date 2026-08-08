@@ -149,6 +149,8 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
   rough: [
   ],
   pfadImBild: true,
+  hint: { x: 220, y: 200 },
+  props: [],
   waves: PLAN_ASCHESCHLUCHT,
   balance: { hpMul: 0.85, goldMul: 1.2 },
 };

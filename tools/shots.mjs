@@ -103,8 +103,18 @@ async function shot(name, w, h, build) {
   // nicht um einen bestimmten Spielstand. Das halbiert die Laufzeit.
   const frames = build(s, r) ?? 0;
   r.resize();
-  // Einmal zeichnen fordert alle Bilder an, dann warten.
+  // Erst alle Bilder anfordern, dann warten, dann pruefen.
+  //
+  // Ein Gegnerbild wird sonst erst geladen, wenn dieser Gegner auftaucht -
+  // die Pruefung meldete deshalb sieben fehlende Bilder, obwohl alles in
+  // Ordnung war. Ein falscher Alarm ist genauso schaedlich wie ein
+  // uebersehener Fehler: nach dem dritten glaubt ihn niemand mehr.
   r.draw(s);
+  if (!r.menu) {
+    getBackground(s.map.id);
+    for (const id of TOWER_ORDER) getTowerArt(id, null, 1, s.map.id);
+    for (const id of Object.keys(ENEMIES)) getEnemyArt(id, false, s.map.id);
+  }
   await settle();
 
   // Sind die eingebetteten Bilder wirklich angekommen?

@@ -318,6 +318,16 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Jede Gegnerart braucht ein gerendertes Bild - sonst laeuft eine gezeichnete
+// Silhouette zwischen gerenderten Fahrzeugen.
+{
+  const { hasEnemyArt } = await import('../src/gfx/enemyart');
+  const { ENEMIES } = await import('../src/data/enemies');
+  for (const id of Object.keys(ENEMIES) as (keyof typeof ENEMIES)[]) {
+    if (!hasEnemyArt(id)) problems.push(`Gegnerbild fehlt: ${id}.`);
+  }
+}
+
 // Jeder Zweig braucht einen eigenen Umriss. Geprueft wird nicht das Aussehen,
 // sondern dass ueberhaupt unterschiedliche Bilder entstehen: gleiche Bildpunkte
 // hiessen gleicher Turm, und dann verrieten nur noch die Farben, was da steht.

@@ -12,6 +12,7 @@ import { beginGlowBatch, endGlowBatch, hexA, stampGlow, stampGlowFast } from './
 import { bakeTerrain } from './terrain';
 import { backgroundVersion, getBackground } from './backgrounds';
 import { getTowerArt, towerArtScale, towerArtVersion } from './towerart';
+import { enemyArtWidth, getEnemyArt } from './enemyart';
 import {
   drawSprite, getEnemySprite, getShadow, getTowerBase, getTowerWeapon, ENEMY_FRAMES,
 } from './sprites';
@@ -359,7 +360,14 @@ export class Renderer {
       ctx.translate(h.x, h.y - h.alt);
       ctx.rotate(h.angle);
       const shrink = 0.5 + k * 0.5;
-      drawSprite(ctx, getEnemySprite(h.def, false, h.frame), 0, 0, shrink);
+      const art = getEnemyArt(h.def, false);
+      if (art) {
+        const w = enemyArtWidth(h.def) * shrink;
+        const hh = w * (art.height / art.width);
+        ctx.drawImage(art, -w / 2, -hh * 0.72, w, hh);
+      } else {
+        drawSprite(ctx, getEnemySprite(h.def, false, h.frame), 0, 0, shrink);
+      }
       ctx.restore();
     }
     ctx.globalAlpha = 1;
@@ -525,40 +533,73 @@ export class Renderer {
       const def = ENEMIES[e.def];
       const wob = Math.sin(s.time * 9 + e.wobble) * 2;
       const alt = this.altitude(e, s.time, !!def.flying);
-      const rotating = e.def === 'runner' || !!def.flying;
-      // Die Laufphase haengt an der zurueckgelegten Strecke, nicht an der Uhr:
-      // ein gebremster Gegner bewegt die Beine langsamer.
-      const cycle = def.flying ? s.time * 7 + e.wobble : e.travelled / 26 + e.wobble;
-      const frame = Math.floor(cycle) % ENEMY_FRAMES;
+      const art = getEnemyArt(e.def, false);
 
-      if (rotating || def.boss) {
+      if (art) {
+        // Die Bilder sind in Seitenansicht gezeichnet und schauen nach links.
+        // Gedreht wird deshalb nicht - ein Fahrzeug in Dreiviertelansicht
+        // kippt dabei. Gespiegelt wird, sobald es nach rechts laeuft.
+        const path = s.lanes[e.lane] ?? s.lanes[0];
+        const nx = def.flying
+          ? s.goal
+          : path[Math.min(e.seg + 1, path.length - 1)];
+        const facingRight = nx.x >= e.x;
+        const w = enemyArtWidth(e.def);
+        const h = w * (art.height / art.width);
         ctx.save();
-        ctx.translate(e.x, e.y - alt);
-        if (def.flying) {
-          ctx.rotate(Math.atan2(s.goal.y - e.y, s.goal.x - e.x));
-        } else if (rotating) {
-          const path = s.lanes[e.lane] ?? s.lanes[0];
-          const nx = path[Math.min(e.seg + 1, path.length - 1)];
-          ctx.rotate(Math.atan2(nx.y - e.y, nx.x - e.x));
-        }
-        drawSprite(ctx, getEnemySprite(e.def, false, frame), 0, 0);
+        ctx.translate(e.x, e.y - alt + wob * 0.3);
+        if (facingRight) ctx.scale(-1, 1);
+        ctx.drawImage(art, -w / 2, -h * 0.72, w, h);
         if (e.hitFlash > 0.01) {
-          ctx.globalAlpha = e.hitFlash * 0.7;
-          drawSprite(ctx, getEnemySprite(e.def, true, frame), 0, 0);
-          ctx.globalAlpha = 1;
+          const hot = getEnemyArt(e.def, true);
+          if (hot) {
+            ctx.globalAlpha = e.hitFlash * 0.8;
+            ctx.drawImage(hot, -w / 2, -h * 0.72, w, h);
+            ctx.globalAlpha = 1;
+          }
         }
+        ctx.restore();
         if (def.boss) {
+          ctx.save();
+          ctx.translate(e.x, e.y - alt);
           ctx.rotate(s.time * 0.8);
           ctx.strokeStyle = hexA(def.trim, 0.7); ctx.lineWidth = 3;
           ctx.beginPath(); ctx.arc(0, 0, def.radius * 1.35, 0, Math.PI * 1.3); ctx.stroke();
+          ctx.restore();
         }
-        ctx.restore();
       } else {
-        drawSprite(ctx, getEnemySprite(e.def, false, frame), e.x, e.y + wob * 0.4);
-        if (e.hitFlash > 0.01) {
-          ctx.globalAlpha = e.hitFlash * 0.7;
-          drawSprite(ctx, getEnemySprite(e.def, true, frame), e.x, e.y + wob * 0.4);
-          ctx.globalAlpha = 1;
+        const rotating = e.def === 'runner' || !!def.flying;
+        const cycle = def.flying ? s.time * 7 + e.wobble : e.travelled / 26 + e.wobble;
+        const frame = Math.floor(cycle) % ENEMY_FRAMES;
+        if (rotating || def.boss) {
+          ctx.save();
+          ctx.translate(e.x, e.y - alt);
+          if (def.flying) {
+            ctx.rotate(Math.atan2(s.goal.y - e.y, s.goal.x - e.x));
+          } else if (rotating) {
+            const path = s.lanes[e.lane] ?? s.lanes[0];
+            const nx = path[Math.min(e.seg + 1, path.length - 1)];
+            ctx.rotate(Math.atan2(nx.y - e.y, nx.x - e.x));
+          }
+          drawSprite(ctx, getEnemySprite(e.def, false, frame), 0, 0);
+          if (e.hitFlash > 0.01) {
+            ctx.globalAlpha = e.hitFlash * 0.7;
+            drawSprite(ctx, getEnemySprite(e.def, true, frame), 0, 0);
+            ctx.globalAlpha = 1;
+          }
+          if (def.boss) {
+            ctx.rotate(s.time * 0.8);
+            ctx.strokeStyle = hexA(def.trim, 0.7); ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(0, 0, def.radius * 1.35, 0, Math.PI * 1.3); ctx.stroke();
+          }
+          ctx.restore();
+        } else {
+          drawSprite(ctx, getEnemySprite(e.def, false, frame), e.x, e.y + wob * 0.4);
+          if (e.hitFlash > 0.01) {
+            ctx.globalAlpha = e.hitFlash * 0.7;
+            drawSprite(ctx, getEnemySprite(e.def, true, frame), e.x, e.y + wob * 0.4);
+            ctx.globalAlpha = 1;
+          }
         }
       }
 

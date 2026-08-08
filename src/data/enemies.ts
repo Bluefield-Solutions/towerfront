@@ -35,7 +35,7 @@ export const ENEMIES: Record<EnemyId, EnemyDef> = {
     body: '#8B5CF6', trim: '#C9B6FF',
   },
   runner: {
-    id: 'runner', name: 'Husche',
+    id: 'runner', name: 'Späher',
     hp: 24, speed: 172, bounty: 2, leak: 1, radius: 14, armor: 0, slowResist: 0,
     body: '#E2566A', trim: '#FFB3BE',
   },
@@ -45,7 +45,7 @@ export const ENEMIES: Record<EnemyId, EnemyDef> = {
     body: '#3F5A8A', trim: '#9FC0E8',
   },
   flyer: {
-    id: 'flyer', name: 'Schwärmer',
+    id: 'flyer', name: 'Gleiter',
     hp: 62, speed: 118, bounty: 4, leak: 2, radius: 16, armor: 0, slowResist: 0.2,
     flying: true,
     body: '#3ED9A4', trim: '#C7FFE9',

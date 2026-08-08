@@ -40,7 +40,7 @@ export const PLAN_SPIRALHAIN: Wave[] = [
   { bonus: 172, note: 'Spalter zerfallen beim Tod', groups: [
     { enemy: 'splitter', count: 5, gap: 1.8, delay: 0 },
     { enemy: 'runner', count: 10, gap: 0.5, delay: 5 } ] },
-  { bonus: 211, note: 'Erste Schwärmer — der Mörser erreicht sie nicht', groups: [
+  { bonus: 211, note: 'Erste Gleiter — der Mörser erreicht sie nicht', groups: [
     { enemy: 'crawler', count: 20, gap: 0.42, delay: 0 },
     { enemy: 'flyer', count: 4, gap: 1.6, delay: 7 } ] },
   { bonus: 216, groups: [
@@ -54,7 +54,7 @@ export const PLAN_SPIRALHAIN: Wave[] = [
     { enemy: 'titan', count: 1, gap: 1, delay: 0 },
     { enemy: 'crawler', count: 16, gap: 0.5, delay: 5 },
     { enemy: 'flyer', count: 5, gap: 1.4, delay: 9 } ] },
-  { bonus: 277, note: 'Schwarm aus der Luft', groups: [
+  { bonus: 277, note: 'Gleiter aus der Luft', groups: [
     { enemy: 'flyer', count: 10, gap: 0.9, delay: 0 },
     { enemy: 'runner', count: 18, gap: 0.34, delay: 5 } ] },
   { bonus: 308, note: 'Doppelte Kolosswand', groups: [
@@ -97,7 +97,7 @@ export const PLAN_ASCHESCHLUCHT: Wave[] = [
   { bonus: 150, groups: [
     { enemy: 'splitter', count: 6, gap: 1.4, delay: 0 },
     { enemy: 'runner', count: 8, gap: 0.5, delay: 5 } ] },
-  { bonus: 168, note: 'Erste Schwärmer — der Mörser erreicht sie nicht', groups: [
+  { bonus: 168, note: 'Erste Gleiter — der Mörser erreicht sie nicht', groups: [
     { enemy: 'crawler', count: 15, gap: 0.4, delay: 0 },
     { enemy: 'flyer', count: 4, gap: 1.4, delay: 6 } ] },
   { bonus: 182, groups: [
@@ -156,7 +156,7 @@ export const PLAN_FROSTSPALTE: Wave[] = [
   { bonus: 142, groups: [
     { enemy: 'brute', count: 3, gap: 2.2, delay: 0 },
     { enemy: 'crawler', count: 8, gap: 0.6, delay: 4 } ] },
-  { bonus: 156, note: 'Erste Schwärmer — der Mörser erreicht sie nicht', groups: [
+  { bonus: 156, note: 'Erste Gleiter — der Mörser erreicht sie nicht', groups: [
     { enemy: 'crawler', count: 10, gap: 0.5, delay: 0 },
     { enemy: 'flyer', count: 2, gap: 1.8, delay: 6 } ] },
   { bonus: 170, groups: [

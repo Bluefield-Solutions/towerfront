@@ -36,7 +36,14 @@ function overVariants(run: (variant: number) => Result): { runs: Result[]; mean:
 /** Eine Zahl, die Sieg und Niederlage vergleichbar macht: Niederlage zaehlt
  *  die erreichte Welle, Sieg 100 plus verbleibenden Kristall. */
 function score(r: Result): number {
-  return r.won ? 100 + r.lives : r.wave;
+  // Bewusst normiert von 0 bis 100 und nicht "100 plus Kristall": als der
+  // Kristall von 20 auf 60 Punkte stieg, wurden alle absoluten Grenzen in
+  // dieser Datei still falsch - zwei Pruefungen schlugen an, obwohl sich an
+  // der Balance nichts verschlechtert hatte. Eine Kennzahl, deren Bedeutung
+  // von einer anderen Einstellung abhaengt, ist keine Kennzahl.
+  const waves = Math.max(1, MAPS[0].waves.length);
+  if (!r.won) return (Math.min(r.wave, waves) / waves) * 50;
+  return 50 + (r.lives / Math.max(1, r.maxLives)) * 50;
 }
 
 /** Spielstile.
@@ -322,7 +329,7 @@ for (const bot of BOTS) {
     `\nAbstand der Spielstile: ` + runs.map((r) => `${r.name} ${r.mean.toFixed(0)}`).join('   ') +
     `   Spanne ${(best - worst).toFixed(0)}`,
   );
-  if (best - worst > 60) {
+  if (best - worst > 18) {
     console.log(
       '  OFFEN (T16): die Stile liegen zu weit auseinander - deshalb laesst sich ' +
       'die Kurve nicht anziehen, ohne die schwaecheren ganz zu verlieren.',
@@ -358,13 +365,13 @@ for (const bot of BOTS) {
     `  Streuung zwischen den Abwandlungen bei gleichem Schaden: ` +
     `${spread(low).toFixed(0)} / ${spread(mid).toFixed(0)} / ${spread(high).toFixed(0)}`,
   );
-  if (span > 45) {
+  if (span > 22) {
     errors.push(
       `Zehn Prozent Schaden bewegen das Ergebnis um ${span.toFixed(0)} Punkte - ` +
       'die Balance haengt an zu wenigen Stellen.',
     );
   }
-  if (spread(mid) > 45) {
+  if (spread(mid) > 32) {
     errors.push(
       `Drei vernuenftige Bauverlaeufe liegen ${spread(mid).toFixed(0)} Punkte auseinander - ` +
       'dann misst jede einzelne Messung vor allem den Zufall der Reihenfolge.',
@@ -502,9 +509,12 @@ for (const id of TOWER_ORDER) {
   for (const [br, r] of [[def.branches[0], a], [def.branches[1], b]] as const) {
     if (!r.won) errors.push(`${def.name} / ${br.name}: gewinnt nicht - toter Ausbaupfad.`);
   }
-  if (a.won && b.won && Math.abs(a.lives - b.lives) > 7) {
+  // Der Abstand wird am Anteil des Kristalls gemessen, nicht in Punkten -
+  // sonst haengt die Grenze am Schwierigkeitsgrad.
+  const share = Math.abs(a.lives - b.lives) / Math.max(1, a.maxLives);
+  if (a.won && b.won && share > 0.22) {
     errors.push(
-      `${def.name}: die Zweige liegen ${Math.abs(a.lives - b.lives)} Kristall auseinander - ` +
+      `${def.name}: die Zweige liegen ${Math.round(share * 100)} % des Kristalls auseinander - ` +
       `"${a.lives > b.lives ? def.branches[0].name : def.branches[1].name}" ist die klar bessere Wahl.`,
     );
   }

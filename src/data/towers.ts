@@ -96,8 +96,8 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         id: 'shard', name: 'Splitterfrost', color: '#9FD4FF',
         blurb: 'Bremst weniger, schneidet dafür. Ein Schadenspuls statt einer Fessel.',
         levels: [
-          { cost: 110, damage: 24, range: 162, cooldown: 0.7, slow: 0.26, slowTime: 1.3, pierce: 2 },
-          { cost: 200, damage: 47, range: 182, cooldown: 0.62, slow: 0.32, slowTime: 1.5, pierce: 3 },
+          { cost: 110, damage: 31, range: 168, cooldown: 0.68, slow: 0.27, slowTime: 1.35, pierce: 3 },
+          { cost: 200, damage: 52, range: 188, cooldown: 0.60, slow: 0.33, slowTime: 1.55, pierce: 3 },
         ],
       },
     ],

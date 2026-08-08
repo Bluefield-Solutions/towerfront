@@ -82,7 +82,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     blurb: 'Kein Geschoss. Pulst im Umkreis und bremst alles gleichzeitig.',
     color: '#BFE9F2', accent: '#7FE7E0',
     attack: 'aura', hitsAir: true, projectileSpeed: 0,
-    base: { cost: 85, damage: 4, range: 148, cooldown: 0.85, slow: 0.34, slowTime: 1.5 },
+    base: { cost: 80, damage: 7, range: 150, cooldown: 0.85, slow: 0.34, slowTime: 1.5 },
     branches: [
       {
         id: 'eternal', name: 'Ewiges Eis', color: '#7FE7E0',
@@ -107,7 +107,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     blurb: 'Langsam und teuer, trifft eine ganze Traube. Erreicht keine Flieger.',
     color: '#C3B39A', accent: '#F08A3C',
     attack: 'splash', hitsAir: false, projectileSpeed: 320,
-    base: { cost: 130, damage: 30, range: 250, cooldown: 1.9, splash: 62 },
+    base: { cost: 125, damage: 37, range: 250, cooldown: 1.9, splash: 62 },
     branches: [
       {
         id: 'cluster', name: 'Streubombe', color: '#F08A3C',
@@ -132,7 +132,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     blurb: 'Sofortstrahl, springt auf Nachbarn über.',
     color: '#E4D3FF', accent: '#B07CFF',
     attack: 'chain', hitsAir: true, projectileSpeed: 0,
-    base: { cost: 155, damage: 13, range: 185, cooldown: 0.95, chains: 2, falloff: 0.65 },
+    base: { cost: 140, damage: 18, range: 185, cooldown: 0.95, chains: 2, falloff: 0.65 },
     branches: [
       {
         id: 'fork', name: 'Verzweigung', color: '#B07CFF',

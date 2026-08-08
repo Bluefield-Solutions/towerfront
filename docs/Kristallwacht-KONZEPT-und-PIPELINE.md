@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v23 · 07.08.2026
+Stand: v24 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -305,6 +305,49 @@ jederzeit wiederherstellbar. Ein Fehlversuch kostet eine Minute, nicht einen
 Abend.
 
 ---
+
+### 3.24 Zwei Ursachen für den Abstand der Spielstile
+
+Der Abstand war 42 Punkte (Meister 116, Breite 78, Sparsam 74). Diesmal habe
+ich nicht getunt, sondern zuerst gemessen — und zwei völlig verschiedene
+Ursachen gefunden.
+
+**Erste Ursache: ein Fehler im Bot, kein Spielstil.** Der sparsame Stil ließ am
+Ende **1.642 Gold liegen** — ein Viertel seines gesamten Einkommens. Nicht weil
+Sparen sein Wesen ist, sondern weil seine Obergrenze bei elf Türmen lag und er
+das Übrige nirgends unterbringen konnte. Ein Mensch würde nicht auf einem
+Viertel seines Geldes sitzen. Obergrenze auf fünfzehn: **74 → 110 Punkte.**
+
+**Zweite Ursache: Stufe 1 war ein schlechtes Geschäft.** Schaden je tausend
+Gold, gemessen:
+
+| | Stufe 1 | bester Ausbau |
+|---|---|---|
+| Bogenturm | 264 | 371 |
+| Frostturm | **55** | 192 |
+| Mörser | 121 | 177 |
+| Prisma | **88** | 184 |
+
+Ein frischer Frostturm brachte ein Drittel dessen, was derselbe Betrag in einem
+Ausbau gebracht hätte. Wer in die Breite baut, kauft also lauter schlechte
+Geschäfte. Frost, Mörser und Prisma sind auf Stufe 1 jetzt spürbar stärker und
+etwas billiger (Frost 55 → 103, Prisma 88 → 135, Mörser 121 → 156).
+
+**Und die Ursache, die bleibt.** Der breite Stil wurde davon *nicht* besser. Die
+Messung dazu:
+
+```
+Deckung je Pfadzelle bei 16 Türmen:  Spiralhain 3,1   Ascheschlucht 2,5   Frostspalte 2,7
+```
+
+**Schon sechzehn Türme decken jede Pfadzelle dreifach ab.** Ein siebzehnter
+bringt keine neue Strecke, nur mehr Überlappung — und damit hört „viele Türme"
+auf, ein eigener Spielstil zu sein. Das ist keine Frage der Wirtschaft, sondern
+der Geometrie: Reichweite 200 gegen einen Pfad von 43 Kacheln.
+
+Lösbar auf zwei Wegen, beide mit Folgen: kürzere Reichweiten oder längere Pfade.
+Der Datenwächter meldet den Wert ab jetzt bei jedem Lauf und warnt oberhalb von
+drei.
 
 ### 3.23 Warum T15 nicht an der Kurve liegt
 
@@ -882,7 +925,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v23
+## 5. Stand v24
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -942,6 +985,12 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v24 — T16 halb gelöst und die andere Hälfte erklärt.** Zwei der drei
+Spielstile liegen jetzt nah beieinander (117 und 110 statt 116 und 74). Warum
+der dritte nicht aufschließen kann, ist gemessen und hat einen Namen — siehe
+Abschnitt 3.24. Nebenbei: Frostturm, Mörser und Prisma sind auf Stufe 1
+deutlich stärker geworden.
 
 **Neu in v23 — drei Messgeräte und eine Wand, die jetzt einen Namen hat.**
 T15 (Verluste über mehrere Wellen verteilen) wurde dreimal angegangen und

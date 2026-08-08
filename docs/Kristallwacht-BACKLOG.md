@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v23 · 07.08.2026
+Stand: nach v24 · 07.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Kristallwacht-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
@@ -40,6 +40,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 
 | # | Punkt | Nutzen | Aufw. |
 |---|---|---|---|
+| **T17** | **Geometrie: 16 Türme decken jede Pfadzelle dreifach ab.** Deshalb ist „viele Türme" kein Spielstil. Kürzere Reichweiten oder längere Pfade — beides zieht eine Neujustierung nach sich. Rest von T16 | ●●● | L |
 | **T16** | **BLOCKER vor T15: Der Abstand zwischen den Spielstilen ist zu groß (Meister 116, Breite 78, Sparsam 74).** Ein mittelmäßiges, aber vernünftiges Feld muss tragen — sonst gibt es kein Fenster, in dem sich die Kurve anziehen lässt. Ansatz: Einkommen noch stärker auf den Wellenbonus, günstigere zweite Ausbaustufe | ●●● | M |
 | **T15** | **BLOCKER: Die Verluste liegen fast nur in der letzten Welle. Druck über die Wellen 10 bis 15 verteilen.** Solange das so ist, kippt jede Ergänzung am Sortiment die Balance, statt sie zu verschieben — siehe S41. Vor R4 und G5 zu erledigen | ●●● | M |
 | T12 | Sichtprüfung im Tor: gebaute Datei in einem echten Browser laden und ein Bild vergleichen (jsdom kann die Kaskade nicht) | ●●● | L |
@@ -80,6 +81,9 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S48 | Der sparsame Spielstil ließ 1.642 Gold liegen — ein Viertel des Einkommens — weil seine Turmobergrenze bei elf lag | Kein Spielstil, ein Botfehler. Obergrenze auf 15: 74 → 110 Punkte. Der Abstand zum stärksten Stil fiel damit von 42 auf 7. |
+| S49 | Stufe 1 war bei Frost (55) und Prisma (88) je tausend Gold nur ein Drittel bis die Hälfte dessen wert, was ein Ausbau brachte | Wer in die Breite baut, kauft lauter schlechte Geschäfte. Stufe 1 dieser drei Türme deutlich gestärkt. |
+| S50 | Trotzdem blieb der breite Stil zurück. Messung: **16 Türme decken jede Pfadzelle 3,1-fach ab** | Geometrie, nicht Wirtschaft: Reichweite 200 gegen 43 Pfadkacheln. Ein siebzehnter Turm bringt keine neue Strecke. Neuer Punkt T17. |
 | S45 | T15 dreimal angegangen, dreimal zurückgenommen. Mit einer Kurve mit Knie lagen die Verluste tatsächlich in drei Wellen — aber zwei von drei Spielstilen verloren dann auf jeder Karte | Die Wand ist nicht die Kurve, sondern der Abstand der Stile (Spanne 42). Neuer Blocker T16, er kommt vor T15. |
 | S46 | Der Bot hat sein Feld **vor Welle 10** fertig und baut danach nur noch aus — die Kurve zieht deshalb erst ganz am Schluss daran vorbei | Erklärt, warum reine Höhenänderungen nichts bewirken. Gemessen, nicht vermutet. |
 | S47 | Bei einer Zwischenmessung führte **mehr** Schaden zu einem schlechteren Ergebnis | Pfadabhängigkeit: früheres Gold ändert die Baureihenfolge. Behoben durch drei abgewandelte Bauverläufe je Messung. Seitdem ist die Kennzahl monoton — vorher wurde seit v13 nach einer springenden Zahl justiert. |

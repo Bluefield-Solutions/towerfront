@@ -71,8 +71,11 @@ const BOTS: Bot[] = [
     name: 'Breite', maxTowers: 26, maxLevel: 3, reserve: 15, decideEvery: 20, deepenAt: 0.85,
   },
   {
-    // Wenige Stellungen, frueh tief ausgebaut, viel Gold in der Hand.
-    name: 'Sparsam', maxTowers: 11, maxLevel: 3, reserve: 140, decideEvery: 30, deepenAt: 0.6,
+    // Wenige Stellungen, frueh tief ausgebaut, grosse Ruecklage. Die Obergrenze
+    // liegt hoeher als die 11 aus v14: mit 11 blieb am Ende ein Viertel des
+    // Einkommens ungenutzt liegen, und das ist kein Spielstil, sondern ein
+    // Fehler im Bot.
+    name: 'Sparsam', maxTowers: 15, maxLevel: 3, reserve: 140, decideEvery: 30, deepenAt: 0.55,
   },
 ];
 
@@ -279,12 +282,24 @@ for (const bot of BOTS) {
 // verteilen, verlieren die schwaecheren Stile sofort ganz. Solange der Abstand
 // so gross ist, gibt es kein Fenster, in dem beides zugleich gilt.
 {
-  const runs = BOTS.map((b) => ({
-    name: b.name,
-    mean: overVariants((variant) => play(
+  const runs = BOTS.map((b) => {
+    const o = overVariants((variant) => play(
       mixedPlanBase, () => 0, b, 'normal', MAPS[0].id, { variant },
-    )).mean,
-  }));
+    ));
+    const avg = (f: (r: Result) => number) => o.runs.reduce((a, r) => a + f(r), 0) / o.runs.length;
+    return {
+      name: b.name, mean: o.mean,
+      towers: avg((r) => r.towers), ups: avg((r) => r.upgrades),
+      earned: avg((r) => r.earned), left: avg((r) => r.earned - r.spent),
+    };
+  });
+  for (const r of runs) {
+    console.log(
+      `  ${r.name.padEnd(9)} ${r.mean.toFixed(0).padStart(4)} Punkte   ` +
+      `${r.towers.toFixed(0).padStart(2)} Tuerme, ${r.ups.toFixed(0).padStart(2)} Ausbauten, ` +
+      `${r.earned.toFixed(0).padStart(5)} Gold verdient, ${r.left.toFixed(0)} uebrig`,
+    );
+  }
   const best = Math.max(...runs.map((r) => r.mean));
   const worst = Math.min(...runs.map((r) => r.mean));
   console.log(

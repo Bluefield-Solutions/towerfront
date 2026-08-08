@@ -1,7 +1,7 @@
 /** Datenwaechter. Laeuft vor jedem Build und prueft die Inhaltsdateien auf
  *  Widersprueche, die im Spiel erst spaet oder gar nicht auffallen wuerden.
  *  Aufruf: npx tsx tools/guards.ts */
-import { COLS, ROWS } from '../src/data/config';
+import { COLS, ROWS, TILE } from '../src/data/config';
 import { DIFFICULTIES, DIFFICULTY_ORDER, hpScale } from '../src/data/difficulty';
 import { PERKS, PERK_ORDER, starsFor } from '../src/data/perks';
 
@@ -140,10 +140,43 @@ for (const map of MAPS) {
   for (const [key, val] of Object.entries(map.palette)) {
     if (!isHex(val)) fail(`${map.id}: Farbe "${key}" ist ungueltig (${val}).`);
   }
-  console.log(
-    `  Karte ${map.name}: ${map.lanes.length} Bahn(en), ${cells.length} Pfadzellen, ` +
-    `${build} Bauplaetze, Ausgleich ${bal.hpMul}/${bal.goldMul}`,
-  );
+  // Deckungsdichte: wie oft wird eine Pfadzelle von einem Turm erfasst, wenn
+  // sechzehn gute Stellungen besetzt sind?
+  //
+  // Liegt der Wert deutlich ueber zwei, ist der Pfad schon mehrfach abgedeckt -
+  // dann bringt ein weiterer Turm keine neue Strecke, sondern nur Ueberlappung,
+  // und "viele Tuerme" hoert auf, ein eigener Spielstil zu sein. Genau das war
+  // der Befund zu T16.
+  {
+    const reach = 210 / TILE;
+    const scores: number[] = [];
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const k = cellKey(x, y);
+        if (pathKeys.has(k) || blockKeys.has(k)) continue;
+        let covered = 0, nearest = 1e9;
+        for (const c of cells) {
+          const d = (c.x - x) ** 2 + (c.y - y) ** 2;
+          if (d <= reach * reach) covered++;
+          if (d < nearest) nearest = d;
+        }
+        if (nearest <= 4) scores.push(covered);
+      }
+    }
+    scores.sort((a, b) => b - a);
+    const top16 = scores.slice(0, 16).reduce((a, b) => a + b, 0);
+    const density = top16 / cells.length;
+    console.log(
+      `  Karte ${map.name}: ${map.lanes.length} Bahn(en), ${cells.length} Pfadzellen, ` +
+      `${build} Bauplaetze, Deckung je Pfadzelle bei 16 Tuermen ${density.toFixed(1)}`,
+    );
+    if (density > 3) {
+      warn(
+        `${map.id}: schon 16 Tuerme decken jede Pfadzelle ${density.toFixed(1)}-fach ab - ` +
+        'weitere Tuerme bringen keine neue Strecke (T16).',
+      );
+    }
+  }
 }
 
 // ------------------------------------------------------------------ Tuerme

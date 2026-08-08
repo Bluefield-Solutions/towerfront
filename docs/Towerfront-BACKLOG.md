@@ -1,6 +1,6 @@
 # Towerfront — Rückstandsverzeichnis
 
-Stand: nach v34 · 08.08.2026
+Stand: nach v44 · 08.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Towerfront-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
@@ -79,6 +79,10 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S69 | **T15 ist lösbar — aber nicht mit einer glatten Kurve.** Der erste Versuch (gleichmäßiger Anstieg über alle Wellen) ändert gar nichts: die Verluste bleiben zu 100 % in der letzten Welle | Der Grund: die Feldstärke wächst in **Stufen** (gemessen 15 → 36 → 84 → 140 → 234 → 388), die Wellen gleichmäßig. Ist das Feld ab Welle 11 fertig, sind die Wellen 12 bis 15 je 1,6-fach schwerer als die vorige — nur die letzte kann beißen. |
+| S70 | **Verluste verteilen sich, wenn die letzten Wellen nah beieinander liegen** — nicht wenn die ganze Kurve glatt ist | Zweiteilige Form: Aufbau bis Welle 11 mit Faktor 1,78, danach Hochplateau mit Faktor 1,16. Ergebnis gemessen: **W11:14 W13:4 W14:5 W15:5, nur 18 % in der letzten Welle** statt 100 %. T15 damit sachlich gelöst. |
+| S71 | Der Versuch ist trotzdem **zurückgebaut** worden: er verschiebt Zweigbalance, Sternschwellen und Turmdominanz gleichzeitig, und nach drei Nachjustierrunden war die Torkette immer noch rot | Die Wellenform ist die richtige Antwort, aber sie braucht einen eigenen Durchgang mit Neueichung von Zweigen und Sternen. Aufgehoben als Marke `versuch-t15`. **Drei Schleifen je Ziel, dann zurück — die Regel hat funktioniert.** |
+| S72 | Der Perk-Vergleich hatte einen Denkfehler: „Harter Kern" erhöht den Kristall und damit den **Nenner** der Kennzahl — derselbe Lauf sah dadurch schlechter aus | Vierter Fall derselben Familie in dieser Sitzung. Behoben in der Marke `versuch-t15`: Vergleich gegen einen gemeinsamen Nenner. |
 | S66 | Feste Bauplätze (12 statt 170) senken den **Abstand der Spielstile von 42 auf 3 Punkte** | T16 erledigt. „Viele Türme" war kein Stil, sondern Überdeckung. Die Stile unterscheiden sich jetzt im Zeitpunkt des Ausbaus. |
 | S67 | Die Kante bei Welle 15 lag nicht an der Kurve, sondern an der **Wirtschaft des Kristalls**: 20 Punkte gegen Gegner, die 2 bis 5 kosten | Vier durchgekommene Kolosse waren das Spiel — es gab kein „teuer erkauft". Kristall auf 60 (Normal). Danach greift die Kurve mit Knie: Verluste in drei Wellen statt einer, Robustheitsspanne von 65,7 auf 14,2. |
 | S68 | Beim Anheben des Kristalls wurden zwei Prüfungen **still falsch** — sie rechneten in absoluten Punkten und schlugen an, ohne dass sich die Balance verschlechtert hatte | Kennzahl auf 0 bis 100 normiert. Eine Kennzahl, deren Bedeutung von einer anderen Einstellung abhängt, ist keine Kennzahl. |

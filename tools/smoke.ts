@@ -271,6 +271,20 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   ui.hideScreen();
 }
 
+// Jeder Turmzustand braucht ein gerendertes Bild - sonst steht ein
+// gezeichneter Turm neben elf gerenderten und faellt sofort auf.
+{
+  const { hasTowerArt } = await import('../src/gfx/towerart');
+  for (const id of TOWER_ORDER) {
+    if (!hasTowerArt(id, null)) problems.push(`Turmbild fehlt: ${id} Stufe 1.`);
+    for (const b of [0, 1] as const) {
+      if (!hasTowerArt(id, b)) {
+        problems.push(`Turmbild fehlt: ${id} Zweig ${TOWERS[id].branches[b].id}.`);
+      }
+    }
+  }
+}
+
 // Jeder Zweig braucht einen eigenen Umriss. Geprueft wird nicht das Aussehen,
 // sondern dass ueberhaupt unterschiedliche Bilder entstehen: gleiche Bildpunkte
 // hiessen gleicher Turm, und dann verrieten nur noch die Farben, was da steht.

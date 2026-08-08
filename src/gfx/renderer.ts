@@ -11,6 +11,7 @@ import type { Tower } from '../game/types';
 import { beginGlowBatch, endGlowBatch, hexA, stampGlow, stampGlowFast } from './glow';
 import { bakeTerrain } from './terrain';
 import { backgroundVersion, getBackground } from './backgrounds';
+import { getTowerArt, towerArtScale, towerArtVersion } from './towerart';
 import {
   drawSprite, getEnemySprite, getShadow, getTowerBase, getTowerWeapon, ENEMY_FRAMES,
 } from './sprites';
@@ -26,6 +27,7 @@ export class Renderer {
    *  Bestand etwas aendert - nicht in jedem Bild. */
   private towerLayer: HTMLCanvasElement | null = null;
   private towerLayerVersion = -1;
+  private towerArtVersionAt = -1;
   /** Partikel werden nach Farbe und Deckkraft gebuendelt, damit nicht fuer
    *  jedes einzelne die Zeichenfarbe neu gesetzt werden muss. */
   private pBatch = new Map<string, number[]>();
@@ -152,10 +154,14 @@ export class Renderer {
     }
     const g = this.towerLayer.getContext('2d')!;
     g.clearRect(0, 0, WORLD_W, WORLD_H);
+    // Nur die gezeichneten Tuerme kommen in die Schicht. Gerenderte werden
+    // je Bild gezeichnet, weil sie sich zum Ziel hin spiegeln.
     for (const t of s.towers) {
+      if (getTowerArt(t.def, t.branch, t.level)) continue;
       drawSprite(g, getTowerBase(t.def, t.branch, t.level), t.x, t.y);
     }
     this.towerLayerVersion = s.towersVersion;
+    this.towerArtVersionAt = towerArtVersion();
   }
 
   // ------------------------------------------------------------- Welt
@@ -339,7 +345,8 @@ export class Renderer {
 
   private drawTowers(s: GameState, hi: boolean): void {
     const ctx = this.ctx;
-    if (this.towerLayerVersion !== s.towersVersion) this.bakeTowerLayer(s);
+    if (this.towerLayerVersion !== s.towersVersion ||
+      this.towerArtVersionAt !== towerArtVersion()) this.bakeTowerLayer(s);
     if (this.towerLayer) ctx.drawImage(this.towerLayer, 0, 0);
 
     // Reichweite und Umkreispuls sind Ausnahmen und betreffen wenige Tuerme.
@@ -363,7 +370,25 @@ export class Renderer {
         ctx.arc(t.x, t.y, s.towerStats(t).range * (1 - t.pulse * 0.15), 0, Math.PI * 2);
         ctx.stroke();
       }
-      this.paintWeapon(t.def, t.branch, t.level, t.x, t.y, t.angle, t.recoil, t.pulse, s.crystalPulse);
+      // Bei gerenderten Tuermen entfaellt die drehbare Waffe: ein Objekt in
+      // Dreiviertelansicht kippt, wenn man es in der Flaeche dreht. Statt zu
+      // drehen wird gespiegelt, sobald das Ziel links steht.
+      const art = getTowerArt(t.def, t.branch, t.level);
+      if (art) {
+        const k = towerArtScale(t.level);
+        const w = 104 * k, h = 104 * k;
+        const facingLeft = Math.cos(t.angle) < 0;
+        const rec = t.recoil * 3;
+        ctx.save();
+        ctx.translate(t.x, t.y - rec * 0.4);
+        if (facingLeft) ctx.scale(-1, 1);
+        // Der Fuss des Bildes liegt bei 86 % - so steht der Turm auf der
+        // Kachel statt darueber zu schweben.
+        ctx.drawImage(art, -w / 2, -h * 0.72, w, h);
+        ctx.restore();
+      } else {
+        this.paintWeapon(t.def, t.branch, t.level, t.x, t.y, t.angle, t.recoil, t.pulse, s.crystalPulse);
+      }
     }
 
     if (hi) {

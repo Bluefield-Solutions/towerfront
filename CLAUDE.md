@@ -74,21 +74,31 @@ zweites Mal kosten.
    trägt dort eine Probe nach. Jede Probe prüft zuerst, ob ihr Eingriff
    überhaupt angekommen ist — drei von zehn sind daran einmal gescheitert,
    und ein nicht angekommener Eingriff sieht aus wie ein bestandenes Tor.
-6. **Vor jeder Lieferung die vier Aufnahmen aus `npm run kritik` ansehen.**
+6. **Im Menü ist keine Spielbedienung sichtbar. Niemals.** Keine Turmknöpfe,
+   keine Kopfzeile, kein Prüfsteg — auf der Landkarte, in der Einweisung, im
+   Fortschritt, auf dem Ergebnisbildschirm. Das ist zweimal schiefgegangen:
+   einmal, weil niemand die Leiste ausblendete, und einmal, weil beim ersten
+   Laden kein Phasenwechsel stattfand und der Aufruf ausblieb.
+
+   Deshalb ist es **kein Schalter mehr, sondern eine Ableitung**: `ui.sync()`
+   setzt die Sichtbarkeit in jedem Bild aus `istMenuOffen()`. Es gibt keine
+   Stelle mehr, an der man es vergessen kann — und wer diese Ableitung
+   entfernt, wird von `npm run proben` erwischt.
+7. **Vor jeder Lieferung die vier Aufnahmen aus `npm run kritik` ansehen.**
    In v50 lag die Turmleiste über der Landkarte, man kam nicht ins Spiel, und
    alle vierzehn Tore waren grün. Ein Tor prüft, ob etwas funktioniert — nicht,
    ob man es spielen kann.
-7. **Kein Tor ersetzt den Blick — und kein Blick die Tore.** Elf von 57
+8. **Kein Tor ersetzt den Blick — und kein Blick die Tore.** Elf von 57
    Befunden kamen aus Bildschirmfotos. Seit v47 prüft `bildtor` wenigstens
    das Mechanische: einfarbige Fläche, falsche Helligkeit, nicht dekodierte
    Bilder. Ob es *gut aussieht*, sagt es weiterhin nicht.
-8. **Vor dem Justieren den Raum ansehen.** `npm run eichen` probiert einen
+9. **Vor dem Justieren den Raum ansehen.** `npm run eichen` probiert einen
    Wert durch und legt alle Kennzahlen nebeneinander. Blind nachjustieren
    heisst, durch ein Schlüsselloch zu schauen: T15 scheiterte so an drei
    Runden und gelang im zweiten Anlauf in einer.
-9. **Das Soll kommt aus der Referenz, nicht aus mir.** Sonst wandert es mit
+10. **Das Soll kommt aus der Referenz, nicht aus mir.** Sonst wandert es mit
    der eigenen Leistung mit. Deshalb Schritt 0.
-10. **Safari-Falle:** nie `drawImage(self)` mit `filter: blur` oder
+11. **Safari-Falle:** nie `drawImage(self)` mit `filter: blur` oder
    `globalCompositeOperation: 'lighter'`. Auf iOS schwarzes Bild nach etwa
    einer Sekunde, auf dem Schreibtisch unauffällig. Alles Leuchten wird
    gebacken.

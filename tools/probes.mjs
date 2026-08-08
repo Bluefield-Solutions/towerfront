@@ -127,6 +127,13 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    name: 'Turmleiste nicht mehr abgeleitet',
+    datei: 'src/ui/ui.ts',
+    suche: '    this.setSpielansicht(!this.istMenuOffen());',
+    ersatz: '    void this.istMenuOffen;',
+    tor: 'smoke',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     suche: 'hpEnd: 9.9, hpCurve: 2.4',

@@ -18,12 +18,15 @@
     "determinism": "tsx tools/determinism.ts",
     "pack-art": "node tools/pack-art.mjs",
     "bericht": "tsx tools/benchmark.ts",
-    "lesbarkeit": "tsx tools/readability.mjs"
+    "lesbarkeit": "tsx tools/readability.mjs",
+    "bilder": "tsx tools/shots.mjs",
+    "schleife": "node tools/loop.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@napi-rs/canvas": "^1.0.3",
     "@types/jsdom": "^30.0.0",
     "@types/node": "^26.2.0",
     "jsdom": "^25.0.1",

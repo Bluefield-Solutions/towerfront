@@ -110,15 +110,26 @@ export function bakeTerrain(
       if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
     }
     g.closePath();
-    g.fillStyle = hexA(pal.terrainLo, 0.8);
+    // Erst ein weicher Schatten unter dem Feld, dann eine dunkle Senke -
+    // vorher war es eine halbdurchsichtige Flaeche und las sich als Fleck
+    // auf dem Boden, nicht als Gelaende.
+    g.save();
+    g.translate(0, 8);
+    g.fillStyle = 'rgba(0,0,0,0.4)';
     g.fill();
-    g.strokeStyle = hexA(pal.rockHi, 0.3); g.lineWidth = 2; g.stroke();
     g.restore();
-    const stones = 3 + Math.round(gr.r / 34);
+    g.fillStyle = hexA(pal.terrainLo, 0.55);
+    g.fill();
+    g.restore();
+
+    // Dicht an dicht liegende Brocken fuellen das Feld ganz aus. Ein Fels ist
+    // etwas, das man sieht - keine Schraffur.
+    const stones = 6 + Math.round(gr.r / 16);
     for (let i = 0; i < stones; i++) {
-      const a = rnd() * Math.PI * 2, rr = rnd() * gr.r * 0.66;
+      const a = rnd() * Math.PI * 2;
+      const rr = Math.sqrt(rnd()) * gr.r * 0.82;
       drawRock(g, gr.x + Math.cos(a) * rr, gr.y + Math.sin(a) * rr * 0.78,
-        12 + rnd() * (gr.r * 0.24), rnd, pal);
+        gr.r * (0.16 + rnd() * 0.2), rnd, pal);
     }
   }
 
@@ -150,12 +161,23 @@ function drawRock(
     if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
   }
   g.closePath();
-  g.fillStyle = 'rgba(0,0,0,0.34)';
-  g.save(); g.translate(0, 4); g.fill(); g.restore();
+  // Ein Fels braucht drei Toene, sonst bleibt er eine Silhouette: Schatten
+  // darunter, Koerper, und eine helle Kante oben links. Ohne die Kante liest
+  // das Auge nur einen dunklen Fleck.
+  g.fillStyle = 'rgba(0,0,0,0.45)';
+  g.save(); g.translate(0, r * 0.22); g.fill(); g.restore();
   g.fillStyle = pal.rock; g.fill();
+  g.save();
+  g.clip();
   g.fillStyle = pal.rockHi;
   g.beginPath();
-  g.ellipse(-r * 0.18, -r * 0.22, r * 0.42, r * 0.24, -0.5, 0, Math.PI * 2);
+  g.ellipse(-r * 0.2, -r * 0.28, r * 0.62, r * 0.4, -0.5, 0, Math.PI * 2);
   g.fill();
+  g.fillStyle = 'rgba(255,255,255,0.22)';
+  g.beginPath();
+  g.ellipse(-r * 0.3, -r * 0.4, r * 0.34, r * 0.18, -0.5, 0, Math.PI * 2);
+  g.fill();
+  g.restore();
+  g.strokeStyle = 'rgba(0,0,0,0.35)'; g.lineWidth = 1.5; g.stroke();
   g.restore();
 }

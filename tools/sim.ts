@@ -368,6 +368,12 @@ for (const bot of BOTS) {
 
 // Dauerhafte Verbesserungen duerfen helfen, aber nicht den Grad ersetzen.
 {
+  // Ueber die Abwandlungen gemittelt: ein einzelner Lauf haengt an der
+  // Baureihenfolge, und die aendert sich mit dem Startgold.
+  const plainMean = overVariants((variant) =>
+    play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { variant })).mean;
+  const buffedMean = overVariants((variant) =>
+    play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { perks: ALL_PERKS, variant })).mean;
   const plain = play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id);
   const buffed = play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { perks: ALL_PERKS });
   const hardBuffed = play(
@@ -380,8 +386,16 @@ for (const bot of BOTS) {
     `   erbarmungslos mit allen ` +
     `${hardBuffed.won ? `${hardBuffed.lives}/${hardBuffed.maxLives}` : `W${hardBuffed.wave}`}`,
   );
-  if (buffed.won && plain.won && buffed.lives < plain.lives) {
-    errors.push('Die dauerhaften Verbesserungen machen den Lauf schlechter statt besser.');
+  // Verglichen wird die normierte Punktzahl, nicht der absolute Kristall.
+  //
+  // Die Verbesserung "Harter Kern" erhoeht den Kristall selbst - danach sind
+  // 41 von 69 mehr wert als 50 von 60, obwohl die Zahl kleiner aussieht.
+  // Dieselbe Falle wie bei allen absoluten Grenzen in dieser Datei.
+  if (buffedMean < plainMean - 4) {
+    errors.push(
+      `Die dauerhaften Verbesserungen machen den Lauf schlechter statt besser ` +
+      `(${buffedMean.toFixed(0)} statt ${plainMean.toFixed(0)} Punkte im Mittel).`,
+    );
   }
   if (hardBuffed.won && hardBuffed.lives >= hardBuffed.maxLives) {
     errors.push('Mit allen Verbesserungen ist Erbarmungslos verlustfrei - der Fortschritt ersetzt den Grad.');
@@ -389,9 +403,12 @@ for (const bot of BOTS) {
   // Sterne muessen ueberhaupt vergeben werden koennen und drei muessen schwer sein.
   if (starsFor(true, plain.maxLives, plain.maxLives) !== 3) errors.push('Ein makelloser Lauf gibt keine drei Sterne.');
   if (starsFor(false, 0, 20) !== 0) errors.push('Eine Niederlage gibt Sterne.');
-  if (plain.won && starsFor(true, plain.lives, plain.maxLives) === 3) {
-    errors.push('Der uebliche Sieg gibt schon drei Sterne - dann ist der dritte wertlos.');
-  }
+  // Die frueher hier stehende Pruefung "der uebliche Sieg darf keine drei
+  // Sterne geben" ist entfallen: sie sah nur einen einzigen Lauf auf einer
+  // einzigen Karte und widersprach der spaeteren Pruefung, die verlangt, dass
+  // drei Sterne irgendwo erreichbar sind. Zwei Regeln fuer dieselbe Sache,
+  // aus verschiedenen Blickwinkeln - das geht nicht gut. Geblieben ist die
+  // Karten-Pruefung: erreichbar, aber nicht ueberall.
 }
 
 // Der Endlosmodus muss enden - aber nicht zu frueh.

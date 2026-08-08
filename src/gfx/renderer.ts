@@ -423,22 +423,22 @@ export class Renderer {
     ctx.save();
     ctx.translate(x, y);
     ctx.fillStyle = hexA(C.ink, 0.45);
-    ctx.beginPath(); ctx.ellipse(0, 36, 44, 15, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, 48, 62, 21, 0, 0, Math.PI * 2); ctx.fill();
     // Ein gestufter Sockel gibt dem Kristall Stand und Groesse.
     ctx.fillStyle = '#1D2436';
     ctx.beginPath();
-    ctx.moveTo(-40, 36); ctx.lineTo(40, 36); ctx.lineTo(31, 20); ctx.lineTo(-31, 20);
+    ctx.moveTo(-56, 48); ctx.lineTo(56, 48); ctx.lineTo(43, 28); ctx.lineTo(-43, 28);
     ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#2A3348';
     ctx.beginPath();
-    ctx.moveTo(-31, 20); ctx.lineTo(31, 20); ctx.lineTo(24, 8); ctx.lineTo(-24, 8);
+    ctx.moveTo(-43, 28); ctx.lineTo(43, 28); ctx.lineTo(34, 11); ctx.lineTo(-34, 11);
     ctx.closePath(); ctx.fill();
     ctx.fillStyle = hexA('#FFFFFF', 0.12);
-    ctx.fillRect(-31, 19, 62, 2);
+    ctx.fillRect(-43, 27, 86, 3);
 
     ctx.scale(pulse, pulse);
-    ctx.translate(0, -14);
-    const h = 58, w = 30;
+    ctx.translate(0, -20);
+    const h = 82, w = 42;
     ctx.beginPath();
     ctx.moveTo(0, -h); ctx.lineTo(w, -10); ctx.lineTo(0, 30); ctx.lineTo(-w, -10);
     ctx.closePath();

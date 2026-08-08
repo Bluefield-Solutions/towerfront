@@ -82,55 +82,55 @@ export const PLAN_SPIRALHAIN: Wave[] = [
  *  Panzerung, und die Spalter machen aus jedem Flaechentreffer zwei Gegner. */
 export const PLAN_ASCHESCHLUCHT: Wave[] = [
   { bonus: 96, note: 'Zwei Zuwege', groups: [
-    { enemy: 'crawler', count: 6, gap: 1.0, delay: 0 } ] },
+    { enemy: 'crawler', count: 5, gap: 1.0, delay: 0 } ] },
   { bonus: 100, groups: [
-    { enemy: 'crawler', count: 10, gap: 0.8, delay: 0 } ] },
+    { enemy: 'crawler', count: 9, gap: 0.8, delay: 0 } ] },
   { bonus: 108, note: 'Beide Seiten gleichzeitig', groups: [
-    { enemy: 'crawler', count: 8, gap: 0.8, delay: 0 },
-    { enemy: 'runner', count: 6, gap: 0.6, delay: 4 } ] },
+    { enemy: 'crawler', count: 7, gap: 0.8, delay: 0 },
+    { enemy: 'runner', count: 5, gap: 0.6, delay: 4 } ] },
   { bonus: 116, groups: [
     { enemy: 'splitter', count: 4, gap: 1.6, delay: 0 },
-    { enemy: 'crawler', count: 7, gap: 0.7, delay: 4 } ] },
+    { enemy: 'crawler', count: 6, gap: 0.7, delay: 4 } ] },
   { bonus: 190, note: 'Erste Kolosse — Panzerung 3', groups: [
     { enemy: 'brute', count: 2, gap: 2.6, delay: 0 },
-    { enemy: 'crawler', count: 10, gap: 0.65, delay: 3 } ] },
+    { enemy: 'crawler', count: 9, gap: 0.65, delay: 3 } ] },
   { bonus: 150, groups: [
-    { enemy: 'splitter', count: 6, gap: 1.4, delay: 0 },
-    { enemy: 'runner', count: 8, gap: 0.5, delay: 5 } ] },
+    { enemy: 'splitter', count: 5, gap: 1.4, delay: 0 },
+    { enemy: 'runner', count: 7, gap: 0.5, delay: 5 } ] },
   { bonus: 168, note: 'Erste Gleiter — der Mörser erreicht sie nicht', groups: [
-    { enemy: 'crawler', count: 15, gap: 0.4, delay: 0 },
+    { enemy: 'crawler', count: 14, gap: 0.4, delay: 0 },
     { enemy: 'flyer', count: 4, gap: 1.4, delay: 6 } ] },
   { bonus: 182, groups: [
     { enemy: 'brute', count: 4, gap: 2.0, delay: 0 },
-    { enemy: 'splitter', count: 6, gap: 1.3, delay: 4 } ] },
+    { enemy: 'splitter', count: 5, gap: 1.3, delay: 4 } ] },
   { bonus: 196, groups: [
-    { enemy: 'crawler', count: 18, gap: 0.38, delay: 0 },
-    { enemy: 'runner', count: 11, gap: 0.4, delay: 5 },
+    { enemy: 'crawler', count: 16, gap: 0.38, delay: 0 },
+    { enemy: 'runner', count: 10, gap: 0.4, delay: 5 },
     { enemy: 'brute', count: 4, gap: 2.2, delay: 9 } ] },
   { bonus: 420, note: 'Leerentitan — Panzerung 6, bremsresistent', groups: [
     { enemy: 'titan', count: 1, gap: 1, delay: 0 },
-    { enemy: 'splitter', count: 7, gap: 1.1, delay: 5 },
+    { enemy: 'splitter', count: 6, gap: 1.1, delay: 5 },
     { enemy: 'flyer', count: 4, gap: 1.3, delay: 9 } ] },
   { bonus: 220, note: 'Sturm im Laub', groups: [
-    { enemy: 'runner', count: 18, gap: 0.3, delay: 0 },
-    { enemy: 'splitter', count: 7, gap: 1.1, delay: 5 } ] },
+    { enemy: 'runner', count: 16, gap: 0.3, delay: 0 },
+    { enemy: 'splitter', count: 6, gap: 1.1, delay: 5 } ] },
   { bonus: 240, note: 'Kolosswand auf beiden Seiten', groups: [
-    { enemy: 'brute', count: 8, gap: 1.3, delay: 0 },
-    { enemy: 'crawler', count: 17, gap: 0.38, delay: 4 } ] },
+    { enemy: 'brute', count: 7, gap: 1.3, delay: 0 },
+    { enemy: 'crawler', count: 15, gap: 0.38, delay: 4 } ] },
   { bonus: 258, groups: [
-    { enemy: 'splitter', count: 8, gap: 1.0, delay: 0 },
-    { enemy: 'runner', count: 18, gap: 0.3, delay: 5 },
-    { enemy: 'flyer', count: 7, gap: 0.9, delay: 10 } ] },
+    { enemy: 'splitter', count: 7, gap: 1.0, delay: 0 },
+    { enemy: 'runner', count: 16, gap: 0.3, delay: 5 },
+    { enemy: 'flyer', count: 6, gap: 0.9, delay: 10 } ] },
   { bonus: 276, note: 'Alles gleichzeitig', groups: [
-    { enemy: 'brute', count: 8, gap: 1.2, delay: 0 },
-    { enemy: 'splitter', count: 7, gap: 1.2, delay: 4 },
-    { enemy: 'runner', count: 17, gap: 0.3, delay: 8 },
-    { enemy: 'flyer', count: 7, gap: 0.9, delay: 12 } ] },
+    { enemy: 'brute', count: 7, gap: 1.2, delay: 0 },
+    { enemy: 'splitter', count: 6, gap: 1.2, delay: 4 },
+    { enemy: 'runner', count: 15, gap: 0.3, delay: 8 },
+    { enemy: 'flyer', count: 6, gap: 0.9, delay: 12 } ] },
   { bonus: 900, note: 'Zwei Titanen und der ganze Rest', groups: [
     { enemy: 'titan', count: 1, gap: 8, delay: 0 },
-    { enemy: 'brute', count: 7, gap: 1.4, delay: 4 },
-    { enemy: 'splitter', count: 8, gap: 1.0, delay: 8 },
-    { enemy: 'runner', count: 18, gap: 0.28, delay: 13 } ] },
+    { enemy: 'brute', count: 6, gap: 1.4, delay: 4 },
+    { enemy: 'splitter', count: 7, gap: 1.0, delay: 8 },
+    { enemy: 'runner', count: 16, gap: 0.28, delay: 13 } ] },
 ];
 
 /** Frostspalte: enge Wege, wenig Platz, kurze Luftlinie zum Kristall.

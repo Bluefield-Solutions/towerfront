@@ -148,7 +148,9 @@ for (const map of MAPS) {
   // und "viele Tuerme" hoert auf, ein eigener Spielstil zu sein. Genau das war
   // der Befund zu T16.
   {
-    const reach = 210 / TILE;
+    // Die groesste Grundreichweite im Sortiment - so bleibt die Kennzahl
+    // richtig, wenn sich die Reichweiten aendern.
+    const reach = Math.max(...TOWER_ORDER.map((t) => TOWERS[t].base.range)) / TILE;
     const scores: number[] = [];
     for (let y = 0; y < ROWS; y++) {
       for (let x = 0; x < COLS; x++) {
@@ -163,12 +165,55 @@ for (const map of MAPS) {
         if (nearest <= 4) scores.push(covered);
       }
     }
-    scores.sort((a, b) => b - a);
-    const top16 = scores.slice(0, 16).reduce((a, b) => a + b, 0);
-    const density = top16 / cells.length;
+    // Nicht einfach die sechzehn besten Einzelplaetze: sie liegen dicht
+    // beieinander und decken dieselben Zellen. Gewaehlt wird gierig - immer
+    // der Platz, der die meisten *noch nicht* gedeckten Pfadzellen bringt.
+    // Genau das tut ein Spieler auch, und nur so misst die Zahl, was sie soll.
+    const spotsList: { x: number; y: number }[] = [];
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const k = cellKey(x, y);
+        if (pathKeys.has(k) || blockKeys.has(k)) continue;
+        let nearest = 1e9;
+        for (const c of cells) {
+          const d = (c.x - x) ** 2 + (c.y - y) ** 2;
+          if (d < nearest) nearest = d;
+        }
+        if (nearest <= 4) spotsList.push({ x, y });
+      }
+    }
+    const seenCells = new Set<number>();
+    let totalCovered = 0;
+    const chosen: { x: number; y: number }[] = [];
+    for (let n = 0; n < 16 && spotsList.length; n++) {
+      let bestSpot = -1, bestGain = -1, bestAll = 0;
+      for (let i = 0; i < spotsList.length; i++) {
+        const sp = spotsList[i];
+        let gain = 0, all = 0;
+        for (const c of cells) {
+          if ((c.x - sp.x) ** 2 + (c.y - sp.y) ** 2 > reach * reach) continue;
+          all++;
+          if (!seenCells.has(cellKey(c.x, c.y))) gain++;
+        }
+        if (gain > bestGain) { bestGain = gain; bestSpot = i; bestAll = all; }
+      }
+      if (bestSpot < 0) break;
+      const sp = spotsList.splice(bestSpot, 1)[0];
+      chosen.push(sp);
+      totalCovered += bestAll;
+      for (const c of cells) {
+        if ((c.x - sp.x) ** 2 + (c.y - sp.y) ** 2 <= reach * reach) {
+          seenCells.add(cellKey(c.x, c.y));
+        }
+      }
+    }
+    const reachedShare = seenCells.size / cells.length;
+    const density = totalCovered / cells.length;
+    void scores; void chosen;
     console.log(
       `  Karte ${map.name}: ${map.lanes.length} Bahn(en), ${cells.length} Pfadzellen, ` +
-      `${build} Bauplaetze, Deckung je Pfadzelle bei 16 Tuermen ${density.toFixed(1)}`,
+      `${build} Bauplaetze, Deckung je Pfadzelle bei 16 Tuermen ${density.toFixed(1)} ` +
+      `(erreicht ${Math.round(reachedShare * 100)} % des Weges)`,
     );
     if (density > 3) {
       warn(

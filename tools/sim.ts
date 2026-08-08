@@ -86,6 +86,10 @@ const MEISTER = BOTS[0];
  *  Innenkurve der Spirale deckt drei Pfadabschnitte, eine am Rand nur einen. */
 function buildSpots(s: GameState) {
   const spots: { x: number; y: number; score: number }[] = [];
+  // Bewusst ein fester Wert und nicht die groesste Reichweite im Sortiment:
+  // die Bewertung der Bauplaetze ist Teil des Bot-Modells. Haengt sie an den
+  // Turmwerten, aendert jede Turmaenderung zugleich das Verhalten des Bots -
+  // und dann misst die Simulation zwei Dinge auf einmal.
   const reach = 210 / TILE;
   for (let y = 0; y < ROWS; y++) {
     for (let x = 0; x < COLS; x++) {

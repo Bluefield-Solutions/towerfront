@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v24 · 07.08.2026
+Stand: v25 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -305,6 +305,55 @@ jederzeit wiederherstellbar. Ein Fehlversuch kostet eine Minute, nicht einen
 Abend.
 
 ---
+
+### 3.25 Die Kennzahl war selbst falsch — und der Vorschlag, der daraus folgt
+
+T17 lautete: Reichweiten kürzen und Pfade verlängern, damit ein siebzehnter
+Turm wieder Strecke bringt. Beim Umsetzen fiel zuerst auf, dass die Kennzahl
+aus v24 falsch gerechnet war.
+
+**Sie nahm die sechzehn besten Einzelplätze** — und die liegen dicht
+beieinander und decken dieselben Zellen doppelt. Ein Spieler setzt nicht so.
+Gierig gewählt, also immer der Platz mit dem meisten *noch nicht* gedeckten Weg,
+sieht es anders aus:
+
+```
+Deckung je Pfadzelle bei 16 Türmen   alte Rechnung   richtig
+Spiralhain                                     3,1      2,5
+Ascheschlucht                                  2,5      2,1
+Frostspalte                                    2,7      1,8
+```
+
+Die Überdeckung ist also deutlich geringer als gedacht. Das Entscheidende steht
+aber daneben: **sechzehn Türme erreichen auf jeder Karte 100 % des Weges.**
+Genau das ist der Grund, warum ein siebzehnter nichts bringt — nicht die
+Überdeckung, sondern die vollständige Abdeckung.
+
+**Der Umbau selbst ist gescheitert.** Reichweiten minus 26 %, Spiralhain von 43
+auf 57 Pfadzellen, Schaden zum Ausgleich erhöht. Ergebnis: eine Kette von
+Nachjustierungen ohne Boden. Dabei ein Befund, der jede künftige
+Reichweitenänderung betrifft: **ein pauschaler Schnitt ist nicht rollenneutral.**
+Der Schaden eines Einzelzielturms ist Schadensleistung mal Zeit im Radius — er
+verliert eins zu eins. Der Frostturm pulst auf alles, was da ist, und verliert
+kaum. Nach dem Schnitt kam ausgerechnet das reine Frostfeld am weitesten,
+während alles andere fünf Wellen früher zusammenbrach.
+
+**Und eine Regel für die Simulation:** Die Bewertung der Bauplätze im Bot hing
+kurzzeitig an der größten Reichweite im Sortiment. Damit änderte jede
+Turmänderung zugleich das Verhalten des Bots — die Messung maß zwei Dinge auf
+einmal. Sie ist jetzt wieder ein fester Wert. *Das Modell darf nicht vom
+Gemessenen abhängen.*
+
+**Der Vorschlag.** Vier Anläufe in Folge (T15 dreimal, T17 einmal) sind an
+derselben Sache gescheitert: Die Frage „wie viele Türme" hat keine gute
+Antwort, solange man beliebig viele bauen kann. Das Genre löst das anders — in
+Kingdom Rush gibt es acht bis vierzehn **feste Bauplätze**, und die Entscheidung
+lautet nicht „wie viele", sondern „welcher Turm hierhin und welcher Ausbau".
+
+Genau das würde alle offenen Punkte auf einmal auflösen: „viele Türme" wäre kein
+Spielstil mehr (T16), der Abstand der Stile verschwände, die Kurve ließe sich
+gegen eine bekannte Obergrenze stellen (T15), und die Karten bekämen echte
+Gestaltung statt einer Fläche aus Sockeln.
 
 ### 3.24 Zwei Ursachen für den Abstand der Spielstile
 
@@ -925,7 +974,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v24
+## 5. Stand v25
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -985,6 +1034,11 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v25 — nichts am Spiel. Eine korrigierte Kennzahl und ein Vorschlag,
+wie es weitergeht.** Der Versuch, die Geometrie zu ändern, ist zurückgenommen.
+Was dabei herauskam, steht in Abschnitt 3.25 — und am Ende ein Vorschlag, der
+die ganze Frage anders stellt.
 
 **Neu in v24 — T16 halb gelöst und die andere Hälfte erklärt.** Zwei der drei
 Spielstile liegen jetzt nah beieinander (117 und 110 statt 116 und 74). Warum

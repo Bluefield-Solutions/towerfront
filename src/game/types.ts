@@ -13,6 +13,12 @@ export interface Enemy {
   heading: number;
   /** Rest bis zum naechsten Heilpuls eines Webers. */
   healIn: number;
+  /** Stauchen nach einem Treffer: 1 = frisch getroffen, klingt ab.
+   *  Aus der Animationslehre - was Kraft abbekommt, verformt sich. */
+  squash: number;
+  /** Angezeigte Lebenspunkte. Sie laufen dem echten Wert nach, statt zu
+   *  springen - eine springende Leiste liest niemand. */
+  hpShown: number;
   travelled: number; // Zurueckgelegte Strecke - Basis fuer "vorderstes Ziel"
   slowFactor: number;
   slowLeft: number;
@@ -33,6 +39,8 @@ export interface Tower {
   recoil: number;
   /** Muendungsblitz, klingt nach dem Schuss ab. */
   flash: number;
+  /** Aufbau-Regung: der Turm federt beim Bauen und Ausbauen einmal ein. */
+  spring: number;
   pulse: number;          // Sichtbarer Umkreispuls beim Frostturm
   target: Enemy | null;   // Zwischengespeichertes Ziel
   retargetIn: number;     // Sekunden bis zur naechsten Zielsuche

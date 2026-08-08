@@ -113,6 +113,18 @@ export class GameState {
   crystalPulse = 0;
   crystalHit = 0;
   shake = 0;
+  /** Trefferstopp in Sekunden.
+   *
+   *  Bei einem schweren Treffer steht die Simulation drei bis fuenf Bilder
+   *  still. Das klingt nach einem Fehler, ist aber der aelteste Kniff des
+   *  Handwerks: die Pause gibt dem Auge Zeit, den Treffer ueberhaupt zu
+   *  registrieren. Ohne sie fuehlt sich ein Schlag an, als ginge er durch
+   *  Luft.
+   *
+   *  Bewusst gedeckelt: Politur darf das Spiel nicht anhalten. */
+  hitStop = 0;
+  /** Wieviel Trefferstopp in dieser Sekunde schon verbraucht wurde. */
+  private stopBudget = 0;
   time = 0;
   hitstop = 0;
   idleTime = 0;      // Sekunden seit Ende der letzten Welle
@@ -225,11 +237,13 @@ export class GameState {
     const c = { x, y };
     const t: Tower = {
       id: this.nextId++, def: id, x: c.x, y: c.y,
-      level: 1, branch: null, cooldownLeft: 0, angle: -Math.PI / 2, recoil: 0, flash: 0, pulse: 0,
+      level: 1, branch: null, cooldownLeft: 0, angle: -Math.PI / 2, recoil: 0, flash: 0,
+      pulse: 0, spring: 1,
       target: null, retargetIn: 0, kills: 0, damageDone: 0,
     };
     this.towers.push(t);
     this.towersVersion++;
+    t.spring = 1;
     this.ring(c.x, c.y, 54, def.accent, 0.4, 3);
     Sfx.play('build');
     return true;
@@ -249,6 +263,7 @@ export class GameState {
     t.branch = chosen;
     t.level++;
     this.towersVersion++;
+    t.spring = 1;
     this.ring(t.x, t.y, 66, accentFor(def, t.branch), 0.45, 4);
     Sfx.play('upgrade');
     return true;
@@ -424,6 +439,7 @@ export class GameState {
       this.smoke(m.x, m.y, 16, 150);
       this.debris(m.x, m.y, '#6B5B44', this.quality === 'hoch' ? 14 : 4, 320);
       this.shake = Math.min(1, this.shake + 0.8);
+      this.stop(0.5);
       this.hitstop = Math.max(this.hitstop, 0.07);
       this.flashT = 1;
       Sfx.play('boom');
@@ -445,6 +461,19 @@ export class GameState {
 
   // ---------------------------------------------------------------- Update
 
+  /** Trefferstopp ausloesen. `weight` von 0 bis 1.
+   *
+   *  Gedeckelt auf 90 Millisekunden je Sekunde: sonst steht das Spiel bei
+   *  einem dichten Gefecht mehr still, als es laeuft. Politur darf spuerbar
+   *  sein, aber nie im Weg stehen. */
+  private stop(weight: number): void {
+    const want = 0.02 + weight * 0.05;
+    const left = Math.max(0, 0.09 - this.stopBudget);
+    const use = Math.min(want, left);
+    this.stopBudget += use;
+    this.hitStop = Math.max(this.hitStop, use);
+  }
+
   update(dtReal: number): void {
     Sfx.frame();
     if (this.phase !== 'playing' || this.paused) {
@@ -464,6 +493,13 @@ export class GameState {
     this.stats.duration += dt;
     this.crystalPulse += dt;
     if (this.shake > 0) this.shake = Math.max(0, this.shake - dtReal * 3);
+    this.stopBudget = Math.max(0, this.stopBudget - dtReal * 0.09);
+    if (this.hitStop > 0) {
+      // Waehrend des Trefferstopps steht die Welt still - Rueckmeldung und
+      // Bedienung laufen weiter.
+      this.hitStop = Math.max(0, this.hitStop - dtReal);
+      return;
+    }
     if (this.crystalHit > 0) this.crystalHit = Math.max(0, this.crystalHit - dtReal * 2);
     if (!this.waveActive) this.idleTime += dtReal;
 
@@ -510,7 +546,7 @@ export class GameState {
       id: this.nextId++, def: id, x: p0.x, y: p0.y + off,
       hp, hpMax: hp, speed: def.speed, lane: ln, heading: 0, travelled: 0,
       slowFactor: 1, slowLeft: 0, healIn: 0,
-      hitFlash: 0, wobble: this.rng.next() * 9,
+      hitFlash: 0, squash: 0, hpShown: hp, wobble: this.rng.next() * 9,
       dead: false, leaked: false,
     });
   }
@@ -529,7 +565,7 @@ export class GameState {
         lane: parent.lane, heading: parent.heading, healIn: 0,
         travelled: Math.max(0, parent.travelled - 6),
         slowFactor: parent.slowFactor, slowLeft: parent.slowLeft,
-        hitFlash: 0, wobble: this.rng.next() * 9,
+        hitFlash: 0, squash: 0, hpShown: hp, wobble: this.rng.next() * 9,
         dead: false, leaked: false,
       });
     }
@@ -544,6 +580,13 @@ export class GameState {
         if (e.slowLeft <= 0) e.slowFactor = 1;
       }
       if (e.hitFlash > 0) e.hitFlash = Math.max(0, e.hitFlash - dt * 5);
+      if (e.squash > 0) e.squash = Math.max(0, e.squash - dt * 6);
+      // Die Lebensleiste laeuft dem echten Wert nach - schnell, aber sichtbar.
+      if (e.hpShown !== e.hp) {
+        const d = e.hp - e.hpShown;
+        e.hpShown += d * Math.min(1, dt * 9) + Math.sign(d) * Math.min(Math.abs(d), e.hpMax * dt * 0.6);
+        if (Math.abs(e.hp - e.hpShown) < 0.5) e.hpShown = e.hp;
+      }
 
       const edef = ENEMIES[e.def];
       if (edef.flying) {
@@ -604,6 +647,7 @@ export class GameState {
       (this.stats.leaksByWave[this.waveIndex] ?? 0) + def.leak;
     this.crystalHit = 1;
     this.shake = Math.min(1, this.shake + 0.55);
+    this.stop(0.8);
     this.float(this.goal.x, this.goal.y - 44, `-${def.leak}`, C.danger, 28);
     this.ring(this.goal.x, this.goal.y, 120, C.danger, 0.5, 5);
   }
@@ -615,6 +659,7 @@ export class GameState {
       if (t.recoil > 0) t.recoil = Math.max(0, t.recoil - dt * 6);
       if (t.flash > 0) t.flash = Math.max(0, t.flash - dt * 9);
       if (t.pulse > 0) t.pulse = Math.max(0, t.pulse - dt * 2.2);
+      if (t.spring > 0) t.spring = Math.max(0, t.spring - dt * 3.2);
       t.cooldownLeft -= dt;
 
       if (def.attack === 'aura') {
@@ -848,6 +893,7 @@ export class GameState {
     const dmg = Math.max(1, Math.round(raw * this.perks.damageMul) - Math.max(0, def.armor - pierce));
     e.hp -= dmg;
     e.hitFlash = 1;
+    e.squash = Math.min(1, e.squash + 0.55);
     if (owner) owner.damageDone += dmg;
     this.stats.damage += dmg;
     const src = owner ? owner.def : 'meteor';
@@ -882,6 +928,10 @@ export class GameState {
         // Kurzes Stocken macht den Tod schwerer Gegner spuerbar.
         this.hitstop = def.boss ? 0.16 : 0.05;
         this.shake = Math.min(1, this.shake + (def.boss ? 0.9 : 0.22));
+        // Schwere Gegner bekommen einen Trefferstopp, kleine nicht - sonst
+        // ruckelt jede Welle statt nur die Ereignisse, die zaehlen.
+        if (def.boss) this.stop(1);
+        else if (def.radius >= 24) this.stop(0.35);
         this.ring(e.x, e.y, def.boss ? 190 : 80, def.trim, 0.5, 5);
         if (def.boss) this.smoke(e.x, e.y, 14, 120);
       }
@@ -1146,7 +1196,8 @@ export class GameState {
       const t: Tower = {
         id: this.nextId++, def, x: tx, y: ty,
         level, branch: (branch ?? null) as BranchIndex,
-        cooldownLeft: cooldownLeft ?? 0, angle: -Math.PI / 2, recoil: 0, flash: 0, pulse: 0,
+        cooldownLeft: cooldownLeft ?? 0, angle: -Math.PI / 2, recoil: 0, flash: 0,
+        pulse: 0, spring: 0,
         target: null, retargetIn: retargetIn ?? 0, kills, damageDone,
       };
       this.towers.push(t);
@@ -1158,7 +1209,8 @@ export class GameState {
       this.enemies.push({
         id: this.nextId++, def, x, y, hp, hpMax,
         speed: ENEMIES[def].speed, lane: lane ?? 0, heading: 0, travelled,
-        slowFactor, slowLeft, healIn: healIn ?? 0, hitFlash: 0, wobble,
+        slowFactor, slowLeft, healIn: healIn ?? 0, hitFlash: 0, squash: 0, hpShown: hp,
+        wobble,
         dead: false, leaked: false,
       });
     }

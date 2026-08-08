@@ -280,6 +280,35 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   renderer.resize();
 }
 
+// Politur darf das Spiel nicht anhalten.
+//
+// Trefferstopp ist der aelteste Kniff des Handwerks - und der am leichtesten
+// uebertriebene. Geprueft wird deshalb die Obergrenze: ueber eine ganze Welle
+// darf hoechstens ein Zehntel der Zeit stillstehen.
+{
+  const probe = new GameState();
+  probe.reset(99, 'normal');
+  probe.gold = 100000;
+  const cand = candidateSpots(probe).slice(0, 12);
+  for (const sp of cand) probe.build(sp.x, sp.y, 'mortar');
+  probe.waveIndex = probe.waves.length - 1;
+  probe.startWave();
+  let stopped = 0, total = 0;
+  for (let i = 0; i < 60 * 60; i++) {
+    const before = probe.hitStop;
+    probe.update(DT);
+    total += DT;
+    if (before > 0) stopped += DT;
+  }
+  const share = stopped / total;
+  if (share > 0.1) {
+    problems.push(`Politur: ${(share * 100).toFixed(0)} % der Zeit steht das Spiel still - hoechstens 10 % sind vorgesehen.`);
+  }
+  if (stopped <= 0) {
+    problems.push('Politur: der Trefferstopp loest nie aus - dann ist er nicht eingebaut.');
+  }
+}
+
 // Jeder Ausbauzweig muss antippbar sein - und der Pruefsteg muss auf den
 // Bildschirm passen.
 //

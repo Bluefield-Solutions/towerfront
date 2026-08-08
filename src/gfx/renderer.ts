@@ -549,6 +549,11 @@ export class Renderer {
         ctx.save();
         ctx.translate(t.x, t.y - rec * 0.4);
         if (facingLeft) ctx.scale(-1, 1);
+        // Der frisch gebaute Turm federt einmal ein und schwingt aus.
+        if (t.spring > 0.01) {
+          const q = Math.sin(t.spring * Math.PI * 2.2) * t.spring * 0.16;
+          ctx.scale(1 - q, 1 + q);
+        }
         // Der Fuss des Bildes liegt bei 86 % - so steht der Turm auf der
         // Kachel statt darueber zu schweben.
         ctx.drawImage(art, -w / 2, -h * 0.72, w, h);
@@ -685,6 +690,13 @@ export class Renderer {
         ctx.save();
         ctx.translate(e.x, e.y - alt + wob * 0.3);
         if (facingRight) ctx.scale(-1, 1);
+        // Stauchen und Strecken: was getroffen wird, wird breiter und
+        // flacher. Die Flaeche bleibt gleich, deshalb liest das Auge es als
+        // Wucht und nicht als Groessenaenderung.
+        if (e.squash > 0.01) {
+          const q = e.squash * 0.22;
+          ctx.scale(1 + q, 1 - q);
+        }
         ctx.drawImage(art, -w / 2, -h * 0.72, w, h);
         if (e.hitFlash > 0.01) {
           const hot = getEnemyArt(e.def, true, s.map.id);
@@ -766,6 +778,21 @@ export class Renderer {
       const a = this.altitude(e, s.time, !!def.flying);
       ctx.fillRect(e.x - w / 2 - 1, e.y - a - def.radius - 13, w + 2, h + 2);
     }
+    // Zuerst der Nachlauf: der Teil, der gerade verloren geht, bleibt kurz
+    // als heller Streifen stehen. Erst dadurch sieht man, *wieviel* ein
+    // Treffer gekostet hat - eine springende Leiste liest niemand.
+    ctx.fillStyle = 'rgba(255,236,180,0.75)';
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      if (e.hpShown <= e.hp || e.hpShown >= e.hpMax) continue;
+      const def = ENEMIES[e.def];
+      const w = Math.max(def.radius * 2.1, def.boss ? 90 : 0);
+      const h = def.boss ? 7 : 4;
+      const a = this.altitude(e, s.time, !!def.flying);
+      const x0 = e.x - w / 2 + w * (e.hp / e.hpMax);
+      ctx.fillRect(x0, e.y - a - def.radius - 12, w * ((e.hpShown - e.hp) / e.hpMax), h);
+    }
+
     const tones = ['#5FD08A', C.gold, C.danger];
     for (let band = 0; band < 3; band++) {
       let drew = false;

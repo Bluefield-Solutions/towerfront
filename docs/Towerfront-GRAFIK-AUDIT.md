@@ -199,9 +199,94 @@ beurteilen — nur die, die durchkommen.
 
 ---
 
-## 5. Was ich von dir brauche
+## 5. Das Zielbild — gemessen
 
-**Entweder** du erzeugst die Bilder nach der Vorgabe aus 4.2 — dann schicke
+Du hast ein Bild geschickt: eine gerenderte Aufsicht, sonnenbeschienen, warmer
+Sandboden, kühle Felsen, gepflasterter Weg, Türme mit Mündungsfeuer und blauen
+Energieeffekten. Ich habe den Spielbereich herausgeschnitten und **mit
+denselben Kennzahlen gemessen** wie unsere eigene Grafik.
+
+```
+                  Palette  Helligk   Sätt.  Spanne  Dichte  Schwarz
+Zielbild gesamt      1238    0.34    0.52    0.59    3.00    1.3 %
+  davon Boden         294    0.33    0.51    0.39    1.63
+  davon ein Turm      889    0.36    0.37    0.67    3.44
+
+Wir: Untergründe               0.13-0.27  0.30-0.55         2.4-3.7
+Wir: Figuren                   0.19-0.31  0.20-0.42        12.6-21.6  5-15 %
+```
+
+### 5.1 Drei harte Abstände
+
+**A · Das Zielbild ist eine Tagszene, unsere ist eine Nachtszene.**
+Helligkeit 0,34 gegen 0,18 beim Boden. Das ist der größte einzelne Abstand und
+er zieht sich durch alles: Untergründe, Farbwelt, Leuchteffekte, Stimmung.
+Keine Detailarbeit an Einzelbildern holt das auf.
+
+**B · Unsere Figuren rauschen.** Detaildichte 12,6 bis 21,6 gegen **3,44** beim
+Zielturm. Nicht weil sie mehr Inhalt hätten — sie sind kleingerechnete,
+komprimierte Renderings mit Kompressionskörnung. Das Zielbild ist ein glattes
+Rendering.
+
+**C · Schwarz.** 5 bis 15 % gegen **1,3 %**. Bleibt bestehen.
+
+### 5.2 Eine Korrektur an meinem eigenen Audit
+
+Befund B2 sagte: *„Figuren müssen gesättigter sein als der Untergrund."* Das
+stammt aus der Lehre zur Pixelgrafik — und **im Zielbild gilt es nicht.** Dort
+ist der Boden mit 0,51 deutlich **gesättigter** als der Turm mit 0,37.
+
+Der Grund ist die andere Bauart: In einer gerenderten Szene macht das **Licht**
+die Hierarchie, nicht die Farbe. Türme stehen im Sonnenlicht, werfen Schatten,
+haben Glanzkanten — das hebt sie heraus. Ein Sättigungsgefälle wäre dort sogar
+falsch, weil es den Boden entfärbt und die Szene tot wirken lässt.
+
+**B2 ist damit hinfällig.** Was bleibt: Werthierarchie durch Licht.
+
+### 5.3 Was ohne neue Bilder geht
+
+Gemessen und ausprobiert:
+
+- **Entrauschen wirkt** — anders als das Staffeln. Eine milde Weichzeichnung
+  bringt den Koloss von 13,5 auf 6,3 Detaildichte, und die Form bleibt
+  vollständig erhalten. Damit kommt man in die Nähe der 3,4.
+- **Schwarz anheben** ist ein Zweizeiler im Bildwerkzeug.
+- **Untergründe aufhellen und wärmen** — die vorhandenen Fotos lassen sich
+  umfärben. Das schließt A nicht ganz, aber deutlich.
+
+### 5.4 Was neue Bilder braucht
+
+Der Boden. Ein sonnenbeschienenes, gerendertes Gelände mit echten Felsen,
+Grasbüscheln und gepflastertem Weg **im Bild** — das ist der eine große Hebel,
+und der Weg als gezeichnetes Band verschwindet dabei gleich mit.
+
+Die Vorgabe für die Bilderzeugung lautet damit **nicht mehr** „flache
+Vektorzeichnung" wie in Abschnitt 4.2, sondern:
+
+```
+Gerenderte Aufsicht, leicht geneigte Kamera, sonnenbeschienen von oben links,
+warme Mittagssonne. Warmer Sandboden in Ocker, kühlgraue Felsformationen,
+gepflasterter Weg aus grauen Steinen. Weiche lange Schatten in derselben
+Richtung. Kräftige, natürliche Sättigung. Kein reines Schwarz - dunkelster Ton
+ein warmes Braungrau. Glatte Oberflächen ohne Körnung. Detailgrad mittel: die
+Formen tragen, nicht die Textur.
+```
+
+**Der Abschnitt 4.1 gilt weiter, aber mit diesen Zahlen aus der Referenz:**
+
+| Kennzahl | Figuren | Untergrund |
+|---|---|---|
+| Mittlere Helligkeit | **0,33 bis 0,40** | **0,30 bis 0,36** |
+| Sättigung | 0,35 bis 0,45 | 0,45 bis 0,55 |
+| Detaildichte | **3 bis 6** | 1,5 bis 3 |
+| Reines Schwarz | unter 2 % | unter 2 % |
+| Lichtrichtung | oben links, überall gleich | oben links |
+
+---
+
+## 6. Was ich von dir brauche
+
+**Entweder** du erzeugst die Bilder nach der Vorgabe aus 5.4 — dann schicke
 ich dir je Los eine fertige Liste mit Beschreibungen, und ich prüfe die
 Lieferung gegen 4.1.
 

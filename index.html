@@ -69,20 +69,49 @@
   </aside>
 
   <section class="screen" id="screen" hidden>
-    <div class="card">
-      <p class="eyebrow" id="s-eyebrow">Kapitel eins</p>
-      <h1 id="s-title">Kristallwacht</h1>
-      <p class="lead" id="s-text"></p>
-      <div class="grades" id="s-mode"></div>
-      <div class="grades" id="s-maps"></div>
-      <div class="perks" id="s-perks"></div>
-      <div class="grades" id="s-grades"></div>
-      <div class="stats" id="s-stats" hidden></div>
-      <p class="best" id="s-best"></p>
-      <button class="primary" id="s-resume" hidden>Partie fortsetzen</button>
-      <button class="primary" id="s-action">Beginnen</button>
-      <button class="link" id="s-tut">Einführung beim nächsten Spiel zeigen</button>
-      <button class="link" id="s-perf">Technikanzeige einschalten</button>
+    <div class="card" id="s-card">
+
+      <!-- Ebene 1: eine Entscheidung. Alles Weitere liegt dahinter. -->
+      <div class="view" id="v-main">
+        <p class="eyebrow" id="s-eyebrow">Kapitel eins</p>
+        <h1 id="s-title">Kristallwacht</h1>
+        <p class="lead" id="s-text"></p>
+        <div class="stats" id="s-stats" hidden></div>
+        <button class="primary" id="s-resume" hidden>Partie fortsetzen</button>
+        <button class="primary" id="s-action">Beginnen</button>
+        <button class="choice" id="s-choice">
+          <span class="ch-lab">Karte und Schwierigkeit</span>
+          <span class="ch-val" id="s-choice-val">Spiralhain · Normal</span>
+          <span class="ch-arrow">›</span>
+        </button>
+        <button class="choice" id="s-open-progress">
+          <span class="ch-lab">Fortschritt</span>
+          <span class="ch-val" id="s-progress-val">—</span>
+          <span class="ch-arrow">›</span>
+        </button>
+        <p class="best" id="s-best"></p>
+      </div>
+
+      <!-- Ebene 2: Karte, Schwierigkeit, Modus -->
+      <div class="view" id="v-choose" hidden>
+        <button class="back" id="s-back-1">‹ Zurück</button>
+        <h2 class="sub">Karte</h2>
+        <div class="grades" id="s-maps"></div>
+        <h2 class="sub">Schwierigkeit</h2>
+        <div class="grades" id="s-grades"></div>
+        <h2 class="sub">Modus</h2>
+        <div class="grades" id="s-mode"></div>
+      </div>
+
+      <!-- Ebene 3: dauerhafte Verbesserungen -->
+      <div class="view" id="v-progress" hidden>
+        <button class="back" id="s-back-2">‹ Zurück</button>
+        <h2 class="sub">Dauerhafte Verbesserungen</h2>
+        <div class="perks" id="s-perks"></div>
+        <button class="link" id="s-tut">Einführung beim nächsten Spiel zeigen</button>
+        <button class="link" id="s-perf">Technikanzeige einschalten</button>
+      </div>
+
     </div>
   </section>
 

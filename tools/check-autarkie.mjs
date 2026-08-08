@@ -72,6 +72,7 @@ const REQUIRED_IDS = [
   'b-wave', 'b-wave-t', 'b-wave-b', 'next', 'n-list', 'build',
   'skills', 'inspector', 'i-name', 'i-stats', 'i-hint', 'i-ups', 'i-sell', 'i-close',
   'screen', 's-eyebrow', 's-title', 's-text', 's-best', 's-stats', 's-grades', 's-maps', 's-mode', 's-perks', 's-action', 'dock-toggle', 'dock-body',
+  'v-main', 'v-choose', 'v-progress', 's-choice', 's-open-progress',
   's-resume', 's-perf', 's-tut', 'perf', 'coach', 'coach-text', 'coach-skip',
 ];
 for (const id of REQUIRED_IDS) {

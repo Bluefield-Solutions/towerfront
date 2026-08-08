@@ -421,13 +421,67 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   renderer.resize();
 }
 
-// Titelbildschirm: Modus, Karten, Grade und Fortschritt muessen erscheinen.
+// Titelbildschirm: eine Ebene, eine Entscheidung.
+//
+// Vorher standen vierzehn antippbare Elemente gleichzeitig da - zwei Modi,
+// drei Karten, drei Grade, fuenf Verbesserungen, der Startknopf. Wer das
+// erste Mal hinschaut, weiss nicht, wo er anfangen soll.
+//
+// Die Regel dahinter ist alt und gut belegt: eine Ebene stellt eine Frage.
+// Alles Weitere liegt dahinter, sichtbar durch eine Zeile, die den aktuellen
+// Wert zeigt. Geprueft wird deshalb die *Anzahl* - denn genau die war das
+// Problem, nicht das Aussehen.
 {
   ui.showScreen('title');
-  const need: [string, number][] = [['s-mode', 2], ['s-maps', 3], ['s-grades', 3], ['s-perks', 5]];
-  for (const [id, min] of need) {
-    const n = win.document.getElementById(id)?.querySelectorAll('button').length ?? 0;
-    if (n < min) problems.push(`Titelbildschirm: "${id}" zeigt ${n} Knoepfe, erwartet mindestens ${min}.`);
+  const visible = (root: Element | null): number => {
+    if (!root) return 0;
+    let n = 0;
+    for (const b of root.querySelectorAll('button')) {
+      let el: Element | null = b;
+      let hidden = false;
+      while (el && el !== root.parentElement) {
+        if ((el as HTMLElement).hidden) { hidden = true; break; }
+        el = el.parentElement;
+      }
+      if (!hidden) n++;
+    }
+    return n;
+  };
+
+  const card = win.document.getElementById('s-card');
+  const onFirstLevel = visible(card);
+  const MAX_FIRST = 5;
+  if (onFirstLevel > MAX_FIRST) {
+    problems.push(
+      `Titelbildschirm: ${onFirstLevel} antippbare Elemente auf der ersten Ebene - ` +
+      `hoechstens ${MAX_FIRST} sind vorgesehen.`,
+    );
+  }
+
+  // Die tieferen Ebenen muessen erreichbar sein und ihren Inhalt zeigen.
+  for (const [opener, view, inner] of [
+    ['s-choice', 'v-choose', [['s-maps', 3], ['s-grades', 3], ['s-mode', 2]]],
+    ['s-open-progress', 'v-progress', [['s-perks', 5]]],
+  ] as const) {
+    (win.document.getElementById(opener) as HTMLButtonElement)
+      .dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
+    if ((win.document.getElementById(view) as HTMLElement).hidden) {
+      problems.push(`Titelbildschirm: "${view}" laesst sich nicht oeffnen.`);
+    }
+    for (const [id, min] of inner) {
+      const n = win.document.getElementById(id)?.querySelectorAll('button').length ?? 0;
+      if (n < min) problems.push(`Titelbildschirm: "${id}" zeigt ${n} Knoepfe, erwartet ${min}.`);
+    }
+    // Und wieder zurueck - eine Ebene ohne Rueckweg ist eine Sackgasse.
+    const back = [...(win.document.getElementById(view) as HTMLElement)
+      .querySelectorAll('button')].find((b) => b.className === 'back');
+    if (!back) problems.push(`Titelbildschirm: "${view}" hat keinen Rueckweg.`);
+    else {
+      back.dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
+      if (!(win.document.getElementById(view) as HTMLElement).hidden) {
+        problems.push(`Titelbildschirm: "${view}" laesst sich nicht schliessen.`);
+      }
+    }
   }
   ui.hideScreen();
 }

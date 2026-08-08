@@ -571,3 +571,77 @@ html, body {
   .dock-row { max-width: 58vw; }
   .next { font-size: 10px; }
 }
+
+/* ------------------------------------------------- Titelbildschirm (v41) */
+/* Drei Ebenen statt einer Wand.
+   Vorher standen vierzehn antippbare Elemente gleichzeitig da: zwei Modi,
+   drei Karten, drei Schwierigkeiten, fünf Verbesserungen, der Startknopf.
+   Das ist kein Gestaltungsproblem, sondern ein Strukturproblem — man kann
+   eine Wand nicht schöner machen, man muss sie aufteilen.
+
+   Ebene 1 stellt eine Frage: spielen oder nicht. Alles Weitere liegt hinter
+   je einer Zeile, die zeigt, was gerade eingestellt ist. */
+
+.view { display: flex; flex-direction: column; }
+
+.card h1 {
+  font-size: 30px; letter-spacing: -0.01em; margin: 2px 0 6px;
+}
+.card .eyebrow {
+  font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--muted); margin: 0;
+}
+.card .lead {
+  font-size: 12.5px; line-height: 1.5; color: var(--muted);
+  margin: 0 0 16px; max-width: 34em;
+}
+
+/* Der Startknopf ist der einzige große Knopf auf der Ebene. */
+.card .primary {
+  font-size: 15px; font-weight: 700; padding: 13px 20px; border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+/* Eine Einstellzeile: Beschriftung links, aktueller Wert, Pfeil.
+   Das Muster kennt jeder aus den Einstellungen seines Telefons. */
+.choice {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 11px 14px; margin-bottom: 6px;
+  border-radius: 11px; cursor: pointer; text-align: left;
+  font-family: var(--ui);
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid var(--edge); color: var(--text);
+}
+.choice:active { transform: scale(0.99); }
+.ch-lab { font-size: 12px; font-weight: 600; flex: none; }
+.ch-val {
+  flex: 1; text-align: right; font-size: 11.5px; color: var(--muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ch-arrow { flex: none; font-size: 16px; color: var(--muted); line-height: 1; }
+
+.back {
+  align-self: flex-start; background: none; border: none; cursor: pointer;
+  color: var(--muted); font-family: var(--ui); font-size: 12px;
+  padding: 2px 0 10px;
+}
+.back:active { color: var(--text); }
+
+.sub {
+  font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--muted); margin: 10px 0 6px; font-weight: 700;
+}
+.view:first-child .sub:first-of-type { margin-top: 0; }
+
+.card .best {
+  font-size: 10.5px; color: var(--muted); margin: 10px 0 0; text-align: center;
+}
+
+/* Auf flachen Geräten rollt die Karte, statt aus dem Bild zu laufen. */
+@media (max-height: 480px) {
+  .card { max-height: calc(100% - 24px); overflow-y: auto; }
+  .card h1 { font-size: 24px; }
+  .card .lead { font-size: 11.5px; margin-bottom: 12px; }
+  .card .primary { padding: 11px 18px; font-size: 14px; }
+  .choice { padding: 9px 12px; }
+}

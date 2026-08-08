@@ -50,6 +50,13 @@ export class UI {
   private sMaps = $('s-maps');
   private sPerks = $('s-perks');
   private sMode = $('s-mode');
+  private vMain = $('v-main');
+  private vChoose = $('v-choose');
+  private vProgress = $('v-progress');
+  private sChoice = $('s-choice');
+  private sChoiceVal = $('s-choice-val');
+  private sOpenProgress = $('s-open-progress');
+  private sProgressVal = $('s-progress-val');
   private dock = $('dock');
   private dockToggle = $('dock-toggle');
   private dockToggleI = $('dock-toggle-i');
@@ -66,6 +73,7 @@ export class UI {
   private skillBtns = new Map<AbilityId, HTMLButtonElement>();
   private lastSkillSig = '';
   private endlessWanted = false;
+  private view: (w: 'main' | 'choose' | 'progress') => void = () => {};
   private tutStep = -1;
   private tutTarget: HTMLElement | null = null;
   private lastSig = '';
@@ -121,6 +129,23 @@ export class UI {
         'aria-label', folded ? 'Leiste einklappen' : 'Leiste ausklappen',
       );
     });
+
+    // Der Titelbildschirm hat drei Ebenen statt einer Wand aus vierzehn
+    // Knoepfen. Ebene eins stellt genau eine Frage: spielen oder nicht.
+    const showView = (which: 'main' | 'choose' | 'progress') => {
+      this.vMain.hidden = which !== 'main';
+      this.vChoose.hidden = which !== 'choose';
+      this.vProgress.hidden = which !== 'progress';
+      if (which !== 'main') this.renderProgress();
+    };
+    this.view = showView;
+    this.sChoice.addEventListener('click', () => { Sfx.unlock(); Sfx.play('tap'); showView('choose'); });
+    this.sOpenProgress.addEventListener('click', () => {
+      Sfx.unlock(); Sfx.play('tap'); showView('progress');
+    });
+    for (const id of ['s-back-1', 's-back-2']) {
+      $(id).addEventListener('click', () => { Sfx.play('tap'); showView('main'); });
+    }
 
     setPerkCost((id) => PERKS[id as PerkId]?.cost ?? 0);
 
@@ -229,21 +254,30 @@ export class UI {
   showScreen(kind: 'title' | 'won' | 'lost'): void {
     const s = this.s;
     this.screen.hidden = false;
+    this.view('main');
     const shown = kind === 'title' ? getSettings().difficulty : s.difficulty;
     const shownMap = kind === 'title' ? getSettings().map : s.map.id;
     const best = getBest(shownMap, shown);
     const gradeName = DIFFICULTIES[shown].name;
     const mapName = mapById(shownMap).name;
     this.sBest.textContent = best.wave > 0
-      ? `Bester Lauf · ${mapName} · ${gradeName}: Welle ${best.wave}` +
-        `${best.lives ? `, Kristall ${best.lives}` : ''}`
+      ? `Bisher am weitesten: Welle ${best.wave}${best.lives ? `, ${best.lives} Kristall` : ''}`
       : '';
 
-    this.sGrades.hidden = kind !== 'title';
-    this.sMaps.hidden = kind !== 'title';
-    this.sPerks.hidden = kind !== 'title';
-    this.sMode.hidden = kind !== 'title';
-    if (kind === 'title') { this.renderProgress(); this.renderMaps(); this.renderGrades(); }
+    // Karte, Grad und Fortschritt liegen hinter je einer Zeile, die zeigt,
+    // was gerade eingestellt ist - das Muster kennt jeder aus den
+    // Einstellungen seines Telefons.
+    this.sChoice.hidden = kind !== 'title';
+    this.sOpenProgress.hidden = kind !== 'title';
+    if (kind === 'title') {
+      this.renderProgress(); this.renderMaps(); this.renderGrades();
+      this.sChoiceVal.textContent =
+        `${mapName} · ${gradeName}${this.endlessWanted ? ' · Endlos' : ''}`;
+      const free = freeStars();
+      this.sProgressVal.textContent = free > 0
+        ? `${free} Splitter frei`
+        : `${totalStars()} Sterne verdient`;
+    }
 
     const save = kind === 'title' ? loadGame() : null;
     if (save) {
@@ -259,10 +293,11 @@ export class UI {
     if (kind === 'title') this.sStats.hidden = true; else this.renderStats();
 
     if (kind === 'title') {
-      this.sEyebrow.textContent = `${mapName} · ${gradeName} · ${VERSION}`;
+      this.sEyebrow.textContent = VERSION;
       this.sTitle.textContent = 'Kristallwacht';
+      // Ein Satz, nicht vier. Wer mehr wissen will, erfaehrt es beim Spielen.
       this.sText.textContent =
-        'Der Herzkristall liegt am Ende des Pfades. Baue Türme auf das Gras, halte die Leere auf, überstehe fünfzehn Wellen. Früh gestartete Wellen bringen zusätzliches Gold.';
+        'Halte die Leere vom Herzkristall fern. Baue Türme neben den Weg und überstehe fünfzehn Wellen.';
       if (!save) this.sAction.textContent = 'Beginnen';
     } else if (kind === 'won') {
       this.sEyebrow.textContent = s.stars > 0

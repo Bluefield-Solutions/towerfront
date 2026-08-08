@@ -9,6 +9,8 @@ export interface Settings {
   tutorial: boolean;
   /** Zuletzt gewaehlter Schwierigkeitsgrad. */
   difficulty: 'ruhig' | 'normal' | 'erbarmungslos';
+  /** Zuletzt gewaehlte Karte. */
+  map: string;
 }
 
 export interface Best {
@@ -23,7 +25,7 @@ type BestMap = Partial<Record<string, Best>>;
 interface Store { settings: Settings; best: BestMap; }
 
 const DEFAULTS: Store = {
-  settings: { sound: true, quality: 'auto', perf: false, tutorial: true, difficulty: 'normal' },
+  settings: { sound: true, quality: 'auto', perf: false, tutorial: true, difficulty: 'normal', map: 'spiralhain' },
   best: {},
 };
 
@@ -52,8 +54,9 @@ function structuredCloneSafe(s: Store): Store {
 let store = read();
 
 export const getSettings = (): Settings => store.settings;
-export const getBest = (difficulty: string): Best =>
-  store.best[difficulty] ?? { wave: 0, lives: 0 };
+/** Der Bestwert haengt an Karte *und* Grad - alles andere waere irrefuehrend. */
+export const getBest = (mapId: string, difficulty: string): Best =>
+  store.best[`${mapId}|${difficulty}`] ?? { wave: 0, lives: 0 };
 
 export function saveSettings(patch: Partial<Settings>): void {
   store.settings = { ...store.settings, ...patch };
@@ -61,10 +64,13 @@ export function saveSettings(patch: Partial<Settings>): void {
 }
 
 /** Merkt sich den besten Lauf je Grad: weiter gekommen schlaegt mehr Kristall. */
-export function recordRun(difficulty: string, wave: number, lives: number): void {
-  const b = store.best[difficulty] ?? { wave: 0, lives: 0 };
+export function recordRun(
+  mapId: string, difficulty: string, wave: number, lives: number,
+): void {
+  const key = `${mapId}|${difficulty}`;
+  const b = store.best[key] ?? { wave: 0, lives: 0 };
   if (wave > b.wave || (wave === b.wave && lives > b.lives)) {
-    store.best[difficulty] = { wave, lives };
+    store.best[key] = { wave, lives };
     write(store);
   }
 }

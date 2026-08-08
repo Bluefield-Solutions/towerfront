@@ -1,11 +1,14 @@
 import { C, COLS, ROWS, TILE, WORLD_H, WORLD_W } from '../data/config';
+import type { MapPalette } from '../data/maps';
 import { cellKey } from '../data/maps';
 import { makeRng } from '../core/math';
 import { hexA } from './glow';
 
 /** Der statische Untergrund wird genau einmal gebacken und danach nur noch
  *  als Bild gezeichnet. Spart auf dem Handy den Grossteil der Zeichenlast. */
-export function bakeTerrain(pathSet: Set<number>, blockedSet: Set<number>): HTMLCanvasElement {
+export function bakeTerrain(
+  pathSet: Set<number>, blockedSet: Set<number>, pal: MapPalette,
+): HTMLCanvasElement {
   const cv = document.createElement('canvas');
   cv.width = WORLD_W; cv.height = WORLD_H;
   const g = cv.getContext('2d')!;
@@ -13,9 +16,9 @@ export function bakeTerrain(pathSet: Set<number>, blockedSet: Set<number>): HTML
 
   // Grundflaeche mit vertikalem Verlauf: unten kuehler, oben heller angehaucht.
   const bg = g.createLinearGradient(0, 0, 0, WORLD_H);
-  bg.addColorStop(0, C.terrainHi);
-  bg.addColorStop(0.55, C.terrain);
-  bg.addColorStop(1, C.terrainLo);
+  bg.addColorStop(0, pal.terrainHi);
+  bg.addColorStop(0.55, pal.terrain);
+  bg.addColorStop(1, pal.terrainLo);
   g.fillStyle = bg;
   g.fillRect(0, 0, WORLD_W, WORLD_H);
 
@@ -60,7 +63,7 @@ export function bakeTerrain(pathSet: Set<number>, blockedSet: Set<number>): HTML
   }
 
   // Grasbueschel als kleine Striche - sparsam, nur Silhouette.
-  g.strokeStyle = hexA(C.terrainHi, 0.5);
+  g.strokeStyle = hexA(pal.terrainHi, 0.5);
   g.lineWidth = 2;
   for (let i = 0; i < 620; i++) {
     const x = rnd() * WORLD_W, y = rnd() * WORLD_H;
@@ -77,9 +80,9 @@ export function bakeTerrain(pathSet: Set<number>, blockedSet: Set<number>): HTML
   // Mitte. Der Uebergang traegt den groessten Teil der Wirkung.
   g.fillStyle = 'rgba(8,14,22,0.35)';
   paintCells(g, pathSet, -3);
-  g.fillStyle = C.pathEdge;
+  g.fillStyle = pal.pathEdge;
   paintCells(g, pathSet, 2);
-  g.fillStyle = C.path;
+  g.fillStyle = pal.path;
   paintCells(g, pathSet, 11);
   g.fillStyle = 'rgba(255,246,220,0.10)';
   paintCells(g, pathSet, 22);
@@ -107,7 +110,7 @@ export function bakeTerrain(pathSet: Set<number>, blockedSet: Set<number>): HTML
   // Deko-Felsen auf gesperrten Zellen
   for (const k of blockedSet) {
     const cx = k % COLS, cy = Math.floor(k / COLS);
-    drawRock(g, cx * TILE + TILE / 2, cy * TILE + TILE / 2, TILE * 0.34, rnd);
+    drawRock(g, cx * TILE + TILE / 2, cy * TILE + TILE / 2, TILE * 0.34, rnd, pal);
   }
 
   // Vignette: lenkt den Blick zur Mitte
@@ -136,7 +139,10 @@ function paintCells(g: CanvasRenderingContext2D, cells: Set<number>, inset: numb
   }
 }
 
-function drawRock(g: CanvasRenderingContext2D, x: number, y: number, r: number, rnd: () => number): void {
+function drawRock(
+  g: CanvasRenderingContext2D, x: number, y: number, r: number,
+  rnd: () => number, pal: MapPalette,
+): void {
   g.save();
   g.translate(x, y);
   g.beginPath();
@@ -148,9 +154,9 @@ function drawRock(g: CanvasRenderingContext2D, x: number, y: number, r: number, 
     if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
   }
   g.closePath();
-  g.fillStyle = '#2A3348'; g.fill();
+  g.fillStyle = pal.rock; g.fill();
   g.clip();
-  g.fillStyle = '#3D4A66';
+  g.fillStyle = pal.rockHi;
   g.fillRect(-r, -r, r * 2, r * 0.9);
   g.restore();
 }

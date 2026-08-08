@@ -295,6 +295,30 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Jede Karte muss sich aufbauen und zeichnen lassen. Ein Pfad, der ins Leere
+// fuehrt, oder eine Farbwelt mit Luecke faellt sonst erst beim Antippen auf.
+{
+  const { MAPS } = await import('../src/data/maps');
+  for (const m of MAPS) {
+    step(`Karte ${m.name}`, () => {
+      state.reset(4711, 'normal', m.id);
+      if (state.map.id !== m.id) throw new Error('Karte wurde nicht geladen.');
+      if (!state.lanes.length) throw new Error('keine Bahn in Weltkoordinaten.');
+      for (const lane of state.lanes) {
+        const end = lane[lane.length - 1];
+        if (Math.abs(end.x - state.goal.x) > 1 || Math.abs(end.y - state.goal.y) > 1) {
+          throw new Error('eine Bahn endet nicht am Kristall.');
+        }
+      }
+      state.startWave();
+      for (let i = 0; i < 60 * 45; i++) { state.update(DT); renderer.draw(state); }
+      if (!state.stats.kills && !state.leakedTotal) {
+        throw new Error('in 45 Sekunden kam kein einziger Gegner an oder um.');
+      }
+    });
+  }
+}
+
 // Endbildschirm und Neustart muessen ebenfalls durchlaufen.
 step('Endbildschirm', () => {
   ui.showScreen(state.phase === 'won' ? 'won' : 'lost');

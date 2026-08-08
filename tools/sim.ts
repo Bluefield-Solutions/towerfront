@@ -10,6 +10,7 @@ import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../src/data/d
 const START_LIVES = DIFFICULTIES.normal.startLives;
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, type TowerId } from '../src/data/towers';
 import { WAVES } from '../src/data/waves';
+import { MAPS } from '../src/data/maps';
 import { ABILITIES } from '../src/data/abilities';
 
 const DT = 1 / 60;
@@ -90,9 +91,10 @@ type BranchPick = (id: TowerId) => 0 | 1;
 function play(
   strategy: TowerId[], pick: BranchPick = () => 0,
   bot: Bot = MEISTER, difficulty: DifficultyId = 'normal',
+  mapId: string = MAPS[0].id,
 ): Result {
-  const s = new GameState();
-  s.reset(20260807, difficulty);
+  const s = new GameState(mapId);
+  s.reset(20260807, difficulty, mapId);
   const spots = buildSpots(s);
   let spotIdx = 0, si = 0, t = 0, frame = 0, upgrades = 0;
   let peakEnemies = 0, peakFx = 0;
@@ -205,6 +207,20 @@ for (const bot of BOTS) {
     `  ${bot.name.padEnd(9)} ${verdict.padEnd(30)}` +
     `${r.towers} Tuerme, ${r.upgrades} Ausbauten, ${r.earned} Gold`,
   );
+}
+
+// Jede Karte muss fuer sich spielbar sein. Eine Karte, die nur mit einem
+// einzigen Stil zu schaffen ist, ist keine zweite Karte, sondern eine Huerde.
+console.log('\nKarten (Normal, alle Stile):');
+const mapRuns = new Map<string, Result>();
+for (const m of MAPS) {
+  const line: string[] = [];
+  for (const bot of BOTS) {
+    const r = play(mixedPlanBase, () => 0, bot, 'normal', m.id);
+    mapRuns.set(`${m.id}:${bot.name}`, r);
+    line.push(`${bot.name} ${r.won ? `${r.lives}/${r.maxLives}` : `W${r.wave}`}`);
+  }
+  console.log(`  ${m.name.padEnd(15)} ${line.join('   ')}`);
 }
 
 // Jeder Schwierigkeitsgrad bekommt eine eigene Pruefung. Ein Grad, den kein
@@ -323,6 +339,19 @@ for (const id of TOWER_ORDER) {
   }
   if (wonCount('ruhig') <= wonCount('erbarmungslos')) {
     errors.push('Ruhig ist nicht leichter als Erbarmungslos - die Grade unterscheiden sich nicht.');
+  }
+}
+
+// 4e. Jede Karte muss von mindestens zwei Stilen zu schaffen sein und keine
+//     darf muehelos sein.
+for (const m of MAPS) {
+  const runs = BOTS.map((b) => mapRuns.get(`${m.id}:${b.name}`)!);
+  const won = runs.filter((r) => r.won);
+  if (won.length < 2) {
+    errors.push(`Karte "${m.name}": nur ${won.length} von ${BOTS.length} Stilen kommt durch.`);
+  }
+  if (won.length && won.every((r) => r.lives >= r.maxLives)) {
+    errors.push(`Karte "${m.name}": jeder Sieg ohne einen einzigen Verlust - zu einfach.`);
   }
 }
 

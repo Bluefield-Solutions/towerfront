@@ -182,7 +182,7 @@ const CRITERIA: Criterion[] = [
     id: 'K2', area: 'Karten', from: 'Kingdom Rush Frontiers (Gabelungen, mehrere Zugaenge)',
     text: 'Mindestens eine Karte mit Gabelung oder zwei Zugaengen.',
     measured: true, weight: 3,
-    check: () => MAPS.some((m) => m.waypoints.length > 12),
+    check: () => MAPS.some((m) => m.lanes.length > 1),
     gap: 'Zweiter Pfad, der sich mit dem ersten vereint.',
   },
   {

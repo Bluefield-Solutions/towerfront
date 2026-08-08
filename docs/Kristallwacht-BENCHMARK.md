@@ -1,8 +1,8 @@
 # Kristallwacht — Genre-Abgleich
 
-Stand: v17 · 07.08.2026 · Aktueller Wert: **22 von 30 Kriterien, gewichtet 76 %**
+Stand: v18 · 07.08.2026 · Aktueller Wert: **24 von 30 Kriterien, gewichtet 85 %**
 
-*Verlauf: v11 = 18/27 (69 %) → v12 = 19/27 (73 %) → v15 = 21/30 (74 %) → v17 = 22/30 (76 %), K3 erfüllt.
+*Verlauf: v11 = 18/27 (69 %) → v12 = 19/27 (73 %) → v15 = 21/30 (74 %) → v17 = 22/30 (76 %) → v18 = 24/30 (85 %), K1 und K2 erfüllt.
 In v15 kamen drei Grafik-Kriterien in den Katalog; zwei davon sind erfüllt.*
 
 Dieses Dokument ist die Grundlage für `npm run benchmark`. Es hält fest, *woher*
@@ -58,7 +58,7 @@ reichen für einen Prototyp. *Diesen Fehler haben wir bisher vermieden.*
 | Fokus & Klarheit | 4/4 | Karte ohne Scrollen, Pause mit Baumöglichkeit, Tempo 1×/2×/3×, Werte vor dem Kauf |
 | Rollen & Entscheidungen | 5/6 | Vier Türme, vier Wirkungsweisen, **verzweigter Ausbau**, Fähigkeiten, Luftlücke — es fehlt der Blocker |
 | Gegner | 5/6 | Masse, Tempo, Panzerung, Luft, Zerfall, Boss — es fehlen unterstützende Gegner |
-| Karten & Wiederspielwert | **1/6** | **Die eine große Lücke.** Eine Karte, ein Schwierigkeitsgrad, kein Endlosmodus, keine Bewertung, kein Fortschritt |
+| Karten & Wiederspielwert | 3/6 | Drei Karten, zwei davon mit Gabelung, drei Schwierigkeitsgrade — es fehlen Endlosmodus, Sterne und Fortschritt |
 | Politur | 7/8 | Ton, Auswertung, Einführung, Spielstand, Inspektor, animierte Gegner, lebende Welt — es fehlen antippbare Kleinigkeiten in der Karte |
 
 Das Bild ist eindeutig: **Die Kernschleife ist auf Genre-Niveau, der
@@ -74,8 +74,6 @@ Gegenteil —, aber ab hier liegt der Hebel eindeutig bei Bereich „Karten".
 
 | # | Fehlt | Vorbild | Nächster Schritt |
 |---|---|---|---|
-| K1 ●●● | Mehr als eine Karte | Kingdom Rush, Defense Grid | Karte 2 und 3 mit eigenem Biom und eigener Pfadform |
-| K2 ●●● | Gabelung oder zwei Zugänge | Kingdom Rush Frontiers | Zweiter Pfad, der sich mit dem ersten vereint |
 | R4 ●● | Etwas, das aufhält statt tötet | Kingdom Rush (Kaserne) | Blockturm, der Gegner bindet |
 | G5 ●● | Unterstützende Gegner | Kingdom Rush, PvZ | Heiler oder Schildträger, der die Zielreihenfolge erzwingt |
 | K4 ●● | Endlosmodus | Kingdom Rush | Nach Welle 15 fortlaufend skalierend |
@@ -86,9 +84,10 @@ Gegenteil —, aber ab hier liegt der Hebel eindeutig bei Bereich „Karten".
 ausschließende Richtungen — aus vier Türmen sind faktisch acht geworden, ohne
 eine Zeile neuen Inhalt.
 
-**K1 und K2 zusammen sind der größte Sprung**, weil sie die restlichen
-K-Kriterien mitziehen: Sterne, Fortschritt und Schwierigkeitsgrade ergeben erst
-Sinn, wenn es mehr als ein Brett gibt.
+**K1 und K2 sind seit v18 erfüllt.** Drei Karten mit eigenen Biomen, zwei davon
+mit zwei Zuwegen, die sich unterwegs vereinen. Damit ergeben Sterne (K5) und
+Fortschritt (K6) überhaupt erst Sinn — sie sind jetzt der größte verbliebene
+Block.
 
 ---
 

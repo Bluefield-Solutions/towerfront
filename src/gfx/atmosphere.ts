@@ -1,4 +1,5 @@
 import { C, WORLD_H, WORLD_W } from '../data/config';
+import type { MapPalette } from '../data/maps';
 import { makeRng } from '../core/math';
 import { hexA } from './glow';
 
@@ -10,22 +11,23 @@ import { hexA } from './glow';
  *  langsam, ein Polarlicht atmet darueber. Alles vorgebacken - im Spiel
  *  bleiben davon eine Handvoll Zeichenbefehle. */
 
-let moodLayer: HTMLCanvasElement | null = null;
-let fogDisc: HTMLCanvasElement | null = null;
+const moodLayers = new Map<string, HTMLCanvasElement>();
+const fogDiscs = new Map<string, HTMLCanvasElement>();
 let auroraBand: HTMLCanvasElement | null = null;
 
 /** Ruhende Lichtstimmung ueber dem ganzen Feld: ein schraeger Mondschacht von
  *  oben links, kuehler Abfall nach unten rechts. Einmal gebacken, danach ein
  *  einziger Zeichenbefehl je Bild. */
-export function getMoodLayer(): HTMLCanvasElement {
-  if (moodLayer) return moodLayer;
+export function getMoodLayer(pal: MapPalette): HTMLCanvasElement {
+  const hit = moodLayers.get(pal.mood);
+  if (hit) return hit;
   const cv = document.createElement('canvas');
   cv.width = WORLD_W; cv.height = WORLD_H;
   const g = cv.getContext('2d')!;
 
   const shaft = g.createLinearGradient(0, 0, WORLD_W * 0.85, WORLD_H);
-  shaft.addColorStop(0, 'rgba(190, 226, 255, 0.16)');
-  shaft.addColorStop(0.32, 'rgba(160, 205, 245, 0.06)');
+  shaft.addColorStop(0, hexA(pal.mood, 0.17));
+  shaft.addColorStop(0.32, hexA(pal.mood, 0.06));
   shaft.addColorStop(0.7, 'rgba(10, 16, 34, 0.12)');
   shaft.addColorStop(1, 'rgba(6, 10, 24, 0.32)');
   g.fillStyle = shaft;
@@ -36,37 +38,40 @@ export function getMoodLayer(): HTMLCanvasElement {
   g.translate(WORLD_W * 0.24, 0);
   g.rotate(0.28);
   const beam = g.createLinearGradient(-260, 0, 260, 0);
-  beam.addColorStop(0, 'rgba(200, 232, 255, 0)');
-  beam.addColorStop(0.5, 'rgba(200, 232, 255, 0.09)');
-  beam.addColorStop(1, 'rgba(200, 232, 255, 0)');
+  beam.addColorStop(0, hexA(pal.mood, 0));
+  beam.addColorStop(0.5, hexA(pal.mood, 0.1));
+  beam.addColorStop(1, hexA(pal.mood, 0));
   g.fillStyle = beam;
   g.fillRect(-260, -200, 520, WORLD_H + 400);
   g.restore();
 
-  moodLayer = cv;
+  moodLayers.set(pal.mood, cv);
   return cv;
 }
 
-function getFogDisc(): HTMLCanvasElement {
-  if (fogDisc) return fogDisc;
+function getFogDisc(tone: string): HTMLCanvasElement {
+  const hit = fogDiscs.get(tone);
+  if (hit) return hit;
   const r = 190;
   const cv = document.createElement('canvas');
   cv.width = r * 2; cv.height = r * 2;
   const g = cv.getContext('2d')!;
   const grad = g.createRadialGradient(r, r, 0, r, r, r);
-  grad.addColorStop(0, 'rgba(180, 214, 226, 0.13)');
-  grad.addColorStop(0.5, 'rgba(160, 200, 216, 0.06)');
-  grad.addColorStop(1, 'rgba(150, 190, 210, 0)');
+  grad.addColorStop(0, hexA(tone, 0.14));
+  grad.addColorStop(0.5, hexA(tone, 0.06));
+  grad.addColorStop(1, hexA(tone, 0));
   g.fillStyle = grad;
   g.fillRect(0, 0, r * 2, r * 2);
-  fogDisc = cv;
+  fogDiscs.set(tone, cv);
   return cv;
 }
 
 /** Bodennebel: acht Scheiben, die in verschiedenen Tempi ueber das Feld
  *  ziehen. Weil sie sich unterschiedlich schnell bewegen, entsteht Tiefe. */
-export function drawGroundFog(ctx: CanvasRenderingContext2D, time: number, dense: boolean): void {
-  const disc = getFogDisc();
+export function drawGroundFog(
+  ctx: CanvasRenderingContext2D, time: number, dense: boolean, tone: string,
+): void {
+  const disc = getFogDisc(tone);
   const n = dense ? 8 : 4;
   const rnd = makeRng(3141);
   ctx.save();

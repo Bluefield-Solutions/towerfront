@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v17 · 07.08.2026
+Stand: nach v18 · 07.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Kristallwacht-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
@@ -30,8 +30,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | C16 | Turm, der ausschließlich Luftziele trifft (Gegenstück zum Mörser) | ●● | M |
 | C6 | Heiler, regeneriert Umstehende | ●● | M |
 | C7 | Schildgegner, absorbiert die ersten n Treffer | ●● | S |
-| C9 | Karte 2 und 3 mit eigenem Biom und eigener Pfadform | ●●● | L |
-| C10 | Zwei Pfade, die sich vereinen — echte Prioritätsentscheidung | ●●● | M |
+| C24 | Karte 4 mit einer Mechanik statt nur einer Form (bewegliche Brücke, Tor, das sich schließt) | ●● | L |
+| C25 | Wellenplan je Karte statt eines gemeinsamen — erst sinnvoll, wenn der Ausgleichsfaktor nicht mehr reicht | ●● | M |
 | C12 | Endlosmodus nach Welle 15 mit fortlaufender Skalierung | ●● | S |
 | C17 | Dritte Fähigkeit, die Gold statt Schaden bringt (Ernte mit Abklingzeit) | ●● | S |
 | C18 | Fähigkeiten zwischen Karten freischalten statt von Anfang an verfügbar | ●● | M |
@@ -79,6 +79,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S36 | Beide neuen Karten waren beim ersten Lauf für **jeden** Spielstil unspielbar, obwohl der Wellenplan derselbe ist | Zwei Zuwege halbieren die Deckung — ein Turm sieht nur eine Seite. Erst Geometrie (längere Wege, frühere Vereinigung), dann ein Ausgleichsfaktor je Karte. |
+| S37 | Frostspalte brauchte zunächst einen Ausgleich von 0,34 — außerhalb der Wächtergrenze von 0,4 bis 1,6 | Die Grenze wurde nicht gedehnt, sondern die Karte geändert: Vereinigung vorgezogen, danach reichten 0,62. Die Regel dahinter: braucht eine Karte einen extremeren Ausgleich, stimmt die Karte nicht. |
 | S35 | Erbarmungslos war zunächst mit 15 % weniger Einkommen angesetzt — **kein** Spielstil kam durch, auch nicht mit mehr Kristall und milderer Kurve | Das Einkommen ist die empfindlichste Schraube im Spiel: 15 % weniger brechen den Lauf, 30 % mehr Lebenspunkte ändern kaum etwas. Der harte Grad läuft jetzt mit 95 % Einkommen. |
 | S34 | Aussehen lässt sich nicht automatisch beurteilen — *Gleichheit* aber schon, und die ist der eigentliche Fehler | Wächter prüft eindeutige Zweig-Bezeichner (daran hängt die Form), Rauchtest prüft, dass für jeden Zweig ein eigenes Bild entsteht. Beide Gegenproben schlagen an. |
 | S32 | Vor der Grafikrunde standen 2.874 von 3.000 Zeichenbefehlen — zu eng für Politur. Größter Posten: 907 Teilchen-Rechtecke | Obergrenze für Teilchen eingeführt (620/180). Danach passte mehr Grafik in *weniger* Befehle: 2.576. |

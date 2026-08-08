@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v17 · 07.08.2026
+Stand: v18 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -305,6 +305,41 @@ jederzeit wiederherstellbar. Ein Fehlversuch kostet eine Minute, nicht einen
 Abend.
 
 ---
+
+### 3.18 Was zwei Zuwege mit der Balance machen
+
+Beide neuen Karten waren beim ersten Lauf **unspielbar** — kein einziger
+Spielstil kam durch, obwohl der Wellenplan derselbe ist.
+
+Der Grund ist geometrisch: Zwei Zuwege halbieren die Deckung. Ein Turm sieht
+nur eine der beiden Seiten, solange die Bahnen getrennt laufen. Dasselbe Feld
+leistet auf einer zweispurigen Karte also deutlich weniger, ohne dass sich an
+einer einzigen Zahl etwas geändert hätte.
+
+Zwei Antworten darauf, in dieser Reihenfolge:
+
+**Erst die Geometrie.** Die Wege wurden verlängert und die gemeinsame Strecke
+vergrößert — Ascheschlucht von 43 auf 54 Pfadzellen, die Vereinigung früh statt
+in der Mitte. Damit deckt der größte Teil der Türme beide Seiten.
+
+**Dann ein Ausgleich je Karte.** Jede Karte trägt einen eigenen Faktor auf
+Lebenspunkte und Einkommen. Die Alternative wäre gewesen, den Wellenplan je
+Karte zu verdoppeln — dann müsste jede spätere Balanceänderung dreifach gemacht
+werden.
+
+Und der Wächter begrenzt diesen Faktor auf 0,4 bis 1,6. Das ist die
+eigentliche Regel dahinter: **Braucht eine Karte einen extremeren Ausgleich,
+stimmt die Karte nicht, nicht der Faktor.** Genau das ist passiert — Frostspalte
+brauchte zunächst 0,34. Statt die Grenze zu dehnen, wurde die Vereinigung
+vorgezogen; danach reichten 0,62.
+
+Aktueller Stand auf Normal:
+
+```
+Spiralhain      Meister 15/20   Breite 15/20   Sparsam  6/20
+Ascheschlucht   Meister 10/20   Breite W13     Sparsam 10/20
+Frostspalte     Meister 13/20   Breite W14     Sparsam  7/20
+```
 
 ### 3.17 Jeder Grad bekommt eine eigene Prüfung
 
@@ -653,7 +688,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v17
+## 5. Stand v18
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -713,6 +748,25 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v18 — drei Karten, zwei davon mit Gabelung.**
+
+| Karte | Zuwege | Pfadzellen | Bauplätze | Biom |
+|---|---|---|---|---|
+| Spiralhain | 1 | 43 | 171 | Mondmoos, kaltes Blaugrün |
+| Ascheschlucht | 2, früh vereint | 54 | 147 | Asche und Lava, warmes Braunrot |
+| Frostspalte | 2, spät vereint | 38 | 120 | Gletscher, kaltes Stahlblau |
+
+Jede Karte bringt ihre eigene Farbwelt mit — Boden, Pfad, Felsen, Lichtstimmung
+und Nebelton. Kristall, Gold und Gefahr bleiben überall gleich, damit die
+Bedeutung der Farben nicht von der Karte abhängt.
+
+Auf mehrspurigen Karten werden die Bahnen abwechselnd bedient, damit eine Welle
+nicht zufällig nur einen Zuweg belastet. Jedes Tor dreht sich zur Bahn hin — man
+sieht auf einen Blick, aus welchen Richtungen es kommt.
+
+Karte und Schwierigkeitsgrad werden auf dem Titelbildschirm gewählt, der
+Bestwert wird je Kombination getrennt geführt.
 
 **Neu in v17 — drei Schwierigkeitsgrade, wählbar auf dem Titelbildschirm.**
 Nicht ein einzelner Regler, sondern ein ganzer Satz Kurvenparameter — die

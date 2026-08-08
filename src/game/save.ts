@@ -16,8 +16,9 @@ import type { DifficultyId } from '../data/difficulty';
  *  wegzulassen war bequem, aber falsch: die Determinismus-Pruefung hat gezeigt,
  *  dass eine fortgesetzte Partie dadurch messbar anders verlaeuft. */
 export interface SaveGame {
-  v: 5;
+  v: 6;
   difficulty: DifficultyId;
+  map: string;
   seed: number;
   rng: number;
   gold: number;
@@ -43,7 +44,7 @@ export interface SaveGame {
     number, number, number, number, number, number, number, number, number, string,
   ][];
   /** [Zeit, Gegnerart, Lebenspunktfaktor] */
-  pending: [number, EnemyId, number][];
+  pending: [number, EnemyId, number, number][];
   /** Rest der Trefferpause - sie haelt die Simulation an und gehoert deshalb
    *  in den Stand, obwohl sie sich wie ein Effekt anfuehlt. */
   hitstop: number;
@@ -59,7 +60,11 @@ export interface SaveGame {
    *  veraendern. */
   towers: [TowerId, number, number, number, number, number, number, number, BranchIndex, number][];
   /** [Gegnerart, x, y, hp, hpMax, Segment, Strecke, Bremsfaktor, Bremsrest, Wackeln] */
-  enemies: [EnemyId, number, number, number, number, number, number, number, number, number][];
+  /** [Gegnerart, x, y, hp, hpMax, Segment, Strecke, Bremsfaktor, Bremsrest,
+   *  Wackeln, Bahn] */
+  enemies: [
+    EnemyId, number, number, number, number, number, number, number, number, number, number,
+  ][];
 }
 
 const KEY = 'kristallwacht.lauf';
@@ -74,7 +79,7 @@ export function loadGame(): SaveGame | null {
     if (!raw) return null;
     const p = JSON.parse(raw) as SaveGame;
     // Ein Stand aus einer aelteren Fassung wird verworfen statt halb geladen.
-    if (p.v !== 5 || !Array.isArray(p.towers) || !Array.isArray(p.enemies)) return null;
+    if (p.v !== 6 || !Array.isArray(p.towers) || !Array.isArray(p.enemies)) return null;
     return p;
   } catch {
     return null;

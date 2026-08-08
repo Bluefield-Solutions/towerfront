@@ -8,6 +8,7 @@ import {
 import { Sfx } from '../core/audio';
 import { getBest, getSettings, saveSettings } from '../core/storage';
 import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../data/difficulty';
+import { MAPS, mapById } from '../data/maps';
 import { spriteCount } from '../gfx/sprites';
 import { clearGame, loadGame } from '../game/save';
 import { TUTORIAL, type TutorialStep } from '../game/tutorial';
@@ -42,6 +43,7 @@ export class UI {
   private sText = $('s-text');
   private sBest = $('s-best');
   private sGrades = $('s-grades');
+  private sMaps = $('s-maps');
   private sStats = $('s-stats');
   private sAction = $<HTMLButtonElement>('s-action');
   private sResume = $<HTMLButtonElement>('s-resume');
@@ -98,6 +100,15 @@ export class UI {
       this.skillBtns.set(id, b);
     }
 
+    this.sMaps.addEventListener('click', (ev) => {
+      const b = (ev.target as HTMLElement).closest('button');
+      if (!b?.dataset.map) return;
+      Sfx.unlock(); Sfx.play('tap');
+      saveSettings({ map: b.dataset.map });
+      this.s.loadMap(b.dataset.map);
+      this.showScreen('title');
+    });
+
     // Schwierigkeitsgrad waehlbar, bevor es losgeht.
     this.sGrades.addEventListener('click', (ev) => {
       const b = (ev.target as HTMLElement).closest('button');
@@ -143,7 +154,7 @@ export class UI {
     });
     this.sAction.addEventListener('click', () => {
       Sfx.unlock();
-      this.s.reset(undefined, getSettings().difficulty);
+      this.s.reset(undefined, getSettings().difficulty, getSettings().map);
       // Die Einfuehrung laeuft nur bei einem neuen Spiel, nie beim Fortsetzen.
       this.tutStep = getSettings().tutorial ? 0 : -1;
     });
@@ -176,20 +187,25 @@ export class UI {
     const s = this.s;
     this.screen.hidden = false;
     const shown = kind === 'title' ? getSettings().difficulty : s.difficulty;
-    const best = getBest(shown);
+    const shownMap = kind === 'title' ? getSettings().map : s.map.id;
+    const best = getBest(shownMap, shown);
     const gradeName = DIFFICULTIES[shown].name;
+    const mapName = mapById(shownMap).name;
     this.sBest.textContent = best.wave > 0
-      ? `Bester Lauf auf ${gradeName}: Welle ${best.wave}${best.lives ? `, Kristall ${best.lives}` : ''}`
+      ? `Bester Lauf · ${mapName} · ${gradeName}: Welle ${best.wave}` +
+        `${best.lives ? `, Kristall ${best.lives}` : ''}`
       : '';
 
     this.sGrades.hidden = kind !== 'title';
-    if (kind === 'title') this.renderGrades();
+    this.sMaps.hidden = kind !== 'title';
+    if (kind === 'title') { this.renderMaps(); this.renderGrades(); }
 
     const save = kind === 'title' ? loadGame() : null;
     if (save) {
       this.sResume.hidden = false;
       this.sResume.textContent =
-        `Partie fortsetzen · Welle ${Math.min(save.waveIndex + 1, s.totalWaves)}, Kristall ${save.lives}`;
+        `Fortsetzen · ${mapById(save.map).name} · Welle ` +
+        `${Math.min(save.waveIndex + 1, s.totalWaves)}, Kristall ${save.lives}`;
       this.sAction.textContent = 'Neu beginnen';
     } else {
       this.sResume.hidden = true;
@@ -198,7 +214,7 @@ export class UI {
     if (kind === 'title') this.sStats.hidden = true; else this.renderStats();
 
     if (kind === 'title') {
-      this.sEyebrow.textContent = `Spiralhain · Karte 1 · ${VERSION}`;
+      this.sEyebrow.textContent = `${mapName} · ${gradeName} · ${VERSION}`;
       this.sTitle.textContent = 'Kristallwacht';
       this.sText.textContent =
         'Der Herzkristall liegt am Ende des Pfades. Baue Türme auf das Gras, halte die Leere auf, überstehe fünfzehn Wellen. Früh gestartete Wellen bringen zusätzliches Gold.';
@@ -211,7 +227,7 @@ export class UI {
         `Kristallpunkten übrig, ${s.towers.length} Türme im Feld.`;
       this.sAction.textContent = 'Noch einmal';
     } else {
-      this.sEyebrow.textContent = `Welle ${s.waveNumber} von ${s.totalWaves}`;
+      this.sEyebrow.textContent = `${mapName} · Welle ${s.waveNumber} von ${s.totalWaves}`;
       this.sTitle.textContent = 'Der Kristall zerbricht';
       this.sText.textContent =
         'Die Leere ist durchgekommen. Mehr Türme an den Kurven, früher ausbauen — und den Mörser gegen dichte Gruppen einsetzen.';
@@ -220,6 +236,15 @@ export class UI {
   }
 
   hideScreen(): void { this.screen.hidden = true; }
+
+  private renderMaps(): void {
+    const cur = getSettings().map;
+    this.sMaps.innerHTML = MAPS.map((m) => {
+      const lanes = m.lanes.length > 1 ? `${m.lanes.length} Zuwege` : 'ein Zuweg';
+      return `<button class="grade" data-map="${m.id}" data-on="${m.id === cur ? 1 : 0}">` +
+        `<b>${m.name}</b><span>${m.blurb}<br>${lanes}</span></button>`;
+    }).join('');
+  }
 
   private renderGrades(): void {
     const cur = getSettings().difficulty;

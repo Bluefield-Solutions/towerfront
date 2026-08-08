@@ -50,8 +50,9 @@ export const DIFFICULTIES: Record<DifficultyId, DifficultyDef> = {
 
 export const DIFFICULTY_ORDER: DifficultyId[] = ['ruhig', 'normal', 'erbarmungslos'];
 
-/** Lebenspunktfaktor der Welle mit dem Index i (0-basiert). */
-export function hpScale(d: DifficultyDef, i: number, waveCount: number): number {
+/** Lebenspunktfaktor der Welle mit dem Index i (0-basiert).
+ *  `mapMul` ist der Ausgleich der Karte - siehe GameMap.balance. */
+export function hpScale(d: DifficultyDef, i: number, waveCount: number, mapMul = 1): number {
   const t = i / Math.max(1, waveCount - 1);
-  return 1 + Math.pow(t, d.hpCurve) * d.hpEnd;
+  return 1 + Math.pow(t, d.hpCurve) * d.hpEnd * mapMul;
 }

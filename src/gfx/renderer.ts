@@ -18,6 +18,7 @@ import { drawAurora, drawGroundFog, getMoodLayer } from './atmosphere';
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
   private terrain: HTMLCanvasElement | null = null;
+  private terrainFor = '';
   private sky: HTMLCanvasElement | null = null;
   /** Alle Turmsockel in einem Bild. Wird nur neu gebacken, wenn sich am
    *  Bestand etwas aendert - nicht in jedem Bild. */
@@ -55,7 +56,11 @@ export class Renderer {
 
   draw(s: GameState): void {
     const ctx = this.ctx;
-    if (!this.terrain) this.terrain = bakeTerrain(s.pathSet, s.blockedSet);
+    if (!this.terrain || this.terrainFor !== s.map.id) {
+      this.terrain = bakeTerrain(s.pathSet, s.blockedSet, s.map.palette);
+      this.terrainFor = s.map.id;
+      this.towerLayerVersion = -1;
+    }
     if (!this.sky) this.sky = this.bakeSky();
     const hi = s.quality === 'hoch';
 
@@ -71,7 +76,7 @@ export class Renderer {
     ctx.scale(this.scale, this.scale);
 
     ctx.drawImage(this.terrain!, 0, 0);
-    ctx.drawImage(getMoodLayer(), 0, 0);
+    ctx.drawImage(getMoodLayer(s.map.palette), 0, 0);
     if (hi) drawAurora(ctx, s.crystalPulse);
 
     this.drawPortal(s, hi);
@@ -84,7 +89,7 @@ export class Renderer {
     this.drawProjectiles(s, hi);
     this.drawBolts(s);
     this.drawParticles(s);
-    drawGroundFog(ctx, s.crystalPulse, hi);
+    drawGroundFog(ctx, s.crystalPulse, hi, s.map.palette.haze);
     this.drawMeteors(s, hi);
     this.drawGhost(s);
     this.drawAim(s);
@@ -141,22 +146,30 @@ export class Renderer {
 
   // ------------------------------------------------------------- Welt
 
+  /** Ein Tor je Bahn - auf mehrspurigen Karten sieht man auf einen Blick,
+   *  aus wie vielen Richtungen es kommt. Das Tor dreht sich zur Bahn hin. */
   private drawPortal(s: GameState, hi: boolean): void {
     const ctx = this.ctx;
-    const p = s.points[0];
     const t = s.crystalPulse;
-    const x = p.x + TILE * 0.35;
-    if (hi) stampGlow(ctx, C.voidling, x, p.y, 72, 0.5 + Math.sin(t * 2) * 0.1);
-    ctx.save();
-    ctx.translate(x, p.y);
-    ctx.strokeStyle = hexA(C.voidling, 0.9);
-    ctx.lineWidth = 4;
-    for (let i = 0; i < 3; i++) {
-      const r = 16 + i * 9 + Math.sin(t * 3 - i) * 3;
-      ctx.globalAlpha = 0.8 - i * 0.22;
-      ctx.beginPath(); ctx.ellipse(0, 0, r * 0.4, r, 0, 0, Math.PI * 2); ctx.stroke();
+    for (const lane of s.lanes) {
+      const p = lane[0], nx = lane[1] ?? p;
+      const ang = Math.atan2(nx.y - p.y, nx.x - p.x);
+      const x = p.x + Math.cos(ang) * TILE * 0.35;
+      const y = p.y + Math.sin(ang) * TILE * 0.35;
+      if (hi) stampGlow(ctx, C.voidling, x, y, 72, 0.5 + Math.sin(t * 2) * 0.1);
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(ang);
+      ctx.strokeStyle = hexA(C.voidling, 0.9);
+      ctx.lineWidth = 4;
+      for (let i = 0; i < 3; i++) {
+        const r = 16 + i * 9 + Math.sin(t * 3 - i) * 3;
+        ctx.globalAlpha = 0.8 - i * 0.22;
+        ctx.beginPath(); ctx.ellipse(0, 0, r * 0.4, r, 0, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.restore();
     }
-    ctx.restore();
+    ctx.globalAlpha = 1;
   }
 
   private drawBuildOverlay(s: GameState): void {
@@ -438,7 +451,8 @@ export class Renderer {
         if (def.flying) {
           ctx.rotate(Math.atan2(s.goal.y - e.y, s.goal.x - e.x));
         } else if (rotating) {
-          const nx = s.points[Math.min(e.seg + 1, s.points.length - 1)];
+          const path = s.lanes[e.lane] ?? s.lanes[0];
+          const nx = path[Math.min(e.seg + 1, path.length - 1)];
           ctx.rotate(Math.atan2(nx.y - e.y, nx.x - e.x));
         }
         drawSprite(ctx, getEnemySprite(e.def, false, frame), 0, 0);

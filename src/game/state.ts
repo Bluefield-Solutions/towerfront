@@ -9,7 +9,10 @@ import {
   DIFFICULTIES, hpScale, type DifficultyDef, type DifficultyId,
 } from '../data/difficulty';
 import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
-import { MAP_SPIRALHAIN, cellCenter, cellKey, pathCells, pathLength, pathPoints } from '../data/maps';
+import {
+  MAPS, mapById, cellCenter, cellKey, goalOf, laneCells, lanePoints, pathCells, pathLength,
+  type GameMap,
+} from '../data/maps';
 import type { Vec } from '../core/math';
 import { dist, dist2 } from '../core/math';
 import { Sfx } from '../core/audio';
@@ -23,7 +26,7 @@ import type {
   Ring, RunStats, Tower,
 } from './types';
 
-interface PendingSpawn { time: number; enemy: EnemyId; hpMul: number; }
+interface PendingSpawn { time: number; enemy: EnemyId; hpMul: number; lane: number; }
 
 function emptyStats(): RunStats {
   return {
@@ -33,16 +36,20 @@ function emptyStats(): RunStats {
 }
 
 export class GameState {
-  readonly map = MAP_SPIRALHAIN;
-  readonly points: Vec[] = pathPoints(this.map);
+  /** Die Karte kann zwischen zwei Partien wechseln, deshalb ist hier nichts
+   *  mehr fest verdrahtet. */
+  map: GameMap = MAPS[0];
+  /** Die Bahnen in Weltkoordinaten. Eine Karte kann mehrere Zuwege haben,
+   *  die sich unterwegs vereinen. */
+  lanes: Vec[][] = [];
   readonly pathSet = new Set<number>();
   readonly blockedSet = new Set<number>();
-  readonly goal: Vec;
-  /** Gesamtlaenge des Pfades. Dient als gemeinsamer Massstab, damit fliegende
-   *  und laufende Gegner beim Zielen "vorderster zuerst" vergleichbar sind. */
-  readonly pathTotal = pathLength(this.points);
-  /** Luftlinie vom Eintrittspunkt zum Kristall - der Massstab der Flieger. */
-  readonly airTotal: number;
+  goal: Vec = { x: 0, y: 0 };
+  /** Gesamtlaenge der laengsten Bahn. Dient als gemeinsamer Massstab, damit
+   *  fliegende und laufende Gegner beim Zielen vergleichbar sind. */
+  pathTotal = 1;
+  /** Luftlinie vom weitesten Tor zum Kristall - der Massstab der Flieger. */
+  airTotal = 1;
 
   phase: Phase = 'title';
   /** Der gewaehlte Schwierigkeitsgrad. Er verstellt Startwerte, Kurvenform,
@@ -138,12 +145,25 @@ export class GameState {
     pts: [], color: '#fff', life: 0, maxLife: 1,
   }), 40);
 
-  constructor() {
+  constructor(mapId = MAPS[0].id) {
+    this.loadMap(mapId);
+  }
+
+  /** Setzt die Karte. Alles, was von ihr abhaengt, wird hier neu berechnet -
+   *  so gibt es keinen Zustand, der zur alten Karte gehoert. */
+  loadMap(mapId: string): void {
+    this.map = mapById(mapId);
+    this.lanes = this.map.lanes.map(lanePoints);
+    this.pathSet.clear();
+    this.blockedSet.clear();
     for (const c of pathCells(this.map)) this.pathSet.add(cellKey(c.x, c.y));
     for (const b of this.map.blocked) this.blockedSet.add(cellKey(b.x, b.y));
-    const last = this.map.waypoints[this.map.waypoints.length - 1];
-    this.goal = cellCenter(last.x, last.y);
-    this.airTotal = dist(this.points[0].x, this.points[0].y, this.goal.x, this.goal.y);
+    this.goal = goalOf(this.map);
+    this.pathTotal = Math.max(...this.lanes.map(pathLength));
+    this.airTotal = Math.max(...this.lanes.map(
+      (l) => dist(l[0].x, l[0].y, this.goal.x, this.goal.y),
+    ));
+    void laneCells;
   }
 
   // ---------------------------------------------------------------- Bauen
@@ -240,12 +260,18 @@ export class GameState {
     // Spaetere Wellen kommen dichter: was zaehlt, ist die Huelle je Sekunde.
     const dense = 1 + this.waveIndex * this.diff.densityRamp;
     this.pending = [];
+    // Auf mehrspurigen Karten werden die Bahnen abwechselnd bedient, damit
+    // eine Welle nicht zufaellig nur einen Zuweg belastet.
+    const laneCount = this.lanes.length;
+    let laneTurn = this.waveIndex % laneCount;
     for (const g of wave.groups) {
       for (let i = 0; i < g.count; i++) {
         this.pending.push({
           time: g.delay + (i * g.gap) / dense,
           enemy: g.enemy, hpMul: g.hpMul ?? 1,
+          lane: laneTurn % laneCount,
         });
+        laneTurn++;
       }
     }
     this.pending.sort((a, b) => a.time - b.time);
@@ -257,7 +283,7 @@ export class GameState {
 
   private finishWave(): void {
     const wave = WAVES[this.waveIndex];
-    const payout = Math.round(wave.bonus * this.diff.bonusMul);
+    const payout = Math.round(wave.bonus * this.diff.bonusMul * this.map.balance.goldMul);
     this.gold += payout;
     this.stats.goldEarned += payout;
     this.float(this.goal.x, this.goal.y - 56, `Welle geschafft  +${payout}`, C.gold, 26);
@@ -267,7 +293,7 @@ export class GameState {
     if (this.waveIndex >= WAVES.length) {
       this.phase = 'won';
       clearGame();
-      recordRun(this.difficulty, WAVES.length, this.lives);
+      recordRun(this.map.id, this.difficulty, WAVES.length, this.lives);
       Sfx.play('win');
     }
   }
@@ -376,7 +402,7 @@ export class GameState {
       this.waveTime += dt;
       while (this.pending.length && this.pending[0].time <= this.waveTime) {
         const p = this.pending.shift()!;
-        this.spawnEnemy(p.enemy, p.hpMul);
+        this.spawnEnemy(p.enemy, p.hpMul, p.lane);
       }
       if (!this.pending.length && !this.enemies.length) this.finishWave();
     }
@@ -399,22 +425,23 @@ export class GameState {
       this.lives = 0;
       this.phase = 'lost';
       clearGame();
-      recordRun(this.difficulty, this.waveNumber - 1, 0);
+      recordRun(this.map.id, this.difficulty, this.waveNumber - 1, 0);
       Sfx.play('lose');
     }
   }
 
-  private spawnEnemy(id: EnemyId, hpMul: number): void {
+  private spawnEnemy(id: EnemyId, hpMul: number, lane: number): void {
     const def = ENEMIES[id];
-    const p0 = this.points[0];
-    const ramp = hpScale(this.diff, this.waveIndex, WAVES.length);
+    const ln = lane % this.lanes.length;
+    const p0 = this.lanes[ln][0];
+    const ramp = hpScale(this.diff, this.waveIndex, WAVES.length, this.map.balance.hpMul);
     const hp = Math.round(def.hp * hpMul * ramp);
     // Flieger starten leicht versetzt, damit ein Schwarm nicht als eine Linie
     // uebereinander liegt.
     const off = def.flying ? (this.rng.next() - 0.5) * TILE * 2.2 : 0;
     this.enemies.push({
       id: this.nextId++, def: id, x: p0.x, y: p0.y + off,
-      hp, hpMax: hp, speed: def.speed, seg: 0, travelled: 0,
+      hp, hpMax: hp, speed: def.speed, lane: ln, seg: 0, travelled: 0,
       slowFactor: 1, slowLeft: 0, hitFlash: 0, wobble: this.rng.next() * 9,
       dead: false, leaked: false,
     });
@@ -431,7 +458,7 @@ export class GameState {
         id: this.nextId++, def: rule.into,
         x: parent.x + spread, y: parent.y + (this.rng.next() - 0.5) * 10,
         hp, hpMax: hp, speed: child.speed,
-        seg: parent.seg, travelled: Math.max(0, parent.travelled - 6),
+        lane: parent.lane, seg: parent.seg, travelled: Math.max(0, parent.travelled - 6),
         slowFactor: parent.slowFactor, slowLeft: parent.slowLeft,
         hitFlash: 0, wobble: this.rng.next() * 9,
         dead: false, leaked: false,
@@ -469,9 +496,10 @@ export class GameState {
         continue;
       }
 
+      const path = this.lanes[e.lane] ?? this.lanes[0];
       let move = e.speed * e.slowFactor * dt;
-      while (move > 0 && e.seg < this.points.length - 1) {
-        const to = this.points[e.seg + 1];
+      while (move > 0 && e.seg < path.length - 1) {
+        const to = path[e.seg + 1];
         const d = dist(e.x, e.y, to.x, to.y);
         if (d <= move) {
           e.x = to.x; e.y = to.y; e.travelled += d; move -= d; e.seg++;
@@ -483,7 +511,7 @@ export class GameState {
           move = 0;
         }
       }
-      if (e.seg >= this.points.length - 1) {
+      if (e.seg >= path.length - 1) {
         this.leak(e, edef);
         leaked = true;
       }
@@ -603,10 +631,11 @@ export class GameState {
 
   /** Vorhalten: wohin laeuft der Gegner in der Flugzeit des Geschosses. */
   private predict(e: Enemy, flight: number): Vec {
+    const path = this.lanes[e.lane] ?? this.lanes[0];
     let x = e.x, y = e.y, seg = e.seg;
     let move = e.speed * e.slowFactor * flight;
-    while (move > 0 && seg < this.points.length - 1) {
-      const to = this.points[seg + 1];
+    while (move > 0 && seg < path.length - 1) {
+      const to = path[seg + 1];
       const d = dist(x, y, to.x, to.y);
       if (d <= move) { x = to.x; y = to.y; move -= d; seg++; }
       else { const k = move / d; x += (to.x - x) * k; y += (to.y - y) * k; move = 0; }
@@ -762,7 +791,7 @@ export class GameState {
     Sfx.play('hit');
     if (e.hp <= 0) {
       e.dead = true;
-      const bounty = Math.max(1, Math.round(def.bounty * this.diff.bountyMul));
+      const bounty = Math.max(1, Math.round(def.bounty * this.diff.bountyMul * this.map.balance.goldMul));
       this.gold += bounty;
       this.stats.goldEarned += bounty;
       this.stats.kills++;
@@ -904,10 +933,15 @@ export class GameState {
 
   get diff(): DifficultyDef { return DIFFICULTIES[this.difficulty]; }
 
-  reset(seed = newSeed(), difficulty: DifficultyId = this.difficulty): void {
+  reset(
+    seed = newSeed(),
+    difficulty: DifficultyId = this.difficulty,
+    mapId: string = this.map.id,
+  ): void {
     this.seed = seed;
     this.rng.state = seed;
     this.difficulty = difficulty;
+    if (mapId !== this.map.id) this.loadMap(mapId);
     clearGame();
     const d = DIFFICULTIES[difficulty];
     this.gold = d.startGold;
@@ -944,8 +978,9 @@ export class GameState {
   /** Nur das, was den Verlauf bestimmt. Reine Darstellung bleibt draussen. */
   snapshot(): SaveGame {
     return {
-      v: 5,
+      v: 6,
       difficulty: this.difficulty,
+      map: this.map.id,
       seed: this.seed,
       rng: this.rng.state,
       gold: this.gold,
@@ -968,13 +1003,14 @@ export class GameState {
         p.owner ? this.towers.indexOf(p.owner) : -1,
         p.speed, p.damage, p.slow, p.slowTime, p.splash, p.pierce, p.t, p.dur, p.life, p.color,
       ]) as unknown as SaveGame['shots'],
-      pending: this.pending.map((p) => [p.time, p.enemy, p.hpMul]),
+      pending: this.pending.map((p) => [p.time, p.enemy, p.hpMul, p.lane]),
       towers: this.towers.map((t) => [
         t.def, t.cx, t.cy, t.level, t.kills, t.damageDone, t.cooldownLeft, t.retargetIn, t.branch,
         t.target ? this.enemies.indexOf(t.target) : -1,
       ]) as SaveGame['towers'],
       enemies: this.enemies.map((e) => [
         e.def, e.x, e.y, e.hp, e.hpMax, e.seg, e.travelled, e.slowFactor, e.slowLeft, e.wobble,
+        e.lane,
       ]),
     };
   }
@@ -983,14 +1019,15 @@ export class GameState {
    *  Stand nicht zu den aktuellen Daten passt - dann wird er verworfen statt
    *  halb geladen. */
   restore(save: SaveGame): boolean {
-    if (save.v !== 5) return false;
+    if (save.v !== 6) return false;
+    if (!MAPS.some((m) => m.id === save.map)) return false;
     if (!(save.difficulty in DIFFICULTIES)) return false;
     if (save.waveIndex < 0 || save.waveIndex > WAVES.length) return false;
     for (const [id] of save.towers) if (!(id in TOWERS)) return false;
     for (const [id] of save.enemies) if (!(id in ENEMIES)) return false;
     for (const [, id] of save.pending) if (!(id in ENEMIES)) return false;
 
-    this.reset(save.seed, save.difficulty);
+    this.reset(save.seed, save.difficulty, save.map);
     this.rng.state = save.rng;
     this.gold = save.gold;
     this.lives = save.lives;
@@ -1003,7 +1040,8 @@ export class GameState {
     if (save.stats) this.stats = { ...emptyStats(), ...save.stats };
     this.time = save.time;
     this.speed = save.speed === 2 || save.speed === 3 ? save.speed : 1;
-    this.pending = save.pending.map(([time, enemy, hpMul]) => ({ time, enemy, hpMul }));
+    this.pending = save.pending.map(([time, enemy, hpMul, lane]) =>
+      ({ time, enemy, hpMul, lane: lane ?? 0 }));
     for (const [id, cd] of save.abilityCd ?? []) {
       if (id in this.abilityCd) this.abilityCd[id] = Math.max(0, cd);
     }
@@ -1027,10 +1065,11 @@ export class GameState {
     }
     this.towersVersion++;
 
-    for (const [def, x, y, hp, hpMax, seg, travelled, slowFactor, slowLeft, wobble] of save.enemies) {
+    for (const [def, x, y, hp, hpMax, seg, travelled, slowFactor, slowLeft, wobble, lane]
+      of save.enemies) {
       this.enemies.push({
         id: this.nextId++, def, x, y, hp, hpMax,
-        speed: ENEMIES[def].speed, seg, travelled,
+        speed: ENEMIES[def].speed, lane: lane ?? 0, seg, travelled,
         slowFactor, slowLeft, hitFlash: 0, wobble,
         dead: false, leaked: false,
       });

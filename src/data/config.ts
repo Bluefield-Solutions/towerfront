@@ -3,7 +3,7 @@
 
 /** Wird auf dem Titelbildschirm angezeigt - so ist immer sichtbar,
  *  welcher Stand gerade im Browser liegt. */
-export const VERSION = 'v17';
+export const VERSION = 'v18';
 
 export const TILE = 80;
 export const COLS = 20;

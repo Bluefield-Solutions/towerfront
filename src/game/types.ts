@@ -7,6 +7,8 @@ export interface Enemy {
   x: number; y: number;
   hp: number; hpMax: number;
   speed: number;
+  /** Auf welcher Bahn der Gegner laeuft. */
+  lane: number;
   seg: number;       // Index des aktuellen Pfadsegments
   travelled: number; // Zurueckgelegte Strecke - Basis fuer "vorderstes Ziel"
   slowFactor: number;

@@ -7,7 +7,7 @@ import { DIFFICULTIES, DIFFICULTY_ORDER, hpScale } from '../src/data/difficulty'
 const NORMAL = DIFFICULTIES.normal;
 const START_GOLD = NORMAL.startGold;
 const START_LIVES = NORMAL.startLives;
-import { MAPS, cellKey, pathCells } from '../src/data/maps';
+import { MAPS, cellKey, laneCells, pathCells } from '../src/data/maps';
 import { TOWERS, TOWER_ORDER } from '../src/data/towers';
 import { ENEMIES } from '../src/data/enemies';
 import { WAVES } from '../src/data/waves';
@@ -22,48 +22,79 @@ const isHex = (s: string) => /^#[0-9A-Fa-f]{6}$/.test(s);
 // ------------------------------------------------------------------ Karten
 
 for (const map of MAPS) {
-  let cells;
-  try { cells = pathCells(map); } catch (e) { fail(`${map.id}: ${(e as Error).message}`); continue; }
+  if (!map.name || !map.blurb) fail(`${map.id}: Name oder Beschreibung fehlt.`);
+  if (!map.lanes.length) { fail(`${map.id}: keine Bahn.`); continue; }
 
-  // Pfad darf sich nicht selbst kreuzen - das verwirrt beim Lesen der Karte.
-  const seen = new Set<number>();
-  const wps = map.waypoints;
-  let raw = 0;
-  for (let i = 0; i < wps.length - 1; i++) {
-    const a = wps[i], b = wps[i + 1];
-    const sx = Math.sign(b.x - a.x), sy = Math.sign(b.y - a.y);
-    let x = a.x, y = a.y;
-    for (;;) {
-      if (x >= 0 && y >= 0 && x < COLS && y < ROWS) {
-        raw++;
-        const k = cellKey(x, y);
-        if (seen.has(k) && !(i > 0 && x === a.x && y === a.y)) {
-          fail(`${map.id}: Pfad kreuzt sich bei Zelle ${x}/${y}.`);
+  // Innerhalb einer Bahn darf keine Zelle zweimal vorkommen - ein Weg, der
+  // sich selbst kreuzt, ist auf einen Blick nicht mehr lesbar. Zwischen zwei
+  // Bahnen ist eine gemeinsame Zelle dagegen genau das Gewuenschte: dort
+  // laufen sie zusammen.
+  let laneCellLists: ReturnType<typeof laneCells>[];
+  try {
+    laneCellLists = map.lanes.map(laneCells);
+  } catch (e) { fail(`${map.id}: ${(e as Error).message}`); continue; }
+
+  for (let i = 0; i < map.lanes.length; i++) {
+    const lane = map.lanes[i];
+    const seen = new Set<number>();
+    let raw = 0;
+    for (let k = 0; k < lane.length - 1; k++) {
+      const a = lane[k], b = lane[k + 1];
+      const sx = Math.sign(b.x - a.x), sy = Math.sign(b.y - a.y);
+      let x = a.x, y = a.y;
+      for (;;) {
+        if (x >= 0 && y >= 0 && x < COLS && y < ROWS) {
+          raw++;
+          const key = cellKey(x, y);
+          if (seen.has(key) && !(k > 0 && x === a.x && y === a.y)) {
+            fail(`${map.id}, Bahn ${i + 1}: kreuzt sich selbst bei Zelle ${x}/${y}.`);
+          }
+          seen.add(key);
         }
-        seen.add(k);
+        if (x === b.x && y === b.y) break;
+        x += sx; y += sy;
       }
-      if (x === b.x && y === b.y) break;
-      x += sx; y += sy;
+    }
+    if (raw < 18) warn(`${map.id}, Bahn ${i + 1}: mit ${raw} Zellen sehr kurz.`);
+
+    const end = lane[lane.length - 1];
+    const goal = map.lanes[0][map.lanes[0].length - 1];
+    if (end.x !== goal.x || end.y !== goal.y) {
+      fail(`${map.id}, Bahn ${i + 1}: endet nicht am Herzkristall.`);
+    }
+    if (goal.x < 0 || goal.y < 0 || goal.x >= COLS || goal.y >= ROWS) {
+      fail(`${map.id}: der Herzkristall liegt ausserhalb des Feldes.`);
+    }
+    // Der Start muss ausserhalb liegen - sonst erscheinen Gegner mitten im Feld.
+    const start = lane[0];
+    const outside = start.x < 0 || start.y < 0 || start.x >= COLS || start.y >= ROWS;
+    if (!outside) fail(`${map.id}, Bahn ${i + 1}: beginnt innerhalb des Feldes.`);
+  }
+
+  // Mehrere Bahnen muessen sich vereinen - zwei voellig getrennte Wege waeren
+  // zwei Karten nebeneinander, keine Gabelung.
+  if (map.lanes.length > 1) {
+    const first = new Set(laneCellLists[0].map((c) => cellKey(c.x, c.y)));
+    for (let i = 1; i < laneCellLists.length; i++) {
+      const shared = laneCellLists[i].filter((c) => first.has(cellKey(c.x, c.y))).length;
+      if (shared < 2) {
+        fail(`${map.id}: Bahn ${i + 1} trifft nie auf Bahn 1 - das ist keine Gabelung.`);
+      }
     }
   }
-  if (raw < 25) warn(`${map.id}: Pfad ist mit ${raw} Zellen sehr kurz.`);
 
-  const end = wps[wps.length - 1];
-  if (end.x < 0 || end.y < 0 || end.x >= COLS || end.y >= ROWS) {
-    fail(`${map.id}: Der Herzkristall liegt ausserhalb des Feldes.`);
-  }
-
+  const cells = pathCells(map);
   const pathKeys = new Set(cells.map((c) => cellKey(c.x, c.y)));
   const blockKeys = new Set(map.blocked.map((b) => cellKey(b.x, b.y)));
   for (const b of map.blocked) {
     if (pathKeys.has(cellKey(b.x, b.y))) fail(`${map.id}: Deko-Zelle ${b.x}/${b.y} liegt auf dem Pfad.`);
     if (b.x < 0 || b.y < 0 || b.x >= COLS || b.y >= ROWS) fail(`${map.id}: Deko-Zelle ${b.x}/${b.y} ausserhalb.`);
   }
+
   const hk = cellKey(map.hint.x, map.hint.y);
   if (pathKeys.has(hk) || blockKeys.has(hk)) {
     fail(`${map.id}: der empfohlene Bauplatz ${map.hint.x}/${map.hint.y} ist nicht bebaubar.`);
   }
-  // Er soll auch etwas taugen: mindestens eine Pfadzelle direkt daneben.
   let touches = false;
   for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
     if (pathKeys.has(cellKey(map.hint.x + dx, map.hint.y + dy))) touches = true;
@@ -78,6 +109,23 @@ for (const map of MAPS) {
     }
   }
   if (build < 40) fail(`${map.id}: nur ${build} Bauplaetze - zu wenig Spielraum.`);
+
+  const bal = map.balance;
+  if (bal.hpMul < 0.4 || bal.hpMul > 1.6) {
+    fail(`${map.id}: Ausgleich hpMul ${bal.hpMul} liegt ausserhalb 0,4 bis 1,6 - dann stimmt die Karte nicht, nicht der Faktor.`);
+  }
+  if (bal.goldMul < 0.7 || bal.goldMul > 1.4) {
+    fail(`${map.id}: Ausgleich goldMul ${bal.goldMul} liegt ausserhalb 0,7 bis 1,4.`);
+  }
+
+  // Farbwelt vollstaendig und gueltig.
+  for (const [key, val] of Object.entries(map.palette)) {
+    if (!isHex(val)) fail(`${map.id}: Farbe "${key}" ist ungueltig (${val}).`);
+  }
+  console.log(
+    `  Karte ${map.name}: ${map.lanes.length} Bahn(en), ${cells.length} Pfadzellen, ` +
+    `${build} Bauplaetze, Ausgleich ${bal.hpMul}/${bal.goldMul}`,
+  );
 }
 
 // ------------------------------------------------------------------ Tuerme

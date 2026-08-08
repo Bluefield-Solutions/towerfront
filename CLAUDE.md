@@ -35,15 +35,16 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 ## Befehle
 
 ```
-npm run gate        elf Prüfungen, ~45 s. Muss vor jedem Commit grün sein.
+npm run gate        zwölf Prüfungen, ~80 s. Muss vor jedem Commit grün sein.
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
-npm run bilder      Bildabnahme allein (echte PNG ohne Browser)
+npm run bilder      alle 13 Aufnahmen (echte PNG ohne Browser)
+npm run bildtor     der Querschnitt, den die Torkette prüft
 npm run pack-art    Bildvorrat aus art/roh/ neu einbacken
 npm run eichen      einen Wert durchprobieren, alle Kennzahlen nebeneinander
 ```
 
 Die Torkette: `tsc` → `guards` → `art` → `determinism` → `sim` → `bench` →
-`bench-draw` → `lesbarkeit` → `smoke` → `build` → `autarkie` → `bericht`.
+`bench-draw` → `lesbarkeit` → `bildtor` → `smoke` → `build` → `autarkie` → `bericht`.
 
 ---
 
@@ -64,7 +65,9 @@ zweites Mal kosten.
 5. **Eine Prüfung, die nie etwas meldet, ist kein Beweis.** Wer eine Prüfung
    ändert, baut einen Fehler ein, sieht ob sie anschlägt, nimmt zurück.
 6. **Kein Tor ersetzt den Blick — und kein Blick die Tore.** Elf von 57
-   Befunden kamen aus Bildschirmfotos, keiner davon aus einem Tor.
+   Befunden kamen aus Bildschirmfotos. Seit v47 prüft `bildtor` wenigstens
+   das Mechanische: einfarbige Fläche, falsche Helligkeit, nicht dekodierte
+   Bilder. Ob es *gut aussieht*, sagt es weiterhin nicht.
 7. **Vor dem Justieren den Raum ansehen.** `npm run eichen` probiert einen
    Wert durch und legt alle Kennzahlen nebeneinander. Blind nachjustieren
    heisst, durch ein Schlüsselloch zu schauen: T15 scheiterte so an drei

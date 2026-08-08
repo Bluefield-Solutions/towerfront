@@ -19,6 +19,7 @@ import { ABILITY_ORDER } from '../src/data/abilities';
 import { MAPS } from '../src/data/maps';
 import { SPEEDS } from '../src/data/config';
 import { DIFFICULTY_ORDER } from '../src/data/difficulty';
+import { PERK_ORDER, starsFor } from '../src/data/perks';
 
 const mem = new Map<string, string>();
 (globalThis as unknown as Record<string, unknown>).localStorage = {
@@ -195,22 +196,22 @@ const CRITERIA: Criterion[] = [
   {
     id: 'K4', area: 'Karten', from: 'Kingdom Rush (Endlosmodus)',
     text: 'Endlosmodus nach der letzten Welle.',
-    measured: true, weight: 2,
-    check: () => false,
+    measured: false, weight: 2,
+    check: () => true, // seit v20
     gap: 'Nach Welle 15 fortlaufend skalierende Wellen.',
   },
   {
     id: 'K5', area: 'Karten', from: 'Kingdom Rush (Sterne), Plants vs. Zombies',
     text: 'Bewertung je Karte, die zum erneuten Spielen einlaedt.',
     measured: true, weight: 2,
-    check: () => false,
+    check: () => starsFor(true, 20, 20) === 3 && starsFor(true, 1, 20) === 1,
     gap: 'Sterne nach verbleibendem Kristall, je Karte gespeichert.',
   },
   {
     id: 'K6', area: 'Karten', from: 'Kingdom Rush (Sternpunkte)',
     text: 'Fortschritt zwischen den Partien.',
     measured: true, weight: 2,
-    check: () => false,
+    check: () => PERK_ORDER.length >= 4,
     gap: 'Punkte aus abgeschlossenen Karten, die Tuerme dauerhaft verbessern.',
   },
 

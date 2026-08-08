@@ -1,8 +1,8 @@
 # Kristallwacht — Genre-Abgleich
 
-Stand: v18 · 07.08.2026 · Aktueller Wert: **24 von 30 Kriterien, gewichtet 85 %**
+Stand: v20 · 07.08.2026 · Aktueller Wert: **27 von 30 Kriterien, gewichtet 93 %**
 
-*Verlauf: v11 = 18/27 (69 %) → v12 = 19/27 (73 %) → v15 = 21/30 (74 %) → v17 = 22/30 (76 %) → v18 = 24/30 (85 %), K1 und K2 erfüllt.
+*Verlauf: v11 = 18/27 (69 %) → v12 = 19/27 (73 %) → v15 = 21/30 (74 %) → v17 = 22/30 (76 %) → v18 = 24/30 (85 %) → v20 = 27/30 (93 %), K4, K5 und K6 erfüllt.
 In v15 kamen drei Grafik-Kriterien in den Katalog; zwei davon sind erfüllt.*
 
 Dieses Dokument ist die Grundlage für `npm run benchmark`. Es hält fest, *woher*
@@ -58,7 +58,7 @@ reichen für einen Prototyp. *Diesen Fehler haben wir bisher vermieden.*
 | Fokus & Klarheit | 4/4 | Karte ohne Scrollen, Pause mit Baumöglichkeit, Tempo 1×/2×/3×, Werte vor dem Kauf |
 | Rollen & Entscheidungen | 5/6 | Vier Türme, vier Wirkungsweisen, **verzweigter Ausbau**, Fähigkeiten, Luftlücke — es fehlt der Blocker |
 | Gegner | 5/6 | Masse, Tempo, Panzerung, Luft, Zerfall, Boss — es fehlen unterstützende Gegner |
-| Karten & Wiederspielwert | 3/6 | Drei Karten, zwei davon mit Gabelung, drei Schwierigkeitsgrade — es fehlen Endlosmodus, Sterne und Fortschritt |
+| Karten & Wiederspielwert | **6/6** | Drei Karten mit Gabelungen, drei Grade, Endlosmodus, Sterne je Karte und Grad, dauerhafte Verbesserungen |
 | Politur | 7/8 | Ton, Auswertung, Einführung, Spielstand, Inspektor, animierte Gegner, lebende Welt — es fehlen antippbare Kleinigkeiten in der Karte |
 
 Das Bild ist eindeutig: **Die Kernschleife ist auf Genre-Niveau, der
@@ -76,13 +76,14 @@ Gegenteil —, aber ab hier liegt der Hebel eindeutig bei Bereich „Karten".
 |---|---|---|---|
 | R4 ●● | Etwas, das aufhält statt tötet | Kingdom Rush (Kaserne) | Blockturm, der Gegner bindet |
 | G5 ●● | Unterstützende Gegner | Kingdom Rush, PvZ | Heiler oder Schildträger, der die Zielreihenfolge erzwingt |
-| K4 ●● | Endlosmodus | Kingdom Rush | Nach Welle 15 fortlaufend skalierend |
-| K5 ●● | Bewertung je Karte | Kingdom Rush (Sterne) | Sterne nach verbleibendem Kristall |
-| K6 ●● | Fortschritt zwischen Partien | Kingdom Rush (Sternpunkte) | Punkte, die Türme dauerhaft verbessern |
 
 **R3 ist seit v12 erfüllt.** Jeder Turm verzweigt auf Stufe 2 in zwei sich
 ausschließende Richtungen — aus vier Türmen sind faktisch acht geworden, ohne
 eine Zeile neuen Inhalt.
+
+Der Bereich „Karten" ist seit v20 vollständig. Was bleibt, sind drei Punkte im
+Spielinneren: ein Turm, der aufhält statt tötet (R4), ein Gegner, der die
+Zielreihenfolge erzwingt (G5), und antippbare Kleinigkeiten in der Karte (P8).
 
 **K1 und K2 sind seit v18 erfüllt.** Drei Karten mit eigenen Biomen, zwei davon
 mit zwei Zuwegen, die sich unterwegs vereinen. Damit ergeben Sterne (K5) und

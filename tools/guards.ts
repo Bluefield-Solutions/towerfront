@@ -3,6 +3,7 @@
  *  Aufruf: npx tsx tools/guards.ts */
 import { COLS, ROWS } from '../src/data/config';
 import { DIFFICULTIES, DIFFICULTY_ORDER, hpScale } from '../src/data/difficulty';
+import { PERKS, PERK_ORDER, starsFor } from '../src/data/perks';
 
 const NORMAL = DIFFICULTIES.normal;
 const START_GOLD = NORMAL.startGold;
@@ -370,6 +371,29 @@ for (const [id, e] of Object.entries(ENEMIES)) {
       fail(`Schwierigkeitsgrad ${id}: kein Turm ist mit ${d.startGold} Startgold bezahlbar.`);
     }
   }
+}
+
+// ------------------------------------------------------------- Fortschritt
+{
+  const maxStars = MAPS.length * DIFFICULTY_ORDER.length * 3;
+  const totalCost = PERK_ORDER.reduce((a, id) => a + PERKS[id].cost, 0);
+  if (totalCost > maxStars) {
+    fail(`Die Verbesserungen kosten ${totalCost} Sterne, es gibt aber hoechstens ${maxStars}.`);
+  }
+  if (totalCost < maxStars * 0.3) {
+    warn(`Alle Verbesserungen kosten nur ${totalCost} von ${maxStars} Sternen - zu frueh alles gekauft.`);
+  }
+  for (const id of PERK_ORDER) {
+    const p = PERKS[id];
+    if (p.id !== id) fail(`Verbesserung ${id}: id passt nicht zum Schluessel.`);
+    if (!p.name || !p.blurb) fail(`Verbesserung ${id}: Name oder Beschreibung fehlt.`);
+    if (p.cost < 1) fail(`Verbesserung ${id}: Kosten unter einem Stern.`);
+  }
+  // Die Sternschwelle muss eine Schwelle sein.
+  if (starsFor(true, 20, 20) !== 3 || starsFor(true, 1, 20) !== 1 || starsFor(false, 5, 20) !== 0) {
+    fail('Die Sternvergabe ist nicht monoton: makellos, knapp und verloren muessen sich unterscheiden.');
+  }
+  console.log(`  Fortschritt: ${totalCost} Sterne fuer alle Verbesserungen, ${maxStars} erreichbar`);
 }
 
 // ------------------------------------------------------------ Faehigkeiten

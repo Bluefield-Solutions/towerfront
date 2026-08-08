@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v19 · 07.08.2026
+Stand: v20 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -305,6 +305,32 @@ jederzeit wiederherstellbar. Ein Fehlversuch kostet eine Minute, nicht einen
 Abend.
 
 ---
+
+### 3.20 Wie man Fortschritt prüft, ohne ihn zu entwerten
+
+Dauerhafte Verbesserungen sind der einfachste Weg, ein Spiel kaputtzumachen:
+irgendwann ersetzt der Fortschritt das Können. Die Simulation misst deshalb drei
+Dinge:
+
+- **Sie müssen helfen.** Derselbe Lauf mit allen Verbesserungen darf nicht
+  schlechter ausgehen als ohne — klingt selbstverständlich, ist es bei
+  gekoppelten Werten nicht.
+- **Sie dürfen den Schwierigkeitsgrad nicht ersetzen.** Mit allen
+  Verbesserungen muss *Erbarmungslos* weiterhin Kristall kosten. Aktuell: 11
+  von 16 statt 3 von 14 — spürbar leichter, aber nicht geschenkt.
+- **Der dritte Stern muss selten sein.** Wenn der übliche Sieg schon drei Sterne
+  gibt, ist der dritte wertlos. Geprüft am tatsächlichen Ergebnis des
+  Meister-Bots.
+
+Für den Endlosmodus gilt eine eigene Regel, und zwar in beide Richtungen: er
+**darf nicht gewonnen werden können**, muss aber über das Ende des normalen
+Plans hinaus laufen und darf nicht mehr als 25 Wellen weiter tragen — sonst ist
+die Steigerung zu flach und es wird zäh statt spannend. Aktuell endet er auf
+Spiralhain in Welle 19 von 15 geplanten.
+
+Der Datenwächter prüft dazu die Wirtschaft dahinter: alle Verbesserungen
+zusammen kosten 14 Sterne, erreichbar sind 27. Kostete alles zusammen weniger
+als ein Drittel des Erreichbaren, wäre der Fortschritt zu früh abgeschlossen.
 
 ### 3.19 Die Abkürzung, die man der Karte nicht ansieht
 
@@ -714,7 +740,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v19
+## 5. Stand v20
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -774,6 +800,23 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v20 — Endlosmodus, Sterne und dauerhafter Fortschritt.**
+
+**Endlos** wird auf dem Titelbildschirm gewählt. Nach der letzten Welle des
+Plans wiederholen sich die letzten fünf, jede Runde mit 18 % mehr Gegnern; die
+Lebenspunktkurve wächst ohnehin weiter. Es gibt kein Gewinnen, nur ein Weiter —
+und deshalb auch keine Sterne, weil es kein Ende gibt, an dem man messen könnte,
+wie sauber man durchgekommen ist.
+
+**Sterne** gibt es je Karte und Grad: drei ab 90 % verbleibendem Kristall, zwei
+ab 55 %, einer für jeden Sieg, keiner für eine Niederlage. Nur das beste
+Ergebnis zählt.
+
+**Verbesserungen** kosten Sterne und bleiben: +35 Startgold (2), +2 Kristall (3),
+80 % statt 70 % Verkaufserlös (2), 10 % kürzere Abklingzeiten (3), +4 % Schaden
+(4). Zusammen 14 Sterne von 27 erreichbaren — man kann also nicht alles haben,
+ohne fast überall drei Sterne zu holen.
 
 **Neu in v19 — jede Karte hat ihren eigenen Wellenplan.** Bis v18 teilten sich
 alle Karten einen Plan, der über einen Faktor je Karte gebogen wurde. Das

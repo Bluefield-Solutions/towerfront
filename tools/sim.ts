@@ -11,6 +11,7 @@ const START_LIVES = DIFFICULTIES.normal.startLives;
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, type TowerId } from '../src/data/towers';
 
 import { MAPS } from '../src/data/maps';
+import { ALL_PERKS, NO_PERKS, starsFor } from '../src/data/perks';
 import { ABILITIES } from '../src/data/abilities';
 
 const DT = 1 / 60;
@@ -91,10 +92,10 @@ type BranchPick = (id: TowerId) => 0 | 1;
 function play(
   strategy: TowerId[], pick: BranchPick = () => 0,
   bot: Bot = MEISTER, difficulty: DifficultyId = 'normal',
-  mapId: string = MAPS[0].id,
+  mapId: string = MAPS[0].id, opts: { endless?: boolean; perks?: typeof NO_PERKS } = {},
 ): Result {
   const s = new GameState(mapId);
-  s.reset(20260807, difficulty, mapId);
+  s.reset(20260807, difficulty, mapId, { endless: opts.endless, perks: opts.perks ?? NO_PERKS });
   const spots = buildSpots(s);
   let spotIdx = 0, si = 0, t = 0, frame = 0, upgrades = 0;
   let peakEnemies = 0, peakFx = 0;
@@ -207,6 +208,47 @@ for (const bot of BOTS) {
     `  ${bot.name.padEnd(9)} ${verdict.padEnd(30)}` +
     `${r.towers} Tuerme, ${r.upgrades} Ausbauten, ${r.earned} Gold`,
   );
+}
+
+// Dauerhafte Verbesserungen duerfen helfen, aber nicht den Grad ersetzen.
+{
+  const plain = play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id);
+  const buffed = play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { perks: ALL_PERKS });
+  const hardBuffed = play(
+    mixedPlanBase, () => 0, MEISTER, 'erbarmungslos', MAPS[0].id, { perks: ALL_PERKS },
+  );
+  console.log('\nFortschritt (Meister, Spiralhain):');
+  console.log(
+    `  ohne Verbesserungen ${plain.won ? `${plain.lives}/${plain.maxLives}` : `W${plain.wave}`}` +
+    `   mit allen ${buffed.won ? `${buffed.lives}/${buffed.maxLives}` : `W${buffed.wave}`}` +
+    `   erbarmungslos mit allen ` +
+    `${hardBuffed.won ? `${hardBuffed.lives}/${hardBuffed.maxLives}` : `W${hardBuffed.wave}`}`,
+  );
+  if (buffed.won && plain.won && buffed.lives < plain.lives) {
+    errors.push('Die dauerhaften Verbesserungen machen den Lauf schlechter statt besser.');
+  }
+  if (hardBuffed.won && hardBuffed.lives >= hardBuffed.maxLives) {
+    errors.push('Mit allen Verbesserungen ist Erbarmungslos verlustfrei - der Fortschritt ersetzt den Grad.');
+  }
+  // Sterne muessen ueberhaupt vergeben werden koennen und drei muessen schwer sein.
+  if (starsFor(true, plain.maxLives, plain.maxLives) !== 3) errors.push('Ein makelloser Lauf gibt keine drei Sterne.');
+  if (starsFor(false, 0, 20) !== 0) errors.push('Eine Niederlage gibt Sterne.');
+  if (plain.won && starsFor(true, plain.lives, plain.maxLives) === 3) {
+    errors.push('Der uebliche Sieg gibt schon drei Sterne - dann ist der dritte wertlos.');
+  }
+}
+
+// Der Endlosmodus muss enden - aber nicht zu frueh.
+{
+  const e = play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { endless: true });
+  console.log(`  Endlos: bis Welle ${e.wave}, ${e.towers} Tuerme`);
+  if (e.won) errors.push('Der Endlosmodus wurde gewonnen - er darf kein Ende haben.');
+  if (e.wave <= MAPS[0].waves.length) {
+    errors.push(`Endlos endet in Welle ${e.wave} - vor dem Ende des normalen Plans.`);
+  }
+  if (e.wave > MAPS[0].waves.length + 25) {
+    errors.push(`Endlos laeuft bis Welle ${e.wave} - die Steigerung ist zu flach.`);
+  }
 }
 
 // Jede Karte muss fuer sich spielbar sein. Eine Karte, die nur mit einem

@@ -177,11 +177,14 @@ export function accentFor(def: TowerDef, branch: BranchIndex): string {
   return branch === null ? def.accent : def.branches[branch].color;
 }
 
-/** Rueckgabewert beim Verkauf: 70 % der bisher investierten Summe. */
-export function sellValue(def: TowerDef, branch: BranchIndex, level: number): number {
+/** Rueckgabewert beim Verkauf. Der Anteil haengt an den dauerhaften
+ *  Verbesserungen und liegt zwischen 70 und 85 %. */
+export function sellValue(
+  def: TowerDef, branch: BranchIndex, level: number, refund = 0.7,
+): number {
   let spent = def.base.cost;
   if (branch !== null) {
     for (let i = 0; i < level - 1; i++) spent += def.branches[branch].levels[i].cost;
   }
-  return Math.floor(spent * 0.7);
+  return Math.floor(spent * refund);
 }

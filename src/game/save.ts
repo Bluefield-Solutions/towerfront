@@ -16,9 +16,10 @@ import type { DifficultyId } from '../data/difficulty';
  *  wegzulassen war bequem, aber falsch: die Determinismus-Pruefung hat gezeigt,
  *  dass eine fortgesetzte Partie dadurch messbar anders verlaeuft. */
 export interface SaveGame {
-  v: 6;
+  v: 7;
   difficulty: DifficultyId;
   map: string;
+  endless: boolean;
   seed: number;
   rng: number;
   gold: number;
@@ -79,7 +80,7 @@ export function loadGame(): SaveGame | null {
     if (!raw) return null;
     const p = JSON.parse(raw) as SaveGame;
     // Ein Stand aus einer aelteren Fassung wird verworfen statt halb geladen.
-    if (p.v !== 6 || !Array.isArray(p.towers) || !Array.isArray(p.enemies)) return null;
+    if (p.v !== 7 || !Array.isArray(p.towers) || !Array.isArray(p.enemies)) return null;
     return p;
   } catch {
     return null;

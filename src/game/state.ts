@@ -16,7 +16,10 @@ import {
 import type { Vec } from '../core/math';
 import { dist, dist2 } from '../core/math';
 import { Sfx } from '../core/audio';
-import { recordRun } from '../core/storage';
+import { getProgress, recordRun, recordStars } from '../core/storage';
+import {
+  NO_PERKS, perkEffect, starsFor, type PerkEffect,
+} from '../data/perks';
 import { Rng, newSeed } from '../core/rng';
 import { clearGame, type SaveGame } from './save';
 import { SpatialGrid } from '../core/spatialgrid';
@@ -55,6 +58,13 @@ export class GameState {
   /** Der gewaehlte Schwierigkeitsgrad. Er verstellt Startwerte, Kurvenform,
    *  Wellendichte und Einkommen gemeinsam. */
   difficulty: DifficultyId = 'normal';
+  /** Endlosmodus: nach dem letzten Wellenplan geht es weiter, bis der
+   *  Kristall faellt. */
+  endless = false;
+  /** Wirkung der dauerhaften Verbesserungen. */
+  perks: PerkEffect = NO_PERKS;
+  /** Sterne des letzten abgeschlossenen Laufs. */
+  stars = 0;
   gold = DIFFICULTIES.normal.startGold;
   lives = DIFFICULTIES.normal.startLives;
   maxLives = DIFFICULTIES.normal.startLives;
@@ -219,7 +229,7 @@ export class GameState {
 
   sell(t: Tower): void {
     const def = TOWERS[t.def];
-    const value = sellValue(def, t.branch, t.level);
+    const value = sellValue(def, t.branch, t.level, this.perks.refund);
     this.gold += value;
     t.target = null;
     compact(this.towers, (o) => o === t);
@@ -238,10 +248,31 @@ export class GameState {
 
   /** Der Wellenplan der aktuellen Karte. */
   get waves() { return this.map.waves; }
-  get waveNumber(): number { return Math.min(this.waveIndex + 1, this.waves.length); }
+  get waveNumber(): number {
+    return this.endless ? this.waveIndex + 1 : Math.min(this.waveIndex + 1, this.waves.length);
+  }
   get totalWaves(): number { return this.waves.length; }
-  get canStartWave(): boolean { return !this.waveActive && this.waveIndex < this.waves.length; }
-  get nextWave() { return this.waves[this.waveIndex]; }
+  get canStartWave(): boolean {
+    return !this.waveActive && (this.endless || this.waveIndex < this.waves.length);
+  }
+  get nextWave() { return this.waveAt(this.waveIndex); }
+
+  /** Der Wellenplan geht im Endlosmodus weiter: die letzten fuenf Wellen
+   *  wiederholen sich, jede Runde mit mehr Gegnern. Die Lebenspunktkurve
+   *  waechst ohnehin von selbst weiter. */
+  waveAt(i: number) {
+    const plan = this.waves;
+    if (i < plan.length) return plan[i];
+    const tail = Math.min(5, plan.length);
+    const base = plan[plan.length - tail + ((i - plan.length) % tail)];
+    const round = Math.floor((i - plan.length) / tail) + 1;
+    const grow = 1 + round * 0.18;
+    return {
+      bonus: Math.round(base.bonus * (1 + round * 0.25)),
+      note: `Endlos · Runde ${round}`,
+      groups: base.groups.map((g) => ({ ...g, count: Math.max(1, Math.round(g.count * grow)) })),
+    };
+  }
 
   /** Gold fuer einen frueh gestarteten Angriff. Faellt linear auf null. */
   get earlyBonus(): number {
@@ -258,7 +289,7 @@ export class GameState {
       this.stats.goldEarned += bonus;
       this.float(this.goal.x, this.goal.y - 70, `Frueh gestartet  +${bonus}`, C.gold, 22);
     }
-    const wave = this.waves[this.waveIndex];
+    const wave = this.waveAt(this.waveIndex);
     // Spaetere Wellen kommen dichter: was zaehlt, ist die Huelle je Sekunde.
     const dense = 1 + this.waveIndex * this.diff.densityRamp;
     this.pending = [];
@@ -284,7 +315,7 @@ export class GameState {
   }
 
   private finishWave(): void {
-    const wave = this.waves[this.waveIndex];
+    const wave = this.waveAt(this.waveIndex);
     const payout = Math.round(wave.bonus * this.diff.bonusMul * this.map.balance.goldMul);
     this.gold += payout;
     this.stats.goldEarned += payout;
@@ -292,10 +323,8 @@ export class GameState {
     this.waveIndex++;
     this.waveActive = false;
     this.idleTime = 0;
-    if (this.waveIndex >= this.waves.length) {
-      this.phase = 'won';
-      clearGame();
-      recordRun(this.map.id, this.difficulty, this.waves.length, this.lives);
+    if (!this.endless && this.waveIndex >= this.waves.length) {
+      this.finishRun(true);
       Sfx.play('win');
     }
   }
@@ -319,7 +348,7 @@ export class GameState {
   cast(id: AbilityId, x: number, y: number): boolean {
     if (!this.ready(id)) return false;
     const def = ABILITIES[id];
-    this.abilityCd[id] = def.cooldown;
+    this.abilityCd[id] = def.cooldown * this.perks.cooldownMul;
     this.stats.abilityUses[id] = (this.stats.abilityUses[id] ?? 0) + 1;
     this.aiming = null;
 
@@ -376,6 +405,18 @@ export class GameState {
     compact(this.meteors, (m) => m.t >= 1);
   }
 
+  /** Abschluss eines Laufs: Bestwert, Sterne, Spielstand loeschen. */
+  private finishRun(won: boolean): void {
+    this.phase = won ? 'won' : 'lost';
+    clearGame();
+    const reached = won ? this.waveIndex : this.waveNumber - 1;
+    recordRun(this.map.id, this.difficulty, reached, won ? this.lives : 0);
+    // Im Endlosmodus gibt es keine Sterne - er hat kein Ende, an dem man
+    // messen koennte, wie sauber man durchgekommen ist.
+    this.stars = this.endless ? 0 : starsFor(won, this.lives, this.maxLives);
+    if (this.stars > 0) recordStars(this.map.id, this.difficulty, this.stars);
+  }
+
   // ---------------------------------------------------------------- Update
 
   update(dtReal: number): void {
@@ -425,9 +466,7 @@ export class GameState {
 
     if (this.lives <= 0) {
       this.lives = 0;
-      this.phase = 'lost';
-      clearGame();
-      recordRun(this.map.id, this.difficulty, this.waveNumber - 1, 0);
+      this.finishRun(false);
       Sfx.play('lose');
     }
   }
@@ -777,7 +816,7 @@ export class GameState {
   ): void {
     if (e.dead) return;
     const def = ENEMIES[e.def];
-    const dmg = Math.max(1, Math.round(raw) - Math.max(0, def.armor - pierce));
+    const dmg = Math.max(1, Math.round(raw * this.perks.damageMul) - Math.max(0, def.armor - pierce));
     e.hp -= dmg;
     e.hitFlash = 1;
     if (owner) owner.damageDone += dmg;
@@ -939,16 +978,20 @@ export class GameState {
     seed = newSeed(),
     difficulty: DifficultyId = this.difficulty,
     mapId: string = this.map.id,
+    opts: { endless?: boolean; perks?: PerkEffect } = {},
   ): void {
     this.seed = seed;
     this.rng.state = seed;
     this.difficulty = difficulty;
     if (mapId !== this.map.id) this.loadMap(mapId);
     clearGame();
+    this.endless = opts.endless ?? false;
+    this.perks = opts.perks ?? perkEffect(getProgress().perks);
     const d = DIFFICULTIES[difficulty];
-    this.gold = d.startGold;
-    this.lives = d.startLives;
-    this.maxLives = d.startLives;
+    this.gold = d.startGold + this.perks.goldBonus;
+    this.lives = d.startLives + this.perks.livesBonus;
+    this.maxLives = this.lives;
+    this.stars = 0;
     this.waveIndex = 0;
     this.waveActive = false;
     this.enemies.length = 0; this.towers.length = 0; this.projectiles.length = 0;
@@ -980,8 +1023,9 @@ export class GameState {
   /** Nur das, was den Verlauf bestimmt. Reine Darstellung bleibt draussen. */
   snapshot(): SaveGame {
     return {
-      v: 6,
+      v: 7,
       difficulty: this.difficulty,
+      endless: this.endless,
       map: this.map.id,
       seed: this.seed,
       rng: this.rng.state,
@@ -1021,15 +1065,15 @@ export class GameState {
    *  Stand nicht zu den aktuellen Daten passt - dann wird er verworfen statt
    *  halb geladen. */
   restore(save: SaveGame): boolean {
-    if (save.v !== 6) return false;
+    if (save.v !== 7) return false;
     if (!MAPS.some((m) => m.id === save.map)) return false;
     if (!(save.difficulty in DIFFICULTIES)) return false;
-    if (save.waveIndex < 0 || save.waveIndex > this.map.waves.length) return false;
+    if (save.waveIndex < 0) return false;
     for (const [id] of save.towers) if (!(id in TOWERS)) return false;
     for (const [id] of save.enemies) if (!(id in ENEMIES)) return false;
     for (const [, id] of save.pending) if (!(id in ENEMIES)) return false;
 
-    this.reset(save.seed, save.difficulty, save.map);
+    this.reset(save.seed, save.difficulty, save.map, { endless: save.endless });
     this.rng.state = save.rng;
     this.gold = save.gold;
     this.lives = save.lives;

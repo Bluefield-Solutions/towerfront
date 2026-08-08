@@ -426,3 +426,30 @@ html, body {
 .grade b { display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 2px; }
 .grade span { display: block; font-size: 10px; line-height: 1.35; }
 .grade:active { transform: scale(0.97); }
+
+/* ----------------------------------------------------------- Fortschritt */
+
+.stars { font-style: normal; font-size: 11px; color: var(--gold); letter-spacing: 1px; }
+
+.perks {
+  display: flex; gap: 7px; flex-wrap: wrap; justify-content: center;
+  margin: 0 0 18px;
+}
+.perk-head {
+  flex: 1 0 100%; margin: 0 0 4px; text-align: center;
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+}
+.perk-head b { color: var(--gold); font-size: 12px; }
+.perk {
+  flex: 1 1 140px; max-width: 190px; cursor: pointer; text-align: left;
+  padding: 7px 9px; border-radius: 10px; font-family: var(--ui);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--edge); color: var(--muted);
+}
+.perk b { display: block; font-size: 11.5px; font-weight: 700; color: var(--text); }
+.perk span { display: block; font-size: 9.5px; line-height: 1.35; margin: 1px 0 3px; }
+.perk i { font-style: normal; font-size: 10px; font-weight: 700; color: var(--gold); }
+.perk[data-have="1"] { border-color: var(--crystal); opacity: 0.75; }
+.perk[data-have="1"] i { color: var(--crystal); }
+.perk:disabled { cursor: default; }
+.perk:disabled[data-have="0"] { opacity: 0.4; }

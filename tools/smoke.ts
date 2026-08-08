@@ -242,6 +242,17 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Titelbildschirm: Modus, Karten, Grade und Fortschritt muessen erscheinen.
+{
+  ui.showScreen('title');
+  const need: [string, number][] = [['s-mode', 2], ['s-maps', 3], ['s-grades', 3], ['s-perks', 5]];
+  for (const [id, min] of need) {
+    const n = win.document.getElementById(id)?.querySelectorAll('button').length ?? 0;
+    if (n < min) problems.push(`Titelbildschirm: "${id}" zeigt ${n} Knoepfe, erwartet mindestens ${min}.`);
+  }
+  ui.hideScreen();
+}
+
 // Jeder Zweig braucht einen eigenen Umriss. Geprueft wird nicht das Aussehen,
 // sondern dass ueberhaupt unterschiedliche Bilder entstehen: gleiche Bildpunkte
 // hiessen gleicher Turm, und dann verrieten nur noch die Farben, was da steht.

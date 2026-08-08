@@ -6,7 +6,11 @@ import {
   type TowerId,
 } from '../data/towers';
 import { Sfx } from '../core/audio';
-import { getBest, getSettings, saveSettings } from '../core/storage';
+import {
+  buyPerk, freeStars, getBest, getSettings, getStars, saveSettings, setPerkCost, totalStars,
+} from '../core/storage';
+import { PERKS, PERK_ORDER, type PerkId } from '../data/perks';
+import { getProgress } from '../core/storage';
 import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../data/difficulty';
 import { MAPS, mapById } from '../data/maps';
 import { spriteCount } from '../gfx/sprites';
@@ -44,6 +48,8 @@ export class UI {
   private sBest = $('s-best');
   private sGrades = $('s-grades');
   private sMaps = $('s-maps');
+  private sPerks = $('s-perks');
+  private sMode = $('s-mode');
   private sStats = $('s-stats');
   private sAction = $<HTMLButtonElement>('s-action');
   private sResume = $<HTMLButtonElement>('s-resume');
@@ -56,6 +62,7 @@ export class UI {
   private btns = new Map<TowerId, HTMLButtonElement>();
   private skillBtns = new Map<AbilityId, HTMLButtonElement>();
   private lastSkillSig = '';
+  private endlessWanted = false;
   private tutStep = -1;
   private tutTarget: HTMLElement | null = null;
   private lastSig = '';
@@ -99,6 +106,26 @@ export class UI {
       this.skills.appendChild(b);
       this.skillBtns.set(id, b);
     }
+
+    setPerkCost((id) => PERKS[id as PerkId]?.cost ?? 0);
+
+    this.sPerks.addEventListener('click', (ev) => {
+      const b = (ev.target as HTMLElement).closest('button');
+      if (!b?.dataset.perk) return;
+      Sfx.unlock();
+      if (buyPerk(b.dataset.perk, PERKS[b.dataset.perk as PerkId].cost)) {
+        Sfx.play('upgrade');
+        this.showScreen('title');
+      }
+    });
+
+    this.sMode.addEventListener('click', (ev) => {
+      const b = (ev.target as HTMLElement).closest('button');
+      if (!b?.dataset.mode) return;
+      Sfx.unlock(); Sfx.play('tap');
+      this.endlessWanted = b.dataset.mode === 'endless';
+      this.showScreen('title');
+    });
 
     this.sMaps.addEventListener('click', (ev) => {
       const b = (ev.target as HTMLElement).closest('button');
@@ -154,7 +181,8 @@ export class UI {
     });
     this.sAction.addEventListener('click', () => {
       Sfx.unlock();
-      this.s.reset(undefined, getSettings().difficulty, getSettings().map);
+      this.s.reset(undefined, getSettings().difficulty, getSettings().map,
+        { endless: this.endlessWanted });
       // Die Einfuehrung laeuft nur bei einem neuen Spiel, nie beim Fortsetzen.
       this.tutStep = getSettings().tutorial ? 0 : -1;
     });
@@ -198,7 +226,9 @@ export class UI {
 
     this.sGrades.hidden = kind !== 'title';
     this.sMaps.hidden = kind !== 'title';
-    if (kind === 'title') { this.renderMaps(); this.renderGrades(); }
+    this.sPerks.hidden = kind !== 'title';
+    this.sMode.hidden = kind !== 'title';
+    if (kind === 'title') { this.renderProgress(); this.renderMaps(); this.renderGrades(); }
 
     const save = kind === 'title' ? loadGame() : null;
     if (save) {
@@ -220,14 +250,18 @@ export class UI {
         'Der Herzkristall liegt am Ende des Pfades. Baue Türme auf das Gras, halte die Leere auf, überstehe fünfzehn Wellen. Früh gestartete Wellen bringen zusätzliches Gold.';
       if (!save) this.sAction.textContent = 'Beginnen';
     } else if (kind === 'won') {
-      this.sEyebrow.textContent = 'Alle Wellen überstanden';
+      this.sEyebrow.textContent = s.stars > 0
+        ? `Geschafft · ${'★'.repeat(s.stars)}${'☆'.repeat(3 - s.stars)}`
+        : 'Alle Wellen überstanden';
       this.sTitle.textContent = 'Der Kristall hält';
       this.sText.textContent =
         `Fünfzehn Wellen abgewehrt auf ${gradeName}, ${s.lives} von ${s.maxLives} ` +
         `Kristallpunkten übrig, ${s.towers.length} Türme im Feld.`;
       this.sAction.textContent = 'Noch einmal';
     } else {
-      this.sEyebrow.textContent = `${mapName} · Welle ${s.waveNumber} von ${s.totalWaves}`;
+      this.sEyebrow.textContent = s.endless
+        ? `${mapName} · Endlos · Welle ${s.waveNumber}`
+        : `${mapName} · Welle ${s.waveNumber} von ${s.totalWaves}`;
       this.sTitle.textContent = 'Der Kristall zerbricht';
       this.sText.textContent =
         'Die Leere ist durchgekommen. Mehr Türme an den Kurven, früher ausbauen — und den Mörser gegen dichte Gruppen einsetzen.';
@@ -239,10 +273,39 @@ export class UI {
 
   private renderMaps(): void {
     const cur = getSettings().map;
+    const grade = getSettings().difficulty;
     this.sMaps.innerHTML = MAPS.map((m) => {
       const lanes = m.lanes.length > 1 ? `${m.lanes.length} Zuwege` : 'ein Zuweg';
+      const st = getStars(m.id, grade);
+      const stars = '★★★'.slice(0, st) + '☆☆☆'.slice(0, 3 - st);
       return `<button class="grade" data-map="${m.id}" data-on="${m.id === cur ? 1 : 0}">` +
-        `<b>${m.name}</b><span>${m.blurb}<br>${lanes}</span></button>`;
+        `<b>${m.name} <i class="stars">${stars}</i></b>` +
+        `<span>${m.blurb}<br>${lanes}</span></button>`;
+    }).join('');
+  }
+
+  /** Modus und Fortschritt. Sterne sind die Waehrung: sie entstehen aus
+   *  sauberen Laeufen und werden in bleibende Vorteile getauscht. */
+  private renderProgress(): void {
+    this.sMode.innerHTML = [
+      ['kampagne', 'Kampagne', 'Alle Wellen der Karte. Nur hier gibt es Sterne.'],
+      ['endless', 'Endlos', 'Nach der letzten Welle geht es weiter, bis der Kristall faellt.'],
+    ].map(([id, name, blurb]) =>
+      `<button class="grade" data-mode="${id}" ` +
+      `data-on="${(id === 'endless') === this.endlessWanted ? 1 : 0}">` +
+      `<b>${name}</b><span>${blurb}</span></button>`).join('');
+
+    const free = freeStars();
+    const owned = getProgress().perks;
+    const head = `<p class="perk-head">Splitter: <b>${free}</b> frei von ${totalStars()} verdient</p>`;
+    this.sPerks.innerHTML = head + PERK_ORDER.map((id) => {
+      const p = PERKS[id];
+      const have = owned.includes(id);
+      const can = !have && free >= p.cost;
+      return `<button class="perk" data-perk="${id}" data-have="${have ? 1 : 0}"` +
+        `${have || !can ? ' disabled' : ''}>` +
+        `<b>${p.name}</b><span>${p.blurb}</span>` +
+        `<i>${have ? 'gekauft' : `${p.cost} ★`}</i></button>`;
     }).join('');
   }
 
@@ -459,7 +522,7 @@ export class UI {
 
     this.gold.textContent = String(s.gold);
     this.lives.textContent = String(s.lives);
-    this.wave.textContent = `${s.waveNumber}/${s.totalWaves}`;
+    this.wave.textContent = s.endless ? `${s.waveNumber} ∞` : `${s.waveNumber}/${s.totalWaves}`;
     this.bSound.textContent = getSettings().sound ? 'Ton' : 'Stumm';
     this.bSpeed.textContent = `${s.speed}×`;
     this.bPause.textContent = s.paused ? 'Weiter' : 'Pause';

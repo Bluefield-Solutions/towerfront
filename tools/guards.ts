@@ -29,6 +29,7 @@ for (const map of MAPS) {
 
   const paths = lanePaths(map);
   const goal = goalOf(map);
+  const profile: string[] = [];
 
   for (let i = 0; i < map.lanes.length; i++) {
     const lane = map.lanes[i];
@@ -61,6 +62,47 @@ for (const map of MAPS) {
       if (d > Math.PI) d = Math.PI * 2 - d;
       if (d > sharpest) sharpest = d;
     }
+    // Wie interessant ist der Weg?
+    //
+    // Drei Zahlen, weil "interessant" sonst Geschmackssache bleibt:
+    //
+    //  - Umwegfaktor: Weglaenge geteilt durch Luftlinie vom Tor zum Kristall.
+    //    Eine Gerade hat 1,0 - da gibt es nichts zu entscheiden.
+    //  - Richtungswechsel: wie oft die Kurve die Drehrichtung aendert. Ein
+    //    einziger langer Bogen ist auch nur eine Gerade mit Umweg.
+    //  - Breitenverhaeltnis: weiteste zu engster Stelle. Ein ueberall gleich
+    //    breiter Weg hat keine Engstellen, und Engstellen sind das, worum das
+    //    Spiel gespielt wird.
+    {
+      const air = Math.hypot(
+        path.pts[path.pts.length - 1].x - path.pts[0].x,
+        path.pts[path.pts.length - 1].y - path.pts[0].y,
+      );
+      const detour = path.length / Math.max(1, air);
+      let turns = 0, lastSign = 0;
+      for (let k = 2; k < path.pts.length; k++) {
+        const a = path.pts[k - 2], b = path.pts[k - 1], c = path.pts[k];
+        const cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
+        const sign = Math.sign(cross);
+        if (sign !== 0 && lastSign !== 0 && sign !== lastSign) turns++;
+        if (sign !== 0) lastSign = sign;
+      }
+      const w = path.widthRange();
+      const ratio = w.max / Math.max(1, w.min);
+      if (detour < 1.8) {
+        fail(`${map.id}, Bahn ${i + 1}: Umwegfaktor ${detour.toFixed(2)} - der Weg ist fast eine Gerade.`);
+      }
+      if (turns < 3) {
+        fail(`${map.id}, Bahn ${i + 1}: nur ${turns} Richtungswechsel - ein einziger Bogen ist keine Strecke.`);
+      }
+      if (ratio < 1.35) {
+        fail(`${map.id}, Bahn ${i + 1}: Breitenverhaeltnis ${ratio.toFixed(2)} - der Weg hat keine Engstellen.`);
+      }
+      profile.push(
+        `Bahn ${i + 1}: Umweg ${detour.toFixed(1)}x, ${turns} Wechsel, Breite ${w.min}-${w.max}`,
+      );
+    }
+
     const deg = (sharpest * 180) / Math.PI;
     if (deg > 25) {
       fail(`${map.id}, Bahn ${i + 1}: knickt um ${deg.toFixed(0)} Grad - das ist eine Ecke, keine Kurve.`);
@@ -151,6 +193,7 @@ for (const map of MAPS) {
       fail(`${map.id}: der empfohlene Bauplatz ${map.hint.x}/${map.hint.y} ist nicht bebaubar.`);
     }
 
+    for (const line of profile) console.log(`    ${line}`);
     console.log(
       `  Karte ${map.name}: ${map.lanes.length} Bahn(en), Weg ` +
       `${Math.round(Math.max(...paths.map((p) => p.length)))} px, bebaubar ` +

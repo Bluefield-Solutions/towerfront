@@ -43,43 +43,46 @@ export function bakeTerrain(
     }
   }
 
-  // --- Der Weg als Band entlang der Kurve.
+  // --- Der Weg als Band mit wechselnder Breite.
   //
-  // Drei Durchlaeufe uebereinander: ein dunkler Schatten etwas breiter, das
-  // eigentliche Band, und eine hellere Spur in der Mitte. Runde Enden und
-  // runde Verbindungen sorgen dafuer, dass in keiner Kurve eine Ecke entsteht.
-  const stroke = (paths: LanePath[], width: number, colour: string, blur = 0) => {
-    g.save();
-    g.lineCap = 'round';
-    g.lineJoin = 'round';
-    g.strokeStyle = colour;
-    g.lineWidth = width;
-    if (blur) { g.shadowColor = colour; g.shadowBlur = blur; }
-    for (const p of paths) {
-      g.beginPath();
-      g.moveTo(p.pts[0].x, p.pts[0].y);
-      for (let i = 1; i < p.pts.length; i++) g.lineTo(p.pts[i].x, p.pts[i].y);
-      g.stroke();
+  // Nicht mehr eine Linie mit fester Staerke, sondern eine Flaeche zwischen
+  // den beiden Raendern. Erst dadurch kann der Weg mal weiter und mal enger
+  // sein - und Engstellen sind das, woran sich das Spiel entscheidet.
+  const ribbon = (p: LanePath, grow: number): void => {
+    g.beginPath();
+    for (let i = 0; i < p.pts.length; i++) {
+      const e = p.edgesAt(i);
+      const dx = e.lx - p.pts[i].x, dy = e.ly - p.pts[i].y;
+      const len = Math.hypot(dx, dy) || 1;
+      const x = p.pts[i].x + (dx / len) * (len + grow);
+      const y = p.pts[i].y + (dy / len) * (len + grow);
+      if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
     }
-    g.restore();
+    for (let i = p.pts.length - 1; i >= 0; i--) {
+      const e = p.edgesAt(i);
+      const dx = e.rx - p.pts[i].x, dy = e.ry - p.pts[i].y;
+      const len = Math.hypot(dx, dy) || 1;
+      g.lineTo(p.pts[i].x + (dx / len) * (len + grow),
+        p.pts[i].y + (dy / len) * (len + grow));
+    }
+    g.closePath();
+    g.fill();
   };
 
-  const W = 74;
-  stroke(lanes, W + 16, 'rgba(6,10,18,0.5)');
-  stroke(lanes, W, pal.pathEdge);
-  stroke(lanes, W - 14, pal.path);
-  stroke(lanes, W - 34, hexA('#FFF6DC', 0.13));
+  for (const p of lanes) { g.fillStyle = 'rgba(6,10,18,0.5)'; ribbon(p, 12); }
+  for (const p of lanes) { g.fillStyle = pal.pathEdge; ribbon(p, 0); }
+  for (const p of lanes) { g.fillStyle = pal.path; ribbon(p, -9); }
+  for (const p of lanes) { g.fillStyle = hexA('#FFF6DC', 0.12); ribbon(p, -22); }
 
-  // Randsteine: kleine Ellipsen entlang beider Seiten. Sie folgen der Kurve,
-  // also runden sie sich in den Kurven von selbst mit.
+  // Randsteine entlang beider Raender. Sie folgen der wechselnden Breite mit,
+  // also verengt sich mit dem Weg auch seine Einfassung.
   for (const p of lanes) {
     for (let i = 4; i < p.pts.length - 4; i += 5) {
-      const a = p.pts[i - 1], b = p.pts[i + 1];
-      const ang = Math.atan2(b.y - a.y, b.x - a.x) + Math.PI / 2;
-      for (const side of [-1, 1]) {
-        const jitter = (rnd() - 0.5) * 5;
-        const cx = p.pts[i].x + Math.cos(ang) * side * (W / 2 - 3) + jitter;
-        const cy = p.pts[i].y + Math.sin(ang) * side * (W / 2 - 3) + jitter;
+      const e = p.edgesAt(i);
+      const ang = Math.atan2(e.ly - e.ry, e.lx - e.rx);
+      for (const [cx0, cy0] of [[e.lx, e.ly], [e.rx, e.ry]] as const) {
+        const jx = (rnd() - 0.5) * 5, jy = (rnd() - 0.5) * 5;
+        const cx = cx0 + jx, cy = cy0 + jy;
         g.fillStyle = 'rgba(0,0,0,0.28)';
         g.beginPath(); g.ellipse(cx, cy + 2, 7, 4.5, ang, 0, Math.PI * 2); g.fill();
         g.fillStyle = hexA(pal.pathEdge, 0.95);
@@ -89,9 +92,6 @@ export function bakeTerrain(
       }
     }
   }
-
-  // --- Deko: Felsen an freien Orten.
-  for (const pr of map.props) drawRock(g, pr.x, pr.y, pr.r, rnd, pal);
 
   // --- Unwegsames Gelaende.
   //

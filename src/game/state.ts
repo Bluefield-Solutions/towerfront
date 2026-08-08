@@ -186,8 +186,11 @@ export class GameState {
   canPlace(id: TowerId, x: number, y: number): boolean {
     const r = TOWERS[id].footprint / 2;
     if (x - r < 0 || y - r < 0 || x + r > WORLD_W || y + r > WORLD_H) return false;
+    // Abstand zur Wegmitte minus der oertlichen halben Breite: an einer
+    // Engstelle darf naeher gebaut werden als an einer breiten Stelle, und
+    // genau das macht Engstellen wertvoll.
     for (const lane of this.lanes) {
-      if (lane.distanceTo(x, y) < r + PATH_CLEARANCE) return false;
+      if (lane.distanceTo(x, y) < r + PATH_CLEARANCE + lane.halfNear(x, y)) return false;
     }
     for (const g of this.map.rough) {
       if (Math.hypot(g.x - x, g.y - y) < g.r + r) return false;

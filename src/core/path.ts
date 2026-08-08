@@ -1,5 +1,9 @@
 import type { Vec } from './math';
 
+/** Ein Kontrollpunkt des Weges. `w` ist die halbe Wegbreite an dieser Stelle -
+ *  dadurch kann der Weg mal weiter, mal enger sein. */
+export interface PathPoint extends Vec { w?: number }
+
 /** Ein Weg als Kurve.
  *
  *  Bis v35 war ein Weg eine Kette achsenparalleler Abschnitte auf einem
@@ -20,6 +24,8 @@ import type { Vec } from './math';
 export class LanePath {
   /** Dicht abgetastete Punkte entlang der Kurve. */
   readonly pts: Vec[] = [];
+  /** Halbe Wegbreite an jedem Abtastpunkt, weich ueberblendet. */
+  readonly half: number[] = [];
   /** Zurueckgelegte Strecke bis zum jeweiligen Punkt. */
   readonly cum: number[] = [];
   /** Gesamtlaenge in Pixeln. */
@@ -29,7 +35,7 @@ export class LanePath {
    *  ausserhalb des Feldes liegen - dort steht das Tor.
    *  @param perSpan Abtastpunkte je Abschnitt. 24 ist fein genug, dass man
    *  die Abtastung nicht sieht, und grob genug, dass die Tabelle klein bleibt. */
-  constructor(readonly control: Vec[], perSpan = 24) {
+  constructor(readonly control: PathPoint[], perSpan = 24) {
     const n = control.length;
     if (n < 2) throw new Error('Ein Weg braucht mindestens zwei Punkte.');
 
@@ -51,8 +57,12 @@ export class LanePath {
     for (let i = 0; i < n - 1; i++) {
       const p0 = p(i - 1), p1 = p(i), p2 = p(i + 1), p3 = p(i + 2);
       const steps = i === n - 2 ? perSpan : perSpan - 1;
+      const w1 = control[i].w ?? 42, w2 = control[i + 1].w ?? 42;
       for (let k = 0; k <= steps; k++) {
         const t = k / perSpan;
+        // Breite weich ueberblenden, damit keine Stufe im Band entsteht.
+        const ease = t * t * (3 - 2 * t);
+        this.half.push(w1 + (w2 - w1) * ease);
         const t2 = t * t, t3 = t2 * t;
         this.pts.push({
           x: 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t
@@ -99,6 +109,35 @@ export class LanePath {
       y: a.y + (b.y - a.y) * f,
       angle: Math.atan2(b.y - a.y, b.x - a.x),
     };
+  }
+
+  /** Die beiden Raender des Weges an einem Abtastpunkt. */
+  edgesAt(i: number): { lx: number; ly: number; rx: number; ry: number } {
+    const a = this.pts[Math.max(0, i - 1)];
+    const b = this.pts[Math.min(this.pts.length - 1, i + 1)];
+    const ang = Math.atan2(b.y - a.y, b.x - a.x) + Math.PI / 2;
+    const w = this.half[i] ?? 42;
+    const p = this.pts[i];
+    return {
+      lx: p.x + Math.cos(ang) * w, ly: p.y + Math.sin(ang) * w,
+      rx: p.x - Math.cos(ang) * w, ry: p.y - Math.sin(ang) * w,
+    };
+  }
+
+  /** Die engste und die weiteste Stelle - fuer die Pruefung, ob der Weg
+   *  ueberhaupt atmet. */
+  widthRange(): { min: number; max: number } {
+    return { min: Math.min(...this.half), max: Math.max(...this.half) };
+  }
+
+  /** Halbe Wegbreite an der Stelle, die diesem Punkt am naechsten liegt. */
+  halfNear(x: number, y: number): number {
+    let best = 0, bestD = Infinity;
+    for (let i = 0; i < this.pts.length; i++) {
+      const d = (this.pts[i].x - x) ** 2 + (this.pts[i].y - y) ** 2;
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    return this.half[best] ?? 42;
   }
 
   /** Kuerzester Abstand eines Punktes zur Kurve. Wird gebraucht, um zu

@@ -81,6 +81,7 @@ const { bindInput } = await import('../src/core/input');
 const { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor } = await import('../src/data/towers');
 
 const { TUTORIAL } = await import('../src/game/tutorial');
+const { candidateSpots } = await import('./spots');
 const { WORLD_W, WORLD_H } = await import('../src/data/config');
 
 // ---------------------------------------------------------------- Ablauf
@@ -132,7 +133,7 @@ for (const step of TUTORIAL) {
   probe.reset();
   const doStep: Record<string, () => void> = {
     pick: () => { probe.buildChoice = 'arrow'; },
-    place: () => { probe.build(probe.map.hint, 'arrow'); },
+    place: () => { probe.build(probe.map.hint.x, probe.map.hint.y, 'arrow'); },
     start: () => probe.startWave(),
     upgrade: () => { probe.gold += 2000; probe.upgrade(probe.towers[0], 0); },
     early: () => { probe.waveIndex = 1; probe.waveActive = false; probe.startWave(); },
@@ -153,7 +154,7 @@ for (const step of TUTORIAL) {
 // Ueber den Knopf starten statt direkt zuruecksetzen - so laeuft auch die
 // Einfuehrung mit und ihre Positionsrechnung wird ausgefuehrt.
 (win.document.getElementById('s-action') as unknown as HTMLButtonElement).click();
-const spots = state.map.spots.map((_, i) => i);
+const spots = candidateSpots(state);
 let spotIdx = 0, si = 0, frames = 0;
 let outcome = 'playing';
 const plan = TOWER_ORDER;
@@ -164,7 +165,7 @@ step('Partie durchspielen', () => {
     const id = plan[si % plan.length];
     if (spotIdx < spots.length && state.gold >= TOWERS[id].base.cost) {
       const sp = spots[spotIdx++];
-      if (state.build(sp, id)) si++;
+      if (state.build(sp.x, sp.y, id)) si++;
     }
     const up = state.towers.find((t) => {
       if (t.level >= MAX_LEVEL) return false;
@@ -184,12 +185,12 @@ step('Partie durchspielen', () => {
     // Auswahl und Bauvorschau mitlaufen lassen - beide zeichnen eigene Wege.
     if (frames % 180 === 0) {
       state.buildChoice = plan[(frames / 180) % plan.length];
-      state.hoverSpot = (frames / 180) % state.map.spots.length;
-      state.pendingSpot = state.hoverSpot;
+      state.hoverPoint = spots[(frames / 180) % Math.max(1, spots.length)] ?? null;
+      state.pendingPoint = state.hoverPoint;
     }
     if (frames % 180 === 90) {
       state.buildChoice = null;
-      state.pendingSpot = -1;
+      state.pendingPoint = null;
       state.selectedTower = state.towers[0] ?? null;
     }
 
@@ -212,7 +213,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   const probe = new GameState();
   probe.reset();
   probe.gold = 5000;
-  probe.build(probe.map.hint, 'arrow');
+  probe.build(probe.map.hint.x, probe.map.hint.y, 'arrow');
   const t = probe.towers[0];
   if (t.branch !== null) problems.push('Zweige: ein frisch gebauter Turm hat schon einen Zweig.');
   if (probe.upgrade(t)) problems.push('Zweige: Ausbau ohne Zweigwahl war moeglich.');
@@ -221,6 +222,12 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   if (!probe.upgrade(t, 0)) problems.push('Zweige: zweiter Ausbau schlug fehl.');
   if (t.branch !== 1) problems.push('Zweige: der Zweig liess sich nachtraeglich wechseln.');
   if (t.level !== 3) problems.push(`Zweige: Stufe ${t.level} statt 3 nach zwei Ausbauten.`);
+  // Bis zur Endstufe durchbauen und dann einen Schritt zu weit versuchen.
+  probe.gold = 100000;
+  while (t.level < MAX_LEVEL) {
+    if (!probe.upgrade(t, 0)) { problems.push(`Zweige: Ausbau auf Stufe ${t.level + 1} schlug fehl.`); break; }
+  }
+  if (t.level !== MAX_LEVEL) problems.push(`Zweige: Endstufe ${t.level} statt ${MAX_LEVEL}.`);
   if (probe.upgrade(t, 0)) problems.push('Zweige: Ausbau ueber die Endstufe hinaus war moeglich.');
 
   // Und die Oberflaeche muss die Wahl auch anbieten - geprueft am echten
@@ -271,6 +278,54 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
   sizeCanvas(canvas, 844, 390);
   renderer.resize();
+}
+
+// Jeder Ausbauzweig muss antippbar sein - und der Pruefsteg muss auf den
+// Bildschirm passen.
+//
+// Auf dem Handy quer lief der Pruefsteg unten aus dem Bild, und der zweite
+// Zweigknopf war nicht erreichbar. Ein Knopf, den man nicht treffen kann, ist
+// dasselbe wie ein fehlender Knopf.
+{
+  const probe = new GameState();
+  probe.reset();
+  probe.gold = 9000;
+  probe.build(probe.map.hint.x, probe.map.hint.y, 'arrow');
+  state.selectedTower = null;
+  const before = state.towers.length;
+  void before;
+
+  // Denselben Zustand im echten Steg herstellen.
+  state.gold = 9000;
+  if (!state.towers.length) state.build(state.map.hint.x, state.map.hint.y, 'arrow');
+  const tw = state.towers[0];
+  tw.branch = null; tw.level = 1;
+  state.selectedTower = tw;
+  ui.sync();
+
+  const ups = win.document.getElementById('i-ups')!;
+  const buttons = [...ups.querySelectorAll('button')];
+  if (buttons.length !== 2) {
+    problems.push(`Ausbau: ${buttons.length} Zweigknoepfe statt zwei.`);
+  }
+  for (let i = 0; i < buttons.length; i++) {
+    const b = buttons[i] as HTMLButtonElement;
+    if (b.disabled) problems.push(`Ausbau: Zweigknopf ${i} ist gesperrt, obwohl Gold reicht.`);
+    if (b.dataset.branch !== String(i)) {
+      problems.push(`Ausbau: Zweigknopf ${i} traegt die Kennung "${b.dataset.branch}".`);
+    }
+  }
+  // Beide Zweige muessen sich auch tatsaechlich waehlen lassen.
+  for (const branch of [0, 1] as const) {
+    const t2 = new GameState();
+    t2.reset(); t2.gold = 9000; t2.build(t2.map.hint.x, t2.map.hint.y, 'arrow');
+    if (!t2.upgrade(t2.towers[0], branch)) {
+      problems.push(`Ausbau: Zweig ${branch} liess sich nicht waehlen.`);
+    } else if (t2.towers[0].branch !== branch) {
+      problems.push(`Ausbau: Zweig ${branch} gewaehlt, gespeichert wurde ${t2.towers[0].branch}.`);
+    }
+  }
+  state.selectedTower = null;
 }
 
 // Die Leiste muss sich ein- und ausklappen lassen.

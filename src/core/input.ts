@@ -9,11 +9,10 @@ import type { Renderer } from '../gfx/renderer';
  *  Ein Fehltipp kostet damit kein Gold und keine Nerven.
  *  Ohne gewaehlte Turmsorte waehlt der Tipp einen vorhandenen Turm aus. */
 export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer): void {
-  /** Welcher Bauplatz liegt unter dem Finger? -1, wenn keiner. */
-  const toSpot = (ev: { clientX: number; clientY: number }) => {
+  /** Weltpunkt unter dem Finger. */
+  const toWorld = (ev: { clientX: number; clientY: number }) => {
     const rect = canvas.getBoundingClientRect();
-    const w = r.screenToWorld(ev.clientX - rect.left, ev.clientY - rect.top);
-    return s.spotUnder(w.x, w.y);
+    return r.screenToWorld(ev.clientX - rect.left, ev.clientY - rect.top);
   };
 
   let down = false;
@@ -46,7 +45,7 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
       }
       pinchDist = d;
       dragging = true;
-      s.pendingSpot = -1;
+      s.pendingPoint = null;
       return;
     }
 
@@ -57,19 +56,19 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
       }
       if (!dragging && Math.hypot(p.x - startX, p.y - startY) > DRAG_THRESHOLD) {
         dragging = true;
-        s.pendingSpot = -1;
+        s.pendingPoint = null;
       }
       if (dragging) {
         r.panBy(p.x - lastX, p.y - lastY);
         lastX = p.x; lastY = p.y;
         return;
       }
-      s.pendingSpot = toSpot(ev);
+      s.pendingPoint = toWorld(ev);
       return;
     }
-    if (ev.pointerType !== 'touch') s.hoverSpot = toSpot(ev);
+    if (ev.pointerType !== 'touch') s.hoverPoint = toWorld(ev);
   });
-  canvas.addEventListener('pointerleave', () => { s.hoverSpot = -1; });
+  canvas.addEventListener('pointerleave', () => { s.hoverPoint = null; });
 
   canvas.addEventListener('pointerdown', (ev) => {
     Sfx.unlock();
@@ -80,7 +79,7 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
       const [a, b] = [...points.values()];
       pinchDist = Math.hypot(a.x - b.x, a.y - b.y);
       dragging = true;
-      s.pendingSpot = -1;
+      s.pendingPoint = null;
       return;
     }
     canvas.setPointerCapture?.(ev.pointerId);
@@ -89,9 +88,9 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
     if (s.aiming) r.aimPoint = r.screenToWorld(p.x, p.y);
     startX = lastX = p.x; startY = lastY = p.y;
     if (s.phase !== 'playing') return;
-    const c = toSpot(ev);
-    s.hoverSpot = c;
-    s.pendingSpot = s.buildChoice || s.aiming ? c : -1;
+    const c = toWorld(ev);
+    s.hoverPoint = c;
+    s.pendingPoint = s.buildChoice || s.aiming ? c : null;
   });
 
   const finish = (ev: PointerEvent) => {
@@ -101,8 +100,8 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
     down = false;
     const wasDragging = dragging;
     dragging = false;
-    const spot = s.pendingSpot;
-    s.pendingSpot = -1;
+    const at = s.pendingPoint;
+    s.pendingPoint = null;
     // Geschoben statt getippt: nichts bauen, nichts auswaehlen.
     if (wasDragging) return;
 
@@ -119,7 +118,7 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
     lastTap = now;
 
     if (s.phase !== 'playing') return;
-    const c = spot >= 0 ? spot : toSpot(ev);
+    const c = at ?? toWorld(ev);
 
     // Eine angewaehlte Faehigkeit hat Vorrang: der Tipp zielt, er baut nicht.
     if (s.aiming) {
@@ -130,11 +129,11 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
       return;
     }
 
-    const existing = s.towerOnSpotIndex(c);
+    const existing = s.towerUnder(c.x, c.y);
     if (s.buildChoice) {
       if (existing) { s.selectedTower = existing; s.buildChoice = null; Sfx.play('tap'); return; }
       const choice = s.buildChoice;
-      if (s.build(c, choice)) {
+      if (s.build(c.x, c.y, choice)) {
         // Reicht das Gold nicht mehr fuer den naechsten Turm, Auswahl loesen.
         if (s.gold < TOWERS[choice].base.cost) s.buildChoice = null;
       }
@@ -148,7 +147,7 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
   canvas.addEventListener('pointercancel', (ev) => {
     points.delete(ev.pointerId);
     if (points.size < 2) pinchDist = 0;
-    down = false; dragging = false; s.pendingSpot = -1;
+    down = false; dragging = false; s.pendingPoint = null;
   });
 
   // Am Schreibtisch: Mausrad zoomt um den Zeiger.

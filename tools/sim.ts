@@ -13,6 +13,7 @@ import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, type TowerId } from '../src/da
 import { MAPS } from '../src/data/maps';
 import { ALL_PERKS, NO_PERKS, starsFor } from '../src/data/perks';
 import { ABILITIES } from '../src/data/abilities';
+import { candidateSpots } from './spots';
 
 const DT = 1 / 60;
 
@@ -110,15 +111,8 @@ const MEISTER = BOTS[0];
  *  Sortiment: die Bewertung ist Teil des Bot-Modells. Haengt sie an den
  *  Turmwerten, aendert jede Turmaenderung zugleich das Verhalten des Bots -
  *  und dann misst die Simulation zwei Dinge auf einmal. */
-function buildSpots(s: GameState): number[] {
-  const REACH = 252;
-  return s.map.spots
-    .map((sp, i) => ({
-      i,
-      score: s.lanes.reduce((a, l) => a + l.coveredLength(sp.x, sp.y, REACH), 0),
-    }))
-    .sort((a, b) => b.score - a.score)
-    .map((o) => o.i);
+function buildSpots(s: GameState): { x: number; y: number }[] {
+  return candidateSpots(s);
 }
 
 interface Result {
@@ -168,7 +162,7 @@ function play(
 
       if (wantBuild) {
         const sp = spots[spotIdx];
-        if (s.build(sp, id)) { si++; }
+        if (s.build(sp.x, sp.y, id)) { si++; }
         spotIdx++;
       } else {
         // In die Tiefe: immer in den Turm, der bisher am meisten geleistet hat.
@@ -183,7 +177,7 @@ function play(
         else if (s.towers.length < bot.maxTowers && spotIdx < spots.length &&
           s.gold >= TOWERS[id].base.cost + reserve) {
           const sp = spots[spotIdx];
-          if (s.build(sp, id)) si++;
+          if (s.build(sp.x, sp.y, id)) si++;
           spotIdx++;
         }
       }

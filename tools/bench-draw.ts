@@ -103,12 +103,13 @@ r.resize();
 s.reset();
 s.gold = 1_000_000;
 let i = 0;
-for (let spot = 0; spot < s.map.spots.length; spot++) {
-    {
-      if (!s.canBuild(spot)) continue;
+const cand = candidateSpots(s);
+for (let k = 0; k < cand.length; k++) {
+  {
+    const sp = cand[k];
     const id = TOWER_ORDER[i++ % TOWER_ORDER.length];
-    if (s.build(spot, id)) {
-      const t = s.towerOnSpotIndex(spot)!;
+    if (s.build(sp.x, sp.y, id)) {
+      const t = s.towerUnder(sp.x, sp.y)!;
       while (t.level < MAX_LEVEL) s.upgrade(t, (i % 2) as 0 | 1);
     }
   }
@@ -121,6 +122,8 @@ const keepAlive = (): void => {
   s.lives = 999;
   for (const e of s.enemies) { e.hp = 1e9; e.hpMax = 1e9; }
 };
+
+import { candidateSpots } from './spots';
 
 const DT = 1 / 60;
 // Aufwaermen: Untergrund, Himmel und alle Bilder werden hier gebacken.

@@ -25,8 +25,6 @@ export interface Enemy {
 export interface Tower {
   id: number;
   def: TowerId;
-  /** Index des Bauplatzes, auf dem der Turm steht. */
-  spot: number;
   x: number; y: number;   // Weltmitte
   level: number;          // 1..3
   branch: BranchIndex;    // null solange Stufe 1, danach endgueltig

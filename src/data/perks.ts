@@ -85,7 +85,7 @@ export const ALL_PERKS: PerkEffect = perkEffect(PERK_ORDER);
 export function starsFor(won: boolean, lives: number, maxLives: number): number {
   if (!won) return 0;
   const share = lives / Math.max(1, maxLives);
-  if (share >= 0.75) return 3;
-  if (share >= 0.4) return 2;
+  if (share >= 0.85) return 3;
+  if (share >= 0.45) return 2;
   return 1;
 }

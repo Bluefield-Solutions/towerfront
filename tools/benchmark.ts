@@ -60,7 +60,7 @@ function buildsWhilePaused(): boolean {
   const t = new GameState();
   t.reset(1);
   t.paused = true;
-  return t.build(t.map.hint, 'arrow');
+  return t.build(t.map.hint.x, t.map.hint.y, 'arrow');
 }
 
 const CRITERIA: Criterion[] = [

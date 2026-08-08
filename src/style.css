@@ -137,9 +137,14 @@ html, body {
 
 /* ------------------------------------------------------------ Inspector */
 
+/* Der Prüfsteg darf nie über den Bildschirmrand hinauslaufen.
+   Vorher hatte er keine Höhenbegrenzung: auf dem Handy quer rutschte der
+   zweite Zweigknopf unter den unteren Rand und war nicht antippbar. */
 .inspector {
   position: absolute; z-index: 3; top: calc(56px + var(--sat)); right: calc(12px + var(--sar));
   width: 208px; padding: 12px;
+  max-height: calc(100% - 150px - var(--sat) - var(--sab));
+  overflow-y: auto; overscroll-behavior: contain;
   background: var(--panel); border: 1px solid var(--edge);
   border-radius: 14px; backdrop-filter: blur(10px);
 }
@@ -552,6 +557,15 @@ html, body {
 
 /* Auf flachen Geräten noch kompakter. */
 @media (max-height: 480px) {
+  /* Auf flachen Geräten liegen die Ausbauzweige nebeneinander statt
+     untereinander - sonst passen sie nicht auf den Bildschirm. */
+  .inspector { width: 250px; padding: 9px; top: calc(48px + var(--sat)); }
+  .insp-ups { flex-direction: row; gap: 5px; }
+  .branch { flex: 1 1 0; min-width: 0; padding: 6px 7px; }
+  .br-b { display: none; }
+  .br-n { font-size: 11px; }
+  .insp-stats { margin-bottom: 6px; }
+
   .tower-btn { min-width: 70px; padding: 5px 7px; }
   .skill-btn { min-width: 54px; padding: 5px 7px; }
   .dock-row { max-width: 58vw; }

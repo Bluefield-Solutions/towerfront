@@ -10,7 +10,7 @@ import {
 } from '../data/difficulty';
 import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
 import {
-  MAPS, mapById, goalOf, lanePaths, spotAt, type GameMap,
+  MAPS, mapById, goalOf, lanePaths, snap, PATH_CLEARANCE, type GameMap,
 } from '../data/maps';
 import type { LanePath } from '../core/path';
 import type { Vec } from '../core/math';
@@ -45,8 +45,7 @@ export class GameState {
   /** Die Kurven der Zuwege. Eine Karte kann mehrere haben, die sich
    *  unterwegs vereinen. */
   lanes: LanePath[] = [];
-  /** Turm je Bauplatz-Index, oder undefined. */
-  private towerOnSpot: (Tower | undefined)[] = [];
+
   goal: Vec = { x: 0, y: 0 };
   /** Gesamtlaenge der laengsten Bahn. Dient als gemeinsamer Massstab, damit
    *  fliegende und laufende Gegner beim Zielen vergleichbar sind. */
@@ -93,11 +92,11 @@ export class GameState {
 
   buildChoice: TowerId | null = null;
   selectedTower: Tower | null = null;
-  /** Bauplatz unter dem Zeiger, -1 wenn keiner. */
-  hoverSpot = -1;
+  /** Weltpunkt unter dem Zeiger. */
+  hoverPoint: Vec | null = null;
   /** Zelle unter dem gedrueckten Finger. Gebaut wird erst beim Loslassen. */
-  /** Bauplatz, ueber dem gerade gedrueckt wird, -1 wenn keiner. */
-  pendingSpot = -1;
+  /** Weltpunkt, ueber dem gerade gedrueckt wird. */
+  pendingPoint: Vec | null = null;
 
   /** Aussaat und Zufallszustand. Beides wandert in den Spielstand, damit eine
    *  fortgesetzte Partie exakt so weiterlaeuft wie eine ununterbrochene - und
@@ -165,7 +164,6 @@ export class GameState {
   loadMap(mapId: string): void {
     this.map = mapById(mapId);
     this.lanes = lanePaths(this.map);
-    this.towerOnSpot = new Array(this.map.spots.length).fill(undefined);
     this.goal = goalOf(this.map);
     this.pathTotal = Math.max(...this.lanes.map((l) => l.length));
     this.airTotal = Math.max(...this.lanes.map(
@@ -175,37 +173,59 @@ export class GameState {
 
   // ---------------------------------------------------------------- Bauen
 
-  /** Kann auf diesem Bauplatz gebaut werden? Angabe ist der Index, nicht mehr
-   *  eine Rasterzelle. */
-  canBuild(spot: number): boolean {
-    return spot >= 0 && spot < this.map.spots.length && !this.towerOnSpot[spot];
+  /** Darf hier ein Turm dieser Sorte stehen?
+   *
+   *  Vier Bedingungen, und jede hat einen Grund:
+   *  - innerhalb des Feldes, mit dem eigenen Platzbedarf,
+   *  - weit genug vom Weg, sonst klebt er auf der Strasse,
+   *  - nicht in unwegsamem Gelaende,
+   *  - ohne Ueberschneidung mit einem anderen Turm.
+   *
+   *  Der Platzbedarf haengt an der Turmsorte - genau darin besteht die
+   *  Entscheidung beim freien Bauen. */
+  canPlace(id: TowerId, x: number, y: number): boolean {
+    const r = TOWERS[id].footprint / 2;
+    if (x - r < 0 || y - r < 0 || x + r > WORLD_W || y + r > WORLD_H) return false;
+    for (const lane of this.lanes) {
+      if (lane.distanceTo(x, y) < r + PATH_CLEARANCE) return false;
+    }
+    for (const g of this.map.rough) {
+      if (Math.hypot(g.x - x, g.y - y) < g.r + r) return false;
+    }
+    for (const t of this.towers) {
+      if (Math.hypot(t.x - x, t.y - y) < r + TOWERS[t.def].footprint / 2 + 4) return false;
+    }
+    return true;
   }
 
-  /** Welcher Bauplatz liegt unter diesem Weltpunkt? -1, wenn keiner. */
-  spotUnder(x: number, y: number): number {
-    return spotAt(this.map, x, y);
+  /** Der Turm unter diesem Punkt - fuer die Auswahl. */
+  towerUnder(x: number, y: number): Tower | undefined {
+    let best: Tower | undefined;
+    let bestD = Infinity;
+    for (const t of this.towers) {
+      const d = Math.hypot(t.x - x, t.y - y);
+      const r = TOWERS[t.def].footprint / 2 + 10;
+      if (d < r && d < bestD) { bestD = d; best = t; }
+    }
+    return best;
   }
 
-  towerOnSpotIndex(spot: number): Tower | undefined {
-    return spot >= 0 ? this.towerOnSpot[spot] : undefined;
-  }
 
 
-
-  build(spot: number, id: TowerId): boolean {
+  build(wx: number, wy: number, id: TowerId): boolean {
     const def = TOWERS[id];
-    if (!this.canBuild(spot) || this.gold < def.base.cost) return false;
+    const x = snap(wx), y = snap(wy);
+    if (!this.canPlace(id, x, y) || this.gold < def.base.cost) return false;
     this.gold -= def.base.cost;
     this.stats.goldSpent += def.base.cost;
     this.stats.towersBuilt++;
-    const c = this.map.spots[spot];
+    const c = { x, y };
     const t: Tower = {
-      id: this.nextId++, def: id, spot, x: c.x, y: c.y,
+      id: this.nextId++, def: id, x: c.x, y: c.y,
       level: 1, branch: null, cooldownLeft: 0, angle: -Math.PI / 2, recoil: 0, flash: 0, pulse: 0,
       target: null, retargetIn: 0, kills: 0, damageDone: 0,
     };
     this.towers.push(t);
-    this.towerOnSpot[spot] = t;
     this.towersVersion++;
     this.ring(c.x, c.y, 54, def.accent, 0.4, 3);
     Sfx.play('build');
@@ -238,7 +258,6 @@ export class GameState {
     t.target = null;
     compact(this.towers, (o) => o === t);
     this.towersVersion++;
-    this.towerOnSpot[t.spot] = undefined;
     if (this.selectedTower === t) this.selectedTower = null;
     this.float(t.x, t.y - 10, `+${value}`, C.gold, 22);
     this.ring(t.x, t.y, 48, C.stoneDark, 0.35, 2);
@@ -1009,12 +1028,11 @@ export class GameState {
     this.abilityCd = { meteor: 0, freeze: 0 };
     this.aiming = null;
     this.grid.clear();
-    this.towerOnSpot = new Array(this.map.spots.length).fill(undefined);
     this.towersVersion++;
     this.pending = [];
     this.selectedTower = null;
     this.buildChoice = null;
-    this.pendingSpot = -1;
+    this.pendingPoint = null;
     this.speed = 1;
     this.paused = false;
     this.idleTime = 0;
@@ -1058,7 +1076,7 @@ export class GameState {
       ]) as unknown as SaveGame['shots'],
       pending: this.pending.map((p) => [p.time, p.enemy, p.hpMul, p.lane]),
       towers: this.towers.map((t) => [
-        t.def, t.spot, t.level, t.kills, t.damageDone, t.cooldownLeft, t.retargetIn, t.branch,
+        t.def, t.x, t.y, t.level, t.kills, t.damageDone, t.cooldownLeft, t.retargetIn, t.branch,
         t.target ? this.enemies.indexOf(t.target) : -1,
       ]) as unknown as SaveGame['towers'],
       enemies: this.enemies.map((e) => [
@@ -1083,10 +1101,14 @@ export class GameState {
     // dieser Zeit - oder ein von Hand veraenderter - haette Tuerme mitten im
     // Gelaende wiederhergestellt, und die Zelle waere dauerhaft blockiert
     // gewesen. Lieber neu anfangen als in einem unmoeglichen Zustand landen.
+    // Jeder gespeicherte Turm muss dort ueberhaupt stehen duerfen. Ein Stand
+    // aus einer aelteren Fassung - oder ein veraenderter - haette sonst
+    // Tuerme im Fels oder auf dem Weg.
     {
-      const n = mapById(save.map).spots.length;
-      for (const [, spot] of save.towers) {
-        if (!Number.isInteger(spot) || spot < 0 || spot >= n) return false;
+      const probe = new GameState(save.map);
+      for (const [def, tx, ty] of save.towers) {
+        if (!probe.canPlace(def, tx, ty)) return false;
+        probe.towers.push({ x: tx, y: ty, def } as Tower);
       }
     }
     for (const [id] of save.enemies) if (!(id in ENEMIES)) return false;
@@ -1115,19 +1137,17 @@ export class GameState {
     }
 
     const targetIdx: number[] = [];
-    for (const [def, spot, level, kills, damageDone, cooldownLeft, retargetIn, branch, tIdx]
+    for (const [def, tx, ty, level, kills, damageDone, cooldownLeft, retargetIn, branch, tIdx]
       of save.towers) {
       targetIdx.push(tIdx ?? -1);
-      const c = this.map.spots[spot];
       const t: Tower = {
-        id: this.nextId++, def, spot, x: c.x, y: c.y,
+        id: this.nextId++, def, x: tx, y: ty,
         level, branch: (branch ?? null) as BranchIndex,
         cooldownLeft: cooldownLeft ?? 0, angle: -Math.PI / 2, recoil: 0, flash: 0, pulse: 0,
         target: null, retargetIn: retargetIn ?? 0, kills, damageDone,
       };
       this.towers.push(t);
-      this.towerOnSpot[spot] = t;
-    }
+      }
     this.towersVersion++;
 
     for (const [def, x, y, hp, hpMax, travelled, slowFactor, slowLeft, wobble, lane, healIn]

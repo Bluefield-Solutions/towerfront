@@ -31,10 +31,14 @@ export interface TowerBranch {
   blurb: string;
   color: string;
   /** Werte fuer Stufe 2 und Stufe 3. */
-  levels: [TowerLevel, TowerLevel];
+  /** Die Stufen 2 bis 6 dieses Zweiges. */
+  levels: TowerLevel[];
 }
 
 export interface TowerDef {
+  /** Platzbedarf in Weltpixeln. Nicht jeder Turm nimmt gleich viel Raum ein -
+   *  darin besteht die Entscheidung beim freien Bauen. */
+  footprint: number;
   id: TowerId;
   name: string;
   role: string;
@@ -49,11 +53,11 @@ export interface TowerDef {
   branches: [TowerBranch, TowerBranch];
 }
 
-export const MAX_LEVEL = 3;
+export const MAX_LEVEL = 6;
 
 export const TOWERS: Record<TowerId, TowerDef> = {
   arrow: {
-    id: 'arrow', name: 'Bogenturm', role: 'Dauerfeuer',
+    id: 'arrow', footprint: 44, name: 'Bogenturm', role: 'Dauerfeuer',
     blurb: 'Günstig und schnell. Trägt die frühen Wellen.',
     color: '#D8DCE8', accent: '#F2C14E',
     attack: 'single', hitsAir: true, projectileSpeed: 840,
@@ -63,8 +67,11 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         id: 'sniper', name: 'Scharfschütze', color: '#F2C14E',
         blurb: 'Weite Reichweite, harter Einzelschuss, durchschlägt Panzerung.',
         levels: [
-          { cost: 70, damage: 24, range: 330, cooldown: 0.8, pierce: 2 },
-          { cost: 130, damage: 52, range: 408, cooldown: 0.75, pierce: 4 },
+          { cost: 70, damage: 29, range: 330, cooldown: 0.8, pierce: 2 },
+          { cost: 130, damage: 63, range: 408, cooldown: 0.75, pierce: 4 },
+          { cost: 265, damage: 102, range: 442, cooldown: 0.73, pierce: 4 },
+          { cost: 545, damage: 166, range: 479, cooldown: 0.71, pierce: 5 },
+          { cost: 1115, damage: 268, range: 519, cooldown: 0.69, pierce: 5 },
         ],
       },
       {
@@ -73,12 +80,15 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         levels: [
           { cost: 70, damage: 16, range: 300, cooldown: 0.27, pierce: 1 },
           { cost: 145, damage: 26, range: 319, cooldown: 0.20, pierce: 2 },
+          { cost: 295, damage: 35, range: 326, cooldown: 0.17, pierce: 2 },
+          { cost: 605, damage: 47, range: 333, cooldown: 0.15, pierce: 3 },
+          { cost: 1240, damage: 64, range: 340, cooldown: 0.14, pierce: 3 },
         ],
       },
     ],
   },
   frost: {
-    id: 'frost', name: 'Frostturm', role: 'Umkreis-Bremse',
+    id: 'frost', footprint: 52, name: 'Frostturm', role: 'Umkreis-Bremse',
     blurb: 'Kein Geschoss. Pulst im Umkreis und bremst alles gleichzeitig.',
     color: '#BFE9F2', accent: '#7FE7E0',
     attack: 'aura', hitsAir: true, projectileSpeed: 0,
@@ -88,8 +98,11 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         id: 'eternal', name: 'Ewiges Eis', color: '#7FE7E0',
         blurb: 'Weiter Umkreis, harte Bremse, kaum Schaden. Reine Kontrolle.',
         levels: [
-          { cost: 90, damage: 9, range: 234, cooldown: 0.7, slow: 0.5, slowTime: 2.2 },
-          { cost: 150, damage: 19, range: 300, cooldown: 0.58, slow: 0.72, slowTime: 3.4 },
+          { cost: 90, damage: 12, range: 234, cooldown: 0.7, slow: 0.5, slowTime: 2.2 },
+          { cost: 150, damage: 25, range: 300, cooldown: 0.58, slow: 0.72, slowTime: 3.4 },
+          { cost: 310, damage: 39, range: 330, cooldown: 0.53, slow: 0.81, slowTime: 4.05 },
+          { cost: 635, damage: 62, range: 363, cooldown: 0.49, slow: 0.82, slowTime: 4.82 },
+          { cost: 1300, damage: 99, range: 399, cooldown: 0.45, slow: 0.82, slowTime: 5.74 },
         ],
       },
       {
@@ -98,12 +111,15 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         levels: [
           { cost: 110, damage: 28, range: 252, cooldown: 0.64, slow: 0.28, slowTime: 1.4, pierce: 2 },
           { cost: 200, damage: 45, range: 281, cooldown: 0.56, slow: 0.34, slowTime: 1.6, pierce: 2 },
+          { cost: 410, damage: 60, range: 292, cooldown: 0.53, slow: 0.36, slowTime: 1.68, pierce: 2 },
+          { cost: 840, damage: 81, range: 304, cooldown: 0.5, slow: 0.38, slowTime: 1.76, pierce: 3 },
+          { cost: 1720, damage: 109, range: 316, cooldown: 0.47, slow: 0.4, slowTime: 1.85, pierce: 3 },
         ],
       },
     ],
   },
   mortar: {
-    id: 'mortar', name: 'Mörser', role: 'Fläche, nur Boden',
+    id: 'mortar', footprint: 70, name: 'Mörser', role: 'Fläche, nur Boden',
     blurb: 'Langsam und teuer, trifft eine ganze Traube. Erreicht keine Flieger.',
     color: '#C3B39A', accent: '#F08A3C',
     attack: 'splash', hitsAir: false, projectileSpeed: 384,
@@ -115,6 +131,9 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         levels: [
           { cost: 140, damage: 42, range: 330, cooldown: 1.35, splash: 115 },
           { cost: 235, damage: 66, range: 360, cooldown: 1.1, splash: 149 },
+          { cost: 480, damage: 87, range: 371, cooldown: 1.0, splash: 164 },
+          { cost: 985, damage: 115, range: 383, cooldown: 0.91, splash: 181 },
+          { cost: 2020, damage: 152, range: 395, cooldown: 0.83, splash: 200 },
         ],
       },
       {
@@ -123,12 +142,15 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         levels: [
           { cost: 160, damage: 95, range: 318, cooldown: 2.1, splash: 62, pierce: 4 },
           { cost: 280, damage: 200, range: 348, cooldown: 2.0, splash: 70, pierce: 8 },
+          { cost: 575, damage: 317, range: 359, cooldown: 1.96, splash: 73, pierce: 8 },
+          { cost: 1180, damage: 503, range: 371, cooldown: 1.92, splash: 76, pierce: 9 },
+          { cost: 2420, damage: 798, range: 383, cooldown: 1.88, splash: 79, pierce: 9 },
         ],
       },
     ],
   },
   prism: {
-    id: 'prism', name: 'Prisma', role: 'Kettenblitz',
+    id: 'prism', footprint: 58, name: 'Prisma', role: 'Kettenblitz',
     blurb: 'Sofortstrahl, springt auf Nachbarn über.',
     color: '#E4D3FF', accent: '#B07CFF',
     attack: 'chain', hitsAir: true, projectileSpeed: 0,
@@ -140,6 +162,9 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         levels: [
           { cost: 165, damage: 19, range: 246, cooldown: 0.85, chains: 5, falloff: 0.85 },
           { cost: 285, damage: 29, range: 276, cooldown: 0.75, chains: 8, falloff: 0.92 },
+          { cost: 585, damage: 38, range: 288, cooldown: 0.71, chains: 8, falloff: 0.92 },
+          { cost: 1200, damage: 49, range: 300, cooldown: 0.67, chains: 9, falloff: 0.92 },
+          { cost: 2460, damage: 64, range: 313, cooldown: 0.63, chains: 9, falloff: 0.92 },
         ],
       },
       {
@@ -148,6 +173,9 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         levels: [
           { cost: 175, damage: 48, range: 258, cooldown: 0.9, chains: 1, falloff: 0.5 },
           { cost: 300, damage: 96, range: 288, cooldown: 0.85, chains: 1, falloff: 0.5, pierce: 3 },
+          { cost: 615, damage: 148, range: 300, cooldown: 0.83, chains: 1, falloff: 0.5, pierce: 3 },
+          { cost: 1260, damage: 227, range: 312, cooldown: 0.81, chains: 2, falloff: 0.5, pierce: 4 },
+          { cost: 2585, damage: 349, range: 325, cooldown: 0.79, chains: 2, falloff: 0.5, pierce: 4 },
         ],
       },
     ],

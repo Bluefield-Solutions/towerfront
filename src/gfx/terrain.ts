@@ -1,6 +1,6 @@
 import { C, WORLD_H, WORLD_W } from '../data/config';
 import type { MapPalette, GameMap } from '../data/maps';
-import { SPOT_RADIUS } from '../data/maps';
+
 import type { LanePath } from '../core/path';
 import { hexA } from './glow';
 
@@ -93,31 +93,33 @@ export function bakeTerrain(
   // --- Deko: Felsen an freien Orten.
   for (const pr of map.props) drawRock(g, pr.x, pr.y, pr.r, rnd, pal);
 
-  // --- Bauplaetze: gemauerte Plattformen, ruhig gehalten.
+  // --- Unwegsames Gelaende.
   //
-  // Sie sind absichtlich nur zu ahnen. Erst wenn eine Turmsorte gewaehlt ist,
-  // hebt der Renderer sie hervor - vorher soll das Brett ruhig sein.
-  for (const sp of map.spots) {
-    const r = SPOT_RADIUS;
-    g.fillStyle = 'rgba(0,0,0,0.3)';
-    g.beginPath(); g.ellipse(sp.x, sp.y + 4, r * 1.04, r * 0.62, 0, 0, Math.PI * 2); g.fill();
-    g.fillStyle = hexA(pal.rockHi, 0.5);
-    g.beginPath(); g.ellipse(sp.x, sp.y, r, r * 0.58, 0, 0, Math.PI * 2); g.fill();
-    g.fillStyle = hexA(pal.rock, 0.6);
-    g.beginPath(); g.ellipse(sp.x, sp.y + 2, r * 0.8, r * 0.45, 0, 0, Math.PI * 2); g.fill();
-    // Ein paar Fugen, damit es gemauert wirkt statt gestempelt.
-    g.strokeStyle = 'rgba(0,0,0,0.25)'; g.lineWidth = 1.5;
-    for (let k = 0; k < 4; k++) {
-      const a = (Math.PI * 2 * k) / 4 + 0.4;
-      g.beginPath();
-      g.moveTo(sp.x + Math.cos(a) * r * 0.3, sp.y + Math.sin(a) * r * 0.18);
-      g.lineTo(sp.x + Math.cos(a) * r, sp.y + Math.sin(a) * r * 0.58);
-      g.stroke();
-    }
-    g.strokeStyle = 'rgba(255,255,255,0.16)'; g.lineWidth = 2;
+  // Es wird nicht als Verbotsschild gezeichnet, sondern als das, was es ist:
+  // Felsfelder und Dickicht. Man soll auf einen Blick sehen, *warum* dort
+  // nichts hinpasst - nicht, dass es verboten waere.
+  for (const gr of map.rough) {
+    const n = 9;
+    g.save();
+    g.translate(gr.x, gr.y);
     g.beginPath();
-    g.ellipse(sp.x, sp.y, r, r * 0.58, 0, Math.PI * 1.06, Math.PI * 1.94);
-    g.stroke();
+    for (let i = 0; i < n; i++) {
+      const a = (Math.PI * 2 * i) / n;
+      const rr = gr.r * (0.78 + rnd() * 0.34);
+      const px = Math.cos(a) * rr, py = Math.sin(a) * rr * 0.78;
+      if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
+    }
+    g.closePath();
+    g.fillStyle = hexA(pal.terrainLo, 0.8);
+    g.fill();
+    g.strokeStyle = hexA(pal.rockHi, 0.3); g.lineWidth = 2; g.stroke();
+    g.restore();
+    const stones = 3 + Math.round(gr.r / 34);
+    for (let i = 0; i < stones; i++) {
+      const a = rnd() * Math.PI * 2, rr = rnd() * gr.r * 0.66;
+      drawRock(g, gr.x + Math.cos(a) * rr, gr.y + Math.sin(a) * rr * 0.78,
+        12 + rnd() * (gr.r * 0.24), rnd, pal);
+    }
   }
 
   // --- Vignette

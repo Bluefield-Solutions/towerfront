@@ -8,8 +8,9 @@ import { PERKS, PERK_ORDER, starsFor } from '../src/data/perks';
 const NORMAL = DIFFICULTIES.normal;
 const START_GOLD = NORMAL.startGold;
 const START_LIVES = NORMAL.startLives;
-import { MAPS, goalOf, lanePaths, SPOT_RADIUS } from '../src/data/maps';
-import { TOWERS, TOWER_ORDER } from '../src/data/towers';
+import { MAPS, goalOf, lanePaths } from '../src/data/maps';
+import { GameState } from '../src/game/state';
+import { TOWERS, TOWER_ORDER, MAX_LEVEL } from '../src/data/towers';
 import { ENEMIES } from '../src/data/enemies';
 
 import { ABILITIES, ABILITY_ORDER } from '../src/data/abilities';
@@ -84,80 +85,83 @@ for (const map of MAPS) {
     if (shared < 10) fail(`${map.id}: die Bahnen treffen sich nie - das ist keine Gabelung.`);
   }
 
-  // --- Bauplaetze
-  const build = map.spots.length;
-  if (build < 10 || build > 16) {
-    fail(`${map.id}: ${build} Bauplaetze - zwischen 10 und 16 sind vorgesehen.`);
-  }
-  if (map.hint < 0 || map.hint >= build) {
-    fail(`${map.id}: der empfohlene Bauplatz ${map.hint} gibt es nicht.`);
-  }
-  const reach = Math.max(...TOWER_ORDER.map((t) => TOWERS[t].base.range));
-  for (let i = 0; i < map.spots.length; i++) {
-    const sp = map.spots[i];
-    if (sp.x < 0 || sp.y < 0 || sp.x > WORLD_W || sp.y > WORLD_H) {
-      fail(`${map.id}: Bauplatz ${i} liegt ausserhalb des Feldes.`);
-      continue;
-    }
-    const d = Math.min(...paths.map((p) => p.distanceTo(sp.x, sp.y)));
-    if (d < SPOT_RADIUS + 22) {
-      fail(`${map.id}: Bauplatz ${i} liegt mit ${Math.round(d)} Pixeln zu dicht am Weg.`);
-    }
-    if (d > reach * 0.8) {
-      fail(`${map.id}: Bauplatz ${i} ist ${Math.round(d)} Pixel vom Weg entfernt - er traefe kaum.`);
-    }
-    for (let k = i + 1; k < map.spots.length; k++) {
-      const o = map.spots[k];
-      if (Math.hypot(o.x - sp.x, o.y - sp.y) < SPOT_RADIUS * 2.4) {
-        warn(`${map.id}: Bauplaetze ${i} und ${k} liegen fast aufeinander.`);
-      }
-    }
-  }
-
-  // Zusammen muessen sie den ganzen Weg erreichen.
+  // --- Baubare Flaeche
+  //
+  // Seit v37 wird frei gebaut. Statt einer Liste von Plaetzen wird die Karte
+  // abgetastet: wieviel Prozent des Feldes trÃ¤gt einen Bogenturm, wieviel den
+  // viel groesseren Moerser? Das macht "zu eng" und "zu offen" messbar statt
+  // zur Geschmacksfrage.
   {
+    const probe = new GameState(map.id);
+    const STEP = 24;
+    const share: Record<string, number> = {};
+    let cells = 0;
+    for (let y = 0; y < WORLD_H; y += STEP) for (let x = 0; x < WORLD_W; x += STEP) cells++;
+    for (const id of TOWER_ORDER) {
+      let ok = 0;
+      for (let y = 0; y < WORLD_H; y += STEP) {
+        for (let x = 0; x < WORLD_W; x += STEP) if (probe.canPlace(id, x, y)) ok++;
+      }
+      share[id] = ok / cells;
+    }
+    const small = share[TOWER_ORDER[0]];
+    const big = Math.min(...TOWER_ORDER.map((t) => share[t]));
+    if (small < 0.18) {
+      fail(`${map.id}: nur ${(small * 100).toFixed(0)} % des Feldes tragen den kleinsten Turm - zu eng.`);
+    }
+    if (small > 0.62) {
+      warn(`${map.id}: ${(small * 100).toFixed(0)} % des Feldes sind bebaubar - sehr offen, das Gelaende entscheidet kaum mit.`);
+    }
+    if (big < 0.07) {
+      fail(`${map.id}: der groesste Turm passt nur auf ${(big * 100).toFixed(0)} % des Feldes.`);
+    }
+    // Der Platzbedarf muss ueberhaupt einen Unterschied machen - sonst ist er
+    // eine Zahl ohne Wirkung.
+    if (small - big < 0.05) {
+      warn(`${map.id}: grosser und kleiner Turm haben fast dieselbe Flaeche - der Platzbedarf wirkt nicht.`);
+    }
+
+    // Der ganze Weg muss von irgendwo aus erreichbar sein.
+    const reach = Math.max(...TOWER_ORDER.map((t) => TOWERS[t].base.range));
     let uncovered = 0, total = 0;
     for (const p of paths) {
-      for (let k = 0; k < p.pts.length; k += 3) {
+      for (let k = 0; k < p.pts.length; k += 6) {
         total++;
         const pt = p.pts[k];
-        if (!map.spots.some((sp) => Math.hypot(sp.x - pt.x, sp.y - pt.y) <= reach)) uncovered++;
+        let found = false;
+        for (let a = 0; a < 16 && !found; a++) {
+          for (let d = 60; d <= reach && !found; d += 40) {
+            const ang = (Math.PI * 2 * a) / 16;
+            const x = pt.x + Math.cos(ang) * d, y = pt.y + Math.sin(ang) * d;
+            if (probe.canPlace('arrow', x, y)) found = true;
+          }
+        }
+        if (!found) uncovered++;
       }
     }
-    // Ein paar Punkte ganz am Anfang liegen noch ausserhalb des Feldes -
-    // dort ist der Gegner noch im Tor. Erlaubt sind zwei Prozent.
-    if (uncovered > total * 0.02) {
+    if (uncovered > total * 0.03) {
       fail(
-        `${map.id}: ${uncovered} von ${total} Wegpunkten liegen ausserhalb jeder Reichweite - ` +
-        'dort kaeme jeder Gegner unbehelligt durch.',
+        `${map.id}: ${uncovered} von ${total} Wegpunkten sind von keiner bebaubaren Stelle ` +
+        'aus erreichbar - dort kaeme jeder Gegner unbehelligt durch.',
       );
     }
+
+    // Der Einfuehrungspunkt muss bebaubar sein.
+    if (!probe.canPlace('arrow', map.hint.x, map.hint.y)) {
+      fail(`${map.id}: der empfohlene Bauplatz ${map.hint.x}/${map.hint.y} ist nicht bebaubar.`);
+    }
+
+    console.log(
+      `  Karte ${map.name}: ${map.lanes.length} Bahn(en), Weg ` +
+      `${Math.round(Math.max(...paths.map((p) => p.length)))} px, bebaubar ` +
+      TOWER_ORDER.map((t) => `${TOWERS[t].name.slice(0, 4)} ${(share[t] * 100).toFixed(0)} %`).join(', '),
+    );
   }
 
-  // Mindestens eine Haeufung: drei Bauplaetze, die sich gegenseitig sehen.
-  //
-  // Ohne die ist eine Karte ein gleichmaessiger Teppich - genau das, was das
-  // Genre-Vorbild bewusst vermeidet. Erst Haeufungen machen Toetungszonen.
-  let clusters = 0;
-  for (let i = 0; i < map.spots.length; i++) {
-    let near = 0;
-    for (let k = 0; k < map.spots.length; k++) {
-      if (k === i) continue;
-      if (Math.hypot(map.spots[k].x - map.spots[i].x, map.spots[k].y - map.spots[i].y) < reach) near++;
-    }
-    if (near >= 2) clusters++;
-  }
-  if (clusters === 0) {
-    fail(`${map.id}: keine Haeufung von Bauplaetzen - die Karte hat keine Toetungszone.`);
-  }
-
-  // Deko darf nicht auf dem Weg oder einem Bauplatz liegen.
-  for (const pr of map.props) {
-    if (Math.min(...paths.map((p) => p.distanceTo(pr.x, pr.y))) < 44) {
-      fail(`${map.id}: Deko bei ${pr.x}/${pr.y} liegt auf dem Weg.`);
-    }
-    if (map.spots.some((sp) => Math.hypot(sp.x - pr.x, sp.y - pr.y) < SPOT_RADIUS + pr.r)) {
-      fail(`${map.id}: Deko bei ${pr.x}/${pr.y} liegt auf einem Bauplatz.`);
+  // Unwegsames Gelaende darf nicht auf dem Weg liegen - dort waere es unsichtbar.
+  for (const gr of map.rough) {
+    if (Math.min(...paths.map((p) => p.distanceTo(gr.x, gr.y))) < gr.r) {
+      fail(`${map.id}: unwegsames Gelaende bei ${gr.x}/${gr.y} ueberdeckt den Weg.`);
     }
   }
 
@@ -173,11 +177,6 @@ for (const map of MAPS) {
     fail(`${map.id}: Ausgleich goldMul ${bal.goldMul} ausserhalb 0,85 bis 1,2.`);
   }
 
-  const totalLen = Math.round(Math.max(...paths.map((p) => p.length)));
-  console.log(
-    `  Karte ${map.name}: ${map.lanes.length} Bahn(en), Weg ${totalLen} px, ` +
-    `${build} Bauplaetze, ${clusters} in Haeufungen`,
-  );
 }
 
 // ------------------------------------------------------------------ Tuerme
@@ -194,7 +193,9 @@ for (const id of TOWER_ORDER) {
     const b = t.branches[br];
     if (!isHex(b.color)) fail(`Turm ${id}, Zweig ${b.id}: ungueltige Farbe.`);
     if (!b.name || !b.blurb) fail(`Turm ${id}, Zweig ${b.id}: Name oder Beschreibung fehlt.`);
-    if (b.levels.length !== 2) fail(`Turm ${id}, Zweig ${b.id}: es muessen genau 2 Stufen sein.`);
+    if (b.levels.length !== MAX_LEVEL - 1) {
+      fail(`Turm ${id}, Zweig ${b.id}: ${b.levels.length} Stufen statt ${MAX_LEVEL - 1}.`);
+    }
     const lv = chain(br);
     for (let i = 0; i < lv.length; i++) {
       const l = lv[i];

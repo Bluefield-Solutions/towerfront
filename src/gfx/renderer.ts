@@ -10,7 +10,7 @@ import type { GameState } from '../game/state';
 import type { Tower } from '../game/types';
 import { beginGlowBatch, endGlowBatch, hexA, stampGlow, stampGlowFast } from './glow';
 import { bakeTerrain } from './terrain';
-import { SPOT_RADIUS } from '../data/maps';
+import { snap } from '../data/maps';
 import { backgroundVersion, getBackground } from './backgrounds';
 import { getTowerArt, towerArtScale, towerArtVersion } from './towerart';
 import { enemyArtWidth, getEnemyArt } from './enemyart';
@@ -304,61 +304,75 @@ export class Renderer {
    *  nur als Struktur im Untergrund zu ahnen. Erst die Wahl hebt sie hervor:
    *  gruen, wenn bezahlbar, rot, wenn das Gold fehlt, gedaempft, wenn schon
    *  besetzt. */
+  /** Das Feld antwortet auf die Turmwahl.
+   *
+   *  Gezeigt wird nicht mehr eine Handvoll fester Plaetze, sondern die ganze
+   *  Flaeche, auf der dieser Turm stehen darf - gruen. Weil das von seinem
+   *  Platzbedarf abhaengt, sieht die Flaeche fuer den Moerser anders aus als
+   *  fuer den Bogenturm, und genau das ist die Entscheidung.
+   *
+   *  Die Flaeche wird gebacken und nur neu gerechnet, wenn sich Turmsorte
+   *  oder Turmbestand aendern - sonst waeren es zehntausend Pruefungen je Bild.
+   */
+  private buildMask: HTMLCanvasElement | null = null;
+  private buildMaskKey = '';
+
   private drawBuildOverlay(s: GameState): void {
     if (!s.buildChoice) return;
     const ctx = this.ctx;
     const def = TOWERS[s.buildChoice];
     const affordable = s.gold >= def.base.cost;
-    const beat = 0.5 + 0.5 * Math.sin(s.crystalPulse * 3);
-    const r = SPOT_RADIUS;
+    const key = `${s.map.id}|${s.buildChoice}|${s.towersVersion}|${affordable}`;
 
-    ctx.save();
-    ctx.lineWidth = 3;
-    for (let i = 0; i < s.map.spots.length; i++) {
-      const sp = s.map.spots[i];
-      const free = s.canBuild(i);
-      const tone = !free ? C.stoneDark : affordable ? '#5BE07A' : C.danger;
-      const strength = free ? 0.5 + beat * 0.3 : 0.22;
-      ctx.fillStyle = hexA(tone, free ? 0.16 + beat * 0.08 : 0.06);
-      ctx.strokeStyle = hexA(tone, strength);
-      ctx.beginPath(); ctx.ellipse(sp.x, sp.y, r, r * 0.6, 0, 0, Math.PI * 2);
-      ctx.fill(); ctx.stroke();
-      if (free && affordable) {
-        // Ein zweiter, weiterer Ring, der mitatmet - das zieht den Blick,
-        // ohne die Plattform zu ueberdecken.
-        ctx.strokeStyle = hexA(tone, 0.3 - beat * 0.18);
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.ellipse(sp.x, sp.y, r * (1.12 + beat * 0.12), r * 0.6 * (1.12 + beat * 0.12),
-          0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.lineWidth = 3;
+    if (this.buildMaskKey !== key) {
+      const STEP = 12;
+      const cv = document.createElement('canvas');
+      cv.width = Math.ceil(WORLD_W / STEP);
+      cv.height = Math.ceil(WORLD_H / STEP);
+      const g = cv.getContext('2d')!;
+      g.fillStyle = affordable ? '#5BE07A' : C.danger;
+      for (let gy = 0; gy < cv.height; gy++) {
+        for (let gx = 0; gx < cv.width; gx++) {
+          if (s.canPlace(s.buildChoice, gx * STEP, gy * STEP)) g.fillRect(gx, gy, 1, 1);
+        }
       }
+      this.buildMask = cv;
+      this.buildMaskKey = key;
     }
+
+    const beat = 0.5 + 0.5 * Math.sin(s.crystalPulse * 2.4);
+    ctx.save();
+    ctx.globalAlpha = (affordable ? 0.2 : 0.12) + beat * 0.07;
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(this.buildMask!, 0, 0, WORLD_W, WORLD_H);
     ctx.restore();
   }
 
-  /** Halbtransparenter Turm unter dem Finger, samt Reichweite.
-   *  Gebaut wird erst beim Loslassen - Fehltipps kosten kein Gold. */
   private drawGhost(s: GameState): void {
-    const spot = s.pendingSpot >= 0 ? s.pendingSpot : (s.buildChoice ? s.hoverSpot : -1);
-    if (spot < 0 || !s.buildChoice) return;
+    const at = s.pendingPoint ?? (s.buildChoice ? s.hoverPoint : null);
+    if (!at || !s.buildChoice) return;
     const ctx = this.ctx;
     const def = TOWERS[s.buildChoice];
     const lvl = def.base;
-    const ok = s.canBuild(spot) && s.gold >= lvl.cost;
-    const sp = s.map.spots[spot];
+    const x = snap(at.x), y = snap(at.y);
+    const ok = s.canPlace(s.buildChoice, x, y) && s.gold >= lvl.cost;
     const tone = ok ? def.accent : C.danger;
 
     ctx.save();
-    ctx.fillStyle = hexA(tone, 0.14);
-    ctx.beginPath(); ctx.arc(sp.x, sp.y, lvl.range, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = hexA(tone, 0.8); ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(sp.x, sp.y, lvl.range, 0, Math.PI * 2); ctx.stroke();
+    // Der Platzbedarf als eigener Kreis - er ist die eigentliche Groesse,
+    // ueber die man beim freien Bauen entscheidet.
+    ctx.fillStyle = hexA(tone, 0.2);
+    ctx.beginPath(); ctx.arc(x, y, def.footprint / 2, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = hexA(tone, 0.9); ctx.lineWidth = 2;
+    ctx.setLineDash([6, 5]);
+    ctx.beginPath(); ctx.arc(x, y, def.footprint / 2, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
 
-    // Die Wegstrecke, die dieser Turm abdecken wuerde, leuchtet auf. Das ist
-    // die Auskunft, die man beim Bauen wirklich braucht - nicht "hier ist
-    // Platz", sondern "das hier deckt er ab".
+    ctx.fillStyle = hexA(tone, 0.12);
+    ctx.beginPath(); ctx.arc(x, y, lvl.range, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = hexA(tone, 0.7); ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(x, y, lvl.range, 0, Math.PI * 2); ctx.stroke();
+
     if (ok) {
       ctx.save();
       ctx.lineCap = 'round';
@@ -369,7 +383,7 @@ export class Renderer {
         let drawing = false;
         ctx.beginPath();
         for (const p of lane.pts) {
-          const inside = (p.x - sp.x) ** 2 + (p.y - sp.y) ** 2 <= r2;
+          const inside = (p.x - x) ** 2 + (p.y - y) ** 2 <= r2;
           if (inside && !drawing) { ctx.moveTo(p.x, p.y); drawing = true; }
           else if (inside) ctx.lineTo(p.x, p.y);
           else if (drawing) { ctx.stroke(); ctx.beginPath(); drawing = false; }
@@ -380,9 +394,10 @@ export class Renderer {
     }
 
     ctx.globalAlpha = ok ? 0.7 : 0.3;
-    this.paintTower(def, 1, sp.x, sp.y, s.crystalPulse, s.map.id);
+    this.paintTower(def, 1, x, y, s.crystalPulse, s.map.id);
     ctx.restore();
   }
+
 
 
   private drawCrystal(s: GameState, hi: boolean): void {
@@ -919,9 +934,8 @@ export class Renderer {
     if (!this.coachHint) return;
     let x: number, y: number, r: number;
     if (this.coachHint === 'build') {
-      if (!s.canBuild(s.map.hint)) return;
-      const h = s.map.spots[s.map.hint];
-      x = h.x; y = h.y; r = SPOT_RADIUS * 1.3;
+      const h = s.map.hint;
+      x = h.x; y = h.y; r = 62;
     } else {
       const t = s.towers[0];
       if (!t) return;

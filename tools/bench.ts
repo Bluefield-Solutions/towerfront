@@ -10,6 +10,7 @@
 import { GameState } from '../src/game/state';
 import { } from '../src/data/config';
 import { MAX_LEVEL, TOWER_ORDER } from '../src/data/towers';
+import { candidateSpots } from './spots';
 
 
 const DT = 1 / 60;
@@ -21,12 +22,13 @@ s.gold = 1_000_000;
 
 // Jeden Bauplatz belegen und voll ausbauen.
 let i = 0;
-for (let spot = 0; spot < s.map.spots.length; spot++) {
-    {
-      if (!s.canBuild(spot)) continue;
+const cand = candidateSpots(s);
+for (let k = 0; k < cand.length; k++) {
+  {
+    const sp = cand[k];
     const id = TOWER_ORDER[i++ % TOWER_ORDER.length];
-    if (s.build(spot, id)) {
-      const t = s.towerOnSpotIndex(spot)!;
+    if (s.build(sp.x, sp.y, id)) {
+      const t = s.towerUnder(sp.x, sp.y)!;
       while (t.level < MAX_LEVEL) s.upgrade(t, (i % 2) as 0 | 1);
     }
   }

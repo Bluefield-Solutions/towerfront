@@ -372,7 +372,7 @@ export class UI {
     for (const t of s.towers) if (t.damageDone > (best?.damageDone ?? 0)) best = t;
     const bestLine = best && best.damageDone > 0
       ? `<p class="note-line">Stärkster Turm: <b>${TOWERS[best.def].name} Stufe ${best.level}</b> ` +
-        `auf Bauplatz ${best.spot + 1} — ${Math.round(best.damageDone)} Schaden, ` +
+        `bei ${Math.round(best.x)}/${Math.round(best.y)} — ${Math.round(best.damageDone)} Schaden, ` +
         `${best.kills} erledigt.</p>`
       : '';
 

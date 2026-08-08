@@ -43,11 +43,15 @@ export interface GameMap {
    *  des Feldes liegen - dort steht das Tor. Mehrere Bahnen koennen sich
    *  vereinen, indem sie ab dem Treffpunkt dieselben Punkte fuehren. */
   lanes: Vec[][];
-  /** Bauplaetze in Weltkoordinaten. Gestaltete Orte, keine Rasterzellen -
-   *  sie duerfen und sollen ungleich verteilt sein. */
-  spots: Vec[];
-  /** Index des Bauplatzes, auf den die Einfuehrung zeigt. */
-  hint: number;
+  /** Unwegsames Gelaende: Kreise, in denen nicht gebaut werden kann.
+   *
+   *  Ab v37 wird wieder frei gebaut - aber nicht ueberall. Fels, Wasser,
+   *  Dickicht sperren Flaechen, und jeder Turm braucht seinen Platz. Das ist
+   *  die eigentliche Entscheidung: nicht *ob* hier ein Platz ist, sondern
+   *  wieviel Flaeche man wofuer hergibt. */
+  rough: { x: number; y: number; r: number }[];
+  /** Wo die Einfuehrung hinzeigt. */
+  hint: Vec;
   /** Deko - Felsen und Bewuchs, rein optisch. */
   props: { x: number; y: number; r: number }[];
   /** Der Wellenplan dieser Karte. */
@@ -92,13 +96,18 @@ export const MAP_SPIRALHAIN: GameMap = {
       { x: 336, y: 444 }, { x: 1104, y: 444 },
     ],
   ],
-  spots: [
-    { x: 516, y: 612 }, { x: 1380, y: 468 }, { x: 948, y: 204 },
-    { x: 996, y: 684 }, { x: 348, y: 228 }, { x: 1260, y: 396 },
-    { x: 204, y: 300 }, { x: 564, y: 300 }, { x: 444, y: 516 },
-    { x: 780, y: 276 }, { x: 660, y: 228 }, { x: 1284, y: 636 },
+  rough: [
+    { x: 1678, y: 1074, r: 120 }, { x: 1654, y: 644, r: 66 }, { x: 269, y: 1026, r: 125 },
+    { x: 1056, y: 280, r: 126 }, { x: 1901, y: 486, r: 67 }, { x: 1882, y: 111, r: 125 },
+    { x: 1363, y: 331, r: 68 }, { x: 1340, y: 530, r: 75 }, { x: 24, y: 700, r: 86 },
+    { x: 95, y: 366, r: 92 }, { x: 1471, y: 1050, r: 63 }, { x: 1913, y: 1061, r: 103 },
+    { x: 46, y: 1016, r: 91 }, { x: 677, y: 621, r: 100 }, { x: 1872, y: 722, r: 102 },
+    { x: 537, y: 989, r: 122 }, { x: 16, y: 472, r: 64 }, { x: 742, y: 1052, r: 107 },
+    { x: 959, y: 617, r: 125 }, { x: 1646, y: 99, r: 108 }, { x: 1710, y: 823, r: 113 },
+    { x: 1244, y: 1079, r: 84 }, { x: 1045, y: 944, r: 78 }, { x: 1875, y: 371, r: 69 },
+    { x: 1489, y: 874, r: 114 }, { x: 1744, y: 245, r: 69 },
   ],
-  hint: 0,
+  hint: { x: 516, y: 612 },
   props: [
     { x: 1584, y: 156, r: 26 }, { x: 1680, y: 252, r: 26 }, { x: 48, y: 540, r: 26 },
     { x: 144, y: 828, r: 26 }, { x: 816, y: 60, r: 26 }, { x: 624, y: 828, r: 26 },
@@ -128,13 +137,18 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
       { x: 1104, y: 636 }, { x: 1392, y: 636 },
     ],
   ],
-  spots: [
-    { x: 1212, y: 396 }, { x: 492, y: 660 }, { x: 1644, y: 444 },
-    { x: 396, y: 276 }, { x: 1452, y: 780 }, { x: 132, y: 684 },
-    { x: 996, y: 708 }, { x: 204, y: 300 }, { x: 1140, y: 756 },
-    { x: 828, y: 708 }, { x: 1260, y: 756 }, { x: 1524, y: 612 },
+  rough: [
+    { x: 721, y: 28, r: 91 }, { x: 1910, y: 921, r: 95 }, { x: 497, y: 1019, r: 118 },
+    { x: 896, y: 66, r: 62 }, { x: 1380, y: 1070, r: 91 }, { x: 1695, y: 1032, r: 73 },
+    { x: 1547, y: 468, r: 110 }, { x: 24, y: 700, r: 86 }, { x: 911, y: 275, r: 102 },
+    { x: 1776, y: 27, r: 78 }, { x: 95, y: 366, r: 92 }, { x: 1096, y: 33, r: 89 },
+    { x: 826, y: 1053, r: 107 }, { x: 1330, y: 460, r: 85 }, { x: 1339, y: 9, r: 91 },
+    { x: 1565, y: 1059, r: 88 }, { x: 861, y: 640, r: 86 }, { x: 353, y: 332, r: 83 },
+    { x: 1907, y: 253, r: 87 }, { x: 385, y: 661, r: 101 }, { x: 1057, y: 1038, r: 85 },
+    { x: 1214, y: 1074, r: 72 }, { x: 884, y: 487, r: 70 }, { x: 232, y: 360, r: 70 },
+    { x: 1829, y: 1059, r: 88 }, { x: 665, y: 1075, r: 81 },
   ],
-  hint: 5,
+  hint: { x: 1212, y: 396 },
   props: [
     { x: 48, y: 348, r: 26 }, { x: 144, y: 348, r: 26 }, { x: 48, y: 444, r: 26 },
     { x: 144, y: 444, r: 26 }, { x: 1860, y: 180, r: 26 }, { x: 1872, y: 444, r: 26 },
@@ -169,13 +183,18 @@ export const MAP_FROSTSPALTE: GameMap = {
       { x: 1104, y: 924 }, { x: 1104, y: 636 },
     ],
   ],
-  spots: [
-    { x: 1020, y: 636 }, { x: 1572, y: 804 }, { x: 1284, y: 276 },
-    { x: 444, y: 204 }, { x: 516, y: 732 }, { x: 1212, y: 684 },
-    { x: 924, y: 276 }, { x: 180, y: 444 }, { x: 1548, y: 660 },
-    { x: 996, y: 756 }, { x: 900, y: 684 }, { x: 1308, y: 612 },
+  rough: [
+    { x: 269, y: 1026, r: 125 }, { x: 117, y: 24, r: 98 }, { x: 1366, y: 776, r: 129 },
+    { x: 748, y: 233, r: 79 }, { x: 1835, y: 208, r: 121 }, { x: 803, y: 1011, r: 76 },
+    { x: 1828, y: 1058, r: 110 }, { x: 582, y: 697, r: 107 }, { x: 66, y: 912, r: 111 },
+    { x: 1031, y: 1076, r: 129 }, { x: 105, y: 587, r: 103 }, { x: 16, y: 472, r: 64 },
+    { x: 1646, y: 99, r: 108 }, { x: 1615, y: 279, r: 91 }, { x: 590, y: 355, r: 124 },
+    { x: 1907, y: 448, r: 114 }, { x: 941, y: 206, r: 123 }, { x: 577, y: 1076, r: 84 },
+    { x: 14, y: 697, r: 68 }, { x: 4, y: 1077, r: 81 }, { x: 369, y: 16, r: 106 },
+    { x: 808, y: 361, r: 64 }, { x: 1917, y: 781, r: 96 }, { x: 105, y: 416, r: 69 },
+    { x: 489, y: 525, r: 77 }, { x: 1587, y: 685, r: 89 },
   ],
-  hint: 0,
+  hint: { x: 1020, y: 636 },
   props: [
     { x: 48, y: 924, r: 26 }, { x: 144, y: 924, r: 26 }, { x: 240, y: 924, r: 26 },
     { x: 48, y: 1020, r: 26 }, { x: 144, y: 1020, r: 26 }, { x: 240, y: 1020, r: 26 },
@@ -224,16 +243,13 @@ export function goalOf(map: GameMap): Vec {
   return { x: last.x, y: last.y };
 }
 
-/** Wie breit ein Bauplatz ist - er ist ein Kreis, keine Kachel. */
-export const SPOT_RADIUS = 42;
+/** Mindestabstand jedes Turms zum Weg. Naeher darf nichts stehen - sonst
+ *  klebt der Turm auf der Strasse und verdeckt die Gegner. */
+export const PATH_CLEARANCE = 30;
 
-/** Welcher Bauplatz liegt unter diesem Punkt? -1, wenn keiner. */
-export function spotAt(map: GameMap, x: number, y: number, slack = 14): number {
-  let best = -1, bestD = (SPOT_RADIUS + slack) ** 2;
-  for (let i = 0; i < map.spots.length; i++) {
-    const s = map.spots[i];
-    const d = (s.x - x) ** 2 + (s.y - y) ** 2;
-    if (d < bestD) { bestD = d; best = i; }
-  }
-  return best;
-}
+/** Bauen wird auf ein feines Raster gefangen. Nicht als Spielregel, sondern
+ *  damit die Tuerme sauber stehen statt krumm - man merkt es nicht, aber man
+ *  sieht es. */
+export const BUILD_SNAP = 12;
+
+export const snap = (v: number): number => Math.round(v / BUILD_SNAP) * BUILD_SNAP;

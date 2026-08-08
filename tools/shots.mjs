@@ -71,6 +71,7 @@ const { Renderer } = await import('../src/gfx/renderer.ts');
 const { MAPS } = await import('../src/data/maps.ts');
 const { TOWERS, TOWER_ORDER } = await import('../src/data/towers.ts');
 const { candidateSpots } = await import('./spots.ts');
+const { Menu } = await import('../src/game/menu.ts');
 
 const DT = 1 / 60;
 
@@ -87,12 +88,13 @@ async function shot(name, w, h, build) {
 
   const s = new GameState();
   const r = new Renderer(canvas);
+  r.menu = null;
   const frames = build(s, r) ?? 0;
   r.resize();
   // Einmal zeichnen fordert alle Bilder an, dann warten, dann richtig laufen.
   r.draw(s);
   await settle();
-  for (let i = 0; i < frames; i++) { s.update(DT); r.draw(s); }
+  for (let i = 0; i < frames; i++) { s.update(DT); if (r.menu) r.menu.time += DT; r.draw(s); }
   r.draw(s);
 
   const file = join(OUT, `${name}.png`);
@@ -116,6 +118,30 @@ const wanted = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const takes = [];
 
 // --- Handy quer, das wichtigste Format
+// --- Das Menue: seit v42 auf der Leinwand, also endlich sichtbar.
+takes.push(['menu-karte', () => shot('menu-karte', 844, 390, (s, r) => {
+  s.reset(1, 'normal', 'spiralhain');
+  r.menu = new Menu();
+  r.menu.hasSave = true;
+  r.menu.saveLabel = 'Fortsetzen · Welle 7';
+  return 20;
+})]);
+
+takes.push(['menu-einweisung', () => shot('menu-einweisung', 844, 390, (s, r) => {
+  s.reset(1, 'normal', 'spiralhain');
+  r.menu = new Menu();
+  r.menu.view = 'brief';
+  r.menu.picked = 1;
+  return 20;
+})]);
+
+takes.push(['menu-fortschritt', () => shot('menu-fortschritt', 844, 390, (s, r) => {
+  s.reset(1, 'normal', 'spiralhain');
+  r.menu = new Menu();
+  r.menu.view = 'progress';
+  return 20;
+})]);
+
 takes.push(['start', () => shot('start', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   return 30;

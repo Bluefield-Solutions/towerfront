@@ -421,6 +421,66 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   renderer.resize();
 }
 
+// Die Landkarte: jeder anklickbare Bereich muss auch gezeichnet worden sein.
+//
+// Die Bereiche entstehen beim Zeichnen - dadurch kann es keine Schaltflaeche
+// geben, die man sieht, aber nicht trifft. Geprueft wird, dass alle Wege
+// begehbar sind: Ort antippen, Einweisung, zurueck, Fortschritt, zurueck.
+{
+  const { Menu } = await import('../src/game/menu');
+  const { drawMenu } = await import('../src/gfx/menurender');
+  const { MAPS } = await import('../src/data/maps');
+  const m = new Menu();
+  const g = canvas.getContext('2d')!;
+
+  const ids = () => { drawMenu(g, m); return m.hotspots.map((h) => h.id); };
+
+  const onMap = ids();
+  for (let i = 0; i < MAPS.length; i++) {
+    if (!onMap.includes(`node:${i}`)) problems.push(`Landkarte: Ort ${i} fehlt.`);
+  }
+  if (!onMap.includes('progress')) problems.push('Landkarte: Fortschritt ist nicht erreichbar.');
+
+  // Ein Ort fuehrt zur Einweisung, und die hat alles Noetige.
+  const nodeSpot = m.hotspots.find((h) => h.id === 'node:1')!;
+  m.tap(nodeSpot.x + nodeSpot.w / 2, nodeSpot.y + nodeSpot.h / 2);
+  if (m.view !== 'brief') problems.push('Landkarte: ein Ort oeffnet keine Einweisung.');
+  const onBrief = ids();
+  for (const need of ['back', 'start', 'endless', 'diff:normal', 'diff:ruhig', 'diff:erbarmungslos']) {
+    if (!onBrief.includes(need)) problems.push(`Einweisung: "${need}" fehlt.`);
+  }
+
+  // Schwierigkeit laesst sich wirklich waehlen.
+  const dh = m.hotspots.find((h) => h.id === 'diff:erbarmungslos')!;
+  m.tap(dh.x + 4, dh.y + 4);
+  if (m.difficulty !== 'erbarmungslos') problems.push('Einweisung: Schwierigkeit laesst sich nicht waehlen.');
+
+  const back = m.hotspots.find((h) => h.id === 'back')!;
+  m.tap(back.x + 4, back.y + 4);
+  if (m.view !== 'map') problems.push('Einweisung: kein Rueckweg zur Karte.');
+
+  // Und der Fortschritt.
+  ids();
+  const pr = m.hotspots.find((h) => h.id === 'progress')!;
+  m.tap(pr.x + 4, pr.y + 4);
+  if (m.view !== 'progress') problems.push('Landkarte: Fortschritt oeffnet nicht.');
+  ids();
+  const back2 = m.hotspots.find((h) => h.id === 'back')!;
+  m.tap(back2.x + 4, back2.y + 4);
+  if (m.view !== 'map') problems.push('Fortschritt: kein Rueckweg zur Karte.');
+
+  // Nichts darf ausserhalb des Feldes liegen - sonst ist es unerreichbar.
+  drawMenu(g, m);
+  for (const h of m.hotspots) {
+    if (h.x < 0 || h.y < 0 || h.x + h.w > 1920 || h.y + h.h > 1080) {
+      problems.push(`Landkarte: "${h.id}" liegt ausserhalb des Bildes.`);
+    }
+    if (Math.min(h.w, h.h) < 60) {
+      problems.push(`Landkarte: "${h.id}" ist mit ${Math.round(Math.min(h.w, h.h))} Punkten zu klein zum Treffen.`);
+    }
+  }
+}
+
 // Titelbildschirm: eine Ebene, eine Entscheidung.
 //
 // Vorher standen vierzehn antippbare Elemente gleichzeitig da - zwei Modi,

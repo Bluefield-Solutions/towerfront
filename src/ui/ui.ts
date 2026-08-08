@@ -73,7 +73,10 @@ export class UI {
   private skillBtns = new Map<AbilityId, HTMLButtonElement>();
   private lastSkillSig = '';
   private endlessWanted = false;
+  /** Wird von main gesetzt: zurueck zur Landkarte. */
+  openMenu: () => void = () => {};
   private view: (w: 'main' | 'choose' | 'progress') => void = () => {};
+  private lastScreen: 'title' | 'won' | 'lost' = 'title';
   private tutStep = -1;
   private tutTarget: HTMLElement | null = null;
   private lastSig = '';
@@ -221,6 +224,7 @@ export class UI {
     });
     this.sAction.addEventListener('click', () => {
       Sfx.unlock();
+      if (this.lastScreen !== 'title') { this.openMenu(); return; }
       this.s.reset(undefined, getSettings().difficulty, getSettings().map,
         { endless: this.endlessWanted });
       // Die Einfuehrung laeuft nur bei einem neuen Spiel, nie beim Fortsetzen.
@@ -253,6 +257,7 @@ export class UI {
 
   showScreen(kind: 'title' | 'won' | 'lost'): void {
     const s = this.s;
+    this.lastScreen = kind;
     this.screen.hidden = false;
     this.view('main');
     const shown = kind === 'title' ? getSettings().difficulty : s.difficulty;

@@ -11,6 +11,8 @@ import type { Tower } from '../game/types';
 import { beginGlowBatch, endGlowBatch, hexA, stampGlow, stampGlowFast } from './glow';
 import { bakeTerrain } from './terrain';
 import { snap } from '../data/maps';
+import { drawMenu } from './menurender';
+import type { Menu } from '../game/menu';
 import { backgroundVersion, getBackground } from './backgrounds';
 import { getTowerArt, towerArtScale, towerArtVersion } from './towerart';
 import { enemyArtWidth, getEnemyArt } from './enemyart';
@@ -26,6 +28,9 @@ export class Renderer {
   private terrainBgVersion = -1;
   /** Weltpunkt, auf den gerade gezielt wird. */
   aimPoint: { x: number; y: number } | null = null;
+  /** Ist gesetzt, solange das Menue offen ist - dann wird es statt des
+   *  Spielfeldes gezeichnet. */
+  menu: Menu | null = null;
   private sky: HTMLCanvasElement | null = null;
   /** Alle Turmsockel in einem Bild. Wird nur neu gebacken, wenn sich am
    *  Bestand etwas aendert - nicht in jedem Bild. */
@@ -125,10 +130,38 @@ export class Renderer {
 
   /** Bildschirmpunkt -> Weltkoordinate. */
   screenToWorld(sx: number, sy: number): { x: number; y: number } {
+    if (this.menu) {
+      // Im Menue gilt die eingepasste Abbildung, sonst traefe man daneben.
+      const k = Math.min(this.cssW / WORLD_W, this.cssH / WORLD_H);
+      return {
+        x: (sx - (this.cssW - WORLD_W * k) / 2) / k,
+        y: (sy - (this.cssH - WORLD_H * k) / 2) / k,
+      };
+    }
     return { x: (sx - this.offX) / this.scale, y: (sy - this.offY) / this.scale };
   }
 
   /** Weltkoordinate -> Bildschirmpunkt. */
+  /** Das Menue fuellt dieselbe Flaeche wie das Spielfeld - dadurch stimmen
+   *  Bedienung und Bild ohne Sonderfaelle zusammen, und die Bildabnahme sieht
+   *  es genauso wie der Browser. */
+  private drawMenuFrame(): void {
+    const ctx = this.ctx;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = C.voidDeep;
+    ctx.fillRect(0, 0, this.cssW, this.cssH);
+    // Das Menue ist eine feste Anordnung - es muss ganz sichtbar sein.
+    // Deshalb wird es eingepasst und nicht wie das Spielfeld formatfuellend
+    // beschnitten. Beim ersten Versuch lagen Titel und Startknopf ausserhalb.
+    const k = Math.min(this.cssW / WORLD_W, this.cssH / WORLD_H);
+    ctx.save();
+    ctx.translate((this.cssW - WORLD_W * k) / 2, (this.cssH - WORLD_H * k) / 2);
+    ctx.scale(k, k);
+    drawMenu(ctx, this.menu!);
+    ctx.restore();
+  }
+
   worldToScreen(wx: number, wy: number): { x: number; y: number } {
     return { x: wx * this.scale + this.offX, y: wy * this.scale + this.offY };
   }
@@ -174,6 +207,7 @@ export class Renderer {
   draw(s: GameState): void {
     this.ensureFrame();
     const ctx = this.ctx;
+    if (this.menu) { this.drawMenuFrame(); return; }
     // Neu backen bei Kartenwechsel - und noch einmal, sobald das
     // Untergrundbild fertig dekodiert ist.
     const bgV = backgroundVersion();

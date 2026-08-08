@@ -3,6 +3,7 @@ import { ABILITIES, ABILITY_ORDER } from '../data/abilities';
 import { Sfx } from './audio';
 import type { GameState } from '../game/state';
 import type { Renderer } from '../gfx/renderer';
+import { inside as insideSpot } from '../game/menu';
 
 /** Bedienung am Daumen.
  *  Bauen: druecken zeigt Vorschau und Reichweite, erst das Loslassen baut.
@@ -73,6 +74,14 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
   canvas.addEventListener('pointerdown', (ev) => {
     Sfx.unlock();
     ev.preventDefault();
+    // Im Menue laufen alle Tipper an die Landkarte - kein Bauen, kein Zoomen.
+    if (r.menu) {
+      const w = r.screenToWorld(ev.clientX - canvas.getBoundingClientRect().left,
+        ev.clientY - canvas.getBoundingClientRect().top);
+      const hit = r.menu.hotspots.find((h) => insideSpot(h, w.x, w.y));
+      r.menu.pressed = hit ? hit.id : null;
+      return;
+    }
     const p = local(ev);
     points.set(ev.pointerId, p);
     if (points.size >= 2) {
@@ -94,6 +103,13 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
   });
 
   const finish = (ev: PointerEvent) => {
+    if (r.menu) {
+      const rect = canvas.getBoundingClientRect();
+      const w = r.screenToWorld(ev.clientX - rect.left, ev.clientY - rect.top);
+      r.menu.pressed = null;
+      if (r.menu.tap(w.x, w.y)) Sfx.play('tap');
+      return;
+    }
     points.delete(ev.pointerId);
     if (points.size < 2) pinchDist = 0;
     if (!down) return;

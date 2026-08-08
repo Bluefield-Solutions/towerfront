@@ -1,5 +1,8 @@
 import './style.css';
 import { Loop } from './core/loop';
+import { Menu } from './game/menu';
+import { saveSettings } from './core/storage';
+import { loadGame } from './game/save';
 import { bindInput } from './core/input';
 import { Sfx } from './core/audio';
 import { getSettings } from './core/storage';
@@ -19,6 +22,30 @@ const ui = new UI(state);
 function layout(): void {
   renderer.resize();
 }
+
+// Das Menue liegt auf der Leinwand, nicht mehr im HTML.
+const menu = new Menu();
+renderer.menu = menu;
+menu.onStart = (mapId, difficulty, endless) => {
+  saveSettings({ map: mapId, difficulty });
+  state.reset(undefined, difficulty, mapId, { endless });
+  renderer.menu = null;
+  ui.hideScreen();
+};
+menu.onResume = () => {
+  const save = loadGame();
+  if (save && state.restore(save)) { renderer.menu = null; ui.hideScreen(); }
+};
+ui.openMenu = () => {
+  const save = loadGame();
+  menu.hasSave = !!save;
+  menu.saveLabel = save
+    ? `Fortsetzen · Welle ${Math.min(save.waveIndex + 1, state.totalWaves)}`
+    : '';
+  menu.view = 'map';
+  renderer.menu = menu;
+  ui.hideScreen();
+};
 
 layout();
 bindInput(canvas, state, renderer);
@@ -57,6 +84,7 @@ const loop = new Loop(
     if (state.phase !== lastPhase) {
       lastPhase = state.phase;
       if (state.phase === 'playing') ui.hideScreen();
+      else if (state.phase === 'title') ui.openMenu();
       else ui.showScreen(state.phase);
     }
     ui.sync();

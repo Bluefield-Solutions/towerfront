@@ -11,6 +11,8 @@ export interface Settings {
   difficulty: 'ruhig' | 'normal' | 'erbarmungslos';
   /** Zuletzt gewaehlte Karte. */
   map: string;
+  /** Endlosmodus vorgewaehlt. */
+  endless: boolean;
 }
 
 export interface Best {
@@ -33,7 +35,7 @@ export interface Progress {
 interface Store { settings: Settings; best: BestMap; progress: Progress; }
 
 const DEFAULTS: Store = {
-  settings: { sound: true, quality: 'auto', perf: false, tutorial: true, difficulty: 'normal', map: 'spiralhain' },
+  settings: { sound: true, quality: 'auto', perf: false, tutorial: true, difficulty: 'normal', map: 'spiralhain', endless: false },
   best: {},
   progress: { stars: {}, perks: [] },
 };

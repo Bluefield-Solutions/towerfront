@@ -43,6 +43,7 @@ npm run pack-art    Bildvorrat aus art/roh/ neu einbacken
 npm run eichen      einen Wert durchprobieren, alle Kennzahlen nebeneinander
 npm run doku        prüft die Dokumente gegen die Wirklichkeit
 npm run beruehrung  prüft, ob alles mit dem Daumen zu treffen ist
+npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen
 ```
 
 Die Torkette: `tsc` → `guards` → `doku` → `art` → `determinism` → `sim` → `bench` →
@@ -56,7 +57,10 @@ Jede hat mindestens eine Runde gekostet. Sie stehen hier, damit sie nicht ein
 zweites Mal kosten.
 
 1. **Erst einchecken, dann gegenproben.** Gegenproben arbeiten mit
-   `git checkout` und löschen sonst die frische Arbeit. Zweimal passiert.
+   `git checkout` und löschen sonst die frische Arbeit. **Vier Mal passiert**,
+   zuletzt in v49 — obwohl die Regel seit v40 hier steht. Deshalb setzt
+   `npm run proben` sie jetzt durch und verweigert den Dienst bei schmutzigem
+   Baum. Eine Regel, die nur aufgeschrieben ist, wird gebrochen.
 2. **Grenzen anteilig, nie absolut.** Als der Kristall von 20 auf 60 stieg,
    wurden fünf Prüfungen still bedeutungslos, ohne dass etwas rot wurde.
    Dreimal dieselbe Falle.
@@ -64,8 +68,11 @@ zweites Mal kosten.
    scheiterten an der Probe, nicht am Tor.
 4. **Das Modell darf nicht vom Gemessenen abhängen.** Hängt die Bewertung der
    Bauplätze an den Turmwerten, misst die Simulation zwei Dinge auf einmal.
-5. **Eine Prüfung, die nie etwas meldet, ist kein Beweis.** Wer eine Prüfung
-   ändert, baut einen Fehler ein, sieht ob sie anschlägt, nimmt zurück.
+5. **Eine Prüfung, die nie etwas meldet, ist kein Beweis.** `npm run proben`
+   hält zwölf stehende Gegenproben und führt sie aus. Wer ein Tor ändert,
+   trägt dort eine Probe nach. Jede Probe prüft zuerst, ob ihr Eingriff
+   überhaupt angekommen ist — drei von zehn sind daran einmal gescheitert,
+   und ein nicht angekommener Eingriff sieht aus wie ein bestandenes Tor.
 6. **Kein Tor ersetzt den Blick — und kein Blick die Tore.** Elf von 57
    Befunden kamen aus Bildschirmfotos. Seit v47 prüft `bildtor` wenigstens
    das Mechanische: einfarbige Fläche, falsche Helligkeit, nicht dekodierte

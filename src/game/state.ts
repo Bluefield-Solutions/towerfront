@@ -572,7 +572,8 @@ export class GameState {
     const off = def.flying ? (this.rng.next() - 0.5) * 200 : 0;
     this.enemies.push({
       id: this.nextId++, def: id, x: p0.x, y: p0.y + off,
-      hp, hpMax: hp, speed: def.speed, lane: ln, heading: 0, travelled: 0,
+      hp, hpMax: hp, speed: def.speed, lane: ln, heading: 0,
+      side: (this.rng.next() * 2 - 1) * 0.85, travelled: 0,
       slowFactor: 1, slowLeft: 0, healIn: 0,
       hitFlash: 0, squash: 0, hpShown: hp, wobble: this.rng.next() * 9,
       dead: false, leaked: false,
@@ -591,6 +592,8 @@ export class GameState {
         x: parent.x + spread, y: parent.y + (this.rng.next() - 0.5) * 10,
         hp, hpMax: hp, speed: child.speed,
         lane: parent.lane, heading: parent.heading, healIn: 0,
+        // Spaene stieben zur Seite auseinander.
+        side: Math.max(-1, Math.min(1, parent.side + (this.rng.next() - 0.5) * 0.9)),
         travelled: Math.max(0, parent.travelled - 6),
         slowFactor: parent.slowFactor, slowLeft: parent.slowLeft,
         hitFlash: 0, squash: 0, hpShown: hp, wobble: this.rng.next() * 9,
@@ -648,7 +651,14 @@ export class GameState {
         leaked = true;
       } else {
         const p = path.at(e.travelled);
-        e.x = p.x; e.y = p.y; e.heading = p.angle;
+        // Quer zum Weg versetzt, aber nie ueber den Rand hinaus: bei einer
+        // Engstelle ruecken alle zusammen, auf breiter Strecke faechern sie
+        // auf. Genau dafuer traegt der Weg seine wechselnde Breite.
+        const platz = Math.max(0, p.half - edef.radius * 0.55 - 4);
+        const quer = e.side * platz;
+        e.x = p.x + Math.cos(p.angle + Math.PI / 2) * quer;
+        e.y = p.y + Math.sin(p.angle + Math.PI / 2) * quer;
+        e.heading = p.angle;
       }
     }
     if (leaked) Sfx.play('leak');
@@ -1162,7 +1172,7 @@ export class GameState {
       ]) as unknown as SaveGame['towers'],
       enemies: this.enemies.map((e) => [
         e.def, e.x, e.y, e.hp, e.hpMax, e.travelled, e.slowFactor, e.slowLeft, e.wobble,
-        e.lane, e.healIn,
+        e.lane, e.healIn, e.side,
       ]),
     };
   }
@@ -1232,12 +1242,13 @@ export class GameState {
       }
     this.towersVersion++;
 
-    for (const [def, x, y, hp, hpMax, travelled, slowFactor, slowLeft, wobble, lane, healIn]
+    for (const [def, x, y, hp, hpMax, travelled, slowFactor, slowLeft, wobble, lane, healIn, side]
       of save.enemies) {
       this.enemies.push({
         id: this.nextId++, def, x, y, hp, hpMax,
         speed: ENEMIES[def].speed, lane: lane ?? 0, heading: 0, travelled,
         slowFactor, slowLeft, healIn: healIn ?? 0, hitFlash: 0, squash: 0, hpShown: hp,
+        side: side ?? 0,
         wobble,
         dead: false, leaked: false,
       });

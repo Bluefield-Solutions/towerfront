@@ -88,7 +88,7 @@ export class LanePath {
    *
    *  Die Suche geht binaer ueber die Streckentabelle - bei rund 200 Punkten
    *  sind das acht Vergleiche, und sie laeuft je Gegner und Bild einmal. */
-  at(s: number): { x: number; y: number; angle: number } {
+  at(s: number): { x: number; y: number; angle: number; half: number } {
     const total = this.length;
     if (s <= 0) return this.pointAt(0, 0);
     if (s >= total) return this.pointAt(this.pts.length - 2, 1);
@@ -102,12 +102,16 @@ export class LanePath {
     return this.pointAt(lo, span > 0 ? (s - this.cum[lo]) / span : 0);
   }
 
-  private pointAt(i: number, f: number): { x: number; y: number; angle: number } {
+  private pointAt(i: number, f: number): { x: number; y: number; angle: number; half: number } {
     const a = this.pts[i], b = this.pts[Math.min(i + 1, this.pts.length - 1)];
+    const h1 = this.half[i] ?? 42, h2 = this.half[Math.min(i + 1, this.half.length - 1)] ?? h1;
     return {
       x: a.x + (b.x - a.x) * f,
       y: a.y + (b.y - a.y) * f,
       angle: Math.atan2(b.y - a.y, b.x - a.x),
+      // Die oertliche halbe Wegbreite. Gegner brauchen sie, um sich quer zum
+      // Weg zu verteilen, ohne ueber den Rand zu laufen.
+      half: h1 + (h2 - h1) * f,
     };
   }
 

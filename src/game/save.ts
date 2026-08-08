@@ -65,6 +65,7 @@ export interface SaveGame {
    *  Wackeln, Bahn] */
   enemies: [
     EnemyId, number, number, number, number, number, number, number, number, number, number,
+    number,
   ][];
 }
 

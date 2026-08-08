@@ -11,7 +11,8 @@ const START_LIVES = NORMAL.startLives;
 import { MAPS, goalOf, lanePaths } from '../src/data/maps';
 import { GameState } from '../src/game/state';
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, DRAW_SCALE } from '../src/data/towers';
-import { ENEMIES } from '../src/data/enemies';
+import { ENEMIES, type EnemyId } from '../src/data/enemies';
+import { enemyArtWidth } from '../src/gfx/enemyart';
 
 import { ABILITIES, ABILITY_ORDER } from '../src/data/abilities';
 
@@ -229,6 +230,35 @@ for (const map of MAPS) {
     }
     if (amRand > 0) {
       fail(`${map.id}: an ${amRand} Stellen liesse sich direkt auf den Wegrand bauen.`);
+    }
+  }
+
+  // Passen die Gegner ueberhaupt auf den Weg?
+  //
+  // Das war lange nicht geprueft, und man sah es erst im Bild: der
+  // Leerentitan war dreimal so breit wie die engste Stelle, ein Schleicher
+  // anderthalbmal. Deshalb verschmolzen sie zu einer Masse, in der man weder
+  // einzelne Gegner noch ihre Lebensbalken auseinanderhalten konnte - und
+  // jeder Querversatz war wirkungslos, weil kein Platz da war.
+  {
+    const engste = Math.min(...paths.map((p) => p.widthRange().min)) * 2;
+    for (const [id, def] of Object.entries(ENEMIES)) {
+      const breit = enemyArtWidth(id as EnemyId);
+      const anteil = breit / engste;
+      if (anteil > 1.35) {
+        fail(
+          `${map.id}: ${def.name} ist ${Math.round(anteil * 100)} % der engsten Wegstelle ` +
+          `(${Math.round(breit)} zu ${Math.round(engste)}) - er passt nicht auf die Strasse.`,
+        );
+      } else if (anteil > 1.0) {
+        warn(`${map.id}: ${def.name} fuellt die engste Stelle zu ${Math.round(anteil * 100)} %.`);
+      }
+    }
+    // Und zwei kleine Gegner sollten nebeneinander Platz haben - sonst gibt es
+    // keine Kolonne, sondern eine Reihe.
+    const kleinste = Math.min(...Object.keys(ENEMIES).map((id) => enemyArtWidth(id as EnemyId)));
+    if (kleinste * 1.7 > engste) {
+      warn(`${map.id}: zwei kleine Gegner passen nicht nebeneinander (${Math.round(kleinste)} bei Weg ${Math.round(engste)}).`);
     }
   }
 

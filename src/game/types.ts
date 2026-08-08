@@ -11,6 +11,13 @@ export interface Enemy {
   lane: number;
   /** Blickrichtung, folgt aus der Kurve. */
   heading: number;
+  /** Wo auf der Wegbreite dieser Gegner laeuft: -1 linker Rand, +1 rechter.
+   *
+   *  Ohne das laufen alle exakt auf der Mittellinie und verschmelzen zu einer
+   *  Masse - mit uebereinanderliegenden Lebensbalken, an denen man nichts mehr
+   *  ablesen kann. Der Wert bleibt ueber die ganze Strecke gleich, deshalb
+   *  gehoert er zum Gegner und nicht zur Bewegung. */
+  side: number;
   /** Rest bis zum naechsten Heilpuls eines Webers. */
   healIn: number;
   /** Stauchen nach einem Treffer: 1 = frisch getroffen, klingt ab.

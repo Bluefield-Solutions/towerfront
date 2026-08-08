@@ -20,7 +20,8 @@
     "bericht": "tsx tools/benchmark.ts",
     "lesbarkeit": "tsx tools/readability.mjs",
     "bilder": "tsx tools/shots.mjs",
-    "schleife": "node tools/loop.mjs"
+    "schleife": "node tools/loop.mjs",
+    "eichen": "node tools/calibrate.mjs"
   },
   "keywords": [],
   "author": "",

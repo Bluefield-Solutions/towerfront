@@ -59,7 +59,7 @@ function drawMap(
   ctx.textAlign = 'center';
   ctx.fillStyle = C.stone;
   ctx.font = '700 68px system-ui, sans-serif';
-  ctx.fillText('Kristallwacht', WORLD_W / 2, 130);
+  ctx.fillText('Towerfront', WORLD_W / 2, 130);
   ctx.font = '400 26px system-ui, sans-serif';
   ctx.fillStyle = C.stoneDark;
   ctx.fillText('Wähle ein Land', WORLD_W / 2, 172);

@@ -23,7 +23,7 @@ entpackst es lokal. Die Marken kommen mit — `git log --oneline` zeigt dann
 alles von v1 bis v42.
 
 ```bash
-tar -xzf kristallwacht.tar.gz
+tar -xzf towerfront.tar.gz
 cd tower-defense
 npm install
 npm run gate          # muss grün sein, bevor irgendetwas anderes passiert
@@ -37,7 +37,7 @@ Auf GitHub ein neues, **leeres** Repositorium anlegen — ohne LIESMICH, ohne
 Lizenz, sonst gibt es beim ersten Push einen Konflikt.
 
 ```bash
-git remote add origin git@github.com:<dein-name>/kristallwacht.git
+git remote add origin git@github.com:<dein-name>/towerfront.git
 git branch -M main
 git push -u origin main --tags
 ```
@@ -63,7 +63,7 @@ nicht aus** — das ist der wichtigste Satz an der ganzen Einrichtung.
 Danach liegt das Spiel unter:
 
 ```
-https://<dein-name>.github.io/kristallwacht/
+https://<dein-name>.github.io/towerfront/
 ```
 
 ---

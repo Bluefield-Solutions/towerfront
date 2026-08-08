@@ -68,7 +68,8 @@ export interface SaveGame {
   ][];
 }
 
-const KEY = 'kristallwacht.lauf';
+// Vormals 'kristallwacht.lauf' - siehe Hinweis in storage.ts.
+const KEY = 'towerfront.lauf';
 
 export function saveGame(s: SaveGame): void {
   try { localStorage.setItem(KEY, JSON.stringify(s)); } catch { /* Speicher gesperrt */ }

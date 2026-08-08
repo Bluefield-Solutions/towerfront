@@ -1,4 +1,4 @@
-# Kristallwacht
+# Towerfront
 
 Browser-Tower-Defense, deutsch, eine autarke HTML-Datei. TypeScript 5 + Vite +
 `vite-plugin-singlefile`, Canvas 2D, kein Spielgerüst von der Stange.

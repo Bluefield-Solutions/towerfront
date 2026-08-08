@@ -2,7 +2,7 @@
 /**
  * Lesbarkeitsmessung.
  *
- * Die Bilanz über alle Tore (docs/Kristallwacht-TOR-BILANZ.md) hat eine Lücke
+ * Die Bilanz über alle Tore (docs/Towerfront-TOR-BILANZ.md) hat eine Lücke
  * gefunden: Elf von 57 Befunden kamen aus Bildschirmfotos, und kein Tor prüfte
  * Darstellung. Kontrast zwischen Turm und Untergrund, Größe auf dem
  * Bildschirm, Unterscheidbarkeit der Gegnerfarben — alles Fragen, die bisher

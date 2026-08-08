@@ -1,4 +1,4 @@
-# Kristallwacht — Asset-Spezifikation für KI-generierte Grafik
+# Towerfront — Asset-Spezifikation für KI-generierte Grafik
 
 *Version 1.0 · 07.08.2026 · Umstieg von prozeduraler auf gerenderte Optik*
 *Zielspiel: Tower Defense, Aufsicht, eine autarke HTML-Datei*
@@ -6,7 +6,7 @@
 > ## ACHTUNG — in drei Punkten überholt, bitte zuerst lesen
 >
 > Diese Fassung stammt aus der Zeit des Kachelrasters. **Konzept 2.0**
-> (`Kristallwacht-KONZEPT-2.0.md`) ändert drei Vorgaben. Alles Übrige —
+> (`Towerfront-KONZEPT-2.0.md`) ändert drei Vorgaben. Alles Übrige —
 > Lichteinfall, Freistellen, Standlinie, kein eingebackener Schatten,
 > Dateinamen, Budget — gilt unverändert.
 >

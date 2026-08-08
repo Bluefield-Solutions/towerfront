@@ -1,13 +1,13 @@
-# Kristallwacht — Konzept und Entwicklungspipeline
+# Towerfront — Konzept und Entwicklungspipeline
 
 Stand: v35 · 08.08.2026
-Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
+Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Towerfront.html`
 
 ---
 
 ## 1. Was gebaut wird
 
-**Kristallwacht** ist ein Tower-Defense-Spiel im Browser. Eine einzelne,
+**Towerfront** ist ein Tower-Defense-Spiel im Browser. Eine einzelne,
 eigenständige HTML-Datei, die offline läuft — auf dem iPhone im Querformat
 genauso wie im Desktop-Browser.
 
@@ -128,7 +128,7 @@ Jede Runde hat seit v11 eine feste Dreierstruktur, und in dieser Reihenfolge:
 **Erstens: Abgleich.** `npm run benchmark` misst das Spiel gegen einen Katalog,
 der aus den bestbewerteten Vertretern des Genres abgeleitet ist. Wo stehen wir,
 was hat sich seit dem letzten Lauf verschoben, welches Delta wiegt am
-schwersten. Grundlage und Herkunft jedes Kriteriums: `Kristallwacht-BENCHMARK.md`.
+schwersten. Grundlage und Herkunft jedes Kriteriums: `Towerfront-BENCHMARK.md`.
 
 **Zweitens: Prozess.** Eine konkrete Verbesserung an der Pipeline selbst — ein
 neues Tor, eine schärfere Prüfung, eine Gegenprobe, ein Werkzeug. Die Regel
@@ -149,7 +149,7 @@ Innerhalb von Schritt drei gilt weiterhin dieser Ablauf, ohne Ausnahmen:
 4. **Das Tor durchlaufen:** `npm run gate`
    → TypeScript ohne Fehler → Build → Autarkie-Check → Balance-Simulation.
    Alles grün, sonst wird nicht ausgeliefert.
-5. **Ausliefern.** Vollständige HTML-Datei als `Kristallwacht.html`.
+5. **Ausliefern.** Vollständige HTML-Datei als `Towerfront.html`.
 6. **Auf Bestätigung warten.** Erst wenn im Browser bestätigt — auf dem iPhone
    *und* am Desktop — wird committet und getaggt (`v2`, `v3`, …).
 7. **Daumen runter = sofortiger Rückbau.** `git checkout -- .`, zurück auf den
@@ -293,7 +293,7 @@ Ladezeit. Der Punkt, an dem das Spiel aussieht, als hätte ein Studio es gemacht
 
 Drei Mechanismen greifen ineinander:
 
-**Das Rückstandsverzeichnis** (`Kristallwacht-BACKLOG.md`) führt jeden offenen
+**Das Rückstandsverzeichnis** (`Towerfront-BACKLOG.md`) führt jeden offenen
 Punkt mit Phase, Nutzen und Aufwand. Nichts wird mündlich vereinbart. Was nicht
 im Verzeichnis steht, existiert nicht.
 

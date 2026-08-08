@@ -1,4 +1,4 @@
-# Kristallwacht — Bilanz über alle Tore
+# Towerfront — Bilanz über alle Tore
 
 *Stand: v35 · 08.08.2026 · Messung entstand bei v31, Ergebnisse gelten unverändert*
 

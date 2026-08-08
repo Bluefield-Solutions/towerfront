@@ -1,4 +1,8 @@
-const KEY = 'kristallwacht.v1';
+// Der Schluessel hiess bis v42 'kristallwacht.v1'. Mit der Umbenennung
+// beginnt der Fortschritt bei null - vertretbar, weil die Auslieferung
+// ohnehin auf eine neue Adresse umzieht und die Ablage an die Adresse
+// gebunden ist. Alte Staende waeren dort so oder so nicht sichtbar.
+const KEY = 'towerfront.v1';
 
 export interface Settings {
   sound: boolean;

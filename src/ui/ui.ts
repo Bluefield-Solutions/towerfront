@@ -299,7 +299,7 @@ export class UI {
 
     if (kind === 'title') {
       this.sEyebrow.textContent = VERSION;
-      this.sTitle.textContent = 'Kristallwacht';
+      this.sTitle.textContent = 'Towerfront';
       // Ein Satz, nicht vier. Wer mehr wissen will, erfaehrt es beim Spielen.
       this.sText.textContent =
         'Halte die Leere vom Herzkristall fern. Baue Türme neben den Weg und überstehe fünfzehn Wellen.';

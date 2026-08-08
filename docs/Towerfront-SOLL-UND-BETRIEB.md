@@ -1,4 +1,4 @@
-# Kristallwacht — Soll heben, Betrieb, Projektanweisungen
+# Towerfront — Soll heben, Betrieb, Projektanweisungen
 
 *08.08.2026 · Antwort auf drei Fragen: Wie heben wir das Soll? Cowork oder
 etwas anderes? Was gehört in die Projektanweisungen?*

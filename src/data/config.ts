@@ -14,7 +14,7 @@ export const WORLD_H = 1080;
 /** Nur noch fuer die Hintergrundstruktur, nicht fuer das Spiel. */
 export const TILE = 96;
 
-/** Farbwelt "Kristallwacht": kaltes Mondmoos gegen warmen Knochenpfad.
+/** Farbwelt "Towerfront": kaltes Mondmoos gegen warmen Knochenpfad.
  *  Hoher Kontrast, damit der Pfad auf dem Handy sofort lesbar ist. */
 export const C = {
   voidDeep: '#080B18',

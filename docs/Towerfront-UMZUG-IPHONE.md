@@ -46,7 +46,7 @@ Working Copy ist ein Git-Programm für iOS. Es kann ein Verzeichnis samt
 `.git` importieren und nach GitHub schieben.
 
 1. Archiv aus der Claude-App in **Dateien** sichern.
-2. In Dateien lange auf `kristallwacht.tar.gz` tippen → **Entpacken**.
+2. In Dateien lange auf `towerfront.tar.gz` tippen → **Entpacken**.
 3. Auf GitHub (mobiler Browser) ein **leeres** Repositorium anlegen — ohne
    LIESMICH, ohne Lizenz.
 4. In Working Copy: Repositorium hinzufügen → aus Dateien importieren → das
@@ -91,7 +91,7 @@ Ab hier brauchst du nichts weiter als Safari.
 Torkette, dann die Auslieferung. Ist ein Tor rot, bricht er ab und
 veröffentlicht nichts.
 
-**Lesezeichen umhängen** — `https://<dein-name>.github.io/kristallwacht/`
+**Lesezeichen umhängen** — `https://<dein-name>.github.io/towerfront/`
 öffnen, Teilen → Zum Home-Bildschirm. Vollbild und Querformat sind im Dokument
 schon eingestellt.
 

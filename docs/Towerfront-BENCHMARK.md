@@ -1,4 +1,4 @@
-# Kristallwacht — Genre-Abgleich
+# Towerfront — Genre-Abgleich
 
 Stand: v35 · 08.08.2026 · Aktueller Wert: **27 von 30 Kriterien, gewichtet 93 %**
 

@@ -3,7 +3,7 @@
  *  Misst das Spiel gegen einen Katalog, der aus den bestbewerteten Vertretern
  *  des Genres abgeleitet ist - Kingdom Rush, Bloons TD 6, Plants vs. Zombies,
  *  Defense Grid, Defender's Quest. Herkunft und Begruendung jedes Kriteriums
- *  stehen in docs/Kristallwacht-BENCHMARK.md.
+ *  stehen in docs/Towerfront-BENCHMARK.md.
  *
  *  Wo es geht, wird tatsaechlich geprueft statt behauptet: manche Kriterien
  *  lassen sich am Spielzustand messen. Der Rest ist ausdruecklich als

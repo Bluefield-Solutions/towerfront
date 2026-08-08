@@ -1,4 +1,4 @@
-# Kristallwacht — Schleifenbetrieb
+# Towerfront — Schleifenbetrieb
 
 *Version 1.0 · 08.08.2026 · wie wir arbeiten, ohne dass du jede Runde
 einzeln freigibst*

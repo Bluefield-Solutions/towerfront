@@ -1,8 +1,8 @@
-# Kristallwacht — Rückstandsverzeichnis
+# Towerfront — Rückstandsverzeichnis
 
 Stand: nach v34 · 08.08.2026
 
-Das gewichtete Delta gegen die Genre-Referenzen steht in `Kristallwacht-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
+Das gewichtete Delta gegen die Genre-Referenzen steht in `Towerfront-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
 Legende Nutzen: ●●● hoch · ●● mittel · ● gering
 Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
@@ -144,7 +144,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | v1 | Grundgerüst: Karte, Pfad, zwei Türme mit drei Stufen, drei Gegner, zehn Wellen, Gold, Leben, Sieg/Niederlage, HUD, Inspektor, Partikel, Kristall mit Rissen, Pipeline mit vier Toren |
 | v13 | Simulationsbot auf menschliches Maß begrenzt (16 Türme, Entscheidung alle 0,5 s, Bauplätze nach Pfaddeckung, Reserve, Ausbau in den stärksten Turm) · Schwierigkeitskurve neu: Potenzkurve `1+(i/n)^2,2×10` statt linear, Verdichtungsrampe 12 % je Welle, Einkommen −15 % · Zweig-Prüfung verfeinert: ein gemischtes Feld mit genau einem umgestellten Turmtyp · Zweig-Waage gewichtet Panzerung nach später Präsenz und Bremsen mit 2,4 · Salve und Splitterfrost als tote Zweige erkannt und behoben |
 | v12 | Verzweigter Ausbau (R3): zwei sich ausschließende Zweige je Turm ab Stufe 2, acht Endausbauten statt vier · Panzerdurchschlag als neue Eigenschaft · Zweigfarbe sichtbar an Sockel, Waffe und Reichweitenring · Zweig-Waage im Datenwächter (Wirkung je Gold, Faktor höchstens 1,4) · Rauchtest prüft Endgültigkeit der Zweigwahl und die zwei Auswahlknöpfe · Spielstand um Turmziel und Geschosse im Flug ergänzt · Genre-Abgleich 18/27 → 19/27 |
-| v11 | Genre-Abgleich als zehntes (nicht abbrechendes) Tor: 27 Kriterien aus Kingdom Rush, Bloons TD 6, Plants vs. Zombies, Defense Grid und Defender's Quest, wo möglich gemessen statt behauptet · Dokument `Kristallwacht-BENCHMARK.md` mit Herkunft jedes Kriteriums · feste Dreierstruktur je Runde (Abgleich → Prozess → Spiel) · volle Turmwerte im Inspektor vor dem Kauf, vom Rauchtest geprüft |
+| v11 | Genre-Abgleich als zehntes (nicht abbrechendes) Tor: 27 Kriterien aus Kingdom Rush, Bloons TD 6, Plants vs. Zombies, Defense Grid und Defender's Quest, wo möglich gemessen statt behauptet · Dokument `Towerfront-BENCHMARK.md` mit Herkunft jedes Kriteriums · feste Dreierstruktur je Runde (Abgleich → Prozess → Spiel) · volle Turmwerte im Inspektor vor dem Kauf, vom Rauchtest geprüft |
 | v10 | Auswertung nach der Partie: Kennzahlen, Schadensanteil je Quelle als Balken, stärkster Turm mit Feldposition, Wellen mit Kristallverlust, Fähigkeitsnutzung · Werte wandern im Spielstand mit · Rauchtest prüft vier Gleichungen der Auswertung · `stats()` in `towerStats()` umbenannt |
 | v9 | Fehlerbehebung: `[hidden] { display: none !important }` — versteckte Ebenen fingen zuvor jeden Tipp ab und machten das Spiel auf dem Handy unbedienbar · Autarkie-Check erzwingt die Regel · `-webkit-backdrop-filter` · `color-mix` durch festen Wert ersetzt |
 | v8 | Einführung im Spiel: sieben kontextbezogene Sätze über die ersten drei Wellen, das gemeinte Bedienelement pulsiert, auf dem Feld zeigt ein Pfeil auf den empfohlenen Bauplatz · überspringbar und auf dem Titelbildschirm wieder einschaltbar · läuft beim Fortsetzen nie an · Rauchtest prüft, dass jeder Schritt ein existierendes Element trifft und erfüllbar ist · Wächter prüft den empfohlenen Bauplatz |

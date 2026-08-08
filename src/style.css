@@ -453,3 +453,30 @@ html, body {
 .perk[data-have="1"] i { color: var(--crystal); }
 .perk:disabled { cursor: default; }
 .perk:disabled[data-have="0"] { opacity: 0.4; }
+
+/* ------------------------------------------- Kompakt auf flachen Geräten */
+/* Auf dem Handy quer bleiben nach Kopfzeile und Leiste nur rund 230 Punkte
+   für das Spielfeld übrig. Deshalb wird alles Zweitrangige dort schmaler:
+   das Brett ist wichtiger als der Rand. */
+@media (max-height: 480px) {
+  .hud { padding-top: calc(4px + var(--sat)); padding-bottom: 4px; gap: 10px; }
+  .val { font-size: 17px; }
+  .lab { font-size: 8px; margin-bottom: 1px; }
+  .chip { padding: 5px 11px; font-size: 11px; min-width: 44px; }
+
+  .dock { gap: 4px; padding-top: 5px; padding-bottom: calc(5px + var(--sab)); }
+  .next { padding: 1px 2px; min-height: 14px; }
+  .next-lab { font-size: 8px; }
+  .next-list { font-size: 10.5px; gap: 8px; }
+
+  .tower-btn { min-width: 74px; padding: 5px 8px; }
+  .tower-btn .n { font-size: 11px; }
+  .tower-btn .c { font-size: 10px; }
+  .tower-btn .r { display: none; }
+  .skill-btn { min-width: 58px; padding: 5px 8px; }
+  .go { padding: 9px 16px; font-size: 13px; }
+  .go-bonus { display: none; }
+
+  .coach { padding-top: 4px; padding-bottom: 4px; }
+  .coach-text { font-size: 11.5px; }
+}

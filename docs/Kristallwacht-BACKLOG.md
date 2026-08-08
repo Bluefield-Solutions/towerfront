@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v25 · 07.08.2026
+Stand: nach v28 · 08.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Kristallwacht-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
@@ -82,6 +82,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S54 | Nach dem Einbau der Turmbilder war das Spielfeld **komplett verzogen** — horizontal gestreckt, vertikal gestaucht | Bildraster der Leinwand passte nicht zu ihrer Fläche: `resize` war zu früh gelaufen und abgebrochen, die Leinwand behielt 300 × 150. Behoben durch Selbstheilung in jedem Bild, einen Größenbeobachter und eine Rauchtest-Prüfung, die genau diesen Fall nachstellt. |
+| S55 | Der gelieferte Turmsatz war **keine Rotationsfolge**, sondern 32 Varianten in Dreiviertelansicht | Als Drehung unbrauchbar, als zwölf Turmzustände sehr brauchbar. Turmdrehung durch Spiegelung ersetzt — ein Objekt in Dreiviertelansicht kippt, wenn man es in der Fläche dreht. |
 | S51 | Die Kennzahl aus v24 war selbst falsch: sie nahm die 16 besten *Einzelplätze*, die sich gegenseitig überdecken. Gierig gerechnet: 2,5 / 2,1 / 1,8 statt 3,1 / 2,5 / 2,7 | Der eigentliche Befund steht daneben: 16 Türme erreichen auf jeder Karte **100 % des Weges**. Deshalb bringt der siebzehnte nichts. |
 | S52 | Ein pauschaler Reichweitenschnitt ist **nicht rollenneutral**: Einzelzieltürme verlieren eins zu eins (Schaden × Zeit im Radius), der Frostturm kaum | Nach dem Schnitt kam das reine Frostfeld am weitesten, alles andere brach fünf Wellen früher zusammen. Reichweiten künftig nur je Rolle ändern. |
 | S53 | Die Bauplatzbewertung des Bots hing kurzzeitig an der größten Reichweite im Sortiment — jede Turmänderung änderte damit auch das Botverhalten | Das Modell darf nicht vom Gemessenen abhängen. Wieder ein fester Wert. |

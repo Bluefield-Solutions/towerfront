@@ -44,7 +44,13 @@ export class Renderer {
    *  Bedienleiste belegen. Das Spielfeld wird nur in den Bereich dazwischen
    *  gezeichnet - vorher lag die Bedienung ueber dem Brett, und das untere
    *  Drittel des Feldes war schlicht verdeckt. */
-  resize(insetTop = 0, insetBottom = 0): void {
+  /** Zuletzt gemessene Baender - fuer die Selbstheilung unten. */
+  private lastInsetTop = 0;
+  private lastInsetBottom = 0;
+
+  resize(insetTop = this.lastInsetTop, insetBottom = this.lastInsetBottom): void {
+    this.lastInsetTop = insetTop;
+    this.lastInsetBottom = insetBottom;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
     if (!w || !h) return;
@@ -64,7 +70,35 @@ export class Renderer {
     return { x: (sx - this.offX) / this.scale, y: (sy - this.offY) / this.scale };
   }
 
+  /** Passt das Bildraster der Leinwand noch zu ihrer Flaeche auf dem
+   *  Bildschirm? Wenn nicht, streckt der Browser das fertige Bild - und zwar
+   *  in beide Richtungen unterschiedlich. Genau so entstand in v27 ein
+   *  flachgedruecktes Spielfeld: `resize` war einmal zu frueh gelaufen, die
+   *  Leinwand behielt ihre Standardgroesse von 300 x 150, und das CSS zog
+   *  dieses Raster ueber den ganzen Bildschirm.
+   *
+   *  Deshalb wird das jetzt in jedem Bild geprueft, nicht nur bei einem
+   *  Groessenwechsel. Die Pruefung kostet zwei Vergleiche. */
+  private ensureFrame(): void {
+    const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
+    if (!w || !h) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const wantW = Math.round(w * dpr), wantH = Math.round(h * dpr);
+    if (this.canvas.width !== wantW || this.canvas.height !== wantH) {
+      this.resize();
+    }
+  }
+
+  /** Weicht das Seitenverhaeltnis des Bildrasters von dem der Flaeche ab?
+   *  Nur fuer die Pruefwerkzeuge - im Spiel darf das nie vorkommen. */
+  frameSkew(): number {
+    const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
+    if (!w || !h || !this.canvas.height) return 0;
+    return Math.abs((this.canvas.width / this.canvas.height) / (w / h) - 1);
+  }
+
   draw(s: GameState): void {
+    this.ensureFrame();
     const ctx = this.ctx;
     // Neu backen bei Kartenwechsel - und noch einmal, sobald das
     // Untergrundbild fertig dekodiert ist.

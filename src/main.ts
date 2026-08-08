@@ -91,6 +91,18 @@ function layout(): void {
 
 layout();
 window.addEventListener('resize', onResize);
+// Die Baender aendern ihre Hoehe auch ohne Fenstergroessenwechsel - etwa wenn
+// die Einfuehrungsleiste erscheint oder die Schriften fertig geladen sind.
+if (typeof ResizeObserver !== 'undefined') {
+  const ro = new ResizeObserver(() => layout());
+  ro.observe(canvas);
+  const dockEl = document.getElementById('dock');
+  if (dockEl) ro.observe(dockEl);
+}
+// Ein zweiter Durchlauf, nachdem der Browser das erste Bild gesetzt hat:
+// beim allerersten Aufruf steht die Groesse der Leinwand noch nicht fest.
+requestAnimationFrame(() => layout());
+window.addEventListener('load', () => layout());
 window.addEventListener('orientationchange', () => setTimeout(onResize, 250));
 window.addEventListener('pointerdown', () => Sfx.unlock(), { once: true });
 window.addEventListener('keydown', (ev) => {

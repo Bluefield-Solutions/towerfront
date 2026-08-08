@@ -242,6 +242,39 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Das Bildraster der Leinwand muss immer zu ihrer Flaeche passen.
+//
+// Weicht es ab, streckt der Browser das fertige Bild ungleichmaessig - das
+// Spielfeld wird flachgedrueckt. Genau das ist in v27 passiert, weil `resize`
+// einmal zu frueh lief und die Leinwand ihre Standardgroesse behielt.
+// Geprueft wird deshalb auch der Fall, in dem `resize` gar nicht erst
+// aufgerufen wurde: ein Bild zeichnen muss reichen, um es zu heilen.
+{
+  for (const [w, h] of [[844, 390], [390, 844], [1440, 780], [2200, 500]] as const) {
+    sizeCanvas(canvas, w, h);
+    renderer.resize(60, 140);
+    if (renderer.frameSkew() > 0.01) {
+      problems.push(
+        `Seitenverhaeltnis: bei ${w}x${h} weicht das Bildraster um ` +
+        `${(renderer.frameSkew() * 100).toFixed(0)} % ab.`,
+      );
+    }
+  }
+
+  // Der eigentliche Fehlerfall: Groesse aendert sich, resize wird NICHT
+  // gerufen, es wird nur gezeichnet.
+  sizeCanvas(canvas, 900, 420);
+  renderer.draw(state);
+  if (renderer.frameSkew() > 0.01) {
+    problems.push(
+      'Seitenverhaeltnis: eine Groessenaenderung ohne resize wird beim Zeichnen ' +
+      'nicht geheilt - das Feld bliebe verzerrt.',
+    );
+  }
+  sizeCanvas(canvas, 844, 390);
+  renderer.resize(60, 140);
+}
+
 // Kein Bedienelement darf ueber dem Spielfeld liegen.
 //
 // Das Spielfeld wird nur zwischen Kopfzeile und Bedienleiste gezeichnet.

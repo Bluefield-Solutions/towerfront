@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v25 · 07.08.2026
+Stand: v28 · 08.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -305,6 +305,39 @@ jederzeit wiederherstellbar. Ein Fehlversuch kostet eine Minute, nicht einen
 Abend.
 
 ---
+
+### 3.26 Ein flachgedrücktes Spielfeld
+
+Nach dem Einbau der Turmbilder kam ein Bildschirmfoto zurück, auf dem das
+Spielfeld **horizontal gestreckt und vertikal gestaucht** war. Nicht ein
+bisschen daneben — komplett verzogen.
+
+Die Ursache ist ein alter Klassiker. Eine Leinwand hat zwei Größen: ihre
+Fläche auf dem Bildschirm und ihr Bildraster. Stimmen die Seitenverhältnisse
+nicht überein, zieht der Browser das fertige Bild ungleichmäßig auseinander.
+`resize` bricht ab, wenn die Fläche beim Aufruf noch keine Größe hat — dann
+behält die Leinwand ihr Standardraster von 300 × 150, und das CSS zieht dieses
+Raster über den ganzen Bildschirm.
+
+Drei Dinge dagegen, in dieser Reihenfolge:
+
+**Selbstheilung in jedem Bild.** Vor dem Zeichnen wird geprüft, ob das
+Bildraster noch zur Fläche passt; wenn nicht, wird neu eingepasst. Das kostet
+zwei Vergleiche je Bild und macht jede denkbare Ursache folgenlos.
+
+**Ein Beobachter auf der Leinwand und der Bedienleiste.** Die Bänder ändern
+ihre Höhe auch ohne Fenstergrößenwechsel — wenn die Einführungsleiste erscheint
+oder Schriften fertig laden.
+
+**Eine Prüfung im Rauchtest**, die genau den Fehlerfall nachstellt: Größe
+ändern, `resize` **nicht** rufen, nur zeichnen. Baut man die Selbstheilung
+wieder aus, meldet sie *„eine Größenänderung ohne resize wird beim Zeichnen
+nicht geheilt — das Feld bliebe verzerrt."*
+
+Dazu eine zweite Sache aus demselben Bild: Kopfzeile und Bedienleiste ließen
+auf dem Handy quer nur noch rund 230 Punkte für das Brett übrig. Unterhalb von
+480 Punkten Höhe sind jetzt alle Ränder, Schriftgrößen und Abstände kleiner —
+das Brett ist wichtiger als der Rand.
 
 ### 3.25 Die Kennzahl war selbst falsch — und der Vorschlag, der daraus folgt
 
@@ -974,7 +1007,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v25
+## 5. Stand v28
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -1034,6 +1067,12 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v26 bis v28 — gerenderte Grafik und ein Verzerrungsfehler.**
+Drei Untergrundbilder und zwölf Türme sind eingebaut; Karte 2 heißt jetzt
+Laubschlucht, weil im Bildsatz nichts Vulkanisches war. Dabei ist ein Fehler
+entstanden, der im Bild sofort auffiel und den keine Prüfung gesehen hat —
+siehe Abschnitt 3.26.
 
 **Neu in v25 — nichts am Spiel. Eine korrigierte Kennzahl und ein Vorschlag,
 wie es weitergeht.** Der Versuch, die Geometrie zu ändern, ist zurückgenommen.

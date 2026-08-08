@@ -13,6 +13,19 @@
  * ist ein einziges zusammenhängendes Gebilde, das von einer Bildkante zur
  * anderen reicht. Felsen sind Klumpen.
  *
+ * ── Grenze des Verfahrens ──────────────────────────────────────────────
+ * Es trennt ueber die Saettigung. Das geht, solange sich Weg und Boden darin
+ * unterscheiden - gemessen auf der Sandkarte 0,1 bis 0,3 gegen 0,6 bis 0,7.
+ *
+ * Auf der Winterkarte ist beides grau: der Schnee ebenso entsaettigt wie das
+ * Pflaster. Das Verfahren findet dort 93.442 statt 19.000 Wegpunkte und 44
+ * statt 6 Randberuehrungen - es haelt die ganze Karte fuer Weg.
+ *
+ * Dort hilft nur die Wegmaske aus der Bestellung. Sie ist genau fuer diesen
+ * Fall vorgesehen, und dieser Fall tritt ein, sobald ein Boden nicht farbig
+ * ist: Schnee, Asche, Stein, Beton.
+ * ───────────────────────────────────────────────────────────────────────
+ *
  * Aufruf: npx tsx tools/mapread.mjs <bild.png> [name]
  */
 import { writeFileSync } from 'node:fs';
@@ -85,47 +98,105 @@ console.log(`Gebiete: ${gebiete.length}, davon Weg mit ${weg.punkte.length} Punk
 const istWeg = new Uint8Array(B * H);
 for (const p of weg.punkte) istWeg[p] = 1;
 
-const R = 11;                 // Sichtweite je Schritt
-const SCHRITT = 7;
+const R = 16;                 // Sichtweite je Schritt
+const SCHRITT = 10;
 
-// Startpunkt: der Wegpunkt am weitesten links.
-let start = weg.punkte[0];
-for (const p of weg.punkte) if ((p % B) < (start % B)) start = p;
-let cx = start % B, cy = (start / B) | 0;
-// Anfangsrichtung: nach rechts.
-let dx = 1, dy = 0;
 
-const kurve = [{ x: cx, y: cy }];
-const besucht = new Uint8Array(B * H);
-for (let schritt = 0; schritt < 400; schritt++) {
-  let sx = 0, sy = 0, n = 0;
-  for (let y = Math.max(0, Math.round(cy - R)); y <= Math.min(H - 1, Math.round(cy + R)); y++) {
-    for (let x = Math.max(0, Math.round(cx - R)); x <= Math.min(B - 1, Math.round(cx + R)); x++) {
-      if (!istWeg[y * B + x] || besucht[y * B + x]) continue;
-      const ax = x - cx, ay = y - cy;
-      if (ax * ax + ay * ay > R * R) continue;
-      // Nur was vor uns liegt - sonst läuft der Punkt zurück.
-      if (ax * dx + ay * dy <= 0) continue;
-      sx += x; sy += y; n++;
+/** Von einem Punkt aus die Mittellinie ablaufen.
+ *
+ *  Kein Ausduennen, kein Skelett: jeder Schritt zielt auf den Schwerpunkt der
+ *  Wegpunkte, die vor einem liegen. Das folgt auch einer Haarnadel, an der ein
+ *  spaltenweiser Mittelwert scheitern wuerde.
+ *
+ *  `bestehende` sind bereits gefundene Bahnen. Trifft der Lauf auf eine, wird
+ *  ab dort deren Rest uebernommen - genau so, wie das Spiel eine Vereinigung
+ *  abbildet: ab dem Treffpunkt fuehren beide Bahnen dieselben Punkte.
+ */
+function ablaufen(startX, startY, richtung, bestehende) {
+  let cx = startX, cy = startY;
+  let dx = richtung[0], dy = richtung[1];
+  const kurve = [{ x: cx, y: cy }];
+  const besucht = new Uint8Array(B * H);
+  for (let schritt = 0; schritt < 400; schritt++) {
+    let sx = 0, sy = 0, n = 0;
+    for (let y = Math.max(0, Math.round(cy - R)); y <= Math.min(H - 1, Math.round(cy + R)); y++) {
+      for (let x = Math.max(0, Math.round(cx - R)); x <= Math.min(B - 1, Math.round(cx + R)); x++) {
+        if (!istWeg[y * B + x] || besucht[y * B + x]) continue;
+        const ax = x - cx, ay = y - cy;
+        if (ax * ax + ay * ay > R * R) continue;
+        if (ax * dx + ay * dy <= 0) continue;
+        sx += x; sy += y; n++;
+      }
+    }
+    if (n < 6) break;
+    const zx = sx / n, zy = sy / n;
+    const len = Math.hypot(zx - cx, zy - cy) || 1;
+    dx = (zx - cx) / len; dy = (zy - cy) / len;
+    cx += dx * SCHRITT; cy += dy * SCHRITT;
+
+    // Trifft der Lauf eine bestehende Bahn, wird ab dort deren Rest geteilt.
+    if (schritt > 6) {
+      for (const alt of bestehende) {
+        for (let k = 0; k < alt.length; k++) {
+          if (Math.hypot(alt[k].x - cx, alt[k].y - cy) < R * 0.8) {
+            return kurve.concat(alt.slice(k));
+          }
+        }
+      }
+    }
+    kurve.push({ x: cx, y: cy });
+    for (let y = Math.max(0, Math.round(cy - R)); y <= Math.min(H - 1, Math.round(cy + R)); y++) {
+      for (let x = Math.max(0, Math.round(cx - R)); x <= Math.min(B - 1, Math.round(cx + R)); x++) {
+        const ax = x - cx, ay = y - cy;
+        if (ax * ax + ay * ay <= R * R && ax * dx + ay * dy < 0) besucht[y * B + x] = 1;
+      }
     }
   }
-  if (n < 6) break;
-  const zx = sx / n, zy = sy / n;
-  const len = Math.hypot(zx - cx, zy - cy) || 1;
-  dx = (zx - cx) / len; dy = (zy - cy) / len;
-  cx += dx * SCHRITT; cy += dy * SCHRITT;
-  // Alles hinter uns als erledigt markieren.
-  for (let y = Math.max(0, Math.round(cy - R)); y <= Math.min(H - 1, Math.round(cy + R)); y++) {
-    for (let x = Math.max(0, Math.round(cx - R)); x <= Math.min(B - 1, Math.round(cx + R)); x++) {
-      const ax = x - cx, ay = y - cy;
-      if (ax * ax + ay * ay <= R * R && ax * dx + ay * dy < 0) besucht[y * B + x] = 1;
-    }
-  }
-  kurve.push({ x: cx, y: cy });
+  return kurve;
 }
 
+/** Wo beruehrt der Weg den Bildrand? Jede solche Stelle ist ein Zuweg. */
+function einstiege() {
+  const treffer = [];
+  const rand = [];
+  for (const p of weg.punkte) {
+    const x = p % B, y = (p / B) | 0;
+    if (x <= 1 || y <= 1 || x >= B - 2 || y >= H - 2) rand.push({ x, y });
+  }
+  // Randpunkte zu Gruppen zusammenfassen - ein Zuweg ist mehrere Punkte breit.
+  const benutzt = new Set();
+  for (const r of rand) {
+    const key = `${r.x},${r.y}`;
+    if (benutzt.has(key)) continue;
+    const gruppe = rand.filter((o) => Math.hypot(o.x - r.x, o.y - r.y) < 22);
+    for (const o of gruppe) benutzt.add(`${o.x},${o.y}`);
+    const mx = gruppe.reduce((a, o) => a + o.x, 0) / gruppe.length;
+    const my = gruppe.reduce((a, o) => a + o.y, 0) / gruppe.length;
+    // Richtung ins Bild hinein.
+    const dx = mx < B / 2 ? 1 : mx > B / 2 ? -1 : 0;
+    const dy = my < H / 2 ? 1 : my > H / 2 ? -1 : 0;
+    const nachInnen = mx <= 2 ? [1, 0] : mx >= B - 3 ? [-1, 0] : my <= 2 ? [0, 1] : [0, -1];
+    void dx; void dy;
+    treffer.push({ x: mx, y: my, richtung: nachInnen, groesse: gruppe.length });
+  }
+  return treffer.sort((a, b) => b.groesse - a.groesse);
+}
+
+const zugaenge = einstiege();
+console.log(`Randberuehrungen: ${zugaenge.length} (${zugaenge.map((z) => `${Math.round(z.x)}/${Math.round(z.y)}`).join(', ')})`);
+
+// Der laengste Lauf ist die Hauptbahn, danach die uebrigen Zuwege.
+const bahnen = [];
+for (const z of zugaenge.slice(0, 8)) {
+  const k = ablaufen(z.x, z.y, z.richtung, bahnen);
+  if (k.length > 8) bahnen.push(k);
+}
+bahnen.sort((a, b) => b.length - a.length);
+console.log(`Bahnen: ${bahnen.map((b) => b.length + ' Punkte').join(', ')}`);
+const kurve = bahnen[0];
+
 /** Wegbreite an einem Punkt: quer zur Laufrichtung messen. */
-function breiteBei(i) {
+function breiteBei(kurve, i) {
   const a = kurve[Math.max(0, i - 1)], b = kurve[Math.min(kurve.length - 1, i + 1)];
   const ang = Math.atan2(b.y - a.y, b.x - a.x) + Math.PI / 2;
   const p = kurve[i];
@@ -144,30 +215,42 @@ function breiteBei(i) {
 }
 
 // Auf Weltmaß umrechnen (1920 x 1080) und ausdünnen: die Kurve braucht
-// Stützpunkte, keine Messpunkte.
+// Stützpunkte, keine Messpunkte. Jede Bahn einzeln.
 const k = 1920 / B;
-const jeder = Math.max(1, Math.round(kurve.length / 16));
-const punkte = [];
-for (let i = 0; i < kurve.length; i += jeder) {
-  punkte.push({
-    x: Math.round(kurve[i].x * k),
-    y: Math.round(kurve[i].y * k),
-    w: Math.max(30, Math.round(breiteBei(i) * k)),
-  });
-}
-// Der erste Punkt gehört vor die Bildkante - dort steht das Tor.
-if (punkte.length) punkte[0] = { ...punkte[0], x: -80 };
 
-console.log(`\nKurve: ${kurve.length} Messpunkte -> ${punkte.length} Stützpunkte`);
-console.log(`Breite: ${Math.min(...punkte.map((p) => p.w))} bis ${Math.max(...punkte.map((p) => p.w))}`);
+function stuetzpunkte(bahn) {
+  const jeder = Math.max(1, Math.round(bahn.length / 14));
+  const raus = [];
+  for (let i = 0; i < bahn.length; i += jeder) {
+    raus.push({
+      x: Math.round(bahn[i].x * k),
+      y: Math.round(bahn[i].y * k),
+      w: Math.max(40, Math.round(breiteBei(bahn, i) * k)),
+    });
+  }
+  // Der letzte Messpunkt gehört dazu, sonst endet die Bahn zu früh.
+  const letzter = bahn[bahn.length - 1];
+  raus.push({ x: Math.round(letzter.x * k), y: Math.round(letzter.y * k), w: raus[raus.length - 1].w });
+  return raus;
+}
+
+const alleBahnen = bahnen.map(stuetzpunkte);
+
+// Alle Bahnen müssen am selben Punkt enden - dort steht der Kristall.
+const ziel = alleBahnen[0][alleBahnen[0].length - 1];
+for (const b of alleBahnen) b[b.length - 1] = { ...ziel, w: b[b.length - 1].w };
+
+console.log(`\nBahnen: ${alleBahnen.map((b) => b.length + ' Stützpunkte').join(', ')}`);
 
 console.log('\n  lanes: [');
-console.log('    [');
-for (let i = 0; i < punkte.length; i += 3) {
-  console.log('      ' + punkte.slice(i, i + 3)
-    .map((p) => `{ x: ${p.x}, y: ${p.y}, w: ${p.w} }`).join(', ') + ',');
+for (const bahn of alleBahnen) {
+  console.log('    [');
+  for (let i = 0; i < bahn.length; i += 3) {
+    console.log('      ' + bahn.slice(i, i + 3)
+      .map((p) => `{ x: ${p.x}, y: ${p.y}, w: ${p.w} }`).join(', ') + ',');
+  }
+  console.log('    ],');
 }
-console.log('    ],');
 console.log('  ],');
 
 // --- Unwegsames Gelände: jede Felsgruppe als Kreis.
@@ -191,13 +274,13 @@ console.log('  ],');
 
 // --- Kontrollbild: die gefundene Kurve über das Original legen.
 const svg = `<svg width="${B}" height="${H}">
-  <polyline points="${kurve.map((p) => `${p.x},${p.y}`).join(' ')}"
-    fill="none" stroke="#FF2D95" stroke-width="3"/>
+  ${bahnen.map((b, i) => `<polyline points="${b.map((p) => `${p.x},${p.y}`).join(' ')}"
+    fill="none" stroke="${['#FF2D95', '#2D95FF', '#FFD52D'][i % 3]}" stroke-width="3"/>`).join('')}
   ${rau.map((g) => `<circle cx="${g.x / k}" cy="${g.y / k}" r="${g.r / k}"
     fill="none" stroke="#2DFF95" stroke-width="2"/>`).join('')}
 </svg>`;
 await sharp(datei).resize(B, H)
   .composite([{ input: Buffer.from(svg), top: 0, left: 0 }])
   .png().toFile(`/tmp/${name}_kontrolle.png`);
-writeFileSync(`/tmp/${name}_daten.json`, JSON.stringify({ lanes: [punkte], rough: rau }, null, 2));
+writeFileSync(`/tmp/${name}_daten.json`, JSON.stringify({ lanes: alleBahnen, rough: rau }, null, 2));
 console.log(`\nKontrollbild: /tmp/${name}_kontrolle.png`);

@@ -10,7 +10,7 @@ const START_GOLD = NORMAL.startGold;
 const START_LIVES = NORMAL.startLives;
 import { MAPS, goalOf, lanePaths } from '../src/data/maps';
 import { GameState } from '../src/game/state';
-import { TOWERS, TOWER_ORDER, MAX_LEVEL } from '../src/data/towers';
+import { TOWERS, TOWER_ORDER, MAX_LEVEL, DRAW_SCALE } from '../src/data/towers';
 import { ENEMIES } from '../src/data/enemies';
 
 import { ABILITIES, ABILITY_ORDER } from '../src/data/abilities';
@@ -251,6 +251,43 @@ for (const map of MAPS) {
     fail(`${map.id}: Ausgleich goldMul ${bal.goldMul} ausserhalb 0,85 bis 1,2.`);
   }
 
+}
+
+// --- Zeichengroesse gegen Platzbedarf.
+//
+// Diese Pruefung fehlte, und man sah das Ergebnis erst im Bild: gezeichnet
+// wurde jeder Turm 81 Pixel breit, stehen durfte ein Bogenturm schon 48 Pixel
+// neben dem naechsten - 46 % Ueberlappung. Die Tuerme sahen aus wie ein
+// Haufen statt wie Gebaeude.
+{
+  if (DRAW_SCALE > 1.35) {
+    fail(`Zeichenmassstab ${DRAW_SCALE} - darueber ueberdecken sich Nachbarn.`);
+  }
+  if (DRAW_SCALE < 1.05) {
+    warn(`Zeichenmassstab ${DRAW_SCALE} - der Turm wirkt in seinen Platz gequetscht.`);
+  }
+  // Zwei Tuerme dicht nebeneinander duerfen sich hoechstens leicht ueberdecken.
+  for (const a of TOWER_ORDER) {
+    for (const b of TOWER_ORDER) {
+      const abstand = (TOWERS[a].footprint + TOWERS[b].footprint) / 2 + 4;
+      const breite = (TOWERS[a].footprint + TOWERS[b].footprint) / 2 * DRAW_SCALE;
+      const ueber = (breite - abstand) / breite;
+      if (ueber > 0.22) {
+        fail(
+          `${TOWERS[a].name} neben ${TOWERS[b].name}: ${Math.round(ueber * 100)} % ` +
+          'Ueberdeckung - hoechstens 22 % sind vorgesehen.',
+        );
+      }
+    }
+  }
+  // Und ein Turm muss auf dem Handy ueberhaupt zu erkennen sein.
+  const kleinst = Math.max(568 / WORLD_W, 320 / WORLD_H);
+  for (const id of TOWER_ORDER) {
+    const px = TOWERS[id].footprint * DRAW_SCALE * kleinst;
+    if (px < 22) {
+      fail(`${TOWERS[id].name}: nur ${px.toFixed(0)} Bildschirmpunkte gross auf dem kleinsten Geraet.`);
+    }
+  }
 }
 
 // ------------------------------------------------------------------ Tuerme

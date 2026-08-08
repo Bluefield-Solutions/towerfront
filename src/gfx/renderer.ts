@@ -3,6 +3,7 @@ import { ENEMIES } from '../data/enemies';
 import {
   TOWERS, accentFor, statsFor,
   type BranchIndex, type TowerDef, type TowerId, type TowerLevel,
+  DRAW_SCALE,
 } from '../data/towers';
 import { ABILITIES } from '../data/abilities';
 import { makeRng } from '../core/math';
@@ -577,7 +578,8 @@ export class Renderer {
       const art = getTowerArt(t.def, t.branch, t.level, s.map.id);
       if (art) {
         const k = towerArtScale(t.level);
-        const w = 104 * k, h = 104 * k;
+        const w = TOWERS[def.id].footprint * DRAW_SCALE * k;
+      const h = w;
         const facingLeft = Math.cos(t.angle) < 0;
         const rec = t.recoil * 3;
         ctx.save();
@@ -660,7 +662,8 @@ export class Renderer {
     const art = getTowerArt(def.id, null, level, mapId);
     if (art) {
       const k = towerArtScale(level);
-      const w = 104 * k, h = 104 * k;
+      const w = TOWERS[def.id].footprint * DRAW_SCALE * k;
+      const h = w;
       this.ctx.drawImage(art, x - w / 2, y - h * 0.72, w, h);
       return;
     }

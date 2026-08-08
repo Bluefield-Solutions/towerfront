@@ -36,8 +36,15 @@ export interface TowerBranch {
 }
 
 export interface TowerDef {
-  /** Platzbedarf in Weltpixeln. Nicht jeder Turm nimmt gleich viel Raum ein -
-   *  darin besteht die Entscheidung beim freien Bauen. */
+  /** Platzbedarf in Weltpixeln.
+   *
+   *  Er ist zugleich die Zeichengroesse: ein Turm wird `footprint * DRAW_SCALE`
+   *  breit gemalt. Bis v51 waren beide Zahlen unabhaengig - gezeichnet wurde
+   *  jeder Turm 81 Pixel breit, stehen durfte ein Bogenturm aber schon 48
+   *  Pixel neben dem naechsten. Ergebnis: 46 % Ueberlappung, die Tuerme sahen
+   *  aus wie ein Haufen statt wie Gebaeude.
+   *
+   *  Jetzt haengt das eine am anderen, und ein Waechter haelt es fest. */
   footprint: number;
   id: TowerId;
   name: string;
@@ -55,9 +62,16 @@ export interface TowerDef {
 
 export const MAX_LEVEL = 6;
 
+/** Wie breit ein Turm im Verhaeltnis zu seinem Platzbedarf gemalt wird.
+ *
+ *  Ueber 1,0 ragt er ueber seinen Platz hinaus - das ist gewollt, sonst wirkt
+ *  er wie hineingequetscht. Ueber etwa 1,3 fangen Nachbarn an, sich zu
+ *  ueberdecken. */
+export const DRAW_SCALE = 1.25;
+
 export const TOWERS: Record<TowerId, TowerDef> = {
   arrow: {
-    id: 'arrow', footprint: 44, name: 'Bogenturm', role: 'Dauerfeuer',
+    id: 'arrow', footprint: 62, name: 'Bogenturm', role: 'Dauerfeuer',
     blurb: 'Günstig und schnell. Trägt die frühen Wellen.',
     color: '#D8DCE8', accent: '#F2C14E',
     attack: 'single', hitsAir: true, projectileSpeed: 840,
@@ -88,7 +102,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     ],
   },
   frost: {
-    id: 'frost', footprint: 52, name: 'Frostturm', role: 'Umkreis-Bremse',
+    id: 'frost', footprint: 72, name: 'Frostturm', role: 'Umkreis-Bremse',
     blurb: 'Kein Geschoss. Pulst im Umkreis und bremst alles gleichzeitig.',
     color: '#BFE9F2', accent: '#7FE7E0',
     attack: 'aura', hitsAir: true, projectileSpeed: 0,
@@ -119,7 +133,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     ],
   },
   mortar: {
-    id: 'mortar', footprint: 70, name: 'Mörser', role: 'Fläche, nur Boden',
+    id: 'mortar', footprint: 96, name: 'Mörser', role: 'Fläche, nur Boden',
     blurb: 'Langsam und teuer, trifft eine ganze Traube. Erreicht keine Flieger.',
     color: '#C3B39A', accent: '#F08A3C',
     attack: 'splash', hitsAir: false, projectileSpeed: 384,
@@ -150,7 +164,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     ],
   },
   prism: {
-    id: 'prism', footprint: 58, name: 'Prisma', role: 'Kettenblitz',
+    id: 'prism', footprint: 80, name: 'Prisma', role: 'Kettenblitz',
     blurb: 'Sofortstrahl, springt auf Nachbarn über.',
     color: '#E4D3FF', accent: '#B07CFF',
     attack: 'chain', hitsAir: true, projectileSpeed: 0,

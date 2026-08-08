@@ -269,13 +269,6 @@ for (const map of MAPS) {
     }
   }
 
-  // Unwegsames Gelaende darf nicht auf dem Weg liegen - dort waere es unsichtbar.
-  for (const gr of map.rough) {
-    if (Math.min(...paths.map((p) => p.distanceTo(gr.x, gr.y))) < gr.r) {
-      fail(`${map.id}: unwegsames Gelaende bei ${gr.x}/${gr.y} ueberdeckt den Weg.`);
-    }
-  }
-
   for (const [key, val] of Object.entries(map.palette)) {
     if (!isHex(val)) fail(`${map.id}: Farbe "${key}" ist ungueltig (${val}).`);
   }

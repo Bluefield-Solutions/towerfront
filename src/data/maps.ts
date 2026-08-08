@@ -58,8 +58,6 @@ export interface GameMap {
    *  drei Bildsprachen auf einem Bild - weich gezeichneter Untergrund,
    *  flaechig gezeichneter Weg, gerenderte Figuren - werden zu zweien. */
   pfadImBild?: boolean;
-  /** Deko - Felsen und Bewuchs, rein optisch. */
-  props: { x: number; y: number; r: number }[];
   /** Der Wellenplan dieser Karte. */
   waves: Wave[];
   /** Feinausgleich der Karte. Siehe Konzept, Abschnitt zur Balance. */
@@ -113,10 +111,6 @@ export const MAP_SPIRALHAIN: GameMap = {
   ],
   pfadImBild: true,
   hint: { x: 260, y: 100 },
-  props: [
-    { x: 1584, y: 156, r: 26 }, { x: 1680, y: 252, r: 26 }, { x: 48, y: 540, r: 26 },
-    { x: 144, y: 828, r: 26 }, { x: 816, y: 60, r: 26 }, { x: 624, y: 828, r: 26 },
-  ],
   waves: PLAN_SPIRALHAIN,
   balance: { hpMul: 0.85, goldMul: 1.15 },
 };
@@ -150,7 +144,6 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
   ],
   pfadImBild: true,
   hint: { x: 220, y: 200 },
-  props: [],
   waves: PLAN_ASCHESCHLUCHT,
   balance: { hpMul: 0.85, goldMul: 1.2 },
 };
@@ -187,25 +180,6 @@ export const MAP_FROSTSPALTE: GameMap = {
   ],
   pfadImBild: true,
   hint: { x: 220, y: 200 },
-  props: [
-    { x: 48, y: 924, r: 26 }, { x: 144, y: 924, r: 26 }, { x: 240, y: 924, r: 26 },
-    { x: 48, y: 1020, r: 26 }, { x: 144, y: 1020, r: 26 }, { x: 240, y: 1020, r: 26 },
-    { x: 1296, y: 1020, r: 26 }, { x: 1392, y: 1020, r: 26 }, { x: 1488, y: 1020, r: 26 },
-    { x: 1584, y: 1020, r: 26 }, { x: 1680, y: 1020, r: 26 }, { x: 1776, y: 1020, r: 26 },
-    { x: 1872, y: 1020, r: 26 }, { x: 48, y: 540, r: 26 }, { x: 144, y: 540, r: 26 },
-    { x: 240, y: 540, r: 26 }, { x: 48, y: 636, r: 26 }, { x: 144, y: 636, r: 26 },
-    { x: 240, y: 636, r: 26 }, { x: 48, y: 732, r: 26 }, { x: 144, y: 732, r: 26 },
-    { x: 240, y: 732, r: 26 }, { x: 1680, y: 60, r: 26 }, { x: 1776, y: 60, r: 26 },
-    { x: 1872, y: 60, r: 26 }, { x: 1680, y: 156, r: 26 }, { x: 1776, y: 156, r: 26 },
-    { x: 1872, y: 156, r: 26 }, { x: 1680, y: 252, r: 26 }, { x: 1776, y: 252, r: 26 },
-    { x: 1872, y: 252, r: 26 }, { x: 1296, y: 732, r: 26 }, { x: 1392, y: 732, r: 26 },
-    { x: 1488, y: 732, r: 26 }, { x: 1296, y: 828, r: 26 }, { x: 1392, y: 828, r: 26 },
-    { x: 1488, y: 828, r: 26 }, { x: 144, y: 60, r: 26 }, { x: 240, y: 60, r: 26 },
-    { x: 336, y: 60, r: 26 }, { x: 144, y: 156, r: 26 }, { x: 240, y: 156, r: 26 },
-    { x: 336, y: 156, r: 26 }, { x: 432, y: 444, r: 26 }, { x: 528, y: 444, r: 26 },
-    { x: 816, y: 252, r: 26 }, { x: 1200, y: 252, r: 26 }, { x: 1860, y: 960, r: 26 },
-    { x: 1584, y: 156, r: 26 },
-  ],
   waves: PLAN_FROSTSPALTE,
   balance: { hpMul: 0.85, goldMul: 1.05 },
 };

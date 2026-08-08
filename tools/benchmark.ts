@@ -14,7 +14,7 @@
 import { GameState } from '../src/game/state';
 import { TOWERS, TOWER_ORDER } from '../src/data/towers';
 import { ENEMIES } from '../src/data/enemies';
-import { WAVES } from '../src/data/waves';
+import type { Wave } from '../src/data/waves';
 import { ABILITY_ORDER } from '../src/data/abilities';
 import { MAPS } from '../src/data/maps';
 import { SPEEDS } from '../src/data/config';
@@ -49,9 +49,9 @@ s.reset(12345);
 
 const attackKinds = new Set(TOWER_ORDER.map((id) => TOWERS[id].attack));
 const enemyList = Object.values(ENEMIES);
-const bossWaves = WAVES
+const bossWaves = MAPS.flatMap((m: { waves: Wave[] }) => m.waves
   .map((w, i) => (w.groups.some((g) => ENEMIES[g.enemy].boss) ? i + 1 : 0))
-  .filter(Boolean);
+  .filter(Boolean));
 
 /** Baut es sich auch bei Pause? Defender's Quest nennt das Fehlen dieser
  *  Moeglichkeit den einen grossen Fehler von Cursed Treasure. */

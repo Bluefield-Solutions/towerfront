@@ -10,7 +10,7 @@
 import { GameState } from '../src/game/state';
 import { COLS, ROWS } from '../src/data/config';
 import { MAX_LEVEL, TOWER_ORDER } from '../src/data/towers';
-import { WAVES } from '../src/data/waves';
+
 
 const DT = 1 / 60;
 const BUDGET_MS = 4; // Obergrenze fuer die reine Simulation je Bild
@@ -33,7 +33,7 @@ for (let y = 0; y < ROWS; y++) {
 }
 
 // Letzte Welle starten und laufen lassen, bis viele Gegner unterwegs sind.
-s.waveIndex = WAVES.length - 1;
+s.waveIndex = s.waves.length - 1;
 s.gold = 1_000_000;
 s.startWave();
 for (let f = 0; f < 60 * 20; f++) { s.update(DT); keepAlive(); }

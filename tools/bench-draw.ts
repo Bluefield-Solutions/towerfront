@@ -88,7 +88,7 @@ const { GameState } = await import('../src/game/state');
 const { Renderer } = await import('../src/gfx/renderer');
 const { COLS, ROWS } = await import('../src/data/config');
 const { MAX_LEVEL, TOWER_ORDER } = await import('../src/data/towers');
-const { WAVES } = await import('../src/data/waves');
+
 const { spriteCount, spriteBytes } = await import('../src/gfx/sprites');
 
 const canvas = win.document.getElementById('view') as unknown as HTMLCanvasElement;
@@ -113,7 +113,7 @@ for (let y = 0; y < ROWS; y++) {
     }
   }
 }
-s.waveIndex = WAVES.length - 1;
+s.waveIndex = s.waves.length - 1;
 s.gold = 1_000_000;
 s.startWave();
 

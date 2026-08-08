@@ -4,7 +4,7 @@ import {
   TOWERS, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor,
   type BranchIndex, type TowerId,
 } from '../data/towers';
-import { WAVES, EARLY_BONUS_MAX, EARLY_BONUS_WINDOW } from '../data/waves';
+import { EARLY_BONUS_MAX, EARLY_BONUS_WINDOW } from '../data/waves';
 import {
   DIFFICULTIES, hpScale, type DifficultyDef, type DifficultyId,
 } from '../data/difficulty';
@@ -236,10 +236,12 @@ export class GameState {
 
   // ---------------------------------------------------------------- Wellen
 
-  get waveNumber(): number { return Math.min(this.waveIndex + 1, WAVES.length); }
-  get totalWaves(): number { return WAVES.length; }
-  get canStartWave(): boolean { return !this.waveActive && this.waveIndex < WAVES.length; }
-  get nextWave() { return WAVES[this.waveIndex]; }
+  /** Der Wellenplan der aktuellen Karte. */
+  get waves() { return this.map.waves; }
+  get waveNumber(): number { return Math.min(this.waveIndex + 1, this.waves.length); }
+  get totalWaves(): number { return this.waves.length; }
+  get canStartWave(): boolean { return !this.waveActive && this.waveIndex < this.waves.length; }
+  get nextWave() { return this.waves[this.waveIndex]; }
 
   /** Gold fuer einen frueh gestarteten Angriff. Faellt linear auf null. */
   get earlyBonus(): number {
@@ -256,7 +258,7 @@ export class GameState {
       this.stats.goldEarned += bonus;
       this.float(this.goal.x, this.goal.y - 70, `Frueh gestartet  +${bonus}`, C.gold, 22);
     }
-    const wave = WAVES[this.waveIndex];
+    const wave = this.waves[this.waveIndex];
     // Spaetere Wellen kommen dichter: was zaehlt, ist die Huelle je Sekunde.
     const dense = 1 + this.waveIndex * this.diff.densityRamp;
     this.pending = [];
@@ -282,7 +284,7 @@ export class GameState {
   }
 
   private finishWave(): void {
-    const wave = WAVES[this.waveIndex];
+    const wave = this.waves[this.waveIndex];
     const payout = Math.round(wave.bonus * this.diff.bonusMul * this.map.balance.goldMul);
     this.gold += payout;
     this.stats.goldEarned += payout;
@@ -290,10 +292,10 @@ export class GameState {
     this.waveIndex++;
     this.waveActive = false;
     this.idleTime = 0;
-    if (this.waveIndex >= WAVES.length) {
+    if (this.waveIndex >= this.waves.length) {
       this.phase = 'won';
       clearGame();
-      recordRun(this.map.id, this.difficulty, WAVES.length, this.lives);
+      recordRun(this.map.id, this.difficulty, this.waves.length, this.lives);
       Sfx.play('win');
     }
   }
@@ -434,7 +436,7 @@ export class GameState {
     const def = ENEMIES[id];
     const ln = lane % this.lanes.length;
     const p0 = this.lanes[ln][0];
-    const ramp = hpScale(this.diff, this.waveIndex, WAVES.length, this.map.balance.hpMul);
+    const ramp = hpScale(this.diff, this.waveIndex, this.waves.length, this.map.balance.hpMul);
     const hp = Math.round(def.hp * hpMul * ramp);
     // Flieger starten leicht versetzt, damit ein Schwarm nicht als eine Linie
     // uebereinander liegt.
@@ -1022,7 +1024,7 @@ export class GameState {
     if (save.v !== 6) return false;
     if (!MAPS.some((m) => m.id === save.map)) return false;
     if (!(save.difficulty in DIFFICULTIES)) return false;
-    if (save.waveIndex < 0 || save.waveIndex > WAVES.length) return false;
+    if (save.waveIndex < 0 || save.waveIndex > this.map.waves.length) return false;
     for (const [id] of save.towers) if (!(id in TOWERS)) return false;
     for (const [id] of save.enemies) if (!(id in ENEMIES)) return false;
     for (const [, id] of save.pending) if (!(id in ENEMIES)) return false;

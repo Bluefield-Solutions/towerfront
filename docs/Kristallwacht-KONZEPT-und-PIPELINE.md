@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v18 · 07.08.2026
+Stand: v19 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -305,6 +305,32 @@ jederzeit wiederherstellbar. Ein Fehlversuch kostet eine Minute, nicht einen
 Abend.
 
 ---
+
+### 3.19 Die Abkürzung, die man der Karte nicht ansieht
+
+Frostspalte blieb hartnäckig unspielbar für zwei von drei Spielstilen — auch
+nachdem der Wellenplan auf 55 % heruntergefahren war. Das war das Signal, mit
+dem Tunen aufzuhören und nachzurechnen.
+
+Die Zahlen sagten das Gegenteil des Erlebten: Frostspalte hat mit **24,5 Hülle
+je Gold** die *niedrigste* Belastung aller drei Karten (Spiralhain 36,4). Sie
+müsste die leichteste sein.
+
+Der Fehler stand nicht in den Zahlen, sondern in der Geometrie: **Bahn 2 war 30
+Kacheln lang, Bahn 1 dagegen 47.** Die Hälfte aller Gegner nahm eine Abkürzung
+und lief an weit weniger Türmen vorbei. Von außen sieht man einer Karte das
+nicht an — sie ist aus einem Grund schwer, den niemand benennen kann.
+
+Behoben durch eine längere zweite Bahn. Und der Datenwächter verlangt es ab
+jetzt: **Bahnen einer Karte dürfen sich um höchstens 30 % in der Länge
+unterscheiden.** Alles darüber ist eine Abkürzung, keine Alternative.
+
+Ein zweiter Fund derselben Art: Frostspalte hatte anfangs die
+Schwärmer-Identität. Ihr Kristall liegt aber nahe am Rand, und Schwärmer fliegen
+die Luftlinie — sie standen dort kaum unter Feuer. Die Identität wanderte
+deshalb zur Ascheschlucht mit ihrem langen, offenen Weg; Frostspalte bekam
+Panzerung statt Luft. **Nicht jede Gegnerart passt auf jede Karte, und das
+entscheidet die Geometrie, nicht der Geschmack.**
 
 ### 3.18 Was zwei Zuwege mit der Balance machen
 
@@ -688,7 +714,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v18
+## 5. Stand v19
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -748,6 +774,22 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v19 — jede Karte hat ihren eigenen Wellenplan.** Bis v18 teilten sich
+alle Karten einen Plan, der über einen Faktor je Karte gebogen wurde. Das
+funktionierte, war aber unehrlich: die Karten unterschieden sich in der Form des
+Weges, nicht in dem, was darauf kam.
+
+| Karte | Was dort verlangt wird |
+|---|---|
+| Spiralhain | Der Lehrplan: alle Gegnerarten in ausgewogener Mischung |
+| Ascheschlucht | Masse und Panzerung — Spalter, die aus jedem Flächentreffer zwei Gegner machen |
+| Frostspalte | Panzerwände statt Masse: Kolosse und Spalter, kaum Flieger |
+
+Die Ausgleichsfaktoren stehen jetzt bei allen drei Karten auf 1,0 — die Pläne
+tragen sich selbst. Der Faktor bleibt als letzte Feinschraube, aber der Wächter
+lässt nur noch 0,85 bis 1,2 zu: ein größerer Bedarf heißt, dass der Plan nicht
+stimmt.
 
 **Neu in v18 — drei Karten, zwei davon mit Gabelung.**
 

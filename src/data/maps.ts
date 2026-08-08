@@ -1,5 +1,8 @@
 import { TILE, COLS, ROWS } from './config';
 import type { Vec } from '../core/math';
+import {
+  PLAN_SPIRALHAIN, PLAN_ASCHESCHLUCHT, PLAN_FROSTSPALTE, type Wave,
+} from './waves';
 
 /** Farbwelt einer Karte. Jedes Biom setzt eigene Toene fuer Boden und Pfad -
  *  Kristall, Gold und Gefahr bleiben ueberall gleich, damit die Bedeutung der
@@ -35,13 +38,14 @@ export interface GameMap {
   blocked: Vec[];
   /** Empfohlener erster Bauplatz - die Einfuehrung zeigt darauf. */
   hint: Vec;
-  /** Ausgleich der Karte.
+  /** Der Wellenplan dieser Karte. */
+  waves: Wave[];
+  /** Feinausgleich der Karte.
    *
-   *  Eine Karte mit zwei spaet zusammenlaufenden Bahnen halbiert die Deckung
-   *  fast ueber den ganzen Weg: ein Turm sieht nur eine der beiden Seiten.
-   *  Derselbe Wellenplan trifft dort also viel haerter. Statt die Wellen je
-   *  Karte zu verdoppeln - was jede spaetere Balanceaenderung dreifach
-   *  machen wuerde - traegt die Karte einen eigenen Faktor. */
+   *  Seit v19 traegt jede Karte ihren eigenen Wellenplan, und alle drei
+   *  stehen bei 1,0 - der Faktor wird nicht mehr gebraucht. Er bleibt als
+   *  letzte Feinschraube fuer den Fall, dass eine kuenftige Karte sie
+   *  wirklich braucht; der Waechter begrenzt ihn eng. */
   balance: { hpMul: number; goldMul: number };
 }
 
@@ -83,6 +87,7 @@ export const MAP_SPIRALHAIN: GameMap = {
     { x: 11, y: 4 },
   ]],
   hint: { x: 12, y: 2 },
+  waves: PLAN_SPIRALHAIN,
   balance: { hpMul: 1, goldMul: 1 },
   blocked: [
     { x: 16, y: 1 }, { x: 17, y: 2 },
@@ -120,7 +125,8 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
     ],
   ],
   hint: { x: 7, y: 4 },
-  balance: { hpMul: 0.92, goldMul: 1.05 },
+  waves: PLAN_ASCHESCHLUCHT,
+  balance: { hpMul: 1, goldMul: 1 },
   blocked: [
     // Lavafelder engen die Raender ein.
     ...rect(0, 3, 1, 4),
@@ -141,27 +147,29 @@ export const MAP_FROSTSPALTE: GameMap = {
   palette: FROST,
   lanes: [
     [
-      { x: -1, y: 2 }, { x: 4, y: 2 }, { x: 4, y: 7 },
-      { x: 10, y: 7 }, { x: 10, y: 4 }, { x: 16, y: 4 },
-      { x: 16, y: 8 }, { x: 12, y: 8 },
+      { x: -1, y: 2 }, { x: 3, y: 2 }, { x: 3, y: 8 },
+      { x: 8, y: 8 }, { x: 8, y: 5 }, { x: 17, y: 5 },
+      { x: 17, y: 9 }, { x: 11, y: 9 }, { x: 11, y: 6 },
     ],
     [
-      { x: 9, y: -1 }, { x: 9, y: 4 },
-      { x: 16, y: 4 }, { x: 16, y: 8 }, { x: 12, y: 8 },
+      { x: 6, y: -1 }, { x: 6, y: 0 }, { x: 14, y: 0 }, { x: 14, y: 3 },
+      { x: 10, y: 3 }, { x: 10, y: 5 },
+      { x: 17, y: 5 }, { x: 17, y: 9 }, { x: 11, y: 9 }, { x: 11, y: 6 },
     ],
   ],
-  hint: { x: 11, y: 5 },
-  balance: { hpMul: 0.62, goldMul: 1.12 },
+  hint: { x: 9, y: 4 },
+  waves: PLAN_FROSTSPALTE,
+  balance: { hpMul: 1, goldMul: 1 },
   blocked: [
     // Gletscherspalten nehmen viel Bauflaeche - hier ist Platz die Ressource.
-    ...rect(0, 8, 3, 10),
-    ...rect(6, 9, 10, 10),
-    ...rect(17, 9, 19, 10),
-    ...rect(0, 4, 2, 6),
-    ...rect(6, 2, 8, 3),
+    ...rect(0, 9, 2, 10),
+    ...rect(13, 10, 19, 10),
+    ...rect(0, 5, 2, 7),
     ...rect(17, 0, 19, 2),
-    ...rect(12, 5, 14, 6),
-    { x: 5, y: 5 }, { x: 5, y: 6 }, { x: 11, y: 0 }, { x: 12, y: 0 },
+    ...rect(13, 7, 15, 8),
+    ...rect(1, 0, 3, 1),
+    { x: 4, y: 4 }, { x: 5, y: 4 }, { x: 8, y: 2 }, { x: 12, y: 2 },
+    { x: 15, y: 2 }, { x: 16, y: 1 },
   ],
 };
 

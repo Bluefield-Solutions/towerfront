@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v18 · 07.08.2026
+Stand: nach v19 · 07.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Kristallwacht-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
@@ -31,7 +31,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | C6 | Heiler, regeneriert Umstehende | ●● | M |
 | C7 | Schildgegner, absorbiert die ersten n Treffer | ●● | S |
 | C24 | Karte 4 mit einer Mechanik statt nur einer Form (bewegliche Brücke, Tor, das sich schließt) | ●● | L |
-| C25 | Wellenplan je Karte statt eines gemeinsamen — erst sinnvoll, wenn der Ausgleichsfaktor nicht mehr reicht | ●● | M |
+| C26 | Ascheschlucht und Spiralhain verlangen noch fast dasselbe (Wächterhinweis, Abstand 0,22) — die Mischung stärker trennen | ●● | S |
 | C12 | Endlosmodus nach Welle 15 mit fortlaufender Skalierung | ●● | S |
 | C17 | Dritte Fähigkeit, die Gold statt Schaden bringt (Ernte mit Abklingzeit) | ●● | S |
 | C18 | Fähigkeiten zwischen Karten freischalten statt von Anfang an verfügbar | ●● | M |
@@ -79,6 +79,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S38 | Frostspalte blieb unspielbar, obwohl sie mit 24,5 Hülle je Gold die **niedrigste** Belastung aller Karten hat (Spiralhain 36,4) | Der Fehler saß in der Geometrie: Bahn 2 war 30 Kacheln lang, Bahn 1 dagegen 47. Die Hälfte der Gegner nahm eine Abkürzung. Neuer Wächter: Bahnen dürfen sich um höchstens 30 % unterscheiden. |
+| S39 | Frostspalte hatte anfangs die Schwärmer-Identität, ihr Kristall liegt aber nahe am Rand — Flieger standen kaum unter Feuer | Identität zur Ascheschlucht verschoben. Nicht jede Gegnerart passt auf jede Karte, und das entscheidet die Geometrie, nicht der Geschmack. |
 | S36 | Beide neuen Karten waren beim ersten Lauf für **jeden** Spielstil unspielbar, obwohl der Wellenplan derselbe ist | Zwei Zuwege halbieren die Deckung — ein Turm sieht nur eine Seite. Erst Geometrie (längere Wege, frühere Vereinigung), dann ein Ausgleichsfaktor je Karte. |
 | S37 | Frostspalte brauchte zunächst einen Ausgleich von 0,34 — außerhalb der Wächtergrenze von 0,4 bis 1,6 | Die Grenze wurde nicht gedehnt, sondern die Karte geändert: Vereinigung vorgezogen, danach reichten 0,62. Die Regel dahinter: braucht eine Karte einen extremeren Ausgleich, stimmt die Karte nicht. |
 | S35 | Erbarmungslos war zunächst mit 15 % weniger Einkommen angesetzt — **kein** Spielstil kam durch, auch nicht mit mehr Kristall und milderer Kurve | Das Einkommen ist die empfindlichste Schraube im Spiel: 15 % weniger brechen den Lauf, 30 % mehr Lebenspunkte ändern kaum etwas. Der harte Grad läuft jetzt mit 95 % Einkommen. |

@@ -10,7 +10,7 @@ const START_LIVES = NORMAL.startLives;
 import { MAPS, cellKey, laneCells, pathCells } from '../src/data/maps';
 import { TOWERS, TOWER_ORDER } from '../src/data/towers';
 import { ENEMIES } from '../src/data/enemies';
-import { WAVES } from '../src/data/waves';
+
 import { ABILITIES, ABILITY_ORDER } from '../src/data/abilities';
 
 const errors: string[] = [];
@@ -71,6 +71,21 @@ for (const map of MAPS) {
     if (!outside) fail(`${map.id}, Bahn ${i + 1}: beginnt innerhalb des Feldes.`);
   }
 
+  // Bahnen muessen aehnlich lang sein. Eine deutlich kuerzere Bahn ist eine
+  // Abkuerzung: die Haelfte der Gegner laeuft dann an viel weniger Tuermen
+  // vorbei, und die Karte wird aus einem Grund schwer, den man ihr nicht
+  // ansieht. Genau das war in v19 der Fall.
+  if (map.lanes.length > 1) {
+    const lens = laneCellLists.map((l) => l.length);
+    const min = Math.min(...lens), max = Math.max(...lens);
+    if (max > min * 1.3) {
+      fail(
+        `${map.id}: Bahnlaengen ${lens.join('/')} - die kuerzeste ist eine Abkuerzung ` +
+        `(hoechstens 30 % Unterschied erlaubt).`,
+      );
+    }
+  }
+
   // Mehrere Bahnen muessen sich vereinen - zwei voellig getrennte Wege waeren
   // zwei Karten nebeneinander, keine Gabelung.
   if (map.lanes.length > 1) {
@@ -111,11 +126,13 @@ for (const map of MAPS) {
   if (build < 40) fail(`${map.id}: nur ${build} Bauplaetze - zu wenig Spielraum.`);
 
   const bal = map.balance;
-  if (bal.hpMul < 0.4 || bal.hpMul > 1.6) {
-    fail(`${map.id}: Ausgleich hpMul ${bal.hpMul} liegt ausserhalb 0,4 bis 1,6 - dann stimmt die Karte nicht, nicht der Faktor.`);
+  // Eng gefasst: seit jede Karte einen eigenen Wellenplan hat, ist ein
+  // groesserer Ausgleich ein Zeichen dafuer, dass der Plan nicht stimmt.
+  if (bal.hpMul < 0.85 || bal.hpMul > 1.2) {
+    fail(`${map.id}: Ausgleich hpMul ${bal.hpMul} ausserhalb 0,85 bis 1,2 - dann gehoert der Wellenplan geaendert, nicht der Faktor.`);
   }
-  if (bal.goldMul < 0.7 || bal.goldMul > 1.4) {
-    fail(`${map.id}: Ausgleich goldMul ${bal.goldMul} liegt ausserhalb 0,7 bis 1,4.`);
+  if (bal.goldMul < 0.85 || bal.goldMul > 1.2) {
+    fail(`${map.id}: Ausgleich goldMul ${bal.goldMul} ausserhalb 0,85 bis 1,2.`);
   }
 
   // Farbwelt vollstaendig und gueltig.
@@ -210,11 +227,13 @@ for (const id of TOWER_ORDER) {
   // Die Panzerung wird nach dem gewichtet, was spaet tatsaechlich kommt -
   // ein Mittelwert ueber alle Gegnerarten unterschaetzt sie deutlich. Genau
   // dieser Fehler liess in v12 zwei tote Zweige durch.
-  const late = WAVES.slice(Math.floor(WAVES.length / 2));
+  // Ueber alle Karten, jeweils die spaetere Haelfte des Plans.
+  const late = MAPS.flatMap((m) => m.waves.slice(Math.floor(m.waves.length / 2)));
   let armorSum = 0, hpSum = 0, airHp = 0;
   for (const w of late) {
     for (const g of w.groups) {
       const e = ENEMIES[g.enemy];
+      if (!e) continue;
       const bulk = g.count * e.hp;
       armorSum += e.armor * bulk;
       hpSum += bulk;
@@ -345,7 +364,7 @@ for (const [id, e] of Object.entries(ENEMIES)) {
       warn(`Schwierigkeitsgrad ${id}: flacher Exponent ${d.hpCurve} - die Mitte wird haerter als das Ende.`);
     }
     // Die erste Welle darf nirgends schon skaliert sein.
-    const first = hpScale(d, 0, WAVES.length);
+    const first = hpScale(d, 0, MAPS[0].waves.length);
     if (Math.abs(first - 1) > 1e-9) fail(`Schwierigkeitsgrad ${id}: Welle 1 startet nicht bei Faktor 1.`);
     if (!TOWER_ORDER.some((t) => TOWERS[t].base.cost <= d.startGold)) {
       fail(`Schwierigkeitsgrad ${id}: kein Turm ist mit ${d.startGold} Startgold bezahlbar.`);
@@ -384,36 +403,67 @@ if (new Set(ABILITY_ORDER.map((id) => ABILITIES[id].key)).size !== ABILITY_ORDER
 }
 
 // ------------------------------------------------------------------ Wellen
+//
+// Jede Karte hat ihren eigenen Plan - und jeder wird einzeln geprueft.
+for (const map of MAPS) {
+  const plan = map.waves;
+  if (plan.length < 12) fail(`${map.id}: nur ${plan.length} Wellen - zu kurz fuer einen Lauf.`);
+  if (!plan.some((w) => w.groups.some((g) => ENEMIES[g.enemy]?.boss))) {
+    fail(`${map.id}: kein einziger Boss im Wellenplan.`);
+  }
 
-let prevPressure = 0;
-WAVES.forEach((w, i) => {
-  if (!w.groups.length) fail(`Welle ${i + 1}: keine Gruppen.`);
-  if (w.bonus <= 0) fail(`Welle ${i + 1}: kein Bonus.`);
-  let pressure = 0, maxLeak = 0, dur = 0;
-  for (const g of w.groups) {
-    if (!(g.enemy in ENEMIES)) { fail(`Welle ${i + 1}: unbekannter Gegner "${g.enemy}".`); continue; }
-    if (g.count <= 0) fail(`Welle ${i + 1}: Gruppe mit Anzahl ${g.count}.`);
-    if (g.gap <= 0) fail(`Welle ${i + 1}: Abstand muss groesser als null sein.`);
-    if (g.delay < 0) fail(`Welle ${i + 1}: negative Verzoegerung.`);
-    const e = ENEMIES[g.enemy];
-    const split = e.split ? e.split.count * e.split.hpFactor : 0;
-    pressure += g.count * e.hp * (1 + split) * (g.hpMul ?? 1);
-    maxLeak += g.count * (e.leak + (e.split ? e.split.count * ENEMIES[e.split.into].leak : 0));
-    dur = Math.max(dur, g.delay + g.count * g.gap);
+  let prevPressure = 0;
+  plan.forEach((w, i) => {
+    if (!w.groups.length) fail(`${map.id}, Welle ${i + 1}: keine Gruppen.`);
+    if (w.bonus <= 0) fail(`${map.id}, Welle ${i + 1}: kein Bonus.`);
+    let pressure = 0, maxLeak = 0, dur = 0;
+    for (const g of w.groups) {
+      if (!(g.enemy in ENEMIES)) { fail(`${map.id}, Welle ${i + 1}: unbekannter Gegner "${g.enemy}".`); continue; }
+      if (g.count <= 0) fail(`${map.id}, Welle ${i + 1}: Gruppe mit Anzahl ${g.count}.`);
+      if (g.gap <= 0) fail(`${map.id}, Welle ${i + 1}: Abstand muss groesser als null sein.`);
+      if (g.delay < 0) fail(`${map.id}, Welle ${i + 1}: negative Verzoegerung.`);
+      const e = ENEMIES[g.enemy];
+      const split = e.split ? e.split.count * e.split.hpFactor : 0;
+      pressure += g.count * e.hp * (1 + split) * (g.hpMul ?? 1);
+      maxLeak += g.count * (e.leak + (e.split ? e.split.count * ENEMIES[e.split.into].leak : 0));
+      dur = Math.max(dur, g.delay + g.count * g.gap);
+    }
+    if (dur > 90) warn(`${map.id}, Welle ${i + 1}: dauert rechnerisch ${Math.round(dur)} s - sehr lang.`);
+    if (i >= 5 && maxLeak < START_LIVES) {
+      warn(`${map.id}, Welle ${i + 1}: selbst bei totalem Durchkommen bleibt der Kristall stehen.`);
+    }
+    const prevBoss = i > 0 && plan[i - 1].groups.some((g) => ENEMIES[g.enemy]?.boss);
+    if (i > 0 && !prevBoss && pressure < prevPressure * 0.75) {
+      warn(`${map.id}, Welle ${i + 1}: Druck faellt gegenueber Welle ${i} um mehr als ein Viertel.`);
+    }
+    prevPressure = Math.max(prevPressure, pressure);
+  });
+
+  // Jede Karte soll etwas anderes verlangen. Zwei Plaene, die dieselbe
+  // Gegnermischung haben, sind zwei Namen fuer dieselbe Karte.
+  const mixOf = (p: typeof plan) => {
+    const m = new Map<string, number>();
+    let total = 0;
+    for (const w of p) for (const g of w.groups) {
+      const e = ENEMIES[g.enemy];
+      if (!e) continue;
+      m.set(g.enemy, (m.get(g.enemy) ?? 0) + g.count * e.hp);
+      total += g.count * e.hp;
+    }
+    return { m, total };
+  };
+  for (const other of MAPS) {
+    if (other.id <= map.id) continue;
+    const a = mixOf(map.waves), b = mixOf(other.waves);
+    let diff = 0;
+    for (const key of new Set([...a.m.keys(), ...b.m.keys()])) {
+      diff += Math.abs((a.m.get(key) ?? 0) / a.total - (b.m.get(key) ?? 0) / b.total);
+    }
+    if (diff < 0.25) {
+      warn(`${map.id} und ${other.id} verlangen fast dasselbe (Abstand ${diff.toFixed(2)}) - die Karten unterscheiden sich nur in der Form.`);
+    }
   }
-  if (dur > 90) warn(`Welle ${i + 1}: dauert rechnerisch ${Math.round(dur)} s - sehr lang.`);
-  // Ab der Mitte muss eine komplett durchgelassene Welle toedlich sein.
-  if (i >= 5 && maxLeak < START_LIVES) {
-    warn(`Welle ${i + 1}: selbst bei totalem Durchkommen bleibt der Kristall stehen.`);
-  }
-  // Der Druck darf zwischen zwei Wellen nicht einbrechen - ausser nach einer
-  // Bosswelle, deren Spitze bewusst herausragt.
-  const prevBoss = i > 0 && WAVES[i - 1].groups.some((g) => ENEMIES[g.enemy]?.boss);
-  if (i > 0 && !prevBoss && pressure < prevPressure * 0.75) {
-    warn(`Welle ${i + 1}: Druck faellt gegenueber Welle ${i} um mehr als ein Viertel.`);
-  }
-  prevPressure = Math.max(prevPressure, pressure);
-});
+}
 
 // ------------------------------------------------------------------ Ausgabe
 

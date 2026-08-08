@@ -9,7 +9,7 @@ import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../src/data/d
 
 const START_LIVES = DIFFICULTIES.normal.startLives;
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, type TowerId } from '../src/data/towers';
-import { WAVES } from '../src/data/waves';
+
 import { MAPS } from '../src/data/maps';
 import { ABILITIES } from '../src/data/abilities';
 
@@ -98,7 +98,7 @@ function play(
   const spots = buildSpots(s);
   let spotIdx = 0, si = 0, t = 0, frame = 0, upgrades = 0;
   let peakEnemies = 0, peakFx = 0;
-  const leakByWave = new Array(WAVES.length).fill(0);
+  const leakByWave = new Array(s.waves.length).fill(0);
   let lastLives = s.lives;
 
   while (s.phase === 'playing' && t < 60 * 45) {
@@ -136,7 +136,7 @@ function play(
       useAbilities(s);
     }
 
-    const wi = Math.min(s.waveIndex, WAVES.length - 1);
+    const wi = Math.min(s.waveIndex, s.waves.length - 1);
     if (s.canStartWave) s.startWave();
     s.update(DT);
     t += DT;

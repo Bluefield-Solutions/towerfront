@@ -52,6 +52,12 @@ export interface GameMap {
   rough: { x: number; y: number; r: number }[];
   /** Wo die Einfuehrung hinzeigt. */
   hint: Vec;
+  /** Bringt das Kartenbild den Weg schon mit?
+   *
+   *  Dann zeichnet die Engine ihn nicht mehr. Das war der Sinn der Uebung:
+   *  drei Bildsprachen auf einem Bild - weich gezeichneter Untergrund,
+   *  flaechig gezeichneter Weg, gerenderte Figuren - werden zu zweien. */
+  pfadImBild?: boolean;
   /** Deko - Felsen und Bewuchs, rein optisch. */
   props: { x: number; y: number; r: number }[];
   /** Der Wellenplan dieser Karte. */
@@ -92,22 +98,21 @@ export const MAP_SPIRALHAIN: GameMap = {
   palette: MOOS,
   lanes: [
     [
-      { x: -80, y: 210, w: 88 }, { x: 210, y: 226, w: 82 }, { x: 520, y: 300, w: 76 },
-      { x: 760, y: 430, w: 50 }, { x: 980, y: 470, w: 50 }, { x: 1280, y: 396, w: 73 },
-      { x: 1560, y: 300, w: 80 }, { x: 1760, y: 430, w: 77 }, { x: 1740, y: 700, w: 50 },
-      { x: 1460, y: 850, w: 50 }, { x: 1080, y: 880, w: 50 }, { x: 720, y: 830, w: 50 },
-      { x: 470, y: 700, w: 77 }, { x: 430, y: 500, w: 80 }, { x: 620, y: 620, w: 73 },
-      { x: 900, y: 700, w: 50 }, { x: 1130, y: 640, w: 50 },
+      { x: -80, y: 180, w: 46 }, { x: 148, y: 176, w: 50 }, { x: 252, y: 307, w: 60 },
+      { x: 307, y: 455, w: 68 }, { x: 312, y: 617, w: 74 }, { x: 474, y: 660, w: 64 },
+      { x: 638, y: 693, w: 70 }, { x: 789, y: 632, w: 72 }, { x: 855, y: 483, w: 52 },
+      { x: 1005, y: 413, w: 54 }, { x: 1168, y: 381, w: 64 }, { x: 1320, y: 448, w: 46 },
+      { x: 1447, y: 558, w: 46 }, { x: 1580, y: 656, w: 68 }, { x: 1747, y: 671, w: 90 },
+      { x: 1842, y: 547, w: 82 },
     ],
   ],
   rough: [
-    { x: 1780, y: 53, r: 95 }, { x: 693, y: 57, r: 48 }, { x: 1889, y: 1051, r: 76 },
-    { x: 924, y: 99, r: 89 }, { x: 304, y: 944, r: 82 }, { x: 109, y: 807, r: 70 },
-    { x: 357, y: 29, r: 45 }, { x: 163, y: 634, r: 53 }, { x: 1466, y: 575, r: 62 },
-    { x: 208, y: 12, r: 56 }, { x: 1334, y: 74, r: 94 }, { x: 1912, y: 251, r: 58 },
-    { x: 136, y: 973, r: 50 },
+    { x: 1186, y: 821, r: 165 }, { x: 764, y: 125, r: 142 }, { x: 1565, y: 179, r: 121 },
+    { x: 247, y: 862, r: 82 }, { x: 1750, y: 356, r: 39 }, { x: 829, y: 896, r: 29 },
+    { x: 1069, y: 1004, r: 27 }, { x: 1433, y: 953, r: 25 },
   ],
-  hint: { x: 60, y: 60 },
+  pfadImBild: true,
+  hint: { x: 260, y: 100 },
   props: [
     { x: 1584, y: 156, r: 26 }, { x: 1680, y: 252, r: 26 }, { x: 48, y: 540, r: 26 },
     { x: 144, y: 828, r: 26 }, { x: 816, y: 60, r: 26 }, { x: 624, y: 828, r: 26 },

@@ -90,8 +90,15 @@ for (const map of MAPS) {
       }
       const w = path.widthRange();
       const ratio = w.max / Math.max(1, w.min);
+      // Bei einer gezeichneten Karte ist der Umweg unsere Entscheidung, bei
+      // einem gelieferten Bild nicht - dort ist der Weg gemalt, und er laesst
+      // sich nicht nachtraeglich verlaengern. Deshalb dort ein Hinweis statt
+      // eines Abbruchs, mit derselben Zahl. Der Wert gehoert in die
+      // Bildbestellung, nicht in eine Nachbesserung.
       if (detour < 1.8) {
-        fail(`${map.id}, Bahn ${i + 1}: Umwegfaktor ${detour.toFixed(2)} - der Weg ist fast eine Gerade.`);
+        const text = `${map.id}, Bahn ${i + 1}: Umwegfaktor ${detour.toFixed(2)} - der Weg ist fast eine Gerade.`;
+        if (map.pfadImBild) warn(`${text} Fuer das naechste Bild mehr Windungen bestellen.`);
+        else fail(text);
       }
       if (turns < 3) {
         fail(`${map.id}, Bahn ${i + 1}: nur ${turns} Richtungswechsel - ein einziger Bogen ist keine Strecke.`);

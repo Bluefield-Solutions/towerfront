@@ -69,11 +69,16 @@ export function bakeTerrain(
     g.fill();
   };
 
-  for (const p of lanes) { g.fillStyle = 'rgba(6,10,18,0.5)'; ribbon(p, 12); }
-  for (const p of lanes) { g.fillStyle = pal.pathEdge; ribbon(p, 0); }
-  for (const p of lanes) { g.fillStyle = pal.path; ribbon(p, -9); }
-  for (const p of lanes) { g.fillStyle = hexA('#FFF6DC', 0.12); ribbon(p, -22); }
+  // Bringt das Bild den Weg schon mit, wird hier nichts gezeichnet.
+  if (!map.pfadImBild) {
+    for (const p of lanes) { g.fillStyle = 'rgba(6,10,18,0.5)'; ribbon(p, 12); }
+    for (const p of lanes) { g.fillStyle = pal.pathEdge; ribbon(p, 0); }
+    for (const p of lanes) { g.fillStyle = pal.path; ribbon(p, -9); }
+    for (const p of lanes) { g.fillStyle = hexA('#FFF6DC', 0.12); ribbon(p, -22); }
+  }
 
+  // Randsteine nur, wo der Weg auch gezeichnet wird.
+  if (!map.pfadImBild) {
   // Randsteine entlang beider Raender. Sie folgen der wechselnden Breite mit,
   // also verengt sich mit dem Weg auch seine Einfassung.
   for (const p of lanes) {
@@ -93,12 +98,15 @@ export function bakeTerrain(
     }
   }
 
+  }
+
   // --- Unwegsames Gelaende.
   //
   // Es wird nicht als Verbotsschild gezeichnet, sondern als das, was es ist:
   // Felsfelder und Dickicht. Man soll auf einen Blick sehen, *warum* dort
   // nichts hinpasst - nicht, dass es verboten waere.
-  for (const gr of map.rough) {
+  // Bringt das Bild sein Gelaende schon mit, wird nichts darueber gemalt.
+  for (const gr of (map.pfadImBild ? [] : map.rough)) {
     const n = 9;
     g.save();
     g.translate(gr.x, gr.y);

@@ -95,11 +95,20 @@ async function processBackground(srcPath, spec) {
   const want = (spec.width ?? 2000) / (spec.height ?? 1100);
   const have = meta.width / meta.height;
   const notes = [];
-  if (Math.abs(have / want - 1) > 0.01) {
+  // Abweichende Verhaeltnisse werden mittig beschnitten statt abgelehnt.
+  //
+  // Vorher brach das Werkzeug ab. Das war richtig, solange alle Bilder aus
+  // einer Bestellung kamen; sobald aber Bilder aus verschiedenen Quellen
+  // eintreffen, ist ein Zuschnitt die bessere Antwort als eine Verweigerung -
+  // ein Prozent Unterschied sieht niemand, eine fehlende Karte schon.
+  if (Math.abs(have / want - 1) > 0.12) {
     throw new Error(
       `Seitenverhaeltnis ${have.toFixed(3)} statt ${want.toFixed(3)} ` +
-      `(${meta.width}x${meta.height}) - der Untergrund passt nicht aufs Raster.`,
+      `(${meta.width}x${meta.height}) - zu weit weg, das laesst sich nicht zuschneiden.`,
     );
+  }
+  if (Math.abs(have / want - 1) > 0.005) {
+    notes.push(`zugeschnitten von ${have.toFixed(3)}`);
   }
   // --- Auf Tageslicht bringen.
   //
@@ -111,7 +120,7 @@ async function processBackground(srcPath, spec) {
   // `helligkeit` hebt linear an, `waerme` verschiebt zum Ocker hin,
   // `farbe` saettigt nach. In dieser Reihenfolge, sonst kippt der Farbton.
   let bild = sharp(srcPath)
-    .resize(spec.width ?? 2000, spec.height ?? 1100, { fit: 'fill' });
+    .resize(spec.width ?? 2400, spec.height ?? 1350, { fit: 'cover', position: 'centre' });
 
   if (spec.helligkeit || spec.farbe) {
     bild = bild.modulate({

@@ -1,13 +1,13 @@
 {
-  "comment": "Untergrundbilder der Karten. Auf Tageslicht gebracht (siehe Grafik-Audit 5.3): helle Bilder komprimieren schlechter als dunkle, deshalb wurde das Budget von 520 auf 700 KB angehoben - bewusst, es kostet rund 90 KB in der ausgelieferten Datei.",
+  "comment": "Untergrundbilder der Karten. Auf Tageslicht gebracht (siehe Grafik-Audit 5.3): helle Bilder komprimieren schlechter als dunkle, deshalb wurde das Budget von 520 auf 700 KB angehoben - bewusst, es kostet rund 90 KB in der ausgelieferten Datei. Zielgroesse 2400x1350 = 16:9, passend zum Feld seit v36; vorher stand hier 2000x1100 aus der Rasterzeit.",
   "source": "roh/untergrund",
   "output": "backgrounds.ts",
   "exportName": "MAP_BACKGROUNDS",
   "mode": "background",
   "budgetKb": 700,
   "defaults": {
-    "width": 2000,
-    "height": 1100,
+    "width": 2400,
+    "height": 1350,
     "quality": 55,
     "helligkeit": 1.9,
     "waerme": 1.0,
@@ -15,10 +15,11 @@
   },
   "items": {
     "spiralhain": {
-      "file": "01_mooswald.webp",
-      "helligkeit": 2.0,
-      "waerme": 1.2,
-      "farbe": 1.3
+      "file": "06_sandweg.png",
+      "comment": "Erstes Bild mit gemaltem Weg. Gemessen 0,50 Helligkeit - auf Zielwert heruntergezogen.",
+      "helligkeit": 0.72,
+      "waerme": 0.0,
+      "farbe": 1.0
     },
     "ascheschlucht": {
       "file": "05_herbstwald.webp",

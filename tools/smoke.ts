@@ -328,7 +328,11 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 // fuehrt, oder eine Farbwelt mit Luecke faellt sonst erst beim Antippen auf.
 {
   const { MAPS } = await import('../src/data/maps');
+  const { hasBackground } = await import('../src/gfx/backgrounds');
   for (const m of MAPS) {
+    if (!hasBackground(m.id)) {
+      problems.push(`Karte ${m.name} hat kein Untergrundbild - sie faellt optisch aus der Reihe.`);
+    }
     step(`Karte ${m.name}`, () => {
       state.reset(4711, 'normal', m.id);
       if (state.map.id !== m.id) throw new Error('Karte wurde nicht geladen.');

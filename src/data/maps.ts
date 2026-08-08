@@ -56,11 +56,11 @@ const MOOS: MapPalette = {
   mood: '#BEE2FF', haze: '#B4D6E2',
 };
 
-const ASCHE: MapPalette = {
-  terrain: '#3A2622', terrainHi: '#5A382C', terrainLo: '#231512',
-  path: '#D8C0A0', pathEdge: '#9A7A5C',
-  rock: '#41282A', rockHi: '#66413E',
-  mood: '#FFC79A', haze: '#C99C7E',
+const LAUB: MapPalette = {
+  terrain: '#2E2A1E', terrainHi: '#4A4228', terrainLo: '#1B1810',
+  path: '#CBB48A', pathEdge: '#8E7A52',
+  rock: '#39332A', rockHi: '#5C5242',
+  mood: '#FFD9A8', haze: '#B8A882',
 };
 
 const FROST: MapPalette = {
@@ -104,14 +104,14 @@ function rect(x0: number, y0: number, x1: number, y1: number): Vec[] {
   return out;
 }
 
-/** Karte 2 "Ascheschlucht": Zwei Zuwege, die sich auf halbem Weg vereinen.
+/** Karte 2 "Laubschlucht": Zwei Zuwege, die sich auf halbem Weg vereinen.
  *  Vor der Gabelung muss man sich entscheiden, hinter ihr zahlt jede Stellung
  *  doppelt - das ist die eigentliche Frage dieser Karte. */
 export const MAP_ASCHESCHLUCHT: GameMap = {
   id: 'ascheschlucht',
-  name: 'Ascheschlucht',
+  name: 'Laubschlucht',
   blurb: 'Zwei Zuwege, die sich früh vereinen. Danach zählt jede Stellung doppelt.',
-  palette: ASCHE,
+  palette: LAUB,
   lanes: [
     [
       { x: -1, y: 1 }, { x: 6, y: 1 }, { x: 6, y: 5 },
@@ -128,7 +128,7 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
   waves: PLAN_ASCHESCHLUCHT,
   balance: { hpMul: 1, goldMul: 1 },
   blocked: [
-    // Lavafelder engen die Raender ein.
+    // Wurzelwerk und Findlinge engen die Raender ein.
     ...rect(0, 3, 1, 4),
     ...rect(18, 4, 19, 6),
     ...rect(8, 0, 10, 0),

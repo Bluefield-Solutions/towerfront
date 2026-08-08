@@ -78,6 +78,20 @@ for (const id of REQUIRED_IDS) {
   if (!new RegExp(`id=["']${id}["']`).test(html)) problems.push(`Element mit id="${id}" fehlt im HTML.`);
 }
 
+// Groessenbudget.
+//
+// Seit die Untergrundbilder eingebettet sind, ist die Dateigroesse eine echte
+// Groesse geworden: jedes Bild wird als Datenadresse hineingeschrieben und
+// wird dabei ein Drittel groesser. Ohne Obergrenze waechst die Datei mit jedem
+// weiteren Bild unbemerkt, bis der erste Ladevorgang auf dem Handy stoert.
+const SIZE_BUDGET_KB = 1600;
+const sizeKb = statSync(file).size / 1024;
+if (sizeKb > SIZE_BUDGET_KB) {
+  problems.push(
+    `Die Datei ist ${sizeKb.toFixed(0)} KB gross - Obergrenze ${SIZE_BUDGET_KB} KB.`,
+  );
+}
+
 const kb = (statSync(file).size / 1024).toFixed(0);
 
 if (problems.length) {

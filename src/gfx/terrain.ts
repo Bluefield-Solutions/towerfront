@@ -8,34 +8,44 @@ import { hexA } from './glow';
  *  als Bild gezeichnet. Spart auf dem Handy den Grossteil der Zeichenlast. */
 export function bakeTerrain(
   pathSet: Set<number>, blockedSet: Set<number>, pal: MapPalette,
+  photo: HTMLImageElement | null = null,
 ): HTMLCanvasElement {
   const cv = document.createElement('canvas');
   cv.width = WORLD_W; cv.height = WORLD_H;
   const g = cv.getContext('2d')!;
   const rnd = makeRng(20260807);
 
-  // Grundflaeche mit vertikalem Verlauf: unten kuehler, oben heller angehaucht.
-  const bg = g.createLinearGradient(0, 0, 0, WORLD_H);
-  bg.addColorStop(0, pal.terrainHi);
-  bg.addColorStop(0.55, pal.terrain);
-  bg.addColorStop(1, pal.terrainLo);
-  g.fillStyle = bg;
-  g.fillRect(0, 0, WORLD_W, WORLD_H);
+  // Untergrund: entweder das gerenderte Bild der Karte oder, solange es noch
+  // nicht dekodiert ist, der alte gemalte Verlauf.
+  if (photo) {
+    g.drawImage(photo, 0, 0, WORLD_W, WORLD_H);
+  } else {
+    const bg = g.createLinearGradient(0, 0, 0, WORLD_H);
+    bg.addColorStop(0, pal.terrainHi);
+    bg.addColorStop(0.55, pal.terrain);
+    bg.addColorStop(1, pal.terrainLo);
+    g.fillStyle = bg;
+    g.fillRect(0, 0, WORLD_W, WORLD_H);
+  }
 
-  // Leichte Kachelvariation, damit die Flaeche nicht flach wirkt.
-  for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      const k = cellKey(x, y);
-      if (pathSet.has(k)) continue;
-      const v = (rnd() - 0.5) * 0.07;
-      g.fillStyle = v > 0 ? `rgba(255,255,255,${v})` : `rgba(0,0,0,${-v})`;
-      g.fillRect(x * TILE, y * TILE, TILE, TILE);
+  // Kachelvariation und Grasbueschel nur ohne Bild - das Bild bringt seine
+  // eigene Struktur mit, und beides zusammen wird unruhig.
+  if (!photo) {
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const k = cellKey(x, y);
+        if (pathSet.has(k)) continue;
+        const v = (rnd() - 0.5) * 0.07;
+        g.fillStyle = v > 0 ? `rgba(255,255,255,${v})` : `rgba(0,0,0,${-v})`;
+        g.fillRect(x * TILE, y * TILE, TILE, TILE);
+      }
     }
   }
 
   // Kachelfasen: eine helle Lippe oben, ein Schatten unten. Erst dadurch
-  // bekommt die Flaeche ueberhaupt Relief statt bloss Farbe.
-  for (let y = 0; y < ROWS; y++) {
+  // bekommt die gemalte Flaeche Relief. Mit Bild waere es ein Raster ueber
+  // einer Fotostruktur - genau das, was man nicht will.
+  if (!photo) for (let y = 0; y < ROWS; y++) {
     for (let x = 0; x < COLS; x++) {
       const k = cellKey(x, y);
       if (pathSet.has(k)) continue;
@@ -51,8 +61,9 @@ export function bakeTerrain(
     }
   }
 
-  // Steine und Risse - kleine Unruhe, damit die Flaeche nicht gedruckt wirkt.
-  for (let i = 0; i < 150; i++) {
+  // Steine und Risse - kleine Unruhe, damit die gemalte Flaeche nicht gedruckt
+  // wirkt. Das Bild hat sie schon.
+  if (!photo) for (let i = 0; i < 150; i++) {
     const x = rnd() * WORLD_W, y = rnd() * WORLD_H;
     if (pathSet.has(cellKey(Math.floor(x / TILE), Math.floor(y / TILE)))) continue;
     const r = 2 + rnd() * 4;
@@ -65,7 +76,7 @@ export function bakeTerrain(
   // Grasbueschel als kleine Striche - sparsam, nur Silhouette.
   g.strokeStyle = hexA(pal.terrainHi, 0.5);
   g.lineWidth = 2;
-  for (let i = 0; i < 620; i++) {
+  if (!photo) for (let i = 0; i < 620; i++) {
     const x = rnd() * WORLD_W, y = rnd() * WORLD_H;
     const k = cellKey(Math.floor(x / TILE), Math.floor(y / TILE));
     if (pathSet.has(k)) continue;
@@ -143,11 +154,13 @@ export function bakeTerrain(
       const r = TILE * 0.31;
       g.fillStyle = 'rgba(0,0,0,0.22)';
       g.beginPath(); g.ellipse(cx, cy + 3, r * 1.06, r * 0.62, 0, 0, Math.PI * 2); g.fill();
-      g.fillStyle = hexA(pal.rockHi, 0.34);
+      // Auf dem Bild braucht die Platte mehr Deckkraft und eine hellere
+      // Lichtkante, sonst verschwindet sie in der Fotostruktur.
+      g.fillStyle = hexA(pal.rockHi, photo ? 0.62 : 0.34);
       g.beginPath(); g.ellipse(cx, cy, r, r * 0.58, 0, 0, Math.PI * 2); g.fill();
-      g.fillStyle = hexA(pal.rock, 0.5);
+      g.fillStyle = hexA(pal.rock, photo ? 0.72 : 0.5);
       g.beginPath(); g.ellipse(cx, cy + 1.5, r * 0.78, r * 0.44, 0, 0, Math.PI * 2); g.fill();
-      g.strokeStyle = 'rgba(255,255,255,0.10)';
+      g.strokeStyle = photo ? 'rgba(255,255,255,0.20)' : 'rgba(255,255,255,0.10)';
       g.lineWidth = 1.5;
       g.beginPath(); g.ellipse(cx, cy, r, r * 0.58, 0, Math.PI * 1.08, Math.PI * 1.92); g.stroke();
     }
@@ -165,7 +178,9 @@ export function bakeTerrain(
     WORLD_W / 2, WORLD_H / 2, WORLD_W * 0.72,
   );
   vg.addColorStop(0, 'rgba(0,0,0,0)');
-  vg.addColorStop(1, hexA(C.voidDeep, 0.65));
+  // Ueber dem Bild reicht eine schwaechere Vignette - es ist an den Raendern
+  // ohnehin schon dunkler.
+  vg.addColorStop(1, hexA(C.voidDeep, photo ? 0.38 : 0.65));
   g.fillStyle = vg;
   g.fillRect(0, 0, WORLD_W, WORLD_H);
 

@@ -10,6 +10,7 @@ import type { GameState } from '../game/state';
 import type { Tower } from '../game/types';
 import { beginGlowBatch, endGlowBatch, hexA, stampGlow, stampGlowFast } from './glow';
 import { bakeTerrain } from './terrain';
+import { backgroundVersion, getBackground } from './backgrounds';
 import {
   drawSprite, getEnemySprite, getShadow, getTowerBase, getTowerWeapon, ENEMY_FRAMES,
 } from './sprites';
@@ -19,6 +20,7 @@ export class Renderer {
   private ctx: CanvasRenderingContext2D;
   private terrain: HTMLCanvasElement | null = null;
   private terrainFor = '';
+  private terrainBgVersion = -1;
   private sky: HTMLCanvasElement | null = null;
   /** Alle Turmsockel in einem Bild. Wird nur neu gebacken, wenn sich am
    *  Bestand etwas aendert - nicht in jedem Bild. */
@@ -62,9 +64,15 @@ export class Renderer {
 
   draw(s: GameState): void {
     const ctx = this.ctx;
-    if (!this.terrain || this.terrainFor !== s.map.id) {
-      this.terrain = bakeTerrain(s.pathSet, s.blockedSet, s.map.palette);
+    // Neu backen bei Kartenwechsel - und noch einmal, sobald das
+    // Untergrundbild fertig dekodiert ist.
+    const bgV = backgroundVersion();
+    if (!this.terrain || this.terrainFor !== s.map.id || this.terrainBgVersion !== bgV) {
+      this.terrain = bakeTerrain(
+        s.pathSet, s.blockedSet, s.map.palette, getBackground(s.map.id),
+      );
       this.terrainFor = s.map.id;
+      this.terrainBgVersion = bgV;
       this.towerLayerVersion = -1;
     }
     if (!this.sky) this.sky = this.bakeSky();

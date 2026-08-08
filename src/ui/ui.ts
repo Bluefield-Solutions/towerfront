@@ -57,6 +57,7 @@ export class UI {
   private sChoiceVal = $('s-choice-val');
   private sOpenProgress = $('s-open-progress');
   private sProgressVal = $('s-progress-val');
+  private hud = $('hud');
   private dock = $('dock');
   private dockToggle = $('dock-toggle');
   private dockToggleI = $('dock-toggle-i');
@@ -325,6 +326,26 @@ export class UI {
   }
 
   hideScreen(): void { this.screen.hidden = true; }
+
+  /** Die Bedienung ein- und ausblenden.
+   *
+   *  Im Menue darf nichts davon zu sehen sein. Das klingt selbstverstaendlich,
+   *  war es aber nicht: das Menue wanderte in v42 auf die Leinwand, und
+   *  niemand blendete die Leiste darueber aus. Die Turmknoepfe lagen quer
+   *  ueber der Landkarte, und man kam nicht mehr ins Spiel.
+   *
+   *  Meine Bildabnahme hat das nicht gesehen, weil sie nur die Leinwand
+   *  zeichnet - die Bedienung ist HTML. Deshalb wird es hier geprueft und
+   *  nicht im Bild. */
+  setSpielansicht(anzeigen: boolean): void {
+    this.hud.hidden = !anzeigen;
+    this.dock.hidden = !anzeigen;
+    if (!anzeigen) {
+      this.insp.hidden = true;
+      this.s.selectedTower = null;
+      this.s.buildChoice = null;
+    }
+  }
 
   private renderMaps(): void {
     const cur = getSettings().map;

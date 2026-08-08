@@ -32,10 +32,15 @@ menu.onStart = (mapId, difficulty, endless) => {
   state.reset(undefined, difficulty, mapId, { endless });
   renderer.menu = null;
   ui.hideScreen();
+  ui.setSpielansicht(true);
 };
 menu.onResume = () => {
   const save = loadGame();
-  if (save && state.restore(save)) { renderer.menu = null; ui.hideScreen(); }
+  if (save && state.restore(save)) {
+    renderer.menu = null;
+    ui.hideScreen();
+    ui.setSpielansicht(true);
+  }
 };
 ui.openMenu = () => {
   const save = loadGame();
@@ -46,6 +51,7 @@ ui.openMenu = () => {
   menu.view = 'map';
   renderer.menu = menu;
   ui.hideScreen();
+  ui.setSpielansicht(false);
 };
 
 /** Das Ergebnis einer Partie - auf der Leinwand, in derselben Formensprache
@@ -66,6 +72,7 @@ function showResult(won: boolean): void {
   menu.view = 'result';
   renderer.menu = menu;
   ui.hideScreen();
+  ui.setSpielansicht(false);
 }
 
 menu.onRetry = () => {
@@ -75,6 +82,7 @@ menu.onRetry = () => {
   menu.result = null;
   renderer.menu = null;
   ui.hideScreen();
+  ui.setSpielansicht(true);
 };
 
 layout();

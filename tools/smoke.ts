@@ -450,6 +450,34 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   renderer.resize();
 }
 
+// Im Menue darf keine Spielbedienung sichtbar sein.
+//
+// Der schwerste Fehler dieser Sitzung: das Menue wanderte auf die Leinwand,
+// die Turmleiste blieb darueber stehen, und man kam nicht mehr ins Spiel.
+// Die Bildabnahme sah es nicht, weil sie nur die Leinwand zeichnet - die
+// Bedienung ist HTML. Also wird es hier geprueft.
+{
+  const sichtbar = (id: string): boolean => {
+    let el: HTMLElement | null = win.document.getElementById(id);
+    while (el) {
+      if (el.hidden) return false;
+      el = el.parentElement as HTMLElement | null;
+    }
+    return true;
+  };
+  const bedienung = ['hud', 'dock', 'inspector'];
+
+  ui.setSpielansicht(false);
+  for (const id of bedienung) {
+    if (sichtbar(id)) problems.push(`Menue: "${id}" ist sichtbar, obwohl das Menue offen ist.`);
+  }
+
+  ui.setSpielansicht(true);
+  for (const id of ['hud', 'dock']) {
+    if (!sichtbar(id)) problems.push(`Spiel: "${id}" fehlt, obwohl gespielt wird.`);
+  }
+}
+
 // Die Landkarte: jeder anklickbare Bereich muss auch gezeichnet worden sein.
 //
 // Die Bereiche entstehen beim Zeichnen - dadurch kann es keine Schaltflaeche

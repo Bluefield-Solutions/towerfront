@@ -16,6 +16,14 @@ import { ABILITIES } from '../src/data/abilities';
 
 const DT = 1 / 60;
 
+const SEEDS = [20260807];
+
+/** Eine Zahl, die Sieg und Niederlage vergleichbar macht: Niederlage zaehlt
+ *  die erreichte Welle, Sieg 100 plus verbleibenden Kristall. */
+function score(r: Result): number {
+  return r.won ? 100 + r.lives : r.wave;
+}
+
 /** Spielstile.
  *
  *  Ein einzelner Bot ist ein einzelner Blickwinkel. Eine Kurve, die nur gegen
@@ -92,10 +100,12 @@ type BranchPick = (id: TowerId) => 0 | 1;
 function play(
   strategy: TowerId[], pick: BranchPick = () => 0,
   bot: Bot = MEISTER, difficulty: DifficultyId = 'normal',
-  mapId: string = MAPS[0].id, opts: { endless?: boolean; perks?: typeof NO_PERKS } = {},
+  mapId: string = MAPS[0].id,
+  opts: { endless?: boolean; perks?: typeof NO_PERKS; seed?: number } = {},
 ): Result {
   const s = new GameState(mapId);
-  s.reset(20260807, difficulty, mapId, { endless: opts.endless, perks: opts.perks ?? NO_PERKS });
+  s.reset(opts.seed ?? SEEDS[0], difficulty, mapId,
+    { endless: opts.endless, perks: opts.perks ?? NO_PERKS });
   const spots = buildSpots(s);
   let spotIdx = 0, si = 0, t = 0, frame = 0, upgrades = 0;
   let peakEnemies = 0, peakFx = 0;
@@ -208,6 +218,49 @@ for (const bot of BOTS) {
     `  ${bot.name.padEnd(9)} ${verdict.padEnd(30)}` +
     `${r.towers} Tuerme, ${r.upgrades} Ausbauten, ${r.earned} Gold`,
   );
+}
+
+// Robustheitsprobe.
+//
+// Beim Versuch, in v21 einen Werkzeugturm einzubauen, sprang das Ergebnis bei
+// kleinsten Aenderungen zwischen 5 und 20 Kristall. Der erste Verdacht war
+// Rauschen - falsch: der Spielverlauf hat gar keinen Zufall, der auf das
+// Ergebnis wirkt (drei Aussaaten liefern dasselbe bis aufs Goldstueck).
+//
+// Der wahre Grund ist eine Kante: alle Verluste haengen an einer einzigen
+// spaeten Welle. Entweder das Feld haelt sie - dann ist der Lauf makellos -
+// oder es haelt sie nicht - dann bricht alles weg. Dazwischen gibt es nichts.
+//
+// Diese Probe macht die Kante sichtbar: dasselbe Feld mit 10 % mehr und 10 %
+// weniger Schaden. Bewegt sich das Ergebnis dabei um mehr als 40 Punkte, haengt
+// die Balance an einem Faden - und dann ist jede weitere Feinjustierung
+// Gluecksspiel statt Arbeit.
+{
+  const shifted = (mul: number) => {
+    const perks = { ...NO_PERKS, damageMul: mul };
+    return play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { perks });
+  };
+  const runs = [0.9, 1, 1.1].map(shifted);
+  const scores = runs.map(score);
+  const span = Math.max(...scores) - Math.min(...scores);
+  console.log(
+    '\nRobustheit (Schaden -10 % / normal / +10 %): ' +
+    runs.map((r) => (r.won ? `${r.lives}/${r.maxLives}` : `W${r.wave}`)).join('   ') +
+    `   Spanne ${span}`,
+  );
+  const flawless = runs.findIndex((r) => r.won && r.lives >= r.maxLives);
+  if (flawless >= 0 && !(runs[1].won && runs[1].lives >= runs[1].maxLives)) {
+    console.log(
+      '  Hinweis: schon 10 % mehr Schaden machen den Lauf makellos - die ' +
+      'Entscheidung faellt an einer einzigen Welle.',
+    );
+  }
+  if (span > 40) {
+    errors.push(
+      `Zehn Prozent Schaden bewegen das Ergebnis um ${span} Punkte - die Balance ` +
+      'haengt an einer einzelnen Welle. Erst die Kante glaetten, dann weiter bauen.',
+    );
+  }
 }
 
 // Dauerhafte Verbesserungen duerfen helfen, aber nicht den Grad ersetzen.

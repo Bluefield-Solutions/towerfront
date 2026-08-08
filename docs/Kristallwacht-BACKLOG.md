@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v20 · 07.08.2026
+Stand: nach v21 · 07.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Kristallwacht-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
@@ -40,7 +40,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 
 | # | Punkt | Nutzen | Aufw. |
 |---|---|---|---|
-| T15 | Die Verluste liegen fast nur in Welle 15 — Wellen 10 bis 14 sind für ein gutes Feld zu bequem. Mittlere Spitzen einbauen | ●●● | M |
+| **T15** | **BLOCKER: Die Verluste liegen fast nur in der letzten Welle. Druck über die Wellen 10 bis 15 verteilen.** Solange das so ist, kippt jede Ergänzung am Sortiment die Balance, statt sie zu verschieben — siehe S41. Vor R4 und G5 zu erledigen | ●●● | M |
 | T12 | Sichtprüfung im Tor: gebaute Datei in einem echten Browser laden und ein Bild vergleichen (jsdom kann die Kaskade nicht) | ●●● | L |
 | T8 | Kristall je Rissstufe backen (letztes Objekt mit Pfaden in jedem Bild) | ● | S |
 | T9 | Bildpuffer bei Größenwechsel gezielt verwerfen statt alles neu zu backen | ● | S |
@@ -77,6 +77,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S41 | Ankerturm und Weber wurden gebaut, gemessen und **zurückgenommen**. Der Ankerturm sprang bei 10 % Änderung der Abklingzeit von 5/20 auf 20/20; der Weber war entweder wirkungslos oder brach die Balance | Ursache ist nicht die Auslegung der beiden, sondern die Kante bei Welle 15. Erst T15, dann erneut versuchen. |
+| S42 | Erste Diagnose war Messrauschen — Mittelung über drei Aussaaten eingebaut, alle drei Läufe **identisch bis aufs Goldstück** | Der Spielverlauf enthält keinen ergebniswirksamen Zufall; die Aussaat steuert nur Partikel. Das Werkzeug wurde durch die Robustheitsprobe ersetzt, die die echte Ursache misst. |
 | S40 | Mit allen Verbesserungen gewinnt der Meister auf Normal verlustfrei (22/22) | Bewusst so: der Fortschritt soll frühere Inhalte erleichtern, das ist sein Zweck. Die Grenze liegt beim härtesten Grad — dort bleiben 11 von 16, und genau das prüft das Tor. |
 | S38 | Frostspalte blieb unspielbar, obwohl sie mit 24,5 Hülle je Gold die **niedrigste** Belastung aller Karten hat (Spiralhain 36,4) | Der Fehler saß in der Geometrie: Bahn 2 war 30 Kacheln lang, Bahn 1 dagegen 47. Die Hälfte der Gegner nahm eine Abkürzung. Neuer Wächter: Bahnen dürfen sich um höchstens 30 % unterscheiden. |
 | S39 | Frostspalte hatte anfangs die Schwärmer-Identität, ihr Kristall liegt aber nahe am Rand — Flieger standen kaum unter Feuer | Identität zur Ascheschlucht verschoben. Nicht jede Gegnerart passt auf jede Karte, und das entscheidet die Geometrie, nicht der Geschmack. |

@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v20 · 07.08.2026
+Stand: v21 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -305,6 +305,52 @@ jederzeit wiederherstellbar. Ein Fehlversuch kostet eine Minute, nicht einen
 Abend.
 
 ---
+
+### 3.21 Eine Runde, die zurückgenommen wurde
+
+Geplant waren zwei Dinge: ein Turm, der Gegner festhält statt sie zu töten
+(Ankerturm), und ein Gegner, der die Zielreihenfolge erzwingt (Weber, heilt
+seine Umgebung). Beide wurden vollständig gebaut — Werte, Grafik, Bedienung,
+Wächterregeln — und beide sind wieder draußen.
+
+**Was passierte.** Der Ankerturm ließ sich nicht einstellen. Bei einer
+Abklingzeit von 4,0 Sekunden gewann das gemischte Feld mit 5 von 20 Kristall,
+bei 3,6 Sekunden mit 20 von 20. Nicht ein bisschen besser — von fast verloren
+auf makellos, bei einer Änderung von zehn Prozent an einer einzigen Zahl.
+Dasselbe beim Weber: schwach genug, um die Balance zu halten, hieß zugleich zu
+schwach, um überhaupt einen Unterschied zu machen.
+
+**Die erste Diagnose war falsch.** Ich hielt es für Messrauschen und baute eine
+Mittelung über drei Aussaaten ein. Ergebnis: alle drei Läufe identisch, bis
+aufs Goldstück. Der Spielverlauf enthält gar keinen Zufall, der auf das Ergebnis
+wirkt — die Aussaat steuert nur Partikel und Wackelbewegungen. Die Mittelung
+war ein Werkzeug gegen ein Problem, das es nicht gibt.
+
+**Der wahre Grund** steht seit v14 im Rückstandsverzeichnis und ich hatte ihn
+nicht ernst genug genommen: *alle Verluste liegen in einer einzigen Welle.*
+Entweder das Feld hält Welle 15 — dann ist der Lauf makellos — oder es hält sie
+nicht — dann bricht alles weg. Dazwischen gibt es nichts. Jede Ergänzung am
+Sortiment kippt diese eine Entscheidung, und was man dann misst, ist nicht die
+Wirkung der Ergänzung, sondern auf welcher Seite der Kante man gelandet ist.
+
+**Was diese Runde deshalb liefert:** die **Robustheitsprobe**. Sie spielt
+dasselbe Feld mit 10 % mehr und 10 % weniger Schaden und meldet, wie weit das
+Ergebnis auseinanderläuft. Aktuell:
+
+```
+Robustheit (Schaden -10 % / normal / +10 %): 15/20   15/20   20/20   Spanne 5
+  Hinweis: schon 10 % mehr Schaden machen den Lauf makellos - die
+  Entscheidung faellt an einer einzigen Welle.
+```
+
+Die Spanne ist klein, aber der Hinweis sagt das Entscheidende: zehn Prozent
+mehr Schaden genügen für einen makellosen Lauf. Solange das so ist, ist jede
+Erweiterung des Sortiments ein Glücksspiel.
+
+**Die Reihenfolge ist damit klar:** erst die Kante glätten — Druck über die
+Wellen 10 bis 15 verteilen, statt alles auf die letzte zu legen — und danach
+neue Türme und Gegner. Das ist der Preis dafür, den Befund aus v14 sieben
+Runden lang als Notiz behandelt zu haben statt als Blocker.
 
 ### 3.20 Wie man Fortschritt prüft, ohne ihn zu entwerten
 
@@ -740,7 +786,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v20
+## 5. Stand v21
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -800,6 +846,10 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v21 — nichts am Spiel. Eine zurückgenommene Runde und ein neues
+Messgerät.** Der geplante Blockturm und der heilende Gegner wurden gebaut,
+gemessen und wieder ausgebaut. Warum, steht in Abschnitt 3.21.
 
 **Neu in v20 — Endlosmodus, Sterne und dauerhafter Fortschritt.**
 

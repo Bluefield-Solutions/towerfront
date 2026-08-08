@@ -27,6 +27,21 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIFF = join(ROOT, 'src/data/difficulty.ts');
 const MAPS = join(ROOT, 'src/data/maps.ts');
 
+const MARKE = join(ROOT, '.eichen-sicherung.json');
+
+// --- Zuerst: liegt eine Sicherung von einem abgebrochenen Lauf herum?
+//
+// Diese Prüfung MUSS vor der Sauberkeitsprüfung stehen. Andersherum blockiert
+// der Schutz genau den Fall, für den die Sicherung gedacht ist: nach einem
+// Abbruch ist der Baum schmutzig, das Werkzeug verweigert den Dienst - und
+// die Wiederherstellung kommt nie zum Zug. Die Gegenprobe hat das gefunden.
+if (existsSync(MARKE)) {
+  const alt = JSON.parse(readFileSync(MARKE, 'utf8'));
+  for (const [f, s] of Object.entries(alt)) writeFileSync(f, s);
+  rmSync(MARKE);
+  console.log('EICHEN: ein abgebrochener Lauf wurde gefunden und zurückgestellt.\n');
+}
+
 // --- Schutz vor dem Fehler, der in dieser Sitzung dreimal Arbeit gekostet hat.
 //
 // Das Werkzeug schreibt in Quelldateien und stellt sie danach wieder her.
@@ -75,14 +90,6 @@ danach aus wie vorher.`);
 // Ereignisschleife still, das Signal kommt also nie an, und eine geänderte
 // Datei bleibt stehen. Deshalb liegt die Sicherung auf der Platte und wird
 // beim nächsten Start gefunden.
-const MARKE = join(ROOT, '.eichen-sicherung.json');
-
-if (existsSync(MARKE)) {
-  const alt = JSON.parse(readFileSync(MARKE, 'utf8'));
-  for (const [f, s] of Object.entries(alt)) writeFileSync(f, s);
-  rmSync(MARKE);
-  console.log('EICHEN: ein abgebrochener Lauf wurde gefunden und zurückgestellt.\n');
-}
 
 const backup = new Map([[DIFF, readFileSync(DIFF, 'utf8')], [MAPS, readFileSync(MAPS, 'utf8')]]);
 writeFileSync(MARKE, JSON.stringify(Object.fromEntries(backup)));
@@ -136,7 +143,17 @@ function messen() {
   const fehler = [...out.matchAll(/^ {2}- (.+)$/gm)].map((m) => m[1]);
   const sterne = [...out.matchAll(/^ {2}(\S+)\s+bester Lauf: (\d)/gm)]
     .map((m) => m[2]).join('/');
+  // Bei einer Kartenprobe zaehlt, was auf DIESER Karte passiert. Verteilung
+  // und Robustheit werden auf der ersten Karte gemessen und aendern sich
+  // nicht mit - sie hier zu zeigen waere irrefuehrend.
+  let eigen = '';
+  if (karte) {
+    const zeile = [...out.matchAll(/^ {2}(\S+)\s+Meister (\S+)\s+Breite (\S+)\s+Sparsam (\S+)/gm)]
+      .find((m) => m[1].toLowerCase().startsWith(karte.slice(0, 5).toLowerCase()));
+    if (zeile) eigen = `${zeile[2]} ${zeile[3]} ${zeile[4]}`;
+  }
   return {
+    eigen,
     verteilung: line(/Verluste: (.+?)\s{2,}davon/) || 'keine',
     anteil: line(/letzten Welle (\d+) %/),
     robust: line(/Robustheit.*Spanne ([0-9.]+)/),
@@ -157,12 +174,13 @@ for (const v of werte) {
   else setKarte(karte, hp ? 'hp' : 'gold', v);
   const m = messen();
   rows.push([v, m]);
-  console.log(
-    `  ${String(v).padEnd(6)} ${m.verteilung.padEnd(26)} ` +
-    `letzte ${(m.anteil + ' %').padStart(5)}  ` +
-    `Robust ${m.robust.padStart(5)}  Stile ${m.stile.padStart(3)}  ` +
-    `Sterne ${m.sterne.padEnd(6)} Fehler ${m.fehler.length}`,
-  );
+  console.log(karte
+    ? `  ${String(v).padEnd(6)} ${karte}: ${m.eigen.padEnd(26)} ` +
+      `Sterne ${m.sterne.padEnd(6)} Fehler ${m.fehler.length}`
+    : `  ${String(v).padEnd(6)} ${m.verteilung.padEnd(26)} ` +
+      `letzte ${(m.anteil + ' %').padStart(5)}  ` +
+      `Robust ${m.robust.padStart(5)}  Stile ${m.stile.padStart(3)}  ` +
+      `Sterne ${m.sterne.padEnd(6)} Fehler ${m.fehler.length}`);
 }
 
 fertig();

@@ -39,6 +39,7 @@ npm run gate        elf Prüfungen, ~45 s. Muss vor jedem Commit grün sein.
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
 npm run bilder      Bildabnahme allein (echte PNG ohne Browser)
 npm run pack-art    Bildvorrat aus art/roh/ neu einbacken
+npm run eichen      einen Wert durchprobieren, alle Kennzahlen nebeneinander
 ```
 
 Die Torkette: `tsc` → `guards` → `art` → `determinism` → `sim` → `bench` →
@@ -64,9 +65,13 @@ zweites Mal kosten.
    ändert, baut einen Fehler ein, sieht ob sie anschlägt, nimmt zurück.
 6. **Kein Tor ersetzt den Blick — und kein Blick die Tore.** Elf von 57
    Befunden kamen aus Bildschirmfotos, keiner davon aus einem Tor.
-7. **Das Soll kommt aus der Referenz, nicht aus mir.** Sonst wandert es mit
+7. **Vor dem Justieren den Raum ansehen.** `npm run eichen` probiert einen
+   Wert durch und legt alle Kennzahlen nebeneinander. Blind nachjustieren
+   heisst, durch ein Schlüsselloch zu schauen: T15 scheiterte so an drei
+   Runden und gelang im zweiten Anlauf in einer.
+8. **Das Soll kommt aus der Referenz, nicht aus mir.** Sonst wandert es mit
    der eigenen Leistung mit. Deshalb Schritt 0.
-8. **Safari-Falle:** nie `drawImage(self)` mit `filter: blur` oder
+9. **Safari-Falle:** nie `drawImage(self)` mit `filter: blur` oder
    `globalCompositeOperation: 'lighter'`. Auf iOS schwarzes Bild nach etwa
    einer Sekunde, auf dem Schreibtisch unauffällig. Alles Leuchten wird
    gebacken.

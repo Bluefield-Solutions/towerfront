@@ -21,7 +21,7 @@ import { WORLD_H, WORLD_W } from '../data/config';
  *  das Menü in der Bildabnahme sehen. Als HTML war es die einzige Fläche des
  *  Spiels, die ich nie selbst beurteilen konnte - und genau dort ist die
  *  Gestaltung abgesackt. */
-export type MenuView = 'map' | 'brief' | 'progress';
+export type MenuView = 'map' | 'brief' | 'progress' | 'result';
 
 /** Ein anklickbarer Bereich. Die Zeichenroutine legt sie an, die Bedienung
  *  liest sie - so kann es keine Schaltfläche geben, die man sieht, aber nicht
@@ -40,9 +40,25 @@ export class Menu {
   pressed: string | null = null;
   /** Wird von der Zeichenroutine je Bild neu gefüllt. */
   hotspots: Hotspot[] = [];
+  /** Das Ergebnis der zuletzt beendeten Partie.
+   *
+   *  Bis v43 lag der Sieg- und Niederlagebildschirm als HTML über dem Spiel,
+   *  während das Menü längst auf der Leinwand war - zwei Formensprachen
+   *  hintereinander. Und weil HTML in meiner Bildabnahme nicht erscheint,
+   *  war es zugleich die letzte Fläche, die ich nie sehen konnte. */
+  result: {
+    won: boolean; mapId: string; mapName: string; wave: number; waves: number;
+    lives: number; maxLives: number; stars: number; before: number;
+    kills: number; built: number; damage: number; duration: number;
+  } | null = null;
+  /** Wie lange die Sterne schon auffliegen - für die Einblendung. */
+  resultAge = 0;
+
   /** Startet das Spiel - wird von außen gesetzt. */
   onStart: (mapId: string, difficulty: DifficultyId, endless: boolean) => void = () => {};
   onResume: () => void = () => {};
+  /** Dieselbe Karte, derselbe Grad, noch einmal. */
+  onRetry: () => void = () => {};
   /** Liegt ein Spielstand vor? */
   hasSave = false;
   saveLabel = '';
@@ -81,6 +97,8 @@ export class Menu {
     const id = hit.id;
 
     if (id === 'resume') { this.onResume(); return true; }
+    if (id === 'retry') { this.onRetry(); return true; }
+    if (id === 'tomap') { this.result = null; this.view = 'map'; return true; }
     if (id === 'back') { this.view = 'map'; return true; }
     if (id === 'progress') { this.view = 'progress'; return true; }
     if (id.startsWith('node:')) {

@@ -1,7 +1,8 @@
 import './style.css';
 import { Loop } from './core/loop';
 import { Menu } from './game/menu';
-import { saveSettings } from './core/storage';
+import { getStars, recordRun, recordStars, saveSettings } from './core/storage';
+import { starsFor } from './data/perks';
 import { loadGame } from './game/save';
 import { bindInput } from './core/input';
 import { Sfx } from './core/audio';
@@ -47,6 +48,35 @@ ui.openMenu = () => {
   ui.hideScreen();
 };
 
+/** Das Ergebnis einer Partie - auf der Leinwand, in derselben Formensprache
+ *  wie die Landkarte. */
+function showResult(won: boolean): void {
+  const before = getStars(state.map.id, state.difficulty);
+  const stars = starsFor(won, state.lives, state.maxLives);
+  recordStars(state.map.id, state.difficulty, stars);
+  recordRun(state.map.id, state.difficulty, state.waveNumber, state.lives);
+  menu.result = {
+    won, mapId: state.map.id, mapName: state.map.name,
+    wave: state.waveNumber, waves: state.totalWaves,
+    lives: state.lives, maxLives: state.maxLives, stars, before,
+    kills: state.stats.kills, built: state.stats.towersBuilt,
+    damage: Math.round(state.stats.damage), duration: state.stats.duration,
+  };
+  menu.resultAge = 0;
+  menu.view = 'result';
+  renderer.menu = menu;
+  ui.hideScreen();
+}
+
+menu.onRetry = () => {
+  const r = menu.result;
+  if (!r) return;
+  state.reset(undefined, state.difficulty, r.mapId, { endless: menu.endless });
+  menu.result = null;
+  renderer.menu = null;
+  ui.hideScreen();
+};
+
 layout();
 bindInput(canvas, state, renderer);
 
@@ -85,7 +115,7 @@ const loop = new Loop(
       lastPhase = state.phase;
       if (state.phase === 'playing') ui.hideScreen();
       else if (state.phase === 'title') ui.openMenu();
-      else ui.showScreen(state.phase);
+      else showResult(state.phase === 'won');
     }
     ui.sync();
     ui.perf(fpsAvg);
@@ -93,7 +123,12 @@ const loop = new Loop(
     // Die Einfuehrungsleiste schiebt das Feld nach unten und wieder zurueck.
     if (ui.bandsChanged()) layout();
   },
-  () => renderer.draw(state),
+  () => {
+    // Das Menue lebt auch, wenn die Simulation steht - sonst blieben die
+    // Sterne im Ergebnis reglos stehen.
+    if (renderer.menu) { menu.time += 1 / 60; menu.resultAge += 1 / 60; }
+    renderer.draw(state);
+  },
 );
 
 const onResize = () => /** Seit v30 gibt es keine reservierten Baender mehr: das Spielfeld fuellt den

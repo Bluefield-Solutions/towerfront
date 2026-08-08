@@ -17,7 +17,8 @@ export function drawMenu(ctx: CanvasRenderingContext2D, m: Menu): void {
 
   backdrop(ctx, m.time);
 
-  if (m.view === 'map') drawMap(ctx, m, add);
+  if (m.view === 'result') drawResult(ctx, m, add);
+  else if (m.view === 'map') drawMap(ctx, m, add);
   else if (m.view === 'brief') drawBrief(ctx, m, add);
   else drawProgress(ctx, m, add);
 }
@@ -269,6 +270,95 @@ function drawProgress(
 
     if (!p.owned && p.affordable) add({ id: `perk:${p.id}`, x: bx, y: by, w: bw, h: 100 });
   });
+}
+
+// -------------------------------------------------------------- Das Ergebnis
+
+/** Der Bildschirm nach einer Partie.
+ *
+ *  Die Sterne fliegen nacheinander auf, mit kurzer Verzögerung zwischen
+ *  ihnen. Das ist kein Zierrat: der zweite und dritte Stern sind das Ziel,
+ *  auf das man beim nächsten Anlauf hinspielt, und sie brauchen einen Moment
+ *  Aufmerksamkeit. Springt alles gleichzeitig ins Bild, liest man nur "zwei".
+ */
+function drawResult(
+  ctx: CanvasRenderingContext2D, m: Menu, add: (h: Hotspot) => Hotspot,
+): void {
+  const r = m.result;
+  if (!r) { drawMap(ctx, m, add); return; }
+
+  const x0 = WORLD_W * 0.5 - 470, y0 = 118, w = 940, h = 780;
+  ctx.save();
+  ctx.fillStyle = 'rgba(8,13,28,0.9)';
+  roundRect(ctx, x0, y0, w, h, 28); ctx.fill();
+  ctx.strokeStyle = hexA(r.won ? C.crystal : C.danger, 0.35);
+  ctx.lineWidth = 2; ctx.stroke();
+  ctx.restore();
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = r.won ? C.crystal : C.danger;
+  ctx.font = '700 62px system-ui, sans-serif';
+  ctx.fillText(r.won ? 'Gehalten' : 'Durchbruch', WORLD_W / 2, y0 + 108);
+
+  ctx.font = '400 25px system-ui, sans-serif';
+  ctx.fillStyle = C.stoneDark;
+  ctx.fillText(
+    r.won
+      ? `${r.mapName} · alle ${r.waves} Wellen überstanden`
+      : `${r.mapName} · Welle ${r.wave} von ${r.waves}`,
+    WORLD_W / 2, y0 + 152,
+  );
+
+  // Sterne, nacheinander eingeblendet.
+  for (let i = 0; i < 3; i++) {
+    const due = 0.25 + i * 0.3;
+    const t = Math.max(0, Math.min(1, (m.resultAge - due) / 0.35));
+    const earned = i < r.stars;
+    const pop = earned ? 1 + Math.sin(t * Math.PI) * 0.35 : 1;
+    ctx.save();
+    ctx.globalAlpha = earned ? t : 0.9;
+    star(ctx, WORLD_W / 2 + (i - 1) * 130, y0 + 268, 52 * pop, earned);
+    ctx.restore();
+    if (!earned) { star(ctx, WORLD_W / 2 + (i - 1) * 130, y0 + 268, 52, false); }
+  }
+
+  // Ein neuer Stern ist die eigentliche Nachricht - er wird benannt.
+  if (r.stars > r.before) {
+    ctx.font = '700 26px system-ui, sans-serif';
+    ctx.fillStyle = C.gold;
+    ctx.fillText(
+      r.stars - r.before === 1 ? 'Ein neuer Stern' : `${r.stars - r.before} neue Sterne`,
+      WORLD_W / 2, y0 + 372,
+    );
+  }
+
+  // Vier Zahlen, nicht zehn. Was man nicht vergleichen kann, hilft nicht.
+  const facts: [string, string][] = [
+    ['Kristall', `${r.lives} von ${r.maxLives}`],
+    ['Erledigt', `${r.kills}`],
+    ['Türme gebaut', `${r.built}`],
+    ['Dauer', `${Math.floor(r.duration / 60)}:${String(Math.floor(r.duration % 60)).padStart(2, '0')}`],
+  ];
+  facts.forEach(([k, v], i) => {
+    const cx = x0 + 90 + (i % 2) * (w - 180) / 2 + (w - 180) / 4;
+    const cy = y0 + 442 + Math.floor(i / 2) * 96;
+    ctx.font = '400 19px system-ui, sans-serif';
+    ctx.fillStyle = C.stoneDark;
+    ctx.fillText(k, cx, cy);
+    ctx.font = '700 34px system-ui, sans-serif';
+    ctx.fillStyle = C.stone;
+    ctx.fillText(v, cx, cy + 40);
+  });
+
+  // Der wahrscheinlichere Wunsch ist gefüllt: nach einem Sieg zieht man
+  // weiter, nach einer Niederlage versucht man es noch einmal. Beim ersten
+  // Anlauf war "Noch einmal" immer hervorgehoben - das schickt den Spieler
+  // nach einem gewonnenen Level in dasselbe Level zurück.
+  const bw = (w - 200) / 2;
+  button(ctx, add, 'tomap', x0 + 70, y0 + h - 128, bw, 88,
+    'Zur Karte', r.won ? C.crystal : C.stoneDark, m.pressed === 'tomap', r.won);
+  button(ctx, add, 'retry', x0 + 70 + bw + 60, y0 + h - 128, bw, 88,
+    'Noch einmal', r.won ? C.stoneDark : C.crystal, m.pressed === 'retry', !r.won);
 }
 
 // --------------------------------------------------------------------- Bausteine

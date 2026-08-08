@@ -469,6 +469,30 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   m.tap(back2.x + 4, back2.y + 4);
   if (m.view !== 'map') problems.push('Fortschritt: kein Rueckweg zur Karte.');
 
+  // Das Ergebnis einer Partie liegt auf derselben Flaeche wie die Karte.
+  //
+  // Bis v43 war es HTML ueber dem Spiel - zwei Formensprachen hintereinander,
+  // und zugleich die letzte Flaeche, die in der Bildabnahme nie erschien.
+  for (const won of [true, false]) {
+    m.view = 'result' as typeof m.view;
+    m.resultAge = 3;
+    m.result = {
+      won, mapId: 'spiralhain', mapName: 'Spiralhain', wave: won ? 15 : 11, waves: 15,
+      lives: won ? 47 : 0, maxLives: 60, stars: won ? 2 : 0, before: 0,
+      kills: 200, built: 9, damage: 90000, duration: 480,
+    };
+    const onResult = ids();
+    for (const need of ['tomap', 'retry']) {
+      if (!onResult.includes(need)) problems.push(`Ergebnis (${won ? 'Sieg' : 'Niederlage'}): "${need}" fehlt.`);
+    }
+    // Der Rueckweg zur Karte muss funktionieren.
+    const tm = m.hotspots.find((h) => h.id === 'tomap')!;
+    m.tap(tm.x + 4, tm.y + 4);
+    if ((m.view as string) !== 'map') problems.push('Ergebnis: kein Rueckweg zur Karte.');
+    if (m.result !== null) problems.push('Ergebnis: bleibt nach dem Rueckweg stehen.');
+  }
+  m.view = 'map';
+
   // Nichts darf ausserhalb des Feldes liegen - sonst ist es unerreichbar.
   drawMenu(g, m);
   for (const h of m.hotspots) {

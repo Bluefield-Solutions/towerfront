@@ -142,6 +142,32 @@ takes.push(['menu-fortschritt', () => shot('menu-fortschritt', 844, 390, (s, r) 
   return 20;
 })]);
 
+takes.push(['menu-sieg', () => shot('menu-sieg', 844, 390, (s, r) => {
+  s.reset(1, 'normal', 'spiralhain');
+  r.menu = new Menu();
+  r.menu.view = 'result';
+  r.menu.resultAge = 2;
+  r.menu.result = {
+    won: true, mapId: 'spiralhain', mapName: 'Spiralhain', wave: 15, waves: 15,
+    lives: 47, maxLives: 60, stars: 2, before: 1,
+    kills: 214, built: 9, damage: 98000, duration: 512,
+  };
+  return 10;
+})]);
+
+takes.push(['menu-niederlage', () => shot('menu-niederlage', 844, 390, (s, r) => {
+  s.reset(1, 'normal', 'frostspalte');
+  r.menu = new Menu();
+  r.menu.view = 'result';
+  r.menu.resultAge = 2;
+  r.menu.result = {
+    won: false, mapId: 'frostspalte', mapName: 'Frostspalte', wave: 12, waves: 15,
+    lives: 0, maxLives: 60, stars: 0, before: 0,
+    kills: 168, built: 8, damage: 71000, duration: 402,
+  };
+  return 10;
+})]);
+
 takes.push(['start', () => shot('start', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   return 30;

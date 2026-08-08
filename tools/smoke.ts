@@ -252,7 +252,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 {
   for (const [w, h] of [[844, 390], [390, 844], [1440, 780], [2200, 500]] as const) {
     sizeCanvas(canvas, w, h);
-    renderer.resize(60, 140);
+    renderer.resize();
     if (renderer.frameSkew() > 0.01) {
       problems.push(
         `Seitenverhaeltnis: bei ${w}x${h} weicht das Bildraster um ` +
@@ -272,25 +272,71 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
     );
   }
   sizeCanvas(canvas, 844, 390);
-  renderer.resize(60, 140);
+  renderer.resize();
 }
 
-// Kein Bedienelement darf ueber dem Spielfeld liegen.
-//
-// Das Spielfeld wird nur zwischen Kopfzeile und Bedienleiste gezeichnet.
-// Geprueft wird deshalb, dass der Renderer diese Baender kennt und das Feld
-// tatsaechlich dazwischen legt - vorher lag das untere Drittel des Bretts
-// unter der Leiste.
+// Die Leiste muss sich ein- und ausklappen lassen.
 {
-  const insetTop = 60, insetBottom = 140;
-  renderer.resize(insetTop, insetBottom);
-  const topLeft = renderer.screenToWorld(0, insetTop);
-  const bottomLeft = renderer.screenToWorld(0, 844 - insetBottom);
-  if (renderer.offY < insetTop - 0.5) {
-    problems.push(`Layout: das Feld beginnt bei ${renderer.offY.toFixed(0)} und liegt unter der Kopfzeile.`);
+  const dock = win.document.getElementById('dock')!;
+  const toggle = win.document.getElementById('dock-toggle')!;
+  const before = dock.dataset.folded ?? '0';
+  toggle.dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
+  if ((dock.dataset.folded ?? '0') === before) {
+    problems.push('Die Bedienleiste laesst sich nicht einklappen.');
   }
-  void topLeft; void bottomLeft;
-  renderer.resize(0, 0);
+  toggle.dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
+  if ((dock.dataset.folded ?? '0') !== before) {
+    problems.push('Die Bedienleiste laesst sich nicht wieder ausklappen.');
+  }
+}
+
+// Kamera: fuellen, verschieben, zoomen - und nie ueber den Rand hinaus.
+//
+// Das Spielfeld fuellt jetzt den Bildschirm, statt zwischen Baendern zu
+// liegen. Damit wird das Verschieben zur eigentlichen Fehlerquelle: ein
+// falsch begrenzter Ausschnitt zeigt schwarze Flaechen neben dem Feld.
+{
+  for (const [w, h] of [[844, 390], [1440, 780], [2200, 500], [390, 844]] as const) {
+    sizeCanvas(canvas, w, h);
+    renderer.resize();
+
+    // Startzustand fuellt den Bildschirm: in einer Richtung genau passend,
+    // in der anderen ueberstehend.
+    const cover = Math.max(w / 1600, h / 880);
+    if (Math.abs(renderer.scale - cover) > 1e-3) {
+      problems.push(`Kamera bei ${w}x${h}: Startmassstab ${renderer.scale.toFixed(3)}, erwartet ${cover.toFixed(3)}.`);
+    }
+
+    // Weit in jede Richtung schieben - danach darf kein Rand sichtbar sein.
+    for (const [dx, dy] of [[9000, 9000], [-9000, -9000], [9000, -9000]] as const) {
+      renderer.panBy(dx, dy);
+      const tl = renderer.screenToWorld(0, 0);
+      const br = renderer.screenToWorld(w, h);
+      const eps = 0.5;
+      if (br.x - tl.x <= 1600 + eps && (tl.x < -eps || br.x > 1600 + eps)) {
+        problems.push(`Kamera bei ${w}x${h}: waagerecht ueber den Rand geschoben (${tl.x.toFixed(0)}..${br.x.toFixed(0)}).`);
+      }
+      if (br.y - tl.y <= 880 + eps && (tl.y < -eps || br.y > 880 + eps)) {
+        problems.push(`Kamera bei ${w}x${h}: senkrecht ueber den Rand geschoben (${tl.y.toFixed(0)}..${br.y.toFixed(0)}).`);
+      }
+    }
+
+    // Ganz herauszoomen zeigt alles, ganz hinein bleibt begrenzt.
+    renderer.toggleOverview();
+    if (!renderer.atOverview) problems.push(`Kamera bei ${w}x${h}: Uebersicht laesst sich nicht einschalten.`);
+    const tl = renderer.screenToWorld(0, 0);
+    const br = renderer.screenToWorld(w, h);
+    if (tl.x > 0.5 || tl.y > 0.5 || br.x < 1599.5 || br.y < 879.5) {
+      problems.push(`Kamera bei ${w}x${h}: in der Uebersicht ist nicht das ganze Feld zu sehen.`);
+    }
+    renderer.zoomAt(6, w / 2, h / 2);
+    if (renderer.scale > renderer.coverScale * 3 + 1e-6) {
+      problems.push(`Kamera bei ${w}x${h}: Zoom nicht begrenzt.`);
+    }
+    renderer.toggleOverview();
+  }
+  sizeCanvas(canvas, 844, 390);
+  renderer.resize();
 }
 
 // Titelbildschirm: Modus, Karten, Grade und Fortschritt muessen erscheinen.

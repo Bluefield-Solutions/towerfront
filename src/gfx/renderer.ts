@@ -45,30 +45,100 @@ export class Renderer {
    *  Bedienleiste belegen. Das Spielfeld wird nur in den Bereich dazwischen
    *  gezeichnet - vorher lag die Bedienung ueber dem Brett, und das untere
    *  Drittel des Feldes war schlicht verdeckt. */
-  /** Zuletzt gemessene Baender - fuer die Selbstheilung unten. */
-  private lastInsetTop = 0;
-  private lastInsetBottom = 0;
+  /** Kamera.
+   *
+   *  Bis v29 wurde das Spielfeld zwischen Kopfzeile und Bedienleiste
+   *  eingepasst - das Brett lag als Insel in der Mitte, mit breiten toten
+   *  Raendern. Die Vorbilder des Genres machen es umgekehrt: die Karte fuellt
+   *  den Bildschirm, die Bedienung schwebt darueber.
+   *
+   *  Zwei Bezugsgroessen:
+   *  - `fitScale`  - alles ist sichtbar, es bleiben Raender
+   *  - `coverScale`- der Bildschirm ist gefuellt, es wird beschnitten
+   *
+   *  Der Startwert ist `coverScale`. Wer mehr Uebersicht will, zieht heraus
+   *  bis `fitScale`; wer Genaues braucht, zieht hinein. Verschieben ist immer
+   *  so begrenzt, dass kein Rand des Feldes ins Bild rutscht. */
+  private zoom = 1;
+  private camX = WORLD_W / 2;
+  private camY = WORLD_H / 2;
+  fitScale = 1;
+  coverScale = 1;
 
-  resize(insetTop = this.lastInsetTop, insetBottom = this.lastInsetBottom): void {
-    this.lastInsetTop = insetTop;
-    this.lastInsetBottom = insetBottom;
+  resize(): void {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
     if (!w || !h) return;
+    const wasAtCover = Math.abs(this.zoom - this.coverScale) < 1e-6;
     this.cssW = w; this.cssH = h;
     this.canvas.width = Math.round(w * dpr);
     this.canvas.height = Math.round(h * dpr);
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const freeH = Math.max(80, h - insetTop - insetBottom);
-    this.scale = Math.min(w / WORLD_W, freeH / WORLD_H);
-    this.offX = (w - WORLD_W * this.scale) / 2;
-    this.offY = insetTop + (freeH - WORLD_H * this.scale) / 2;
+    this.fitScale = Math.min(w / WORLD_W, h / WORLD_H);
+    this.coverScale = Math.max(w / WORLD_W, h / WORLD_H);
+    // Beim ersten Mal und solange nicht selbst gezoomt wurde: Bildschirm fuellen.
+    if (this.zoom <= 0 || wasAtCover) this.zoom = this.coverScale;
+    this.clamp();
     this.sky = null;
   }
 
+  /** Grenzen einhalten: nie ueber den Rand des Feldes hinaus, und wenn das
+   *  Feld in einer Richtung kleiner ist als der Bildschirm, mittig. */
+  private clamp(): void {
+    this.zoom = Math.min(Math.max(this.zoom, this.fitScale), this.coverScale * 3);
+    const halfW = this.cssW / 2 / this.zoom;
+    const halfH = this.cssH / 2 / this.zoom;
+    this.camX = halfW * 2 >= WORLD_W
+      ? WORLD_W / 2
+      : Math.min(Math.max(this.camX, halfW), WORLD_W - halfW);
+    this.camY = halfH * 2 >= WORLD_H
+      ? WORLD_H / 2
+      : Math.min(Math.max(this.camY, halfH), WORLD_H - halfH);
+    this.scale = this.zoom;
+    this.offX = this.cssW / 2 - this.camX * this.zoom;
+    this.offY = this.cssH / 2 - this.camY * this.zoom;
+  }
+
+  /** Verschieben um eine Strecke in Bildschirmpunkten. */
+  panBy(dx: number, dy: number): void {
+    this.camX -= dx / this.zoom;
+    this.camY -= dy / this.zoom;
+    this.clamp();
+  }
+
+  /** Zoomen um einen festen Punkt auf dem Bildschirm - der bleibt stehen,
+   *  alles andere bewegt sich darum herum. Ohne das rutscht beim Kneifen
+   *  immer der falsche Ausschnitt weg. */
+  zoomAt(factor: number, sx: number, sy: number): void {
+    const before = this.screenToWorld(sx, sy);
+    this.zoom = Math.min(Math.max(this.zoom * factor, this.fitScale), this.coverScale * 3);
+    this.clamp();
+    const after = this.screenToWorld(sx, sy);
+    this.camX += before.x - after.x;
+    this.camY += before.y - after.y;
+    this.clamp();
+  }
+
+  /** Bildschirmpunkt -> Weltkoordinate. */
   screenToWorld(sx: number, sy: number): { x: number; y: number } {
     return { x: (sx - this.offX) / this.scale, y: (sy - this.offY) / this.scale };
+  }
+
+  /** Weltkoordinate -> Bildschirmpunkt. */
+  worldToScreen(wx: number, wy: number): { x: number; y: number } {
+    return { x: wx * this.scale + this.offX, y: wy * this.scale + this.offY };
+  }
+
+  /** Zwischen "alles sichtbar" und "Bildschirm gefuellt" umschalten. */
+  toggleOverview(): void {
+    const atCover = Math.abs(this.zoom - this.coverScale) < 1e-3;
+    this.zoom = atCover ? this.fitScale : this.coverScale;
+    this.clamp();
+  }
+
+  get atOverview(): boolean {
+    return Math.abs(this.zoom - this.fitScale) < 1e-3;
   }
 
   /** Passt das Bildraster der Leinwand noch zu ihrer Flaeche auf dem

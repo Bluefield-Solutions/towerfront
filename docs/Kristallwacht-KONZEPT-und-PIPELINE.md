@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v28 · 08.08.2026
+Stand: v30 · 08.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -305,6 +305,44 @@ jederzeit wiederherstellbar. Ein Fehlversuch kostet eine Minute, nicht einen
 Abend.
 
 ---
+
+### 3.27 Vom eingepassten Brett zur Kamera
+
+Bis v29 wurden Kopfzeile und Bedienleiste als feste Bänder reserviert und das
+Spielfeld dazwischen eingepasst. Das Ergebnis war ein kleines Brett als Insel
+mit breiten toten Rändern — auf dem Handy quer blieb rund ein Drittel des
+Bildschirms für Bedienung reserviert.
+
+Die Vorbilder des Genres machen es genau umgekehrt: **die Karte füllt den
+Bildschirm, die Bedienung schwebt darüber.** Das ist jetzt auch hier so.
+
+**Zwei Bezugsgrößen.** `fitScale` zeigt alles mit Rändern, `coverScale` füllt
+den Bildschirm und schneidet an. Gestartet wird bei `coverScale`; herausziehen
+geht bis `fitScale`, hineinziehen bis zum Dreifachen.
+
+**Verschieben ist begrenzt**, und zwar so, dass nie ein Rand des Feldes ins
+Bild rutscht. Ist das Feld in einer Richtung kleiner als der Bildschirm, wird
+es dort mittig gehalten statt frei beweglich.
+
+**Zoomen geschieht um einen festen Punkt** — beim Kneifen der Punkt zwischen
+den Fingern, am Schreibtisch der Mauszeiger. Ohne das rutscht immer der falsche
+Ausschnitt weg.
+
+**Tippen und Schieben mussten getrennt werden.** Ohne Schwelle setzt jedes
+Verschieben am Ende einen Turm. Ab elf Punkten Fingerweg gilt es als Schieben,
+und dann passiert beim Loslassen nichts. Doppeltipp schaltet zwischen Übersicht
+und Vollbild um — der schnellste Weg, kurz das ganze Feld zu sehen.
+
+**Die Bedienung ist milchiges Glas statt Farbe.** Die Regel dabei: nie so
+deckend, dass man nicht mehr sieht, was darunter passiert, aber lesbar. Die
+Turmleiste sitzt unten links und klappt weg; der Startknopf sitzt unten rechts
+und bleibt immer stehen — er wird gebraucht, gerade wenn die Leiste weg ist.
+
+**Geprüft wird das in vier Bildschirmformaten**: Startmaßstab gleich
+`coverScale`, weit in jede Richtung schieben ohne sichtbaren Rand, Übersicht
+zeigt tatsächlich das ganze Feld, Zoom bleibt begrenzt. Gegenprobe: entfernt man
+die waagerechte Begrenzung, meldet der Rauchtest *„waagerecht über den Rand
+geschoben (−8787..−8381)"*.
 
 ### 3.26 Ein flachgedrücktes Spielfeld
 
@@ -1007,7 +1045,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v28
+## 5. Stand v30
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -1067,6 +1105,11 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v30 — echtes Vollbild mit Kamera.** Das Spielfeld füllt jetzt den
+Bildschirm, statt zwischen zwei Bänder gequetscht zu werden; die Bedienung
+schwebt darüber und lässt sich wegklappen. Verschieben, Kneifen, Doppeltipp.
+Siehe Abschnitt 3.27.
 
 **Neu in v26 bis v28 — gerenderte Grafik und ein Verzerrungsfehler.**
 Drei Untergrundbilder und zwölf Türme sind eingebaut; Karte 2 heißt jetzt

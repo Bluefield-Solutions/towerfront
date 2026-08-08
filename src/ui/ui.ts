@@ -50,6 +50,9 @@ export class UI {
   private sMaps = $('s-maps');
   private sPerks = $('s-perks');
   private sMode = $('s-mode');
+  private dock = $('dock');
+  private dockToggle = $('dock-toggle');
+  private dockToggleI = $('dock-toggle-i');
   private sStats = $('s-stats');
   private sAction = $<HTMLButtonElement>('s-action');
   private sResume = $<HTMLButtonElement>('s-resume');
@@ -106,6 +109,18 @@ export class UI {
       this.skills.appendChild(b);
       this.skillBtns.set(id, b);
     }
+
+    // Die Leiste laesst sich wegklappen. Wer den Ausschnitt studieren will,
+    // bekommt den ganzen Bildschirm - der Startknopf bleibt trotzdem stehen.
+    this.dockToggle.addEventListener('click', () => {
+      Sfx.unlock(); Sfx.play('tap');
+      const folded = this.dock.dataset.folded === '1';
+      this.dock.dataset.folded = folded ? '0' : '1';
+      this.dockToggleI.textContent = folded ? '▾' : '▴';
+      this.dockToggle.setAttribute(
+        'aria-label', folded ? 'Leiste einklappen' : 'Leiste ausklappen',
+      );
+    });
 
     setPerkCost((id) => PERKS[id as PerkId]?.cost ?? 0);
 

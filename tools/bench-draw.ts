@@ -140,7 +140,7 @@ const buildCounts = new Map<string, number>();
   empty.reset(1, 'normal');
   empty.buildChoice = 'arrow';
   const r2 = new Renderer(canvas);
-  r2.resize(60, 120);
+  r2.resize();
   r2.draw(empty);
   counts.clear();
   counting = true;

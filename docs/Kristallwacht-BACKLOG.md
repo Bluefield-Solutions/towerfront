@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v29 · 08.08.2026
+Stand: nach v30 · 08.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Kristallwacht-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
@@ -82,6 +82,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S58 | Das Spielfeld lag als Insel zwischen zwei reservierten Bändern — auf dem Handy quer ging ein Drittel des Bildschirms an die Bedienung | Umgekehrt gelöst wie im Genre-Vorbild: Karte füllt den Bildschirm, Bedienung schwebt darüber und klappt weg. Kamera mit Verschieben, Kneifen, Doppeltipp. |
+| S59 | Ohne Schwelle zwischen Tippen und Schieben setzt jedes Verschieben am Ende einen Turm | Ab elf Punkten Fingerweg gilt es als Schieben; beim Loslassen passiert dann nichts. |
 | S56 | Der Gegnersatz zeigt **gepanzerte Fahrzeuge**, das Konzept sah Kreaturen der Leere vor | Statt die Lieferung abzulehnen: die Gegnerfraktion ist jetzt eine Maschinenarmee. Nur zwei Namen mussten weichen (Husche → Späher, Schwärmer → Gleiter), Rollen und Balance blieben unberührt. |
 | S57 | Zwei der zwölf Vorlagen hatten abgeschnittene Reste am Bildrand — sie wären beim Zuschneiden mitskaliert worden und hätten das Fahrzeug schrumpfen lassen | Der Packer behält nur den größten zusammenhängenden Bereich je Bild. Eine Vorlage (`armored_vehicle_01`) war ganz unbrauchbar und blieb draußen. |
 | S54 | Nach dem Einbau der Turmbilder war das Spielfeld **komplett verzogen** — horizontal gestreckt, vertikal gestaucht | Bildraster der Leinwand passte nicht zu ihrer Fläche: `resize` war zu früh gelaufen und abgebrochen, die Leinwand behielt 300 × 150. Behoben durch Selbstheilung in jedem Bild, einen Größenbeobachter und eine Rauchtest-Prüfung, die genau diesen Fall nachstellt. |

@@ -16,30 +16,102 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
   };
 
   let down = false;
+  /** Sobald der Finger weiter als das gewandert ist, ist es kein Tipp mehr,
+   *  sondern ein Schieben - und dann darf am Ende nichts gebaut werden.
+   *  Ohne diese Schwelle setzt jedes Verschieben einen Turm. */
+  const DRAG_THRESHOLD = 11;
+  let dragging = false;
+  let startX = 0, startY = 0, lastX = 0, lastY = 0;
+  /** Alle liegenden Finger - fuer das Kneifen. */
+  const points = new Map<number, { x: number; y: number }>();
+  let pinchDist = 0;
+  let lastTap = 0;
+
+  const local = (ev: { clientX: number; clientY: number }) => {
+    const rect = canvas.getBoundingClientRect();
+    return { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+  };
 
   canvas.addEventListener('pointermove', (ev) => {
-    const c = toCell(ev);
-    if (down) s.pendingCell = c;
-    else if (ev.pointerType !== 'touch') s.hoverCell = c;
+    const p = local(ev);
+    if (points.has(ev.pointerId)) points.set(ev.pointerId, p);
+
+    // Zwei Finger: kneifen. Der Punkt zwischen den Fingern bleibt stehen.
+    if (points.size >= 2) {
+      const [a, b] = [...points.values()];
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinchDist > 0 && d > 0) {
+        r.zoomAt(d / pinchDist, (a.x + b.x) / 2, (a.y + b.y) / 2);
+      }
+      pinchDist = d;
+      dragging = true;
+      s.pendingCell = null;
+      return;
+    }
+
+    if (down) {
+      if (!dragging && Math.hypot(p.x - startX, p.y - startY) > DRAG_THRESHOLD) {
+        dragging = true;
+        s.pendingCell = null;
+      }
+      if (dragging) {
+        r.panBy(p.x - lastX, p.y - lastY);
+        lastX = p.x; lastY = p.y;
+        return;
+      }
+      s.pendingCell = toCell(ev);
+      return;
+    }
+    if (ev.pointerType !== 'touch') s.hoverCell = toCell(ev);
   });
   canvas.addEventListener('pointerleave', () => { s.hoverCell = null; });
 
   canvas.addEventListener('pointerdown', (ev) => {
     Sfx.unlock();
-    if (s.phase !== 'playing') return;
     ev.preventDefault();
+    const p = local(ev);
+    points.set(ev.pointerId, p);
+    if (points.size >= 2) {
+      const [a, b] = [...points.values()];
+      pinchDist = Math.hypot(a.x - b.x, a.y - b.y);
+      dragging = true;
+      s.pendingCell = null;
+      return;
+    }
     canvas.setPointerCapture?.(ev.pointerId);
     down = true;
+    dragging = false;
+    startX = lastX = p.x; startY = lastY = p.y;
+    if (s.phase !== 'playing') return;
     const c = toCell(ev);
     s.hoverCell = c;
     s.pendingCell = s.buildChoice || s.aiming ? c : null;
   });
 
   const finish = (ev: PointerEvent) => {
+    points.delete(ev.pointerId);
+    if (points.size < 2) pinchDist = 0;
     if (!down) return;
     down = false;
+    const wasDragging = dragging;
+    dragging = false;
     const cell = s.pendingCell;
     s.pendingCell = null;
+    // Geschoben statt getippt: nichts bauen, nichts auswaehlen.
+    if (wasDragging) return;
+
+    // Doppeltipp schaltet zwischen Uebersicht und Vollbild um - der schnellste
+    // Weg, kurz das ganze Feld zu sehen und wieder heranzugehen.
+    const now = performance.now();
+    if (now - lastTap < 280) {
+      lastTap = 0;
+      const p = local(ev);
+      r.toggleOverview();
+      void p;
+      return;
+    }
+    lastTap = now;
+
     if (s.phase !== 'playing') return;
     const c = cell ?? toCell(ev);
 
@@ -66,13 +138,25 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
   };
 
   canvas.addEventListener('pointerup', finish);
-  canvas.addEventListener('pointercancel', () => { down = false; s.pendingCell = null; });
+  canvas.addEventListener('pointercancel', (ev) => {
+    points.delete(ev.pointerId);
+    if (points.size < 2) pinchDist = 0;
+    down = false; dragging = false; s.pendingCell = null;
+  });
+
+  // Am Schreibtisch: Mausrad zoomt um den Zeiger.
+  canvas.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const p = local(ev);
+    r.zoomAt(ev.deltaY < 0 ? 1.12 : 1 / 1.12, p.x, p.y);
+  }, { passive: false });
 
   window.addEventListener('keydown', (ev) => {
     Sfx.unlock();
     if (ev.key === ' ') { ev.preventDefault(); s.startWave(); }
     if (ev.key === 'p' || ev.key === 'P') s.paused = !s.paused;
     if (ev.key === 'Escape') { s.buildChoice = null; s.selectedTower = null; s.aiming = null; }
+    if (ev.key === 'o' || ev.key === 'O') r.toggleOverview();
     for (const id of ABILITY_ORDER) {
       if (ev.key.toLowerCase() === ABILITIES[id].key) s.chooseAbility(id);
     }

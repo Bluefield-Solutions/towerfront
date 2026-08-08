@@ -31,16 +31,22 @@
   </header>
 
   <div class="dock" id="dock">
-    <div class="next" id="next">
-      <span class="next-lab" id="n-lab">Als Nächstes</span>
-      <span class="next-list" id="n-list"></span>
-    </div>
-    <div class="dock-row">
-      <div class="build" id="build"></div>
-      <div class="skills" id="skills"></div>
-      <button class="go" id="b-wave"><span id="b-wave-t">Welle starten</span><span class="go-bonus" id="b-wave-b"></span></button>
+    <button class="dock-toggle" id="dock-toggle" aria-label="Leiste einklappen">
+      <span id="dock-toggle-i">▾</span>
+    </button>
+    <div class="dock-body" id="dock-body">
+      <div class="next" id="next">
+        <span class="next-lab" id="n-lab">Als Nächstes</span>
+        <span class="next-list" id="n-list"></span>
+      </div>
+      <div class="dock-row">
+        <div class="build" id="build"></div>
+        <div class="skills" id="skills"></div>
+      </div>
     </div>
   </div>
+
+  <button class="go" id="b-wave"><span id="b-wave-t">Welle starten</span><span class="go-bonus" id="b-wave-b"></span></button>
 
   <div class="perf" id="perf" hidden></div>
 

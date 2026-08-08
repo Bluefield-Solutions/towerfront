@@ -13,18 +13,11 @@ const state = new GameState();
 const renderer = new Renderer(canvas);
 const ui = new UI(state);
 
-/** Die Baender oben und unten messen und dem Renderer geben, damit das Feld
- *  nur zwischen ihnen liegt. */
+/** Seit v30 gibt es keine reservierten Baender mehr: das Spielfeld fuellt den
+ *  ganzen Bildschirm, die Bedienung schwebt darueber und laesst sich
+ *  einklappen. Bleibt nur, die Leinwand einzupassen. */
 function layout(): void {
-  const hud = document.getElementById('hud');
-  const dock = document.getElementById('dock');
-  const coach = document.getElementById('coach');
-  let top = hud ? hud.offsetHeight : 0;
-  if (coach && !coach.hidden) {
-    coach.style.top = `${top}px`;
-    top += coach.offsetHeight;
-  }
-  renderer.resize(top, dock ? dock.offsetHeight : 0);
+  renderer.resize();
 }
 
 layout();
@@ -75,18 +68,11 @@ const loop = new Loop(
   () => renderer.draw(state),
 );
 
-const onResize = () => /** Die Baender oben und unten messen und dem Renderer geben, damit das Feld
- *  nur zwischen ihnen liegt. */
+const onResize = () => /** Seit v30 gibt es keine reservierten Baender mehr: das Spielfeld fuellt den
+ *  ganzen Bildschirm, die Bedienung schwebt darueber und laesst sich
+ *  einklappen. Bleibt nur, die Leinwand einzupassen. */
 function layout(): void {
-  const hud = document.getElementById('hud');
-  const dock = document.getElementById('dock');
-  const coach = document.getElementById('coach');
-  let top = hud ? hud.offsetHeight : 0;
-  if (coach && !coach.hidden) {
-    coach.style.top = `${top}px`;
-    top += coach.offsetHeight;
-  }
-  renderer.resize(top, dock ? dock.offsetHeight : 0);
+  renderer.resize();
 }
 
 layout();

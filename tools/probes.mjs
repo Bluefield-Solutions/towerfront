@@ -113,6 +113,20 @@ const PROBEN = [
     tor: 'doku',
   },
   {
+    name: 'Tuerme ueberdecken einander',
+    datei: 'src/data/towers.ts',
+    suche: 'export const DRAW_SCALE = 1.25;',
+    ersatz: 'export const DRAW_SCALE = 2.4;',
+    tor: 'guards',
+  },
+  {
+    name: 'Bedienung liegt im Menue im Weg',
+    datei: 'src/ui/ui.ts',
+    suche: '    this.hud.hidden = !anzeigen;',
+    ersatz: '    this.hud.hidden = false;',
+    tor: 'smoke',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     suche: 'hpEnd: 16.5, hpCurve: 2.4',

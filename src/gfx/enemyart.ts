@@ -1,6 +1,8 @@
 import { ENEMY_ART } from './assets/enemies';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import { hexA } from './glow';
+import { mapById } from '../data/maps';
+import { drawRim } from './towerart';
 
 /** Gerenderte Gegnerbilder.
  *
@@ -32,8 +34,11 @@ function load(id: EnemyId): HTMLImageElement | null {
   return ready.has(id) ? img : null;
 }
 
-export function getEnemyArt(id: EnemyId, flash: boolean): HTMLCanvasElement | null {
-  const cacheKey = `${id}|${flash ? 'f' : 'n'}`;
+export function getEnemyArt(
+  id: EnemyId, flash: boolean, mapId = 'spiralhain',
+): HTMLCanvasElement | null {
+  const rim = mapById(mapId).palette.rim;
+  const cacheKey = `${id}|${flash ? 'f' : 'n'}|${rim}`;
   const hit = baked.get(cacheKey);
   if (hit) return hit;
 
@@ -45,23 +50,28 @@ export function getEnemyArt(id: EnemyId, flash: boolean): HTMLCanvasElement | nu
   const cv = document.createElement('canvas');
   cv.width = size; cv.height = size;
   const g = cv.getContext('2d')!;
-  g.drawImage(img, 0, 0);
+  if (!flash) drawRim(g, img, size, rim);
 
-  g.globalCompositeOperation = 'source-atop';
+  const body = document.createElement('canvas');
+  body.width = size; body.height = size;
+  const bg = body.getContext('2d')!;
+  bg.drawImage(img, 0, 0);
+  bg.globalCompositeOperation = 'source-atop';
   if (flash) {
-    g.fillStyle = 'rgba(255,255,255,0.85)';
-    g.fillRect(0, 0, size, size);
+    bg.fillStyle = 'rgba(255,255,255,0.85)';
+    bg.fillRect(0, 0, size, size);
   } else {
-    g.fillStyle = hexA(def.body, 0.38);
-    g.fillRect(0, 0, size, size);
-    const lift = g.createLinearGradient(0, 0, size * 0.7, size);
+    bg.fillStyle = hexA(def.body, 0.38);
+    bg.fillRect(0, 0, size, size);
+    const lift = bg.createLinearGradient(0, 0, size * 0.7, size);
     lift.addColorStop(0, 'rgba(255,255,255,0.24)');
     lift.addColorStop(0.5, 'rgba(255,255,255,0.04)');
     lift.addColorStop(1, 'rgba(0,0,0,0.24)');
-    g.fillStyle = lift;
-    g.fillRect(0, 0, size, size);
+    bg.fillStyle = lift;
+    bg.fillRect(0, 0, size, size);
   }
-  g.globalCompositeOperation = 'source-over';
+  bg.globalCompositeOperation = 'source-over';
+  g.drawImage(body, 0, 0);
 
   baked.set(cacheKey, cv);
   return cv;
@@ -69,6 +79,10 @@ export function getEnemyArt(id: EnemyId, flash: boolean): HTMLCanvasElement | nu
 
 /** Wie breit der Gegner im Spiel gezeichnet wird - abgeleitet aus seinem
  *  Radius, damit Bild und Treffererkennung zusammenpassen. */
-export const enemyArtWidth = (id: EnemyId): number => ENEMIES[id].radius * 3.0;
+/** Wie breit der Gegner gezeichnet wird. Der Mindestwert ist bewusst von der
+ *  Treffererkennung entkoppelt: der Span hatte bei seinem Radius nur elf
+ *  Bildschirmpunkte, und darunter ist nichts mehr zu erkennen. */
+export const enemyArtWidth = (id: EnemyId): number =>
+  Math.max(ENEMIES[id].radius * 3.0, 50);
 
 export const hasEnemyArt = (id: EnemyId): boolean => id in ENEMY_ART;

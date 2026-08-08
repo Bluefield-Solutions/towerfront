@@ -1,6 +1,7 @@
 import { TOWER_ART } from './assets/towers';
 import { accentFor, TOWERS, type BranchIndex, type TowerId } from '../data/towers';
 import { hexA } from './glow';
+import { mapById } from '../data/maps';
 
 /** Gerenderte Turmbilder.
  *
@@ -16,6 +17,28 @@ import { hexA } from './glow';
  *
  *  Zweitens bekommen sie eine helle Kante. Auf dem dunklen Untergrundbild
  *  verschwaende ein dunkler Turm sonst schlicht. */
+/** Saum um eine Silhouette: das Bild achtfach versetzt in einer Farbe,
+ *  darunter gelegt. Zweieinhalb Punkte reichen und kosten zur Laufzeit
+ *  nichts, weil das Ergebnis gebacken wird. */
+export function drawRim(
+  g: CanvasRenderingContext2D, img: HTMLImageElement | HTMLCanvasElement,
+  size: number, colour: string, width = 2.5,
+): void {
+  const mask = document.createElement('canvas');
+  mask.width = size; mask.height = size;
+  const mg = mask.getContext('2d')!;
+  for (let i = 0; i < 8; i++) {
+    const a = (Math.PI * 2 * i) / 8;
+    mg.drawImage(img, Math.cos(a) * width, Math.sin(a) * width, size, size);
+  }
+  mg.globalCompositeOperation = 'source-atop';
+  mg.fillStyle = colour;
+  mg.fillRect(0, 0, size, size);
+  g.globalAlpha = 0.92;
+  g.drawImage(mask, 0, 0);
+  g.globalAlpha = 1;
+}
+
 const tinted = new Map<string, HTMLCanvasElement>();
 const raw = new Map<string, HTMLImageElement>();
 const ready = new Set<string>();
@@ -45,11 +68,12 @@ function load(k: string): HTMLImageElement | null {
 /** Das fertige, eingefaerbte Bild - oder null, solange nichts geladen ist.
  *  Der Renderer faellt dann auf die gezeichneten Formen zurueck. */
 export function getTowerArt(
-  id: TowerId, branch: BranchIndex, level: number,
+  id: TowerId, branch: BranchIndex, level: number, mapId = 'spiralhain',
 ): HTMLCanvasElement | null {
   const k = key(id, branch);
   const accent = accentFor(TOWERS[id], branch);
-  const cacheKey = `${k}|${accent}`;
+  const rim = mapById(mapId).palette.rim;
+  const cacheKey = `${k}|${accent}|${rim}`;
   const hit = tinted.get(cacheKey);
   if (hit) return hit;
 
@@ -60,22 +84,26 @@ export function getTowerArt(
   const cv = document.createElement('canvas');
   cv.width = size; cv.height = size;
   const g = cv.getContext('2d')!;
-  g.drawImage(img, 0, 0, size, size);
 
-  // Zweigfarbe ueber die Silhouette, nicht ueber das ganze Bild.
-  g.globalCompositeOperation = 'source-atop';
-  g.fillStyle = hexA(accent, 0.3);
-  g.fillRect(0, 0, size, size);
+  // Erst der Saum, dann der eingefaerbte Koerper darueber - so bleibt die
+  // Kante sauber und wird nicht mit eingefaerbt.
+  drawRim(g, img, size, rim);
 
-  // Lichtkante von oben links, damit der Turm sich vom Boden abhebt.
-  g.globalCompositeOperation = 'source-atop';
-  const lift = g.createLinearGradient(0, 0, size * 0.7, size);
-  lift.addColorStop(0, 'rgba(255,255,255,0.26)');
-  lift.addColorStop(0.45, 'rgba(255,255,255,0.05)');
+  const body = document.createElement('canvas');
+  body.width = size; body.height = size;
+  const bg = body.getContext('2d')!;
+  bg.drawImage(img, 0, 0, size, size);
+  bg.globalCompositeOperation = 'source-atop';
+  bg.fillStyle = hexA(accent, 0.38);
+  bg.fillRect(0, 0, size, size);
+  const lift = bg.createLinearGradient(0, 0, size * 0.7, size);
+  lift.addColorStop(0, 'rgba(255,255,255,0.34)');
+  lift.addColorStop(0.45, 'rgba(255,255,255,0.10)');
   lift.addColorStop(1, 'rgba(0,0,0,0.22)');
-  g.fillStyle = lift;
-  g.fillRect(0, 0, size, size);
-  g.globalCompositeOperation = 'source-over';
+  bg.fillStyle = lift;
+  bg.fillRect(0, 0, size, size);
+  bg.globalCompositeOperation = 'source-over';
+  g.drawImage(body, 0, 0);
 
   tinted.set(cacheKey, cv);
   void level;

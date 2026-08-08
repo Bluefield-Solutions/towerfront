@@ -262,7 +262,7 @@ export class Renderer {
     // Nur die gezeichneten Tuerme kommen in die Schicht. Gerenderte werden
     // je Bild gezeichnet, weil sie sich zum Ziel hin spiegeln.
     for (const t of s.towers) {
-      if (getTowerArt(t.def, t.branch, t.level)) continue;
+      if (getTowerArt(t.def, t.branch, t.level, s.map.id)) continue;
       drawSprite(g, getTowerBase(t.def, t.branch, t.level), t.x, t.y);
     }
     this.towerLayerVersion = s.towersVersion;
@@ -430,7 +430,7 @@ export class Renderer {
       ctx.translate(h.x, h.y - h.alt);
       ctx.rotate(h.angle);
       const shrink = 0.5 + k * 0.5;
-      const art = getEnemyArt(h.def, false);
+      const art = getEnemyArt(h.def, false, s.map.id);
       if (art) {
         const w = enemyArtWidth(h.def) * shrink;
         const hh = w * (art.height / art.width);
@@ -485,7 +485,7 @@ export class Renderer {
       // Bei gerenderten Tuermen entfaellt die drehbare Waffe: ein Objekt in
       // Dreiviertelansicht kippt, wenn man es in der Flaeche dreht. Statt zu
       // drehen wird gespiegelt, sobald das Ziel links steht.
-      const art = getTowerArt(t.def, t.branch, t.level);
+      const art = getTowerArt(t.def, t.branch, t.level, s.map.id);
       if (art) {
         const k = towerArtScale(t.level);
         const w = 104 * k, h = 104 * k;
@@ -603,7 +603,7 @@ export class Renderer {
       const def = ENEMIES[e.def];
       const wob = Math.sin(s.time * 9 + e.wobble) * 2;
       const alt = this.altitude(e, s.time, !!def.flying);
-      const art = getEnemyArt(e.def, false);
+      const art = getEnemyArt(e.def, false, s.map.id);
 
       if (art) {
         // Die Bilder sind in Seitenansicht gezeichnet und schauen nach links.
@@ -621,7 +621,7 @@ export class Renderer {
         if (facingRight) ctx.scale(-1, 1);
         ctx.drawImage(art, -w / 2, -h * 0.72, w, h);
         if (e.hitFlash > 0.01) {
-          const hot = getEnemyArt(e.def, true);
+          const hot = getEnemyArt(e.def, true, s.map.id);
           if (hot) {
             ctx.globalAlpha = e.hitFlash * 0.8;
             ctx.drawImage(hot, -w / 2, -h * 0.72, w, h);

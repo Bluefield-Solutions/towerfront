@@ -19,6 +19,17 @@ export interface MapPalette {
   mood: string;
   /** Farbe des treibenden Bodennebels. */
   haze: string;
+  /** Saumfarbe fuer Tuerme und Gegner.
+   *
+   *  Ein Objekt ist nicht deshalb lesbar, weil seine Flaeche sich vom Boden
+   *  abhebt - mitteldunkel auf mittelhell hat in beide Richtungen wenig
+   *  Kontrast. Lesbar wird es durch seine *Kante*.
+   *
+   *  Alle drei Untergruende liegen gemessen zwischen 1,6 und 6,1 % Helligkeit -
+   *  sie sind samt und sonders dunkel, auch der Winterboden, der im Bild hell
+   *  wirkt. Ein dunkler Saum bringt darauf nichts (gemessen 2,0), ein heller
+   *  sehr viel (8,6). Deshalb ueberall hell, nur im Ton der Karte. */
+  rim: string;
 }
 
 export interface GameMap {
@@ -53,21 +64,21 @@ const MOOS: MapPalette = {
   terrain: '#173D3A', terrainHi: '#215A50', terrainLo: '#102B2B',
   path: '#C9A86A', pathEdge: '#9C7F49',
   rock: '#2A3348', rockHi: '#3D4A66',
-  mood: '#BEE2FF', haze: '#B4D6E2',
+  mood: '#BEE2FF', haze: '#B4D6E2', rim: '#DCEEFF',
 };
 
 const LAUB: MapPalette = {
   terrain: '#2E2A1E', terrainHi: '#4A4228', terrainLo: '#1B1810',
   path: '#CBB48A', pathEdge: '#8E7A52',
   rock: '#39332A', rockHi: '#5C5242',
-  mood: '#FFD9A8', haze: '#B8A882',
+  mood: '#FFD9A8', haze: '#B8A882', rim: '#FFE9C8',
 };
 
 const FROST: MapPalette = {
   terrain: '#22364F', terrainHi: '#33557A', terrainLo: '#16233A',
   path: '#E4EEF6', pathEdge: '#A6BACD',
   rock: '#2C3E5B', rockHi: '#44608A',
-  mood: '#D6ECFF', haze: '#CFE6F5',
+  mood: '#D6ECFF', haze: '#CFE6F5', rim: '#EAF6FF',
 };
 
 /** Karte 1 "Spiralhain": Ein einziger Weg, der sich einmal um den Herzkristall

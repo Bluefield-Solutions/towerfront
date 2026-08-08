@@ -42,7 +42,7 @@ export const ENEMIES: Record<EnemyId, EnemyDef> = {
   brute: {
     id: 'brute', name: 'Koloss',
     hp: 150, speed: 62, bounty: 7, leak: 3, radius: 24, armor: 3, slowResist: 0.3,
-    body: '#3F5A8A', trim: '#9FC0E8',
+    body: '#84AEE0', trim: '#E6F2FF',
   },
   flyer: {
     id: 'flyer', name: 'Gleiter',
@@ -59,7 +59,7 @@ export const ENEMIES: Record<EnemyId, EnemyDef> = {
   splitling: {
     id: 'splitling', name: 'Span',
     hp: 40, speed: 148, bounty: 1, leak: 1, radius: 12, armor: 0, slowResist: 0,
-    body: '#F2B173', trim: '#FFE9CC',
+    body: '#EFE24C', trim: '#FFF8C8',
   },
   titan: {
     id: 'titan', name: 'Leerentitan',

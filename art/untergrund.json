@@ -17,7 +17,7 @@
     "spiralhain": {
       "file": "06_sandweg.png",
       "comment": "Erstes Bild mit gemaltem Weg. Gemessen 0,50 Helligkeit - auf Zielwert heruntergezogen.",
-      "helligkeit": 0.72,
+      "helligkeit": 0.62,
       "waerme": 0.0,
       "farbe": 1.0
     },

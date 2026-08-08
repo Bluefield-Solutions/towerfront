@@ -72,9 +72,12 @@ const { MAPS } = await import('../src/data/maps.ts');
 const { TOWERS, TOWER_ORDER } = await import('../src/data/towers.ts');
 const { candidateSpots } = await import('./spots.ts');
 const { Menu } = await import('../src/game/menu.ts');
-const { hasBackground } = await import('../src/gfx/backgrounds.ts');
-const { hasTowerArt } = await import('../src/gfx/towerart.ts');
-const { hasEnemyArt } = await import('../src/gfx/enemyart.ts');
+// Wichtig: nicht die has*-Funktionen. Die sagen nur, ob ein Bild im Verzeichnis
+// steht - nicht, ob es dekodiert wurde. Genau daran ist die erste Gegenprobe
+// vorbeigelaufen. Die get*-Funktionen liefern erst etwas, wenn das Bild da ist.
+const { getBackground } = await import('../src/gfx/backgrounds.ts');
+const { getTowerArt } = await import('../src/gfx/towerart.ts');
+const { getEnemyArt } = await import('../src/gfx/enemyart.ts');
 const { ENEMIES } = await import('../src/data/enemies.ts');
 
 const DT = 1 / 60;
@@ -112,9 +115,9 @@ async function shot(name, w, h, build) {
   // gefragt, statt geraten.
   if (!r.menu) {
     const fehlt = [];
-    if (!hasBackground(s.map.id)) fehlt.push(`Untergrund ${s.map.id}`);
-    for (const id of TOWER_ORDER) if (!hasTowerArt(id, null)) fehlt.push(`Turm ${id}`);
-    for (const id of Object.keys(ENEMIES)) if (!hasEnemyArt(id)) fehlt.push(`Gegner ${id}`);
+    if (!getBackground(s.map.id)) fehlt.push(`Untergrund ${s.map.id}`);
+    for (const id of TOWER_ORDER) if (!getTowerArt(id, null, 1, s.map.id)) fehlt.push(`Turm ${id}`);
+    for (const id of Object.keys(ENEMIES)) if (!getEnemyArt(id, false, s.map.id)) fehlt.push(`Gegner ${id}`);
     if (fehlt.length) {
       throw new Error(
         `Bilder nicht dekodiert (${fehlt.length}): ${fehlt.slice(0, 4).join(', ')}` +

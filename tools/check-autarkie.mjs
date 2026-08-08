@@ -45,6 +45,26 @@ if (!/\[hidden\][^{]*\{[^}]*display\s*:\s*none\s*!important/.test(html)) {
   );
 }
 
+// Fehlende Umlaute im sichtbaren Text.
+//
+// Bis v21 stand im Spiel "Moerser", "Flaeche" und "Erste Fuehler" - weil die
+// Inhaltsdateien in ASCII geschrieben sind und ich die Ersatzschreibung nicht
+// von den Kommentaren getrennt habe. Im Bild sieht das nach Nachlaessigkeit
+// aus, und genau das war es auch.
+{
+  const suspicious = [
+    'Moerser', 'Flaeche', 'Fuehler', 'Schwaermer', 'Tuerme', 'Faehigkeit',
+    'zaehlt', 'naechste', 'Ueberspringen', 'Bauplaetze', 'Erloes', 'Waechter',
+    'Spruenge', 'Buendelung', 'Scharfschuetze', 'ueber ', 'fuer ', 'koennen',
+  ];
+  const found = suspicious.filter((w) => html.includes(w));
+  if (found.length) {
+    problems.push(
+      `Ersatzschreibung statt Umlaut im ausgelieferten Text: ${found.join(', ')}`,
+    );
+  }
+}
+
 // Die UI greift Elemente ueber feste IDs. Fehlt eine, faellt das erst zur
 // Laufzeit auf - hier faellt es beim Build auf.
 const REQUIRED_IDS = [

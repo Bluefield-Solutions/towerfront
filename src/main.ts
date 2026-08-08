@@ -13,7 +13,21 @@ const state = new GameState();
 const renderer = new Renderer(canvas);
 const ui = new UI(state);
 
-renderer.resize();
+/** Die Baender oben und unten messen und dem Renderer geben, damit das Feld
+ *  nur zwischen ihnen liegt. */
+function layout(): void {
+  const hud = document.getElementById('hud');
+  const dock = document.getElementById('dock');
+  const coach = document.getElementById('coach');
+  let top = hud ? hud.offsetHeight : 0;
+  if (coach && !coach.hidden) {
+    coach.style.top = `${top}px`;
+    top += coach.offsetHeight;
+  }
+  renderer.resize(top, dock ? dock.offsetHeight : 0);
+}
+
+layout();
 bindInput(canvas, state, renderer);
 
 let lastPhase = state.phase;
@@ -55,11 +69,27 @@ const loop = new Loop(
     ui.sync();
     ui.perf(fpsAvg);
     renderer.coachHint = ui.coachHint;
+    // Die Einfuehrungsleiste schiebt das Feld nach unten und wieder zurueck.
+    if (ui.bandsChanged()) layout();
   },
   () => renderer.draw(state),
 );
 
-const onResize = () => renderer.resize();
+const onResize = () => /** Die Baender oben und unten messen und dem Renderer geben, damit das Feld
+ *  nur zwischen ihnen liegt. */
+function layout(): void {
+  const hud = document.getElementById('hud');
+  const dock = document.getElementById('dock');
+  const coach = document.getElementById('coach');
+  let top = hud ? hud.offsetHeight : 0;
+  if (coach && !coach.hidden) {
+    coach.style.top = `${top}px`;
+    top += coach.offsetHeight;
+  }
+  renderer.resize(top, dock ? dock.offsetHeight : 0);
+}
+
+layout();
 window.addEventListener('resize', onResize);
 window.addEventListener('orientationchange', () => setTimeout(onResize, 250));
 window.addEventListener('pointerdown', () => Sfx.unlock(), { once: true });

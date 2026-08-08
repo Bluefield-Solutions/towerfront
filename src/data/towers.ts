@@ -54,14 +54,14 @@ export const MAX_LEVEL = 3;
 export const TOWERS: Record<TowerId, TowerDef> = {
   arrow: {
     id: 'arrow', name: 'Bogenturm', role: 'Dauerfeuer',
-    blurb: 'Guenstig und schnell. Traegt die fruehen Wellen.',
+    blurb: 'Günstig und schnell. Trägt die frühen Wellen.',
     color: '#D8DCE8', accent: '#F2C14E',
     attack: 'single', hitsAir: true, projectileSpeed: 700,
     base: { cost: 55, damage: 8, range: 200, cooldown: 0.55 },
     branches: [
       {
-        id: 'sniper', name: 'Scharfschuetze', color: '#F2C14E',
-        blurb: 'Weite Reichweite, harter Einzelschuss, durchschlaegt Panzerung.',
+        id: 'sniper', name: 'Scharfschütze', color: '#F2C14E',
+        blurb: 'Weite Reichweite, harter Einzelschuss, durchschlägt Panzerung.',
         levels: [
           { cost: 70, damage: 24, range: 275, cooldown: 0.8, pierce: 2 },
           { cost: 130, damage: 52, range: 340, cooldown: 0.75, pierce: 4 },
@@ -94,7 +94,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
       },
       {
         id: 'shard', name: 'Splitterfrost', color: '#9FD4FF',
-        blurb: 'Bremst weniger, schneidet dafuer. Ein Schadenspuls statt einer Fessel.',
+        blurb: 'Bremst weniger, schneidet dafür. Ein Schadenspuls statt einer Fessel.',
         levels: [
           { cost: 110, damage: 24, range: 162, cooldown: 0.7, slow: 0.26, slowTime: 1.3, pierce: 2 },
           { cost: 200, damage: 47, range: 182, cooldown: 0.62, slow: 0.32, slowTime: 1.5, pierce: 3 },
@@ -103,7 +103,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     ],
   },
   mortar: {
-    id: 'mortar', name: 'Moerser', role: 'Flaeche, nur Boden',
+    id: 'mortar', name: 'Mörser', role: 'Fläche, nur Boden',
     blurb: 'Langsam und teuer, trifft eine ganze Traube. Erreicht keine Flieger.',
     color: '#C3B39A', accent: '#F08A3C',
     attack: 'splash', hitsAir: false, projectileSpeed: 320,
@@ -119,7 +119,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
       },
       {
         id: 'breaker', name: 'Brecher', color: '#D6564A',
-        blurb: 'Enger Radius, gewaltige Wucht, durchschlaegt schwere Panzerung.',
+        blurb: 'Enger Radius, gewaltige Wucht, durchschlägt schwere Panzerung.',
         levels: [
           { cost: 160, damage: 95, range: 265, cooldown: 2.1, splash: 52, pierce: 4 },
           { cost: 280, damage: 200, range: 290, cooldown: 2.0, splash: 58, pierce: 8 },
@@ -129,22 +129,22 @@ export const TOWERS: Record<TowerId, TowerDef> = {
   },
   prism: {
     id: 'prism', name: 'Prisma', role: 'Kettenblitz',
-    blurb: 'Sofortstrahl, springt auf Nachbarn ueber.',
+    blurb: 'Sofortstrahl, springt auf Nachbarn über.',
     color: '#E4D3FF', accent: '#B07CFF',
     attack: 'chain', hitsAir: true, projectileSpeed: 0,
     base: { cost: 155, damage: 13, range: 185, cooldown: 0.95, chains: 2, falloff: 0.65 },
     branches: [
       {
         id: 'fork', name: 'Verzweigung', color: '#B07CFF',
-        blurb: 'Mehr Spruenge, kaum Abfall. Legt sich ueber eine ganze Kette.',
+        blurb: 'Mehr Sprünge, kaum Abfall. Legt sich über eine ganze Kette.',
         levels: [
           { cost: 165, damage: 19, range: 205, cooldown: 0.85, chains: 5, falloff: 0.85 },
           { cost: 285, damage: 29, range: 230, cooldown: 0.75, chains: 8, falloff: 0.92 },
         ],
       },
       {
-        id: 'lens', name: 'Buendelung', color: '#FF7ADF',
-        blurb: 'Ein Sprung weniger, dafuer ein Strahl, der wirklich wehtut.',
+        id: 'lens', name: 'Bündelung', color: '#FF7ADF',
+        blurb: 'Ein Sprung weniger, dafür ein Strahl, der wirklich wehtut.',
         levels: [
           { cost: 175, damage: 48, range: 215, cooldown: 0.9, chains: 1, falloff: 0.5 },
           { cost: 300, damage: 96, range: 240, cooldown: 0.85, chains: 1, falloff: 0.5, pierce: 3 },

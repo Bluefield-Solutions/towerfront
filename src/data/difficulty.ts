@@ -41,7 +41,7 @@ export const DIFFICULTIES: Record<DifficultyId, DifficultyDef> = {
   },
   erbarmungslos: {
     id: 'erbarmungslos', name: 'Erbarmungslos',
-    blurb: 'Weniger Kristall, weniger Gold, steile Kurve. Jede Stellung zaehlt.',
+    blurb: 'Weniger Kristall, weniger Gold, steile Kurve. Jede Stellung zählt.',
     startGold: 190, startLives: 14,
     hpEnd: 17, hpCurve: 2.7, densityRamp: 0.20,
     bountyMul: 1.0, bonusMul: 1.0,

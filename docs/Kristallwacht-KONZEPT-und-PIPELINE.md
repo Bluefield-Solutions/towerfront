@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v21 · 07.08.2026
+Stand: v22 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -305,6 +305,48 @@ jederzeit wiederherstellbar. Ein Fehlversuch kostet eine Minute, nicht einen
 Abend.
 
 ---
+
+### 3.22 Was ein Bildschirmfoto zeigte, das zehn Tore nicht sahen
+
+Ein Foto vom iPhone, und vier Dinge sprangen sofort ins Auge:
+
+**Die Bedienung lag auf dem Spielfeld.** Turmknöpfe, Wellenvorschau,
+Einführungsblase und Startknopf überdeckten das untere Drittel des Bretts. Ich
+hatte alles absolut positioniert und über das Feld gelegt.
+
+**Drei Ebenen überlappten sich gegenseitig.** Die Einführungsblase verdeckte die
+Wellenvorschau, die Wellenvorschau die Turmknöpfe.
+
+**„Moerser", „Flaeche", „Erste Fuehler".** Fehlende Umlaute in sichtbarem Text,
+weil die Inhaltsdateien in ASCII geschrieben sind und ich die Ersatzschreibung
+nie von den Kommentaren getrennt habe.
+
+**Man sah nicht, wo man bauen darf.** Die Bauplätze erschienen erst nach der
+Wahl einer Turmsorte. Vorher war das Brett eine leere Fläche.
+
+Behoben, und jeweils mit einer Prüfung abgesichert:
+
+- **Kopfzeile, Einführungsband und Bedienleiste sind jetzt echte Bänder.** Der
+  Renderer bekommt ihre Höhen und zeichnet das Feld *nur dazwischen*. Es kann
+  nichts mehr überlappen, weil sich nichts mehr überlagert. Die Wellenvorschau
+  ist in die Leiste gewandert, die Einführungsblase ist ein Band unter der
+  Kopfzeile geworden.
+- **Der Rauchtest prüft, dass das Feld die Bänder einhält.**
+- **Der Autarkie-Check sucht Ersatzschreibungen im ausgelieferten Text** —
+  `Moerser`, `Fuehler`, `zaehlt` und ein Dutzend weitere. Gegenprobe hat direkt
+  einen übersehenen Fall gefunden.
+- **Jeder Bauplatz liegt jetzt sichtbar als flache Steinplatte auf dem Feld.**
+  Leise genug, um nicht zu stören, deutlich genug, um die Frage zu beantworten.
+  Bei gewählter Turmsorte leuchten sie pulsierend auf.
+- Dazu: größerer Kristall auf einem gestuften Sockel, Randsteine entlang des
+  Weges, kräftigerer Saum.
+
+**Die Lehre ist dieselbe wie in v9, nur teurer.** Die Tore prüfen Verhalten,
+nicht Darstellung. Zehn grüne Tore und ein Spiel, dessen Bedienung auf dem
+Brett liegt. Ein Blick auf das Gerät ersetzt keine Prüfung — aber keine Prüfung
+ersetzt den Blick auf das Gerät. Und die neue Zeichenmessung zeigt: das
+Aufleuchten der Bauplätze kostet 815 Befehle je Bild, gemessen im eigentlichen
+Höchstfall — leeres Feld mit offener Auswahl, nicht volles Feld.
 
 ### 3.21 Eine Runde, die zurückgenommen wurde
 
@@ -786,7 +828,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v21
+## 5. Stand v22
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -846,6 +888,10 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v22 — Bedienung und Bild, nach einem Blick auf den echten
+Bildschirm.** Vier Fehler, die im Bild sofort zu sehen sind und die keine
+Prüfung gefunden hat — siehe Abschnitt 3.22.
 
 **Neu in v21 — nichts am Spiel. Eine zurückgenommene Runde und ein neues
 Messgerät.** Der geplante Blockturm und der heilende Gegner wurden gebaut,

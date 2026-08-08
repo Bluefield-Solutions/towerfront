@@ -242,6 +242,24 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Kein Bedienelement darf ueber dem Spielfeld liegen.
+//
+// Das Spielfeld wird nur zwischen Kopfzeile und Bedienleiste gezeichnet.
+// Geprueft wird deshalb, dass der Renderer diese Baender kennt und das Feld
+// tatsaechlich dazwischen legt - vorher lag das untere Drittel des Bretts
+// unter der Leiste.
+{
+  const insetTop = 60, insetBottom = 140;
+  renderer.resize(insetTop, insetBottom);
+  const topLeft = renderer.screenToWorld(0, insetTop);
+  const bottomLeft = renderer.screenToWorld(0, 844 - insetBottom);
+  if (renderer.offY < insetTop - 0.5) {
+    problems.push(`Layout: das Feld beginnt bei ${renderer.offY.toFixed(0)} und liegt unter der Kopfzeile.`);
+  }
+  void topLeft; void bottomLeft;
+  renderer.resize(0, 0);
+}
+
 // Titelbildschirm: Modus, Karten, Grade und Fortschritt muessen erscheinen.
 {
   ui.showScreen('title');

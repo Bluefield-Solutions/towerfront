@@ -78,14 +78,35 @@ export function bakeTerrain(
 
   // Pfad: warmer Knochenton in drei Lagen - dunkler Saum, Rand, ausgetretene
   // Mitte. Der Uebergang traegt den groessten Teil der Wirkung.
-  g.fillStyle = 'rgba(8,14,22,0.35)';
-  paintCells(g, pathSet, -3);
+  g.fillStyle = 'rgba(6,10,18,0.55)';
+  paintCells(g, pathSet, -5);
   g.fillStyle = pal.pathEdge;
   paintCells(g, pathSet, 2);
   g.fillStyle = pal.path;
   paintCells(g, pathSet, 11);
-  g.fillStyle = 'rgba(255,246,220,0.10)';
-  paintCells(g, pathSet, 22);
+  g.fillStyle = 'rgba(255,246,220,0.13)';
+  paintCells(g, pathSet, 24);
+  // Randsteine saeumen den Weg - erst dadurch wirkt er gebaut statt gemalt.
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      if (!pathSet.has(cellKey(x, y))) continue;
+      for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]] as const) {
+        if (pathSet.has(cellKey(x + dx, y + dy))) continue;
+        const cx = x * TILE + TILE / 2 + dx * (TILE / 2 - 4);
+        const cy = y * TILE + TILE / 2 + dy * (TILE / 2 - 4);
+        for (let k = -1; k <= 1; k++) {
+          const ox = dy !== 0 ? k * (TILE / 3) : 0;
+          const oy = dx !== 0 ? k * (TILE / 3) : 0;
+          g.fillStyle = 'rgba(0,0,0,0.3)';
+          g.beginPath(); g.ellipse(cx + ox, cy + oy + 2, 6, 4, 0, 0, Math.PI * 2); g.fill();
+          g.fillStyle = hexA(pal.pathEdge, 0.9);
+          g.beginPath(); g.ellipse(cx + ox, cy + oy, 6, 4, 0, 0, Math.PI * 2); g.fill();
+          g.fillStyle = 'rgba(255,255,255,0.14)';
+          g.beginPath(); g.ellipse(cx + ox, cy + oy - 1, 4, 2, 0, 0, Math.PI * 2); g.fill();
+        }
+      }
+    }
+  }
 
   // Trittspuren
   for (let i = 0; i < 420; i++) {
@@ -104,6 +125,31 @@ export function bakeTerrain(
         g.ellipse(x + Math.cos(a) * o, y + Math.sin(a) * o, 3.2, 2.1, a, 0, Math.PI * 2);
         g.fill();
       }
+    }
+  }
+
+  // Bauplaetze als sichtbare Sockel.
+  //
+  // Vorher war das Feld eine leere Flaeche und die Bauplaetze erschienen erst,
+  // wenn man eine Turmsorte gewaehlt hatte. Man sah dem Brett nicht an, wo
+  // etwas hingehoert - der haeufigste Vorwurf beim ersten Anspielen. Jetzt
+  // liegt auf jeder freien Zelle eine flache Steinplatte: leise genug, um
+  // nicht zu stoeren, deutlich genug, um die Frage zu beantworten.
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const k = cellKey(x, y);
+      if (pathSet.has(k) || blockedSet.has(k)) continue;
+      const cx = x * TILE + TILE / 2, cy = y * TILE + TILE / 2;
+      const r = TILE * 0.31;
+      g.fillStyle = 'rgba(0,0,0,0.22)';
+      g.beginPath(); g.ellipse(cx, cy + 3, r * 1.06, r * 0.62, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = hexA(pal.rockHi, 0.34);
+      g.beginPath(); g.ellipse(cx, cy, r, r * 0.58, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = hexA(pal.rock, 0.5);
+      g.beginPath(); g.ellipse(cx, cy + 1.5, r * 0.78, r * 0.44, 0, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = 'rgba(255,255,255,0.10)';
+      g.lineWidth = 1.5;
+      g.beginPath(); g.ellipse(cx, cy, r, r * 0.58, 0, Math.PI * 1.08, Math.PI * 1.92); g.stroke();
     }
   }
 

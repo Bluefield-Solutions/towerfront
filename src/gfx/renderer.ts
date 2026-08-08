@@ -36,7 +36,11 @@ export class Renderer {
     this.ctx = canvas.getContext('2d', { alpha: false })!;
   }
 
-  resize(): void {
+  /** `insetTop` und `insetBottom` sind die Baender, die Kopfzeile und
+   *  Bedienleiste belegen. Das Spielfeld wird nur in den Bereich dazwischen
+   *  gezeichnet - vorher lag die Bedienung ueber dem Brett, und das untere
+   *  Drittel des Feldes war schlicht verdeckt. */
+  resize(insetTop = 0, insetBottom = 0): void {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
     if (!w || !h) return;
@@ -44,9 +48,11 @@ export class Renderer {
     this.canvas.width = Math.round(w * dpr);
     this.canvas.height = Math.round(h * dpr);
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    this.scale = Math.min(w / WORLD_W, h / WORLD_H);
+
+    const freeH = Math.max(80, h - insetTop - insetBottom);
+    this.scale = Math.min(w / WORLD_W, freeH / WORLD_H);
     this.offX = (w - WORLD_W * this.scale) / 2;
-    this.offY = (h - WORLD_H * this.scale) / 2;
+    this.offY = insetTop + (freeH - WORLD_H * this.scale) / 2;
     this.sky = null;
   }
 
@@ -179,13 +185,17 @@ export class Renderer {
     const affordable = s.gold >= def.base.cost;
     ctx.save();
     ctx.lineWidth = 2;
-    ctx.fillStyle = affordable ? hexA(def.accent, 0.09) : hexA(C.danger, 0.07);
-    ctx.strokeStyle = affordable ? hexA(def.accent, 0.26) : hexA(C.danger, 0.22);
+    // Die Sockel sind ohnehin sichtbar - beim Bauen leuchten sie auf.
+    const beat = 0.5 + 0.5 * Math.sin(s.crystalPulse * 3);
+    ctx.fillStyle = affordable ? hexA(def.accent, 0.13 + beat * 0.06) : hexA(C.danger, 0.08);
+    ctx.strokeStyle = affordable ? hexA(def.accent, 0.45 + beat * 0.25) : hexA(C.danger, 0.28);
     for (let y = 0; y < ROWS; y++) {
       for (let x = 0; x < COLS; x++) {
         if (!s.canBuild(x, y)) continue;
-        ctx.fillRect(x * TILE + 6, y * TILE + 6, TILE - 12, TILE - 12);
-        ctx.strokeRect(x * TILE + 6, y * TILE + 6, TILE - 12, TILE - 12);
+        const cx = x * TILE + TILE / 2, cy = y * TILE + TILE / 2;
+        const r = TILE * 0.33;
+        ctx.beginPath(); ctx.ellipse(cx, cy, r, r * 0.6, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
       }
     }
     ctx.restore();
@@ -239,19 +249,26 @@ export class Renderer {
     ctx.save();
     ctx.translate(x, y);
     ctx.fillStyle = hexA(C.ink, 0.45);
-    ctx.beginPath(); ctx.ellipse(0, 30, 34, 12, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, 36, 44, 15, 0, 0, Math.PI * 2); ctx.fill();
+    // Ein gestufter Sockel gibt dem Kristall Stand und Groesse.
+    ctx.fillStyle = '#1D2436';
+    ctx.beginPath();
+    ctx.moveTo(-40, 36); ctx.lineTo(40, 36); ctx.lineTo(31, 20); ctx.lineTo(-31, 20);
+    ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#2A3348';
     ctx.beginPath();
-    ctx.moveTo(-30, 30); ctx.lineTo(30, 30); ctx.lineTo(22, 16); ctx.lineTo(-22, 16);
+    ctx.moveTo(-31, 20); ctx.lineTo(31, 20); ctx.lineTo(24, 8); ctx.lineTo(-24, 8);
     ctx.closePath(); ctx.fill();
+    ctx.fillStyle = hexA('#FFFFFF', 0.12);
+    ctx.fillRect(-31, 19, 62, 2);
 
     ctx.scale(pulse, pulse);
-    ctx.translate(0, -4);
-    const h = 42, w = 22;
+    ctx.translate(0, -14);
+    const h = 58, w = 30;
     ctx.beginPath();
-    ctx.moveTo(0, -h); ctx.lineTo(w, -6); ctx.lineTo(0, 22); ctx.lineTo(-w, -6);
+    ctx.moveTo(0, -h); ctx.lineTo(w, -10); ctx.lineTo(0, 30); ctx.lineTo(-w, -10);
     ctx.closePath();
-    const grad = ctx.createLinearGradient(-w, -h, w, 22);
+    const grad = ctx.createLinearGradient(-w, -h, w, 30);
     grad.addColorStop(0, '#EAFFFE');
     grad.addColorStop(0.45, C.crystal);
     grad.addColorStop(1, C.crystalDeep);
@@ -259,8 +276,10 @@ export class Renderer {
     ctx.strokeStyle = hexA('#EAFFFE', 0.8); ctx.lineWidth = 2; ctx.stroke();
     ctx.strokeStyle = hexA('#FFFFFF', 0.35); ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(0, -h); ctx.lineTo(0, 22);
-    ctx.moveTo(-w, -6); ctx.lineTo(w, -6);
+    ctx.moveTo(0, -h); ctx.lineTo(0, 30);
+    ctx.moveTo(-w, -10); ctx.lineTo(w, -10);
+    ctx.moveTo(0, -h); ctx.lineTo(-w * 0.55, 10);
+    ctx.moveTo(0, -h); ctx.lineTo(w * 0.55, 10);
     ctx.stroke();
 
     // Risse: der Spielstand ist ein Gegenstand in der Welt, keine Zahl.
@@ -270,7 +289,7 @@ export class Renderer {
       ctx.strokeStyle = hexA(C.ink, 0.65); ctx.lineWidth = 2;
       for (let i = 0; i < cracks; i++) {
         const sx = (rnd() - 0.5) * w * 1.4;
-        const sy = -h + rnd() * (h + 20);
+        const sy = -h + rnd() * (h + 28);
         ctx.beginPath();
         ctx.moveTo(sx, sy);
         ctx.lineTo(sx + (rnd() - 0.5) * 18, sy + 10 + rnd() * 14);

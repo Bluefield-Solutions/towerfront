@@ -131,6 +131,28 @@ counting = true;
 for (let f = 0; f < FRAMES; f++) { s.update(DT); keepAlive(); r.draw(s); }
 counting = false;
 
+// Zweiter Fall: leeres Feld mit gewaehlter Turmsorte. Dann sind alle Sockel
+// hervorgehoben - der Hoechstwert liegt hier, nicht beim vollen Feld, denn ein
+// belegter Bauplatz wird nicht mehr hervorgehoben. Beide Faelle messen.
+const buildCounts = new Map<string, number>();
+{
+  const empty = new GameState();
+  empty.reset(1, 'normal');
+  empty.buildChoice = 'arrow';
+  const r2 = new Renderer(canvas);
+  r2.resize(60, 120);
+  r2.draw(empty);
+  counts.clear();
+  counting = true;
+  for (let f = 0; f < 30; f++) { empty.update(DT); r2.draw(empty); }
+  counting = false;
+  for (const [k, v] of counts) buildCounts.set(k, v / 30);
+  counts.clear();
+  counting = true;
+  for (let f = 0; f < FRAMES; f++) { s.update(DT); keepAlive(); r.draw(s); }
+  counting = false;
+}
+
 let total = 0;
 for (const n of counts.values()) total += n;
 const perFrame = total / FRAMES;
@@ -144,7 +166,10 @@ console.log(
   `ZEICHENMESSUNG: ${s.towers.length} Tuerme, ${s.enemies.length} Gegner, ` +
   `${s.particles.length} Partikel, ${s.projectiles.length} Geschosse`,
 );
+let buildTotal = 0;
+for (const n of buildCounts.values()) buildTotal += n;
 console.log(`                ${perFrame.toFixed(0)} Befehle je Bild (Budget ${BUDGET})`);
+console.log(`                ${buildTotal.toFixed(0)} Befehle je Bild bei offener Bauauswahl`);
 console.log('                ' + top.map(([k, v]) => `${k} ${v.toFixed(0)}`).join('  ·  '));
 
 // Backbudget: gebackene Bilder sparen Zeichenbefehle, kosten aber Speicher.
@@ -153,6 +178,13 @@ const mb = spriteBytes() / (1024 * 1024);
 console.log(`                ${spriteCount()} gebackene Bilder, ${mb.toFixed(1)} MB (Budget ${SPRITE_BUDGET_MB} MB)`);
 if (mb > SPRITE_BUDGET_MB) {
   console.error(`ZEICHENMESSUNG: Backbudget ueberschritten - ${mb.toFixed(1)} MB statt hoechstens ${SPRITE_BUDGET_MB} MB.`);
+  process.exit(1);
+}
+
+if (buildTotal > BUDGET) {
+  console.error(
+    `ZEICHENMESSUNG: Bauauswahl ueber Budget - ${buildTotal.toFixed(0)} statt hoechstens ${BUDGET}.`,
+  );
   process.exit(1);
 }
 

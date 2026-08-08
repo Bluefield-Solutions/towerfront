@@ -110,7 +110,7 @@ function rect(x0: number, y0: number, x1: number, y1: number): Vec[] {
 export const MAP_ASCHESCHLUCHT: GameMap = {
   id: 'ascheschlucht',
   name: 'Ascheschlucht',
-  blurb: 'Zwei Zuwege, die sich frueh vereinen. Danach zaehlt jede Stellung doppelt.',
+  blurb: 'Zwei Zuwege, die sich früh vereinen. Danach zählt jede Stellung doppelt.',
   palette: ASCHE,
   lanes: [
     [
@@ -143,7 +143,7 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
 export const MAP_FROSTSPALTE: GameMap = {
   id: 'frostspalte',
   name: 'Frostspalte',
-  blurb: 'Spaete Vereinigung, wenig Platz. Jede Stellung muss sitzen.',
+  blurb: 'Späte Vereinigung, wenig Platz. Jede Stellung muss sitzen.',
   palette: FROST,
   lanes: [
     [

@@ -412,29 +412,20 @@ export class UI {
 
   /** Die Blase legt sich ueber das gemeinte Element: bei der Leiste unten
    *  darueber, sonst mittig unter die Kopfzeile. */
-  private placeCoach(target: string): void {
-    const el = target === 'world' ? null : document.getElementById(target);
-    const w = this.coach.offsetWidth || 280;
-    if (!el) {
-      this.coach.style.left = `${Math.max(12, (window.innerWidth - w) / 2)}px`;
-      this.coach.style.top = '64px';
-      this.coach.style.bottom = 'auto';
-      return;
-    }
-    const r = el.getBoundingClientRect();
-    const left = Math.min(
-      Math.max(12, r.left + r.width / 2 - w / 2),
-      Math.max(12, window.innerWidth - w - 12),
-    );
-    this.coach.style.left = `${left}px`;
-    if (r.top > window.innerHeight / 2) {
-      this.coach.style.bottom = `${window.innerHeight - r.top + 10}px`;
-      this.coach.style.top = 'auto';
-    } else {
-      this.coach.style.top = `${r.bottom + 10}px`;
-      this.coach.style.bottom = 'auto';
-    }
+  private lastBands = '';
+  /** Meldet, ob sich die Hoehe der Baender geaendert hat - dann muss das
+   *  Spielfeld neu eingepasst werden. */
+  bandsChanged(): boolean {
+    const sig = `${this.coach.hidden ? 0 : 1}|${this.coachText.dataset.step ?? ''}`;
+    if (sig === this.lastBands) return false;
+    this.lastBands = sig;
+    return true;
   }
+
+  /** Die Blase ist ein eigenes Band unter der Kopfzeile. Positioniert wird
+   *  sie nicht mehr - nur das gemeinte Bedienelement pulsiert. Frueher
+   *  schwebte sie frei und verdeckte je nach Schritt die Wellenvorschau. */
+  private placeCoach(_target: string): void { /* nichts zu tun */ }
 
   private hideCoach(): void {
     if (!this.coach.hidden) this.coach.hidden = true;
@@ -475,9 +466,9 @@ export class UI {
     const warn = fps < 50 ? ' warn' : '';
     this.perfBox.innerHTML =
       `<b class="${warn.trim()}">${fps.toFixed(0)} fps</b>   Qualitaet ${s.quality}\n` +
-      `Gegner ${s.enemies.length}   Tuerme ${s.towers.length}\n` +
+      `Gegner ${s.enemies.length}   Türme ${s.towers.length}\n` +
       `Geschosse ${s.projectiles.length}   Partikel ${s.particles.length}\n` +
-      `Gebackene Bilder ${spriteCount()}   Aussaat ${s.seed.toString(16)}`;
+      `Bilder ${spriteCount()}   Aussaat ${s.seed.toString(16)}`;
   }
 
   /** Jeden Frame gerufen, schreibt aber nur bei echten Aenderungen ins DOM. */

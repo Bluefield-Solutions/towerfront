@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v21 · 07.08.2026
+Stand: nach v22 · 07.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Kristallwacht-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
@@ -54,6 +54,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | # | Punkt | Nutzen | Aufw. |
 |---|---|---|---|
 | D2 | Wetter je Karte als eigene Stimmungsschicht (Regen, Schneetreiben, Asche) | ●● | M |
+| D19 | Grafik weiter: Türme höher und plastischer, Gegner größer, Kartenrand als gestaltete Kante statt harter Abbruch | ●●● | M |
+| D20 | Wellenvorschau als Reihe kleiner Gegnersymbole statt Text — auf dem Handy ist die Zeile zu lang | ●● | S |
 | D14 | **P8** Antippbare Kleinigkeiten in der Karte — Vögel, Fackeln, Steine, die reagieren | ● | S |
 | D17 | Geschosse je Zweig unterscheiden (Pfeil, Salvenbolzen, Granate, Strahl) | ●● | S |
 | D18 | Turm-Leerlaufbewegung: leichtes Atmen, damit auch ein ruhendes Feld lebt | ● | S |
@@ -77,6 +79,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S43 | Ein Bildschirmfoto zeigte vier Fehler, die zehn grüne Tore nicht gesehen haben: Bedienung über dem Spielfeld, drei überlappende Ebenen, fehlende Umlaute, unsichtbare Bauplätze | Alle behoben und je mit einer Prüfung abgesichert (Bänder im Rauchtest, Ersatzschreibung im Autarkie-Check). Dieselbe Lehre wie S19, nur teurer. |
+| S44 | Die Zeichenmessung maß den falschen Höchstfall: bei vollem Feld gibt es keine freien Bauplätze mehr, also auch keine Hervorhebung | Zweiter Messpunkt ergänzt — leeres Feld mit offener Bauauswahl, 815 Befehle je Bild. |
 | S41 | Ankerturm und Weber wurden gebaut, gemessen und **zurückgenommen**. Der Ankerturm sprang bei 10 % Änderung der Abklingzeit von 5/20 auf 20/20; der Weber war entweder wirkungslos oder brach die Balance | Ursache ist nicht die Auslegung der beiden, sondern die Kante bei Welle 15. Erst T15, dann erneut versuchen. |
 | S42 | Erste Diagnose war Messrauschen — Mittelung über drei Aussaaten eingebaut, alle drei Läufe **identisch bis aufs Goldstück** | Der Spielverlauf enthält keinen ergebniswirksamen Zufall; die Aussaat steuert nur Partikel. Das Werkzeug wurde durch die Robustheitsprobe ersetzt, die die echte Ursache misst. |
 | S40 | Mit allen Verbesserungen gewinnt der Meister auf Normal verlustfrei (22/22) | Bewusst so: der Fortschritt soll frühere Inhalte erleichtern, das ist sein Zweck. Die Grenze liegt beim härtesten Grad — dort bleiben 11 von 16, und genau das prüft das Tor. |

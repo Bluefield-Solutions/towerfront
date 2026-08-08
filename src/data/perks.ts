@@ -20,7 +20,7 @@ export interface PerkDef {
 export const PERKS: Record<PerkId, PerkDef> = {
   gold: {
     id: 'gold', name: 'Volle Truhe', cost: 2,
-    blurb: '+35 Startgold. Ein halber Turm mehr in der Eroeffnung.',
+    blurb: '+35 Startgold. Ein halber Turm mehr in der Eröffnung.',
   },
   crystal: {
     id: 'crystal', name: 'Harter Kern', cost: 3,
@@ -28,15 +28,15 @@ export const PERKS: Record<PerkId, PerkDef> = {
   },
   damage: {
     id: 'damage', name: 'Geschliffen', cost: 4,
-    blurb: '+4 % Schaden auf alle Tuerme.',
+    blurb: '+4 % Schaden auf alle Türme.',
   },
   cooldown: {
     id: 'cooldown', name: 'Kurzer Atem', cost: 3,
-    blurb: 'Faehigkeiten sind 10 % frueher wieder bereit.',
+    blurb: 'Fähigkeiten sind 10 % früher wieder bereit.',
   },
   refund: {
     id: 'refund', name: 'Sauberer Abbau', cost: 2,
-    blurb: 'Verkauf bringt 80 % statt 70 % zurueck.',
+    blurb: 'Verkauf bringt 80 % statt 70 % zurück.',
   },
 };
 

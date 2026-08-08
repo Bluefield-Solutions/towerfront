@@ -39,7 +39,7 @@ html, body {
 /* ------------------------------------------------------------------ HUD */
 
 .hud {
-  position: absolute; top: 0; left: 0; right: 0;
+  position: absolute; top: 0; left: 0; right: 0; z-index: 3;
   display: flex; align-items: center; gap: 14px;
   padding: calc(8px + var(--sat)) calc(12px + var(--sar)) 8px calc(12px + var(--sal));
   background: linear-gradient(180deg, rgba(8, 11, 24, 0.9), rgba(8, 11, 24, 0));
@@ -72,12 +72,16 @@ html, body {
 /* ----------------------------------------------------------------- Dock */
 
 .dock {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  display: flex; align-items: flex-end; gap: 10px;
-  padding: 10px calc(12px + var(--sar)) calc(10px + var(--sab)) calc(12px + var(--sal));
-  background: linear-gradient(0deg, rgba(8, 11, 24, 0.92), rgba(8, 11, 24, 0));
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+  display: flex; flex-direction: column; gap: 7px;
+  padding: 8px calc(12px + var(--sar)) calc(8px + var(--sab)) calc(12px + var(--sal));
+  /* Deckend, nicht durchscheinend: die Leiste ist ein eigener Bereich,
+     kein Schleier ueber dem Spielfeld. */
+  background: rgba(7, 10, 22, 0.96);
+  border-top: 1px solid rgba(127, 231, 224, 0.14);
   pointer-events: none;
 }
+.dock-row { display: flex; align-items: stretch; gap: 8px; }
 .build { display: flex; gap: 8px; pointer-events: auto; }
 
 .tower-btn {
@@ -110,7 +114,7 @@ html, body {
 /* ------------------------------------------------------------ Inspector */
 
 .inspector {
-  position: absolute; top: calc(52px + var(--sat)); right: calc(12px + var(--sar));
+  position: absolute; z-index: 3; top: calc(56px + var(--sat)); right: calc(12px + var(--sar));
   width: 208px; padding: 12px;
   background: var(--panel); border: 1px solid var(--edge);
   border-radius: 14px; backdrop-filter: blur(10px);
@@ -182,21 +186,17 @@ html, body {
 /* ------------------------------------------------------- Wellenvorschau */
 
 .next {
-  position: absolute; left: calc(12px + var(--sal)); bottom: calc(72px + var(--sab));
   display: flex; align-items: center; gap: 10px;
-  max-width: min(66%, 560px);
-  padding: 7px 12px; border-radius: 11px;
-  background: var(--panel); border: 1px solid var(--edge);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  padding: 4px 2px;
   pointer-events: none;
+  min-height: 18px;
 }
 .next-lab {
   flex: none; font-size: 9px; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--muted);
 }
 .next-list {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; overflow: hidden;
   font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums;
 }
 .next-list i { font-style: normal; display: inline-flex; align-items: center; gap: 5px; }
@@ -219,7 +219,7 @@ html, body {
 @media (max-width: 780px) {
   .tower-btn { min-width: 78px; padding: 6px 8px; }
   .tower-btn .n { font-size: 11.5px; }
-  .next { max-width: 58%; bottom: calc(66px + var(--sab)); }
+
 }
 
 /* ------------------------------------------------------- Technikanzeige */
@@ -295,11 +295,11 @@ html, body {
 /* ------------------------------------------------------------- Einfuehrung */
 
 .coach {
-  position: absolute; z-index: 12; max-width: 300px;
-  padding: 11px 13px 9px; border-radius: 12px;
-  background: rgba(10, 15, 32, 0.94);
-  border: 1px solid var(--crystal);
-  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.5);
+  position: absolute; z-index: 4; left: 0; right: 0;
+  display: flex; align-items: center; gap: 12px;
+  padding: 7px calc(14px + var(--sar)) 7px calc(14px + var(--sal));
+  background: rgba(10, 18, 38, 0.96);
+  border-bottom: 1px solid var(--crystal);
   pointer-events: none;
   animation: coach-in 0.24s ease-out;
 }
@@ -308,10 +308,10 @@ html, body {
   to { opacity: 1; transform: none; }
 }
 .coach-text {
-  margin: 0 0 7px; font-size: 12.5px; line-height: 1.45; color: var(--text);
+  flex: 1; margin: 0; font-size: 12.5px; line-height: 1.35; color: var(--text);
 }
 .coach-skip {
-  pointer-events: auto; cursor: pointer;
+  flex: none; pointer-events: auto; cursor: pointer;
   background: none; border: none; padding: 2px 0;
   font-family: var(--ui); font-size: 10px; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--muted);

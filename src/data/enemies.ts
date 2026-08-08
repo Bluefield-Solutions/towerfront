@@ -45,7 +45,7 @@ export const ENEMIES: Record<EnemyId, EnemyDef> = {
     body: '#3F5A8A', trim: '#9FC0E8',
   },
   flyer: {
-    id: 'flyer', name: 'Schwaermer',
+    id: 'flyer', name: 'Schwärmer',
     hp: 62, speed: 118, bounty: 4, leak: 2, radius: 16, armor: 0, slowResist: 0.2,
     flying: true,
     body: '#3ED9A4', trim: '#C7FFE9',

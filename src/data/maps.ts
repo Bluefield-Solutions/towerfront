@@ -47,6 +47,18 @@ export interface GameMap {
   lanes: Vec[][];
   /** Zellen, auf denen nicht gebaut werden darf (Deko/Felsen). */
   blocked: Vec[];
+  /** Die Bauplaetze der Karte.
+   *
+   *  Bis v33 durfte man auf jeder freien Zelle bauen - 155 bis 171 Stellen je
+   *  Karte. Das hatte drei Folgen, die sich nicht einzeln loesen liessen:
+   *  Man sah dem Brett nicht an, wo etwas hingehoert. "Viele Tuerme" war kein
+   *  Spielstil, sondern nur Ueberdeckung. Und die Kurve liess sich nicht gegen
+   *  eine bekannte Obergrenze stellen, weil es keine gab.
+   *
+   *  Zwoelf gestaltete Stellungen je Karte statt einer Sockelwiese. Die Frage
+   *  lautet damit nicht mehr "wie viele", sondern "welcher Turm hierhin und
+   *  welcher Ausbau" - so wie im Genre-Vorbild. */
+  spots: Vec[];
   /** Empfohlener erster Bauplatz - die Einfuehrung zeigt darauf. */
   hint: Vec;
   /** Der Wellenplan dieser Karte. */
@@ -97,7 +109,12 @@ export const MAP_SPIRALHAIN: GameMap = {
     { x: 3, y: 4 },
     { x: 11, y: 4 },
   ]],
-  hint: { x: 12, y: 2 },
+  spots: [
+    { x: 5, y: 5 }, { x: 9, y: 2 }, { x: 13, y: 3 }, { x: 12, y: 6 },
+    { x: 4, y: 2 }, { x: 8, y: 5 }, { x: 2, y: 2 }, { x: 2, y: 5 },
+    { x: 6, y: 2 }, { x: 10, y: 6 }, { x: 11, y: 2 }, { x: 2, y: 0 },
+  ],
+  hint: { x: 9, y: 2 },
   waves: PLAN_SPIRALHAIN,
   balance: { hpMul: 1, goldMul: 1 },
   blocked: [
@@ -135,7 +152,12 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
       { x: 11, y: 2 }, { x: 11, y: 6 }, { x: 14, y: 6 },
     ],
   ],
-  hint: { x: 7, y: 4 },
+  spots: [
+    { x: 12, y: 7 }, { x: 4, y: 3 }, { x: 16, y: 6 }, { x: 13, y: 3 },
+    { x: 1, y: 7 }, { x: 7, y: 7 }, { x: 15, y: 3 }, { x: 2, y: 0 },
+    { x: 4, y: 0 }, { x: 4, y: 6 }, { x: 10, y: 7 }, { x: 14, y: 7 },
+  ],
+  hint: { x: 4, y: 3 },
   waves: PLAN_ASCHESCHLUCHT,
   balance: { hpMul: 1, goldMul: 1 },
   blocked: [
@@ -168,7 +190,12 @@ export const MAP_FROSTSPALTE: GameMap = {
       { x: 17, y: 5 }, { x: 17, y: 9 }, { x: 11, y: 9 }, { x: 11, y: 6 },
     ],
   ],
-  hint: { x: 9, y: 4 },
+  spots: [
+    { x: 12, y: 4 }, { x: 16, y: 7 }, { x: 9, y: 7 }, { x: 12, y: 1 },
+    { x: 2, y: 3 }, { x: 4, y: 7 }, { x: 12, y: 8 }, { x: 8, y: 1 },
+    { x: 14, y: 4 }, { x: 9, y: 4 }, { x: 12, y: 6 }, { x: 10, y: 1 },
+  ],
+  hint: { x: 12, y: 4 },
   waves: PLAN_FROSTSPALTE,
   balance: { hpMul: 1, goldMul: 1 },
   blocked: [

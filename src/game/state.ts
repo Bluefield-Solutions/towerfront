@@ -47,6 +47,8 @@ export class GameState {
   lanes: Vec[][] = [];
   readonly pathSet = new Set<number>();
   readonly blockedSet = new Set<number>();
+  /** Die gestalteten Bauplaetze der Karte. */
+  readonly spotSet = new Set<number>();
   goal: Vec = { x: 0, y: 0 };
   /** Gesamtlaenge der laengsten Bahn. Dient als gemeinsamer Massstab, damit
    *  fliegende und laufende Gegner beim Zielen vergleichbar sind. */
@@ -168,6 +170,8 @@ export class GameState {
     this.blockedSet.clear();
     for (const c of pathCells(this.map)) this.pathSet.add(cellKey(c.x, c.y));
     for (const b of this.map.blocked) this.blockedSet.add(cellKey(b.x, b.y));
+    this.spotSet.clear();
+    for (const sp of this.map.spots) this.spotSet.add(cellKey(sp.x, sp.y));
     this.goal = goalOf(this.map);
     this.pathTotal = Math.max(...this.lanes.map(pathLength));
     this.airTotal = Math.max(...this.lanes.map(
@@ -181,7 +185,13 @@ export class GameState {
   canBuild(cx: number, cy: number): boolean {
     if (cx < 0 || cy < 0 || cx >= COLS || cy >= ROWS) return false;
     const k = cellKey(cx, cy);
-    return !this.pathSet.has(k) && !this.blockedSet.has(k) && !this.towerAt.has(k);
+    // Nur auf den gestalteten Bauplaetzen der Karte, und nur wenn frei.
+    return this.spotSet.has(k) && !this.towerAt.has(k);
+  }
+
+  /** Ist diese Zelle ueberhaupt ein Bauplatz - besetzt oder nicht? */
+  isSpot(cx: number, cy: number): boolean {
+    return this.spotSet.has(cellKey(cx, cy));
   }
 
   towerOn(cx: number, cy: number): Tower | undefined {

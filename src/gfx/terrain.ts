@@ -8,7 +8,7 @@ import { hexA } from './glow';
  *  als Bild gezeichnet. Spart auf dem Handy den Grossteil der Zeichenlast. */
 export function bakeTerrain(
   pathSet: Set<number>, blockedSet: Set<number>, pal: MapPalette,
-  photo: HTMLImageElement | null = null,
+  photo: HTMLImageElement | null = null, spotSet: Set<number> = new Set(),
 ): HTMLCanvasElement {
   const cv = document.createElement('canvas');
   cv.width = WORLD_W; cv.height = WORLD_H;
@@ -139,19 +139,18 @@ export function bakeTerrain(
     }
   }
 
-  // Bauplaetze als sichtbare Sockel.
+  // Bauplaetze als gestaltete Sockel.
   //
-  // Vorher war das Feld eine leere Flaeche und die Bauplaetze erschienen erst,
-  // wenn man eine Turmsorte gewaehlt hatte. Man sah dem Brett nicht an, wo
-  // etwas hingehoert - der haeufigste Vorwurf beim ersten Anspielen. Jetzt
-  // liegt auf jeder freien Zelle eine flache Steinplatte: leise genug, um
-  // nicht zu stoeren, deutlich genug, um die Frage zu beantworten.
+  // Seit v34 gibt es je Karte zwoelf davon statt einer Sockelwiese aus 170
+  // Zellen. Damit duerfen sie auch deutlich sein: eine gemauerte Plattform mit
+  // Lichtkante, die man auf einen Blick findet. Vorher musste die Darstellung
+  // leise bleiben, weil sie sonst das halbe Brett zugedeckt haette.
   for (let y = 0; y < ROWS; y++) {
     for (let x = 0; x < COLS; x++) {
       const k = cellKey(x, y);
-      if (pathSet.has(k) || blockedSet.has(k)) continue;
+      if (!spotSet.has(k)) continue;
       const cx = x * TILE + TILE / 2, cy = y * TILE + TILE / 2;
-      const r = TILE * 0.31;
+      const r = TILE * 0.38;
       g.fillStyle = 'rgba(0,0,0,0.22)';
       g.beginPath(); g.ellipse(cx, cy + 3, r * 1.06, r * 0.62, 0, 0, Math.PI * 2); g.fill();
       // Auf dem Bild braucht die Platte mehr Deckkraft und eine hellere

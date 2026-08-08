@@ -108,8 +108,8 @@ for (const map of MAPS) {
   }
 
   const hk = cellKey(map.hint.x, map.hint.y);
-  if (pathKeys.has(hk) || blockKeys.has(hk)) {
-    fail(`${map.id}: der empfohlene Bauplatz ${map.hint.x}/${map.hint.y} ist nicht bebaubar.`);
+  if (!map.spots.some((sp) => cellKey(sp.x, sp.y) === hk)) {
+    fail(`${map.id}: der empfohlene Bauplatz ${map.hint.x}/${map.hint.y} ist kein Bauplatz.`);
   }
   let touches = false;
   for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
@@ -117,14 +117,59 @@ for (const map of MAPS) {
   }
   if (!touches) warn(`${map.id}: der empfohlene Bauplatz liegt nicht am Pfad.`);
 
-  let build = 0;
-  for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      const k = cellKey(x, y);
-      if (!pathKeys.has(k) && !blockKeys.has(k)) build++;
+  // Bauplaetze: gestaltete Stellungen, keine Sockelwiese.
+  const build = map.spots.length;
+  if (build < 10 || build > 16) {
+    fail(`${map.id}: ${build} Bauplaetze - zwischen 10 und 16 sind vorgesehen.`);
+  }
+  const spotKeys = new Set(map.spots.map((sp) => cellKey(sp.x, sp.y)));
+  if (spotKeys.size !== map.spots.length) fail(`${map.id}: ein Bauplatz kommt doppelt vor.`);
+  for (const sp of map.spots) {
+    if (sp.x < 0 || sp.y < 0 || sp.x >= COLS || sp.y >= ROWS) {
+      fail(`${map.id}: Bauplatz ${sp.x}/${sp.y} liegt ausserhalb des Feldes.`);
+      continue;
+    }
+    const k = cellKey(sp.x, sp.y);
+    if (pathKeys.has(k)) fail(`${map.id}: Bauplatz ${sp.x}/${sp.y} liegt auf dem Pfad.`);
+    if (blockKeys.has(k)) fail(`${map.id}: Bauplatz ${sp.x}/${sp.y} liegt auf einem Felsen.`);
+    // Ein Bauplatz, der den Pfad nicht erreicht, ist eine Falle: er kostet
+    // Gold und tut nichts.
+    let nearest = 1e9;
+    for (const c of cells) {
+      const d = (c.x - sp.x) ** 2 + (c.y - sp.y) ** 2;
+      if (d < nearest) nearest = d;
+    }
+    if (nearest > 9) {
+      fail(`${map.id}: Bauplatz ${sp.x}/${sp.y} ist zu weit vom Pfad entfernt.`);
+    }
+    // Zwei Plattformen direkt nebeneinander sehen nach Versehen aus.
+    for (const other of map.spots) {
+      if (other === sp) continue;
+      const cheb = Math.max(Math.abs(other.x - sp.x), Math.abs(other.y - sp.y));
+      if (cheb < 2) {
+        warn(`${map.id}: Bauplaetze ${sp.x}/${sp.y} und ${other.x}/${other.y} liegen direkt aneinander.`);
+      }
     }
   }
-  if (build < 40) fail(`${map.id}: nur ${build} Bauplaetze - zu wenig Spielraum.`);
+  // Zusammen muessen die Plattformen den ganzen Weg erreichen - sonst gibt es
+  // eine Strecke, auf der man nichts tun kann.
+  {
+    const reachAll = Math.max(...TOWER_ORDER.map((t) => TOWERS[t].base.range)) / TILE;
+    const covered = new Set<number>();
+    for (const sp of map.spots) {
+      for (const c of cells) {
+        if ((c.x - sp.x) ** 2 + (c.y - sp.y) ** 2 <= reachAll * reachAll) {
+          covered.add(cellKey(c.x, c.y));
+        }
+      }
+    }
+    if (covered.size < cells.length) {
+      fail(
+        `${map.id}: die Bauplaetze erreichen nur ${covered.size} von ${cells.length} ` +
+        'Pfadzellen - dort kaeme jeder Gegner unbehelligt durch.',
+      );
+    }
+  }
 
   const bal = map.balance;
   // Eng gefasst: seit jede Karte einen eigenen Wellenplan hat, ist ein
@@ -169,23 +214,14 @@ for (const map of MAPS) {
     // beieinander und decken dieselben Zellen. Gewaehlt wird gierig - immer
     // der Platz, der die meisten *noch nicht* gedeckten Pfadzellen bringt.
     // Genau das tut ein Spieler auch, und nur so misst die Zahl, was sie soll.
-    const spotsList: { x: number; y: number }[] = [];
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = 0; x < COLS; x++) {
-        const k = cellKey(x, y);
-        if (pathKeys.has(k) || blockKeys.has(k)) continue;
-        let nearest = 1e9;
-        for (const c of cells) {
-          const d = (c.x - x) ** 2 + (c.y - y) ** 2;
-          if (d < nearest) nearest = d;
-        }
-        if (nearest <= 4) spotsList.push({ x, y });
-      }
-    }
+    // Gerechnet wird ueber die tatsaechlichen Bauplaetze - alle davon, denn
+    // mehr gibt es nicht.
+    const spotsList = map.spots.map((sp) => ({ ...sp }));
     const seenCells = new Set<number>();
     let totalCovered = 0;
     const chosen: { x: number; y: number }[] = [];
-    for (let n = 0; n < 16 && spotsList.length; n++) {
+    const nSpots = spotsList.length;
+    for (let n = 0; n < nSpots && spotsList.length; n++) {
       let bestSpot = -1, bestGain = -1, bestAll = 0;
       for (let i = 0; i < spotsList.length; i++) {
         const sp = spotsList[i];
@@ -212,14 +248,14 @@ for (const map of MAPS) {
     void scores; void chosen;
     console.log(
       `  Karte ${map.name}: ${map.lanes.length} Bahn(en), ${cells.length} Pfadzellen, ` +
-      `${build} Bauplaetze, Deckung je Pfadzelle bei 16 Tuermen ${density.toFixed(1)} ` +
+      `${build} Bauplaetze, Deckung je Pfadzelle ${density.toFixed(1)} ` +
       `(erreicht ${Math.round(reachedShare * 100)} % des Weges)`,
     );
     if (density > 3) {
-      warn(
-        `${map.id}: schon 16 Tuerme decken jede Pfadzelle ${density.toFixed(1)}-fach ab - ` +
-        'weitere Tuerme bringen keine neue Strecke (T16).',
-      );
+      warn(`${map.id}: die Bauplaetze decken jede Pfadzelle ${density.toFixed(1)}-fach ab - sehr viel Ueberlappung.`);
+    }
+    if (density < 1.2) {
+      warn(`${map.id}: nur ${density.toFixed(1)}-fache Deckung - kaum Ueberlappung, jede Stellung muss allein tragen.`);
     }
   }
 }

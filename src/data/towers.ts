@@ -71,8 +71,8 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         id: 'volley', name: 'Salve', color: '#FF9B54',
         blurb: 'Halbe Wucht, doppelte Schlagzahl. Gegen Masse, nicht gegen Panzer.',
         levels: [
-          { cost: 70, damage: 13, range: 205, cooldown: 0.28, pierce: 1 },
-          { cost: 145, damage: 20, range: 215, cooldown: 0.21, pierce: 2 },
+          { cost: 70, damage: 15, range: 210, cooldown: 0.27, pierce: 1 },
+          { cost: 145, damage: 24, range: 225, cooldown: 0.20, pierce: 2 },
         ],
       },
     ],

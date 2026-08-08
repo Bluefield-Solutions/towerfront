@@ -176,7 +176,7 @@ export class Renderer {
     const bgV = backgroundVersion();
     if (!this.terrain || this.terrainFor !== s.map.id || this.terrainBgVersion !== bgV) {
       this.terrain = bakeTerrain(
-        s.pathSet, s.blockedSet, s.map.palette, getBackground(s.map.id),
+        s.pathSet, s.blockedSet, s.map.palette, getBackground(s.map.id), s.spotSet,
       );
       this.terrainFor = s.map.id;
       this.terrainBgVersion = bgV;

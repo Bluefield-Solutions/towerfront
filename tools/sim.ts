@@ -62,22 +62,34 @@ interface Bot {
 /** Die Stile bilden unterschiedliche *Entscheidungen* ab, keine Fehler.
  *  "Nie ueber Stufe 2 ausbauen" waere kein Stil, sondern schlechtes Spiel -
  *  dass ein schlecht gespieltes Feld verliert, ist gewollt. */
+/** Die drei Spielstile.
+ *
+ *  Bis v33 unterschieden sie sich in der *Anzahl* der Tuerme - und genau das
+ *  war das Problem hinter T16 und T17: "viele Tuerme" war kein Stil, sondern
+ *  Ueberdeckung. Seit es je Karte zwoelf feste Bauplaetze gibt, ist die Anzahl
+ *  keine Entscheidung mehr. Die Stile unterscheiden sich jetzt darin, *wann*
+ *  sie ausbauen und wieviel sie in der Hand behalten:
+ *
+ *  - Stellungen zuerst, Ausbau spaeter (Breite)
+ *  - Wechselnd, immer der staerkste Turm zuerst (Meister)
+ *  - Wenige Stellungen, frueh tief, grosse Ruecklage (Sparsam)
+ *
+ *  Alle drei koennen alle zwoelf Plaetze belegen - keiner ist durch die
+ *  Obergrenze benachteiligt. */
 const BOTS: Bot[] = [
   {
-    name: 'Meister', maxTowers: 16, maxLevel: 3, reserve: 40, decideEvery: 30, deepenAt: 1,
+    name: 'Meister', maxTowers: 12, maxLevel: 3, reserve: 40, decideEvery: 30, deepenAt: 0.65,
   },
   {
-    // Erst in die Breite, dann in die Tiefe: viele Stellungen, spaeter ausgebaut.
-    name: 'Breite', maxTowers: 26, maxLevel: 3, reserve: 15, decideEvery: 20, deepenAt: 0.85,
+    // Erst alle Stellungen besetzen, dann ausbauen.
+    name: 'Breite', maxTowers: 12, maxLevel: 3, reserve: 15, decideEvery: 20, deepenAt: 1,
   },
   {
-    // Wenige Stellungen, frueh tief ausgebaut, grosse Ruecklage. Die Obergrenze
-    // liegt hoeher als die 11 aus v14: mit 11 blieb am Ende ein Viertel des
-    // Einkommens ungenutzt liegen, und das ist kein Spielstil, sondern ein
-    // Fehler im Bot.
-    name: 'Sparsam', maxTowers: 15, maxLevel: 3, reserve: 140, decideEvery: 30, deepenAt: 0.55,
+    // Nur die Haelfte der Plaetze, dafuer frueh tief und mit Ruecklage.
+    name: 'Sparsam', maxTowers: 12, maxLevel: 3, reserve: 140, decideEvery: 30, deepenAt: 0.5,
   },
 ];
+
 
 const MEISTER = BOTS[0];
 

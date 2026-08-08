@@ -8,7 +8,7 @@
  *
  *  Aufruf: npx tsx tools/bench.ts */
 import { GameState } from '../src/game/state';
-import { COLS, ROWS } from '../src/data/config';
+import { } from '../src/data/config';
 import { MAX_LEVEL, TOWER_ORDER } from '../src/data/towers';
 
 
@@ -21,12 +21,12 @@ s.gold = 1_000_000;
 
 // Jeden Bauplatz belegen und voll ausbauen.
 let i = 0;
-for (let y = 0; y < ROWS; y++) {
-  for (let x = 0; x < COLS; x++) {
-    if (!s.canBuild(x, y)) continue;
+for (let spot = 0; spot < s.map.spots.length; spot++) {
+    {
+      if (!s.canBuild(spot)) continue;
     const id = TOWER_ORDER[i++ % TOWER_ORDER.length];
-    if (s.build(x, y, id)) {
-      const t = s.towerOn(x, y)!;
+    if (s.build(spot, id)) {
+      const t = s.towerOnSpotIndex(spot)!;
       while (t.level < MAX_LEVEL) s.upgrade(t, (i % 2) as 0 | 1);
     }
   }

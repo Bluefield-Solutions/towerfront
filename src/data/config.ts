@@ -5,11 +5,14 @@
  *  welcher Stand gerade im Browser liegt. */
 export const VERSION = 'v32';
 
-export const TILE = 80;
-export const COLS = 20;
-export const ROWS = 11;
-export const WORLD_W = COLS * TILE; // 1600
-export const WORLD_H = ROWS * TILE; // 880
+/** Das Spielfeld ist ab v36 ein Bild im Verhaeltnis 16:9, kein Kachelraster.
+ *  1920 x 1080 ist die Bezugsgroesse aller Weltkoordinaten - Bilder duerfen
+ *  groesser sein, sie werden darauf gezeichnet. */
+export const WORLD_W = 1920;
+export const WORLD_H = 1080;
+
+/** Nur noch fuer die Hintergrundstruktur, nicht fuer das Spiel. */
+export const TILE = 96;
 
 /** Farbwelt "Kristallwacht": kaltes Mondmoos gegen warmen Knochenpfad.
  *  Hoher Kontrast, damit der Pfad auf dem Handy sofort lesbar ist. */

@@ -79,8 +79,9 @@ const { Renderer } = await import('../src/gfx/renderer');
 const { UI } = await import('../src/ui/ui');
 const { bindInput } = await import('../src/core/input');
 const { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor } = await import('../src/data/towers');
-const { COLS, ROWS } = await import('../src/data/config');
+
 const { TUTORIAL } = await import('../src/game/tutorial');
+const { WORLD_W, WORLD_H } = await import('../src/data/config');
 
 // ---------------------------------------------------------------- Ablauf
 
@@ -131,7 +132,7 @@ for (const step of TUTORIAL) {
   probe.reset();
   const doStep: Record<string, () => void> = {
     pick: () => { probe.buildChoice = 'arrow'; },
-    place: () => { probe.build(probe.map.hint.x, probe.map.hint.y, 'arrow'); },
+    place: () => { probe.build(probe.map.hint, 'arrow'); },
     start: () => probe.startWave(),
     upgrade: () => { probe.gold += 2000; probe.upgrade(probe.towers[0], 0); },
     early: () => { probe.waveIndex = 1; probe.waveActive = false; probe.startWave(); },
@@ -152,10 +153,7 @@ for (const step of TUTORIAL) {
 // Ueber den Knopf starten statt direkt zuruecksetzen - so laeuft auch die
 // Einfuehrung mit und ihre Positionsrechnung wird ausgefuehrt.
 (win.document.getElementById('s-action') as unknown as HTMLButtonElement).click();
-const spots: { x: number; y: number }[] = [];
-for (let y = 0; y < ROWS; y++) {
-  for (let x = 0; x < COLS; x++) if (state.canBuild(x, y)) spots.push({ x, y });
-}
+const spots = state.map.spots.map((_, i) => i);
 let spotIdx = 0, si = 0, frames = 0;
 let outcome = 'playing';
 const plan = TOWER_ORDER;
@@ -166,7 +164,7 @@ step('Partie durchspielen', () => {
     const id = plan[si % plan.length];
     if (spotIdx < spots.length && state.gold >= TOWERS[id].base.cost) {
       const sp = spots[spotIdx++];
-      if (state.build(sp.x, sp.y, id)) si++;
+      if (state.build(sp, id)) si++;
     }
     const up = state.towers.find((t) => {
       if (t.level >= MAX_LEVEL) return false;
@@ -186,12 +184,12 @@ step('Partie durchspielen', () => {
     // Auswahl und Bauvorschau mitlaufen lassen - beide zeichnen eigene Wege.
     if (frames % 180 === 0) {
       state.buildChoice = plan[(frames / 180) % plan.length];
-      state.hoverCell = { x: (frames / 180) % COLS, y: 2 };
-      state.pendingCell = state.hoverCell;
+      state.hoverSpot = (frames / 180) % state.map.spots.length;
+      state.pendingSpot = state.hoverSpot;
     }
     if (frames % 180 === 90) {
       state.buildChoice = null;
-      state.pendingCell = null;
+      state.pendingSpot = -1;
       state.selectedTower = state.towers[0] ?? null;
     }
 
@@ -214,7 +212,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   const probe = new GameState();
   probe.reset();
   probe.gold = 5000;
-  probe.build(probe.map.hint.x, probe.map.hint.y, 'arrow');
+  probe.build(probe.map.hint, 'arrow');
   const t = probe.towers[0];
   if (t.branch !== null) problems.push('Zweige: ein frisch gebauter Turm hat schon einen Zweig.');
   if (probe.upgrade(t)) problems.push('Zweige: Ausbau ohne Zweigwahl war moeglich.');
@@ -302,7 +300,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 
     // Startzustand fuellt den Bildschirm: in einer Richtung genau passend,
     // in der anderen ueberstehend.
-    const cover = Math.max(w / 1600, h / 880);
+    const cover = Math.max(w / WORLD_W, h / WORLD_H);
     if (Math.abs(renderer.scale - cover) > 1e-3) {
       problems.push(`Kamera bei ${w}x${h}: Startmassstab ${renderer.scale.toFixed(3)}, erwartet ${cover.toFixed(3)}.`);
     }
@@ -313,10 +311,10 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
       const tl = renderer.screenToWorld(0, 0);
       const br = renderer.screenToWorld(w, h);
       const eps = 0.5;
-      if (br.x - tl.x <= 1600 + eps && (tl.x < -eps || br.x > 1600 + eps)) {
+      if (br.x - tl.x <= WORLD_W + eps && (tl.x < -eps || br.x > WORLD_W + eps)) {
         problems.push(`Kamera bei ${w}x${h}: waagerecht ueber den Rand geschoben (${tl.x.toFixed(0)}..${br.x.toFixed(0)}).`);
       }
-      if (br.y - tl.y <= 880 + eps && (tl.y < -eps || br.y > 880 + eps)) {
+      if (br.y - tl.y <= WORLD_H + eps && (tl.y < -eps || br.y > WORLD_H + eps)) {
         problems.push(`Kamera bei ${w}x${h}: senkrecht ueber den Rand geschoben (${tl.y.toFixed(0)}..${br.y.toFixed(0)}).`);
       }
     }
@@ -326,7 +324,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
     if (!renderer.atOverview) problems.push(`Kamera bei ${w}x${h}: Uebersicht laesst sich nicht einschalten.`);
     const tl = renderer.screenToWorld(0, 0);
     const br = renderer.screenToWorld(w, h);
-    if (tl.x > 0.5 || tl.y > 0.5 || br.x < 1599.5 || br.y < 879.5) {
+    if (tl.x > 0.5 || tl.y > 0.5 || br.x < WORLD_W - 0.5 || br.y < WORLD_H - 0.5) {
       problems.push(`Kamera bei ${w}x${h}: in der Uebersicht ist nicht das ganze Feld zu sehen.`);
     }
     renderer.zoomAt(6, w / 2, h / 2);
@@ -441,8 +439,8 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
       if (state.map.id !== m.id) throw new Error('Karte wurde nicht geladen.');
       if (!state.lanes.length) throw new Error('keine Bahn in Weltkoordinaten.');
       for (const lane of state.lanes) {
-        const end = lane[lane.length - 1];
-        if (Math.abs(end.x - state.goal.x) > 1 || Math.abs(end.y - state.goal.y) > 1) {
+        const end = lane.pts[lane.pts.length - 1];
+        if (Math.abs(end.x - state.goal.x) > 2 || Math.abs(end.y - state.goal.y) > 2) {
           throw new Error('eine Bahn endet nicht am Kristall.');
         }
       }

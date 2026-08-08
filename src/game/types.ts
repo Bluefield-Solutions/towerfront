@@ -9,7 +9,10 @@ export interface Enemy {
   speed: number;
   /** Auf welcher Bahn der Gegner laeuft. */
   lane: number;
-  seg: number;       // Index des aktuellen Pfadsegments
+  /** Blickrichtung, folgt aus der Kurve. */
+  heading: number;
+  /** Rest bis zum naechsten Heilpuls eines Webers. */
+  healIn: number;
   travelled: number; // Zurueckgelegte Strecke - Basis fuer "vorderstes Ziel"
   slowFactor: number;
   slowLeft: number;
@@ -22,7 +25,8 @@ export interface Enemy {
 export interface Tower {
   id: number;
   def: TowerId;
-  cx: number; cy: number; // Gitterzelle
+  /** Index des Bauplatzes, auf dem der Turm steht. */
+  spot: number;
   x: number; y: number;   // Weltmitte
   level: number;          // 1..3
   branch: BranchIndex;    // null solange Stufe 1, danach endgueltig

@@ -4,7 +4,7 @@
  *  oder Gegnerwerten wird sofort daran gemessen.
  *  Aufruf: npx tsx tools/sim.ts */
 import { GameState } from '../src/game/state';
-import { COLS, ROWS, TILE } from '../src/data/config';
+
 import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../src/data/difficulty';
 
 const START_LIVES = DIFFICULTIES.normal.startLives;
@@ -100,32 +100,25 @@ const BOTS: Bot[] = [
 
 const MEISTER = BOTS[0];
 
-/** Bauplaetze nach Deckung bewertet: wie viele Pfadzellen liegen in Reichweite
- *  eines Turms auf dieser Zelle. Naehe allein taugt nicht - eine Zelle in der
- *  Innenkurve der Spirale deckt drei Pfadabschnitte, eine am Rand nur einen. */
-function buildSpots(s: GameState) {
-  const spots: { x: number; y: number; score: number }[] = [];
-  // Bewusst ein fester Wert und nicht die groesste Reichweite im Sortiment:
-  // die Bewertung der Bauplaetze ist Teil des Bot-Modells. Haengt sie an den
-  // Turmwerten, aendert jede Turmaenderung zugleich das Verhalten des Bots -
-  // und dann misst die Simulation zwei Dinge auf einmal.
-  const reach = 210 / TILE;
-  for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      if (!s.canBuild(x, y)) continue;
-      let covered = 0;
-      let nearest = 1e9;
-      for (const k of s.pathSet) {
-        const px = k % COLS, py = Math.floor(k / COLS);
-        const d2 = (px - x) ** 2 + (py - y) ** 2;
-        if (d2 <= reach * reach) covered++;
-        if (d2 < nearest) nearest = d2;
-      }
-      if (nearest > 4) continue; // zu weit weg, um je zu feuern
-      spots.push({ x, y, score: covered });
-    }
-  }
-  return spots.sort((a, b) => b.score - a.score);
+/** Bauplaetze nach abgedeckter Wegstrecke bewertet.
+ *
+ *  Naehe allein taugt nicht - ein Platz in der Innenkurve deckt drei
+ *  Wegabschnitte, einer am Rand nur einen. Gemessen wird deshalb, wieviel
+ *  Wegstrecke in Reichweite liegt.
+ *
+ *  Die Reichweite ist bewusst ein fester Wert und nicht die groesste im
+ *  Sortiment: die Bewertung ist Teil des Bot-Modells. Haengt sie an den
+ *  Turmwerten, aendert jede Turmaenderung zugleich das Verhalten des Bots -
+ *  und dann misst die Simulation zwei Dinge auf einmal. */
+function buildSpots(s: GameState): number[] {
+  const REACH = 252;
+  return s.map.spots
+    .map((sp, i) => ({
+      i,
+      score: s.lanes.reduce((a, l) => a + l.coveredLength(sp.x, sp.y, REACH), 0),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .map((o) => o.i);
 }
 
 interface Result {
@@ -175,7 +168,7 @@ function play(
 
       if (wantBuild) {
         const sp = spots[spotIdx];
-        if (s.build(sp.x, sp.y, id)) { si++; }
+        if (s.build(sp, id)) { si++; }
         spotIdx++;
       } else {
         // In die Tiefe: immer in den Turm, der bisher am meisten geleistet hat.
@@ -190,7 +183,7 @@ function play(
         else if (s.towers.length < bot.maxTowers && spotIdx < spots.length &&
           s.gold >= TOWERS[id].base.cost + reserve) {
           const sp = spots[spotIdx];
-          if (s.build(sp.x, sp.y, id)) si++;
+          if (s.build(sp, id)) si++;
           spotIdx++;
         }
       }

@@ -1,4 +1,4 @@
-import { C, COLS, ROWS, TILE, WORLD_H, WORLD_W } from '../data/config';
+import { C, WORLD_H, WORLD_W } from '../data/config';
 import { ENEMIES } from '../data/enemies';
 import {
   TOWERS, accentFor, statsFor,
@@ -10,6 +10,7 @@ import type { GameState } from '../game/state';
 import type { Tower } from '../game/types';
 import { beginGlowBatch, endGlowBatch, hexA, stampGlow, stampGlowFast } from './glow';
 import { bakeTerrain } from './terrain';
+import { SPOT_RADIUS } from '../data/maps';
 import { backgroundVersion, getBackground } from './backgrounds';
 import { getTowerArt, towerArtScale, towerArtVersion } from './towerart';
 import { enemyArtWidth, getEnemyArt } from './enemyart';
@@ -23,6 +24,8 @@ export class Renderer {
   private terrain: HTMLCanvasElement | null = null;
   private terrainFor = '';
   private terrainBgVersion = -1;
+  /** Weltpunkt, auf den gerade gezielt wird. */
+  aimPoint: { x: number; y: number } | null = null;
   private sky: HTMLCanvasElement | null = null;
   /** Alle Turmsockel in einem Bild. Wird nur neu gebacken, wenn sich am
    *  Bestand etwas aendert - nicht in jedem Bild. */
@@ -175,9 +178,7 @@ export class Renderer {
     // Untergrundbild fertig dekodiert ist.
     const bgV = backgroundVersion();
     if (!this.terrain || this.terrainFor !== s.map.id || this.terrainBgVersion !== bgV) {
-      this.terrain = bakeTerrain(
-        s.pathSet, s.blockedSet, s.map.palette, getBackground(s.map.id), s.spotSet,
-      );
+      this.terrain = bakeTerrain(s.map, s.lanes, s.map.palette, getBackground(s.map.id));
       this.terrainFor = s.map.id;
       this.terrainBgVersion = bgV;
       this.towerLayerVersion = -1;
@@ -277,10 +278,10 @@ export class Renderer {
     const ctx = this.ctx;
     const t = s.crystalPulse;
     for (const lane of s.lanes) {
-      const p = lane[0], nx = lane[1] ?? p;
+      const p = lane.pts[0], nx = lane.pts[1] ?? p;
       const ang = Math.atan2(nx.y - p.y, nx.x - p.x);
-      const x = p.x + Math.cos(ang) * TILE * 0.35;
-      const y = p.y + Math.sin(ang) * TILE * 0.35;
+      const x = p.x + Math.cos(ang) * 34;
+      const y = p.y + Math.sin(ang) * 34;
       if (hi) stampGlow(ctx, C.voidling, x, y, 72, 0.5 + Math.sin(t * 2) * 0.1);
       ctx.save();
       ctx.translate(x, y);
@@ -297,24 +298,41 @@ export class Renderer {
     ctx.globalAlpha = 1;
   }
 
+  /** Die Bauplätze antworten auf die Turmwahl.
+   *
+   *  Ohne gewaehlte Turmsorte bleibt das Brett ruhig - die Plattformen sind
+   *  nur als Struktur im Untergrund zu ahnen. Erst die Wahl hebt sie hervor:
+   *  gruen, wenn bezahlbar, rot, wenn das Gold fehlt, gedaempft, wenn schon
+   *  besetzt. */
   private drawBuildOverlay(s: GameState): void {
     if (!s.buildChoice) return;
     const ctx = this.ctx;
     const def = TOWERS[s.buildChoice];
     const affordable = s.gold >= def.base.cost;
-    ctx.save();
-    ctx.lineWidth = 2;
-    // Die Sockel sind ohnehin sichtbar - beim Bauen leuchten sie auf.
     const beat = 0.5 + 0.5 * Math.sin(s.crystalPulse * 3);
-    ctx.fillStyle = affordable ? hexA(def.accent, 0.13 + beat * 0.06) : hexA(C.danger, 0.08);
-    ctx.strokeStyle = affordable ? hexA(def.accent, 0.45 + beat * 0.25) : hexA(C.danger, 0.28);
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = 0; x < COLS; x++) {
-        if (!s.canBuild(x, y)) continue;
-        const cx = x * TILE + TILE / 2, cy = y * TILE + TILE / 2;
-        const r = TILE * 0.33;
-        ctx.beginPath(); ctx.ellipse(cx, cy, r, r * 0.6, 0, 0, Math.PI * 2);
-        ctx.fill(); ctx.stroke();
+    const r = SPOT_RADIUS;
+
+    ctx.save();
+    ctx.lineWidth = 3;
+    for (let i = 0; i < s.map.spots.length; i++) {
+      const sp = s.map.spots[i];
+      const free = s.canBuild(i);
+      const tone = !free ? C.stoneDark : affordable ? '#5BE07A' : C.danger;
+      const strength = free ? 0.5 + beat * 0.3 : 0.22;
+      ctx.fillStyle = hexA(tone, free ? 0.16 + beat * 0.08 : 0.06);
+      ctx.strokeStyle = hexA(tone, strength);
+      ctx.beginPath(); ctx.ellipse(sp.x, sp.y, r, r * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+      if (free && affordable) {
+        // Ein zweiter, weiterer Ring, der mitatmet - das zieht den Blick,
+        // ohne die Plattform zu ueberdecken.
+        ctx.strokeStyle = hexA(tone, 0.3 - beat * 0.18);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(sp.x, sp.y, r * (1.12 + beat * 0.12), r * 0.6 * (1.12 + beat * 0.12),
+          0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.lineWidth = 3;
       }
     }
     ctx.restore();
@@ -323,27 +341,49 @@ export class Renderer {
   /** Halbtransparenter Turm unter dem Finger, samt Reichweite.
    *  Gebaut wird erst beim Loslassen - Fehltipps kosten kein Gold. */
   private drawGhost(s: GameState): void {
-    const cell = s.pendingCell ?? (s.hoverCell && s.buildChoice ? s.hoverCell : null);
-    if (!cell || !s.buildChoice) return;
+    const spot = s.pendingSpot >= 0 ? s.pendingSpot : (s.buildChoice ? s.hoverSpot : -1);
+    if (spot < 0 || !s.buildChoice) return;
     const ctx = this.ctx;
     const def = TOWERS[s.buildChoice];
     const lvl = def.base;
-    const ok = s.canBuild(cell.x, cell.y) && s.gold >= lvl.cost;
-    const cx = cell.x * TILE + TILE / 2, cy = cell.y * TILE + TILE / 2;
+    const ok = s.canBuild(spot) && s.gold >= lvl.cost;
+    const sp = s.map.spots[spot];
     const tone = ok ? def.accent : C.danger;
 
     ctx.save();
-    ctx.fillStyle = hexA(tone, 0.16);
-    ctx.beginPath(); ctx.arc(cx, cy, lvl.range, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = hexA(tone, 0.14);
+    ctx.beginPath(); ctx.arc(sp.x, sp.y, lvl.range, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = hexA(tone, 0.8); ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(cx, cy, lvl.range, 0, Math.PI * 2); ctx.stroke();
-    ctx.setLineDash([8, 6]);
-    ctx.strokeRect(cell.x * TILE + 4, cell.y * TILE + 4, TILE - 8, TILE - 8);
-    ctx.setLineDash([]);
-    ctx.globalAlpha = ok ? 0.65 : 0.3;
-    this.paintTower(def, 1, cx, cy, s.crystalPulse, s.map.id);
+    ctx.beginPath(); ctx.arc(sp.x, sp.y, lvl.range, 0, Math.PI * 2); ctx.stroke();
+
+    // Die Wegstrecke, die dieser Turm abdecken wuerde, leuchtet auf. Das ist
+    // die Auskunft, die man beim Bauen wirklich braucht - nicht "hier ist
+    // Platz", sondern "das hier deckt er ab".
+    if (ok) {
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = hexA(tone, 0.55);
+      ctx.lineWidth = 12;
+      const r2 = lvl.range * lvl.range;
+      for (const lane of s.lanes) {
+        let drawing = false;
+        ctx.beginPath();
+        for (const p of lane.pts) {
+          const inside = (p.x - sp.x) ** 2 + (p.y - sp.y) ** 2 <= r2;
+          if (inside && !drawing) { ctx.moveTo(p.x, p.y); drawing = true; }
+          else if (inside) ctx.lineTo(p.x, p.y);
+          else if (drawing) { ctx.stroke(); ctx.beginPath(); drawing = false; }
+        }
+        if (drawing) ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    ctx.globalAlpha = ok ? 0.7 : 0.3;
+    this.paintTower(def, 1, sp.x, sp.y, s.crystalPulse, s.map.id);
     ctx.restore();
   }
+
 
   private drawCrystal(s: GameState, hi: boolean): void {
     const ctx = this.ctx;
@@ -622,11 +662,9 @@ export class Renderer {
         // Die Bilder sind in Seitenansicht gezeichnet und schauen nach links.
         // Gedreht wird deshalb nicht - ein Fahrzeug in Dreiviertelansicht
         // kippt dabei. Gespiegelt wird, sobald es nach rechts laeuft.
-        const path = s.lanes[e.lane] ?? s.lanes[0];
-        const nx = def.flying
-          ? s.goal
-          : path[Math.min(e.seg + 1, path.length - 1)];
-        const facingRight = nx.x >= e.x;
+        // Blickrichtung kommt aus der Kurve; Flieger schauen zum Kristall.
+        const dirX = def.flying ? s.goal.x - e.x : Math.cos(e.heading);
+        const facingRight = dirX >= 0;
         const w = enemyArtWidth(e.def);
         const h = w * (art.height / art.width);
         ctx.save();
@@ -660,9 +698,7 @@ export class Renderer {
           if (def.flying) {
             ctx.rotate(Math.atan2(s.goal.y - e.y, s.goal.x - e.x));
           } else if (rotating) {
-            const path = s.lanes[e.lane] ?? s.lanes[0];
-            const nx = path[Math.min(e.seg + 1, path.length - 1)];
-            ctx.rotate(Math.atan2(nx.y - e.y, nx.x - e.x));
+            ctx.rotate(e.heading);
           }
           drawSprite(ctx, getEnemySprite(e.def, false, frame), 0, 0);
           if (e.hitFlash > 0.01) {
@@ -856,10 +892,11 @@ export class Renderer {
     if (!s.aiming) return;
     const def = ABILITIES[s.aiming];
     if (def.kind !== 'aimed' || !def.radius) return;
-    const cell = s.pendingCell ?? s.hoverCell;
-    if (!cell) return;
+    // Beim Zielen gibt es keinen Bauplatz - die Faehigkeit trifft einen Punkt.
+    const p = this.aimPoint;
+    if (!p) return;
     const ctx = this.ctx;
-    const x = cell.x * TILE + TILE / 2, y = cell.y * TILE + TILE / 2;
+    const x = p.x, y = p.y;
     ctx.save();
     ctx.fillStyle = hexA(def.color, 0.16);
     ctx.beginPath(); ctx.arc(x, y, def.radius, 0, Math.PI * 2); ctx.fill();
@@ -882,13 +919,13 @@ export class Renderer {
     if (!this.coachHint) return;
     let x: number, y: number, r: number;
     if (this.coachHint === 'build') {
-      const h = s.map.hint;
-      if (!s.canBuild(h.x, h.y)) return;
-      x = h.x * TILE + TILE / 2; y = h.y * TILE + TILE / 2; r = TILE * 0.52;
+      if (!s.canBuild(s.map.hint)) return;
+      const h = s.map.spots[s.map.hint];
+      x = h.x; y = h.y; r = SPOT_RADIUS * 1.3;
     } else {
       const t = s.towers[0];
       if (!t) return;
-      x = t.x; y = t.y; r = TILE * 0.5;
+      x = t.x; y = t.y; r = 62;
     }
     const ctx = this.ctx;
     const beat = 0.5 + 0.5 * Math.sin(s.crystalPulse * 4);

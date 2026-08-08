@@ -1,22 +1,31 @@
-import { C, COLS, ROWS, TILE, WORLD_H, WORLD_W } from '../data/config';
-import type { MapPalette } from '../data/maps';
-import { cellKey } from '../data/maps';
-import { makeRng } from '../core/math';
+import { C, WORLD_H, WORLD_W } from '../data/config';
+import type { MapPalette, GameMap } from '../data/maps';
+import { SPOT_RADIUS } from '../data/maps';
+import type { LanePath } from '../core/path';
 import { hexA } from './glow';
 
-/** Der statische Untergrund wird genau einmal gebacken und danach nur noch
- *  als Bild gezeichnet. Spart auf dem Handy den Grossteil der Zeichenlast. */
+/** Der Untergrund, einmal gebacken.
+ *
+ *  Bis v35 wurde hier ein Kachelraster gemalt und der Weg aus achsenparallelen
+ *  Zellen zusammengesetzt - daher die 90-Grad-Ecken. Jetzt wird der Weg als
+ *  Band entlang der Kurve gezeichnet: mit runden Enden, weichen Uebergaengen
+ *  und wechselnder Breite. Sobald echte Kartenbilder da sind, faellt auch das
+ *  weg und das Bild bringt den Weg selbst mit.
+ */
 export function bakeTerrain(
-  pathSet: Set<number>, blockedSet: Set<number>, pal: MapPalette,
-  photo: HTMLImageElement | null = null, spotSet: Set<number> = new Set(),
+  map: GameMap, lanes: LanePath[], pal: MapPalette,
+  photo: HTMLImageElement | null = null,
 ): HTMLCanvasElement {
   const cv = document.createElement('canvas');
   cv.width = WORLD_W; cv.height = WORLD_H;
   const g = cv.getContext('2d')!;
-  const rnd = makeRng(20260807);
 
-  // Untergrund: entweder das gerenderte Bild der Karte oder, solange es noch
-  // nicht dekodiert ist, der alte gemalte Verlauf.
+  let seed = 1337;
+  const rnd = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+
   if (photo) {
     g.drawImage(photo, 0, 0, WORLD_W, WORLD_H);
   } else {
@@ -26,177 +35,102 @@ export function bakeTerrain(
     bg.addColorStop(1, pal.terrainLo);
     g.fillStyle = bg;
     g.fillRect(0, 0, WORLD_W, WORLD_H);
+    // Etwas Unruhe, damit die gemalte Flaeche nicht gedruckt wirkt.
+    for (let i = 0; i < 260; i++) {
+      const x = rnd() * WORLD_W, y = rnd() * WORLD_H, r = 3 + rnd() * 9;
+      g.fillStyle = rnd() > 0.5 ? hexA(pal.terrainHi, 0.16) : hexA(pal.terrainLo, 0.2);
+      g.beginPath(); g.ellipse(x, y, r, r * 0.6, rnd() * 3, 0, Math.PI * 2); g.fill();
+    }
   }
 
-  // Kachelvariation und Grasbueschel nur ohne Bild - das Bild bringt seine
-  // eigene Struktur mit, und beides zusammen wird unruhig.
-  if (!photo) {
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = 0; x < COLS; x++) {
-        const k = cellKey(x, y);
-        if (pathSet.has(k)) continue;
-        const v = (rnd() - 0.5) * 0.07;
-        g.fillStyle = v > 0 ? `rgba(255,255,255,${v})` : `rgba(0,0,0,${-v})`;
-        g.fillRect(x * TILE, y * TILE, TILE, TILE);
+  // --- Der Weg als Band entlang der Kurve.
+  //
+  // Drei Durchlaeufe uebereinander: ein dunkler Schatten etwas breiter, das
+  // eigentliche Band, und eine hellere Spur in der Mitte. Runde Enden und
+  // runde Verbindungen sorgen dafuer, dass in keiner Kurve eine Ecke entsteht.
+  const stroke = (paths: LanePath[], width: number, colour: string, blur = 0) => {
+    g.save();
+    g.lineCap = 'round';
+    g.lineJoin = 'round';
+    g.strokeStyle = colour;
+    g.lineWidth = width;
+    if (blur) { g.shadowColor = colour; g.shadowBlur = blur; }
+    for (const p of paths) {
+      g.beginPath();
+      g.moveTo(p.pts[0].x, p.pts[0].y);
+      for (let i = 1; i < p.pts.length; i++) g.lineTo(p.pts[i].x, p.pts[i].y);
+      g.stroke();
+    }
+    g.restore();
+  };
+
+  const W = 74;
+  stroke(lanes, W + 16, 'rgba(6,10,18,0.5)');
+  stroke(lanes, W, pal.pathEdge);
+  stroke(lanes, W - 14, pal.path);
+  stroke(lanes, W - 34, hexA('#FFF6DC', 0.13));
+
+  // Randsteine: kleine Ellipsen entlang beider Seiten. Sie folgen der Kurve,
+  // also runden sie sich in den Kurven von selbst mit.
+  for (const p of lanes) {
+    for (let i = 4; i < p.pts.length - 4; i += 5) {
+      const a = p.pts[i - 1], b = p.pts[i + 1];
+      const ang = Math.atan2(b.y - a.y, b.x - a.x) + Math.PI / 2;
+      for (const side of [-1, 1]) {
+        const jitter = (rnd() - 0.5) * 5;
+        const cx = p.pts[i].x + Math.cos(ang) * side * (W / 2 - 3) + jitter;
+        const cy = p.pts[i].y + Math.sin(ang) * side * (W / 2 - 3) + jitter;
+        g.fillStyle = 'rgba(0,0,0,0.28)';
+        g.beginPath(); g.ellipse(cx, cy + 2, 7, 4.5, ang, 0, Math.PI * 2); g.fill();
+        g.fillStyle = hexA(pal.pathEdge, 0.95);
+        g.beginPath(); g.ellipse(cx, cy, 7, 4.5, ang, 0, Math.PI * 2); g.fill();
+        g.fillStyle = 'rgba(255,255,255,0.16)';
+        g.beginPath(); g.ellipse(cx, cy - 1.5, 4.5, 2.5, ang, 0, Math.PI * 2); g.fill();
       }
     }
   }
 
-  // Kachelfasen: eine helle Lippe oben, ein Schatten unten. Erst dadurch
-  // bekommt die gemalte Flaeche Relief. Mit Bild waere es ein Raster ueber
-  // einer Fotostruktur - genau das, was man nicht will.
-  if (!photo) for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      const k = cellKey(x, y);
-      if (pathSet.has(k)) continue;
-      const px = x * TILE, py = y * TILE;
-      g.fillStyle = 'rgba(255,255,255,0.045)';
-      g.fillRect(px, py, TILE, 2);
-      g.fillStyle = 'rgba(0,0,0,0.07)';
-      g.fillRect(px, py + TILE - 2, TILE, 2);
-      g.fillStyle = 'rgba(255,255,255,0.02)';
-      g.fillRect(px, py, 2, TILE);
-      g.fillStyle = 'rgba(0,0,0,0.04)';
-      g.fillRect(px + TILE - 2, py, 2, TILE);
+  // --- Deko: Felsen an freien Orten.
+  for (const pr of map.props) drawRock(g, pr.x, pr.y, pr.r, rnd, pal);
+
+  // --- Bauplaetze: gemauerte Plattformen, ruhig gehalten.
+  //
+  // Sie sind absichtlich nur zu ahnen. Erst wenn eine Turmsorte gewaehlt ist,
+  // hebt der Renderer sie hervor - vorher soll das Brett ruhig sein.
+  for (const sp of map.spots) {
+    const r = SPOT_RADIUS;
+    g.fillStyle = 'rgba(0,0,0,0.3)';
+    g.beginPath(); g.ellipse(sp.x, sp.y + 4, r * 1.04, r * 0.62, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = hexA(pal.rockHi, 0.5);
+    g.beginPath(); g.ellipse(sp.x, sp.y, r, r * 0.58, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = hexA(pal.rock, 0.6);
+    g.beginPath(); g.ellipse(sp.x, sp.y + 2, r * 0.8, r * 0.45, 0, 0, Math.PI * 2); g.fill();
+    // Ein paar Fugen, damit es gemauert wirkt statt gestempelt.
+    g.strokeStyle = 'rgba(0,0,0,0.25)'; g.lineWidth = 1.5;
+    for (let k = 0; k < 4; k++) {
+      const a = (Math.PI * 2 * k) / 4 + 0.4;
+      g.beginPath();
+      g.moveTo(sp.x + Math.cos(a) * r * 0.3, sp.y + Math.sin(a) * r * 0.18);
+      g.lineTo(sp.x + Math.cos(a) * r, sp.y + Math.sin(a) * r * 0.58);
+      g.stroke();
     }
-  }
-
-  // Steine und Risse - kleine Unruhe, damit die gemalte Flaeche nicht gedruckt
-  // wirkt. Das Bild hat sie schon.
-  if (!photo) for (let i = 0; i < 150; i++) {
-    const x = rnd() * WORLD_W, y = rnd() * WORLD_H;
-    if (pathSet.has(cellKey(Math.floor(x / TILE), Math.floor(y / TILE)))) continue;
-    const r = 2 + rnd() * 4;
-    g.fillStyle = 'rgba(0,0,0,0.16)';
-    g.beginPath(); g.ellipse(x, y + 1.5, r, r * 0.6, 0, 0, Math.PI * 2); g.fill();
-    g.fillStyle = 'rgba(190,205,205,0.14)';
-    g.beginPath(); g.ellipse(x, y, r, r * 0.6, 0, 0, Math.PI * 2); g.fill();
-  }
-
-  // Grasbueschel als kleine Striche - sparsam, nur Silhouette.
-  g.strokeStyle = hexA(pal.terrainHi, 0.5);
-  g.lineWidth = 2;
-  if (!photo) for (let i = 0; i < 620; i++) {
-    const x = rnd() * WORLD_W, y = rnd() * WORLD_H;
-    const k = cellKey(Math.floor(x / TILE), Math.floor(y / TILE));
-    if (pathSet.has(k)) continue;
-    const h = 5 + rnd() * 7;
+    g.strokeStyle = 'rgba(255,255,255,0.16)'; g.lineWidth = 2;
     g.beginPath();
-    g.moveTo(x, y);
-    g.lineTo(x + (rnd() - 0.5) * 4, y - h);
+    g.ellipse(sp.x, sp.y, r, r * 0.58, 0, Math.PI * 1.06, Math.PI * 1.94);
     g.stroke();
   }
 
-  // Pfad: warmer Knochenton in drei Lagen - dunkler Saum, Rand, ausgetretene
-  // Mitte. Der Uebergang traegt den groessten Teil der Wirkung.
-  g.fillStyle = 'rgba(6,10,18,0.55)';
-  paintCells(g, pathSet, -5);
-  g.fillStyle = pal.pathEdge;
-  paintCells(g, pathSet, 2);
-  g.fillStyle = pal.path;
-  paintCells(g, pathSet, 11);
-  g.fillStyle = 'rgba(255,246,220,0.13)';
-  paintCells(g, pathSet, 24);
-  // Randsteine saeumen den Weg - erst dadurch wirkt er gebaut statt gemalt.
-  for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      if (!pathSet.has(cellKey(x, y))) continue;
-      for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]] as const) {
-        if (pathSet.has(cellKey(x + dx, y + dy))) continue;
-        const cx = x * TILE + TILE / 2 + dx * (TILE / 2 - 4);
-        const cy = y * TILE + TILE / 2 + dy * (TILE / 2 - 4);
-        for (let k = -1; k <= 1; k++) {
-          const ox = dy !== 0 ? k * (TILE / 3) : 0;
-          const oy = dx !== 0 ? k * (TILE / 3) : 0;
-          g.fillStyle = 'rgba(0,0,0,0.3)';
-          g.beginPath(); g.ellipse(cx + ox, cy + oy + 2, 6, 4, 0, 0, Math.PI * 2); g.fill();
-          g.fillStyle = hexA(pal.pathEdge, 0.9);
-          g.beginPath(); g.ellipse(cx + ox, cy + oy, 6, 4, 0, 0, Math.PI * 2); g.fill();
-          g.fillStyle = 'rgba(255,255,255,0.14)';
-          g.beginPath(); g.ellipse(cx + ox, cy + oy - 1, 4, 2, 0, 0, Math.PI * 2); g.fill();
-        }
-      }
-    }
-  }
-
-  // Trittspuren
-  for (let i = 0; i < 420; i++) {
-    const x = rnd() * WORLD_W, y = rnd() * WORLD_H;
-    const cx = Math.floor(x / TILE), cy = Math.floor(y / TILE);
-    if (!pathSet.has(cellKey(cx, cy))) continue;
-    g.fillStyle = rnd() > 0.5 ? 'rgba(255,255,255,0.055)' : 'rgba(0,0,0,0.07)';
-    const r = 3 + rnd() * 9;
-    g.beginPath(); g.ellipse(x, y, r, r * 0.6, 0, 0, Math.PI * 2); g.fill();
-    // Fussabdruecke: kleine paarweise Vertiefungen.
-    if (rnd() > 0.72) {
-      g.fillStyle = 'rgba(0,0,0,0.09)';
-      const a = rnd() * Math.PI;
-      for (const o of [-4, 4]) {
-        g.beginPath();
-        g.ellipse(x + Math.cos(a) * o, y + Math.sin(a) * o, 3.2, 2.1, a, 0, Math.PI * 2);
-        g.fill();
-      }
-    }
-  }
-
-  // Bauplaetze als gestaltete Sockel.
-  //
-  // Seit v34 gibt es je Karte zwoelf davon statt einer Sockelwiese aus 170
-  // Zellen. Damit duerfen sie auch deutlich sein: eine gemauerte Plattform mit
-  // Lichtkante, die man auf einen Blick findet. Vorher musste die Darstellung
-  // leise bleiben, weil sie sonst das halbe Brett zugedeckt haette.
-  for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      const k = cellKey(x, y);
-      if (!spotSet.has(k)) continue;
-      const cx = x * TILE + TILE / 2, cy = y * TILE + TILE / 2;
-      const r = TILE * 0.38;
-      g.fillStyle = 'rgba(0,0,0,0.22)';
-      g.beginPath(); g.ellipse(cx, cy + 3, r * 1.06, r * 0.62, 0, 0, Math.PI * 2); g.fill();
-      // Auf dem Bild braucht die Platte mehr Deckkraft und eine hellere
-      // Lichtkante, sonst verschwindet sie in der Fotostruktur.
-      g.fillStyle = hexA(pal.rockHi, photo ? 0.62 : 0.34);
-      g.beginPath(); g.ellipse(cx, cy, r, r * 0.58, 0, 0, Math.PI * 2); g.fill();
-      g.fillStyle = hexA(pal.rock, photo ? 0.72 : 0.5);
-      g.beginPath(); g.ellipse(cx, cy + 1.5, r * 0.78, r * 0.44, 0, 0, Math.PI * 2); g.fill();
-      g.strokeStyle = photo ? 'rgba(255,255,255,0.20)' : 'rgba(255,255,255,0.10)';
-      g.lineWidth = 1.5;
-      g.beginPath(); g.ellipse(cx, cy, r, r * 0.58, 0, Math.PI * 1.08, Math.PI * 1.92); g.stroke();
-    }
-  }
-
-  // Deko-Felsen auf gesperrten Zellen
-  for (const k of blockedSet) {
-    const cx = k % COLS, cy = Math.floor(k / COLS);
-    drawRock(g, cx * TILE + TILE / 2, cy * TILE + TILE / 2, TILE * 0.34, rnd, pal);
-  }
-
-  // Vignette: lenkt den Blick zur Mitte
+  // --- Vignette
   const vg = g.createRadialGradient(
-    WORLD_W / 2, WORLD_H / 2, WORLD_H * 0.35,
-    WORLD_W / 2, WORLD_H / 2, WORLD_W * 0.72,
+    WORLD_W / 2, WORLD_H / 2, Math.min(WORLD_W, WORLD_H) * 0.3,
+    WORLD_W / 2, WORLD_H / 2, Math.max(WORLD_W, WORLD_H) * 0.72,
   );
   vg.addColorStop(0, 'rgba(0,0,0,0)');
-  // Ueber dem Bild reicht eine schwaechere Vignette - es ist an den Raendern
-  // ohnehin schon dunkler.
-  vg.addColorStop(1, hexA(C.voidDeep, photo ? 0.38 : 0.65));
+  vg.addColorStop(1, hexA(C.voidDeep, photo ? 0.38 : 0.6));
   g.fillStyle = vg;
   g.fillRect(0, 0, WORLD_W, WORLD_H);
 
   return cv;
-}
-
-function paintCells(g: CanvasRenderingContext2D, cells: Set<number>, inset: number): void {
-  for (const k of cells) {
-    const cx = k % COLS, cy = Math.floor(k / COLS);
-    const x = cx * TILE, y = cy * TILE;
-    // Nachbarn beruecksichtigen, damit Ecken zusammenlaufen.
-    const l = cells.has(cellKey(cx - 1, cy)) ? 0 : inset;
-    const r = cells.has(cellKey(cx + 1, cy)) ? 0 : inset;
-    const t = cells.has(cellKey(cx, cy - 1)) ? 0 : inset;
-    const b = cells.has(cellKey(cx, cy + 1)) ? 0 : inset;
-    g.fillRect(x + l, y + t, TILE - l - r, TILE - t - b);
-  }
 }
 
 function drawRock(
@@ -208,15 +142,18 @@ function drawRock(
   g.beginPath();
   const n = 7;
   for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2;
-    const rr = r * (0.75 + rnd() * 0.45);
-    const px = Math.cos(a) * rr, py = Math.sin(a) * rr * 0.8;
+    const a = (Math.PI * 2 * i) / n;
+    const rr = r * (0.74 + rnd() * 0.4);
+    const px = Math.cos(a) * rr, py = Math.sin(a) * rr * 0.72;
     if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
   }
   g.closePath();
+  g.fillStyle = 'rgba(0,0,0,0.34)';
+  g.save(); g.translate(0, 4); g.fill(); g.restore();
   g.fillStyle = pal.rock; g.fill();
-  g.clip();
   g.fillStyle = pal.rockHi;
-  g.fillRect(-r, -r, r * 2, r * 0.9);
+  g.beginPath();
+  g.ellipse(-r * 0.18, -r * 0.22, r * 0.42, r * 0.24, -0.5, 0, Math.PI * 2);
+  g.fill();
   g.restore();
 }

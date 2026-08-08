@@ -1,14 +1,14 @@
 /** Datenwaechter. Laeuft vor jedem Build und prueft die Inhaltsdateien auf
  *  Widersprueche, die im Spiel erst spaet oder gar nicht auffallen wuerden.
  *  Aufruf: npx tsx tools/guards.ts */
-import { COLS, ROWS, TILE } from '../src/data/config';
+import { WORLD_W, WORLD_H } from '../src/data/config';
 import { DIFFICULTIES, DIFFICULTY_ORDER, hpScale } from '../src/data/difficulty';
 import { PERKS, PERK_ORDER, starsFor } from '../src/data/perks';
 
 const NORMAL = DIFFICULTIES.normal;
 const START_GOLD = NORMAL.startGold;
 const START_LIVES = NORMAL.startLives;
-import { MAPS, cellKey, laneCells, pathCells } from '../src/data/maps';
+import { MAPS, goalOf, lanePaths, SPOT_RADIUS } from '../src/data/maps';
 import { TOWERS, TOWER_ORDER } from '../src/data/towers';
 import { ENEMIES } from '../src/data/enemies';
 
@@ -26,238 +26,158 @@ for (const map of MAPS) {
   if (!map.name || !map.blurb) fail(`${map.id}: Name oder Beschreibung fehlt.`);
   if (!map.lanes.length) { fail(`${map.id}: keine Bahn.`); continue; }
 
-  // Innerhalb einer Bahn darf keine Zelle zweimal vorkommen - ein Weg, der
-  // sich selbst kreuzt, ist auf einen Blick nicht mehr lesbar. Zwischen zwei
-  // Bahnen ist eine gemeinsame Zelle dagegen genau das Gewuenschte: dort
-  // laufen sie zusammen.
-  let laneCellLists: ReturnType<typeof laneCells>[];
-  try {
-    laneCellLists = map.lanes.map(laneCells);
-  } catch (e) { fail(`${map.id}: ${(e as Error).message}`); continue; }
+  const paths = lanePaths(map);
+  const goal = goalOf(map);
 
   for (let i = 0; i < map.lanes.length; i++) {
     const lane = map.lanes[i];
-    const seen = new Set<number>();
-    let raw = 0;
-    for (let k = 0; k < lane.length - 1; k++) {
-      const a = lane[k], b = lane[k + 1];
-      const sx = Math.sign(b.x - a.x), sy = Math.sign(b.y - a.y);
-      let x = a.x, y = a.y;
-      for (;;) {
-        if (x >= 0 && y >= 0 && x < COLS && y < ROWS) {
-          raw++;
-          const key = cellKey(x, y);
-          if (seen.has(key) && !(k > 0 && x === a.x && y === a.y)) {
-            fail(`${map.id}, Bahn ${i + 1}: kreuzt sich selbst bei Zelle ${x}/${y}.`);
-          }
-          seen.add(key);
-        }
-        if (x === b.x && y === b.y) break;
-        x += sx; y += sy;
-      }
-    }
-    if (raw < 18) warn(`${map.id}, Bahn ${i + 1}: mit ${raw} Zellen sehr kurz.`);
+    const path = paths[i];
+    if (lane.length < 3) fail(`${map.id}, Bahn ${i + 1}: unter drei Punkten gibt es keine Kurve.`);
 
-    const end = lane[lane.length - 1];
-    const goal = map.lanes[0][map.lanes[0].length - 1];
-    if (end.x !== goal.x || end.y !== goal.y) {
-      fail(`${map.id}, Bahn ${i + 1}: endet nicht am Herzkristall.`);
-    }
-    if (goal.x < 0 || goal.y < 0 || goal.x >= COLS || goal.y >= ROWS) {
-      fail(`${map.id}: der Herzkristall liegt ausserhalb des Feldes.`);
-    }
     // Der Start muss ausserhalb liegen - sonst erscheinen Gegner mitten im Feld.
     const start = lane[0];
-    const outside = start.x < 0 || start.y < 0 || start.x >= COLS || start.y >= ROWS;
+    const outside = start.x < 0 || start.y < 0 || start.x > WORLD_W || start.y > WORLD_H;
     if (!outside) fail(`${map.id}, Bahn ${i + 1}: beginnt innerhalb des Feldes.`);
+
+    const end = lane[lane.length - 1];
+    if (Math.hypot(end.x - goal.x, end.y - goal.y) > 1) {
+      fail(`${map.id}, Bahn ${i + 1}: endet nicht am Herzkristall.`);
+    }
+    if (path.length < 900) {
+      warn(`${map.id}, Bahn ${i + 1}: mit ${Math.round(path.length)} Pixeln sehr kurz.`);
+    }
+
+    // Kurven duerfen eng sein, aber nicht knicken. Geprueft wird der Winkel
+    // zwischen aufeinanderfolgenden Abschnitten der abgetasteten Kurve: mehr
+    // als 25 Grad auf einem Abtastschritt sieht wie eine Ecke aus, und genau
+    // die wollten wir loswerden.
+    let sharpest = 0;
+    for (let k = 1; k < path.pts.length - 1; k++) {
+      const a = path.pts[k - 1], b = path.pts[k], c = path.pts[k + 1];
+      const a1 = Math.atan2(b.y - a.y, b.x - a.x);
+      const a2 = Math.atan2(c.y - b.y, c.x - b.x);
+      let d = Math.abs(a2 - a1);
+      if (d > Math.PI) d = Math.PI * 2 - d;
+      if (d > sharpest) sharpest = d;
+    }
+    const deg = (sharpest * 180) / Math.PI;
+    if (deg > 25) {
+      fail(`${map.id}, Bahn ${i + 1}: knickt um ${deg.toFixed(0)} Grad - das ist eine Ecke, keine Kurve.`);
+    }
   }
 
-  // Bahnen muessen aehnlich lang sein. Eine deutlich kuerzere Bahn ist eine
-  // Abkuerzung: die Haelfte der Gegner laeuft dann an viel weniger Tuermen
-  // vorbei, und die Karte wird aus einem Grund schwer, den man ihr nicht
-  // ansieht. Genau das war in v19 der Fall.
-  if (map.lanes.length > 1) {
-    const lens = laneCellLists.map((l) => l.length);
+  // Bahnlaengen muessen aehnlich sein - sonst ist die kuerzere eine Abkuerzung.
+  if (paths.length > 1) {
+    const lens = paths.map((p) => p.length);
     const min = Math.min(...lens), max = Math.max(...lens);
     if (max > min * 1.3) {
       fail(
-        `${map.id}: Bahnlaengen ${lens.join('/')} - die kuerzeste ist eine Abkuerzung ` +
-        `(hoechstens 30 % Unterschied erlaubt).`,
+        `${map.id}: Bahnlaengen ${lens.map((l) => Math.round(l)).join('/')} - die kuerzeste ` +
+        'ist eine Abkuerzung (hoechstens 30 % Unterschied erlaubt).',
       );
     }
-  }
-
-  // Mehrere Bahnen muessen sich vereinen - zwei voellig getrennte Wege waeren
-  // zwei Karten nebeneinander, keine Gabelung.
-  if (map.lanes.length > 1) {
-    const first = new Set(laneCellLists[0].map((c) => cellKey(c.x, c.y)));
-    for (let i = 1; i < laneCellLists.length; i++) {
-      const shared = laneCellLists[i].filter((c) => first.has(cellKey(c.x, c.y))).length;
-      if (shared < 2) {
-        fail(`${map.id}: Bahn ${i + 1} trifft nie auf Bahn 1 - das ist keine Gabelung.`);
-      }
+    // Mehrere Bahnen muessen sich vereinen.
+    let shared = 0;
+    for (const p of paths[0].pts) {
+      for (let i = 1; i < paths.length; i++) if (paths[i].distanceTo(p.x, p.y) < 8) shared++;
     }
+    if (shared < 10) fail(`${map.id}: die Bahnen treffen sich nie - das ist keine Gabelung.`);
   }
 
-  const cells = pathCells(map);
-  const pathKeys = new Set(cells.map((c) => cellKey(c.x, c.y)));
-  const blockKeys = new Set(map.blocked.map((b) => cellKey(b.x, b.y)));
-  for (const b of map.blocked) {
-    if (pathKeys.has(cellKey(b.x, b.y))) fail(`${map.id}: Deko-Zelle ${b.x}/${b.y} liegt auf dem Pfad.`);
-    if (b.x < 0 || b.y < 0 || b.x >= COLS || b.y >= ROWS) fail(`${map.id}: Deko-Zelle ${b.x}/${b.y} ausserhalb.`);
-  }
-
-  const hk = cellKey(map.hint.x, map.hint.y);
-  if (!map.spots.some((sp) => cellKey(sp.x, sp.y) === hk)) {
-    fail(`${map.id}: der empfohlene Bauplatz ${map.hint.x}/${map.hint.y} ist kein Bauplatz.`);
-  }
-  let touches = false;
-  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-    if (pathKeys.has(cellKey(map.hint.x + dx, map.hint.y + dy))) touches = true;
-  }
-  if (!touches) warn(`${map.id}: der empfohlene Bauplatz liegt nicht am Pfad.`);
-
-  // Bauplaetze: gestaltete Stellungen, keine Sockelwiese.
+  // --- Bauplaetze
   const build = map.spots.length;
   if (build < 10 || build > 16) {
     fail(`${map.id}: ${build} Bauplaetze - zwischen 10 und 16 sind vorgesehen.`);
   }
-  const spotKeys = new Set(map.spots.map((sp) => cellKey(sp.x, sp.y)));
-  if (spotKeys.size !== map.spots.length) fail(`${map.id}: ein Bauplatz kommt doppelt vor.`);
-  for (const sp of map.spots) {
-    if (sp.x < 0 || sp.y < 0 || sp.x >= COLS || sp.y >= ROWS) {
-      fail(`${map.id}: Bauplatz ${sp.x}/${sp.y} liegt ausserhalb des Feldes.`);
+  if (map.hint < 0 || map.hint >= build) {
+    fail(`${map.id}: der empfohlene Bauplatz ${map.hint} gibt es nicht.`);
+  }
+  const reach = Math.max(...TOWER_ORDER.map((t) => TOWERS[t].base.range));
+  for (let i = 0; i < map.spots.length; i++) {
+    const sp = map.spots[i];
+    if (sp.x < 0 || sp.y < 0 || sp.x > WORLD_W || sp.y > WORLD_H) {
+      fail(`${map.id}: Bauplatz ${i} liegt ausserhalb des Feldes.`);
       continue;
     }
-    const k = cellKey(sp.x, sp.y);
-    if (pathKeys.has(k)) fail(`${map.id}: Bauplatz ${sp.x}/${sp.y} liegt auf dem Pfad.`);
-    if (blockKeys.has(k)) fail(`${map.id}: Bauplatz ${sp.x}/${sp.y} liegt auf einem Felsen.`);
-    // Ein Bauplatz, der den Pfad nicht erreicht, ist eine Falle: er kostet
-    // Gold und tut nichts.
-    let nearest = 1e9;
-    for (const c of cells) {
-      const d = (c.x - sp.x) ** 2 + (c.y - sp.y) ** 2;
-      if (d < nearest) nearest = d;
+    const d = Math.min(...paths.map((p) => p.distanceTo(sp.x, sp.y)));
+    if (d < SPOT_RADIUS + 22) {
+      fail(`${map.id}: Bauplatz ${i} liegt mit ${Math.round(d)} Pixeln zu dicht am Weg.`);
     }
-    if (nearest > 9) {
-      fail(`${map.id}: Bauplatz ${sp.x}/${sp.y} ist zu weit vom Pfad entfernt.`);
+    if (d > reach * 0.8) {
+      fail(`${map.id}: Bauplatz ${i} ist ${Math.round(d)} Pixel vom Weg entfernt - er traefe kaum.`);
     }
-    // Zwei Plattformen direkt nebeneinander sehen nach Versehen aus.
-    for (const other of map.spots) {
-      if (other === sp) continue;
-      const cheb = Math.max(Math.abs(other.x - sp.x), Math.abs(other.y - sp.y));
-      if (cheb < 2) {
-        warn(`${map.id}: Bauplaetze ${sp.x}/${sp.y} und ${other.x}/${other.y} liegen direkt aneinander.`);
+    for (let k = i + 1; k < map.spots.length; k++) {
+      const o = map.spots[k];
+      if (Math.hypot(o.x - sp.x, o.y - sp.y) < SPOT_RADIUS * 2.4) {
+        warn(`${map.id}: Bauplaetze ${i} und ${k} liegen fast aufeinander.`);
       }
     }
   }
-  // Zusammen muessen die Plattformen den ganzen Weg erreichen - sonst gibt es
-  // eine Strecke, auf der man nichts tun kann.
+
+  // Zusammen muessen sie den ganzen Weg erreichen.
   {
-    const reachAll = Math.max(...TOWER_ORDER.map((t) => TOWERS[t].base.range)) / TILE;
-    const covered = new Set<number>();
-    for (const sp of map.spots) {
-      for (const c of cells) {
-        if ((c.x - sp.x) ** 2 + (c.y - sp.y) ** 2 <= reachAll * reachAll) {
-          covered.add(cellKey(c.x, c.y));
-        }
+    let uncovered = 0, total = 0;
+    for (const p of paths) {
+      for (let k = 0; k < p.pts.length; k += 3) {
+        total++;
+        const pt = p.pts[k];
+        if (!map.spots.some((sp) => Math.hypot(sp.x - pt.x, sp.y - pt.y) <= reach)) uncovered++;
       }
     }
-    if (covered.size < cells.length) {
+    // Ein paar Punkte ganz am Anfang liegen noch ausserhalb des Feldes -
+    // dort ist der Gegner noch im Tor. Erlaubt sind zwei Prozent.
+    if (uncovered > total * 0.02) {
       fail(
-        `${map.id}: die Bauplaetze erreichen nur ${covered.size} von ${cells.length} ` +
-        'Pfadzellen - dort kaeme jeder Gegner unbehelligt durch.',
+        `${map.id}: ${uncovered} von ${total} Wegpunkten liegen ausserhalb jeder Reichweite - ` +
+        'dort kaeme jeder Gegner unbehelligt durch.',
       );
     }
   }
 
+  // Mindestens eine Haeufung: drei Bauplaetze, die sich gegenseitig sehen.
+  //
+  // Ohne die ist eine Karte ein gleichmaessiger Teppich - genau das, was das
+  // Genre-Vorbild bewusst vermeidet. Erst Haeufungen machen Toetungszonen.
+  let clusters = 0;
+  for (let i = 0; i < map.spots.length; i++) {
+    let near = 0;
+    for (let k = 0; k < map.spots.length; k++) {
+      if (k === i) continue;
+      if (Math.hypot(map.spots[k].x - map.spots[i].x, map.spots[k].y - map.spots[i].y) < reach) near++;
+    }
+    if (near >= 2) clusters++;
+  }
+  if (clusters === 0) {
+    fail(`${map.id}: keine Haeufung von Bauplaetzen - die Karte hat keine Toetungszone.`);
+  }
+
+  // Deko darf nicht auf dem Weg oder einem Bauplatz liegen.
+  for (const pr of map.props) {
+    if (Math.min(...paths.map((p) => p.distanceTo(pr.x, pr.y))) < 44) {
+      fail(`${map.id}: Deko bei ${pr.x}/${pr.y} liegt auf dem Weg.`);
+    }
+    if (map.spots.some((sp) => Math.hypot(sp.x - pr.x, sp.y - pr.y) < SPOT_RADIUS + pr.r)) {
+      fail(`${map.id}: Deko bei ${pr.x}/${pr.y} liegt auf einem Bauplatz.`);
+    }
+  }
+
+  for (const [key, val] of Object.entries(map.palette)) {
+    if (!isHex(val)) fail(`${map.id}: Farbe "${key}" ist ungueltig (${val}).`);
+  }
+
   const bal = map.balance;
-  // Eng gefasst: seit jede Karte einen eigenen Wellenplan hat, ist ein
-  // groesserer Ausgleich ein Zeichen dafuer, dass der Plan nicht stimmt.
   if (bal.hpMul < 0.85 || bal.hpMul > 1.2) {
-    fail(`${map.id}: Ausgleich hpMul ${bal.hpMul} ausserhalb 0,85 bis 1,2 - dann gehoert der Wellenplan geaendert, nicht der Faktor.`);
+    fail(`${map.id}: Ausgleich hpMul ${bal.hpMul} ausserhalb 0,85 bis 1,2.`);
   }
   if (bal.goldMul < 0.85 || bal.goldMul > 1.2) {
     fail(`${map.id}: Ausgleich goldMul ${bal.goldMul} ausserhalb 0,85 bis 1,2.`);
   }
 
-  // Farbwelt vollstaendig und gueltig.
-  for (const [key, val] of Object.entries(map.palette)) {
-    if (!isHex(val)) fail(`${map.id}: Farbe "${key}" ist ungueltig (${val}).`);
-  }
-  // Deckungsdichte: wie oft wird eine Pfadzelle von einem Turm erfasst, wenn
-  // sechzehn gute Stellungen besetzt sind?
-  //
-  // Liegt der Wert deutlich ueber zwei, ist der Pfad schon mehrfach abgedeckt -
-  // dann bringt ein weiterer Turm keine neue Strecke, sondern nur Ueberlappung,
-  // und "viele Tuerme" hoert auf, ein eigener Spielstil zu sein. Genau das war
-  // der Befund zu T16.
-  {
-    // Die groesste Grundreichweite im Sortiment - so bleibt die Kennzahl
-    // richtig, wenn sich die Reichweiten aendern.
-    const reach = Math.max(...TOWER_ORDER.map((t) => TOWERS[t].base.range)) / TILE;
-    const scores: number[] = [];
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = 0; x < COLS; x++) {
-        const k = cellKey(x, y);
-        if (pathKeys.has(k) || blockKeys.has(k)) continue;
-        let covered = 0, nearest = 1e9;
-        for (const c of cells) {
-          const d = (c.x - x) ** 2 + (c.y - y) ** 2;
-          if (d <= reach * reach) covered++;
-          if (d < nearest) nearest = d;
-        }
-        if (nearest <= 4) scores.push(covered);
-      }
-    }
-    // Nicht einfach die sechzehn besten Einzelplaetze: sie liegen dicht
-    // beieinander und decken dieselben Zellen. Gewaehlt wird gierig - immer
-    // der Platz, der die meisten *noch nicht* gedeckten Pfadzellen bringt.
-    // Genau das tut ein Spieler auch, und nur so misst die Zahl, was sie soll.
-    // Gerechnet wird ueber die tatsaechlichen Bauplaetze - alle davon, denn
-    // mehr gibt es nicht.
-    const spotsList = map.spots.map((sp) => ({ ...sp }));
-    const seenCells = new Set<number>();
-    let totalCovered = 0;
-    const chosen: { x: number; y: number }[] = [];
-    const nSpots = spotsList.length;
-    for (let n = 0; n < nSpots && spotsList.length; n++) {
-      let bestSpot = -1, bestGain = -1, bestAll = 0;
-      for (let i = 0; i < spotsList.length; i++) {
-        const sp = spotsList[i];
-        let gain = 0, all = 0;
-        for (const c of cells) {
-          if ((c.x - sp.x) ** 2 + (c.y - sp.y) ** 2 > reach * reach) continue;
-          all++;
-          if (!seenCells.has(cellKey(c.x, c.y))) gain++;
-        }
-        if (gain > bestGain) { bestGain = gain; bestSpot = i; bestAll = all; }
-      }
-      if (bestSpot < 0) break;
-      const sp = spotsList.splice(bestSpot, 1)[0];
-      chosen.push(sp);
-      totalCovered += bestAll;
-      for (const c of cells) {
-        if ((c.x - sp.x) ** 2 + (c.y - sp.y) ** 2 <= reach * reach) {
-          seenCells.add(cellKey(c.x, c.y));
-        }
-      }
-    }
-    const reachedShare = seenCells.size / cells.length;
-    const density = totalCovered / cells.length;
-    void scores; void chosen;
-    console.log(
-      `  Karte ${map.name}: ${map.lanes.length} Bahn(en), ${cells.length} Pfadzellen, ` +
-      `${build} Bauplaetze, Deckung je Pfadzelle ${density.toFixed(1)} ` +
-      `(erreicht ${Math.round(reachedShare * 100)} % des Weges)`,
-    );
-    if (density > 3) {
-      warn(`${map.id}: die Bauplaetze decken jede Pfadzelle ${density.toFixed(1)}-fach ab - sehr viel Ueberlappung.`);
-    }
-    if (density < 1.2) {
-      warn(`${map.id}: nur ${density.toFixed(1)}-fache Deckung - kaum Ueberlappung, jede Stellung muss allein tragen.`);
-    }
-  }
+  const totalLen = Math.round(Math.max(...paths.map((p) => p.length)));
+  console.log(
+    `  Karte ${map.name}: ${map.lanes.length} Bahn(en), Weg ${totalLen} px, ` +
+    `${build} Bauplaetze, ${clusters} in Haeufungen`,
+  );
 }
 
 // ------------------------------------------------------------------ Tuerme
@@ -373,7 +293,18 @@ for (const id of TOWER_ORDER) {
     // Reichweite *aller* umliegenden Tuerme. Der Faktor 1,3 aus v12 war zu
     // niedrig - die Simulation liess einen Zweig scheitern, den das Modell
     // fuer 25 % besser hielt. Bei 2,4 stimmen beide ueberein.
-    if (l.slow) dps *= 1 + l.slow * 2.4;
+    // Bremsen: nicht nur die Staerke zaehlt, sondern wie lange sie anhaelt und
+    // wie oft sie erneuert wird.
+    //
+    // Vorher stand hier `1 + slow * 2.4` - die Dauer kam gar nicht vor. Damit
+    // war "Ewiges Eis" mit Bremse 72 % ueber 3,4 Sekunden im Modell kaum mehr
+    // wert als eine kurze Bremse, und das Modell widersprach der Simulation um
+    // Faktor 1,9. Die Bremse wirkt auf *alle* Tuerme in Reichweite, deshalb
+    // ist ihr Wert ein Vielfaches ihres eigenen Schadens.
+    if (l.slow) {
+      const uptime = Math.min(1, (l.slowTime ?? 1) / Math.max(0.2, l.cooldown));
+      dps *= 1 + l.slow * uptime * 3.4;
+    }
     dps *= 1 + l.range / 900;                            // Reichweite = mehr Zeit am Ziel
     if (!t.hitsAir) dps *= 1 - airShare * 0.7;
     return dps / invest;

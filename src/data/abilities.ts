@@ -23,7 +23,7 @@ export const ABILITIES: Record<AbilityId, AbilityDef> = {
     id: 'meteor', name: 'Meteor',
     blurb: 'Ruft einen Brocken auf eine Stelle. Trifft Boden und Luft.',
     kind: 'aimed', cooldown: 40, color: '#F08A3C', key: 'q',
-    radius: 108, delay: 0.75, damage: 190,
+    radius: 130, delay: 0.75, damage: 190,
   },
   freeze: {
     id: 'freeze', name: 'Frostschlag',

@@ -86,7 +86,7 @@ g.cancelAnimationFrame = (id: number) => win.clearTimeout(id);
 
 const { GameState } = await import('../src/game/state');
 const { Renderer } = await import('../src/gfx/renderer');
-const { COLS, ROWS } = await import('../src/data/config');
+
 const { MAX_LEVEL, TOWER_ORDER } = await import('../src/data/towers');
 
 const { spriteCount, spriteBytes } = await import('../src/gfx/sprites');
@@ -103,12 +103,12 @@ r.resize();
 s.reset();
 s.gold = 1_000_000;
 let i = 0;
-for (let y = 0; y < ROWS; y++) {
-  for (let x = 0; x < COLS; x++) {
-    if (!s.canBuild(x, y)) continue;
+for (let spot = 0; spot < s.map.spots.length; spot++) {
+    {
+      if (!s.canBuild(spot)) continue;
     const id = TOWER_ORDER[i++ % TOWER_ORDER.length];
-    if (s.build(x, y, id)) {
-      const t = s.towerOn(x, y)!;
+    if (s.build(spot, id)) {
+      const t = s.towerOnSpotIndex(spot)!;
       while (t.level < MAX_LEVEL) s.upgrade(t, (i % 2) as 0 | 1);
     }
   }

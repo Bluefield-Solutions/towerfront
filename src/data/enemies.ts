@@ -31,39 +31,39 @@ export interface EnemyDef {
 export const ENEMIES: Record<EnemyId, EnemyDef> = {
   crawler: {
     id: 'crawler', name: 'Schleicher',
-    hp: 34, speed: 95, bounty: 2, leak: 1, radius: 17, armor: 0, slowResist: 0,
+    hp: 34, speed: 114, bounty: 2, leak: 1, radius: 20, armor: 0, slowResist: 0,
     body: '#8B5CF6', trim: '#C9B6FF',
   },
   runner: {
     id: 'runner', name: 'Späher',
-    hp: 24, speed: 172, bounty: 2, leak: 1, radius: 14, armor: 0, slowResist: 0,
+    hp: 24, speed: 206, bounty: 2, leak: 1, radius: 17, armor: 0, slowResist: 0,
     body: '#E2566A', trim: '#FFB3BE',
   },
   brute: {
     id: 'brute', name: 'Koloss',
-    hp: 150, speed: 62, bounty: 7, leak: 3, radius: 24, armor: 3, slowResist: 0.3,
+    hp: 150, speed: 74, bounty: 7, leak: 3, radius: 29, armor: 3, slowResist: 0.3,
     body: '#84AEE0', trim: '#E6F2FF',
   },
   flyer: {
     id: 'flyer', name: 'Gleiter',
-    hp: 62, speed: 118, bounty: 4, leak: 2, radius: 16, armor: 0, slowResist: 0.2,
+    hp: 62, speed: 142, bounty: 4, leak: 2, radius: 19, armor: 0, slowResist: 0.2,
     flying: true,
     body: '#3ED9A4', trim: '#C7FFE9',
   },
   splitter: {
     id: 'splitter', name: 'Spalter',
-    hp: 130, speed: 78, bounty: 6, leak: 2, radius: 22, armor: 1, slowResist: 0.15,
+    hp: 130, speed: 94, bounty: 6, leak: 2, radius: 26, armor: 1, slowResist: 0.15,
     split: { into: 'splitling', count: 2, hpFactor: 0.3 },
     body: '#E8873C', trim: '#FFD9A8',
   },
   splitling: {
     id: 'splitling', name: 'Span',
-    hp: 40, speed: 148, bounty: 1, leak: 1, radius: 12, armor: 0, slowResist: 0,
+    hp: 40, speed: 178, bounty: 1, leak: 1, radius: 14, armor: 0, slowResist: 0,
     body: '#EFE24C', trim: '#FFF8C8',
   },
   titan: {
     id: 'titan', name: 'Leerentitan',
-    hp: 1100, speed: 44, bounty: 48, leak: 5, radius: 36, armor: 6, slowResist: 0.55,
+    hp: 1100, speed: 53, bounty: 48, leak: 5, radius: 43, armor: 6, slowResist: 0.55,
     boss: true,
     body: '#2A1B4D', trim: '#B07CFF',
   },

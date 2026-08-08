@@ -1,4 +1,4 @@
-import { COLS, ROWS, TILE, WORLD_W, WORLD_H, C } from '../data/config';
+import { WORLD_W, WORLD_H, C } from '../data/config';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import {
   TOWERS, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor,
@@ -10,9 +10,9 @@ import {
 } from '../data/difficulty';
 import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
 import {
-  MAPS, mapById, cellCenter, cellKey, goalOf, laneCells, lanePoints, pathCells, pathLength,
-  type GameMap,
+  MAPS, mapById, goalOf, lanePaths, spotAt, type GameMap,
 } from '../data/maps';
+import type { LanePath } from '../core/path';
 import type { Vec } from '../core/math';
 import { dist, dist2 } from '../core/math';
 import { Sfx } from '../core/audio';
@@ -42,13 +42,11 @@ export class GameState {
   /** Die Karte kann zwischen zwei Partien wechseln, deshalb ist hier nichts
    *  mehr fest verdrahtet. */
   map: GameMap = MAPS[0];
-  /** Die Bahnen in Weltkoordinaten. Eine Karte kann mehrere Zuwege haben,
-   *  die sich unterwegs vereinen. */
-  lanes: Vec[][] = [];
-  readonly pathSet = new Set<number>();
-  readonly blockedSet = new Set<number>();
-  /** Die gestalteten Bauplaetze der Karte. */
-  readonly spotSet = new Set<number>();
+  /** Die Kurven der Zuwege. Eine Karte kann mehrere haben, die sich
+   *  unterwegs vereinen. */
+  lanes: LanePath[] = [];
+  /** Turm je Bauplatz-Index, oder undefined. */
+  private towerOnSpot: (Tower | undefined)[] = [];
   goal: Vec = { x: 0, y: 0 };
   /** Gesamtlaenge der laengsten Bahn. Dient als gemeinsamer Massstab, damit
    *  fliegende und laufende Gegner beim Zielen vergleichbar sind. */
@@ -95,9 +93,11 @@ export class GameState {
 
   buildChoice: TowerId | null = null;
   selectedTower: Tower | null = null;
-  hoverCell: Vec | null = null;
+  /** Bauplatz unter dem Zeiger, -1 wenn keiner. */
+  hoverSpot = -1;
   /** Zelle unter dem gedrueckten Finger. Gebaut wird erst beim Loslassen. */
-  pendingCell: Vec | null = null;
+  /** Bauplatz, ueber dem gerade gedrueckt wird, -1 wenn keiner. */
+  pendingSpot = -1;
 
   /** Aussaat und Zufallszustand. Beides wandert in den Spielstand, damit eine
    *  fortgesetzte Partie exakt so weiterlaeuft wie eine ununterbrochene - und
@@ -122,7 +122,6 @@ export class GameState {
   private pending: PendingSpawn[] = [];
   private waveTime = 0;
   private nextId = 1;
-  private towerAt = new Map<number, Tower>();
 
   /** Raster fuer alle Umkreisabfragen. Zellenkante = Kachelgroesse.
    *  Wird einmal pro Simulationsschritt neu befuellt. */
@@ -165,53 +164,48 @@ export class GameState {
    *  so gibt es keinen Zustand, der zur alten Karte gehoert. */
   loadMap(mapId: string): void {
     this.map = mapById(mapId);
-    this.lanes = this.map.lanes.map(lanePoints);
-    this.pathSet.clear();
-    this.blockedSet.clear();
-    for (const c of pathCells(this.map)) this.pathSet.add(cellKey(c.x, c.y));
-    for (const b of this.map.blocked) this.blockedSet.add(cellKey(b.x, b.y));
-    this.spotSet.clear();
-    for (const sp of this.map.spots) this.spotSet.add(cellKey(sp.x, sp.y));
+    this.lanes = lanePaths(this.map);
+    this.towerOnSpot = new Array(this.map.spots.length).fill(undefined);
     this.goal = goalOf(this.map);
-    this.pathTotal = Math.max(...this.lanes.map(pathLength));
+    this.pathTotal = Math.max(...this.lanes.map((l) => l.length));
     this.airTotal = Math.max(...this.lanes.map(
-      (l) => dist(l[0].x, l[0].y, this.goal.x, this.goal.y),
+      (l) => dist(l.pts[0].x, l.pts[0].y, this.goal.x, this.goal.y),
     ));
-    void laneCells;
   }
 
   // ---------------------------------------------------------------- Bauen
 
-  canBuild(cx: number, cy: number): boolean {
-    if (cx < 0 || cy < 0 || cx >= COLS || cy >= ROWS) return false;
-    const k = cellKey(cx, cy);
-    // Nur auf den gestalteten Bauplaetzen der Karte, und nur wenn frei.
-    return this.spotSet.has(k) && !this.towerAt.has(k);
+  /** Kann auf diesem Bauplatz gebaut werden? Angabe ist der Index, nicht mehr
+   *  eine Rasterzelle. */
+  canBuild(spot: number): boolean {
+    return spot >= 0 && spot < this.map.spots.length && !this.towerOnSpot[spot];
   }
 
-  /** Ist diese Zelle ueberhaupt ein Bauplatz - besetzt oder nicht? */
-  isSpot(cx: number, cy: number): boolean {
-    return this.spotSet.has(cellKey(cx, cy));
+  /** Welcher Bauplatz liegt unter diesem Weltpunkt? -1, wenn keiner. */
+  spotUnder(x: number, y: number): number {
+    return spotAt(this.map, x, y);
   }
 
-  towerOn(cx: number, cy: number): Tower | undefined {
-    return this.towerAt.get(cellKey(cx, cy));
+  towerOnSpotIndex(spot: number): Tower | undefined {
+    return spot >= 0 ? this.towerOnSpot[spot] : undefined;
   }
 
-  build(cx: number, cy: number, id: TowerId): boolean {
+
+
+  build(spot: number, id: TowerId): boolean {
     const def = TOWERS[id];
-    if (!this.canBuild(cx, cy) || this.gold < def.base.cost) return false;
+    if (!this.canBuild(spot) || this.gold < def.base.cost) return false;
     this.gold -= def.base.cost;
     this.stats.goldSpent += def.base.cost;
     this.stats.towersBuilt++;
-    const c = cellCenter(cx, cy);
+    const c = this.map.spots[spot];
     const t: Tower = {
-      id: this.nextId++, def: id, cx, cy, x: c.x, y: c.y,
+      id: this.nextId++, def: id, spot, x: c.x, y: c.y,
       level: 1, branch: null, cooldownLeft: 0, angle: -Math.PI / 2, recoil: 0, flash: 0, pulse: 0,
       target: null, retargetIn: 0, kills: 0, damageDone: 0,
     };
     this.towers.push(t);
-    this.towerAt.set(cellKey(cx, cy), t);
+    this.towerOnSpot[spot] = t;
     this.towersVersion++;
     this.ring(c.x, c.y, 54, def.accent, 0.4, 3);
     Sfx.play('build');
@@ -244,7 +238,7 @@ export class GameState {
     t.target = null;
     compact(this.towers, (o) => o === t);
     this.towersVersion++;
-    this.towerAt.delete(cellKey(t.cx, t.cy));
+    this.towerOnSpot[t.spot] = undefined;
     if (this.selectedTower === t) this.selectedTower = null;
     this.float(t.x, t.y - 10, `+${value}`, C.gold, 22);
     this.ring(t.x, t.y, 48, C.stoneDark, 0.35, 2);
@@ -484,16 +478,17 @@ export class GameState {
   private spawnEnemy(id: EnemyId, hpMul: number, lane: number): void {
     const def = ENEMIES[id];
     const ln = lane % this.lanes.length;
-    const p0 = this.lanes[ln][0];
+    const p0 = this.lanes[ln].pts[0];
     const ramp = hpScale(this.diff, this.waveIndex, this.waves.length, this.map.balance.hpMul);
     const hp = Math.round(def.hp * hpMul * ramp);
     // Flieger starten leicht versetzt, damit ein Schwarm nicht als eine Linie
     // uebereinander liegt.
-    const off = def.flying ? (this.rng.next() - 0.5) * TILE * 2.2 : 0;
+    const off = def.flying ? (this.rng.next() - 0.5) * 200 : 0;
     this.enemies.push({
       id: this.nextId++, def: id, x: p0.x, y: p0.y + off,
-      hp, hpMax: hp, speed: def.speed, lane: ln, seg: 0, travelled: 0,
-      slowFactor: 1, slowLeft: 0, hitFlash: 0, wobble: this.rng.next() * 9,
+      hp, hpMax: hp, speed: def.speed, lane: ln, heading: 0, travelled: 0,
+      slowFactor: 1, slowLeft: 0, healIn: 0,
+      hitFlash: 0, wobble: this.rng.next() * 9,
       dead: false, leaked: false,
     });
   }
@@ -509,7 +504,8 @@ export class GameState {
         id: this.nextId++, def: rule.into,
         x: parent.x + spread, y: parent.y + (this.rng.next() - 0.5) * 10,
         hp, hpMax: hp, speed: child.speed,
-        lane: parent.lane, seg: parent.seg, travelled: Math.max(0, parent.travelled - 6),
+        lane: parent.lane, heading: parent.heading, healIn: 0,
+        travelled: Math.max(0, parent.travelled - 6),
         slowFactor: parent.slowFactor, slowLeft: parent.slowLeft,
         hitFlash: 0, wobble: this.rng.next() * 9,
         dead: false, leaked: false,
@@ -547,24 +543,19 @@ export class GameState {
         continue;
       }
 
+      // Bewegung auf der Kurve: die zurueckgelegte Strecke ist die einzige
+      // Zustandsgroesse. Position und Blickrichtung folgen daraus - dadurch
+      // laeuft ein Gegner in einer engen Kurve genauso schnell wie auf der
+      // Geraden, und er dreht sich weich mit.
       const path = this.lanes[e.lane] ?? this.lanes[0];
-      let move = e.speed * e.slowFactor * dt;
-      while (move > 0 && e.seg < path.length - 1) {
-        const to = path[e.seg + 1];
-        const d = dist(e.x, e.y, to.x, to.y);
-        if (d <= move) {
-          e.x = to.x; e.y = to.y; e.travelled += d; move -= d; e.seg++;
-        } else {
-          const k = move / d;
-          e.x += (to.x - e.x) * k;
-          e.y += (to.y - e.y) * k;
-          e.travelled += move;
-          move = 0;
-        }
-      }
-      if (e.seg >= path.length - 1) {
+      e.travelled += e.speed * e.slowFactor * dt;
+      if (e.travelled >= path.length) {
+        e.x = this.goal.x; e.y = this.goal.y;
         this.leak(e, edef);
         leaked = true;
+      } else {
+        const p = path.at(e.travelled);
+        e.x = p.x; e.y = p.y; e.heading = p.angle;
       }
     }
     if (leaked) Sfx.play('leak');
@@ -681,18 +672,24 @@ export class GameState {
   }
 
   /** Vorhalten: wohin laeuft der Gegner in der Flugzeit des Geschosses. */
+  /** Vorhalten: wo ist der Gegner, wenn das Geschoss ankommt?
+   *
+   *  Auf der Kurve ist das eine einzige Nachschlagefrage statt eines Laufs
+   *  ueber Wegabschnitte - die Strecke ist bekannt, der Rest folgt. */
   private predict(e: Enemy, flight: number): Vec {
-    const path = this.lanes[e.lane] ?? this.lanes[0];
-    let x = e.x, y = e.y, seg = e.seg;
-    let move = e.speed * e.slowFactor * flight;
-    while (move > 0 && seg < path.length - 1) {
-      const to = path[seg + 1];
-      const d = dist(x, y, to.x, to.y);
-      if (d <= move) { x = to.x; y = to.y; move -= d; seg++; }
-      else { const k = move / d; x += (to.x - x) * k; y += (to.y - y) * k; move = 0; }
+    if (ENEMIES[e.def].flying) {
+      const d = dist(e.x, e.y, this.goal.x, this.goal.y);
+      const move = Math.min(d, e.speed * e.slowFactor * flight);
+      return d > 0
+        ? { x: e.x + ((this.goal.x - e.x) / d) * move, y: e.y + ((this.goal.y - e.y) / d) * move }
+        : { x: e.x, y: e.y };
     }
-    return { x, y };
+    const path = this.lanes[e.lane] ?? this.lanes[0];
+    const s2 = Math.min(path.length, e.travelled + e.speed * e.slowFactor * flight);
+    const p = path.at(s2);
+    return { x: p.x, y: p.y };
   }
+
 
   private chain(
     t: Tower, first: Enemy, damage: number, jumps: number,
@@ -1012,12 +1009,12 @@ export class GameState {
     this.abilityCd = { meteor: 0, freeze: 0 };
     this.aiming = null;
     this.grid.clear();
-    this.towerAt.clear();
+    this.towerOnSpot = new Array(this.map.spots.length).fill(undefined);
     this.towersVersion++;
     this.pending = [];
     this.selectedTower = null;
     this.buildChoice = null;
-    this.pendingCell = null;
+    this.pendingSpot = -1;
     this.speed = 1;
     this.paused = false;
     this.idleTime = 0;
@@ -1061,12 +1058,12 @@ export class GameState {
       ]) as unknown as SaveGame['shots'],
       pending: this.pending.map((p) => [p.time, p.enemy, p.hpMul, p.lane]),
       towers: this.towers.map((t) => [
-        t.def, t.cx, t.cy, t.level, t.kills, t.damageDone, t.cooldownLeft, t.retargetIn, t.branch,
+        t.def, t.spot, t.level, t.kills, t.damageDone, t.cooldownLeft, t.retargetIn, t.branch,
         t.target ? this.enemies.indexOf(t.target) : -1,
-      ]) as SaveGame['towers'],
+      ]) as unknown as SaveGame['towers'],
       enemies: this.enemies.map((e) => [
-        e.def, e.x, e.y, e.hp, e.hpMax, e.seg, e.travelled, e.slowFactor, e.slowLeft, e.wobble,
-        e.lane,
+        e.def, e.x, e.y, e.hp, e.hpMax, e.travelled, e.slowFactor, e.slowLeft, e.wobble,
+        e.lane, e.healIn,
       ]),
     };
   }
@@ -1087,9 +1084,9 @@ export class GameState {
     // Gelaende wiederhergestellt, und die Zelle waere dauerhaft blockiert
     // gewesen. Lieber neu anfangen als in einem unmoeglichen Zustand landen.
     {
-      const spots = new Set(mapById(save.map).spots.map((sp) => cellKey(sp.x, sp.y)));
-      for (const [, cx, cy] of save.towers) {
-        if (!spots.has(cellKey(cx, cy))) return false;
+      const n = mapById(save.map).spots.length;
+      for (const [, spot] of save.towers) {
+        if (!Number.isInteger(spot) || spot < 0 || spot >= n) return false;
       }
     }
     for (const [id] of save.enemies) if (!(id in ENEMIES)) return false;
@@ -1118,27 +1115,27 @@ export class GameState {
     }
 
     const targetIdx: number[] = [];
-    for (const [def, cx, cy, level, kills, damageDone, cooldownLeft, retargetIn, branch, tIdx]
+    for (const [def, spot, level, kills, damageDone, cooldownLeft, retargetIn, branch, tIdx]
       of save.towers) {
       targetIdx.push(tIdx ?? -1);
-      const c = cellCenter(cx, cy);
+      const c = this.map.spots[spot];
       const t: Tower = {
-        id: this.nextId++, def, cx, cy, x: c.x, y: c.y,
-        level, branch: branch ?? null,
+        id: this.nextId++, def, spot, x: c.x, y: c.y,
+        level, branch: (branch ?? null) as BranchIndex,
         cooldownLeft: cooldownLeft ?? 0, angle: -Math.PI / 2, recoil: 0, flash: 0, pulse: 0,
         target: null, retargetIn: retargetIn ?? 0, kills, damageDone,
       };
       this.towers.push(t);
-      this.towerAt.set(cellKey(cx, cy), t);
+      this.towerOnSpot[spot] = t;
     }
     this.towersVersion++;
 
-    for (const [def, x, y, hp, hpMax, seg, travelled, slowFactor, slowLeft, wobble, lane]
+    for (const [def, x, y, hp, hpMax, travelled, slowFactor, slowLeft, wobble, lane, healIn]
       of save.enemies) {
       this.enemies.push({
         id: this.nextId++, def, x, y, hp, hpMax,
-        speed: ENEMIES[def].speed, lane: lane ?? 0, seg, travelled,
-        slowFactor, slowLeft, hitFlash: 0, wobble,
+        speed: ENEMIES[def].speed, lane: lane ?? 0, heading: 0, travelled,
+        slowFactor, slowLeft, healIn: healIn ?? 0, hitFlash: 0, wobble,
         dead: false, leaked: false,
       });
     }
@@ -1170,7 +1167,5 @@ export class GameState {
     return true;
   }
 
-  worldToCell(wx: number, wy: number): Vec {
-    return { x: Math.floor(wx / TILE), y: Math.floor(wy / TILE) };
-  }
+
 }

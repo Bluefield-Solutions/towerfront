@@ -1,5 +1,5 @@
-import { TILE, COLS, ROWS } from './config';
 import type { Vec } from '../core/math';
+import { LanePath } from '../core/path';
 import {
   PLAN_SPIRALHAIN, PLAN_ASCHESCHLUCHT, PLAN_FROSTSPALTE, type Wave,
 } from './waves';
@@ -37,40 +37,25 @@ export interface GameMap {
   name: string;
   blurb: string;
   palette: MapPalette;
-  /** Ein oder mehrere Zuwege. Jede Bahn ist eine Kette von Gitterpunkten und
-   *  endet auf demselben Herzkristall. Der erste Punkt darf ausserhalb des
-   *  Feldes liegen - dort steht das Tor, aus dem die Gegner kommen.
+  /** Kontrollpunkte der Zuwege in Weltkoordinaten.
    *
-   *  Bahnen duerfen sich Zellen teilen: genau so entsteht eine Gabelung, an
-   *  der zwei Zuege zusammenlaufen. Innerhalb einer Bahn ist eine doppelt
-   *  benutzte Zelle dagegen ein Fehler - der Waechter prueft beides getrennt. */
+   *  Durch sie laeuft eine Catmull-Rom-Kurve. Der erste Punkt darf ausserhalb
+   *  des Feldes liegen - dort steht das Tor. Mehrere Bahnen koennen sich
+   *  vereinen, indem sie ab dem Treffpunkt dieselben Punkte fuehren. */
   lanes: Vec[][];
-  /** Zellen, auf denen nicht gebaut werden darf (Deko/Felsen). */
-  blocked: Vec[];
-  /** Die Bauplaetze der Karte.
-   *
-   *  Bis v33 durfte man auf jeder freien Zelle bauen - 155 bis 171 Stellen je
-   *  Karte. Das hatte drei Folgen, die sich nicht einzeln loesen liessen:
-   *  Man sah dem Brett nicht an, wo etwas hingehoert. "Viele Tuerme" war kein
-   *  Spielstil, sondern nur Ueberdeckung. Und die Kurve liess sich nicht gegen
-   *  eine bekannte Obergrenze stellen, weil es keine gab.
-   *
-   *  Zwoelf gestaltete Stellungen je Karte statt einer Sockelwiese. Die Frage
-   *  lautet damit nicht mehr "wie viele", sondern "welcher Turm hierhin und
-   *  welcher Ausbau" - so wie im Genre-Vorbild. */
+  /** Bauplaetze in Weltkoordinaten. Gestaltete Orte, keine Rasterzellen -
+   *  sie duerfen und sollen ungleich verteilt sein. */
   spots: Vec[];
-  /** Empfohlener erster Bauplatz - die Einfuehrung zeigt darauf. */
-  hint: Vec;
+  /** Index des Bauplatzes, auf den die Einfuehrung zeigt. */
+  hint: number;
+  /** Deko - Felsen und Bewuchs, rein optisch. */
+  props: { x: number; y: number; r: number }[];
   /** Der Wellenplan dieser Karte. */
   waves: Wave[];
-  /** Feinausgleich der Karte.
-   *
-   *  Seit v19 traegt jede Karte ihren eigenen Wellenplan, und alle drei
-   *  stehen bei 1,0 - der Faktor wird nicht mehr gebraucht. Er bleibt als
-   *  letzte Feinschraube fuer den Fall, dass eine kuenftige Karte sie
-   *  wirklich braucht; der Waechter begrenzt ihn eng. */
+  /** Feinausgleich der Karte. Siehe Konzept, Abschnitt zur Balance. */
   balance: { hpMul: number; goldMul: number };
 }
+
 
 const MOOS: MapPalette = {
   terrain: '#173D3A', terrainHi: '#215A50', terrainLo: '#102B2B',
@@ -101,36 +86,27 @@ export const MAP_SPIRALHAIN: GameMap = {
   name: 'Spiralhain',
   blurb: 'Ein Weg, viel Platz. Der Pfad windet sich um den Kristall.',
   palette: MOOS,
-  lanes: [[
-    { x: -1, y: 1 },
-    { x: 14, y: 1 },
-    { x: 14, y: 7 },
-    { x: 3, y: 7 },
-    { x: 3, y: 4 },
-    { x: 11, y: 4 },
-  ]],
+  lanes: [
+    [
+      { x: -48, y: 156 }, { x: 1392, y: 156 }, { x: 1392, y: 732 }, { x: 336, y: 732 },
+      { x: 336, y: 444 }, { x: 1104, y: 444 },
+    ],
+  ],
   spots: [
-    { x: 5, y: 5 }, { x: 9, y: 2 }, { x: 13, y: 3 }, { x: 12, y: 6 },
-    { x: 4, y: 2 }, { x: 8, y: 5 }, { x: 2, y: 2 }, { x: 2, y: 5 },
-    { x: 6, y: 2 }, { x: 10, y: 6 }, { x: 11, y: 2 }, { x: 2, y: 0 },
+    { x: 516, y: 612 }, { x: 1380, y: 468 }, { x: 948, y: 204 },
+    { x: 996, y: 684 }, { x: 348, y: 228 }, { x: 1260, y: 396 },
+    { x: 204, y: 300 }, { x: 564, y: 300 }, { x: 444, y: 516 },
+    { x: 780, y: 276 }, { x: 660, y: 228 }, { x: 1284, y: 636 },
   ],
-  hint: { x: 9, y: 2 },
+  hint: 0,
+  props: [
+    { x: 1584, y: 156, r: 26 }, { x: 1680, y: 252, r: 26 }, { x: 48, y: 540, r: 26 },
+    { x: 144, y: 828, r: 26 }, { x: 816, y: 60, r: 26 }, { x: 624, y: 828, r: 26 },
+  ],
   waves: PLAN_SPIRALHAIN,
-  balance: { hpMul: 0.86, goldMul: 1 },
-  blocked: [
-    { x: 16, y: 1 }, { x: 17, y: 2 },
-    { x: 0, y: 5 }, { x: 1, y: 8 },
-    { x: 8, y: 0 }, { x: 6, y: 8 },
-  ],
+  balance: { hpMul: 0.88, goldMul: 1 },
 };
 
-/** Rechteckiges Feld gesperrter Zellen - kuerzer und lesbarer, als jede Zelle
- *  einzeln aufzuzaehlen. */
-function rect(x0: number, y0: number, x1: number, y1: number): Vec[] {
-  const out: Vec[] = [];
-  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) out.push({ x, y });
-  return out;
-}
 
 /** Karte 2 "Laubschlucht": Zwei Zuwege, die sich auf halbem Weg vereinen.
  *  Vor der Gabelung muss man sich entscheiden, hinter ihr zahlt jede Stellung
@@ -142,33 +118,36 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
   palette: LAUB,
   lanes: [
     [
-      { x: -1, y: 1 }, { x: 6, y: 1 }, { x: 6, y: 5 },
-      { x: 6, y: 8 }, { x: 17, y: 8 }, { x: 17, y: 2 },
-      { x: 11, y: 2 }, { x: 11, y: 6 }, { x: 14, y: 6 },
+      { x: -48, y: 156 }, { x: 624, y: 156 }, { x: 624, y: 540 }, { x: 624, y: 828 },
+      { x: 1680, y: 828 }, { x: 1680, y: 252 }, { x: 1104, y: 252 }, { x: 1104, y: 636 },
+      { x: 1392, y: 636 },
     ],
     [
-      { x: -1, y: 9 }, { x: 2, y: 9 }, { x: 2, y: 5 }, { x: 6, y: 5 },
-      { x: 6, y: 8 }, { x: 17, y: 8 }, { x: 17, y: 2 },
-      { x: 11, y: 2 }, { x: 11, y: 6 }, { x: 14, y: 6 },
+      { x: -48, y: 924 }, { x: 240, y: 924 }, { x: 240, y: 540 }, { x: 624, y: 540 },
+      { x: 624, y: 828 }, { x: 1680, y: 828 }, { x: 1680, y: 252 }, { x: 1104, y: 252 },
+      { x: 1104, y: 636 }, { x: 1392, y: 636 },
     ],
   ],
   spots: [
-    { x: 12, y: 7 }, { x: 4, y: 3 }, { x: 16, y: 6 }, { x: 13, y: 3 },
-    { x: 1, y: 7 }, { x: 7, y: 7 }, { x: 15, y: 3 }, { x: 2, y: 0 },
-    { x: 4, y: 0 }, { x: 4, y: 6 }, { x: 10, y: 7 }, { x: 14, y: 7 },
+    { x: 1212, y: 396 }, { x: 492, y: 660 }, { x: 1644, y: 444 },
+    { x: 396, y: 276 }, { x: 1452, y: 780 }, { x: 132, y: 684 },
+    { x: 996, y: 708 }, { x: 204, y: 300 }, { x: 1140, y: 756 },
+    { x: 828, y: 708 }, { x: 1260, y: 756 }, { x: 1524, y: 612 },
   ],
-  hint: { x: 7, y: 7 },
+  hint: 5,
+  props: [
+    { x: 48, y: 348, r: 26 }, { x: 144, y: 348, r: 26 }, { x: 48, y: 444, r: 26 },
+    { x: 144, y: 444, r: 26 }, { x: 1860, y: 180, r: 26 }, { x: 1872, y: 444, r: 26 },
+    { x: 1860, y: 300, r: 26 }, { x: 1872, y: 540, r: 26 }, { x: 1860, y: 60, r: 26 },
+    { x: 1872, y: 636, r: 26 }, { x: 816, y: 60, r: 26 }, { x: 912, y: 60, r: 26 },
+    { x: 1008, y: 60, r: 26 }, { x: 432, y: 732, r: 26 }, { x: 336, y: 348, r: 26 },
+    { x: 1872, y: 924, r: 26 }, { x: 48, y: 60, r: 26 }, { x: 1296, y: 444, r: 26 },
+    { x: 816, y: 1020, r: 26 },
+  ],
   waves: PLAN_ASCHESCHLUCHT,
-  balance: { hpMul: 0.96, goldMul: 1 },
-  blocked: [
-    // Wurzelwerk und Findlinge engen die Raender ein.
-    ...rect(0, 3, 1, 4),
-    ...rect(18, 4, 19, 6),
-    ...rect(8, 0, 10, 0),
-    { x: 4, y: 7 }, { x: 3, y: 3 }, { x: 19, y: 9 }, { x: 0, y: 0 },
-    { x: 13, y: 4 }, { x: 8, y: 10 },
-  ],
+  balance: { hpMul: 1.05, goldMul: 1 },
 };
+
 
 /** Karte 3 "Frostspalte": Zwei Zuwege, die erst kurz vor dem Kristall
  *  zusammenfinden, dazu ein Feld voller Gletscherspalten. Wenig Platz, spaete
@@ -180,36 +159,46 @@ export const MAP_FROSTSPALTE: GameMap = {
   palette: FROST,
   lanes: [
     [
-      { x: -1, y: 2 }, { x: 3, y: 2 }, { x: 3, y: 8 },
-      { x: 8, y: 8 }, { x: 8, y: 5 }, { x: 17, y: 5 },
-      { x: 17, y: 9 }, { x: 11, y: 9 }, { x: 11, y: 6 },
+      { x: -48, y: 252 }, { x: 336, y: 252 }, { x: 336, y: 828 }, { x: 816, y: 828 },
+      { x: 816, y: 540 }, { x: 1680, y: 540 }, { x: 1680, y: 924 }, { x: 1104, y: 924 },
+      { x: 1104, y: 636 },
     ],
     [
-      { x: 6, y: -1 }, { x: 6, y: 0 }, { x: 14, y: 0 }, { x: 14, y: 3 },
-      { x: 10, y: 3 }, { x: 10, y: 5 },
-      { x: 17, y: 5 }, { x: 17, y: 9 }, { x: 11, y: 9 }, { x: 11, y: 6 },
+      { x: 624, y: -36 }, { x: 624, y: 60 }, { x: 1392, y: 60 }, { x: 1392, y: 348 },
+      { x: 1008, y: 348 }, { x: 1008, y: 540 }, { x: 1680, y: 540 }, { x: 1680, y: 924 },
+      { x: 1104, y: 924 }, { x: 1104, y: 636 },
     ],
   ],
   spots: [
-    { x: 12, y: 4 }, { x: 16, y: 7 }, { x: 9, y: 7 }, { x: 12, y: 1 },
-    { x: 2, y: 3 }, { x: 4, y: 7 }, { x: 12, y: 8 }, { x: 8, y: 1 },
-    { x: 14, y: 4 }, { x: 9, y: 4 }, { x: 12, y: 6 }, { x: 10, y: 1 },
+    { x: 1020, y: 636 }, { x: 1572, y: 804 }, { x: 1284, y: 276 },
+    { x: 444, y: 204 }, { x: 516, y: 732 }, { x: 1212, y: 684 },
+    { x: 924, y: 276 }, { x: 180, y: 444 }, { x: 1548, y: 660 },
+    { x: 996, y: 756 }, { x: 900, y: 684 }, { x: 1308, y: 612 },
   ],
-  hint: { x: 12, y: 4 },
+  hint: 0,
+  props: [
+    { x: 48, y: 924, r: 26 }, { x: 144, y: 924, r: 26 }, { x: 240, y: 924, r: 26 },
+    { x: 48, y: 1020, r: 26 }, { x: 144, y: 1020, r: 26 }, { x: 240, y: 1020, r: 26 },
+    { x: 1296, y: 1020, r: 26 }, { x: 1392, y: 1020, r: 26 }, { x: 1488, y: 1020, r: 26 },
+    { x: 1584, y: 1020, r: 26 }, { x: 1680, y: 1020, r: 26 }, { x: 1776, y: 1020, r: 26 },
+    { x: 1872, y: 1020, r: 26 }, { x: 48, y: 540, r: 26 }, { x: 144, y: 540, r: 26 },
+    { x: 240, y: 540, r: 26 }, { x: 48, y: 636, r: 26 }, { x: 144, y: 636, r: 26 },
+    { x: 240, y: 636, r: 26 }, { x: 48, y: 732, r: 26 }, { x: 144, y: 732, r: 26 },
+    { x: 240, y: 732, r: 26 }, { x: 1680, y: 60, r: 26 }, { x: 1776, y: 60, r: 26 },
+    { x: 1872, y: 60, r: 26 }, { x: 1680, y: 156, r: 26 }, { x: 1776, y: 156, r: 26 },
+    { x: 1872, y: 156, r: 26 }, { x: 1680, y: 252, r: 26 }, { x: 1776, y: 252, r: 26 },
+    { x: 1872, y: 252, r: 26 }, { x: 1296, y: 732, r: 26 }, { x: 1392, y: 732, r: 26 },
+    { x: 1488, y: 732, r: 26 }, { x: 1296, y: 828, r: 26 }, { x: 1392, y: 828, r: 26 },
+    { x: 1488, y: 828, r: 26 }, { x: 144, y: 60, r: 26 }, { x: 240, y: 60, r: 26 },
+    { x: 336, y: 60, r: 26 }, { x: 144, y: 156, r: 26 }, { x: 240, y: 156, r: 26 },
+    { x: 336, y: 156, r: 26 }, { x: 432, y: 444, r: 26 }, { x: 528, y: 444, r: 26 },
+    { x: 816, y: 252, r: 26 }, { x: 1200, y: 252, r: 26 }, { x: 1860, y: 960, r: 26 },
+    { x: 1584, y: 156, r: 26 },
+  ],
   waves: PLAN_FROSTSPALTE,
   balance: { hpMul: 1.12, goldMul: 1 },
-  blocked: [
-    // Gletscherspalten nehmen viel Bauflaeche - hier ist Platz die Ressource.
-    ...rect(0, 9, 2, 10),
-    ...rect(13, 10, 19, 10),
-    ...rect(0, 5, 2, 7),
-    ...rect(17, 0, 19, 2),
-    ...rect(13, 7, 15, 8),
-    ...rect(1, 0, 3, 1),
-    { x: 4, y: 4 }, { x: 5, y: 4 }, { x: 8, y: 2 }, { x: 12, y: 2 },
-    { x: 15, y: 2 }, { x: 16, y: 1 },
-  ],
 };
+
 
 export const MAPS: GameMap[] = [MAP_SPIRALHAIN, MAP_ASCHESCHLUCHT, MAP_FROSTSPALTE];
 
@@ -217,71 +206,34 @@ export function mapById(id: string): GameMap {
   return MAPS.find((m) => m.id === id) ?? MAP_SPIRALHAIN;
 }
 
-/** Zellindex -> eindeutiger Schluessel */
-export const cellKey = (cx: number, cy: number) => cy * COLS + cx;
+/** Die Kurven einer Karte, einmal gebaut und zwischengespeichert. */
+const laneCache = new Map<string, LanePath[]>();
 
-/** Mittelpunkt einer Zelle in Weltkoordinaten */
-export const cellCenter = (cx: number, cy: number): Vec => ({
-  x: cx * TILE + TILE / 2,
-  y: cy * TILE + TILE / 2,
-});
-
-/** Zellen einer einzelnen Bahn, in Laufrichtung. Nur achsenparallele
- *  Abschnitte sind erlaubt. */
-export function laneCells(lane: Vec[]): Vec[] {
-  const out: Vec[] = [];
-  const seen = new Set<number>();
-  const push = (x: number, y: number) => {
-    if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return;
-    const k = cellKey(x, y);
-    if (seen.has(k)) return;
-    seen.add(k);
-    out.push({ x, y });
-  };
-  for (let i = 0; i < lane.length - 1; i++) {
-    const a = lane[i], b = lane[i + 1];
-    if (a.x !== b.x && a.y !== b.y) {
-      throw new Error(`Abschnitt ${i} ist diagonal - nur Achsen erlaubt.`);
-    }
-    const sx = Math.sign(b.x - a.x), sy = Math.sign(b.y - a.y);
-    let x = a.x, y = a.y;
-    push(x, y);
-    while (x !== b.x || y !== b.y) { x += sx; y += sy; push(x, y); }
+export function lanePaths(map: GameMap): LanePath[] {
+  let hit = laneCache.get(map.id);
+  if (!hit) {
+    hit = map.lanes.map((l) => new LanePath(l));
+    laneCache.set(map.id, hit);
   }
-  return out;
-}
-
-/** Alle Zellen, die irgendeine Bahn beruehrt. */
-export function pathCells(map: GameMap): Vec[] {
-  const out: Vec[] = [];
-  const seen = new Set<number>();
-  for (const lane of map.lanes) {
-    for (const c of laneCells(lane)) {
-      const k = cellKey(c.x, c.y);
-      if (seen.has(k)) continue;
-      seen.add(k);
-      out.push(c);
-    }
-  }
-  return out;
-}
-
-/** Weltkoordinaten einer Bahn. */
-export function lanePoints(lane: Vec[]): Vec[] {
-  return lane.map((w) => cellCenter(w.x, w.y));
+  return hit;
 }
 
 /** Der Herzkristall - das Ende aller Bahnen. */
 export function goalOf(map: GameMap): Vec {
   const last = map.lanes[0][map.lanes[0].length - 1];
-  return cellCenter(last.x, last.y);
+  return { x: last.x, y: last.y };
 }
 
-/** Gesamtlaenge einer Bahn in Pixeln (fuer die Sortierung beim Zielen). */
-export function pathLength(points: Vec[]): number {
-  let l = 0;
-  for (let i = 0; i < points.length - 1; i++) {
-    l += Math.abs(points[i + 1].x - points[i].x) + Math.abs(points[i + 1].y - points[i].y);
+/** Wie breit ein Bauplatz ist - er ist ein Kreis, keine Kachel. */
+export const SPOT_RADIUS = 42;
+
+/** Welcher Bauplatz liegt unter diesem Punkt? -1, wenn keiner. */
+export function spotAt(map: GameMap, x: number, y: number, slack = 14): number {
+  let best = -1, bestD = (SPOT_RADIUS + slack) ** 2;
+  for (let i = 0; i < map.spots.length; i++) {
+    const s = map.spots[i];
+    const d = (s.x - x) ** 2 + (s.y - y) ** 2;
+    if (d < bestD) { bestD = d; best = i; }
   }
-  return l;
+  return best;
 }

@@ -56,23 +56,23 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     id: 'arrow', name: 'Bogenturm', role: 'Dauerfeuer',
     blurb: 'Günstig und schnell. Trägt die frühen Wellen.',
     color: '#D8DCE8', accent: '#F2C14E',
-    attack: 'single', hitsAir: true, projectileSpeed: 700,
-    base: { cost: 55, damage: 8, range: 200, cooldown: 0.55 },
+    attack: 'single', hitsAir: true, projectileSpeed: 840,
+    base: { cost: 55, damage: 8, range: 240, cooldown: 0.55 },
     branches: [
       {
         id: 'sniper', name: 'Scharfschütze', color: '#F2C14E',
         blurb: 'Weite Reichweite, harter Einzelschuss, durchschlägt Panzerung.',
         levels: [
-          { cost: 70, damage: 24, range: 275, cooldown: 0.8, pierce: 2 },
-          { cost: 130, damage: 52, range: 340, cooldown: 0.75, pierce: 4 },
+          { cost: 70, damage: 24, range: 330, cooldown: 0.8, pierce: 2 },
+          { cost: 130, damage: 52, range: 408, cooldown: 0.75, pierce: 4 },
         ],
       },
       {
         id: 'volley', name: 'Salve', color: '#FF9B54',
         blurb: 'Halbe Wucht, doppelte Schlagzahl. Gegen Masse, nicht gegen Panzer.',
         levels: [
-          { cost: 70, damage: 14, range: 208, cooldown: 0.28, pierce: 1 },
-          { cost: 145, damage: 22, range: 222, cooldown: 0.21, pierce: 2 },
+          { cost: 70, damage: 16, range: 300, cooldown: 0.27, pierce: 1 },
+          { cost: 145, damage: 26, range: 319, cooldown: 0.20, pierce: 2 },
         ],
       },
     ],
@@ -82,22 +82,22 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     blurb: 'Kein Geschoss. Pulst im Umkreis und bremst alles gleichzeitig.',
     color: '#BFE9F2', accent: '#7FE7E0',
     attack: 'aura', hitsAir: true, projectileSpeed: 0,
-    base: { cost: 80, damage: 7, range: 150, cooldown: 0.85, slow: 0.34, slowTime: 1.5 },
+    base: { cost: 80, damage: 7, range: 180, cooldown: 0.85, slow: 0.34, slowTime: 1.5 },
     branches: [
       {
         id: 'eternal', name: 'Ewiges Eis', color: '#7FE7E0',
         blurb: 'Weiter Umkreis, harte Bremse, kaum Schaden. Reine Kontrolle.',
         levels: [
-          { cost: 90, damage: 9, range: 195, cooldown: 0.7, slow: 0.5, slowTime: 2.2 },
-          { cost: 150, damage: 19, range: 250, cooldown: 0.58, slow: 0.72, slowTime: 3.4 },
+          { cost: 90, damage: 9, range: 234, cooldown: 0.7, slow: 0.5, slowTime: 2.2 },
+          { cost: 150, damage: 19, range: 300, cooldown: 0.58, slow: 0.72, slowTime: 3.4 },
         ],
       },
       {
         id: 'shard', name: 'Splitterfrost', color: '#9FD4FF',
         blurb: 'Bremst weniger, schneidet dafür. Ein Schadenspuls statt einer Fessel.',
         levels: [
-          { cost: 110, damage: 31, range: 168, cooldown: 0.68, slow: 0.27, slowTime: 1.35, pierce: 3 },
-          { cost: 200, damage: 52, range: 188, cooldown: 0.60, slow: 0.33, slowTime: 1.55, pierce: 3 },
+          { cost: 110, damage: 28, range: 252, cooldown: 0.64, slow: 0.28, slowTime: 1.4, pierce: 2 },
+          { cost: 200, damage: 45, range: 281, cooldown: 0.56, slow: 0.34, slowTime: 1.6, pierce: 2 },
         ],
       },
     ],
@@ -106,23 +106,23 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     id: 'mortar', name: 'Mörser', role: 'Fläche, nur Boden',
     blurb: 'Langsam und teuer, trifft eine ganze Traube. Erreicht keine Flieger.',
     color: '#C3B39A', accent: '#F08A3C',
-    attack: 'splash', hitsAir: false, projectileSpeed: 320,
-    base: { cost: 125, damage: 37, range: 250, cooldown: 1.9, splash: 62 },
+    attack: 'splash', hitsAir: false, projectileSpeed: 384,
+    base: { cost: 125, damage: 37, range: 300, cooldown: 1.9, splash: 74 },
     branches: [
       {
         id: 'cluster', name: 'Streubombe', color: '#F08A3C',
         blurb: 'Weiter Wirkradius, schnellere Folge, weniger Wucht je Treffer.',
         levels: [
-          { cost: 140, damage: 42, range: 275, cooldown: 1.35, splash: 96 },
-          { cost: 235, damage: 66, range: 300, cooldown: 1.1, splash: 124 },
+          { cost: 140, damage: 42, range: 330, cooldown: 1.35, splash: 115 },
+          { cost: 235, damage: 66, range: 360, cooldown: 1.1, splash: 149 },
         ],
       },
       {
         id: 'breaker', name: 'Brecher', color: '#D6564A',
         blurb: 'Enger Radius, gewaltige Wucht, durchschlägt schwere Panzerung.',
         levels: [
-          { cost: 160, damage: 95, range: 265, cooldown: 2.1, splash: 52, pierce: 4 },
-          { cost: 280, damage: 200, range: 290, cooldown: 2.0, splash: 58, pierce: 8 },
+          { cost: 160, damage: 95, range: 318, cooldown: 2.1, splash: 62, pierce: 4 },
+          { cost: 280, damage: 200, range: 348, cooldown: 2.0, splash: 70, pierce: 8 },
         ],
       },
     ],
@@ -132,22 +132,22 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     blurb: 'Sofortstrahl, springt auf Nachbarn über.',
     color: '#E4D3FF', accent: '#B07CFF',
     attack: 'chain', hitsAir: true, projectileSpeed: 0,
-    base: { cost: 140, damage: 18, range: 185, cooldown: 0.95, chains: 2, falloff: 0.65 },
+    base: { cost: 140, damage: 18, range: 222, cooldown: 0.95, chains: 2, falloff: 0.65 },
     branches: [
       {
         id: 'fork', name: 'Verzweigung', color: '#B07CFF',
         blurb: 'Mehr Sprünge, kaum Abfall. Legt sich über eine ganze Kette.',
         levels: [
-          { cost: 165, damage: 19, range: 205, cooldown: 0.85, chains: 5, falloff: 0.85 },
-          { cost: 285, damage: 29, range: 230, cooldown: 0.75, chains: 8, falloff: 0.92 },
+          { cost: 165, damage: 19, range: 246, cooldown: 0.85, chains: 5, falloff: 0.85 },
+          { cost: 285, damage: 29, range: 276, cooldown: 0.75, chains: 8, falloff: 0.92 },
         ],
       },
       {
         id: 'lens', name: 'Bündelung', color: '#FF7ADF',
         blurb: 'Ein Sprung weniger, dafür ein Strahl, der wirklich wehtut.',
         levels: [
-          { cost: 175, damage: 48, range: 215, cooldown: 0.9, chains: 1, falloff: 0.5 },
-          { cost: 300, damage: 96, range: 240, cooldown: 0.85, chains: 1, falloff: 0.5, pierce: 3 },
+          { cost: 175, damage: 48, range: 258, cooldown: 0.9, chains: 1, falloff: 0.5 },
+          { cost: 300, damage: 96, range: 288, cooldown: 0.85, chains: 1, falloff: 0.5, pierce: 3 },
         ],
       },
     ],

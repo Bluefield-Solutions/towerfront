@@ -551,8 +551,51 @@ for (const id of TOWER_ORDER) {
       `Erbarmungslos: der Meister gewinnt mit ${hard.lives}/${hard.maxLives} - zu bequem fuer den haertesten Grad.`,
     );
   }
-  if (wonCount('ruhig') <= wonCount('erbarmungslos')) {
-    errors.push('Ruhig ist nicht leichter als Erbarmungslos - die Grade unterscheiden sich nicht.');
+  // Verglichen wird die Punktzahl, nicht die Zahl der Sieger.
+  //
+  // Vorher stand hier ein Vergleich der Sieger-Anzahl. Seit alle drei Stile
+  // auf allen Graden durchkommen, ist die auf beiden Seiten drei - die
+  // Pruefung schlug an, obwohl die Grade sich klar unterscheiden. Dieselbe
+  // Falle wie bei den absoluten Kristallgrenzen: eine Kennzahl, die im neuen
+  // Zustand nicht mehr trennt.
+  const meanOf = (id: DifficultyId) =>
+    BOTS.reduce((a, b) => a + score(diffRuns.get(`${id}:${b.name}`)!), 0) / BOTS.length;
+  const easy = meanOf('ruhig'), hardMean = meanOf('erbarmungslos');
+  console.log(`  Ruhig ${easy.toFixed(0)} Punkte gegen Erbarmungslos ${hardMean.toFixed(0)}`);
+  if (easy - hardMean < 12) {
+    errors.push(
+      `Ruhig liegt nur ${(easy - hardMean).toFixed(0)} Punkte vor Erbarmungslos - ` +
+      'die Grade unterscheiden sich zu wenig.',
+    );
+  }
+}
+
+// Sterne muessen erreichbar sein - und nicht ueberall gleich.
+//
+// Nach dem Umbau des Kristalls waren drei Sterne auf zwei von drei Karten
+// unmoeglich: der beste Stil kam auf 18 von 60 Punkten, gefordert waren 54.
+// Ein Ziel, das niemand erreicht, ist kein Ziel.
+{
+  const best = new Map<string, number>();
+  for (const m of MAPS) {
+    let top = 0;
+    for (const bot of BOTS) {
+      const r = mapRuns.get(`${m.id}:${bot.name}`)!;
+      top = Math.max(top, starsFor(r.won, r.lives, r.maxLives));
+    }
+    best.set(m.id, top);
+    console.log(`  ${m.name.padEnd(15)} bester Lauf: ${top} Stern(e)`);
+  }
+  for (const m of MAPS) {
+    if ((best.get(m.id) ?? 0) < 2) {
+      errors.push(`Karte "${m.name}": auch der beste Spielstil holt nur ${best.get(m.id)} Stern(e) - unerreichbar.`);
+    }
+  }
+  if (![...best.values()].some((v) => v >= 3)) {
+    errors.push('Auf keiner Karte sind drei Sterne erreichbar - die Schwelle ist zu hoch.');
+  }
+  if ([...best.values()].every((v) => v >= 3)) {
+    errors.push('Auf jeder Karte holt schon der Bot drei Sterne - dann ist der dritte wertlos.');
   }
 }
 

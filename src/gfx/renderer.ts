@@ -341,7 +341,7 @@ export class Renderer {
     ctx.strokeRect(cell.x * TILE + 4, cell.y * TILE + 4, TILE - 8, TILE - 8);
     ctx.setLineDash([]);
     ctx.globalAlpha = ok ? 0.65 : 0.3;
-    this.paintTower(def, 1, cx, cy, s.crystalPulse);
+    this.paintTower(def, 1, cx, cy, s.crystalPulse, s.map.id);
     ctx.restore();
   }
 
@@ -555,8 +555,21 @@ export class Renderer {
     ctx.restore();
   }
 
-  /** Nur fuer die Bauvorschau: Sockel und Waffe eines noch nicht gebauten Turms. */
-  private paintTower(def: TowerDef, level: number, x: number, y: number, time: number): void {
+  /** Nur fuer die Bauvorschau: der Turm, wie er nach dem Bauen aussehen wird.
+   *
+   *  Vorher wurde hier die gezeichnete Silhouette gemalt, waehrend gebaute
+   *  Tuerme das gerenderte Bild zeigen. Man sah beim Bauen also etwas anderes
+   *  als das, was danach dastand. */
+  private paintTower(
+    def: TowerDef, level: number, x: number, y: number, time: number, mapId = 'spiralhain',
+  ): void {
+    const art = getTowerArt(def.id, null, level, mapId);
+    if (art) {
+      const k = towerArtScale(level);
+      const w = 104 * k, h = 104 * k;
+      this.ctx.drawImage(art, x - w / 2, y - h * 0.72, w, h);
+      return;
+    }
     drawSprite(this.ctx, getTowerBase(def.id, null, level), x, y);
     this.paintWeapon(def.id, null, level, x, y, -Math.PI / 2, 0, 0, time);
   }

@@ -116,7 +116,7 @@ export const MAP_SPIRALHAIN: GameMap = {
   ],
   hint: { x: 9, y: 2 },
   waves: PLAN_SPIRALHAIN,
-  balance: { hpMul: 1, goldMul: 1 },
+  balance: { hpMul: 0.86, goldMul: 1 },
   blocked: [
     { x: 16, y: 1 }, { x: 17, y: 2 },
     { x: 0, y: 5 }, { x: 1, y: 8 },
@@ -157,9 +157,9 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
     { x: 1, y: 7 }, { x: 7, y: 7 }, { x: 15, y: 3 }, { x: 2, y: 0 },
     { x: 4, y: 0 }, { x: 4, y: 6 }, { x: 10, y: 7 }, { x: 14, y: 7 },
   ],
-  hint: { x: 4, y: 3 },
+  hint: { x: 7, y: 7 },
   waves: PLAN_ASCHESCHLUCHT,
-  balance: { hpMul: 1, goldMul: 1 },
+  balance: { hpMul: 0.96, goldMul: 1 },
   blocked: [
     // Wurzelwerk und Findlinge engen die Raender ein.
     ...rect(0, 3, 1, 4),
@@ -197,7 +197,7 @@ export const MAP_FROSTSPALTE: GameMap = {
   ],
   hint: { x: 12, y: 4 },
   waves: PLAN_FROSTSPALTE,
-  balance: { hpMul: 1, goldMul: 1 },
+  balance: { hpMul: 1.12, goldMul: 1 },
   blocked: [
     // Gletscherspalten nehmen viel Bauflaeche - hier ist Platz die Ressource.
     ...rect(0, 9, 2, 10),

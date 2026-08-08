@@ -567,8 +567,19 @@ for (const map of MAPS) {
       dur = Math.max(dur, g.delay + g.count * g.gap);
     }
     if (dur > 90) warn(`${map.id}, Welle ${i + 1}: dauert rechnerisch ${Math.round(dur)} s - sehr lang.`);
-    if (i >= 5 && maxLeak < START_LIVES) {
-      warn(`${map.id}, Welle ${i + 1}: selbst bei totalem Durchkommen bleibt der Kristall stehen.`);
+    // Anteilig, nicht absolut.
+    //
+    // Vorher stand hier `maxLeak < START_LIVES`. Als der Kristall von 20 auf
+    // 60 stieg, meldete diese Zeile 22 Wellen auf einmal - nicht weil sich
+    // etwas verschlechtert haette, sondern weil eine einzelne Welle bei 60
+    // Kristall gar nicht mehr toedlich sein *soll*. Genau darum ging es beim
+    // Umbau. Geprueft wird jetzt, ob eine spaete Welle wenigstens ein Viertel
+    // des Kristalls kosten koennte - sonst ist sie belanglos.
+    if (i >= plan.length * 0.6 && maxLeak < START_LIVES * 0.25) {
+      warn(
+        `${map.id}, Welle ${i + 1}: koennte hoechstens ${maxLeak} von ${START_LIVES} Kristall ` +
+        'kosten - fuer eine spaete Welle zu belanglos.',
+      );
     }
     const prevBoss = i > 0 && plan[i - 1].groups.some((g) => ENEMIES[g.enemy]?.boss);
     if (i > 0 && !prevBoss && pressure < prevPressure * 0.75) {

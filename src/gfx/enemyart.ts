@@ -18,7 +18,6 @@ const raw = new Map<string, HTMLImageElement>();
 const ready = new Set<string>();
 let version = 0;
 
-export const enemyArtVersion = (): number => version;
 
 function load(id: EnemyId): HTMLImageElement | null {
   const src = ENEMY_ART[id];

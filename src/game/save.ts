@@ -91,6 +91,3 @@ export function clearGame(): void {
   try { localStorage.removeItem(KEY); } catch { /* Speicher gesperrt */ }
 }
 
-export function hasGame(): boolean {
-  return loadGame() !== null;
-}

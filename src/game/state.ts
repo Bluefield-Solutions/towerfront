@@ -999,7 +999,7 @@ export class GameState {
     this.perks = opts.perks ?? perkEffect(getProgress().perks);
     const d = DIFFICULTIES[difficulty];
     this.gold = d.startGold + this.perks.goldBonus;
-    this.lives = d.startLives + this.perks.livesBonus;
+    this.lives = Math.round(d.startLives * (1 + this.perks.livesShare));
     this.maxLives = this.lives;
     this.stars = 0;
     this.waveIndex = 0;
@@ -1080,6 +1080,18 @@ export class GameState {
     if (!(save.difficulty in DIFFICULTIES)) return false;
     if (save.waveIndex < 0) return false;
     for (const [id] of save.towers) if (!(id in TOWERS)) return false;
+    // Jeder gespeicherte Turm muss auf einem Bauplatz dieser Karte stehen.
+    //
+    // Bis v33 durfte man auf jeder freien Zelle bauen. Ein Spielstand aus
+    // dieser Zeit - oder ein von Hand veraenderter - haette Tuerme mitten im
+    // Gelaende wiederhergestellt, und die Zelle waere dauerhaft blockiert
+    // gewesen. Lieber neu anfangen als in einem unmoeglichen Zustand landen.
+    {
+      const spots = new Set(mapById(save.map).spots.map((sp) => cellKey(sp.x, sp.y)));
+      for (const [, cx, cy] of save.towers) {
+        if (!spots.has(cellKey(cx, cy))) return false;
+      }
+    }
     for (const [id] of save.enemies) if (!(id in ENEMIES)) return false;
     for (const [, id] of save.pending) if (!(id in ENEMIES)) return false;
 

@@ -38,8 +38,8 @@ const PROBEN = [
   {
     name: 'Weg knickt scharf ab',
     datei: 'src/data/maps.ts',
-    suche: '{ x: -80, y: 210, w: 35 }, { x: 210, y: 226, w: 34 }',
-    ersatz: '{ x: -80, y: 210, w: 35 }, { x: 210, y: 900, w: 34 }',
+    suche: '{ x: -80, y: 210, w: 35 }, { x: 210, y: 226, w: 33 }',
+    ersatz: '{ x: -80, y: 210, w: 35 }, { x: 210, y: 950, w: 33 }',
     tor: 'guards',
   },
   {
@@ -94,8 +94,8 @@ const PROBEN = [
   {
     name: 'Schwarzes Bild',
     datei: 'src/gfx/renderer.ts',
-    suche: '    ctx.fillStyle = C.voidDeep;\n    ctx.fillRect(0, 0, this.cssW, this.cssH);',
-    ersatz: '    ctx.fillStyle = "#000";\n    ctx.fillRect(0, 0, 99999, 99999); return;',
+    suche: '    drawMenu(ctx, this.menu!);',
+    ersatz: '    ctx.fillStyle = "#000"; ctx.fillRect(-9e4, -9e4, 18e4, 18e4);',
     tor: 'bildtor',
   },
   {
@@ -116,8 +116,8 @@ const PROBEN = [
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     suche: 'hpEnd: 16.5, hpCurve: 2.4',
-    ersatz: 'hpEnd: 30, hpCurve: 2.4',
-    tor: 'sim',
+    ersatz: 'hpEnd: 40, hpCurve: 2.4',
+    tor: 'guards',
   },
 ];
 

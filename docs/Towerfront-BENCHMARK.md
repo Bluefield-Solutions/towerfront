@@ -1,11 +1,11 @@
 # Towerfront — Genre-Abgleich
 
-Stand: v35 · 08.08.2026 · Aktueller Wert: **27 von 30 Kriterien, gewichtet 93 %**
+Messung: v35 · 08.08.2026 · Aktueller Wert: **27 von 30 Kriterien, gewichtet 93 %**
 
 *Verlauf: v11 = 18/27 (69 %) → v12 = 19/27 (73 %) → v15 = 21/30 (74 %) → v17 = 22/30 (76 %) → v18 = 24/30 (85 %) → v20 = 27/30 (93 %), K4, K5 und K6 erfüllt.
 In v15 kamen drei Grafik-Kriterien in den Katalog; zwei davon sind erfüllt.*
 
-Dieses Dokument ist die Grundlage für `npm run benchmark`. Es hält fest, *woher*
+Dieses Dokument ist die Grundlage für `npm run bericht`. Es hält fest, *woher*
 jedes Kriterium stammt — jeder Punkt im Katalog geht auf ein Spiel zurück, das
 von Spielern hoch bewertet wird, oder auf eine oft geäußerte Kritik.
 
@@ -119,7 +119,7 @@ Fair bleiben gehört zum Abgleich dazu.
 
 ## 5. Wie dieser Abgleich in jedem Lauf mitläuft
 
-`npm run benchmark` läuft als letzter Schritt von `npm run gate`. Er bricht
+`npm run bericht` läuft als letzter Schritt von `npm run gate`. Er bricht
 nichts ab — er legt das Delta auf den Tisch, jedes Mal.
 
 Wo möglich wird **gemessen statt behauptet**. Beispiel F2: Statt zu erklären,

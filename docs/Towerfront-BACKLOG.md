@@ -2,7 +2,7 @@
 
 Stand: nach v44 · 08.08.2026
 
-Das gewichtete Delta gegen die Genre-Referenzen steht in `Towerfront-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
+Das gewichtete Delta gegen die Genre-Referenzen steht in `Towerfront-BENCHMARK.md` und läuft mit `npm run bericht` in jedem Lauf mit.
 
 Legende Nutzen: ●●● hoch · ●● mittel · ● gering
 Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)

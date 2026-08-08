@@ -1,6 +1,6 @@
 # Towerfront — Qualitätssicherung, tiefer Durchgang
 
-*Stand: v35 · 08.08.2026 · Auftrag: keine Fehler, keine Lücken, keine Widersprüche*
+*Messung: v35 · 08.08.2026 · Auftrag: keine Fehler, keine Lücken, keine Widersprüche*
 
 Vorgehen: erst mechanisch (Typprüfung streng, ungenutzte Exporte, Wächterausgabe
 vollständig gelesen), dann inhaltlich (Werte gegen den neuen Kristall gerechnet,

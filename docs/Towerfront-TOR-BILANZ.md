@@ -1,6 +1,10 @@
 # Towerfront — Bilanz über alle Tore
 
-*Stand: v35 · 08.08.2026 · Messung entstand bei v31, Ergebnisse gelten unverändert*
+> **Messbericht.** Diese Bilanz entstand bei v31 und beschreibt den Stand von
+> damals — zehn Tore. Die Ergebnisse gelten unverändert, die Zahlen sind
+> historisch. Heutige Kette: siehe `Towerfront-KONZEPT-und-PIPELINE.md`.
+
+*Messung: v35 · 08.08.2026 · Messung entstand bei v31, Ergebnisse gelten unverändert*
 
 Die Frage dieser Runde: **Welches Tor hat tatsächlich Fehler verhindert, und
 welches erzeugt nur Arbeit?** Nicht geschätzt, sondern gemessen — Laufzeit
@@ -129,9 +133,9 @@ Rohbild meldet sofort *„passt nicht mehr zu den Rohbildern"*. Mit `--force`
 lässt sich das Neuerzeugen erzwingen.
 
 **B · Der Genre-Abgleich heißt jetzt Bericht — erledigt.** Er schlägt nie an
-und kann es auch nicht. Aus `npm run benchmark` wurde `npm run bericht`, und
+und kann es auch nicht. Aus `npm run bericht` wurde `npm run bericht`, und
 die Ausgabe sagt es selbst: *„GENRE-BERICHT (kein Tor)"*. Die Kette prüft damit
-zehn Dinge und berichtet eines — vorher sah sie nach elf Prüfungen aus.
+zehn Dinge und berichtet eines — vorher sah sie nach dreizehn Prüfungen aus.
 
 **C · Die Balance-Simulation misst inzwischen zwei Dinge.** Sie prüft die
 Balance *und* modelliert das Spielverhalten. Als in v30 die Bewertung der

@@ -1,7 +1,14 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v35 · 08.08.2026
+Stand: v48 · 08.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Towerfront.html`
+
+> **Aufbau dieses Dokuments.** Die Abschnitte 1 bis 3.4 beschreiben den
+> **heutigen** Stand und werden fortgeschrieben. Alles ab 3.5 ist ein
+> **Fundregister in umgekehrter Zeitfolge** — es hält fest, was wann gelernt
+> wurde, und beschreibt absichtlich den Stand von damals. Wer wissen will,
+> wie das Spiel heute funktioniert, liest die ersten Abschnitte; wer wissen
+> will, warum es so geworden ist, liest weiter.
 
 ---
 
@@ -11,9 +18,10 @@ Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-dat
 eigenständige HTML-Datei, die offline läuft — auf dem iPhone im Querformat
 genauso wie im Desktop-Browser.
 
-**Der Kern in einem Satz:** Die Leere schickt Wellen über einen gewundenen Pfad
+**Der Kern in einem Satz:** Die Leere schickt Wellen über einen gewundenen Weg
 zum Herzkristall, und du entscheidest mit jedem Goldstück neu, ob du in Breite
-oder in Tiefe investierst.
+oder in Tiefe investierst — wobei jeder Turm Platz braucht und nicht überall
+Platz ist.
 
 **Die Fantasie, die das Spiel bedient:** Ein Feld, das du selbst gebaut hast,
 arbeitet ohne dich. Der Moment, in dem eine Welle startet und du nur noch
@@ -54,106 +62,139 @@ Labels mit weiter Laufweite über großen, tabellarischen Zahlen.
 
 ## 2. Architektur
 
-Ein eigener Canvas-2D-Motor, kein Framework. React wäre für ein Feld aus
-tausenden bewegten Pixeln pro Frame das falsche Werkzeug; die Menüs sind
-normales DOM darüber, weil Knöpfe im DOM auf dem Handy besser zu treffen sind.
+Ein eigener Canvas-2D-Motor, kein Framework. Die Prüfung dieser Entscheidung
+steht in `Towerfront-KONZEPT-2.0.md`: gemessen 0,17 ms je Simulationsschritt
+und rund 2.400 von 3.000 Zeichenbefehlen im konstruierten Schlimmstfall. Der
+Zeichendurchsatz ist nicht der Engpass und wird es nicht — ein Wechsel auf
+PixiJS würde die Optik nicht verbessern.
+
+**Kein Kachelraster.** Bis v35 lag das Spiel auf einem Gitter aus 20 × 11
+Zellen; daraus folgten zwangsläufig 90-Grad-Ecken im Weg, feste Bauplätze und
+ein Feld, das nie auf den Bildschirm passte. Seit v36 ist der Unterbau ein
+Kurvenmodell:
+
+- **Wege** sind Catmull-Rom-Kurven durch gesetzte Punkte, mit einer
+  Bogenlängen-Tabelle. Ein Gegner hat als einzige Zustandsgröße die
+  zurückgelegte Strecke; Position und Blickrichtung folgen daraus. Dadurch
+  läuft er in einer engen Kurve genauso schnell wie auf der Geraden.
+- **Jeder Kontrollpunkt trägt seine Breite.** Der Weg wird als Fläche zwischen
+  zwei Rändern gezeichnet, nicht als Strich — mal weiter, mal enger.
+- **Gebaut wird frei**, begrenzt durch vier Bedingungen: im Feld, weit genug
+  vom Weg (gerechnet mit der *örtlichen* halben Breite), nicht in unwegsamem
+  Gelände, ohne Überschneidung mit einem anderen Turm. Jede Turmsorte hat
+  ihren eigenen Platzbedarf — darin besteht die Entscheidung.
+- **Das Feld ist 1920 × 1080**, also 16:9.
+
+**Das Menü liegt auf der Leinwand**, nicht im DOM. Das kam aus dem
+Referenzabgleich — das Genre-Vorbild hat kein Einstellungsmenü, sondern eine
+Landkarte — und hat einen zweiten Grund: HTML erscheint in der Bildabnahme
+nicht, und genau dort war die Gestaltung abgesackt.
 
 ```
 src/
   main.ts              Verdrahtung: Zustand, Renderer, UI, Eingabe, Schleife
   core/
-    loop.ts            Spielschleife mit Zeitbegrenzung pro Frame
+    path.ts            Kurvenmodell mit Bogenlänge  ← das Fundament
+    loop.ts            Spielschleife mit Zeitbegrenzung pro Bild
     input.ts           Zeiger- und Tastatureingabe
+    storage.ts         Fortschritt, Sterne, Einstellungen
     math.ts            Vektor, Distanz, deterministischer Zufall
   data/                ← Hier wird Inhalt hinzugefügt, nicht im Code
-    config.ts          Gitter, Farbwelt, Startwerte
-    maps.ts            Karten als Wegpunkte + gesperrte Zellen
-    towers.ts          Turmdefinitionen inkl. Ausbaustufen
-    enemies.ts         Gegnerdefinitionen
-    waves.ts           Wellenplan
+    config.ts          Weltgröße, Farbwelt, Version
+    maps.ts            Karten: Kurven, unwegsames Gelände, Ausgleich
+    towers.ts          Türme, Zweige, sechs Ausbaustufen, Platzbedarf
+    enemies.ts         Gegner
+    waves.ts           Wellenpläne je Karte
+    difficulty.ts      Drei Grade, Form der Schwierigkeitskurve
+    perks.ts           Dauerhafte Verbesserungen, Sternvergabe
   game/
     types.ts           Datenformen der Entitäten
     state.ts           Der gesamte Spielzustand und alle Systeme
+    menu.ts            Landkarte, Einweisung, Fortschritt, Ergebnis
+    save.ts            Spielstand
   gfx/
-    renderer.ts        Zeichnen: Kamera, Welt, Entitäten, Kristall
-    terrain.ts         Untergrund, einmal gebacken
+    renderer.ts        Kamera, Welt, Entitäten, Kristall
+    menurender.ts      Die Landkarte und ihre Tafeln
+    terrain.ts         Untergrund und Wegband, einmal gebacken
+    towerart.ts        Gerenderte Turmbilder mit Saum
+    enemyart.ts        Gerenderte Gegnerbilder mit Saum
+    backgrounds.ts     Untergrundfotos
     glow.ts            Vorgebackene Leuchtscheiben
-  ui/
-    ui.ts              HUD, Baumenü, Turm-Inspektor, Bildschirme
-  style.css
-tools/
-  check-autarkie.mjs   Prüft die gebaute Datei auf externe Abhängigkeiten
-  sim.ts               Kopflose Balance-Simulation
+  ui/ui.ts             HUD, Baumenü, Prüfsteg
+tools/                 Torkette, Bildabnahme, Eichen, Schleife
+art/roh/               Rohbilder → pack-art.mjs → src/gfx/assets/
 ```
 
-### Drei Prinzipien, die das Wachstum billig halten
+### Fünf Prinzipien, die das Wachstum billig halten
 
-**Erstens: Inhalt lebt in `data/`.** Ein neuer Turm ist ein Objekt in
-`towers.ts`. Eine neue Gegnerart ist ein Objekt in `enemies.ts`. Eine neue Karte
-ist eine Liste von Wegpunkten. Kein System muss dafür angefasst werden. Das ist
-der Grund, warum die nächsten fünfzig Iterationen nicht langsamer werden als
-die ersten fünf.
+**Inhalt lebt in `data/`.** Ein neuer Turm ist ein Objekt in `towers.ts`, eine
+neue Karte eine Liste von Kurvenpunkten. Kein System muss dafür angefasst
+werden.
 
-**Zweitens: Statisches wird gebacken.** Der Untergrund wird genau einmal in ein
-Offscreen-Canvas gezeichnet und danach nur noch als Bild kopiert. Leuchteffekte
-sind vorgerenderte Scheiben, keine live berechneten Verläufe. Auf dem iPhone ist
-das der Unterschied zwischen flüssig und ruckelig.
+**Statisches wird gebacken.** Untergrund und Wegband werden einmal gezeichnet
+und danach kopiert. Leuchten, Türme, Gegner und ihre Säume sind vorgerenderte
+Bilder. Auf dem iPhone ist das der Unterschied zwischen flüssig und ruckelig.
 
-**Viertens: Umkreisabfragen laufen über ein Raster.** Zielsuche, Umkreispuls,
-Explosionsradius und Kettenblitz fragen nicht mehr jeden Gegner einzeln ab,
-sondern nur die Rasterzellen, die der Suchkreis berührt. Und jeder Turm merkt
-sich sein Ziel für 120 ms, statt es jedes Bild neu zu suchen — auch während er
-nachlädt und gar nicht schießen kann.
+**Umkreisabfragen laufen über ein Suchraster.** Zielsuche, Umkreispuls,
+Explosionsradius und Kettenblitz fragen nur die Zellen ab, die der Suchkreis
+berührt. Dieses Raster ist reine Beschleunigung und hat mit dem früheren
+Spielfeldgitter nichts zu tun.
 
-**Fünftens: kurzlebige Objekte werden wiederverwendet.** Partikel, Geschosse,
-Ringe und Blitze kommen aus einem Lager und gehen dorthin zurück; Listen werden
-an Ort und Stelle zusammengeschoben statt bei jedem Bild neu angelegt. Die
-Aufräumläufe der Laufzeitumgebung sind genau die kurzen Hänger, die man auf dem
-Handy als Ruckeln wahrnimmt.
+**Kurzlebige Objekte werden wiederverwendet.** Partikel, Geschosse, Ringe und
+Blitze kommen aus einem Lager und gehen dorthin zurück.
 
-**Drittens: die Safari-Falle bleibt zu.** Ein Canvas darf sich niemals selbst
-mit `drawImage` und `filter='blur'` oder `globalCompositeOperation='lighter'`
-zeichnen. Auf dem Desktop sieht das gut aus, auf iOS Safari wird das Bild nach
-etwa einer Sekunde schwarz. Der Autarkie-Check sucht aktiv nach diesem Muster
-und lässt den Build durchfallen, wenn er ihn findet.
+**Die Safari-Falle bleibt zu.** Ein Canvas darf sich niemals selbst mit
+`drawImage` und `filter='blur'` oder `globalCompositeOperation='lighter'`
+zeichnen. Auf dem Schreibtisch sieht das gut aus, auf iOS Safari wird das Bild
+nach etwa einer Sekunde schwarz. Der Autarkie-Check sucht aktiv nach diesem
+Muster.
 
 ---
 
 ## 3. Die Pipeline
 
-### 3.1 Der Iterationszyklus
+### 3.1 Der Arbeitsablauf
 
-Jede Runde hat seit v11 eine feste Dreierstruktur, und in dieser Reihenfolge:
+Seit v40 läuft die Arbeit im **Schleifenbetrieb** mit getrennten Rollen. Die
+ausführliche Beschreibung steht in `Towerfront-SCHLEIFENBETRIEB.md`; hier die
+Kurzfassung.
 
-**Erstens: Abgleich.** `npm run benchmark` misst das Spiel gegen einen Katalog,
-der aus den bestbewerteten Vertretern des Genres abgeleitet ist. Wo stehen wir,
-was hat sich seit dem letzten Lauf verschoben, welches Delta wiegt am
-schwersten. Grundlage und Herkunft jedes Kriteriums: `Towerfront-BENCHMARK.md`.
+Der Nutzer gibt ein **Ziel** und ein **Abnahmekriterium**. Alles Weitere läuft
+ohne ihn:
 
-**Zweitens: Prozess.** Eine konkrete Verbesserung an der Pipeline selbst — ein
-neues Tor, eine schärfere Prüfung, eine Gegenprobe, ein Werkzeug. Die Regel
-dahinter: *Jeder Fehler, der einmal durchgerutscht ist, bekommt ein Tor.*
+```
+0. Referenzabgleich   Drei Vorbilder benennen, aufschreiben was sie TUN,
+                      Soll ableiten, Abstand messen. Erst dann bauen.
+1. Arbeiter           Genau ein Ziel umsetzen. Entscheidet nicht über
+                      Fertigkeit.
+2. Prüfer             npm run schleife  →  Torkette, Kennzahlen, Bilder,
+                      Änderungsumfang  →  schleife/bericht.md
+3. Inspektor          Sieht nur Bericht und Bilder, nicht den Code und nicht
+                      die Absicht. Urteil: Freigabe · neue Schleife · Rückbau.
+```
 
-**Drittens: Spiel.** Eine konkrete Verbesserung am Spiel, bevorzugt aus dem
-Delta von Schritt eins.
+**Höchstens drei Schleifen je Ziel.** Danach ist nicht die Ausführung das
+Problem, sondern das Ziel — dann zurück zum Nutzer. Diese Grenze ist keine
+Höflichkeit: T15 hat sie zweimal gebraucht, und beim ersten Mal war das
+Überschreiten der Fehler.
 
-Der Bericht am Ende jeder Runde nennt alle drei Teile.
+Schritt 0 ist die jüngste Ergänzung und behebt einen strukturellen Mangel:
+**Solange ich das Soll selbst setze, wandert es mit meiner Leistung mit.** Der
+Beleg steht in `Towerfront-SOLL-UND-BETRIEB.md` — beim Menü hatte ich eine
+saubere Einstellungsliste gebaut, während das Vorbild gar kein
+Einstellungsmenü hat, sondern eine Landkarte.
 
-Innerhalb von Schritt drei gilt weiterhin dieser Ablauf, ohne Ausnahmen:
+Innerhalb von Schritt 1 gilt weiterhin:
 
-1. **Ein Ziel.** Genau eine Sache pro Runde. Minimalinvasiv.
-2. **Vor dem Ändern lesen.** Erst die betroffene Datei ansehen, dann greppen, ob
-   es das schon gibt. Nichts doppelt bauen.
-3. **`git diff` prüfen.** Nur die beabsichtigten Zeilen dürfen sich geändert
-   haben. Andere Türme, andere Karten, andere Systeme bleiben unberührt.
-4. **Das Tor durchlaufen:** `npm run gate`
-   → TypeScript ohne Fehler → Build → Autarkie-Check → Balance-Simulation.
-   Alles grün, sonst wird nicht ausgeliefert.
-5. **Ausliefern.** Vollständige HTML-Datei als `Towerfront.html`.
-6. **Auf Bestätigung warten.** Erst wenn im Browser bestätigt — auf dem iPhone
-   *und* am Desktop — wird committet und getaggt (`v2`, `v3`, …).
-7. **Daumen runter = sofortiger Rückbau.** `git checkout -- .`, zurück auf den
-   letzten Tag, neuer Versuch.
+1. **Ein Ziel.** Genau eine Sache, minimalinvasiv.
+2. **Vor dem Ändern lesen.** Erst die Datei ansehen, dann greppen, ob es das
+   schon gibt.
+3. **`git diff` prüfen.** Nur die beabsichtigten Zeilen.
+4. **Erst einchecken, dann gegenproben.** Gegenproben arbeiten mit
+   `git checkout` und löschen sonst die frische Arbeit. Dreimal passiert.
+5. **`npm run gate`** — dreizehn Prüfungen, rund 80 Sekunden. Alles grün, sonst
+   wird nicht ausgeliefert.
+6. **Ausliefern**, committen, `git tag vN`.
 
 ### 3.2 Die Qualitätstore
 
@@ -162,15 +203,25 @@ Ein Befehl fährt alles: `npm run gate`
 | # | Tor | Befehl | Bricht ab bei |
 |---|---|---|---|
 | 1 | Typen | `npm run tsc` | Typfehler, ungenutzte Variablen, fehlende Fälle — in `src` **und** `tools` |
-| 2 | Datenwächter | `npm run guards` | widersprüchlichen Inhaltsdaten (siehe unten) |
-| 3 | Determinismus | `npm run determinism` | abweichendem Verlauf bei gleicher Aussaat oder nach Sichern/Laden |
-| 4 | Balance | `npm run sim` | kaputter Schwierigkeitskurve (siehe unten) |
-| 5 | Messung Simulation | `npm run bench` | mehr als 4 ms Simulationszeit je Bild |
-| 6 | Messung Zeichnen | `npm run bench-draw` | mehr als 3.000 Zeichenbefehle **oder** 24 MB gebackene Bilder |
-| 7 | Rauchtest | `npm run smoke` | Fehler beim Zeichnen, in der Oberfläche oder bei der Eingabe |
-| 8 | Build | `npm run build` | Bündelfehler |
-| 9 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id |
-| 10 | Genre-Abgleich | `npm run benchmark` | nichts — er meldet, er bricht nicht ab |
+| 2 | Datenwächter | `npm run guards` | widersprüchlichen Inhaltsdaten: Wegknicke über 25°, Umwegfaktor unter 1,8, zu wenig Richtungswechsel, fehlende Engstellen, zu enge oder zu weite Bauflächen |
+| 3 | Bildvorrat | `npm run art` | Rohbildern, die nicht ins Bündel gebacken wurden |
+| 4 | Determinismus | `npm run determinism` | abweichendem Verlauf bei gleicher Aussaat oder nach Sichern/Laden |
+| 5 | Balance | `npm run sim` | kaputter Schwierigkeitskurve, dominierender Turmsorte, totem Ausbaupfad, unerreichbaren Sternen |
+| 6 | Messung Simulation | `npm run bench` | mehr als 4 ms Simulationszeit je Bild |
+| 7 | Messung Zeichnen | `npm run bench-draw` | mehr als 3.000 Zeichenbefehlen **oder** 24 MB gebackenen Bildern |
+| 8 | Lesbarkeit | `npm run lesbarkeit` | zu schwachem Saumkontrast, zu kleiner Silhouette, zu ähnlichen Gegnerfarben |
+| 9 | Bildabnahme | `npm run bildtor` | einfarbiger Fläche, falscher Helligkeit, nicht dekodierten Bildern |
+| 10 | Rauchtest | `npm run smoke` | Fehlern beim Zeichnen, in der Oberfläche, bei der Eingabe; unerreichbaren Menüwegen; zu kleinen Trefferflächen |
+| 11 | Build | `npm run build` | Bündelfehler |
+| 12 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id, Ersatzschreibung statt Umlaut |
+| — | Genre-Abgleich | `npm run bericht` | nichts — er meldet, er bricht nicht ab |
+
+Daneben zwei Werkzeuge, die nicht Teil der Kette sind:
+
+| Werkzeug | Wozu |
+|---|---|
+| `npm run eichen` | Einen Wert durchprobieren und alle Kennzahlen nebeneinander sehen. Vor dem Justieren den Raum ansehen, statt blind nachzuziehen. |
+| `npm run schleife` | Ein Durchgang im Schleifenbetrieb: Torkette, Bilder, Bericht, rechenbares Urteil. |
 
 **Der Genre-Abgleich** ist das einzige Tor, das nichts verhindert. Es misst das
 Spiel gegen 27 Kriterien aus Kingdom Rush, Bloons TD 6, Plants vs. Zombies,
@@ -260,34 +311,27 @@ Die Kurve sitzt jetzt dort, wo sie hingehört: Die Verluste passieren an den
 beiden Bosswellen, nicht verteilt über das ganze Spiel. Das heißt, das Spiel
 ist da schwer, wo es dramatisch sein soll.
 
-### 3.3 Die Ausbaustufen
+### 3.3 Wo das Spiel steht
 
-Das Spiel wächst in vier Phasen. Jede Phase hat ein Abnahmekriterium, das
-erfüllt sein muss, bevor die nächste beginnt.
+Die vier Phasen aus dem ursprünglichen Plan sind durchlaufen.
 
-**Phase A — Fundament** *(v1, erledigt)*
-Spielbare Schleife von Anfang bis Ende. Karte, Pfad, zwei Türme, drei Gegner,
-zehn Wellen, Gold, Leben, Sieg, Niederlage. Nichts davon ist fertig, aber alles
-davon existiert.
-*Abnahme: Man kann gewinnen und man kann verlieren.*
+| Phase | Abnahme | Stand |
+|---|---|---|
+| **A · Fundament** | Man kann gewinnen und verlieren | erledigt (v1) |
+| **B · Spielgefühl** | Fünfzehn Wellen am Stück auf dem iPhone, ohne Haken | erledigt (v39: Trefferstopp, Stauchen, nachlaufende Lebensleisten, Turmfeder) |
+| **C · Tiefe** | Zwei Spieler bauen dasselbe Feld unterschiedlich — und beide gewinnen | erledigt (v45: Abstand der Spielstile 3 von 100 Punkten, vier Türme mit je zwei Zweigen und sechs Stufen) |
+| **D · Politur** | Sieht aus, als hätte ein Studio es gemacht | läuft |
 
-**Phase B — Spielgefühl** *(v2, weitgehend erledigt)*
-Der Moment des Treffens, des Bauens, des Verkaufens muss sich gut anfühlen. Ton,
-Trefferrückmeldung, Bildschirmzittern, Wellenankündigung, flüssige Bedienung
-mit dem Daumen. Hier entsteht der Unterschied zwischen "funktioniert" und
-"macht Spaß".
-*Abnahme: Fünfzehn Wellen am Stück auf dem iPhone, ohne dass etwas hakt.*
+**Heutiger Umfang:** drei Karten, vier Türme mit je zwei Ausbauzweigen und
+sechs Stufen, sieben Gegnerarten, zwei Fähigkeiten, drei Schwierigkeitsgrade,
+Endlosmodus, Sternfortschritt mit fünf dauerhaften Verbesserungen. Genre-Abgleich
+27 von 30 Kriterien.
 
-**Phase C — Tiefe**
-Mehr Türme mit echten Rollen statt Zahlenvarianten. Mehr Gegnertypen mit echten
-Gegenfragen (gepanzert, fliegend, heilend, teilend). Mehrere Karten. Ein
-Fortschritt zwischen den Partien. Wellen bis 30 statt 10.
-*Abnahme: Zwei Spieler bauen dasselbe Feld unterschiedlich — und beide gewinnen.*
-
-**Phase D — Politur**
-Feinschliff an Grafik, Menüführung, Übergängen, Texten, Barrierefreiheit,
-Ladezeit. Der Punkt, an dem das Spiel aussieht, als hätte ein Studio es gemacht.
-*Abnahme: Man erkennt keine Stelle mehr, an der etwas provisorisch aussieht.*
+**Was noch aussteht** — nachgeführt in `Towerfront-BACKLOG.md`:
+- Blockturm und Heiler, die letzten beiden Genre-Kriterien.
+- Berührungsflächen im Spielfeld sind ungemessen (im Menü geprüft).
+- Kartenbilder mit gemaltem Weg, sobald sie vorliegen.
+- Gerichtete Bildsätze mit acht Richtungen.
 
 ### 3.4 Wie vergessen wir nichts
 
@@ -303,6 +347,17 @@ im Verzeichnis steht, existiert nicht.
 **Die Tags.** Jede angenommene Iteration bekommt einen Tag. Jeder Stand ist
 jederzeit wiederherstellbar. Ein Fehlversuch kostet eine Minute, nicht einen
 Abend.
+
+---
+
+---
+
+# Fundregister
+
+*Ab hier steht, was wann gelernt wurde — in umgekehrter Zeitfolge. Diese
+Abschnitte beschreiben absichtlich den Stand von damals und werden nicht
+fortgeschrieben. Mehrere von ihnen sind inzwischen überholt: das Kachelraster
+ist seit v36 weg, die festen Bauplätze seit v37.*
 
 ---
 
@@ -606,7 +661,7 @@ der Spielstile, gemittelte Robustheit — und zwei offene Punkte, die in jedem
 Lauf sichtbar gemeldet werden, ohne das Tor abzubrechen. Sie sind bekannte
 Baustellen, keine Rückschritte.
 
-### 3.22 Was ein Bildschirmfoto zeigte, das zehn Tore nicht sahen
+### 3.22 Was ein Bildschirmfoto zeigte, das dreizehn Tore nicht sahen
 
 Ein Foto vom iPhone, und vier Dinge sprangen sofort ins Auge:
 
@@ -965,7 +1020,7 @@ Auswertung nach dem Fortsetzen bei null an —, stehen sie jetzt auch im
 Fingerabdruck der Determinismus-Prüfung. Lässt man sie beim Sichern weg, fällt
 sie durch. Dieselbe Lehre wie in v7, diesmal von Anfang an berücksichtigt.
 
-### 3.10 Der Fehler, den neun Tore nicht gefunden haben
+### 3.10 Der Fehler, den dreizehn Tore nicht gefunden haben
 
 Bis v8 war das Spiel auf dem Handy unbedienbar. Nach dem Tippen auf „Beginnen"
 reagierte kein einziger Knopf mehr.

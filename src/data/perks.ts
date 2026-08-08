@@ -85,7 +85,12 @@ export const ALL_PERKS: PerkEffect = perkEffect(PERK_ORDER);
 export function starsFor(won: boolean, lives: number, maxLives: number): number {
   if (!won) return 0;
   const share = lives / Math.max(1, maxLives);
-  if (share >= 0.85) return 3;
-  if (share >= 0.45) return 2;
+  // Die Schwellen sind zweimal gewandert, und beide Male aus demselben Grund:
+  // sie waren an einem leichteren Spielstand geeicht. Jetzt gemessen am
+  // tatsaechlichen Koennen der Bots - ein guter Lauf holt zwei Sterne, drei
+  // verlangt mehr als der Bot leistet, bleibt aber auf der leichtesten Karte
+  // erreichbar.
+  if (share >= 0.62) return 3;
+  if (share >= 0.3) return 2;
   return 1;
 }

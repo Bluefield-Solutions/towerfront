@@ -370,10 +370,22 @@ for (const bot of BOTS) {
 {
   // Ueber die Abwandlungen gemittelt: ein einzelner Lauf haengt an der
   // Baureihenfolge, und die aendert sich mit dem Startgold.
-  const plainMean = overVariants((variant) =>
-    play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { variant })).mean;
-  const buffedMean = overVariants((variant) =>
-    play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { perks: ALL_PERKS, variant })).mean;
+  // Gemessen wird gegen denselben Nenner.
+  //
+  // Die Verbesserung "Harter Kern" erhoeht den Kristall selbst - und damit den
+  // Nenner der Punktzahl. Derselbe Lauf sah dadurch schlechter aus, obwohl er
+  // mehr Kristall uebrig hatte. Schon der dritte Fall dieser Familie: eine
+  // Kennzahl, deren Bezugsgroesse sich mit der Einstellung aendert.
+  const commonScore = (r: Result, base: number) =>
+    r.won ? 50 + (r.lives / base) * 50 : (Math.min(r.wave, 15) / 15) * 50;
+  const plainRuns = [0, 1, 2].map((variant) =>
+    play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { variant }));
+  const buffedRuns = [0, 1, 2].map((variant) =>
+    play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { perks: ALL_PERKS, variant }));
+  const base = plainRuns[0].maxLives;
+  const mean = (rs: Result[]) => rs.reduce((a, r) => a + commonScore(r, base), 0) / rs.length;
+  const plainMean = mean(plainRuns);
+  const buffedMean = mean(buffedRuns);
   const plain = play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id);
   const buffed = play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { perks: ALL_PERKS });
   const hardBuffed = play(

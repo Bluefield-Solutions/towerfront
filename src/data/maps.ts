@@ -116,7 +116,7 @@ export const MAP_SPIRALHAIN: GameMap = {
     { x: 144, y: 828, r: 26 }, { x: 816, y: 60, r: 26 }, { x: 624, y: 828, r: 26 },
   ],
   waves: PLAN_SPIRALHAIN,
-  balance: { hpMul: 0.9, goldMul: 1.05 },
+  balance: { hpMul: 0.85, goldMul: 1.2 },
 };
 
 
@@ -223,7 +223,7 @@ export const MAP_FROSTSPALTE: GameMap = {
     { x: 1584, y: 156, r: 26 },
   ],
   waves: PLAN_FROSTSPALTE,
-  balance: { hpMul: 0.85, goldMul: 1.05 },
+  balance: { hpMul: 0.9, goldMul: 1.12 },
 };
 
 

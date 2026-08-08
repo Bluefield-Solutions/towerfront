@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v33 · 08.08.2026
+Stand: nach v34 · 08.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Kristallwacht-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
@@ -40,9 +40,6 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 
 | # | Punkt | Nutzen | Aufw. |
 |---|---|---|---|
-| **T18** | **VORSCHLAG statt T15/T16/T17: feste Bauplätze wie im Genre-Vorbild.** 10–16 gestaltete Stellungen je Karte statt freier Fläche. Die Frage lautet dann „welcher Turm hierhin", nicht „wie viele". Löst T15, T16 und T17 auf einmal und macht die Karten gestaltbar | ●●● | L |
-| **T17** | **Geometrie: 16 Türme decken jede Pfadzelle dreifach ab.** Deshalb ist „viele Türme" kein Spielstil. Kürzere Reichweiten oder längere Pfade — beides zieht eine Neujustierung nach sich. Rest von T16 | ●●● | L |
-| **T16** | **BLOCKER vor T15: Der Abstand zwischen den Spielstilen ist zu groß (Meister 116, Breite 78, Sparsam 74).** Ein mittelmäßiges, aber vernünftiges Feld muss tragen — sonst gibt es kein Fenster, in dem sich die Kurve anziehen lässt. Ansatz: Einkommen noch stärker auf den Wellenbonus, günstigere zweite Ausbaustufe | ●●● | M |
 | **T15** | **BLOCKER: Die Verluste liegen fast nur in der letzten Welle. Druck über die Wellen 10 bis 15 verteilen.** Solange das so ist, kippt jede Ergänzung am Sortiment die Balance, statt sie zu verschieben — siehe S41. Vor R4 und G5 zu erledigen | ●●● | M |
 | T12 | Sichtprüfung im Tor: gebaute Datei in einem echten Browser laden und ein Bild vergleichen (jsdom kann die Kaskade nicht) | ●●● | L |
 | T8 | Kristall je Rissstufe backen (letztes Objekt mit Pfaden in jedem Bild) | ● | S |
@@ -82,6 +79,9 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S66 | Feste Bauplätze (12 statt 170) senken den **Abstand der Spielstile von 42 auf 3 Punkte** | T16 erledigt. „Viele Türme" war kein Stil, sondern Überdeckung. Die Stile unterscheiden sich jetzt im Zeitpunkt des Ausbaus. |
+| S67 | Die Kante bei Welle 15 lag nicht an der Kurve, sondern an der **Wirtschaft des Kristalls**: 20 Punkte gegen Gegner, die 2 bis 5 kosten | Vier durchgekommene Kolosse waren das Spiel — es gab kein „teuer erkauft". Kristall auf 60 (Normal). Danach greift die Kurve mit Knie: Verluste in drei Wellen statt einer, Robustheitsspanne von 65,7 auf 14,2. |
+| S68 | Beim Anheben des Kristalls wurden zwei Prüfungen **still falsch** — sie rechneten in absoluten Punkten und schlugen an, ohne dass sich die Balance verschlechtert hatte | Kennzahl auf 0 bis 100 normiert. Eine Kennzahl, deren Bedeutung von einer anderen Einstellung abhängt, ist keine Kennzahl. |
 | S63 | Das neue Lesbarkeitstor fand beim ersten Lauf **zwölf Befunde**: Mörser und Prisma bei Kontrast 1,14–1,40 auf der Frostspalte, Koloss bei 1,01, Span elf Bildpunkte breit, zwei Farbpaare zu nah | Genau die Lücke, die die Tor-Bilanz benannt hatte. Behoben, ohne die Grenzen zu senken. |
 | S64 | **Lesbarkeit entsteht an der Kante, nicht in der Fläche** | Alle drei Untergründe liegen zwischen 1,6 und 6,1 % Helligkeit — auch der Winterboden, der hell wirkt. Dunkler Saum bringt 2,0, heller 8,6. Überall heller Saum, eingebacken. |
 | S65 | Das Messwerkzeug hatte die Größenregel der Engine **nachgebaut** statt sie zu benutzen — die Gegenprobe fiel dadurch durch | Dieselbe Fehlerklasse wie bei den Injektionsproben (S61). Es importiert jetzt `enemyArtWidth` und `towerArtScale` direkt. |

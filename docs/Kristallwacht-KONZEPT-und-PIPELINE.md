@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v31 · 08.08.2026
+Stand: v34 · 08.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -305,6 +305,51 @@ jederzeit wiederherstellbar. Ein Fehlversuch kostet eine Minute, nicht einen
 Abend.
 
 ---
+
+### 3.29 Feste Bauplätze — und warum der Kristall vervielfacht wurde
+
+Vier Anläufe waren an derselben Sache gescheitert: Die Frage „wie viele Türme"
+hat keine gute Antwort, solange man beliebig viele bauen kann. Jetzt gibt es je
+Karte **zwölf gestaltete Stellungen**, und die Frage lautet „welcher Turm
+hierhin und welcher Ausbau".
+
+Die Wirkung war sofort messbar:
+
+```
+Abstand der Spielstile   vorher 42   jetzt 3
+```
+
+Damit ist **T16 erledigt.** „Viele Türme" war kein Spielstil, sondern
+Überdeckung — nun unterscheiden sich die Stile darin, *wann* sie ausbauen und
+wieviel sie in der Hand behalten, und alle drei können alle zwölf Plätze
+belegen.
+
+**Der zweite Befund war der wichtigere.** Auch mit gleich starken Stilen blieb
+die Kante bei Welle 15. Der Grund lag nicht in der Kurve, sondern in der
+Wirtschaft des Kristalls: **20 Punkte gegen Gegner, die einzeln 2 bis 5 kosten.**
+Vier durchgekommene Kolosse waren das Spiel. Es gab keinen Zustand „teuer
+erkauft" — nur „makellos" oder „tot".
+
+Der Kristall steht jetzt bei 60 auf Normal (80 auf Ruhig, 52 auf
+Erbarmungslos). Damit wird eine schlechte Welle bezahlbar statt tödlich, und
+die Kurve mit Knie funktioniert plötzlich:
+
+```
+Verteilung der Verluste   vorher W15:5 (100 % in der letzten Welle)
+                          jetzt  W13:6  W14:10  W15:29 (64 %)
+Robustheit (±10 % Schaden) vorher Spanne 65,7   jetzt 14,2
+```
+
+Drei Wellen kosten Kristall statt einer. Damit ist **T15 zu zwei Dritteln
+erledigt** — die Zahl der betroffenen Wellen stimmt, der Anteil der letzten
+liegt mit 64 % noch knapp über der gewünschten Grenze von 60 %.
+
+**Und die Messung war mitgewandert.** Als der Kristall von 20 auf 60 stieg,
+wurden zwei Prüfungen still falsch: sie rechneten in absoluten Kristallpunkten
+und schlugen an, obwohl sich an der Balance nichts verschlechtert hatte. Die
+Kennzahl ist jetzt normiert von 0 bis 100 — Niederlage 0 bis 50 nach erreichter
+Welle, Sieg 50 bis 100 nach verbleibendem Kristall. *Eine Kennzahl, deren
+Bedeutung von einer anderen Einstellung abhängt, ist keine Kennzahl.*
 
 ### 3.28 Warum der Bildvorrat ein Werkzeug braucht
 
@@ -1083,7 +1128,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v31
+## 5. Stand v34
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -1143,6 +1188,11 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v34 — feste Bauplätze, und damit fallen T16 und ein Großteil von T15.**
+Zwölf gestaltete Stellungen je Karte statt 170 freier Zellen. Der Abstand der
+Spielstile fällt von 42 auf 3 Punkte, die Verluste verteilen sich erstmals über
+drei Wellen. Siehe Abschnitt 3.29.
 
 **Neu in v31 — der Bildvorrat ist ein Werkzeug geworden.** Dreimal habe ich
 Lieferungen von Hand eingebaut; ab jetzt macht das `tools/pack-art.mjs`, und das

@@ -38,8 +38,8 @@ const PROBEN = [
   {
     name: 'Weg knickt scharf ab',
     datei: 'src/data/maps.ts',
-    suche: '{ x: -80, y: 210, w: 35 }, { x: 210, y: 226, w: 33 }',
-    ersatz: '{ x: -80, y: 210, w: 35 }, { x: 210, y: 950, w: 33 }',
+    suche: '{ x: -80, y: 210, w: 88 }, { x: 210, y: 226, w: 82 }',
+    ersatz: '{ x: -80, y: 210, w: 88 }, { x: 210, y: 950, w: 82 }',
     tor: 'guards',
   },
   {
@@ -129,7 +129,7 @@ const PROBEN = [
   {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
-    suche: 'hpEnd: 16.5, hpCurve: 2.4',
+    suche: 'hpEnd: 9.9, hpCurve: 2.4',
     ersatz: 'hpEnd: 40, hpCurve: 2.4',
     tor: 'guards',
   },

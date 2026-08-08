@@ -19,7 +19,7 @@
  *   npm run eichen -- --karte laubschlucht --gold 1.0,1.1,1.2
  */
 import { execSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -68,12 +68,30 @@ danach aus wie vorher.`);
   process.exit(0);
 }
 
-/** Den Sicherungsstand aller Dateien, die angefasst werden. */
+// --- Sicherung, die auch einen harten Abbruch überlebt.
+//
+// Der erste Entwurf verließ sich auf Signalbehandler. Die Gegenprobe hat
+// gezeigt, dass das nicht reicht: während der Messlauf läuft, steht die
+// Ereignisschleife still, das Signal kommt also nie an, und eine geänderte
+// Datei bleibt stehen. Deshalb liegt die Sicherung auf der Platte und wird
+// beim nächsten Start gefunden.
+const MARKE = join(ROOT, '.eichen-sicherung.json');
+
+if (existsSync(MARKE)) {
+  const alt = JSON.parse(readFileSync(MARKE, 'utf8'));
+  for (const [f, s] of Object.entries(alt)) writeFileSync(f, s);
+  rmSync(MARKE);
+  console.log('EICHEN: ein abgebrochener Lauf wurde gefunden und zurückgestellt.\n');
+}
+
 const backup = new Map([[DIFF, readFileSync(DIFF, 'utf8')], [MAPS, readFileSync(MAPS, 'utf8')]]);
-const restore = () => { for (const [f, s] of backup) writeFileSync(f, s); };
-// Auch bei Abbruch zurückstellen.
+writeFileSync(MARKE, JSON.stringify(Object.fromEntries(backup)));
+const restore = () => {
+  for (const [f, s] of backup) writeFileSync(f, s);
+};
+const fertig = () => { restore(); if (existsSync(MARKE)) rmSync(MARKE); };
 for (const sig of ['SIGINT', 'SIGTERM', 'uncaughtException']) {
-  process.on(sig, (e) => { restore(); if (e instanceof Error) console.error(e); process.exit(1); });
+  process.on(sig, (e) => { fertig(); if (e instanceof Error) console.error(e); process.exit(1); });
 }
 
 /** Die Kurve aller drei Grade setzen. Ruhig und Erbarmungslos folgen der
@@ -95,7 +113,7 @@ const MAP_CONST = {
 
 function setKarte(id, feld, v) {
   const name = MAP_CONST[id];
-  if (!name) { restore(); console.error(`Karte "${id}" gibt es nicht.`); process.exit(1); }
+  if (!name) { fertig(); console.error(`Karte "${id}" gibt es nicht.`); process.exit(1); }
   const s = backup.get(MAPS);
   const i = s.indexOf(`export const ${name}`);
   const j = s.indexOf('\n};', i);
@@ -147,7 +165,7 @@ for (const v of werte) {
   );
 }
 
-restore();
+fertig();
 
 // --- Empfehlung. Bewusst nur ein Vorschlag, keine Entscheidung.
 console.log('');

@@ -45,12 +45,35 @@ const H = Math.round(B * meta.height / meta.width);
 const { data } = await sharp(datei).resize(B, H).ensureAlpha().raw()
   .toBuffer({ resolveWithObject: true });
 
-/** Graue Flächen: Pflaster und Fels. */
-const grau = new Uint8Array(B * H);
+/** Den Weg vom Boden trennen - über Sättigung oder über Helligkeit.
+ *
+ *  Auf einem farbigen Boden ist das Pflaster das Entsättigte: Sand liegt bei
+ *  0,6 bis 0,7, Pflaster bei 0,1 bis 0,3. Sauber getrennt.
+ *
+ *  Auf Schnee versagt das - beides ist grau. Dort trennt die Helligkeit: das
+ *  Pflaster ist dunkler als der Schnee. Welches Verfahren greift, entscheidet
+ *  die Messung selbst: liegt die mittlere Sättigung unter 0,35, ist der Boden
+ *  nicht farbig genug, und es wird über die Helligkeit getrennt.
+ */
+const sw = [];
 for (let i = 0; i < B * H; i++) {
   const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
   const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  grau[i] = (max === 0 ? 0 : (max - min) / max) < 0.42 ? 1 : 0;
+  sw.push(max === 0 ? 0 : (max - min) / max);
+}
+const mittlereSaettigung = sw.reduce((a, b) => a + b, 0) / sw.length;
+const ueberHelligkeit = mittlereSaettigung < 0.35;
+console.log(`Trennung ueber ${ueberHelligkeit ? 'Helligkeit' : 'Saettigung'} `
+  + `(mittlere Saettigung ${mittlereSaettigung.toFixed(2)})`);
+
+const grau = new Uint8Array(B * H);
+for (let i = 0; i < B * H; i++) {
+  if (ueberHelligkeit) {
+    const l = (0.2126 * data[i*4] + 0.7152 * data[i*4+1] + 0.0722 * data[i*4+2]) / 255;
+    grau[i] = l < 0.45 ? 1 : 0;
+  } else {
+    grau[i] = sw[i] < 0.42 ? 1 : 0;
+  }
 }
 
 /** Zusammenhängende Gebiete finden. */
@@ -263,7 +286,16 @@ const rau = felsen.map((g) => {
     y: Math.round((sy / n) * k),
     r: Math.round(Math.sqrt(n / Math.PI) * k * 0.95),
   };
-}).filter((g) => g.r > 24).sort((a, b) => b.r - a.r).slice(0, 20);
+}).filter((g) => {
+  if (g.r <= 24) return false;
+  // Was auf dem Weg liegt, ist kein Hindernis - es ist ein Fehlgriff der
+  // Trennung. Auf der Winterkarte fing die Helligkeitsschwelle auch Schatten
+  // neben dem Pflaster ein, und ein Kreis mitten auf der Strasse haette den
+  // Waechter zu Recht anschlagen lassen.
+  const naechster = Math.min(...alleBahnen.flat()
+    .map((p) => Math.hypot(p.x - g.x, p.y - g.y)));
+  return naechster > g.r * 0.8;
+}).sort((a, b) => b.r - a.r).slice(0, 20);
 
 console.log('\n  rough: [');
 for (let i = 0; i < rau.length; i += 3) {

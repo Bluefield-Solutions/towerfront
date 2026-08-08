@@ -467,12 +467,29 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   };
   const bedienung = ['hud', 'dock', 'inspector'];
 
-  ui.setSpielansicht(false);
+  // Geprueft wird der Weg, den das Spiel wirklich geht: die Sichtbarkeit wird
+  // in jedem Bild aus dem Zustand abgeleitet. Frueher wurde hier nur der
+  // Schalter geprueft - und der Fehler lag genau daneben, naemlich in einem
+  // Pfad, der den Schalter nie umlegte.
+  ui.istMenuOffen = () => true;
+  ui.sync();
   for (const id of bedienung) {
     if (sichtbar(id)) problems.push(`Menue: "${id}" ist sichtbar, obwohl das Menue offen ist.`);
   }
 
-  ui.setSpielansicht(true);
+  // Auch nach einem Turmbau und einer Auswahl darf nichts durchschlagen.
+  state.gold = 9000;
+  state.build(state.map.hint.x, state.map.hint.y, 'arrow');
+  state.selectedTower = state.towers[0] ?? null;
+  state.buildChoice = 'frost';
+  ui.sync();
+  for (const id of bedienung) {
+    if (sichtbar(id)) problems.push(`Menue: "${id}" taucht nach einer Auswahl wieder auf.`);
+  }
+  if (state.buildChoice !== null) problems.push('Menue: eine Turmwahl bleibt im Menue bestehen.');
+
+  ui.istMenuOffen = () => false;
+  ui.sync();
   for (const id of ['hud', 'dock']) {
     if (!sichtbar(id)) problems.push(`Spiel: "${id}" fehlt, obwohl gespielt wird.`);
   }

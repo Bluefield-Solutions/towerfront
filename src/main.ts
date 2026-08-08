@@ -88,6 +88,13 @@ menu.onRetry = () => {
 layout();
 bindInput(canvas, state, renderer);
 
+// Beim ersten Laden steht die Landkarte, aber es gibt keinen Phasenwechsel -
+// also lief `openMenu` nie, und die Turmleiste blieb ueber der Karte stehen.
+// Genau der Fehler, der in v51 schon einmal behoben schien: dort war nur der
+// Weg ueber den Phasenwechsel abgedeckt, nicht der Start.
+ui.istMenuOffen = () => renderer.menu !== null;
+ui.openMenu();
+
 let lastPhase = state.phase;
 
 /** Bildrate beobachten und die Effektdichte anpassen.

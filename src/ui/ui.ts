@@ -76,6 +76,19 @@ export class UI {
   private endlessWanted = false;
   /** Wird von main gesetzt: zurueck zur Landkarte. */
   openMenu: () => void = () => {};
+
+  /** Ist das Menue gerade offen?
+   *
+   *  Das ist eine *Frage*, kein Schalter - und darin liegt der Unterschied.
+   *  Zweimal hat die Turmleiste im Menue gestanden: einmal, weil niemand sie
+   *  ausblendete, und einmal, weil beim ersten Laden kein Phasenwechsel
+   *  stattfand und der Aufruf deshalb ausblieb. Beide Male war die Ursache
+   *  dieselbe - die Sichtbarkeit hing daran, dass jemand an der richtigen
+   *  Stelle eine Funktion aufruft.
+   *
+   *  Jetzt wird sie in jedem Bild aus dem Zustand abgeleitet. Es gibt keine
+   *  Stelle mehr, an der man es vergessen kann. */
+  istMenuOffen: () => boolean = () => false;
   private view: (w: 'main' | 'choose' | 'progress') => void = () => {};
   private lastScreen: 'title' | 'won' | 'lost' = 'title';
   private tutStep = -1;
@@ -550,6 +563,8 @@ export class UI {
   /** Jeden Frame gerufen, schreibt aber nur bei echten Aenderungen ins DOM. */
   sync(): void {
     const s = this.s;
+    // Jedes Bild neu abgeleitet, nicht auf Zuruf gesetzt.
+    this.setSpielansicht(!this.istMenuOffen());
     const sel = s.selectedTower;
     const sig = [
       s.gold, s.lives, s.waveNumber, s.waveActive, s.speed, s.paused,

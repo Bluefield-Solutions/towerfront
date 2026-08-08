@@ -35,17 +35,18 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 ## Befehle
 
 ```
-npm run gate        dreizehn Prüfungen, ~80 s. Muss vor jedem Commit grün sein.
+npm run gate        vierzehn Prüfungen, ~80 s. Muss vor jedem Commit grün sein.
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
 npm run bilder      alle 13 Aufnahmen (echte PNG ohne Browser)
 npm run bildtor     der Querschnitt, den die Torkette prüft
 npm run pack-art    Bildvorrat aus art/roh/ neu einbacken
 npm run eichen      einen Wert durchprobieren, alle Kennzahlen nebeneinander
 npm run doku        prüft die Dokumente gegen die Wirklichkeit
+npm run beruehrung  prüft, ob alles mit dem Daumen zu treffen ist
 ```
 
 Die Torkette: `tsc` → `guards` → `doku` → `art` → `determinism` → `sim` → `bench` →
-`bench-draw` → `lesbarkeit` → `bildtor` → `smoke` → `build` → `autarkie` → `bericht`.
+`bench-draw` → `lesbarkeit` → `beruehrung` → `bildtor` → `smoke` → `build` → `autarkie` → `bericht`.
 
 ---
 

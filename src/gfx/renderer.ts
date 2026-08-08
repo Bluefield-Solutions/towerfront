@@ -6,7 +6,7 @@ import {
 } from '../data/towers';
 import { ABILITIES } from '../data/abilities';
 import { makeRng } from '../core/math';
-import type { GameState } from '../game/state';
+import { GameState } from '../game/state';
 import type { Tower } from '../game/types';
 import { beginGlowBatch, endGlowBatch, hexA, stampGlow, stampGlowFast } from './glow';
 import { bakeTerrain } from './terrain';

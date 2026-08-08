@@ -109,7 +109,7 @@ for (let k = 0; k < cand.length; k++) {
     const sp = cand[k];
     const id = TOWER_ORDER[i++ % TOWER_ORDER.length];
     if (s.build(sp.x, sp.y, id)) {
-      const t = s.towerUnder(sp.x, sp.y)!;
+      const t = s.towerUnder(sp.x, sp.y, 1)!;
       while (t.level < MAX_LEVEL) s.upgrade(t, (i % 2) as 0 | 1);
     }
   }

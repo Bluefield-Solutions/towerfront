@@ -192,7 +192,7 @@ Innerhalb von Schritt 1 gilt weiterhin:
 3. **`git diff` prüfen.** Nur die beabsichtigten Zeilen.
 4. **Erst einchecken, dann gegenproben.** Gegenproben arbeiten mit
    `git checkout` und löschen sonst die frische Arbeit. Dreimal passiert.
-5. **`npm run gate`** — dreizehn Prüfungen, rund 80 Sekunden. Alles grün, sonst
+5. **`npm run gate`** — vierzehn Prüfungen, rund 80 Sekunden. Alles grün, sonst
    wird nicht ausgeliefert.
 6. **Ausliefern**, committen, `git tag vN`.
 
@@ -210,10 +210,11 @@ Ein Befehl fährt alles: `npm run gate`
 | 6 | Messung Simulation | `npm run bench` | mehr als 4 ms Simulationszeit je Bild |
 | 7 | Messung Zeichnen | `npm run bench-draw` | mehr als 3.000 Zeichenbefehlen **oder** 24 MB gebackenen Bildern |
 | 8 | Lesbarkeit | `npm run lesbarkeit` | zu schwachem Saumkontrast, zu kleiner Silhouette, zu ähnlichen Gegnerfarben |
-| 9 | Bildabnahme | `npm run bildtor` | einfarbiger Fläche, falscher Helligkeit, nicht dekodierten Bildern |
-| 10 | Rauchtest | `npm run smoke` | Fehlern beim Zeichnen, in der Oberfläche, bei der Eingabe; unerreichbaren Menüwegen; zu kleinen Trefferflächen |
-| 11 | Build | `npm run build` | Bündelfehler |
-| 12 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id, Ersatzschreibung statt Umlaut |
+| 9 | Berührungsflächen | `npm run beruehrung` | Bedienelementen unter 44 Bildschirmpunkten — auf der Leinwand gerechnet, im HTML aus der Stilvorlage gelesen |
+| 10 | Bildabnahme | `npm run bildtor` | einfarbiger Fläche, falscher Helligkeit, nicht dekodierten Bildern |
+| 11 | Rauchtest | `npm run smoke` | Fehlern beim Zeichnen, in der Oberfläche, bei der Eingabe; unerreichbaren Menüwegen; zu kleinen Trefferflächen |
+| 12 | Build | `npm run build` | Bündelfehler |
+| 13 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id, Ersatzschreibung statt Umlaut |
 | — | Genre-Abgleich | `npm run bericht` | nichts — er meldet, er bricht nicht ab |
 
 Daneben zwei Werkzeuge, die nicht Teil der Kette sind:

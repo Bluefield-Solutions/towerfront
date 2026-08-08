@@ -59,6 +59,12 @@ html, body {
 .val.danger { color: var(--crystal); }
 .spacer { flex: 1; }
 
+/* Berührungsflächen: mindestens 44 Punkte.
+   Gemessen lagen sechs Bedienelemente darunter — die Wellen-Schaltfläche bei
+   23 Punkten, und die trifft man am häufigsten. Unter diesem Richtwert steigt
+   die Fehlerquote messbar, und auf einem Spielfeld heißt eine Fehlberührung,
+   dass man Gold ausgibt, wo man nur nachsehen wollte. `npm run beruehrung`
+   hält das nach. */
 .chip {
   font-family: var(--ui); font-size: 12px; font-weight: 600;
   color: var(--text); background: var(--panel);
@@ -66,6 +72,7 @@ html, body {
   padding: 8px 14px; min-width: 52px; cursor: pointer;
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
+  min-height: 44px;
 }
 .chip:active { transform: scale(0.95); }
 
@@ -104,6 +111,7 @@ html, body {
 .go {
   position: absolute; right: calc(10px + var(--sar)); bottom: calc(10px + var(--sab));
   z-index: 3; pointer-events: auto;
+  min-height: 46px;
 }
 
 .build { display: flex; gap: 8px; pointer-events: auto; }
@@ -115,6 +123,7 @@ html, body {
   border-radius: 12px; color: var(--text); font-family: var(--ui);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
+  min-height: 46px;
 }
 .tower-btn .n { font-size: 12.5px; font-weight: 700; letter-spacing: 0.01em; }
 .tower-btn .c {
@@ -153,6 +162,7 @@ html, body {
 .x {
   background: none; border: none; color: var(--muted);
   font-size: 15px; cursor: pointer; padding: 2px 4px;
+  min-height: 44px;
 }
 .insp-stats { margin: 0 0 10px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; }
 .insp-stats dt {
@@ -170,7 +180,9 @@ html, body {
 }
 .up { background: var(--gold); color: #1A1305; border-color: transparent; }
 .up:disabled { background: rgba(137, 148, 176, 0.25); color: var(--muted); }
-.sell { background: transparent; color: var(--danger); }
+.sell { background: transparent; color: var(--danger);
+  min-height: 44px;
+}
 
 /* -------------------------------------------------------------- Screens */
 
@@ -296,6 +308,7 @@ html, body {
   border-radius: 12px; color: var(--text); font-family: var(--ui);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
+  min-height: 46px;
 }
 .s-fill {
   position: absolute; inset: 0; transform-origin: bottom;
@@ -417,6 +430,7 @@ html, body {
   padding: 8px 10px; border-radius: 10px; font-family: var(--ui);
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--tone); color: var(--text);
+  min-height: 46px;
 }
 .branch:disabled { opacity: 0.4; cursor: default; }
 .branch:active:not(:disabled) { transform: scale(0.97); }
@@ -431,6 +445,7 @@ html, body {
   width: 100%; padding: 10px 6px; border-radius: 10px; cursor: pointer;
   font-family: var(--ui); font-size: 12px; font-weight: 700;
   background: var(--tone); color: #12100A; border: none;
+  min-height: 46px;
 }
 .insp-ups .up:disabled { background: rgba(137, 148, 176, 0.25); color: var(--muted); }
 
@@ -611,6 +626,7 @@ html, body {
   font-family: var(--ui);
   background: rgba(255, 255, 255, 0.045);
   border: 1px solid var(--edge); color: var(--text);
+  min-height: 46px;
 }
 .choice:active { transform: scale(0.99); }
 .ch-lab { font-size: 12px; font-weight: 600; flex: none; }

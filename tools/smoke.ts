@@ -280,6 +280,35 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   renderer.resize();
 }
 
+// Ein Turm muss aus 22 Punkten Entfernung noch zu treffen sein.
+//
+// Das Werkzeug `beruehrung` rechnet die Regel nach - aber es merkt nicht,
+// wenn die Bedienung sie gar nicht anwendet. Deshalb hier eine Probe am
+// Verhalten: ein Turm wird gesetzt, und aus dem halben Richtwert Entfernung
+// muss der Tipper ihn finden. Auf dem kleinsten Geraet, also beim
+// unguenstigsten Massstab.
+{
+  const probe = new GameState();
+  probe.reset();
+  probe.gold = 9000;
+  probe.build(probe.map.hint.x, probe.map.hint.y, 'arrow');
+  const t = probe.towers[0];
+  const scale = Math.max(568 / 1920, 320 / 1080);
+  // 22 Bildschirmpunkte entsprechen so vielen Weltpixeln:
+  const weit = 22 / scale;
+  if (!probe.towerUnder(t.x + weit, t.y, scale)) {
+    problems.push(
+      `Beruehrung: ein Turm ist aus 22 Punkten Entfernung nicht zu treffen ` +
+      `(${weit.toFixed(0)} Weltpixel bei Massstab ${scale.toFixed(3)}).`,
+    );
+  }
+  // Und weit daneben darf er nicht mehr treffen - sonst waere die Zugabe
+  // nicht grosszuegig, sondern kaputt.
+  if (probe.towerUnder(t.x + weit * 4, t.y, scale)) {
+    problems.push('Beruehrung: ein Turm wird noch aus 88 Punkten Entfernung getroffen.');
+  }
+}
+
 // Politur darf das Spiel nicht anhalten.
 //
 // Trefferstopp ist der aelteste Kniff des Handwerks - und der am leichtesten

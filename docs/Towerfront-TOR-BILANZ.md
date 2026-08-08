@@ -135,7 +135,7 @@ lässt sich das Neuerzeugen erzwingen.
 **B · Der Genre-Abgleich heißt jetzt Bericht — erledigt.** Er schlägt nie an
 und kann es auch nicht. Aus `npm run bericht` wurde `npm run bericht`, und
 die Ausgabe sagt es selbst: *„GENRE-BERICHT (kein Tor)"*. Die Kette prüft damit
-zehn Dinge und berichtet eines — vorher sah sie nach dreizehn Prüfungen aus.
+zehn Dinge und berichtet eines — vorher sah sie nach vierzehn Prüfungen aus.
 
 **C · Die Balance-Simulation misst inzwischen zwei Dinge.** Sie prüft die
 Balance *und* modelliert das Spielverhalten. Als in v30 die Bewertung der

@@ -145,7 +145,8 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
       return;
     }
 
-    const existing = s.towerUnder(c.x, c.y);
+    // Trefferzugabe so gross, dass die Flaeche 44 Punkte erreicht.
+    const existing = s.towerUnder(c.x, c.y, r.scale);
     if (s.buildChoice) {
       if (existing) { s.selectedTower = existing; s.buildChoice = null; Sfx.play('tap'); return; }
       const choice = s.buildChoice;

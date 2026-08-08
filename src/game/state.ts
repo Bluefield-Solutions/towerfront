@@ -214,15 +214,43 @@ export class GameState {
   }
 
   /** Der Turm unter diesem Punkt - fuer die Auswahl. */
-  towerUnder(x: number, y: number): Tower | undefined {
+  /** Der Turm unter diesem Punkt - fuer die Auswahl.
+   *
+   *  `slack` ist die Trefferzugabe in Weltpixeln und kommt von der
+   *  Bedienung: sie kennt den Massstab und weiss deshalb, wieviel Welt ein
+   *  Fingerbreit ist. Gemessen war ein Bogenturm auf dem iPhone SE nur 22
+   *  Bildschirmpunkte gross - halb so viel wie der Richtwert von 44.
+   *
+   *  Die Zugabe waechst nur, sie schrumpft nie: naeher heranzoomen darf das
+   *  Treffen nicht erschweren. */
+  towerUnder(x: number, y: number, scale: number): Tower | undefined {
+    // Der Massstab ist Pflicht, kein Zusatz. Zuerst war die Trefferzugabe ein
+    // Zusatzwert mit Vorgabe - und die Gegenprobe zeigte, dass man ihn an der
+    // Aufrufstelle weglassen kann, ohne dass ein Tor es merkt. Eine Regel, die
+    // man vergessen kann, wird vergessen.
+    const slack = Math.max(10, GameState.tapSlack(scale));
     let best: Tower | undefined;
     let bestD = Infinity;
     for (const t of this.towers) {
       const d = Math.hypot(t.x - x, t.y - y);
-      const r = TOWERS[t.def].footprint / 2 + 10;
+      const r = TOWERS[t.def].footprint / 2 + slack;
       if (d < r && d < bestD) { bestD = d; best = t; }
     }
     return best;
+  }
+
+  /** Trefferzugabe in Weltpixeln fuer einen gegebenen Massstab.
+   *
+   *  Die eine Stelle, an der diese Regel steht. Bedienung und Pruefwerkzeug
+   *  holen sie sich beide hier ab - haette das Werkzeug sie nachgebaut, waere
+   *  die Gegenprobe durchgefallen, ohne dass es jemand merkt. */
+  static tapSlack(scale: number, punkte = 44): number {
+    return punkte / scale / 2;
+  }
+
+  /** Wie gross ein Turm auf dem Bildschirm zu treffen ist, in Punkten. */
+  static tapSize(def: TowerId, scale: number): number {
+    return (TOWERS[def].footprint / 2 + Math.max(10, GameState.tapSlack(scale))) * 2 * scale;
   }
 
 

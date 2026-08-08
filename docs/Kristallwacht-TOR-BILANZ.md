@@ -139,12 +139,36 @@ Bauplätze kurz an den Turmwerten hing, änderte jede Turmänderung zugleich das
 Botverhalten. Die Trennung ist wiederhergestellt, gehört aber als Regel
 festgeschrieben: **das Modell darf nicht vom Gemessenen abhängen.**
 
-**D · Kein Tor prüft Lesbarkeit.** Kontrast zwischen Turm und Untergrund,
-Größe der Berührungsflächen, Unterscheidbarkeit der Gegnerfarben — alles
-Fragen, die bisher nur ein Bildschirmfoto beantwortet. Ein einfacher
-Kontrastmesser über das gebackene Bild wäre kein Ersatz, aber ein Anfang.
+**D · Ein Lesbarkeitstor gibt es jetzt — erledigt, und es hat zugeschlagen.**
+`npm run lesbarkeit` liest die ausgelieferten Bilder aus den erzeugten Modulen,
+wendet dieselbe Einfärbung an wie die Engine und rechnet drei Dinge: Kontrast
+gegen jeden Untergrund, Breite der Silhouette in Bildschirmpunkten im
+schlechtesten Fall (iPhone quer, Feld füllt den Bildschirm) und den Farbabstand
+der Gegnerarten in Lab.
 
-**E · Nichts streichen.** Nach dieser Prüfung gibt es kein Tor, das nur Arbeit
+**Beim ersten Lauf: zwölf Befunde.** Mörser und Prisma standen auf der
+Frostspalte bei Kontrast 1,14 bis 1,40, der Koloss bei 1,01 — praktisch
+unsichtbar. Der Span war elf Bildschirmpunkte breit. Spalter und Span lagen
+farblich 8,2 auseinander, Koloss und Leerentitan 9,4.
+
+Und ein Befund über die Sache selbst: **Lesbarkeit entsteht an der Kante, nicht
+in der Fläche.** Mitteldunkel auf mittelhell hat in beide Richtungen wenig
+Kontrast. Alle drei Untergründe liegen gemessen zwischen 1,6 und 6,1 %
+Helligkeit — auch der Winterboden, der im Bild hell wirkt. Ein dunkler Saum
+bringt darauf 2,0, ein heller 8,6. Also überall ein heller Saum, im Ton der
+Karte, zweieinhalb Punkte breit und in die Bilder eingebacken.
+
+Behoben: Saum je Karte · Koloss deutlich heller · Span von Orange auf Gelb ·
+Mindestbreite für den Span, bewusst von der Treffererkennung entkoppelt ·
+kräftigere Einfärbung der Türme.
+
+**E · Und die Messung machte denselben Fehler wie die Proben.** Sie hatte die
+Größenregel der Engine *nachgebaut* statt sie zu benutzen — `Math.max(radius *
+3, 50)` stand zweimal da. Die Gegenprobe fiel deshalb durch: eine Änderung im
+Spiel änderte die Messung nicht. Jetzt importiert das Werkzeug `enemyArtWidth`
+und `towerArtScale` direkt aus der Engine, und die Gegenprobe schlägt an.
+
+**Nichts streichen.** Nach dieser Prüfung gibt es kein Tor, das nur Arbeit
 erzeugt. Das billigste (Autarkie, 0,2 s) hat zwei Befunde gebracht, darunter
 die fehlenden Umlaute.
 

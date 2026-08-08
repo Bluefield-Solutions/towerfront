@@ -142,6 +142,16 @@ async function measureBackground(buffer) {
 const { TOWERS, TOWER_ORDER, accentFor } = await import('../src/data/towers');
 const { ENEMIES } = await import('../src/data/enemies');
 const { MAPS } = await import('../src/data/maps');
+// Die Groessenregeln kommen aus der Engine, nicht aus einer Kopie hier.
+//
+// Zuerst standen sie doppelt: `Math.max(radius * 3, 50)` im Spiel und derselbe
+// Ausdruck in dieser Messung. Die Gegenprobe fiel dadurch durch - eine
+// Aenderung im Spiel aenderte die Messung nicht. Genau der Fehler, den die
+// Tor-Bilanz an drei eigenen Proben gefunden hat.
+const { enemyArtWidth } = await import('../src/gfx/enemyart');
+const { towerArtScale } = await import('../src/gfx/towerart');
+/** Kantenlaenge, mit der der Renderer einen Turm zeichnet. */
+const TOWER_DRAW = 104;
 
 const problems = [];
 const bgArt = readAssets('backgrounds.ts');
@@ -179,9 +189,10 @@ function worstContrast(objLum) {
 console.log('\nTürme (Kontrast gegen den Untergrund, Breite auf dem Bildschirm):');
 for (const id of TOWER_ORDER) {
   const def = TOWERS[id];
-  const states = [[null, `${id}_1`, 0.78], [0, `${id}_${def.branches[0].id}`, 1],
-    [1, `${id}_${def.branches[1].id}`, 1]];
-  for (const [branch, key, levelScale] of states) {
+  const states = [[null, `${id}_1`, 1], [0, `${id}_${def.branches[0].id}`, 3],
+    [1, `${id}_${def.branches[1].id}`, 3]];
+  for (const [branch, key, level] of states) {
+    const levelScale = towerArtScale(level);
     const buf = towerArt.get(key);
     if (!buf) { problems.push(`Turmbild ${key} fehlt.`); continue; }
     const accent = hexRgb(accentFor(def, branch));
@@ -190,7 +201,7 @@ for (const id of TOWER_ORDER) {
     const { worstBody, worstRim, where } = worstContrast(lum);
     // Der Turm wird mit 104 Weltpunkten Kantenlänge gezeichnet, die Silhouette
     // nimmt davon ihren Anteil ein.
-    const worldW = 104 * levelScale * (m.spanX / m.frame);
+    const worldW = TOWER_DRAW * levelScale * (m.spanX / m.frame);
     const px = worldW * COVER;
     const bad = worstRim < MIN_RIM_CONTRAST || worstBody < MIN_BODY_CONTRAST
       || px < MIN_TOWER_PX;
@@ -224,7 +235,7 @@ for (const [id, def] of Object.entries(ENEMIES)) {
   const m = await measureSprite(buf, body, 0.38);
   const lum = luminance(...m.rgb);
   const { worstBody, worstRim, where } = worstContrast(lum);
-  const worldW = Math.max(def.radius * 3.0, 50) * (m.spanX / m.frame);
+  const worldW = enemyArtWidth(id) * (m.spanX / m.frame);
   const px = worldW * COVER;
   enemyColours.push({ id, name: def.name, lab: toLab(...m.rgb) });
   const bad = worstRim < MIN_RIM_CONTRAST || worstBody < MIN_BODY_CONTRAST

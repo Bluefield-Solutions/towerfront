@@ -1,6 +1,6 @@
 # Kristallwacht — Rückstandsverzeichnis
 
-Stand: nach v32 · 08.08.2026
+Stand: nach v33 · 08.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Kristallwacht-BENCHMARK.md` und läuft mit `npm run benchmark` in jedem Lauf mit.
 
@@ -82,6 +82,9 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S9 | Das Raster allein war bei 55 Gegnern langsamer als die Vollprüfung (0,164 statt 0,145 ms) | Nicht das Raster war das Problem, sondern die Zielsuche jedes Bild. Optimierungen nur noch gegen `npm run bench` entscheiden. |
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
+| S63 | Das neue Lesbarkeitstor fand beim ersten Lauf **zwölf Befunde**: Mörser und Prisma bei Kontrast 1,14–1,40 auf der Frostspalte, Koloss bei 1,01, Span elf Bildpunkte breit, zwei Farbpaare zu nah | Genau die Lücke, die die Tor-Bilanz benannt hatte. Behoben, ohne die Grenzen zu senken. |
+| S64 | **Lesbarkeit entsteht an der Kante, nicht in der Fläche** | Alle drei Untergründe liegen zwischen 1,6 und 6,1 % Helligkeit — auch der Winterboden, der hell wirkt. Dunkler Saum bringt 2,0, heller 8,6. Überall heller Saum, eingebacken. |
+| S65 | Das Messwerkzeug hatte die Größenregel der Engine **nachgebaut** statt sie zu benutzen — die Gegenprobe fiel dadurch durch | Dieselbe Fehlerklasse wie bei den Injektionsproben (S61). Es importiert jetzt `enemyArtWidth` und `towerArtScale` direkt. |
 | S61 | **Drei von zehn Fehlerinjektionen meldeten „schlägt nicht an" — alle drei waren Fehler in der Probe, nicht im Tor** | Ein Wert traf nur die erste Ausbaustufe; eine Schleife landete in der falschen Methode; eine Änderung wurde in der Quelldatei geprüft statt in der gebauten. Erst prüfen, ob der Eingriff angekommen ist. |
 | S62 | Die Prüfumgebung sicherte den Quellbaum mit `cp -r src /tmp/src.bak` — das Verzeichnis existierte schon, die Kopie landete darin, beim Zurückspielen war der Baum beschädigt | Aufgefallen nur, weil eine Karte plötzlich anders aussah. Wiederherstellung läuft jetzt über `git checkout`. |
 | S60 | Beim Einbau der Türme hatte ich acht Bruchstücke in den Vorlagen übersehen — sie schrumpften die Türme beim Skalieren | Von Hand eingebaute Bilder sind nicht überprüfbar. Seit v31 macht das `tools/pack-art.mjs`, und das Tor prüft, dass die eingebetteten Module noch zu den Rohbildern passen. |

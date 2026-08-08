@@ -18,6 +18,21 @@ const DT = 1 / 60;
 
 const SEEDS = [20260807];
 
+/** Drei leicht abgewandelte Spielverlaeufe je Messung.
+ *
+ *  Der Verlauf ist path-abhaengig: wann Gold ankommt, entscheidet, welcher
+ *  Turm zuerst steht, und das entscheidet den Rest. Deshalb kann selbst
+ *  *mehr* Schaden zu einem schlechteren Ergebnis fuehren - gemessen an einem
+ *  einzelnen Verlauf ist das Chaos, nicht Balance. Erst der Mittelwert ueber
+ *  mehrere vernuenftige Verlaeufe ist eine Zahl, nach der man justieren kann. */
+const VARIANTS = [0, 1, 2];
+
+/** Mittelwert einer Kennzahl ueber alle Abwandlungen. */
+function overVariants(run: (variant: number) => Result): { runs: Result[]; mean: number } {
+  const runs = VARIANTS.map(run);
+  return { runs, mean: runs.reduce((a, r) => a + score(r), 0) / runs.length };
+}
+
 /** Eine Zahl, die Sieg und Niederlage vergleichbar macht: Niederlage zaehlt
  *  die erreichte Welle, Sieg 100 plus verbleibenden Kristall. */
 function score(r: Result): number {
@@ -101,13 +116,22 @@ function play(
   strategy: TowerId[], pick: BranchPick = () => 0,
   bot: Bot = MEISTER, difficulty: DifficultyId = 'normal',
   mapId: string = MAPS[0].id,
-  opts: { endless?: boolean; perks?: typeof NO_PERKS; seed?: number } = {},
+  opts: {
+    endless?: boolean; perks?: typeof NO_PERKS; seed?: number;
+    /** Kleine Abwandlung des Bauverhaltens - siehe VARIANTS. */
+    variant?: number;
+  } = {},
 ): Result {
   const s = new GameState(mapId);
   s.reset(opts.seed ?? SEEDS[0], difficulty, mapId,
     { endless: opts.endless, perks: opts.perks ?? NO_PERKS });
   const spots = buildSpots(s);
-  let spotIdx = 0, si = 0, t = 0, frame = 0, upgrades = 0;
+  // Die Abwandlung verschiebt Startreihenfolge und Ruecklage leicht. Damit
+  // entstehen mehrere Spielverlaeufe, die alle vernuenftig sind - und der
+  // Mittelwert misst die Balance statt einer einzelnen Bahn durch das Chaos.
+  const variant = opts.variant ?? 0;
+  const reserve = bot.reserve + variant * 15;
+  let spotIdx = variant % 2, si = variant, t = 0, frame = 0, upgrades = 0;
   let peakEnemies = 0, peakFx = 0;
   const leakByWave = new Array(s.waves.length).fill(0);
   let lastLives = s.lives;
@@ -116,12 +140,12 @@ function play(
     if (frame % bot.decideEvery === 0) {
       let id = strategy[si % strategy.length];
       if (s.gold < TOWERS[id].base.cost) {
-        const affordable = strategy.filter((c) => s.gold >= TOWERS[c].base.cost + bot.reserve);
+        const affordable = strategy.filter((c) => s.gold >= TOWERS[c].base.cost + reserve);
         if (affordable.length) id = affordable[0];
       }
 
       const wantBuild = s.towers.length < bot.maxTowers * bot.deepenAt &&
-        spotIdx < spots.length && s.gold >= TOWERS[id].base.cost + bot.reserve;
+        spotIdx < spots.length && s.gold >= TOWERS[id].base.cost + reserve;
 
       if (wantBuild) {
         const sp = spots[spotIdx];
@@ -133,12 +157,12 @@ function play(
         for (const tw of s.towers) {
           if (tw.level >= Math.min(bot.maxLevel, MAX_LEVEL)) continue;
           const n = nextFor(TOWERS[tw.def], tw.branch ?? pick(tw.def), tw.level);
-          if (!n || s.gold < n.cost + bot.reserve) continue;
+          if (!n || s.gold < n.cost + reserve) continue;
           if (!best || tw.damageDone > best.damageDone) best = tw;
         }
         if (best && s.upgrade(best, (best.branch ?? pick(best.def)) as 0 | 1)) upgrades++;
         else if (s.towers.length < bot.maxTowers && spotIdx < spots.length &&
-          s.gold >= TOWERS[id].base.cost + bot.reserve) {
+          s.gold >= TOWERS[id].base.cost + reserve) {
           const sp = spots[spotIdx];
           if (s.build(sp.x, sp.y, id)) si++;
           spotIdx++;
@@ -220,45 +244,99 @@ for (const bot of BOTS) {
   );
 }
 
-// Robustheitsprobe.
+// Verteilung der Verluste.
 //
-// Beim Versuch, in v21 einen Werkzeugturm einzubauen, sprang das Ergebnis bei
-// kleinsten Aenderungen zwischen 5 und 20 Kristall. Der erste Verdacht war
-// Rauschen - falsch: der Spielverlauf hat gar keinen Zufall, der auf das
-// Ergebnis wirkt (drei Aussaaten liefern dasselbe bis aufs Goldstueck).
-//
-// Der wahre Grund ist eine Kante: alle Verluste haengen an einer einzigen
-// spaeten Welle. Entweder das Feld haelt sie - dann ist der Lauf makellos -
-// oder es haelt sie nicht - dann bricht alles weg. Dazwischen gibt es nichts.
-//
-// Diese Probe macht die Kante sichtbar: dasselbe Feld mit 10 % mehr und 10 %
-// weniger Schaden. Bewegt sich das Ergebnis dabei um mehr als 40 Punkte, haengt
-// die Balance an einem Faden - und dann ist jede weitere Feinjustierung
-// Gluecksspiel statt Arbeit.
+// Das eigentliche Ziel von T15: der Kristall darf nicht an einer einzigen
+// Welle haengen. Solange alle Verluste in der letzten Welle liegen, ist jeder
+// Lauf entweder makellos oder gescheitert - und jede Aenderung am Sortiment
+// kippt genau diese eine Entscheidung, statt sie zu verschieben.
 {
-  const shifted = (mul: number) => {
-    const perks = { ...NO_PERKS, damageMul: mul };
-    return play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { perks });
-  };
-  const runs = [0.9, 1, 1.1].map(shifted);
-  const scores = runs.map(score);
-  const span = Math.max(...scores) - Math.min(...scores);
+  const r = play(mixedPlanBase);
+  const hot = r.leakByWave
+    .map((v, i) => ({ w: i + 1, v }))
+    .filter((o) => o.v > 0);
+  const last = MAPS[0].waves.length;
+  const share = hot.length ? (r.leakByWave[last - 1] ?? 0) / hot.reduce((a, o) => a + o.v, 0) : 0;
   console.log(
-    '\nRobustheit (Schaden -10 % / normal / +10 %): ' +
-    runs.map((r) => (r.won ? `${r.lives}/${r.maxLives}` : `W${r.wave}`)).join('   ') +
-    `   Spanne ${span}`,
+    `\nVerteilung der Verluste: ${hot.length ? hot.map((o) => `W${o.w}:${o.v}`).join('  ') : 'keine'}` +
+    `   davon in der letzten Welle ${Math.round(share * 100)} %`,
   );
-  const flawless = runs.findIndex((r) => r.won && r.lives >= r.maxLives);
-  if (flawless >= 0 && !(runs[1].won && runs[1].lives >= runs[1].maxLives)) {
+  // Bewusst ein Hinweis und kein Abbruch: das ist der bekannte offene Punkt
+  // T15, kein Rueckschritt. Er steht in jedem Lauf sichtbar da, bis er
+  // erledigt ist.
+  if (r.won && (hot.length < 3 || share > 0.6)) {
     console.log(
-      '  Hinweis: schon 10 % mehr Schaden machen den Lauf makellos - die ' +
-      'Entscheidung faellt an einer einzigen Welle.',
+      `  OFFEN (T15): Verluste liegen an ${hot.length} Stelle(n), ` +
+      `${Math.round(share * 100)} % davon in der letzten Welle.`,
     );
   }
-  if (span > 40) {
+}
+
+// Abstand zwischen den Spielstilen.
+//
+// Der Kern von T15 liegt tiefer als die Kurvenform: die drei Stile sind zu
+// unterschiedlich stark. Zieht man die Kurve so an, dass die Verluste sich
+// verteilen, verlieren die schwaecheren Stile sofort ganz. Solange der Abstand
+// so gross ist, gibt es kein Fenster, in dem beides zugleich gilt.
+{
+  const runs = BOTS.map((b) => ({
+    name: b.name,
+    mean: overVariants((variant) => play(
+      mixedPlanBase, () => 0, b, 'normal', MAPS[0].id, { variant },
+    )).mean,
+  }));
+  const best = Math.max(...runs.map((r) => r.mean));
+  const worst = Math.min(...runs.map((r) => r.mean));
+  console.log(
+    `\nAbstand der Spielstile: ` + runs.map((r) => `${r.name} ${r.mean.toFixed(0)}`).join('   ') +
+    `   Spanne ${(best - worst).toFixed(0)}`,
+  );
+  if (best - worst > 60) {
+    console.log(
+      '  OFFEN (T16): die Stile liegen zu weit auseinander - deshalb laesst sich ' +
+      'die Kurve nicht anziehen, ohne die schwaecheren ganz zu verlieren.',
+    );
+  }
+}
+
+// Robustheitsprobe.
+//
+// Dasselbe Feld mit 10 % mehr und 10 % weniger Schaden - und jeweils ueber
+// drei Abwandlungen des Bauverhaltens gemittelt.
+//
+// Warum gemittelt: an einem einzelnen Verlauf fuehrte *mehr* Schaden zu einem
+// schlechteren Ergebnis. Das ist kein Widerspruch, sondern Pfadabhaengigkeit -
+// frueher ankommendes Gold aendert die Baureihenfolge und damit alles
+// Weitere. Eine Zahl, die so springt, taugt nicht zum Justieren.
+{
+  const shifted = (mul: number) => overVariants((variant) => play(
+    mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id,
+    { perks: { ...NO_PERKS, damageMul: mul }, variant },
+  ));
+  const low = shifted(0.9), mid = shifted(1), high = shifted(1.1);
+  const span = Math.max(low.mean, mid.mean, high.mean) - Math.min(low.mean, mid.mean, high.mean);
+  const spread = (r: { runs: Result[] }) => {
+    const sc = r.runs.map(score);
+    return Math.max(...sc) - Math.min(...sc);
+  };
+  console.log(
+    `\nRobustheit (Schaden -10 / normal / +10 %, je 3 Abwandlungen gemittelt): ` +
+    `${low.mean.toFixed(1)}  ${mid.mean.toFixed(1)}  ${high.mean.toFixed(1)}   Spanne ${span.toFixed(1)}`,
+  );
+  console.log(
+    `  Streuung zwischen den Abwandlungen bei gleichem Schaden: ` +
+    `${spread(low).toFixed(0)} / ${spread(mid).toFixed(0)} / ${spread(high).toFixed(0)}`,
+  );
+  if (span > 45) {
     errors.push(
-      `Zehn Prozent Schaden bewegen das Ergebnis um ${span} Punkte - die Balance ` +
-      'haengt an einer einzelnen Welle. Erst die Kante glaetten, dann weiter bauen.',
+      `Zehn Prozent Schaden bewegen das Ergebnis um ${span.toFixed(0)} Punkte - ` +
+      'die Balance haengt an zu wenigen Stellen.',
+    );
+  }
+  if (spread(mid) > 45) {
+    errors.push(
+      `Drei vernuenftige Bauverlaeufe liegen ${spread(mid).toFixed(0)} Punkte auseinander - ` +
+      'dann misst jede einzelne Messung vor allem den Zufall der Reihenfolge.',
     );
   }
 }

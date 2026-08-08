@@ -1,6 +1,6 @@
 # Kristallwacht — Konzept und Entwicklungspipeline
 
-Stand: v22 · 07.08.2026
+Stand: v23 · 07.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Kristallwacht.html`
 
 ---
@@ -305,6 +305,60 @@ jederzeit wiederherstellbar. Ein Fehlversuch kostet eine Minute, nicht einen
 Abend.
 
 ---
+
+### 3.23 Warum T15 nicht an der Kurve liegt
+
+Der Auftrag war klar: die Verluste liegen alle in der letzten Welle, das soll
+sich ändern. Drei Anläufe, drei Rücknahmen — und am Ende ein präziserer Befund
+als vorher.
+
+**Erster Anlauf: Endfaktor hochziehen.** Wirkungslos bis Faktor 14, dann kippt
+alles auf einmal. Kein Fenster dazwischen.
+
+**Zweiter Anlauf: die Kurvenform ändern.** Ich habe die Potenzkurve durch eine
+Form mit Knie ersetzt — flach, solange gebaut wird, steil im Bereich der
+Sättigung, oben flacher auslaufend. Der Gedanke stimmte: eine Messung zeigte,
+dass der Bot sein Feld **vor Welle 10** fertig hat und danach nur noch ausbaut.
+Die Kurve zieht also erst ganz am Schluss daran vorbei.
+
+Mit dem Knie und Endfaktor 16 lagen die Verluste tatsächlich in drei Wellen,
+nur noch die Hälfte davon in der letzten. **Das Ziel war erreicht — und
+gleichzeitig verloren zwei der drei Spielstile auf jeder Karte.**
+
+**Dritter Anlauf ergab denselben Befund.** Und damit war klar, wo die Wand
+wirklich steht:
+
+```
+Abstand der Spielstile: Meister 116   Breite 78   Sparsam 74   Spanne 42
+```
+
+**Der stärkste Spielstil liegt 42 Punkte vor den anderen beiden.** Zieht man
+die Kurve so an, dass sich die Verluste verteilen, verlieren die schwächeren
+Stile sofort ganz — es gibt kein Fenster, in dem beides zugleich gilt. T15 ist
+nicht durch die Kurve zu lösen, sondern erst, wenn ein mittelmäßiges, aber
+vernünftiges Feld auch trägt. Das ist der neue Punkt **T16**, und er kommt vor
+T15.
+
+**Und ein Messfehler, der alles davor in Frage stellt.** Bei einer der
+Zwischenmessungen führte *zehn Prozent mehr Schaden* zu einem **schlechteren**
+Ergebnis. Kein Widerspruch, sondern Pfadabhängigkeit: früher ankommendes Gold
+ändert die Baureihenfolge, und die ändert alles Weitere. Eine Zahl, die so
+springt, taugt nicht zum Justieren — und ich habe seit v13 danach justiert.
+
+Behoben durch **drei leicht abgewandelte Bauverläufe je Messung** (verschobene
+Startreihenfolge, andere Rücklage), über die gemittelt wird. Danach ist die
+Kennzahl monoton, wie sie sein muss:
+
+```
+Robustheit (Schaden -10 / normal / +10 %, je 3 Abwandlungen gemittelt):
+  110.7   116.0   119.3    Spanne 8.7
+  Streuung zwischen den Abwandlungen bei gleichem Schaden: 9 / 3 / 2
+```
+
+**Was diese Runde liefert:** drei Messgeräte — Verteilung der Verluste, Abstand
+der Spielstile, gemittelte Robustheit — und zwei offene Punkte, die in jedem
+Lauf sichtbar gemeldet werden, ohne das Tor abzubrechen. Sie sind bekannte
+Baustellen, keine Rückschritte.
 
 ### 3.22 Was ein Bildschirmfoto zeigte, das zehn Tore nicht sahen
 
@@ -828,7 +882,7 @@ Nach jeder Lieferung bekommst du:
 
 ---
 
-## 5. Stand v22
+## 5. Stand v23
 
 **Vier Türme mit vier echten Rollen** — nicht vier Zahlenvarianten. Der
 Angriffstyp trennt sie, nicht die Schadenshöhe:
@@ -888,6 +942,11 @@ U baut aus, X verkauft, P pausiert, Esc hebt die Auswahl auf.
 
 Der Titelbildschirm zeigt die Versionsnummer. So ist im Browser jederzeit
 sichtbar, welcher Stand gerade geladen ist.
+
+**Neu in v23 — drei Messgeräte und eine Wand, die jetzt einen Namen hat.**
+T15 (Verluste über mehrere Wellen verteilen) wurde dreimal angegangen und
+dreimal zurückgenommen. Warum, und was stattdessen entstanden ist, steht in
+Abschnitt 3.23.
 
 **Neu in v22 — Bedienung und Bild, nach einem Blick auf den echten
 Bildschirm.** Vier Fehler, die im Bild sofort zu sehen sind und die keine

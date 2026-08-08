@@ -165,8 +165,15 @@ async function processOne(srcPath, spec, group) {
   const size = spec.size ?? 256;
   const targetW = Math.round(size * (spec.fill ?? 0.8));
   const targetH = Math.max(1, Math.round(cropH * targetW / cropW));
+  // Aufsichten werden mittig gesetzt, nicht auf eine Standlinie.
+  //
+  // Eine Seitenansicht steht auf dem Boden, also zaehlt ihre Unterkante. Eine
+  // Aufsicht wird im Spiel gedreht, und gedreht wird um die Bildmitte - liegt
+  // die Figur nicht dort, eiert sie beim Drehen um einen Punkt neben sich.
   const baseline = Math.round(size * (spec.baseline ?? 0.84));
-  const top = Math.max(0, baseline - targetH);
+  const top = spec.center
+    ? Math.round((size - targetH) / 2)
+    : Math.max(0, baseline - targetH);
   const left = Math.round((size - targetW) / 2);
 
   const scaled = await cropped.resize(targetW, targetH, { fit: 'fill' }).png().toBuffer();

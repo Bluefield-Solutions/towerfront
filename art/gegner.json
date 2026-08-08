@@ -39,6 +39,12 @@
       "file": "enemy_siege_tank_01.png",
       "size": 320,
       "fill": 0.94
+    },
+    "infantry": {
+      "file": "enemy_infantry_topdown.png",
+      "fill": 0.6,
+      "center": true,
+      "comment": "Aufsicht, blickt nach oben. Wird im Spiel gedreht, nicht gespiegelt."
     }
   }
 }

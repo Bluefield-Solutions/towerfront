@@ -716,17 +716,20 @@ export class Renderer {
       const art = getEnemyArt(e.def, false, s.map.id);
 
       if (art) {
-        // Die Bilder sind in Seitenansicht gezeichnet und schauen nach links.
-        // Gedreht wird deshalb nicht - ein Fahrzeug in Dreiviertelansicht
-        // kippt dabei. Gespiegelt wird, sobald es nach rechts laeuft.
-        // Blickrichtung kommt aus der Kurve; Flieger schauen zum Kristall.
+        // Zwei Arten von Bildern, zwei Arten sie zu setzen.
+        //
+        // Seitenansichten schauen nach links und werden nur gespiegelt - ein
+        // Fahrzeug in Dreiviertelansicht kippt beim Drehen. Aufsichten drehen
+        // sich mit der Laufrichtung; ihr Bild blickt im Ausgangszustand nach
+        // oben, deshalb der Viertelkreis Zuschlag.
         const dirX = def.flying ? s.goal.x - e.x : Math.cos(e.heading);
         const facingRight = dirX >= 0;
         const w = enemyArtWidth(e.def);
         const h = w * (art.height / art.width);
         ctx.save();
         ctx.translate(e.x, e.y - alt + wob * 0.3);
-        if (facingRight) ctx.scale(-1, 1);
+        if (def.topdown) ctx.rotate(e.heading + Math.PI / 2);
+        else if (facingRight) ctx.scale(-1, 1);
         // Stauchen und Strecken: was getroffen wird, wird breiter und
         // flacher. Die Flaeche bleibt gleich, deshalb liest das Auge es als
         // Wucht und nicht als Groessenaenderung.
@@ -734,12 +737,15 @@ export class Renderer {
           const q = e.squash * 0.22;
           ctx.scale(1 + q, 1 - q);
         }
-        ctx.drawImage(art, -w / 2, -h * 0.72, w, h);
+        // Aufsichten sitzen mittig im Bild, Seitenansichten stehen auf ihrer
+        // Unterkante - das muss beim Zeichnen zusammenpassen.
+        const oben = def.topdown ? -h / 2 : -h * 0.72;
+        ctx.drawImage(art, -w / 2, oben, w, h);
         if (e.hitFlash > 0.01) {
           const hot = getEnemyArt(e.def, true, s.map.id);
           if (hot) {
             ctx.globalAlpha = e.hitFlash * 0.8;
-            ctx.drawImage(hot, -w / 2, -h * 0.72, w, h);
+            ctx.drawImage(hot, -w / 2, oben, w, h);
             ctx.globalAlpha = 1;
           }
         }

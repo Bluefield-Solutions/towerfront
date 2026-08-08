@@ -1,5 +1,6 @@
 export type EnemyId =
-  | 'crawler' | 'runner' | 'brute' | 'titan' | 'flyer' | 'splitter' | 'splitling';
+  | 'crawler' | 'runner' | 'brute' | 'titan' | 'flyer' | 'splitter' | 'splitling'
+  | 'infantry';
 
 export interface SplitRule {
   into: EnemyId;
@@ -21,6 +22,12 @@ export interface EnemyDef {
   /** Fliegt die Luftlinie statt dem Pfad zu folgen. Bodengebundene Waffen
    *  - der Moerser - erreichen ihn nicht. */
   flying?: boolean;
+  /** Das Bild ist eine Aufsicht und wird zur Laufrichtung gedreht.
+   *
+   *  Die uebrigen Gegner sind Seitenansichten und werden nur gespiegelt - ein
+   *  Fahrzeug in Dreiviertelansicht kippt beim Drehen. Eine Aufsicht kippt
+   *  nicht, sie dreht sich richtig mit. */
+  topdown?: boolean;
   /** Zerfaellt beim Tod. */
   split?: SplitRule;
   boss?: boolean;
@@ -33,6 +40,12 @@ export const ENEMIES: Record<EnemyId, EnemyDef> = {
     id: 'crawler', name: 'Schleicher',
     hp: 34, speed: 114, bounty: 2, leak: 1, radius: 20, armor: 0, slowResist: 0,
     body: '#8B5CF6', trim: '#C9B6FF',
+  },
+  infantry: {
+    id: 'infantry', name: 'Infanterie',
+    hp: 52, speed: 96, bounty: 3, leak: 1, radius: 24, armor: 1, slowResist: 0.1,
+    body: '#7A8A5C', trim: '#D8E0B8',
+    topdown: true,
   },
   runner: {
     id: 'runner', name: 'Späher',

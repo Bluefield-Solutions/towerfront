@@ -191,7 +191,12 @@ function pruefen(name, canvas) {
   // Spielfeld zeigt ein Foto; bleiben dort die Farben aus, wurden die
   // eingebetteten Bilder nicht dekodiert, und die Aufnahme zeigt ein anderes
   // Spiel als der Browser.
-  const mindestens = name.startsWith('menu') ? 90 : 900;
+  // Die Schwelle ist bewusst niedrig: die eigentliche Pruefung auf nicht
+  // dekodierte Bilder fragt weiter unten die Bildschicht direkt. Diese hier
+  // faengt nur den groben Fall. Bei einer Nahaufnahme fuellt der Weg das
+  // halbe Bild, und 836 Farben sind dort voellig richtig - eine zu hohe
+  // Schwelle waere ein Fehlalarm, und nach dem dritten glaubt ihn niemand.
+  const mindestens = name.startsWith('menu') ? 90 : 500;
   if (farben.size < mindestens) {
     probleme.push(`nur ${farben.size} Farben, erwartet ${mindestens} - Bilder vermutlich nicht dekodiert`);
   }
@@ -280,6 +285,31 @@ takes.push(['bauauswahl', () => shot('bauauswahl', 844, 390, (s) => {
   const sp = candidateSpots(s)[6];
   s.hoverPoint = { x: sp.x, y: sp.y };
   return 30;
+})]);
+
+takes.push(['infanterie-nah', () => shot('infanterie-nah', 844, 390, (s, r) => {
+  s.reset(1, 'normal', 'spiralhain');
+  s.waveIndex = 3;
+  s.startWave();
+  // Erst laufen lassen, dann die Kamera auf einen echten Gegner richten -
+  // sonst zeigt die Nahaufnahme eine leere Wiese.
+  for (let i = 0; i < 60 * 8; i++) s.update(DT);
+  const ziel = s.enemies.find((e) => e.def === 'infantry') ?? s.enemies[0];
+  if (ziel) {
+    r.resize();
+    r.zoomAt(3.4, 422, 195);
+    const p = r.worldToScreen(ziel.x, ziel.y);
+    r.panBy(422 - p.x, 195 - p.y);
+  }
+  return 0;
+})]);
+
+takes.push(['infanterie', () => shot('infanterie', 844, 390, (s) => {
+  s.reset(1, 'normal', 'spiralhain');
+  stock(s, 6);
+  s.waveIndex = 3;
+  s.startWave();
+  return 60 * 9;
 })]);
 
 takes.push(['welle8', () => shot('welle8', 844, 390, (s) => {

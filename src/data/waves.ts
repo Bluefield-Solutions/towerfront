@@ -31,9 +31,11 @@ export const PLAN_SPIRALHAIN: Wave[] = [
     { enemy: 'crawler', count: 9, gap: 0.9, delay: 0 } ] },
   { bonus: 114, note: 'Schnelle dabei', groups: [
     { enemy: 'crawler', count: 7, gap: 0.9, delay: 0 },
-    { enemy: 'runner', count: 5, gap: 0.7, delay: 5 } ] },
-  { bonus: 128, groups: [
-    { enemy: 'runner', count: 11, gap: 0.52, delay: 0 } ] },
+    { enemy: 'runner', count: 5, gap: 0.7, delay: 5 },
+    { enemy: 'infantry', count: 3, gap: 1.1, delay: 9 } ] },
+  { bonus: 128, note: 'Infanterie rückt vor', groups: [
+    { enemy: 'runner', count: 9, gap: 0.52, delay: 0 },
+    { enemy: 'infantry', count: 6, gap: 0.9, delay: 2 } ] },
   { bonus: 224, note: 'Erster Koloss — Panzerung 3', groups: [
     { enemy: 'crawler', count: 11, gap: 0.7, delay: 0 },
     { enemy: 'brute', count: 2, gap: 3, delay: 5 } ] },

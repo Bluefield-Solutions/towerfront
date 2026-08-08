@@ -85,7 +85,12 @@ export const ALL_PERKS: PerkEffect = perkEffect(PERK_ORDER);
 export function starsFor(won: boolean, lives: number, maxLives: number): number {
   if (!won) return 0;
   const share = lives / Math.max(1, maxLives);
-  if (share >= 0.85) return 3;
-  if (share >= 0.45) return 2;
+  // Die Schwellen sind zweimal gewandert, beide Male weil sie an einem
+  // leichteren Spielstand geeicht waren. Jetzt aus der Messung: der beste
+  // Bot-Lauf holt auf der Einsteigerkarte 42 von 60 (70 %), auf der
+  // schwersten 22 (37 %). Drei Sterne liegen knapp darunter, damit sie
+  // erreichbar sind - aber nur dort, wo man es gut macht.
+  if (share >= 0.66) return 3;
+  if (share >= 0.33) return 2;
   return 1;
 }

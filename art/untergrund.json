@@ -22,17 +22,20 @@
       "farbe": 1.0
     },
     "ascheschlucht": {
-      "file": "05_herbstwald.webp",
-      "helligkeit": 2.0,
-      "waerme": 1.1,
-      "farbe": 1.35
+      "file": "07_laubweg.png",
+      "comment": "Gemessen Dichte 11,2 und Saettigung 0,72 - beides heruntergezogen.",
+      "helligkeit": 0.92,
+      "waerme": 0.0,
+      "farbe": 0.72,
+      "weich": 2.4
     },
     "frostspalte": {
-      "file": "04_winterboden.webp",
-      "comment": "Winterboden war schon hell - nur leicht anheben, sonst verschwinden die Figuren darauf.",
-      "helligkeit": 1.15,
-      "waerme": 0.5,
-      "farbe": 1.2
+      "file": "08_frostweg.png",
+      "comment": "Gemessen Helligkeit 0,57 - deutlich heruntergezogen, sonst verschwinden die Figuren.",
+      "helligkeit": 0.58,
+      "waerme": 0.15,
+      "farbe": 1.5,
+      "weich": 1.4
     }
   }
 }

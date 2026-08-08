@@ -128,6 +128,13 @@ async function processBackground(srcPath, spec) {
       saturation: spec.farbe ?? 1,
     });
   }
+  // Ein zu unruhiger Boden verschluckt die Einheiten. Die Laubschlucht kam
+  // mit Detaildichte 11,2 an - gemessen das Vierfache des Zielwerts. Eine
+  // leichte Weichzeichnung bringt sie in den Rahmen, ohne die Formen zu
+  // verlieren; beim Untergrund ist das anders als bei Figuren unbedenklich,
+  // er soll ohnehin zuruecktreten.
+  if (spec.weich) bild = bild.blur(spec.weich);
+
   if (spec.waerme) {
     // Rot leicht hoch, Blau leicht herunter - das ist Sonnenlicht.
     const w = spec.waerme;

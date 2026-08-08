@@ -78,6 +78,6 @@ export const ENEMIES: Record<EnemyId, EnemyDef> = {
     id: 'titan', name: 'Leerentitan',
     hp: 1100, speed: 53, bounty: 48, leak: 5, radius: 43, armor: 6, slowResist: 0.55,
     boss: true,
-    body: '#2A1B4D', trim: '#B07CFF',
+    body: '#6B4BB0', trim: '#D9BCFF',
   },
 };

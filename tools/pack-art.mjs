@@ -101,8 +101,31 @@ async function processBackground(srcPath, spec) {
       `(${meta.width}x${meta.height}) - der Untergrund passt nicht aufs Raster.`,
     );
   }
-  const buffer = await sharp(srcPath)
-    .resize(spec.width ?? 2000, spec.height ?? 1100, { fit: 'fill' })
+  // --- Auf Tageslicht bringen.
+  //
+  // Das Zielbild hat einen Boden mit Helligkeit 0,33 und Saettigung 0,51 -
+  // eine Mittagsszene. Unsere Untergruende lagen bei 0,13 bis 0,27: eine
+  // Nachtszene. Das war der groesste einzelne Abstand im Grafik-Audit, und
+  // er laesst sich an den vorhandenen Fotos zu einem guten Teil schliessen.
+  //
+  // `helligkeit` hebt linear an, `waerme` verschiebt zum Ocker hin,
+  // `farbe` saettigt nach. In dieser Reihenfolge, sonst kippt der Farbton.
+  let bild = sharp(srcPath)
+    .resize(spec.width ?? 2000, spec.height ?? 1100, { fit: 'fill' });
+
+  if (spec.helligkeit || spec.farbe) {
+    bild = bild.modulate({
+      brightness: spec.helligkeit ?? 1,
+      saturation: spec.farbe ?? 1,
+    });
+  }
+  if (spec.waerme) {
+    // Rot leicht hoch, Blau leicht herunter - das ist Sonnenlicht.
+    const w = spec.waerme;
+    bild = bild.linear([1 + w * 0.18, 1 + w * 0.05, 1 - w * 0.12], [0, 0, 0]);
+  }
+
+  const buffer = await bild
     .webp({ quality: spec.quality ?? 60, effort: 6 })
     .toBuffer();
   return { buffer, notes, touches: [], from: `${meta.width}x${meta.height}`, crop: '-' };
@@ -176,7 +199,50 @@ async function processOne(srcPath, spec, group) {
     : Math.max(0, baseline - targetH);
   const left = Math.round((size - targetW) / 2);
 
-  const scaled = await cropped.resize(targetW, targetH, { fit: 'fill' }).png().toBuffer();
+  let skaliert = cropped.resize(targetW, targetH, { fit: 'fill' });
+
+  // --- Sofortmassnahmen aus dem Grafik-Audit.
+  //
+  // Gemessen am Zielbild: dessen Tuerme haben eine Detaildichte von 3,4, die
+  // unseren 12 bis 22. Der Unterschied ist kein Inhalt, sondern Koernung -
+  // kleingerechnete, komprimierte Renderings rauschen. Eine milde
+  // Weichzeichnung bringt den Koloss von 13,5 auf 6,3, und die Form bleibt
+  // vollstaendig erhalten. Das Staffeln der Werte tut das *nicht*, siehe den
+  // Warnkasten in tools/style.mjs.
+  const entrauschen = spec.entrauschen ?? 0;
+  if (entrauschen > 0) skaliert = skaliert.blur(entrauschen);
+
+  let scaled = await skaliert.png().toBuffer();
+
+  // Reines Schwarz frisst Loecher in die Form. Das Zielbild hat 1,3 Prozent
+  // davon, wir 5 bis 15. Angehoben wird nur die dunkelste Zone, damit die
+  // Zeichnung darueber unangetastet bleibt.
+  const schwarzHeben = spec.schwarzHeben ?? 0;
+  if (schwarzHeben > 0) {
+    const { data: d, info: di } = await sharp(scaled).ensureAlpha().raw()
+      .toBuffer({ resolveWithObject: true });
+    const boden = Math.round(schwarzHeben * 255);
+    for (let i = 0; i < di.width * di.height; i++) {
+      if (d[i * 4 + 3] < 8) continue;
+      for (let c = 0; c < 3; c++) {
+        // Der dunkelste Ton wird angehoben, ein heller bleibt, wo er ist.
+        d[i * 4 + c] = Math.round(boden + d[i * 4 + c] * (1 - boden / 255));
+      }
+    }
+    scaled = await sharp(d, { raw: { width: di.width, height: di.height, channels: 4 } })
+      .png().toBuffer();
+  }
+
+  // Das Anheben des Schwarz waescht die Farbe aus - gemessen fiel die
+  // Saettigung von 0,32 auf 0,15. Sie wird deshalb danach wieder angehoben,
+  // nicht davor: vorher waere sie beim Anheben gleich wieder verloren.
+  const farbe = spec.farbe ?? 1;
+  const hell = spec.helligkeit ?? 1;
+  if (farbe !== 1 || hell !== 1) {
+    scaled = await sharp(scaled)
+      .modulate({ saturation: farbe, brightness: hell })
+      .png().toBuffer();
+  }
   const out = await sharp({
     create: { width: size, height: size, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
   })

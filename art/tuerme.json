@@ -4,7 +4,15 @@
   "output": "towers.ts",
   "exportName": "TOWER_ART",
   "budgetKb": 260,
-  "defaults": { "size": 256, "fill": 0.86, "baseline": 0.86, "quality": 82 },
+  "defaults": {
+    "size": 256,
+    "fill": 0.86,
+    "baseline": 0.86,
+    "quality": 82,
+    "entrauschen": 1.3,
+    "schwarzHeben": 0.11,
+    "farbe": 2.3
+  },
   "items": {
     "arrow_1": "aa_turret_frame_10.png",
     "arrow_sniper": "aa_turret_frame_04.png",

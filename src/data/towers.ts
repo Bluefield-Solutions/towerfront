@@ -67,11 +67,11 @@ export const MAX_LEVEL = 6;
  *  Ueber 1,0 ragt er ueber seinen Platz hinaus - das ist gewollt, sonst wirkt
  *  er wie hineingequetscht. Ueber etwa 1,3 fangen Nachbarn an, sich zu
  *  ueberdecken. */
-export const DRAW_SCALE = 1.25;
+export const DRAW_SCALE = 1.32;
 
 export const TOWERS: Record<TowerId, TowerDef> = {
   arrow: {
-    id: 'arrow', footprint: 62, name: 'Bogenturm', role: 'Dauerfeuer',
+    id: 'arrow', footprint: 78, name: 'Bogenturm', role: 'Dauerfeuer',
     blurb: 'Günstig und schnell. Trägt die frühen Wellen.',
     color: '#D8DCE8', accent: '#F2C14E',
     attack: 'single', hitsAir: true, projectileSpeed: 840,
@@ -102,7 +102,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     ],
   },
   frost: {
-    id: 'frost', footprint: 72, name: 'Frostturm', role: 'Umkreis-Bremse',
+    id: 'frost', footprint: 88, name: 'Frostturm', role: 'Umkreis-Bremse',
     blurb: 'Kein Geschoss. Pulst im Umkreis und bremst alles gleichzeitig.',
     color: '#BFE9F2', accent: '#7FE7E0',
     attack: 'aura', hitsAir: true, projectileSpeed: 0,
@@ -133,7 +133,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     ],
   },
   mortar: {
-    id: 'mortar', footprint: 96, name: 'Mörser', role: 'Fläche, nur Boden',
+    id: 'mortar', footprint: 116, name: 'Mörser', role: 'Fläche, nur Boden',
     blurb: 'Langsam und teuer, trifft eine ganze Traube. Erreicht keine Flieger.',
     color: '#C3B39A', accent: '#F08A3C',
     attack: 'splash', hitsAir: false, projectileSpeed: 384,
@@ -164,7 +164,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     ],
   },
   prism: {
-    id: 'prism', footprint: 80, name: 'Prisma', role: 'Kettenblitz',
+    id: 'prism', footprint: 98, name: 'Prisma', role: 'Kettenblitz',
     blurb: 'Sofortstrahl, springt auf Nachbarn über.',
     color: '#E4D3FF', accent: '#B07CFF',
     attack: 'chain', hitsAir: true, projectileSpeed: 0,

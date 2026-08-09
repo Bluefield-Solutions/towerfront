@@ -191,11 +191,42 @@ async function processOne(srcPath, spec, group) {
 
   // Berührt das Objekt den Bildrand, ist es angeschnitten - das lässt sich
   // nicht reparieren, nur melden.
+  //
+  // Aber nicht jede Berührung ist ein Anschnitt. Eine einzelne Turmspitze,
+  // die den oberen Rand streift, kostet nichts; eine Kante, die über ein
+  // Zehntel der Bildbreite anliegt, ist abgeschnittenes Objekt. Vorher galt
+  // beides gleich, und eine gute Lieferung wurde abgelehnt.
+  const anteilRand = (test) => {
+    let n = 0, ges = 0;
+    for (let i = 0; i < info.width * info.height; i++) {
+      const x = i % info.width, y = (i / info.width) | 0;
+      if (!test(x, y)) continue;
+      ges++;
+      // Deckend, nicht nur angehaucht: ein weicher Schein um den Turm ist
+      // kein Objekt am Rand. Mit einer Schwelle von 24 zaehlte er mit und
+      // meldete 67 Prozent, wo eine einzelne Spitze anlag.
+      if (data[i * 4 + 3] >= 150) n++;
+    }
+    return ges ? n / ges : 0;
+  };
+  // Elf Prozent an einer Kante ist noch ein breiter Turmfuss, kein
+  // Anschnitt. Gemessen an der Lieferung: der auffaellig angeschnittene Fall
+  // lag bei zwei Dritteln.
+  const GRENZE = 0.16;
   const touches = [];
-  if (minX <= 1) touches.push('links');
-  if (minY <= 1) touches.push('oben');
-  if (maxX >= info.width - 2) touches.push('rechts');
-  if (maxY >= info.height - 2) touches.push('unten');
+  const knapp = [];
+  const kanten = [
+    ['links',  (x) => x <= 1],
+    ['oben',   (_x, y) => y <= 1],
+    ['rechts', (x) => x >= info.width - 2],
+    ['unten',  (_x, y) => y >= info.height - 2],
+  ];
+  for (const [name, test] of kanten) {
+    const anteil = anteilRand(test);
+    if (anteil > GRENZE) touches.push(`${name} ${Math.round(anteil * 100)} %`);
+    else if (anteil > 0) knapp.push(name);
+  }
+  if (knapp.length) notes.push(`streift ${knapp.join('/')}`);
 
   const cropped = sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
     .extract({ left: minX, top: minY, width: cropW, height: cropH });

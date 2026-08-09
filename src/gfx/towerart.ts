@@ -92,9 +92,29 @@ let version = 0;
 
 export const towerArtVersion = (): number => version;
 
-function key(id: TowerId, branch: BranchIndex): string {
-  if (branch === null) return `${id}_1`;
-  return `${id}_${TOWERS[id].branches[branch].id}`;
+/** Welche Bilder kommen fuer diesen Turm in Frage - vom genauesten zum
+ *  allgemeinsten.
+ *
+ *  Bis v66 ging die Ausbaustufe gar nicht in die Bildwahl ein: ein Turm auf
+ *  Stufe 6 sah aus wie ein frisch gebauter. Jetzt wird zuerst nach dem Bild
+ *  fuer genau diese Stufe gesucht, dann nach der naechstniedrigeren, und
+ *  zuletzt nach dem stufenlosen Bild. So kann ein Satz Stueck fuer Stueck
+ *  wachsen, ohne dass zwischendurch etwas fehlt. */
+function kandidaten(id: TowerId, branch: BranchIndex, level: number): string[] {
+  const zweig = branch === null ? '1' : TOWERS[id].branches[branch].id;
+  const aus: string[] = [];
+  for (let l = Math.max(1, Math.round(level)); l >= 1; l--) {
+    aus.push(`${id}_${zweig}_${l}`);
+  }
+  if (zweig !== '1') for (let l = Math.max(1, Math.round(level)); l >= 1; l--) aus.push(`${id}_1_${l}`);
+  aus.push(`${id}_${zweig}`);
+  if (zweig !== '1') aus.push(`${id}_1`);
+  return aus;
+}
+
+function key(id: TowerId, branch: BranchIndex, level = 1): string {
+  for (const k of kandidaten(id, branch, level)) if (TOWER_ART[k]) return k;
+  return `${id}_1`;
 }
 
 function load(k: string): HTMLImageElement | null {
@@ -116,7 +136,7 @@ function load(k: string): HTMLImageElement | null {
 export function getTowerArt(
   id: TowerId, branch: BranchIndex, level: number, mapId = 'spiralhain',
 ): HTMLCanvasElement | null {
-  const k = key(id, branch);
+  const k = key(id, branch, level);
   const accent = accentFor(TOWERS[id], branch);
   const rim = mapById(mapId).palette.rim;
   const cacheKey = `${k}|${accent}|${rim}`;

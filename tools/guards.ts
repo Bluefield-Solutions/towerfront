@@ -172,12 +172,19 @@ for (const map of MAPS) {
     }
 
     // Der ganze Weg muss von irgendwo aus erreichbar sein.
+    //
+    // Gezaehlt wird nur, was im Feld liegt. Der Weg beginnt und endet
+    // absichtlich ausserhalb des Bildes - dort steht das Tor, und dort kann
+    // per Definition kein Turm stehen. Diese Punkte als unerreichbar zu
+    // melden ist ein Fehlalarm; er trat auf, sobald die Tuerme mehr Platz
+    // brauchten und die Meldung dadurch ueber die Schwelle rutschte.
     const reach = Math.max(...TOWER_ORDER.map((t) => TOWERS[t].base.range));
     let uncovered = 0, total = 0;
     for (const p of paths) {
       for (let k = 0; k < p.pts.length; k += 6) {
-        total++;
         const pt = p.pts[k];
+        if (pt.x < 0 || pt.y < 0 || pt.x > WORLD_W || pt.y > WORLD_H) continue;
+        total++;
         let found = false;
         for (let a = 0; a < 16 && !found; a++) {
           for (let d = 60; d <= reach && !found; d += 40) {

@@ -15,7 +15,7 @@ import { snap } from '../data/maps';
 import { drawMenu } from './menurender';
 import type { Menu } from '../game/menu';
 import { backgroundVersion, getBackground } from './backgrounds';
-import { getTowerArt, towerArtScale, towerArtVersion } from './towerart';
+import { artBreite, getTowerArt, towerArtScale, towerArtVersion } from './towerart';
 import { enemyArtWidth, getEnemyArt } from './enemyart';
 import {
   drawSprite, getEnemySprite, getShadow, getTowerBase, getTowerWeapon, ENEMY_FRAMES,
@@ -578,7 +578,10 @@ export class Renderer {
       const art = getTowerArt(t.def, t.branch, t.level, s.map.id);
       if (art) {
         const k = towerArtScale(t.level);
-        const w = TOWERS[def.id].footprint * DRAW_SCALE * k;
+        // Die Kachel wird so gross gezeichnet, dass die FIGUR darin den
+        // Platzbedarf ausfuellt - nicht die Kachel selbst.
+        const anteil = artBreite(art, `${t.def}:${t.branch}:${t.level}`);
+        const w = (TOWERS[def.id].footprint * DRAW_SCALE * k) / Math.max(0.3, anteil);
         const h = w;
 
         // Ein Schlagschatten in Lichtrichtung.

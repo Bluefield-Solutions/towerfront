@@ -202,8 +202,16 @@ async function processOne(srcPath, spec, group) {
 
   // Auf Zielbreite bringen und auf die gemeinsame Standlinie setzen.
   const size = spec.size ?? 256;
-  const targetW = Math.round(size * (spec.fill ?? 0.8));
-  const targetH = Math.max(1, Math.round(cropH * targetW / cropW));
+  // Nach der laengeren Seite einpassen, nicht nach der Breite.
+  //
+  // Vorher wurde nur die Breite gesetzt und die Hoehe folgte dem
+  // Seitenverhaeltnis - bei einem hohen, schmalen Turm lief das Bild oben aus
+  // der Kachel heraus, und die Bildbibliothek brach ab. Betroffen war jedes
+  // Bild, das hoeher als breit ist; die gelieferten Tuerme sind es alle.
+  const platz = size * (spec.fill ?? 0.8);
+  const k = Math.min(platz / cropW, platz / cropH);
+  const targetW = Math.max(1, Math.round(cropW * k));
+  const targetH = Math.max(1, Math.round(cropH * k));
   // Aufsichten werden mittig gesetzt, nicht auf eine Standlinie.
   //
   // Eine Seitenansicht steht auf dem Boden, also zaehlt ihre Unterkante. Eine

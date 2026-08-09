@@ -139,7 +139,7 @@ async function measureBackground(buffer) {
 
 // Die Spieldaten liegen in TypeScript. Aufgerufen wird dieses Werkzeug daher
 // ueber tsx, das die Module direkt laden kann.
-const { TOWERS, TOWER_ORDER, accentFor } = await import('../src/data/towers');
+const { TOWERS, TOWER_ORDER, accentFor, DRAW_SCALE } = await import('../src/data/towers');
 const { ENEMIES } = await import('../src/data/enemies');
 const { MAPS } = await import('../src/data/maps');
 // Die Groessenregeln kommen aus der Engine, nicht aus einer Kopie hier.
@@ -150,8 +150,7 @@ const { MAPS } = await import('../src/data/maps');
 // Tor-Bilanz an drei eigenen Proben gefunden hat.
 const { enemyArtWidth } = await import('../src/gfx/enemyart');
 const { towerArtScale } = await import('../src/gfx/towerart');
-/** Kantenlaenge, mit der der Renderer einen Turm zeichnet. */
-const TOWER_DRAW = 104;
+
 
 const problems = [];
 const bgArt = readAssets('backgrounds.ts');
@@ -201,7 +200,15 @@ for (const id of TOWER_ORDER) {
     const { worstBody, worstRim, where } = worstContrast(lum);
     // Der Turm wird mit 104 Weltpunkten Kantenlänge gezeichnet, die Silhouette
     // nimmt davon ihren Anteil ein.
-    const worldW = TOWER_DRAW * levelScale * (m.spanX / m.frame);
+    // Dieselbe Rechnung wie im Renderer.
+    //
+    // Dort wird die Kachel so gross gezeichnet, dass die FIGUR den
+    // Platzbedarf ausfuellt - der Anteil kuerzt sich also heraus, und die
+    // Breite auf dem Schirm ist schlicht Platzbedarf mal Zeichenmassstab.
+    // Vorher stand hier eine eigene Formel mit der Kachelbreite, und seit dem
+    // Ausgleich stimmte sie nicht mehr. Schon wieder eine Messung, die die
+    // Regel nachbaut statt sie zu benutzen.
+    const worldW = TOWERS[id].footprint * DRAW_SCALE * levelScale;
     const px = worldW * COVER;
     const bad = worstRim < MIN_RIM_CONTRAST || worstBody < MIN_BODY_CONTRAST
       || px < MIN_TOWER_PX;

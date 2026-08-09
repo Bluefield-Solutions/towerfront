@@ -40,6 +40,32 @@ export function drawRim(
 }
 
 const tinted = new Map<string, HTMLCanvasElement>();
+
+/** Wie breit die Figur im Bild tatsaechlich ist, als Anteil der Kachel.
+ *
+ *  Seit die Bilder nach der laengeren Seite eingepasst werden, fuellt ein
+ *  hoher schmaler Turm nur ein Drittel der Breite - gezeichnet wurde aber
+ *  immer die volle Kachel, und der Turm wirkte winzig. Gemessen wird einmal
+ *  je Bild und danach gemerkt. */
+const breiten = new Map<string, number>();
+
+export function artBreite(art: HTMLCanvasElement, schluessel: string): number {
+  const hit = breiten.get(schluessel);
+  if (hit !== undefined) return hit;
+  const g = art.getContext('2d')!;
+  const { data } = g.getImageData(0, 0, art.width, art.height);
+  let minX = art.width, maxX = -1;
+  for (let y = 0; y < art.height; y += 2) {
+    for (let x = 0; x < art.width; x++) {
+      if (data[(y * art.width + x) * 4 + 3] < 40) continue;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+    }
+  }
+  const anteil = maxX < 0 ? 1 : (maxX - minX + 1) / art.width;
+  breiten.set(schluessel, anteil);
+  return anteil;
+}
 const raw = new Map<string, HTMLImageElement>();
 const ready = new Set<string>();
 let version = 0;

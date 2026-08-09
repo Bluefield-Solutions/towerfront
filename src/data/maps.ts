@@ -148,7 +148,7 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
   pfadImBild: true,
   hint: { x: 220, y: 200 },
   waves: PLAN_ASCHESCHLUCHT,
-  balance: { hpMul: 0.85, goldMul: 1.2 },
+  balance: { hpMul: 1.06, goldMul: 1.05 },
 };
 
 
@@ -184,7 +184,7 @@ export const MAP_FROSTSPALTE: GameMap = {
   pfadImBild: true,
   hint: { x: 220, y: 200 },
   waves: PLAN_FROSTSPALTE,
-  balance: { hpMul: 0.85, goldMul: 1.05 },
+  balance: { hpMul: 1.1, goldMul: 1.02 },
 };
 
 

@@ -468,6 +468,15 @@ takes.push(['vier', () => shot('vier', 844, 390, (s, r) => {
   return 3;
 })]);
 
+takes.push(['baumaske', () => shot('baumaske', 844, 390, (s, r) => {
+  s.reset(3, 'normal', 'frostspalte');
+  s.gold = 9000;
+  s.buildChoice = 'frost';
+  s.hoverPoint = { x: 900, y: 500 };
+  r.resize();
+  return 2;
+})]);
+
 takes.push(['pause', () => shot('pause', 844, 390, (s) => {
   s.reset(3, 'normal', 'spiralhain');
   stock(s, 4);

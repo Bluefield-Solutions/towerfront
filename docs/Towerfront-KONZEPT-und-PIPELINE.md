@@ -1,6 +1,6 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v90 · 08.08.2026
+Stand: v97 · 08.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Towerfront.html`
 
 > **Aufbau dieses Dokuments.** Die Abschnitte 1 bis 3.4 beschreiben den
@@ -336,12 +336,28 @@ Spielfeld ist damit keine gezeichnete Form mehr übrig. Türme schwenken beim
 Zielen leicht mit; gedreht wird nur der obere Teil und gedämpft, sonst legt
 sich das Bauwerk schief in die Landschaft.
 
+**Kartenauslesung seit v92 als Wegsuche:** Abstandskarte plus Dijkstra vom
+Endplatz aus, ein Schritt kostet mehr je näher am Rand. Die Mittellinie
+entsteht dadurch aus der Kostenfunktion statt aus einem Skelett, und an
+Kreuzungen wird der Ast genommen, der wirklich zum Ziel führt. Befehle:
+`npm run karte-lesen` und `node tools/mapapply.mjs`.
+
+**Pausenmenü seit v94:** Weiter, Level neu starten, Zurück zur Karte.
+
 **Kartenauslesung seit v88:** Welcher Kanal und welche Schwelle den Weg vom
 Boden trennen, entscheidet die *Schlankheit* — Umfang² durch Fläche. Ein Weg
 ist ein langes schmales Band, ein Boden eine kompakte Fläche. Es wird über
 beide Kanäle und alle Schwellen gesucht und genommen, was am meisten nach
 einem Weg aussieht; `--schwelle` und `--hell/--dunkel` übersteuern von Hand.
 Die Breitenmessung gab bis v89 die halbe Breite zurück.
+
+**Kartenauslesung seit v92 als Wegsuche:** Abstandskarte plus Dijkstra vom
+Endplatz aus, ein Schritt kostet mehr je näher am Rand. Die Mittellinie
+entsteht dadurch aus der Kostenfunktion statt aus einem Skelett, und an
+Kreuzungen wird der Ast genommen, der wirklich zum Ziel führt. Befehle:
+`npm run karte-lesen` und `node tools/mapapply.mjs`.
+
+**Pausenmenü seit v94:** Weiter, Level neu starten, Zurück zur Karte.
 
 **Kartenauslesung seit v88:** Welcher Kanal und welche Schwelle den Weg vom
 Boden trennen, entscheidet die *Schlankheit* — Umfang² durch Fläche. Ein Weg

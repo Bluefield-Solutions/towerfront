@@ -409,15 +409,28 @@ export class Renderer {
     const key = `${s.map.id}|${s.buildChoice}|${s.towersVersion}|${affordable}`;
 
     if (this.buildMaskKey !== key) {
-      const STEP = 12;
+      // Ein Punktraster statt einer Farbfläche.
+      //
+      // Vorher wurde eine Maske im 12-Pixel-Raster erzeugt und dann weich auf
+      // die volle Feldgröße hochgezogen. Daraus wurde ein verwaschener grüner
+      // Schleier über der halben Karte: Man sah, DASS irgendwo gebaut werden
+      // kann, aber nicht WO genau, und der Boden verfärbte sich mit.
+      //
+      // Jetzt steht auf jeder bebaubaren Rasterstelle ein kleiner Punkt. Die
+      // Karte bleibt sichtbar, die Grenzen der Baufläche sind ablesbar, und
+      // das Muster sagt zugleich, wie eng man setzen kann.
+      const STEP = 48;
       const cv = document.createElement('canvas');
-      cv.width = Math.ceil(WORLD_W / STEP);
-      cv.height = Math.ceil(WORLD_H / STEP);
+      cv.width = WORLD_W;
+      cv.height = WORLD_H;
       const g = cv.getContext('2d')!;
       g.fillStyle = affordable ? '#5BE07A' : C.danger;
-      for (let gy = 0; gy < cv.height; gy++) {
-        for (let gx = 0; gx < cv.width; gx++) {
-          if (s.canPlace(s.buildChoice, gx * STEP, gy * STEP)) g.fillRect(gx, gy, 1, 1);
+      for (let wy = STEP / 2; wy < WORLD_H; wy += STEP) {
+        for (let wx = STEP / 2; wx < WORLD_W; wx += STEP) {
+          if (!s.canPlace(s.buildChoice, wx, wy)) continue;
+          g.beginPath();
+          g.arc(wx, wy, 5, 0, Math.PI * 2);
+          g.fill();
         }
       }
       this.buildMask = cv;
@@ -426,9 +439,8 @@ export class Renderer {
 
     const beat = 0.5 + 0.5 * Math.sin(s.crystalPulse * 2.4);
     ctx.save();
-    ctx.globalAlpha = (affordable ? 0.2 : 0.12) + beat * 0.07;
-    ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(this.buildMask!, 0, 0, WORLD_W, WORLD_H);
+    ctx.globalAlpha = (affordable ? 0.5 : 0.34) + beat * 0.12;
+    ctx.drawImage(this.buildMask!, 0, 0);
     ctx.restore();
   }
 

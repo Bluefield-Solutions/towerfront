@@ -58,6 +58,7 @@ export const ENEMIES: Record<EnemyId, EnemyDef> = {
     id: 'brute', name: 'Koloss',
     hp: 150, speed: 74, bounty: 7, leak: 3, radius: 29, armor: 3, slowResist: 0.3,
     body: '#84AEE0', trim: '#E6F2FF',
+    topdown: true,
   },
   flyer: {
     id: 'flyer', name: 'Gleiter',
@@ -71,6 +72,7 @@ export const ENEMIES: Record<EnemyId, EnemyDef> = {
     hp: 130, speed: 94, bounty: 6, leak: 2, radius: 26, armor: 1, slowResist: 0.15,
     split: { into: 'splitling', count: 2, hpFactor: 0.3 },
     body: '#FF7A1A', trim: '#FFD9A8',
+    topdown: true,
   },
   splitling: {
     id: 'splitling', name: 'Span',

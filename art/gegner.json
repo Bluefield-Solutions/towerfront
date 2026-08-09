@@ -35,8 +35,14 @@
       "farbe": 0.72
     },
     "brute": {
-      "file": "enemy_heavy_tank_01.png",
-      "fill": 0.98
+      "file": "gegner_koloss.png",
+      "comment": "Traegt eine gezeichnete Konturlinie - 15,4 % reines Schwarz, angehoben. Sonst faellt er aus dem Satz.",
+      "center": true,
+      "fill": 0.9,
+      "entrauschen": 0.9,
+      "schwarzHeben": 0.13,
+      "helligkeit": 0.85,
+      "farbe": 1.15
     },
     "flyer": {
       "file": "gegner_gleiter.png",
@@ -49,11 +55,14 @@
       "farbe": 0.7
     },
     "splitter": {
-      "file": "enemy_medium_tank_01.png",
-      "fill": 0.92,
-      "farbe": 2.6,
-      "helligkeit": 1.15,
-      "comment": "Altbild - farblich vom neuen Spaeher weggezogen."
+      "file": "gegner_spalter.png",
+      "comment": "Gemessen Saettigung 0,85 - deutlich zurueckgenommen.",
+      "center": true,
+      "fill": 0.9,
+      "entrauschen": 0.9,
+      "schwarzHeben": 0,
+      "helligkeit": 0.92,
+      "farbe": 0.42
     },
     "splitling": {
       "file": "enemy_light_tank_02.png",

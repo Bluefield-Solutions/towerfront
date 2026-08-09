@@ -260,6 +260,18 @@ console.log(`Endplatz bei ${endplatz.x}/${endplatz.y}, Halbbreite ${endplatz.bre
 
 /** Von einem Punkt aus die Mittellinie ablaufen.
  *
+ *  **Diagnose:** `DIAG=1 node tools/mapread.mjs ...` meldet, wo und warum ein
+ *  Lauf abbricht. Das war die nuetzlichste Zeile dieses Werkzeugs - sie hat
+ *  gezeigt, dass die Bahnen NICHT an der Kreuzung enden, wie ich vermutet
+ *  hatte, sondern dass es genau EINEN Abbruch gibt und die uebrigen Bahnen
+ *  sich nur mit der abgebrochenen vereinigen.
+ *
+ *  **Offen (Stand v90):** Auf Karten mit Schleifen laeuft der Lauf in eine
+ *  Schleife hinein und endet dort, statt zum Endplatz weiterzugehen. Das
+ *  Zielgewicht greift nur an echten Gabelungen; eine Schleife ist aber keine
+ *  Gabelung, sie fuehrt einfach im Bogen weg. Naechster Ansatz: den Lauf
+ *  abbrechen und neu ansetzen, wenn er sich vom Endplatz dauerhaft entfernt.
+ *
  *  Kein Ausduennen, kein Skelett: jeder Schritt zielt auf den Schwerpunkt der
  *  Wegpunkte, die vor einem liegen. Das folgt auch einer Haarnadel, an der ein
  *  spaltenweiser Mittelwert scheitern wuerde.
@@ -299,7 +311,7 @@ function ablaufen(startX, startY, richtung, bestehende) {
         sekX[k] += x; sekY[k] += y; sekN[k]++; n++;
       }
     }
-    if (n < 6) break;
+    if (n < 6) { if (process.env.DIAG) console.log(`  Abbruch: zu wenig Punkte (${n}) bei ${Math.round(cx)}/${Math.round(cy)} nach ${schritt} Schritten`); break; }
 
     // Benachbarte Sektoren zu Aesten zusammenfassen.
     const aeste = [];
@@ -314,7 +326,7 @@ function ablaufen(startX, startY, richtung, bestehende) {
       }
       if (pn >= 3) aeste.push({ x: px / pn, y: py / pn, n: pn });
     }
-    if (!aeste.length) break;
+    if (!aeste.length) { if (process.env.DIAG) console.log(`  Abbruch: kein Ast bei ${Math.round(cx)}/${Math.round(cy)} nach ${schritt} Schritten`); break; }
 
     // Nur bei einer ECHTEN Gabelung entscheiden.
     //

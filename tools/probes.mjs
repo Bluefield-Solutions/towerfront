@@ -123,6 +123,13 @@ const PROBEN = [
     tor: 'doku',
   },
   {
+    name: 'Sonne steht in der falschen Richtung',
+    datei: 'src/data/config.ts',
+    regel: /export const LICHT = \{ x: [-0-9.]+, y: [-0-9.]+ \};/,
+    ersatz: 'export const LICHT = { x: -0.62, y: -0.78 };',
+    tor: 'smoke',
+  },
+  {
     name: 'Tuerme ueberdecken einander',
     datei: 'src/data/towers.ts',
     suche: 'export const DRAW_SCALE = 1.25;',

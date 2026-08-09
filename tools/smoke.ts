@@ -450,6 +450,24 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   renderer.resize();
 }
 
+// Die Schatten muessen in Lichtrichtung fallen, und die ist oben links.
+//
+// Alle drei Kartenbilder sind so gerendert - gemessen -140, -135 und -116
+// Grad. Zeigen unsere Schatten woandershin, schwebt jeder Turm sichtbar ueber
+// dem Boden, auf dem er steht.
+{
+  const { LICHT } = await import('../src/data/config');
+  if (LICHT.x <= 0 || LICHT.y <= 0) {
+    problems.push(
+      `Licht: Schatten fallen nach ${LICHT.x}/${LICHT.y} - erwartet nach unten rechts ` +
+      '(beide Werte positiv), weil die Sonne oben links steht.',
+    );
+  }
+  if (Math.hypot(LICHT.x, LICHT.y) < 0.5) {
+    problems.push('Licht: die Schattenrichtung ist zu kurz - die Schatten liegen unter dem Objekt.');
+  }
+}
+
 // Im Menue darf keine Spielbedienung sichtbar sein.
 //
 // Der schwerste Fehler dieser Sitzung: das Menue wanderte auf die Leinwand,

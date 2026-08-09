@@ -1,4 +1,4 @@
-import { C, WORLD_H, WORLD_W } from '../data/config';
+import { C, LICHT, WORLD_H, WORLD_W } from '../data/config';
 import { ENEMIES } from '../data/enemies';
 import {
   TOWERS, accentFor, statsFor,
@@ -579,7 +579,27 @@ export class Renderer {
       if (art) {
         const k = towerArtScale(t.level);
         const w = TOWERS[def.id].footprint * DRAW_SCALE * k;
-      const h = w;
+        const h = w;
+
+        // Ein Schlagschatten in Lichtrichtung.
+        //
+        // Bis v59 warfen gerenderte Tuerme gar keinen - sie standen auf dem
+        // Boden, ohne ihn zu beruehren. Auf dem Kartenbild wirft jeder Fels
+        // und jeder Stumpf seinen Schatten nach unten rechts; ein Turm ohne
+        // Schatten schwebt dann sichtbar darueber. Der Schatten ist das, was
+        // ein Objekt in eine Szene setzt.
+        const fuss = TOWERS[def.id].footprint / 2;
+        ctx.save();
+        ctx.globalAlpha = 0.34;
+        ctx.fillStyle = C.ink;
+        ctx.beginPath();
+        ctx.ellipse(
+          t.x + LICHT.x * fuss * 0.85, t.y + LICHT.y * fuss * 0.42,
+          fuss * 1.05, fuss * 0.44, 0.32, 0, Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.restore();
+
         const facingLeft = Math.cos(t.angle) < 0;
         const rec = t.recoil * 3;
         ctx.save();
@@ -685,12 +705,19 @@ export class Renderer {
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
       const def = ENEMIES[e.def];
+      // Der Schatten faellt in Lichtrichtung, nicht senkrecht nach unten -
+      // dieselbe Richtung wie im Kartenbild.
       if (def.flying) {
-        ctx.globalAlpha = 0.55;
-        drawSprite(ctx, getShadow(def.radius), e.x, e.y + 6, 0.8);
+        // Ein Flieger steht hoch ueber dem Boden, sein Schatten liegt weiter weg.
+        const alt = this.altitude(e, s.time, true);
+        ctx.globalAlpha = 0.4;
+        drawSprite(ctx, getShadow(def.radius),
+          e.x + LICHT.x * alt * 0.9, e.y + LICHT.y * alt * 0.5, 0.8);
         ctx.globalAlpha = 1;
       } else {
-        drawSprite(ctx, getShadow(def.radius), e.x, e.y + def.radius * 0.85);
+        const weit = def.radius * 0.85;
+        drawSprite(ctx, getShadow(def.radius),
+          e.x + LICHT.x * weit * 0.7, e.y + LICHT.y * weit);
       }
     }
 

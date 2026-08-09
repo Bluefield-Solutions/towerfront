@@ -111,6 +111,33 @@ const z = (v, k = 2) => v.toFixed(k).padStart(6);
 console.log('GRAFIK-AUDIT\n');
 const befunde = [];
 
+/** Woher kommt das Licht in einem Bild?
+ *
+ *  An jeder Kante ist eine Seite heller als die andere. Mittelt man ueber alle
+ *  Kanten, zeigt der Vektor zur Lichtquelle. Das ist die eine Eigenschaft, die
+ *  ueber alle Karten gleich sein muss - sonst steht die Sonne je Karte woanders
+ *  und die Szene kippt. Ein geliefertes Bild mit Sonne von rechts faellt hier
+ *  auf, bevor es im Spiel landet.
+ */
+async function lichtrichtung(buffer) {
+  const B = 300;
+  const { data, info } = await sharp(buffer).resize(B, null).ensureAlpha().raw()
+    .toBuffer({ resolveWithObject: true });
+  const W = info.width, H = info.height;
+  const l = (i) => (0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]) / 255;
+  let gx = 0, gy = 0, n = 0;
+  for (let y = 2; y < H - 2; y++) {
+    for (let x = 2; x < W - 2; x++) {
+      const dx = l(((y) * W + x + 2) * 4) - l(((y) * W + x - 2) * 4);
+      const dy = l(((y + 2) * W + x) * 4) - l(((y - 2) * W + x) * 4);
+      if (Math.hypot(dx, dy) < 0.12) continue;
+      gx += dx; gy += dy; n++;
+    }
+  }
+  // Der Vektor zeigt zum Helleren, also zur Sonne.
+  return { winkel: (Math.atan2(gy / n, gx / n) * 180) / Math.PI, kanten: n };
+}
+
 // ------------------------------------------------------------- Untergruende
 console.log('Untergründe');
 console.log('  Name             Palette  Helligk  Sätt.  Spanne  Dichte');
@@ -118,7 +145,8 @@ const bg = lies('backgrounds.ts');
 const bgWerte = [];
 for (const [id, buf] of bg) {
   const m = await messen(buf, { transparent: false });
-  bgWerte.push({ id, ...m });
+  const licht = await lichtrichtung(buf);
+  bgWerte.push({ id, ...m, licht: licht.winkel });
   console.log(`  ${id.padEnd(16)} ${String(m.palette).padStart(6)}  ${z(m.helligkeit)}  ${z(m.saettigung)}  ${z(m.spanne)}  ${z(m.dichte)}`);
 }
 
@@ -144,6 +172,10 @@ for (const [id, buf] of en) {
   enWerte.push({ id, ...m });
   console.log(`  ${id.padEnd(16)} ${String(m.palette).padStart(6)}  ${z(m.helligkeit)}  ${z(m.saettigung)}  ${z(m.spanne)}  ${z(m.dichte)}  ${z(m.schwarzAnteil * 100, 1)}%`);
 }
+
+// --------------------------------------------------------- Lichtrichtung
+console.log('\nLichtrichtung (Winkel zur Sonne, -135 = oben links)');
+for (const b of bgWerte) console.log(`  ${b.id.padEnd(16)} ${b.licht.toFixed(0).padStart(5)}°`);
 
 // --------------------------------------------------------------- Bewertung
 const mittel = (arr, f) => arr.reduce((a, b) => a + f(b), 0) / arr.length;
@@ -212,6 +244,27 @@ if (eng.length > figuren.length * 0.4) {
     `${eng.length} von ${figuren.length} Figuren liegen im selben Helligkeitsband wie der ` +
     'Untergrund. Sie werden nur durch ihren Saum sichtbar, nicht durch ihre Form.',
   );
+}
+
+// 6. Steht die Sonne ueberall gleich?
+{
+  const winkel = bgWerte.map((b) => b.licht);
+  const spanne = Math.max(...winkel) - Math.min(...winkel);
+  console.log(`\n6. Lichtrichtung: Spanne ${spanne.toFixed(0)}° über alle Karten`);
+  console.log('   Referenz: eine Sonne, höchstens 40° Unterschied.');
+  if (spanne > 40) {
+    befunde.push(
+      `Die Sonne steht je Karte woanders (Spanne ${spanne.toFixed(0)}°). ` +
+      'Figurenschatten passen dann auf einer Karte und auf der nächsten nicht.',
+    );
+  }
+  const mittel2 = winkel.reduce((a, b) => a + b, 0) / winkel.length;
+  if (mittel2 > -95 || mittel2 < -175) {
+    befunde.push(
+      `Die Sonne steht im Mittel bei ${mittel2.toFixed(0)}°, erwartet oben links ` +
+      '(zwischen -175 und -95). Die Schatten im Renderer zeigen in die falsche Richtung.',
+    );
+  }
 }
 
 console.log(`\n─── ${befunde.length} Befund(e) ───\n`);

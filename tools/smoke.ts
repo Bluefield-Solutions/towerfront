@@ -78,7 +78,7 @@ const { GameState } = await import('../src/game/state');
 const { Renderer } = await import('../src/gfx/renderer');
 const { UI } = await import('../src/ui/ui');
 const { bindInput } = await import('../src/core/input');
-const { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor } = await import('../src/data/towers');
+const { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, statsFor } = await import('../src/data/towers');
 
 const { TUTORIAL } = await import('../src/game/tutorial');
 const { candidateSpots } = await import('./spots');
@@ -496,6 +496,33 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
   if (Math.hypot(LICHT.x, LICHT.y) < 0.5) {
     problems.push('Licht: die Schattenrichtung ist zu kurz - die Schatten liegen unter dem Objekt.');
+  }
+}
+
+// Was das Ausbaumenue zeigt, muss der Ausbau auch liefern.
+//
+// Nach der Umstellung auf das Reichweitensystem stand im Menue die alte
+// handgeschriebene Zahl und gebaut wurde die berechnete - bei Stufe 5 klafften
+// 519 gegen 600 Pixel. Ein Menue, das etwas anderes verspricht als es liefert,
+// ist schlimmer als gar keins.
+{
+  for (const id of TOWER_ORDER) {
+    const def = TOWERS[id];
+    for (const b of [0, 1] as const) {
+      for (let l = 1; l < MAX_LEVEL; l++) {
+        const versprochen = nextFor(def, b, l);
+        const geliefert = statsFor(def, b, l + 1);
+        if (!versprochen) { problems.push(`Ausbaumenue: keine naechste Stufe fuer ${id}/${b} ab ${l}.`); continue; }
+        for (const feld of ['range', 'damage', 'cost', 'cooldown'] as const) {
+          if (versprochen[feld] !== geliefert[feld]) {
+            problems.push(
+              `Ausbaumenue: ${id}/${b} Stufe ${l + 1} verspricht ${feld} ${versprochen[feld]}, ` +
+              `liefert ${geliefert[feld]}.`,
+            );
+          }
+        }
+      }
+    }
   }
 }
 

@@ -158,6 +158,20 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    name: 'Ausbaumenue zeigt falsche Werte',
+    datei: 'src/data/towers.ts',
+    regel: /  return statsFor\(def, branch, level \+ 1\);/,
+    ersatz: '  return def.branches[branch].levels[level - 1] as TowerStats;',
+    tor: 'smoke',
+  },
+  {
+    name: 'Panzerung wieder als fester Abzug',
+    datei: 'src/game/state.ts',
+    regel: /const schluck = Math\.min\(0\.66, rest \* 0\.11\);/,
+    ersatz: 'const schluck = 0;',
+    tor: 'sim',
+  },
+  {
     name: 'Tuerme ueberdecken einander',
     datei: 'src/data/towers.ts',
     regel: /export const DRAW_SCALE = [0-9.]+;/,

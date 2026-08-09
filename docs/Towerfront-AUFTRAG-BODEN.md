@@ -48,6 +48,23 @@ sortiert, doppelt vereinigt, am falschen Punkt verbunden, doppelte Punkte
 stehen gelassen. Alle vier sind im Werkzeug behoben. Es verarbeitet bis zu
 vier Zuwege und verwirft Doppelgaenger.
 
+## Die Wege muessen breit genug fuer die Gegner sein
+
+**Der wichtigste Wert, und der am leichtesten zu uebersehende.** Die
+Lieferung "Kristallgrund" hatte ein vorbildlich verschlungenes Wegnetz - aber
+die Wege waren im Mittel 43 Weltpixel breit. Unsere groessten Gegner sind 58
+und 68 Pixel breit; sie haetten neben dem Weg gelaufen.
+
+Als Vorgabe fuer das Bild: **der Weg ist an seiner schmalsten Stelle etwa ein
+Vierzigstel der Bildbreite, an seiner breitesten ein Zwanzigstel.** Bei 3840
+Bildpunkten sind das rund 96 bis 192 Punkte. Lieber zu breit als zu schmal -
+ein zu breiter Weg kostet nur Bauflaeche, ein zu schmaler macht die Karte
+unbrauchbar.
+
+Und der Weg braucht **erkennbare Engstellen**: das Verhaeltnis von breitester
+zu schmalster Stelle soll mindestens 1,5 betragen. Ein durchgehend gleich
+breiter Weg nimmt der Karte ihre Taktik.
+
 ## Was geliefert werden soll
 
 Drei Kartenbilder, dazu je zwei Hilfsbilder. **Die Hilfsbilder sind der

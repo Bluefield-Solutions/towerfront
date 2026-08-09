@@ -36,8 +36,12 @@ if (!datenPfad || !konstante) {
 const MAX_BAHNEN = 4;
 /** Wie weit das Ziel ins Bild gezogen wird - dort steht ein Bauwerk. */
 const ZIEL_HINEIN = 150;
-/** Wie weit der Bahnanfang vor die Kante geschoben wird - dort steht das Tor. */
+/** Wie weit der Bahnanfang mindestens vor die Kante geschoben wird - dort
+ *  steht das Tor. Liegt der Anfang noch im Feld, wird weiter geschoben, bis
+ *  er draussen ist; ein fester Wert reichte bei einer Karte nicht, deren
+ *  Zugang 130 Pixel innerhalb der Kante begann. */
 const START_HINAUS = 120;
+const WELT_B = 1920, WELT_H = 1080;
 
 const abstand = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const laenge = (b) => b.reduce((s, _, i) => (i ? s + abstand(b[i - 1], b[i]) : 0), 0);
@@ -88,8 +92,15 @@ for (const b of andere) {
 
 // --- 3. Zacken glätten, doppelte Punkte entfernen, Anfang hinausschieben.
 const glatt = fertig.map((b) => {
+  // Kurze Bahnen koennen nach dem Ausrichten unter drei Punkte fallen - dann
+  // gibt es nichts zu glaetten, und der Zugriff auf den Vorvorgaenger lief
+  // ins Leere.
+  if (b.length < 3) return b;
   const ohneZacken = b.slice(0, 2);
   for (const p of b.slice(2)) {
+    // Das Entfernen eines Zackens kann die Liste unter zwei Punkte schrumpfen;
+    // dann gibt es keinen Vorvorgaenger, an dem sich ein Winkel messen liesse.
+    if (ohneZacken.length < 2) { ohneZacken.push(p); continue; }
     const a = ohneZacken[ohneZacken.length - 2], c = ohneZacken[ohneZacken.length - 1];
     const w1 = Math.atan2(c.y - a.y, c.x - a.x);
     const w2 = Math.atan2(p.y - c.y, p.x - c.x);
@@ -105,9 +116,16 @@ const glatt = fertig.map((b) => {
   if (ohneDoppel.length >= 2) {
     const dx = ohneDoppel[0].x - ohneDoppel[1].x, dy = ohneDoppel[0].y - ohneDoppel[1].y;
     const n = Math.hypot(dx, dy) || 1;
+    let weit = START_HINAUS;
+    for (let versuch = 0; versuch < 40; versuch++) {
+      const x = ohneDoppel[0].x + (dx / n) * weit;
+      const y = ohneDoppel[0].y + (dy / n) * weit;
+      if (x < -20 || y < -20 || x > WELT_B + 20 || y > WELT_H + 20) break;
+      weit += 60;
+    }
     ohneDoppel[0] = {
-      x: Math.round(ohneDoppel[0].x + (dx / n) * START_HINAUS),
-      y: Math.round(ohneDoppel[0].y + (dy / n) * START_HINAUS),
+      x: Math.round(ohneDoppel[0].x + (dx / n) * weit),
+      y: Math.round(ohneDoppel[0].y + (dy / n) * weit),
       w: ohneDoppel[0].w,
     };
   }

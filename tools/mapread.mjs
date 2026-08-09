@@ -63,6 +63,82 @@ for (let i = 0; i < B * H; i++) {
 }
 const mittlereSaettigung = sw.reduce((a, b) => a + b, 0) / sw.length;
 const ueberHelligkeit = mittlereSaettigung < 0.35;
+
+/** Schwelle und Richtung durch Ausprobieren finden.
+ *
+ *  Drei Anlaeufe haben nicht getragen. Erst eine feste Schwelle von 0,45 -
+ *  die stammte von der Frostspalte und fand auf dem helleren Kristallgrund
+ *  nur Bruchstuecke. Dann das Tal zwischen den zwei groessten Gipfeln der
+ *  Helligkeitsverteilung - auf dem Bergpass hat das Schatten von Boden
+ *  getrennt statt Weg von Boden, weil es dort DREI Haufen gibt. Dann die
+ *  Frage, ob der Weg heller oder dunkler ist, ueber die groesste
+ *  zusammenhaengende Flaeche - der Boden haengt aber immer zusammen.
+ *
+ *  Was in allen drei Faellen funktioniert haette, ist das Maß selbst:
+ *  **Schlankheit.** Ein Weg ist ein langes schmales Band, ein Boden eine
+ *  kompakte Flaeche; Umfang zum Quadrat geteilt durch Flaeche trennt beides
+ *  sauber. Also wird nicht mehr geraten, wo die Schwelle liegt - es werden
+ *  alle Schwellen durchprobiert, und genommen wird die, bei der das
+ *  gefundene Gebiet am schlanksten ist.
+ */
+const schlankheit = (istWeg) => {
+  const maske = new Uint8Array(B * H);
+  for (let i = 0; i < B * H; i++) {
+    const l = (0.2126 * data[i*4] + 0.7152 * data[i*4+1] + 0.0722 * data[i*4+2]) / 255;
+    maske[i] = istWeg(l) ? 1 : 0;
+  }
+  const gesehen = new Uint8Array(B * H);
+  let bestFlaeche = 0, bestUmfang = 0;
+  for (let start = 0; start < B * H; start++) {
+    if (!maske[start] || gesehen[start]) continue;
+    let flaeche = 0, umfang = 0;
+    const stapel = [start];
+    gesehen[start] = 1;
+    while (stapel.length) {
+      const p = stapel.pop();
+      flaeche++;
+      const x = p % B, y = (p / B) | 0;
+      const nachbarn = [
+        x > 0 ? p - 1 : -1, x < B - 1 ? p + 1 : -1,
+        y > 0 ? p - B : -1, y < H - 1 ? p + B : -1,
+      ];
+      for (const q of nachbarn) {
+        if (q < 0 || !maske[q]) { umfang++; continue; }
+        if (!gesehen[q]) { gesehen[q] = 1; stapel.push(q); }
+      }
+    }
+    if (flaeche > bestFlaeche) { bestFlaeche = flaeche; bestUmfang = umfang; }
+  }
+  // Ein Gebiet, das fast das ganze Bild fuellt, ist der Boden - kein Weg.
+  if (!bestFlaeche || bestFlaeche > B * H * 0.45) return { wert: 0, flaeche: bestFlaeche };
+  return { wert: (bestUmfang * bestUmfang) / bestFlaeche, flaeche: bestFlaeche };
+};
+
+let schwelle = 0.45, wegIstDunkel = true, bestWert = -1;
+for (let t = 0.14; t <= 0.86; t += 0.03) {
+  for (const dunkel of [true, false]) {
+    const r = schlankheit((l) => (dunkel ? l < t : l >= t));
+    // Zu kleine Gebiete sind Rauschen, keine Wege.
+    if (r.flaeche < B * H * 0.02) continue;
+    if (r.wert > bestWert) { bestWert = r.wert; schwelle = t; wegIstDunkel = dunkel; }
+  }
+}
+// Von Hand uebersteuern: --schwelle 0.52 --dunkel  bzw.  --hell
+//
+// Die Automatik hat vier Anlaeufe gebraucht und trifft es nicht immer. Auf
+// dem Kristallgrund waehlte sie 0,65 und fand damit weniger als mit 0,52.
+// Statt die Heuristik weiter zu verbiegen, gibt es einen Schalter: das
+// Kontrollbild zeigt sofort, ob der Wert stimmt, und zwei Versuche von Hand
+// sind schneller als eine Automatik, die man nicht durchschaut.
+{
+  const argv = process.argv;
+  const i = argv.indexOf('--schwelle');
+  if (i > 0 && argv[i + 1]) schwelle = Number(argv[i + 1]);
+  if (argv.includes('--hell')) wegIstDunkel = false;
+  if (argv.includes('--dunkel')) wegIstDunkel = true;
+}
+console.log(`Helligkeitsschwelle ${schwelle.toFixed(2)}, Weg ist `
+  + `${wegIstDunkel ? 'dunkler' : 'heller'} als der Boden (Schlankheit ${bestWert.toFixed(0)})`);
 console.log(`Trennung ueber ${ueberHelligkeit ? 'Helligkeit' : 'Saettigung'} `
   + `(mittlere Saettigung ${mittlereSaettigung.toFixed(2)})`);
 
@@ -70,7 +146,7 @@ const grau = new Uint8Array(B * H);
 for (let i = 0; i < B * H; i++) {
   if (ueberHelligkeit) {
     const l = (0.2126 * data[i*4] + 0.7152 * data[i*4+1] + 0.0722 * data[i*4+2]) / 255;
-    grau[i] = l < 0.45 ? 1 : 0;
+    grau[i] = (l < schwelle) === wegIstDunkel ? 1 : 0;
   } else {
     grau[i] = sw[i] < 0.42 ? 1 : 0;
   }

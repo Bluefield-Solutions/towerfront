@@ -472,7 +472,10 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
         `(${wtl.x.toFixed(0)}/${wtl.y.toFixed(0)} bis ${wbr.x.toFixed(0)}/${wbr.y.toFixed(0)}).`,
       );
     }
-    renderer.toggleOverview();
+    // Fuer die naechste Bildschirmgroesse wieder auf den Startzustand -
+    // sonst schleppt der vorige Durchgang seinen Zoom mit, und die Pruefung
+    // des Startmassstabs schlaegt beim Nachfolger an.
+    renderer.zoomAt(0.01, w / 2, h / 2);
   }
   sizeCanvas(canvas, 844, 390);
   renderer.resize();

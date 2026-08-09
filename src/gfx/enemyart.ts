@@ -64,14 +64,26 @@ export function getEnemyArt(
     bg.fillStyle = 'rgba(255,255,255,0.85)';
     bg.fillRect(0, 0, size, size);
   } else {
-    bg.fillStyle = hexA(def.body, 0.38);
+    // Dieselbe Altlast wie bei den Tuermen: der Farbschleier und der
+    // Lichtverlauf stammen aus der Zeit, als alle Gegnerbilder aus derselben
+    // Familie kamen und nur ueber die Farbe zu unterscheiden waren. Die neuen
+    // Aufsichten haben eigene Farben und eigenes Licht - ein starker Schleier
+    // verwaescht sie, der Verlauf legt ein zweites Licht darueber.
+    //
+    // Beim Span bleibt der Schleier hoeher: er kommt aus demselben Bild wie
+    // der Spalter, und ohne Farbe waere er nur ein kleinerer Spalter.
+    const neu = !!def.topdown;
+    const staerke = neu ? (id === 'splitling' ? 0.30 : 0.15) : 0.38;
+    bg.fillStyle = hexA(def.body, staerke);
     bg.fillRect(0, 0, size, size);
-    const lift = bg.createLinearGradient(0, 0, size * 0.7, size);
-    lift.addColorStop(0, 'rgba(255,255,255,0.24)');
-    lift.addColorStop(0.5, 'rgba(255,255,255,0.04)');
-    lift.addColorStop(1, 'rgba(0,0,0,0.24)');
-    bg.fillStyle = lift;
-    bg.fillRect(0, 0, size, size);
+    if (!neu) {
+      const lift = bg.createLinearGradient(0, 0, size * 0.7, size);
+      lift.addColorStop(0, 'rgba(255,255,255,0.24)');
+      lift.addColorStop(0.5, 'rgba(255,255,255,0.04)');
+      lift.addColorStop(1, 'rgba(0,0,0,0.24)');
+      bg.fillStyle = lift;
+      bg.fillRect(0, 0, size, size);
+    }
   }
   bg.globalCompositeOperation = 'source-over';
   g.drawImage(body, 0, 0);

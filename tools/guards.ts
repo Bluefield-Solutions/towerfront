@@ -247,6 +247,24 @@ for (const map of MAPS) {
     }
   }
 
+  // Kein Gegner darf durch seinen Zuschnitt kleiner werden, als sein Radius
+  // sagt.
+  //
+  // Der Span wurde ueber den Fuellgrad des Bildes verkleinert statt ueber
+  // seinen Radius - im Spiel war er dadurch elf Bildschirmpunkte gross statt
+  // siebzehn. Dieselbe Verwechslung wie bei den Tuermen: die Kachel ist nicht
+  // die Figur. Die Groesse gehoert in die Spieldaten, nicht in die
+  // Bildaufbereitung.
+  {
+    const kleinst = Math.max(568 / WORLD_W, 320 / WORLD_H);
+    for (const [id, def] of Object.entries(ENEMIES)) {
+      const px = enemyArtWidth(id as EnemyId) * kleinst;
+      if (px < 13) {
+        fail(`${def.name}: nur ${px.toFixed(0)} Bildschirmpunkte auf dem kleinsten Geraet.`);
+      }
+    }
+  }
+
   // Passen die Gegner ueberhaupt auf den Weg?
   //
   // Das war lange nicht geprueft, und man sah es erst im Bild: der

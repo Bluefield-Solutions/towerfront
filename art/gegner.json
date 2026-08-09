@@ -65,8 +65,14 @@
       "farbe": 0.42
     },
     "splitling": {
-      "file": "enemy_light_tank_02.png",
-      "fill": 0.59
+      "file": "gegner_spalter.png",
+      "comment": "Der Span ist ein Bruchstueck des Spalters und kommt deshalb aus demselben Bild - kleiner, blasser und kuehler, damit man ihn im Feld sofort vom ganzen Spalter unterscheidet. Vorher stand hier ein fremdes Altbild ohne Bezug zum Spalter. Die Groesse kommt aus dem Radius, nicht aus fill - sonst schrumpft die Figur im Bild und nicht im Spiel.",
+      "center": true,
+      "fill": 0.9,
+      "entrauschen": 1.1,
+      "schwarzHeben": 0,
+      "helligkeit": 1.12,
+      "farbe": 0.3
     },
     "titan": {
       "file": "gegner_titan.png",

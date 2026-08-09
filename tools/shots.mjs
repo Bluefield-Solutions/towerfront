@@ -366,6 +366,22 @@ takes.push(['bauvorschau', () => shot('bauvorschau', 844, 390, (s, r) => {
   return 4;
 })]);
 
+takes.push(['spalter', () => shot('spalter', 844, 390, (s, r) => {
+  s.reset(1, 'normal', 'spiralhain');
+  stock(s, 6);
+  s.waveIndex = 7;
+  s.startWave();
+  for (let i = 0; i < 60 * 14; i++) s.update(DT);
+  const ziel = s.enemies.find((e) => e.def === 'splitling') ?? s.enemies[0];
+  if (ziel) {
+    r.resize();
+    r.zoomAt(2.8, 422, 195);
+    const p = r.worldToScreen(ziel.x, ziel.y);
+    r.panBy(422 - p.x, 195 - p.y);
+  }
+  return 0;
+})]);
+
 takes.push(['welle8', () => shot('welle8', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 10);

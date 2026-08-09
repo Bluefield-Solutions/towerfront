@@ -78,6 +78,7 @@ export const ENEMIES: Record<EnemyId, EnemyDef> = {
     id: 'splitling', name: 'Span',
     hp: 40, speed: 178, bounty: 1, leak: 1, radius: 14, armor: 0, slowResist: 0,
     body: '#EFE24C', trim: '#FFF8C8',
+    topdown: true,
   },
   titan: {
     id: 'titan', name: 'Leerentitan',

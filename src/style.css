@@ -670,27 +670,59 @@ html, body {
 
 /* Pausenmenue — liegt ueber dem Feld, nicht daneben.
    Es erscheint mit der Pause und verschwindet mit ihr; ein eigener Schalter
-   waere eine zweite Wahrheit ueber denselben Zustand. */
+   waere eine zweite Wahrheit ueber denselben Zustand.
+
+   Zur Farbgebung: Beim ersten Versuch standen hier zwei Variablennamen, die
+   es in diesem Blatt gar nicht gibt (ink und accent). Die Knoepfe erbten
+   dadurch irgendeine Farbe, und die Schrift war kaum zu lesen. Jetzt tragen
+   sie die Farben des Spiels, und jede sagt etwas:
+
+     Weiter spielen      Kristall-Tuerkis, dunkle Schrift — die Hauptaktion,
+                         das Einzige, was nichts kostet.
+     Level neu starten   Gold mit goldener Schrift — es wirft den Fortschritt
+                         der Partie weg, das darf man sehen.
+     Zurueck zur Karte   ruhig und neutral — die Partie wird gespeichert,
+                         hier geht nichts verloren. */
 .pause-menu {
   position: absolute; inset: 0; z-index: 6;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(8, 11, 20, 0.62); backdrop-filter: blur(3px);
+  background: rgba(8, 11, 24, 0.72); backdrop-filter: blur(4px);
 }
 .pause-menu[hidden] { display: none; }
 .pause-card {
   display: flex; flex-direction: column; gap: 10px;
-  min-width: 240px; padding: 22px;
+  min-width: 260px; padding: 24px;
   background: var(--panel); border: 1px solid var(--edge); border-radius: 18px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
 }
 .pause-title {
-  font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--muted); margin-bottom: 4px; text-align: center;
+  font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 6px; text-align: center;
 }
 .pause-btn {
-  padding: 13px 18px; min-height: 46px;
-  font: inherit; font-size: 15px; color: var(--ink);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--edge); border-radius: 12px; cursor: pointer;
+  padding: 14px 20px; min-height: 48px;
+  font: inherit; font-size: 16px; font-weight: 600; letter-spacing: 0.01em;
+  color: var(--text);
+  background: rgba(231, 236, 247, 0.07);
+  border: 1px solid rgba(231, 236, 247, 0.16);
+  border-radius: 12px; cursor: pointer;
+  transition: background 120ms ease, transform 90ms ease;
 }
+.pause-btn:hover { background: rgba(231, 236, 247, 0.13); }
 .pause-btn:active { transform: scale(0.98); }
-.pause-btn.primary { background: var(--accent); color: #04121a; font-weight: 700; border-color: transparent; }
+
+/* Hauptaktion: gefuellt, dunkle Schrift auf hellem Grund. */
+.pause-btn.primary {
+  color: #071620; background: var(--crystal);
+  border-color: transparent; font-weight: 700;
+}
+.pause-btn.primary:hover { background: #9BF0EA; }
+
+/* Verlustreich: Gold, aber nicht gefuellt — es soll auffallen, ohne wie die
+   Hauptaktion auszusehen. */
+.pause-btn.warn {
+  color: var(--gold);
+  background: rgba(242, 193, 78, 0.10);
+  border-color: rgba(242, 193, 78, 0.42);
+}
+.pause-btn.warn:hover { background: rgba(242, 193, 78, 0.18); }

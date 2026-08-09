@@ -872,6 +872,30 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Keine Farbe aus einer Variablen, die es nicht gibt.
+//
+// Im Pausenmenue standen `var(--ink)` und `var(--accent)` - beide sind in
+// diesem Blatt nie definiert worden. CSS meldet das nicht, es erbt einfach
+// irgendeine Farbe; im Spiel war die Schrift dadurch kaum zu lesen. Ein
+// Tippfehler in einem Variablennamen ist unsichtbar, bis jemand hinsieht.
+{
+  const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8');
+  const wurzel = css.slice(css.indexOf(':root'), css.indexOf('}', css.indexOf(':root')));
+  const bekannt = new Set([...wurzel.matchAll(/--([a-z-]+):/g)].map((m) => m[1]));
+  // Manche Variablen setzt die Oberflaeche zur Laufzeit je Element - etwa die
+  // Zweigfarbe eines Turmknopfs. Die stehen zu Recht nicht in :root, also
+  // zaehlt hier auch, was im Quelltext per setProperty oder style= gesetzt wird.
+  const ts = ['ui.ts'].map((f) => readFileSync(new URL(`../src/ui/${f}`, import.meta.url), 'utf8')).join('\n');
+  for (const m of ts.matchAll(/--([a-z-]+)\s*[:,]/g)) bekannt.add(m[1]);
+  for (const m of ts.matchAll(/setProperty\('--([a-z-]+)'/g)) bekannt.add(m[1]);
+  const benutzt = new Set([...css.matchAll(/var\(--([a-z-]+)\)/g)].map((m) => m[1]));
+  for (const name of benutzt) {
+    if (!bekannt.has(name)) {
+      problems.push(`Stilblatt: var(--${name}) wird benutzt, ist aber nirgends gesetzt.`);
+    }
+  }
+}
+
 // Das Pausenmenue haengt am Pausenzustand.
 //
 // Es liegt in HTML, nicht auf der Leinwand - die Bildabnahme sieht es also

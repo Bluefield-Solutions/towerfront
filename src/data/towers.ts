@@ -271,7 +271,7 @@ const REICHWEITE_ZWEIG = [1.35, 0.65];
  *  Ueber 1 begunstigt den Wucht-Zweig, unter 1 den Weiten-Zweig. */
 const WUCHT_AUSGLEICH: Record<TowerId, number> = {
   arrow: 0.86,   // Reichweite zaehlt hier wenig - der Weiten-Zweig braucht Hilfe
-  frost: 1.10,   // die Bremse trifft alles im Umkreis, Weite wiegt schwer
+  frost: 0.94,   // nach der Panzerungsaenderung liegt der Wucht-Zweig vorn
   mortar: 1.06,
   prism: 1.02,
 };

@@ -491,8 +491,15 @@ export class Renderer {
     const { x, y } = s.goal;
     const t = s.crystalPulse;
     const health = Math.max(0, s.lives) / Math.max(1, s.maxLives);
-    const pulse = 1 + Math.sin(t * 2) * 0.04;
-    const glowR = (95 + Math.sin(t * 2) * 8) * (0.55 + health * 0.45);
+    // Das Bauwerk steht still.
+    //
+    // Frueher atmete es: die ganze Burg wuchs und schrumpfte im Takt. Bei
+    // einer gemalten Kristallform ging das durch - sie war ohnehin ein
+    // Leuchtzeichen. Ein Bauwerk aus Stein, das sich hebt und senkt, sieht
+    // aus, als schwebe es ueber dem Boden. Was pulsiert, ist nur noch das
+    // Licht, und auch das ruhiger als vorher.
+    const pulse = 1;
+    const glowR = (95 + Math.sin(t * 2) * 4) * (0.55 + health * 0.45);
 
     // Lichtpfuetze auf dem Boden - der Kristall beleuchtet seine Umgebung,
     // statt nur selbst zu leuchten.

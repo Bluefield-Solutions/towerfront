@@ -1,3 +1,5 @@
+import { WORLD_W } from './config';
+
 export type TowerId = 'arrow' | 'frost' | 'mortar' | 'prism';
 
 /** Wie ein Turm angreift. Der Angriffstyp bestimmt die Rolle im Feld,
@@ -202,9 +204,80 @@ export const TOWER_ORDER: TowerId[] = ['arrow', 'frost', 'mortar', 'prism'];
 export type BranchIndex = 0 | 1 | null;
 
 /** Werte eines Turms auf einer bestimmten Stufe. */
+/* ────────────────────────── Das Reichweitensystem ──────────────────────────
+ *
+ *  Bis v70 stand jede Reichweite als eigene Zahl in den Stufendaten - 45
+ *  Stueck von Hand. Das Ergebnis war Wildwuchs: der Frostturm wuchs ueber
+ *  seine Zweige um das 2,2-fache, der Moerser um das 1,28-fache. Zwei
+ *  Ausbauten kosteten dasselbe und brachten voellig Verschiedenes, ohne dass
+ *  es jemand entschieden haette.
+ *
+ *  Jetzt folgt die Reichweite drei Regeln:
+ *
+ *  1. **Sie ist ein Anteil der Feldbreite, keine Pixelzahl.** Ein Feld ist
+ *     1920 breit; eine Reichweite von 300 sagt nichts, "ein Sechstel des
+ *     Feldes" schon. Aendert sich die Feldgroesse, stimmen die Verhaeltnisse
+ *     weiter.
+ *
+ *  2. **Der Grundwert traegt die Rolle.** Der Frostturm bremst in seiner
+ *     Umgebung und ist deshalb kurz; der Moerser schlaegt weit hinten ein und
+ *     ist lang. Der Abstand zwischen kuerzestem und laengstem betraegt das
+ *     Doppelte - genug, dass die Wahl beim Bauen eine Rolle spielt.
+ *
+ *  3. **Jede Stufe bringt spuerbar mehr.** Die Kurve ist fuer alle gleich und
+ *     endet bei Stufe 6 beim 1,62-fachen. Der Zuwachs je Stufe faellt leicht
+ *     ab, damit die ersten Ausbauten sich lohnen und die letzten nicht
+ *     ueberdrehen.
+ *
+ *  4. **Der Zweig neigt die Kurve.** Ein Zweig steht fuer Weite, der andere
+ *     fuer Wucht - der eine bekommt den Zuwachs anderthalbfach, der andere
+ *     halb. Damit ist die Zweigwahl auch raeumlich eine Entscheidung und
+ *     nicht nur eine Schadenszahl.
+ */
+
+/** Grundreichweite als Anteil der Feldbreite. */
+const REICHWEITE_GRUND: Record<TowerId, number> = {
+  frost: 0.125,   // 240 px - bremst, was neben ihm laeuft
+  arrow: 0.170,   // 326 px - der Allrounder
+  prism: 0.160,   // 307 px - Ketten brauchen Nachbarn in Reichweite
+  mortar: 0.225,  // 432 px - schlaegt weit hinten ein
+};
+
+/** Vielfaches der Grundreichweite je Stufe. Fuer alle Tuerme gleich. */
+const REICHWEITE_STUFE = [1.00, 1.14, 1.27, 1.39, 1.51, 1.62];
+
+/** Wie stark ein Zweig am Zuwachs zieht. Erster Zweig = Weite.
+ *
+ *  Der Abstand ist bewusst kleiner als er sein koennte. Bei 1,5 zu 0,5 lag
+ *  der Weiten-Zweig 28 Prozent des Kristalls vor dem anderen - Reichweite
+ *  wiegt in diesem Spiel schwer, weil sie Wegdeckung bedeutet und nicht nur
+ *  Schaden. Wer weiter schiesst, trifft mehr Gegner laenger. Der zweite Zweig
+ *  gleicht das mit Wucht aus (siehe WUCHT_AUSGLEICH). */
+const REICHWEITE_ZWEIG = [1.35, 0.65];
+
+/** Der Wucht-Zweig bekommt dafuer mehr Schaden. */
+const WUCHT_AUSGLEICH = 1.14;
+
+/** Die Reichweite eines Turms - die eine Stelle, an der sie entsteht. */
+export function rangeFor(id: TowerId, branch: BranchIndex, level: number): number {
+  const stufe = Math.max(1, Math.min(MAX_LEVEL, Math.round(level)));
+  const grund = REICHWEITE_GRUND[id] * WORLD_W;
+  const zuwachs = REICHWEITE_STUFE[stufe - 1] - 1;
+  const neigung = branch === null ? 1 : REICHWEITE_ZWEIG[branch];
+  return Math.round(grund * (1 + zuwachs * neigung));
+}
+
 export function statsFor(def: TowerDef, branch: BranchIndex, level: number): TowerLevel {
-  if (level <= 1 || branch === null) return def.base;
-  return def.branches[branch].levels[Math.min(level, MAX_LEVEL) - 2];
+  const roh = level <= 1 || branch === null
+    ? def.base
+    : def.branches[branch].levels[Math.min(level, MAX_LEVEL) - 2];
+  // Die Reichweite aus den Daten wird ueberschrieben: sie kommt aus dem
+  // System, nicht aus 45 handgeschriebenen Zahlen. Der zweite Zweig bekommt
+  // den Schadensausgleich fuer seine kuerzere Reichweite.
+  const schaden = branch === 1 && level > 1
+    ? Math.round(roh.damage * WUCHT_AUSGLEICH)
+    : roh.damage;
+  return { ...roh, damage: schaden, range: rangeFor(def.id, branch, level) };
 }
 
 /** Werte der naechsten Stufe innerhalb eines Zweiges, oder null am Ende. */

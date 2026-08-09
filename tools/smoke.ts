@@ -872,6 +872,23 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Die Baufeldpunkte bleiben oertlich.
+//
+// Auf der Frostkarte sind 311 Rasterstellen bebaubar. Zeigt man sie alle, liegt
+// eine Tapete ueber der Landschaft - zweimal gemeldet als "passt nicht ins
+// Level", und zweimal habe ich stattdessen an der Farbe gedreht. Die Auskunft
+// wird nur dort gebraucht, wo der Finger ist.
+{
+  const quelle = readFileSync(new URL('../src/gfx/renderer.ts', import.meta.url), 'utf8');
+  const stelle = quelle.indexOf('drawImage(this.buildFenster');
+  if (stelle < 0) {
+    problems.push('Baufelder: das oertliche Fenster fehlt - die Punkte liegen wieder ueber der ganzen Karte.');
+  }
+  if (/ctx\.drawImage\(this\.buildMask!, 0, 0\)/.test(quelle)) {
+    problems.push('Baufelder: die volle Maske wird gezeichnet statt des Fensters um den Zeiger.');
+  }
+}
+
 // Keine Farbe aus einer Variablen, die es nicht gibt.
 //
 // Im Pausenmenue standen `var(--ink)` und `var(--accent)` - beide sind in

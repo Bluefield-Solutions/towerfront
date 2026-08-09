@@ -400,6 +400,7 @@ export class Renderer {
    */
   private buildMask: HTMLCanvasElement | null = null;
   private buildMaskKey = '';
+  private buildFenster: HTMLCanvasElement | null = null;
 
   private drawBuildOverlay(s: GameState): void {
     if (!s.buildChoice) return;
@@ -463,10 +464,45 @@ export class Renderer {
       this.buildMaskKey = key;
     }
 
+    // Nur dort zeigen, wo die Entscheidung faellt.
+    //
+    // Zweimal gemeldet als "passt nicht ins Level", und zweimal habe ich an
+    // der Farbe gedreht. Gemessen sind es auf der Frostkarte **311 Punkte
+    // gleichzeitig** - das ist eine Tapete ueber der ganzen Landschaft, egal
+    // wie sie eingefaerbt ist. Das Bild war nicht falsch gefaerbt, es war zu
+    // viel davon da.
+    //
+    // Gebraucht wird die Auskunft nur an einer Stelle: dort, wo der Finger
+    // gerade ist. Dort sind es rund fuenfzehn Punkte, und die Karte bleibt
+    // sonst frei. Wer weiter weg bauen will, zieht den Finger dorthin - und
+    // die Auskunft wandert mit.
+    const at = s.pendingPoint ?? s.hoverPoint;
+    if (!at) return;
+
+    const SICHT = 330;
     const beat = 0.5 + 0.5 * Math.sin(s.crystalPulse * 2.4);
+    if (!this.buildFenster) {
+      this.buildFenster = document.createElement('canvas');
+      this.buildFenster.width = SICHT * 2;
+      this.buildFenster.height = SICHT * 2;
+    }
+    const f = this.buildFenster.getContext('2d')!;
+    f.clearRect(0, 0, SICHT * 2, SICHT * 2);
+    f.drawImage(this.buildMask!, at.x - SICHT, at.y - SICHT, SICHT * 2, SICHT * 2,
+      0, 0, SICHT * 2, SICHT * 2);
+    // Zum Rand hin ausblenden, damit kein Kreis mit Kante entsteht.
+    f.globalCompositeOperation = 'destination-in';
+    const blende = f.createRadialGradient(SICHT, SICHT, SICHT * 0.35, SICHT, SICHT, SICHT);
+    blende.addColorStop(0, 'rgba(0,0,0,1)');
+    blende.addColorStop(0.7, 'rgba(0,0,0,0.55)');
+    blende.addColorStop(1, 'rgba(0,0,0,0)');
+    f.fillStyle = blende;
+    f.fillRect(0, 0, SICHT * 2, SICHT * 2);
+    f.globalCompositeOperation = 'source-over';
+
     ctx.save();
-    ctx.globalAlpha = (affordable ? 0.42 : 0.30) + beat * 0.08;
-    ctx.drawImage(this.buildMask!, 0, 0);
+    ctx.globalAlpha = (affordable ? 0.62 : 0.42) + beat * 0.08;
+    ctx.drawImage(this.buildFenster, at.x - SICHT, at.y - SICHT);
     ctx.restore();
   }
 

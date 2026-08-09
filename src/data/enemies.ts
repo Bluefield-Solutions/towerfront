@@ -84,5 +84,6 @@ export const ENEMIES: Record<EnemyId, EnemyDef> = {
     hp: 1100, speed: 53, bounty: 48, leak: 5, radius: 34, armor: 6, slowResist: 0.55,
     boss: true,
     body: '#6B4BB0', trim: '#D9BCFF',
+    topdown: true,
   },
 };

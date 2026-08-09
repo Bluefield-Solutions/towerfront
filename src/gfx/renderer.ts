@@ -16,6 +16,7 @@ import { drawMenu } from './menurender';
 import type { Menu } from '../game/menu';
 import { backgroundVersion, getBackground } from './backgrounds';
 import { artBreite, getTowerArt, towerArtScale, towerArtVersion } from './towerart';
+import { getObjectArt } from './objectart';
 import { enemyArtWidth, getEnemyArt } from './enemyart';
 import {
   drawSprite, getEnemySprite, getShadow, getTowerBase, getTowerWeapon, ENEMY_FRAMES,
@@ -313,22 +314,48 @@ export class Renderer {
     const ctx = this.ctx;
     const t = s.crystalPulse;
     for (const lane of s.lanes) {
+      // Weit genug ins Feld hinein, damit das Tor auch zu sehen ist.
+      //
+      // Der Bahnanfang liegt bewusst vor der Bildkante - dort beginnt der Weg.
+      // Bei 34 Pixeln Abstand stand das Tor deshalb halb ausserhalb. Der Wert
+      // muss groesser sein als der Ueberstand des Bahnanfangs.
       const p = lane.pts[0], nx = lane.pts[1] ?? p;
       const ang = Math.atan2(nx.y - p.y, nx.x - p.x);
-      const x = p.x + Math.cos(ang) * 34;
-      const y = p.y + Math.sin(ang) * 34;
+      const hinein = 150;
+      const x = p.x + Math.cos(ang) * hinein;
+      const y = p.y + Math.sin(ang) * hinein;
       if (hi) stampGlow(ctx, C.voidling, x, y, 72, 0.5 + Math.sin(t * 2) * 0.1);
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(ang);
-      ctx.strokeStyle = hexA(C.voidling, 0.9);
-      ctx.lineWidth = 4;
-      for (let i = 0; i < 3; i++) {
-        const r = 16 + i * 9 + Math.sin(t * 3 - i) * 3;
-        ctx.globalAlpha = 0.8 - i * 0.22;
-        ctx.beginPath(); ctx.ellipse(0, 0, r * 0.4, r, 0, 0, Math.PI * 2); ctx.stroke();
+
+      const art = getObjectArt('gate');
+      if (art) {
+        // Das Tor steht aufrecht und wird NICHT zur Bahn gedreht - es ist ein
+        // Bauwerk, kein Fahrzeug. Ein gedrehtes Steintor liegt schief in der
+        // Landschaft. Verschoben wird es stattdessen so, dass der Durchgang
+        // dort liegt, wo die Bahn beginnt.
+        const b = 132 * (1 + Math.sin(t * 2) * 0.012);
+        const h = b * (art.height / art.width);
+        ctx.save();
+        ctx.globalAlpha = 0.32;
+        ctx.fillStyle = C.ink;
+        ctx.beginPath();
+        ctx.ellipse(x + LICHT.x * b * 0.3, y + LICHT.y * b * 0.16, b * 0.42, b * 0.17, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.drawImage(art, x - b / 2, y - h * 0.78, b, h);
+        ctx.restore();
+      } else {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(ang);
+        ctx.strokeStyle = hexA(C.voidling, 0.9);
+        ctx.lineWidth = 4;
+        for (let i = 0; i < 3; i++) {
+          const r = 16 + i * 9 + Math.sin(t * 3 - i) * 3;
+          ctx.globalAlpha = 0.8 - i * 0.22;
+          ctx.beginPath(); ctx.ellipse(0, 0, r * 0.4, r, 0, 0, Math.PI * 2); ctx.stroke();
+        }
+        ctx.restore();
       }
-      ctx.restore();
     }
     ctx.globalAlpha = 1;
   }

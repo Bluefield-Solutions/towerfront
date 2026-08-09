@@ -69,11 +69,15 @@
       "fill": 0.59
     },
     "titan": {
-      "file": "enemy_siege_tank_01.png",
-      "size": 320,
+      "file": "gegner_titan.png",
+      "comment": "Boss. Gemessen Saettigung 0,55 und 3,2 % Schwarz - beides nachgezogen.",
+      "center": true,
       "fill": 0.94,
-      "helligkeit": 1.35,
-      "comment": "Der Boss war zu dunkel fuer den aufgehellten Boden."
+      "entrauschen": 1.0,
+      "schwarzHeben": 0.05,
+      "helligkeit": 0.98,
+      "farbe": 0.72,
+      "size": 320
     },
     "infantry": {
       "file": "enemy_infantry_topdown.png",

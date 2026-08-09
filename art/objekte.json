@@ -1,0 +1,22 @@
+{
+  "comment": "Einzelobjekte: Tor der Leere, spaeter auch der Herzkristall.",
+  "source": "roh/objekte",
+  "output": "objects.ts",
+  "exportName": "OBJECT_ART",
+  "budgetKb": 120,
+  "defaults": {
+    "size": 256,
+    "fill": 0.92,
+    "baseline": 0.86,
+    "quality": 82
+  },
+  "items": {
+    "gate": {
+      "file": "tor.png",
+      "comment": "Gemessen Dichte 15,6 - der wirbelnde Durchgang ist sehr unruhig, entrauscht.",
+      "entrauschen": 1.6,
+      "farbe": 0.8,
+      "helligkeit": 1.0
+    }
+  }
+}

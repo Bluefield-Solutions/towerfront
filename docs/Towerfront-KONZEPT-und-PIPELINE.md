@@ -1,6 +1,6 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v55 · 08.08.2026
+Stand: v62 · 08.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Towerfront.html`
 
 > **Aufbau dieses Dokuments.** Die Abschnitte 1 bis 3.4 beschreiben den
@@ -322,6 +322,13 @@ Die vier Phasen aus dem ursprünglichen Plan sind durchlaufen.
 | **B · Spielgefühl** | Fünfzehn Wellen am Stück auf dem iPhone, ohne Haken | erledigt (v39: Trefferstopp, Stauchen, nachlaufende Lebensleisten, Turmfeder) |
 | **C · Tiefe** | Zwei Spieler bauen dasselbe Feld unterschiedlich — und beide gewinnen | erledigt (v45: Abstand der Spielstile 3 von 100 Punkten, vier Türme mit je zwei Zweigen und sechs Stufen) |
 | **D · Politur** | Sieht aus, als hätte ein Studio es gemacht | läuft |
+
+**Grafik seit v56:** Alle drei Karten sind gelieferte, gerenderte Bilder mit
+gemaltem Weg — die Engine zeichnet weder Weg noch Felsen mehr. Wegkurve und
+unwegsames Gelände liest `tools/mapread.mjs` aus dem Bild aus, über die
+Sättigung bei farbigem Boden und über die Helligkeit bei Schnee. Alle vier
+Türme sind neu und in einem Stil mit den Karten. Das Licht kommt überall von
+oben links; die Richtung steht als `LICHT` an einer Stelle.
 
 **Heutiger Umfang:** drei Karten, vier Türme mit je zwei Ausbauzweigen und
 sechs Stufen, sieben Gegnerarten, zwei Fähigkeiten, drei Schwierigkeitsgrade,

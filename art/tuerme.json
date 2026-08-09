@@ -65,9 +65,33 @@
       "farbe": 1.0,
       "helligkeit": 0.8
     },
-    "mortar_1": "aa_turret_frame_25.png",
-    "mortar_cluster": "aa_turret_frame_27.png",
-    "mortar_breaker": "aa_turret_frame_28.png",
+    "mortar_1": {
+      "file": "turm_moerser.png",
+      "comment": "Gemessen 0,28 Helligkeit, 0,34 Saettigung, 3,1 % Schwarz - alles drei nachgezogen.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.06,
+      "farbe": 1.35,
+      "helligkeit": 1.1,
+      "fill": 0.94
+    },
+    "mortar_cluster": {
+      "file": "turm_moerser.png",
+      "comment": "Gemessen 0,28 Helligkeit, 0,34 Saettigung, 3,1 % Schwarz - alles drei nachgezogen.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.06,
+      "farbe": 1.35,
+      "helligkeit": 1.1,
+      "fill": 0.94
+    },
+    "mortar_breaker": {
+      "file": "turm_moerser.png",
+      "comment": "Gemessen 0,28 Helligkeit, 0,34 Saettigung, 3,1 % Schwarz - alles drei nachgezogen.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.06,
+      "farbe": 1.35,
+      "helligkeit": 1.1,
+      "fill": 0.94
+    },
     "prism_1": {
       "file": "turm_prisma.png",
       "comment": "Neu geliefert, in einem Stil mit den Kartenbildern. Die Zweige nutzen vorerst dasselbe Bild.",

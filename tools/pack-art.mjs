@@ -196,6 +196,31 @@ async function processOne(srcPath, spec, group) {
   // die den oberen Rand streift, kostet nichts; eine Kante, die über ein
   // Zehntel der Bildbreite anliegt, ist abgeschnittenes Objekt. Vorher galt
   // beides gleich, und eine gute Lieferung wurde abgelehnt.
+  // Ist das Bild ueberhaupt freigestellt?
+  //
+  // Die sechs Ausbaustufen des Bogenturms sahen im Betrachter transparent aus
+  // und hatten einen weissen Hintergrund mit voller Deckung. Das faellt erst
+  // auf, wenn man die Werte liest - oder wenn das Bild im Spiel als weisser
+  // Kasten steht. Geprueft wird die aeusserste Zeile: dort gehoert nichts hin.
+  {
+    let deckend = 0, ges = 0, hell = 0;
+    for (let x = 0; x < info.width; x++) {
+      for (const y of [0, info.height - 1]) {
+        const i = (y * info.width + x) * 4;
+        ges++;
+        if (data[i + 3] < 150) continue;
+        deckend++;
+        if (data[i] > 232 && data[i + 1] > 232 && data[i + 2] > 232) hell++;
+      }
+    }
+    if (deckend > ges * 0.5 && hell > deckend * 0.7) {
+      throw new Error(
+        `nicht freigestellt - ${Math.round((deckend / ges) * 100)} % der obersten und untersten ` +
+        'Zeile sind deckend und fast weiss. Erst "node tools/freistellen.mjs" laufen lassen.',
+      );
+    }
+  }
+
   const anteilRand = (test) => {
     let n = 0, ges = 0;
     for (let i = 0; i < info.width * info.height; i++) {
@@ -225,6 +250,16 @@ async function processOne(srcPath, spec, group) {
     const anteil = anteilRand(test);
     if (anteil > GRENZE) touches.push(`${name} ${Math.round(anteil * 100)} %`);
     else if (anteil > 0) knapp.push(name);
+  }
+  // Ein bewusst hingenommener Anschnitt.
+  //
+  // Die Grenze zu verschieben, damit ein einzelnes Bild durchkommt, waere der
+  // falsche Weg - dann faellt der naechste echte Fall auch nicht mehr auf.
+  // Stattdessen wird das Bild namentlich ausgenommen, und im Kommentar steht,
+  // warum. So bleibt die Regel scharf und die Ausnahme sichtbar.
+  if (spec.randOk && touches.length) {
+    notes.push(`Anschnitt hingenommen (${touches.join(', ')})`);
+    touches.length = 0;
   }
   if (knapp.length) notes.push(`streift ${knapp.join('/')}`);
 

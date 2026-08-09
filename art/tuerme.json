@@ -1,9 +1,9 @@
 {
-  "comment": "Turmbilder. Dreiviertelansicht, deshalb nicht gedreht sondern gespiegelt.",
+  "comment": "Turmbilder. Dreiviertelansicht, deshalb nicht gedreht sondern gespiegelt. Budget von 420 auf 620 KB angehoben: zwoelf Ausbaustufen statt vier Grundbilder. Kostet rund 200 KB in der Auslieferung.",
   "source": "roh/tuerme",
   "output": "towers.ts",
   "exportName": "TOWER_ART",
-  "budgetKb": 260,
+  "budgetKb": 620,
   "defaults": {
     "size": 256,
     "fill": 0.86,
@@ -14,30 +14,6 @@
     "farbe": 2.3
   },
   "items": {
-    "frost_1": {
-      "file": "turm_frost.png",
-      "comment": "Neu geliefert, in einem Stil mit den Kartenbildern. Die Zweige nutzen vorerst dasselbe Bild.",
-      "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 1.0,
-      "helligkeit": 0.8
-    },
-    "frost_eternal": {
-      "file": "turm_frost.png",
-      "comment": "Neu geliefert, in einem Stil mit den Kartenbildern. Die Zweige nutzen vorerst dasselbe Bild.",
-      "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 1.0,
-      "helligkeit": 0.8
-    },
-    "frost_shard": {
-      "file": "turm_frost.png",
-      "comment": "Neu geliefert, in einem Stil mit den Kartenbildern. Die Zweige nutzen vorerst dasselbe Bild.",
-      "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 1.0,
-      "helligkeit": 0.8
-    },
     "mortar_1": {
       "file": "turm_moerser.png",
       "comment": "Gemessen 0,28 Helligkeit, 0,34 Saettigung, 3,1 % Schwarz - alles drei nachgezogen.",
@@ -145,6 +121,63 @@
       "farbe": 1.0,
       "helligkeit": 0.94,
       "fill": 0.94
+    },
+    "frost_1_1": {
+      "file": "turm_frost_1.png",
+      "comment": "Sechs Ausbaustufen des Frostturms.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0,
+      "farbe": 0.9,
+      "helligkeit": 0.8,
+      "fill": 0.94
+    },
+    "frost_1_2": {
+      "file": "turm_frost_2.png",
+      "comment": "Sechs Ausbaustufen des Frostturms.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0,
+      "farbe": 0.9,
+      "helligkeit": 0.8,
+      "fill": 0.94
+    },
+    "frost_1_3": {
+      "file": "turm_frost_3.png",
+      "comment": "Sechs Ausbaustufen des Frostturms.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0,
+      "farbe": 0.9,
+      "helligkeit": 0.8,
+      "fill": 0.94
+    },
+    "frost_1_4": {
+      "file": "turm_frost_4.png",
+      "comment": "Stufe 4: obere Eisspitzen angeschnitten (19 % der Kante). Hingenommen, Koerper vollstaendig.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0,
+      "farbe": 0.9,
+      "helligkeit": 0.8,
+      "fill": 0.94,
+      "randOk": true
+    },
+    "frost_1_5": {
+      "file": "turm_frost_5.png",
+      "comment": "Stufe 5: obere Eisspitzen angeschnitten (18 % der Kante). Hingenommen, Koerper vollstaendig.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0,
+      "farbe": 0.9,
+      "helligkeit": 0.8,
+      "fill": 0.94,
+      "randOk": true
+    },
+    "frost_1_6": {
+      "file": "turm_frost_6.png",
+      "comment": "Stufe 6: die Eiskronen sind oben angeschnitten (31 % der Kante). Hingenommen - der Turmkoerper ist vollstaendig, nur die obersten Spitzen enden flach. Bei Gelegenheit neu bestellen.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0,
+      "farbe": 0.9,
+      "helligkeit": 0.8,
+      "fill": 0.94,
+      "randOk": true
     }
   }
 }

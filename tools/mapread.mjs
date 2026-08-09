@@ -266,11 +266,20 @@ console.log(`Endplatz bei ${endplatz.x}/${endplatz.y}, Halbbreite ${endplatz.bre
  *  hatte, sondern dass es genau EINEN Abbruch gibt und die uebrigen Bahnen
  *  sich nur mit der abgebrochenen vereinigen.
  *
- *  **Offen (Stand v90):** Auf Karten mit Schleifen laeuft der Lauf in eine
- *  Schleife hinein und endet dort, statt zum Endplatz weiterzugehen. Das
- *  Zielgewicht greift nur an echten Gabelungen; eine Schleife ist aber keine
- *  Gabelung, sie fuehrt einfach im Bogen weg. Naechster Ansatz: den Lauf
- *  abbrechen und neu ansetzen, wenn er sich vom Endplatz dauerhaft entfernt.
+ *  **Grenze des Verfahrens (Stand v91).** Der Lauf entscheidet LOKAL: er
+ *  sieht 16 Punkte weit und waehlt daraus die Richtung. Auf einem Weg ohne
+ *  Verzweigung reicht das; auf einem Netz mit Kreuzungen und Schleifen nicht.
+ *
+ *  Nachgewiesen an der Frostkarte: Ein Abbruch, alle drei Bahnen enden bei
+ *  481/372, der Endplatz liegt bei 1704/488. Weder das Zielgewicht an
+ *  Gabelungen (v90) noch der Abbruch bei Entfernung vom Ziel (v91) haben das
+ *  geaendert - beide sind wieder lokale Regeln.
+ *
+ *  Was das Netz braucht, ist eine GLOBALE Sicht: das Wegnetz als Graph
+ *  auffassen (Skelett bilden, Kreuzungen als Knoten, Wegstuecke als Kanten)
+ *  und je Tor den kuerzesten Weg zum Endplatz suchen. Damit loesen sich
+ *  Schleifen und Kreuzungen von selbst, weil nicht mehr Schritt fuer Schritt
+ *  geraten wird. Das ist ein Neubau dieses Verfahrens, kein Flicken.
  *
  *  Kein Ausduennen, kein Skelett: jeder Schritt zielt auf den Schwerpunkt der
  *  Wegpunkte, die vor einem liegen. Das folgt auch einer Haarnadel, an der ein
@@ -285,6 +294,10 @@ function ablaufen(startX, startY, richtung, bestehende) {
   let dx = richtung[0], dy = richtung[1];
   const kurve = [{ x: cx, y: cy }];
   const besucht = new Uint8Array(B * H);
+  // Wie nah war der Lauf dem Endplatz jemals? Entfernt er sich davon
+  // dauerhaft, ist er in eine Schleife geraten.
+  let naechste = Math.hypot(endplatz.x - cx, endplatz.y - cy);
+  let seitdem = 0;
   for (let schritt = 0; schritt < 400; schritt++) {
     // Die Punkte vor uns in Winkelsektoren sortieren.
     //
@@ -372,6 +385,27 @@ function ablaufen(startX, startY, richtung, bestehende) {
         }
       }
     }
+    // Laeuft er vom Ziel weg?
+    //
+    // Auf Karten mit Schleifen fuehrte der Weg im Bogen vom Endplatz fort,
+    // und der Lauf folgte ihm bis in die Sackgasse - das Zielgewicht greift
+    // nur an Gabelungen, und eine Schleife ist keine. Jetzt zaehlt, wie lange
+    // er sich nicht mehr angenaehert hat: 30 Schritte ohne neuen Bestwert
+    // heissen, dass dieser Ast nicht zum Ziel fuehrt.
+    //
+    // Die Schwelle ist grosszuegig, weil jede Serpentine sich zwischendurch
+    // entfernt. Gemessen an der Frostkarte reichen 30 Schritte, um eine
+    // Kehre zu ueberstehen, aber nicht, um eine ganze Schleife zu laufen.
+    const dZiel = Math.hypot(endplatz.x - cx, endplatz.y - cy);
+    if (dZiel < naechste - 1) { naechste = dZiel; seitdem = 0; } else { seitdem++; }
+    if (seitdem > 30 && dZiel > R * 2) {
+      if (process.env.DIAG) {
+        console.log(`  Abbruch: entfernt sich vom Ziel (${Math.round(dZiel)} statt `
+          + `${Math.round(naechste)}) bei ${Math.round(cx)}/${Math.round(cy)}`);
+      }
+      break;
+    }
+
     kurve.push({ x: cx, y: cy });
     for (let y = Math.max(0, Math.round(cy - R)); y <= Math.min(H - 1, Math.round(cy + R)); y++) {
       for (let x = Math.max(0, Math.round(cx - R)); x <= Math.min(B - 1, Math.round(cx + R)); x++) {

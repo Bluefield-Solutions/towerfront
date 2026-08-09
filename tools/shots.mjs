@@ -76,6 +76,8 @@ const { Menu } = await import('../src/game/menu.ts');
 // steht - nicht, ob es dekodiert wurde. Genau daran ist die erste Gegenprobe
 // vorbeigelaufen. Die get*-Funktionen liefern erst etwas, wenn das Bild da ist.
 const { getBackground } = await import('../src/gfx/backgrounds.ts');
+const { getObjectArt } = await import('../src/gfx/objectart.ts');
+const { OBJECT_ART } = await import('../src/gfx/assets/objects.ts');
 const { getTowerArt } = await import('../src/gfx/towerart.ts');
 const { getEnemyArt } = await import('../src/gfx/enemyart.ts');
 const { ENEMIES } = await import('../src/data/enemies.ts');
@@ -111,6 +113,11 @@ async function shot(name, w, h, build) {
   // uebersehener Fehler: nach dem dritten glaubt ihn niemand mehr.
   r.draw(s);
   if (!r.menu) {
+    // Einzelobjekte gehoeren mit angefordert: Tor, Kristall und die
+    // Waffenebenen werden erst beim Zeichnen geladen, und der erste Aufruf
+    // liefert nur null. Ohne diese Zeile erschienen sie auf keiner Aufnahme -
+    // im Spiel schon, weil dort tausend Bilder folgen.
+    for (const k of Object.keys(OBJECT_ART)) getObjectArt(k);
     getBackground(s.map.id);
     for (const id of TOWER_ORDER) getTowerArt(id, null, 1, s.map.id);
     for (const id of Object.keys(ENEMIES)) getEnemyArt(id, false, s.map.id);

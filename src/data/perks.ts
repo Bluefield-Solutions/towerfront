@@ -90,7 +90,7 @@ export function starsFor(won: boolean, lives: number, maxLives: number): number 
   // Bot-Lauf holt auf der Einsteigerkarte 42 von 60 (70 %), auf der
   // schwersten 22 (37 %). Drei Sterne liegen knapp darunter, damit sie
   // erreichbar sind - aber nur dort, wo man es gut macht.
-  if (share >= 0.66) return 3;
+  if (share >= 0.72) return 3;
   if (share >= 0.33) return 2;
   return 1;
 }

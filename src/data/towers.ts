@@ -90,10 +90,10 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         blurb: 'Weite Reichweite, harter Einzelschuss, durchschlägt Panzerung.',
         levels: [
           { cost: 70, damage: 29, cooldown: 0.8, pierce: 2 },
-          { cost: 130, damage: 63, cooldown: 0.75, pierce: 4 },
-          { cost: 265, damage: 102, cooldown: 0.73, pierce: 4 },
-          { cost: 545, damage: 166, cooldown: 0.71, pierce: 5 },
-          { cost: 1115, damage: 268, cooldown: 0.69, pierce: 5 },
+          { cost: 115, damage: 63, cooldown: 0.75, pierce: 4 },
+          { cost: 185, damage: 102, cooldown: 0.73, pierce: 4 },
+          { cost: 300, damage: 166, cooldown: 0.71, pierce: 5 },
+          { cost: 480, damage: 268, cooldown: 0.69, pierce: 5 },
         ],
       },
       {
@@ -101,10 +101,10 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         blurb: 'Halbe Wucht, doppelte Schlagzahl. Gegen Masse, nicht gegen Panzer.',
         levels: [
           { cost: 70, damage: 16, cooldown: 0.27, pierce: 1 },
-          { cost: 145, damage: 26, cooldown: 0.20, pierce: 2 },
-          { cost: 295, damage: 35, cooldown: 0.17, pierce: 2 },
-          { cost: 605, damage: 47, cooldown: 0.15, pierce: 3 },
-          { cost: 1240, damage: 64, cooldown: 0.14, pierce: 3 },
+          { cost: 115, damage: 26, cooldown: 0.20, pierce: 2 },
+          { cost: 185, damage: 35, cooldown: 0.17, pierce: 2 },
+          { cost: 300, damage: 47, cooldown: 0.15, pierce: 3 },
+          { cost: 480, damage: 64, cooldown: 0.14, pierce: 3 },
         ],
       },
     ],
@@ -121,10 +121,10 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         blurb: 'Weiter Umkreis, harte Bremse, kaum Schaden. Reine Kontrolle.',
         levels: [
           { cost: 90, damage: 11, cooldown: 0.7, slow: 0.37, slowTime: 1.98 },
-          { cost: 150, damage: 22, cooldown: 0.58, slow: 0.54, slowTime: 3.06 },
-          { cost: 310, damage: 35, cooldown: 0.53, slow: 0.61, slowTime: 3.65 },
-          { cost: 635, damage: 56, cooldown: 0.49, slow: 0.62, slowTime: 4.34 },
-          { cost: 1300, damage: 89, cooldown: 0.45, slow: 0.62, slowTime: 5.17 },
+          { cost: 145, damage: 22, cooldown: 0.58, slow: 0.54, slowTime: 3.06 },
+          { cost: 235, damage: 35, cooldown: 0.53, slow: 0.61, slowTime: 3.65 },
+          { cost: 385, damage: 56, cooldown: 0.49, slow: 0.62, slowTime: 4.34 },
+          { cost: 620, damage: 89, cooldown: 0.45, slow: 0.62, slowTime: 5.17 },
         ],
       },
       {
@@ -132,10 +132,10 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         blurb: 'Bremst weniger, schneidet dafür. Ein Schadenspuls statt einer Fessel.',
         levels: [
           { cost: 110, damage: 25, cooldown: 0.64, slow: 0.25, slowTime: 1.4, pierce: 2 },
-          { cost: 200, damage: 40, cooldown: 0.56, slow: 0.3, slowTime: 1.6, pierce: 2 },
-          { cost: 410, damage: 54, cooldown: 0.53, slow: 0.32, slowTime: 1.68, pierce: 2 },
-          { cost: 840, damage: 73, cooldown: 0.5, slow: 0.33, slowTime: 1.76, pierce: 3 },
-          { cost: 1720, damage: 98, cooldown: 0.47, slow: 0.35, slowTime: 1.85, pierce: 3 },
+          { cost: 180, damage: 40, cooldown: 0.56, slow: 0.3, slowTime: 1.6, pierce: 2 },
+          { cost: 290, damage: 54, cooldown: 0.53, slow: 0.32, slowTime: 1.68, pierce: 2 },
+          { cost: 470, damage: 73, cooldown: 0.5, slow: 0.33, slowTime: 1.76, pierce: 3 },
+          { cost: 760, damage: 98, cooldown: 0.47, slow: 0.35, slowTime: 1.85, pierce: 3 },
         ],
       },
     ],
@@ -152,10 +152,10 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         blurb: 'Weiter Wirkradius, schnellere Folge, weniger Wucht je Treffer.',
         levels: [
           { cost: 140, damage: 47, cooldown: 1.35, splash: 115 },
-          { cost: 235, damage: 74, cooldown: 1.1, splash: 149 },
-          { cost: 480, damage: 97, cooldown: 1.0, splash: 164 },
-          { cost: 985, damage: 129, cooldown: 0.91, splash: 181 },
-          { cost: 2020, damage: 170, cooldown: 0.83, splash: 200 },
+          { cost: 225, damage: 74, cooldown: 1.1, splash: 149 },
+          { cost: 365, damage: 97, cooldown: 1.0, splash: 164 },
+          { cost: 595, damage: 129, cooldown: 0.91, splash: 181 },
+          { cost: 965, damage: 170, cooldown: 0.83, splash: 200 },
         ],
       },
       {
@@ -163,10 +163,10 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         blurb: 'Enger Radius, gewaltige Wucht, durchschlägt schwere Panzerung.',
         levels: [
           { cost: 160, damage: 106, cooldown: 2.1, splash: 62, pierce: 4 },
-          { cost: 280, damage: 224, cooldown: 2.0, splash: 70, pierce: 8 },
-          { cost: 575, damage: 355, cooldown: 1.96, splash: 73, pierce: 8 },
-          { cost: 1180, damage: 563, cooldown: 1.92, splash: 76, pierce: 9 },
-          { cost: 2420, damage: 894, cooldown: 1.88, splash: 79, pierce: 9 },
+          { cost: 260, damage: 224, cooldown: 2.0, splash: 70, pierce: 8 },
+          { cost: 420, damage: 355, cooldown: 1.96, splash: 73, pierce: 8 },
+          { cost: 680, damage: 563, cooldown: 1.92, splash: 76, pierce: 9 },
+          { cost: 1100, damage: 894, cooldown: 1.88, splash: 79, pierce: 9 },
         ],
       },
     ],
@@ -183,10 +183,10 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         blurb: 'Mehr Sprünge, kaum Abfall. Legt sich über eine ganze Kette.',
         levels: [
           { cost: 165, damage: 21, cooldown: 0.85, chains: 5, falloff: 0.85 },
-          { cost: 285, damage: 32, cooldown: 0.75, chains: 8, falloff: 0.92 },
-          { cost: 585, damage: 43, cooldown: 0.71, chains: 8, falloff: 0.92 },
-          { cost: 1200, damage: 55, cooldown: 0.67, chains: 9, falloff: 0.92 },
-          { cost: 2460, damage: 72, cooldown: 0.63, chains: 9, falloff: 0.92 },
+          { cost: 265, damage: 32, cooldown: 0.75, chains: 8, falloff: 0.92 },
+          { cost: 435, damage: 43, cooldown: 0.71, chains: 8, falloff: 0.92 },
+          { cost: 700, damage: 55, cooldown: 0.67, chains: 9, falloff: 0.92 },
+          { cost: 1135, damage: 72, cooldown: 0.63, chains: 9, falloff: 0.92 },
         ],
       },
       {
@@ -194,10 +194,10 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         blurb: 'Ein Sprung weniger, dafür ein Strahl, der wirklich wehtut.',
         levels: [
           { cost: 175, damage: 54, cooldown: 0.9, chains: 1, falloff: 0.5 },
-          { cost: 300, damage: 108, cooldown: 0.85, chains: 1, falloff: 0.5, pierce: 3 },
-          { cost: 615, damage: 166, cooldown: 0.83, chains: 1, falloff: 0.5, pierce: 3 },
-          { cost: 1260, damage: 254, cooldown: 0.81, chains: 2, falloff: 0.5, pierce: 4 },
-          { cost: 2585, damage: 391, cooldown: 0.79, chains: 2, falloff: 0.5, pierce: 4 },
+          { cost: 285, damage: 108, cooldown: 0.85, chains: 1, falloff: 0.5, pierce: 3 },
+          { cost: 460, damage: 166, cooldown: 0.83, chains: 1, falloff: 0.5, pierce: 3 },
+          { cost: 745, damage: 254, cooldown: 0.81, chains: 2, falloff: 0.5, pierce: 4 },
+          { cost: 1205, damage: 391, cooldown: 0.79, chains: 2, falloff: 0.5, pierce: 4 },
         ],
       },
     ],
@@ -271,7 +271,7 @@ const REICHWEITE_ZWEIG = [1.35, 0.65];
  *  Ueber 1 begunstigt den Wucht-Zweig, unter 1 den Weiten-Zweig. */
 const WUCHT_AUSGLEICH: Record<TowerId, number> = {
   arrow: 0.86,   // Reichweite zaehlt hier wenig - der Weiten-Zweig braucht Hilfe
-  frost: 0.94,   // nach der Panzerungsaenderung liegt der Wucht-Zweig vorn
+  frost: 1.10,   // die Bremse trifft alles im Umkreis, Weite wiegt schwer
   mortar: 1.06,
   prism: 1.02,
 };

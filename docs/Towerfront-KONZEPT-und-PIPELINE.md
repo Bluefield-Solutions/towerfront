@@ -343,6 +343,13 @@ beide Kanäle und alle Schwellen gesucht und genommen, was am meisten nach
 einem Weg aussieht; `--schwelle` und `--hell/--dunkel` übersteuern von Hand.
 Die Breitenmessung gab bis v89 die halbe Breite zurück.
 
+**Kartenauslesung seit v88:** Welcher Kanal und welche Schwelle den Weg vom
+Boden trennen, entscheidet die *Schlankheit* — Umfang² durch Fläche. Ein Weg
+ist ein langes schmales Band, ein Boden eine kompakte Fläche. Es wird über
+beide Kanäle und alle Schwellen gesucht und genommen, was am meisten nach
+einem Weg aussieht; `--schwelle` und `--hell/--dunkel` übersteuern von Hand.
+Die Breitenmessung gab bis v89 die halbe Breite zurück.
+
 **Einbettung seit v81:** Jede Figur bekommt zwei Schatten — einen
 Schlagschatten in Lichtrichtung und einen engen Kontaktschatten darunter — und
 einen Sonnenanstrich aus der Lichtfarbe der Karte. Ohne beides liegen die

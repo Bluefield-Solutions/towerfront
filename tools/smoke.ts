@@ -499,6 +499,26 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Die Waffenebene braucht immer beide Teile.
+//
+// Ein Sockel MIT eingebauter Waffe plus eine zweite Waffe darueber waere
+// doppelt; eine Waffe ohne Sockel schwebt. Deshalb wird die Ebene nur
+// benutzt, wenn beides vorliegt - und hier geprueft, dass die Bildgruppe nie
+// nur die Haelfte enthaelt.
+{
+  const { OBJECT_ART } = await import('../src/gfx/assets/objects');
+  for (const id of ['arrow', 'frost', 'mortar', 'prism']) {
+    const hatWaffe = `waffe_${id}` in OBJECT_ART;
+    const hatSockel = `sockel_${id}` in OBJECT_ART;
+    if (hatWaffe !== hatSockel) {
+      problems.push(
+        `Waffenebene ${id}: ${hatWaffe ? 'Waffe ohne Sockel' : 'Sockel ohne Waffe'} - ` +
+        'die Ebene braucht beide Teile, sonst bleibt sie ungenutzt.',
+      );
+    }
+  }
+}
+
 // Was das Ausbaumenue zeigt, muss der Ausbau auch liefern.
 //
 // Nach der Umstellung auf das Reichweitensystem stand im Menue die alte

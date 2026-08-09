@@ -706,6 +706,34 @@ export class Renderer {
           ctx.restore();
         }
 
+        // Liegt die Waffe als eigenes Bild vor, wird sie einzeln gedreht.
+        //
+        // Das ist der saubere Weg: der Sockel steht still, die Waffe zielt.
+        // Er braucht zwei Bilder je Turm - einen Sockel OHNE Waffe und die
+        // Waffe allein, mit dem Drehpunkt in der Bildmitte. Fehlt eines von
+        // beiden, bleibt es beim gedaempften Schwenk darunter; ein Sockel mit
+        // eingebauter Waffe plus zweiter Waffe darueber waere doppelt.
+        const waffe = getObjectArt(`waffe_${t.def}`);
+        const sockel = getObjectArt(`sockel_${t.def}`);
+        if (waffe && sockel) {
+          const rec2 = t.recoil * 4;
+          ctx.save();
+          ctx.translate(t.x, t.y);
+          const sh = w * (sockel.height / sockel.width);
+          ctx.drawImage(sockel, -w / 2, -sh * 0.72, w, sh);
+          // Die Waffe sitzt auf der Plattform, nicht auf dem Boden.
+          ctx.translate(0, -sh * 0.46);
+          // Das Bild blickt nach oben, der Winkel zaehlt von rechts.
+          ctx.rotate(t.angle + Math.PI / 2);
+          // Rueckstoss laeuft entgegen der Schussrichtung.
+          ctx.translate(0, rec2);
+          const ww = w * 0.72;
+          const wh = ww * (waffe.height / waffe.width);
+          ctx.drawImage(waffe, -ww / 2, -wh / 2, ww, wh);
+          ctx.restore();
+          continue;
+        }
+
         // Der Turm dreht sich zum Ziel - aber nur der obere Teil.
         //
         // Ein Turm ist ein Bauwerk: dreht man das ganze Bild, kippt der Sockel

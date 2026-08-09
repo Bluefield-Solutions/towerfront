@@ -255,8 +255,20 @@ const REICHWEITE_STUFE = [1.00, 1.14, 1.27, 1.39, 1.51, 1.62];
  *  gleicht das mit Wucht aus (siehe WUCHT_AUSGLEICH). */
 const REICHWEITE_ZWEIG = [1.35, 0.65];
 
-/** Der Wucht-Zweig bekommt dafuer mehr Schaden. */
-const WUCHT_AUSGLEICH = 1.14;
+/** Der Wucht-Zweig bekommt dafuer mehr Schaden - je Turm eigens.
+ *
+ *  Eine einzige Zahl fuer alle war zu grob: beim Frostturm wiegt Reichweite
+ *  schwer, weil die Bremse alles im Umkreis trifft; beim Bogenturm zaehlt
+ *  sie weniger, weil er ohnehin nur ein Ziel nimmt. Mit einem gemeinsamen
+ *  Wert lagen die Bogenzweige 52 Prozent auseinander.
+ *
+ *  Ueber 1 begunstigt den Wucht-Zweig, unter 1 den Weiten-Zweig. */
+const WUCHT_AUSGLEICH: Record<TowerId, number> = {
+  arrow: 0.86,   // Reichweite zaehlt hier wenig - der Weiten-Zweig braucht Hilfe
+  frost: 1.10,   // die Bremse trifft alles im Umkreis, Weite wiegt schwer
+  mortar: 1.06,
+  prism: 1.02,
+};
 
 /** Die Reichweite eines Turms - die eine Stelle, an der sie entsteht. */
 export function rangeFor(id: TowerId, branch: BranchIndex, level: number): number {
@@ -275,7 +287,7 @@ export function statsFor(def: TowerDef, branch: BranchIndex, level: number): Tow
   // System, nicht aus 45 handgeschriebenen Zahlen. Der zweite Zweig bekommt
   // den Schadensausgleich fuer seine kuerzere Reichweite.
   const schaden = branch === 1 && level > 1
-    ? Math.round(roh.damage * WUCHT_AUSGLEICH)
+    ? Math.round(roh.damage * WUCHT_AUSGLEICH[def.id])
     : roh.damage;
   return { ...roh, damage: schaden, range: rangeFor(def.id, branch, level) };
 }

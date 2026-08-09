@@ -10,7 +10,7 @@ const START_GOLD = NORMAL.startGold;
 const START_LIVES = NORMAL.startLives;
 import { MAPS, goalOf, lanePaths } from '../src/data/maps';
 import { GameState } from '../src/game/state';
-import { TOWERS, TOWER_ORDER, MAX_LEVEL, DRAW_SCALE } from '../src/data/towers';
+import { TOWERS, TOWER_ORDER, MAX_LEVEL, DRAW_SCALE, rangeFor } from '../src/data/towers';
 import { ENEMIES, type EnemyId } from '../src/data/enemies';
 import { enemyArtWidth } from '../src/gfx/enemyart';
 
@@ -288,6 +288,49 @@ for (const map of MAPS) {
     fail(`${map.id}: Ausgleich goldMul ${bal.goldMul} ausserhalb 0,85 bis 1,2.`);
   }
 
+}
+
+// --- Das Reichweitensystem muss ein System bleiben.
+//
+// Vorher standen 45 Reichweiten von Hand in den Stufendaten, und niemand
+// merkte, dass der Frostturm ueber seine Zweige um das 2,2-fache wuchs und
+// der Moerser um das 1,28-fache. Zwei Ausbauten kosteten dasselbe und
+// brachten voellig Verschiedenes.
+{
+  for (const id of TOWER_ORDER) {
+    // Jede Stufe muss spuerbar mehr bringen.
+    for (let b = 0; b < 2; b++) {
+      for (let l = 2; l <= MAX_LEVEL; l++) {
+        const vor = rangeFor(id, b as 0 | 1, l - 1);
+        const jetzt = rangeFor(id, b as 0 | 1, l);
+        if (jetzt <= vor) {
+          fail(`${TOWERS[id].name}, Zweig ${b + 1}: Stufe ${l} bringt keine Reichweite.`);
+        } else if (jetzt / vor < 1.03) {
+          warn(`${TOWERS[id].name}, Zweig ${b + 1}: Stufe ${l} bringt nur ${Math.round((jetzt / vor - 1) * 100)} % Reichweite.`);
+        }
+      }
+    }
+    // Und der Ausbau ueber sechs Stufen muss sich lohnen.
+    for (let b = 0; b < 2; b++) {
+      const gesamt = rangeFor(id, b as 0 | 1, MAX_LEVEL) / rangeFor(id, b as 0 | 1, 1);
+      if (gesamt < 1.25) {
+        fail(`${TOWERS[id].name}, Zweig ${b + 1}: nur ${gesamt.toFixed(2)}-fache Reichweite ueber sechs Stufen.`);
+      }
+    }
+  }
+  // Die Rollen muessen sich unterscheiden.
+  const grund = TOWER_ORDER.map((id) => rangeFor(id, null, 1));
+  const spanne = Math.max(...grund) / Math.min(...grund);
+  if (spanne < 1.5) {
+    fail(`Die Grundreichweiten liegen nur ${spanne.toFixed(2)}-fach auseinander - die Turmwahl ist raeumlich beliebig.`);
+  }
+  // Und keine darf das halbe Feld ueberspannen.
+  for (const id of TOWER_ORDER) {
+    const weit = rangeFor(id, 0, MAX_LEVEL);
+    if (weit > WORLD_W * 0.5) {
+      fail(`${TOWERS[id].name}: ${weit} px auf Stufe 6 - mehr als das halbe Feld, damit deckt ein Turm alles ab.`);
+    }
+  }
 }
 
 // --- Zeichengroesse gegen Platzbedarf.

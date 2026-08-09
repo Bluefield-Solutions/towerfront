@@ -29,7 +29,8 @@
     "kritik": "node tools/review.mjs",
     "grafik": "node tools/artaudit.mjs",
     "einbettung": "tsx tools/embed.mjs",
-    "karte-einbauen": "node tools/mapapply.mjs"
+    "karte-einbauen": "node tools/mapapply.mjs",
+    "karte-lesen": "node tools/mapgraph.mjs"
   },
   "keywords": [],
   "author": "",

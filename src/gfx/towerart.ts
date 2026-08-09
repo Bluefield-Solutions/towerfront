@@ -174,6 +174,16 @@ export function getTowerArt(
   body.width = size; body.height = size;
   const bg = body.getContext('2d')!;
   bg.drawImage(img, 0, 0, size, size);
+  // --- Sonnenanstrich: die Figur nimmt das Licht der Karte an.
+  //
+  // Das ist der Kern der Einbettung. Ein Turm, der seine eigene, kuehle
+  // Beleuchtung mitbringt, liegt auf der Landschaft statt darin - gemessen
+  // 0,14 Farbtemperaturabstand zum Boden bei erlaubten 0,10.
+  //
+  // Aufgetragen wird von oben links, wo die Sonne steht, und nach unten hin
+  // abnehmend; unten uebernimmt stattdessen die Verschattung, weil dort das
+  // Licht vom Boden geschluckt wird.
+  const sonne = mapById(mapId).palette.sonne;
   const stil = einfaerbung(id);
   bg.globalCompositeOperation = 'source-atop';
   bg.fillStyle = hexA(accent, stil.farbe);
@@ -186,6 +196,22 @@ export function getTowerArt(
     bg.fillStyle = lift;
     bg.fillRect(0, 0, size, size);
   }
+  {
+    const licht = bg.createLinearGradient(0, 0, size * 0.55, size);
+    licht.addColorStop(0, hexA(sonne, 0.30));
+    licht.addColorStop(0.45, hexA(sonne, 0.14));
+    licht.addColorStop(1, hexA(sonne, 0.02));
+    bg.fillStyle = licht;
+    bg.fillRect(0, 0, size, size);
+
+    // Bodennaehe verschatten: dort faellt weniger Licht ein.
+    const dunkel = bg.createLinearGradient(0, size * 0.55, 0, size);
+    dunkel.addColorStop(0, 'rgba(24,20,14,0)');
+    dunkel.addColorStop(1, 'rgba(24,20,14,0.34)');
+    bg.fillStyle = dunkel;
+    bg.fillRect(0, 0, size, size);
+  }
+
   bg.globalCompositeOperation = 'source-over';
   g.drawImage(body, 0, 0);
 

@@ -428,6 +428,24 @@ takes.push(['stufen', () => shot('stufen', 844, 390, (s, r) => {
   return 4;
 })]);
 
+takes.push(['einbettung', () => shot('einbettung', 844, 390, (s, r) => {
+  // Ein einzelner Turm auf freiem Boden, weit weg von Weg und Felsen.
+  //
+  // Die Einbettung an einer vollen Kampfszene zu messen, ging schief: das
+  // Vergleichsfeld landete mal auf Sand, mal auf Pflaster, und dieselbe Zahl
+  // schwankte zwischen plus 14 und minus 57 Prozent. Eine Messung braucht
+  // eine ruhige Stelle.
+  s.reset(1, 'normal', 'spiralhain');
+  s.gold = 900000;
+  const ziel = { x: 980, y: 240 };
+  s.build(ziel.x, ziel.y, 'frost');
+  r.resize();
+  r.zoomAt(2.2, 422, 195);
+  const p = r.worldToScreen(ziel.x, ziel.y);
+  r.panBy(422 - p.x, 195 - p.y);
+  return 3;
+})]);
+
 takes.push(['welle8', () => shot('welle8', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 10);

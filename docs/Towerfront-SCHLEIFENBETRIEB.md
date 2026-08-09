@@ -75,6 +75,34 @@ beantworten ist:
 bevor geliefert wird.** Eine Wertung ohne diesen Teil ist wertlos — der
 Beweis steht oben: 96 von 100 für ein Spiel, das sich nicht starten ließ.
 
+### Einbettungsschleife
+
+Neu seit v81, für die Frage: **sitzen die Figuren in der Szene oder liegen sie
+darauf?** Sie hat einen eigenen Durchlauf, weil sie sich nicht am Einzelbild
+entscheidet, sondern am Zusammenspiel von Figur und Boden.
+
+```
+npm run bilder     eine ruhige Aufnahme: ein Turm auf freiem Boden
+npm run einbettung Kennzahlen dazu
+                   dann: bilder/einbettung.png ansehen
+```
+
+**Vier Fragen, in dieser Reihenfolge:**
+
+1. Steht die Figur auf dem Boden, oder schwebt sie darüber?
+2. Fällt ihr Schatten in dieselbe Richtung wie die der Felsen?
+3. Hat sie dieselbe Lichtfarbe wie ihre Umgebung?
+4. Ist die Kante hart wie ausgeschnitten, oder geht sie in den Boden über?
+
+**Das Werkzeug bricht bewusst nicht ab.** Vier Anläufe, die Einbettung zu
+messen, sind gescheitert — jedes Mal traf die Messung die Figur statt den
+Boden darunter, weil das Bild weit über den Platzbedarf hinausreicht und wo
+genau, am gelieferten Bild hängt. Ein Tor, das die falsche Stelle misst, wäre
+schlimmer als keines: Es leuchtete grün, während der Turm aufgeklebt aussieht.
+
+Die Zahlen taugen zum **Vergleich zweier Stände**. Über „sitzt sie drin"
+entscheidet der Blick.
+
 ### Inspektor
 
 **Sieht nur den Bericht und die Bilder. Nicht den Code, nicht die Absicht.**

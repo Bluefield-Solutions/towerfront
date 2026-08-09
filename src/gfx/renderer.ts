@@ -674,13 +674,33 @@ export class Renderer {
         // ein Objekt in eine Szene setzt.
         const fuss = TOWERS[def.id].footprint / 2;
         ctx.save();
-        ctx.globalAlpha = 0.34;
+        // Zwei Schatten, nicht einer.
+        //
+        // Der Schlagschatten faellt in Lichtrichtung und sagt, woher die Sonne
+        // kommt. Er allein reicht nicht: gemessen waren die Tuerme an ihrem
+        // Fuss 21 Prozent HELLER als der Boden daneben - sie lagen auf der
+        // Landschaft statt darin.
+        //
+        // Was fehlte, ist der Kontaktschatten: die enge, dunkle Zone direkt
+        // unter dem Ding, wo kein Licht hinkommt. Sie ist klein und dunkel,
+        // waehrend der Schlagschatten gross und weich ist. Erst beide zusammen
+        // setzen einen Gegenstand auf den Boden.
+        ctx.globalAlpha = 0.30;
         ctx.fillStyle = C.ink;
         ctx.beginPath();
         ctx.ellipse(
           t.x + LICHT.x * fuss * 0.85, t.y + LICHT.y * fuss * 0.42,
           fuss * 1.05, fuss * 0.44, 0.32, 0, Math.PI * 2,
         );
+        ctx.fill();
+
+        ctx.globalAlpha = 0.62;
+        ctx.beginPath();
+        ctx.ellipse(t.x, t.y + fuss * 0.10, fuss * 1.02, fuss * 0.40, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 0.40;
+        ctx.beginPath();
+        ctx.ellipse(t.x, t.y + fuss * 0.06, fuss * 1.32, fuss * 0.52, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
 

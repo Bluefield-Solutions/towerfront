@@ -84,6 +84,27 @@ export function getEnemyArt(
       bg.fillStyle = lift;
       bg.fillRect(0, 0, size, size);
     }
+
+    // Sonnenanstrich, wie bei den Tuermen.
+    //
+    // Ein Gegner, der ueber dieselbe Karte laeuft, bekommt auch dasselbe Licht
+    // ab. Ohne das wandern die Figuren mit ihrer eigenen Beleuchtung durch die
+    // Landschaft - und genau das liest sich als aufgeklebt. Der Anstrich ist
+    // schwaecher als bei den Tuermen, weil Gegner kleiner sind und ihre Farbe
+    // zugleich das Erkennungsmerkmal ist.
+    const sonne = mapById(mapId).palette.sonne;
+    const licht = bg.createLinearGradient(0, 0, size * 0.55, size);
+    licht.addColorStop(0, hexA(sonne, 0.20));
+    licht.addColorStop(0.5, hexA(sonne, 0.09));
+    licht.addColorStop(1, hexA(sonne, 0.01));
+    bg.fillStyle = licht;
+    bg.fillRect(0, 0, size, size);
+
+    const dunkel = bg.createLinearGradient(0, size * 0.6, 0, size);
+    dunkel.addColorStop(0, 'rgba(24,20,14,0)');
+    dunkel.addColorStop(1, 'rgba(24,20,14,0.26)');
+    bg.fillStyle = dunkel;
+    bg.fillRect(0, 0, size, size);
   }
   bg.globalCompositeOperation = 'source-over';
   g.drawImage(body, 0, 0);

@@ -525,6 +525,11 @@ export class Renderer {
       ctx.beginPath();
       ctx.ellipse(x + LICHT.x * 60, y + LICHT.y * 26, b * 0.36, b * 0.13, 0, 0, Math.PI * 2);
       ctx.fill();
+      // Kontaktschatten unter der Burg.
+      ctx.globalAlpha = 0.52;
+      ctx.beginPath();
+      ctx.ellipse(x, y + b * 0.03, b * 0.30, b * 0.11, 0, 0, Math.PI * 2);
+      ctx.fill();
       ctx.globalAlpha = 1;
       // Bei Treffern zuckt die Burg rot, wie jeder andere Getroffene auch.
       ctx.drawImage(burg, x - b / 2, y - h * 0.74, b, h);
@@ -918,9 +923,21 @@ export class Renderer {
           e.x + LICHT.x * alt * 0.9, e.y + LICHT.y * alt * 0.5, 0.8);
         ctx.globalAlpha = 1;
       } else {
+        // Zwei Schatten, wie bei den Tuermen: der Schlagschatten sagt, woher
+        // die Sonne kommt, der Kontaktschatten setzt den Gegner auf den Boden.
+        // Bei einem laufenden Wesen ist die Kontaktzone kleiner und dichter -
+        // es beruehrt den Boden nur mit den Fuessen.
         const weit = def.radius * 0.85;
         drawSprite(ctx, getShadow(def.radius),
           e.x + LICHT.x * weit * 0.7, e.y + LICHT.y * weit);
+        ctx.save();
+        ctx.globalAlpha = 0.42;
+        ctx.fillStyle = C.ink;
+        ctx.beginPath();
+        ctx.ellipse(e.x, e.y + def.radius * 0.16, def.radius * 0.72, def.radius * 0.28,
+          0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
       }
     }
 

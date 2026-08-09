@@ -144,6 +144,20 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    name: 'Ausbau bringt keine Reichweite',
+    datei: 'src/data/towers.ts',
+    regel: /const REICHWEITE_STUFE = \[[^\]]+\];/,
+    ersatz: 'const REICHWEITE_STUFE = [1.00, 1.00, 1.00, 1.00, 1.00, 1.00];',
+    tor: 'guards',
+  },
+  {
+    name: 'Alle Tuerme gleich weit',
+    datei: 'src/data/towers.ts',
+    regel: /const REICHWEITE_GRUND: Record<TowerId, number> = \{/,
+    ersatz: 'const REICHWEITE_GRUND: Record<TowerId, number> = { arrow: 0.17, frost: 0.17, mortar: 0.17, prism: 0.17, __alt: 0 } as unknown as Record<TowerId, number>; const __weg = {',
+    tor: 'guards',
+  },
+  {
     name: 'Tuerme ueberdecken einander',
     datei: 'src/data/towers.ts',
     regel: /export const DRAW_SCALE = [0-9.]+;/,

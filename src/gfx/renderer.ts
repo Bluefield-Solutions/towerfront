@@ -652,6 +652,35 @@ export class Renderer {
         ctx.fill();
         ctx.restore();
 
+        // Ein Farbring am Fuss zeigt den Ausbauzweig.
+        //
+        // Solange die Zweige auf dieselben Bilder zurueckfallen, sieht ein
+        // Scharfschuetze aus wie eine Salve - man kann seinem eigenen Feld
+        // nicht ansehen, wie es gebaut ist. Der Ring ist die kleinste
+        // ehrliche Antwort darauf: er behauptet nicht, ein anderes Bauwerk zu
+        // sein, sondern markiert die Entscheidung.
+        if (t.branch !== null) {
+          // Groesser als der Turmfuss, sonst liegt der Ring dahinter.
+          const ring = TOWERS[def.id].footprint * 0.86;
+          ctx.save();
+          ctx.translate(t.x, t.y + TOWERS[def.id].footprint * 0.1);
+          ctx.scale(1, 0.4);
+          ctx.strokeStyle = hexA(accentFor(TOWERS[def.id], t.branch), 0.85);
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.arc(0, 0, ring, 0, Math.PI * 2);
+          ctx.stroke();
+          // Ein zweiter, feinerer Ring fuer den zweiten Zweig - so sind sie
+          // auch ohne Farbsehen zu unterscheiden.
+          if (t.branch === 1) {
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, ring * 0.72, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
         const facingLeft = Math.cos(t.angle) < 0;
         const rec = t.recoil * 3;
         ctx.save();

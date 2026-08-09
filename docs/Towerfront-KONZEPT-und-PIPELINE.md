@@ -1,6 +1,6 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v62 · 08.08.2026
+Stand: v69 · 08.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Towerfront.html`
 
 > **Aufbau dieses Dokuments.** Die Abschnitte 1 bis 3.4 beschreiben den
@@ -327,7 +327,11 @@ Die vier Phasen aus dem ursprünglichen Plan sind durchlaufen.
 gemaltem Weg — die Engine zeichnet weder Weg noch Felsen mehr. Wegkurve und
 unwegsames Gelände liest `tools/mapread.mjs` aus dem Bild aus, über die
 Sättigung bei farbigem Boden und über die Helligkeit bei Schnee. Alle vier
-Türme sind neu und in einem Stil mit den Karten. Das Licht kommt überall von
+Türme und sieben Gegner sind neu und in einem Stil mit den Karten. Bogen- und
+Frostturm haben je sechs eigene Ausbaustufen; welches Bild eine Stufe bekommt,
+entscheidet eine Rückfallkette vom Genauen zum Allgemeinen. Die Gegner sind
+Aufsichten und drehen sich mit der Laufrichtung. Ein Farbring am Turmfuß zeigt
+den Ausbauzweig. Das Licht kommt überall von
 oben links; die Richtung steht als `LICHT` an einer Stelle.
 
 **Heutiger Umfang:** drei Karten, vier Türme mit je zwei Ausbauzweigen und

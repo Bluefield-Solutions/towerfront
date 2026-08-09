@@ -59,6 +59,20 @@ export function drawRim(
 const OHNE_SAUM = new Set<string>(['arrow', 'frost', 'mortar', 'prism']);
 export const brauchtSaum = (id: string): boolean => !OHNE_SAUM.has(id);
 
+/** Wie stark ein Bild eingefaerbt wird.
+ *
+ *  Die alten Turmbilder kamen alle aus derselben Familie - dunkler Stein mit
+ *  Glut - und waren im Feld nicht zu unterscheiden. Deshalb wurde die
+ *  Zweigfarbe mit 38 Prozent darueber gelegt, dazu ein Lichtverlauf von oben
+ *  links, der ihnen Koerper gab.
+ *
+ *  Die neuen Bilder brauchen beides nicht: sie haben eigene Farben und ihr
+ *  eigenes Licht. Der starke Farbschleier verwaescht sie, und der Verlauf
+ *  legt ein zweites Licht ueber das schon vorhandene. Geblieben ist ein
+ *  Hauch Farbe, damit man den Ausbauzweig noch ablesen kann. */
+const einfaerbung = (id: string): { farbe: number; verlauf: boolean } =>
+  (OHNE_SAUM.has(id) ? { farbe: 0.13, verlauf: false } : { farbe: 0.38, verlauf: true });
+
 const tinted = new Map<string, HTMLCanvasElement>();
 
 /** Wie breit die Figur im Bild tatsaechlich ist, als Anteil der Kachel.
@@ -160,15 +174,18 @@ export function getTowerArt(
   body.width = size; body.height = size;
   const bg = body.getContext('2d')!;
   bg.drawImage(img, 0, 0, size, size);
+  const stil = einfaerbung(id);
   bg.globalCompositeOperation = 'source-atop';
-  bg.fillStyle = hexA(accent, 0.38);
+  bg.fillStyle = hexA(accent, stil.farbe);
   bg.fillRect(0, 0, size, size);
-  const lift = bg.createLinearGradient(0, 0, size * 0.7, size);
-  lift.addColorStop(0, 'rgba(255,255,255,0.34)');
-  lift.addColorStop(0.45, 'rgba(255,255,255,0.10)');
-  lift.addColorStop(1, 'rgba(0,0,0,0.22)');
-  bg.fillStyle = lift;
-  bg.fillRect(0, 0, size, size);
+  if (stil.verlauf) {
+    const lift = bg.createLinearGradient(0, 0, size * 0.7, size);
+    lift.addColorStop(0, 'rgba(255,255,255,0.34)');
+    lift.addColorStop(0.45, 'rgba(255,255,255,0.10)');
+    lift.addColorStop(1, 'rgba(0,0,0,0.22)');
+    bg.fillStyle = lift;
+    bg.fillRect(0, 0, size, size);
+  }
   bg.globalCompositeOperation = 'source-over';
   g.drawImage(body, 0, 0);
 

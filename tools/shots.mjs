@@ -328,6 +328,26 @@ takes.push(['neue-gegner', () => shot('neue-gegner', 844, 390, (s, r) => {
   return 0;
 })]);
 
+takes.push(['zweige', () => shot('zweige', 844, 390, (s, r) => {
+  s.reset(1, 'normal', 'spiralhain');
+  s.gold = 200000;
+  const spots = candidateSpots(s);
+  const bauten = [];
+  for (const sp of spots) {
+    if (bauten.length >= 4) break;
+    if (s.build(sp.x, sp.y, bauten.length < 2 ? 'arrow' : 'frost')) bauten.push(s.towers[s.towers.length - 1]);
+  }
+  // Je zwei Tuerme, einer je Zweig, beide auf Stufe 4.
+  bauten.forEach((t, i) => { for (let k = 0; k < 3; k++) s.upgrade(t, i % 2); });
+  if (bauten[0]) {
+    r.resize();
+    r.zoomAt(2.4, 422, 195);
+    const p = r.worldToScreen(bauten[0].x, bauten[0].y);
+    r.panBy(422 - p.x + 120, 195 - p.y);
+  }
+  return 6;
+})]);
+
 takes.push(['welle8', () => shot('welle8', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 10);

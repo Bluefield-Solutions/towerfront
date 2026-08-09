@@ -12,6 +12,61 @@ gegengeprobt.**
 
 ---
 
+# Dritter Durchgang · v70 bis v72 · Der Motor
+
+**Drei echte Fehler, alle behoben. Der schwerste war unsichtbar.**
+
+### B17 — Das Ausbaumenü versprach etwas anderes, als der Ausbau lieferte
+
+Nach der Umstellung auf das Reichweitensystem holte `nextFor` weiter die alten
+handgeschriebenen Zahlen, während `statsFor` rechnete. Im Menü stand bei Stufe
+5 eine Reichweite von **519**, gebaut wurden **600**.
+
+Ein Menü, das etwas anderes verspricht als es liefert, ist schlimmer als gar
+keins — man trifft eine Kaufentscheidung auf falscher Grundlage. `nextFor`
+läuft jetzt durch dieselbe Aufbereitung, und der Rauchtest vergleicht alle
+Stufen beider Zweige aller vier Türme Feld für Feld.
+
+### B18 — Panzerung verschwand genau dann, wenn sie zählen sollte
+
+Sie war ein fester Abzug. Gemessen am Leerentitan mit Panzerung 6:
+
+```
+Stufe 1   schluckt 75 % eines Bogenschusses
+Stufe 6   schluckt  2 %
+```
+
+Über sechs Stufen wächst der Schaden auf das 33-fache, der Abzug bleibt gleich.
+Panzerung war als Spielelement tot, sobald der Boss kam — und der Mörser
+verlor seine Rolle als Panzerbrecher.
+
+Jetzt schluckt Panzerung einen **Anteil**: 11 % je Punkt, gedeckelt bei zwei
+Dritteln. Der Titan lässt damit auf jeder Stufe ein Drittel durch.
+
+### B19 — 44 tote Werte in den Daten
+
+Die handgeschriebenen Reichweiten standen noch da und wurden ignoriert. Wer sie
+geändert hätte, hätte nichts bewirkt. Entfernt; das Feld ist jetzt optional und
+im Typ als *Ergebnis, nie Eingabe* gekennzeichnet. Fünf Lesestellen liefen noch
+über die Rohdaten — alle auf `statsFor` umgestellt, darunter der
+Balance-Wächter, der dadurch mit einem anderen Schadensmodell rechnete als das
+Spiel.
+
+### Was geprüft wurde und in Ordnung war
+
+- **Kosten steigen** über alle Stufen und Zweige.
+- **Verkaufswert** liegt überall unter dem Bauwert (70 %).
+- **Alle Gegnerarten** kommen vor; `splitling` nur durch Zerfall, wie gedacht.
+- **Speichern und Laden** über alle neun Karten-Grad-Kombinationen, mit
+  ausgebautem Turm — sauber.
+- **Schadenszuwachs je Zweig** wirkte mit ×5,4 gegen ×24 auseinandergerissen.
+  Nachgerechnet ist es richtig: Verzweigung trifft neun Zusatzziele, Bündelung
+  zwei. Die Rohzahl allein sagt nichts.
+
+**Zweiundzwanzig Gegenproben, alle greifen.**
+
+---
+
 # Zweiter Durchgang · v49 bis v59 · Grafikblock
 
 **Sechs Befunde, alle behoben. Zwei davon sind Wiederholungstäter.**

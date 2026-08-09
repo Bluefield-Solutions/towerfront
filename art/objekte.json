@@ -3,7 +3,7 @@
   "source": "roh/objekte",
   "output": "objects.ts",
   "exportName": "OBJECT_ART",
-  "budgetKb": 220,
+  "budgetKb": 320,
   "defaults": {
     "size": 256,
     "fill": 0.92,
@@ -25,6 +25,25 @@
       "farbe": 0.86,
       "helligkeit": 0.92,
       "fill": 0.96
+    },
+    "sockel_arrow": {
+      "file": "sockel_arrow.png",
+      "comment": "Bogenturm ohne Waffe. Steht still, waehrend die Waffe darueber dreht.",
+      "fill": 0.94,
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.03,
+      "helligkeit": 0.96,
+      "farbe": 0.92
+    },
+    "waffe_arrow": {
+      "file": "waffe_arrow.png",
+      "comment": "Armbrust samt Drehkranz. Wird um die BILDMITTE gedreht - deshalb mittig gesetzt und nicht auf eine Standlinie.",
+      "fill": 0.94,
+      "center": true,
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.03,
+      "helligkeit": 0.96,
+      "farbe": 0.88
     }
   }
 }

@@ -722,12 +722,13 @@ export class Renderer {
           const sh = w * (sockel.height / sockel.width);
           ctx.drawImage(sockel, -w / 2, -sh * 0.72, w, sh);
           // Die Waffe sitzt auf der Plattform, nicht auf dem Boden.
-          ctx.translate(0, -sh * 0.46);
+          // Auf die Plattform, nicht in den Schaft.
+          ctx.translate(0, -sh * 0.60);
           // Das Bild blickt nach oben, der Winkel zaehlt von rechts.
           ctx.rotate(t.angle + Math.PI / 2);
           // Rueckstoss laeuft entgegen der Schussrichtung.
           ctx.translate(0, rec2);
-          const ww = w * 0.72;
+          const ww = w * 0.56;
           const wh = ww * (waffe.height / waffe.width);
           ctx.drawImage(waffe, -ww / 2, -wh / 2, ww, wh);
           ctx.restore();

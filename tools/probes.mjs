@@ -144,6 +144,14 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    name: 'Tuerme verschieden gross',
+    datei: 'src/data/towers.ts',
+    // Einem Turm einen eigenen Platzbedarf geben.
+    regel: /(id: 'mortar',[\s\S]{0,400}?)footprint: FOOTPRINT/,
+    ersatz: '$1footprint: 140',
+    tor: 'smoke',
+  },
+  {
     name: 'Ausbau bringt keine Reichweite',
     datei: 'src/data/towers.ts',
     regel: /const REICHWEITE_STUFE = \[[^\]]+\];/,

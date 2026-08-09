@@ -499,6 +499,21 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Alle Turmsorten sind gleich gross.
+//
+// Gemeldet aus dem Spiel: der Moerser war 1,5-mal so breit wie der Bogenturm
+// und in der Flaeche mehr als doppelt so gross - nebeneinander sah das nach
+// zwei Massstaeben aus, nicht nach zwei Rollen. Die Zeichengroesse haengt am
+// Platzbedarf, also muss der einheitlich sein.
+{
+  const werte = TOWER_ORDER.map((id) => TOWERS[id].footprint);
+  if (new Set(werte).size !== 1) {
+    problems.push(
+      `Turmgroesse: Platzbedarfe ${werte.join('/')} - alle Sorten sollen gleich gross sein.`,
+    );
+  }
+}
+
 // Alle Ausbaustufen sind gleich gross.
 //
 // Frueher wuchs der Turm mit der Stufe, weil sich alle Stufen ein Bild

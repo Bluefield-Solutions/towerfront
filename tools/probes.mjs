@@ -146,7 +146,7 @@ const PROBEN = [
   {
     name: 'Tuerme ueberdecken einander',
     datei: 'src/data/towers.ts',
-    suche: 'export const DRAW_SCALE = 1.25;',
+    regel: /export const DRAW_SCALE = [0-9.]+;/,
     ersatz: 'export const DRAW_SCALE = 2.4;',
     tor: 'guards',
   },

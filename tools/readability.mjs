@@ -188,12 +188,22 @@ function worstContrast(objLum) {
 console.log('\nTürme (Kontrast gegen den Untergrund, Breite auf dem Bildschirm):');
 for (const id of TOWER_ORDER) {
   const def = TOWERS[id];
-  const states = [[null, `${id}_1`, 1], [0, `${id}_${def.branches[0].id}`, 3],
-    [1, `${id}_${def.branches[1].id}`, 3]];
-  for (const [branch, key, level] of states) {
+  // Welches Bild fuer eine Stufe genommen wird, entscheidet die Engine ueber
+  // eine Rueckfallkette - Zweig und Stufe zuerst, dann allgemeiner. Diese
+  // Messung hat die Schluessel frueher selbst gebaut und meldete deshalb
+  // fehlende Bilder, sobald die Kette griff. Schon der vierte Fall, in dem
+  // ein Werkzeug die Regel nachbaut statt sie zu benutzen.
+  const states = [[null, 1], [0, 3], [1, 3]];
+  for (const [branch, level] of states) {
+    const zweig = branch === null ? '1' : def.branches[branch].id;
+    let key = null;
+    for (let l = level; l >= 1 && !key; l--) {
+      for (const k of [`${id}_${zweig}_${l}`, `${id}_1_${l}`]) if (towerArt.has(k)) key = k;
+    }
+    if (!key) for (const k of [`${id}_${zweig}`, `${id}_1`]) if (towerArt.has(k)) key = k;
     const levelScale = towerArtScale(level);
-    const buf = towerArt.get(key);
-    if (!buf) { problems.push(`Turmbild ${key} fehlt.`); continue; }
+    const buf = key ? towerArt.get(key) : null;
+    if (!buf) { problems.push(`Turmbild fuer ${id}/${zweig} Stufe ${level} fehlt.`); continue; }
     const accent = hexRgb(accentFor(def, branch));
     const m = await measureSprite(buf, accent, 0.38);
     const lum = luminance(...m.rgb);

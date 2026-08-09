@@ -414,32 +414,58 @@ export class Renderer {
       // Vorher wurde eine Maske im 12-Pixel-Raster erzeugt und dann weich auf
       // die volle Feldgröße hochgezogen. Daraus wurde ein verwaschener grüner
       // Schleier über der halben Karte: Man sah, DASS irgendwo gebaut werden
-      // kann, aber nicht WO genau, und der Boden verfärbte sich mit.
+      // kann, aber nicht WO genau.
       //
-      // Jetzt steht auf jeder bebaubaren Rasterstelle ein kleiner Punkt. Die
-      // Karte bleibt sichtbar, die Grenzen der Baufläche sind ablesbar, und
-      // das Muster sagt zugleich, wie eng man setzen kann.
+      // Der erste Punktraster-Versuch löste das, sah aber aufgedruckt aus -
+      // gemeldet als "passt nicht ins Level". Drei Gründe, alle behoben:
+      //
+      //   * **Die Farbe war fremd.** Neongrün #5BE07A kommt in diesem Spiel
+      //     nirgends vor. Jetzt das Kristall-Türkis der Oberfläche.
+      //   * **Die Punkte lagen auf der Karte, nicht darin.** Harte Kreise mit
+      //     scharfer Kante. Jetzt ein weicher Verlauf mit dunklem Ring
+      //     darunter - derselbe Kontaktschatten wie bei Türmen und Gegnern.
+      //   * **Das Raster war mechanisch.** Gleiche Größe überall wie
+      //     Millimeterpapier. Jetzt schwankt der Punkt leicht mit seinem Ort,
+      //     sodass das Muster lebt statt gedruckt zu wirken.
       const STEP = 48;
       const cv = document.createElement('canvas');
       cv.width = WORLD_W;
       cv.height = WORLD_H;
       const g = cv.getContext('2d')!;
-      g.fillStyle = affordable ? '#5BE07A' : C.danger;
+      const ton = affordable ? C.crystal : C.danger;
       for (let wy = STEP / 2; wy < WORLD_H; wy += STEP) {
         for (let wx = STEP / 2; wx < WORLD_W; wx += STEP) {
           if (!s.canPlace(s.buildChoice, wx, wy)) continue;
+          // Eine ruhige Schwankung aus dem Ort selbst - kein Zufall, damit
+          // das Bild bei gleichem Spielstand gleich aussieht.
+          const wellen = Math.sin(wx * 0.021) * Math.cos(wy * 0.019);
+          const r = 4.6 + wellen * 1.1;
+
+          // Kontaktschatten: der Punkt liegt auf dem Boden.
+          g.fillStyle = hexA(C.ink, 0.30);
           g.beginPath();
-          g.arc(wx, wy, 5, 0, Math.PI * 2);
+          g.ellipse(wx, wy + r * 0.5, r * 1.15, r * 0.6, 0, 0, Math.PI * 2);
+          g.fill();
+
+          // Weicher Punkt statt harter Scheibe.
+          const scheibe = g.createRadialGradient(wx, wy, 0, wx, wy, r);
+          scheibe.addColorStop(0, hexA(ton, 0.95));
+          scheibe.addColorStop(0.6, hexA(ton, 0.7));
+          scheibe.addColorStop(1, hexA(ton, 0));
+          g.fillStyle = scheibe;
+          g.beginPath();
+          g.arc(wx, wy, r, 0, Math.PI * 2);
           g.fill();
         }
       }
+
       this.buildMask = cv;
       this.buildMaskKey = key;
     }
 
     const beat = 0.5 + 0.5 * Math.sin(s.crystalPulse * 2.4);
     ctx.save();
-    ctx.globalAlpha = (affordable ? 0.5 : 0.34) + beat * 0.12;
+    ctx.globalAlpha = (affordable ? 0.42 : 0.30) + beat * 0.08;
     ctx.drawImage(this.buildMask!, 0, 0);
     ctx.restore();
   }

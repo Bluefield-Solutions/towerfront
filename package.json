@@ -28,7 +28,8 @@
     "proben": "node tools/probes.mjs",
     "kritik": "node tools/review.mjs",
     "grafik": "node tools/artaudit.mjs",
-    "einbettung": "tsx tools/embed.mjs"
+    "einbettung": "tsx tools/embed.mjs",
+    "karte-einbauen": "node tools/mapapply.mjs"
   },
   "keywords": [],
   "author": "",

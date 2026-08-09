@@ -32,6 +32,22 @@ entfällt, weil er Teil des Bildes wird.
 >   drei gelieferten Karten bei 1,0 bis 1,3; nötig sind 1,8. Ein gerader Weg
 >   lässt sich mit vier Türmen abdecken und verlangt keine Entscheidung.
 
+## Der Weg vom Bild ins Spiel
+
+Zwei Befehle, kein Handskript mehr:
+
+```
+node tools/mapread.mjs <bild.png> <name>      Weg und Gelaende auslesen
+node tools/mapapply.mjs /tmp/<name>_daten.json MAP_<KONSTANTE>
+npm run guards                                 pruefen
+```
+
+Der Einbau war bis v85 jedes Mal ein frisch geschriebenes Handskript, und
+jedes Mal sind dieselben vier Fehler passiert: nach Punktzahl statt Laenge
+sortiert, doppelt vereinigt, am falschen Punkt verbunden, doppelte Punkte
+stehen gelassen. Alle vier sind im Werkzeug behoben. Es verarbeitet bis zu
+vier Zuwege und verwirft Doppelgaenger.
+
 ## Was geliefert werden soll
 
 Drei Kartenbilder, dazu je zwei Hilfsbilder. **Die Hilfsbilder sind der

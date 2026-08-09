@@ -123,6 +123,20 @@ const PROBEN = [
     tor: 'doku',
   },
   {
+    name: 'Uebersicht zeigt schwarze Raender',
+    datei: 'src/gfx/renderer.ts',
+    regel: /this\.zoom = Math\.min\(Math\.max\(this\.zoom, this\.coverScale\), this\.coverScale \* 3\);/,
+    ersatz: 'this.zoom = Math.min(Math.max(this.zoom, this.fitScale), this.coverScale * 3);',
+    tor: 'smoke',
+  },
+  {
+    name: 'Werteliste steht vor dem Ausbauen',
+    datei: 'index.html',
+    regel: /(<div class="insp-ups" id="i-ups"><\/div>)/,
+    ersatz: '<dl class="insp-x"></dl>',
+    tor: 'smoke',
+  },
+  {
     name: 'Sonne steht in der falschen Richtung',
     datei: 'src/data/config.ts',
     regel: /export const LICHT = \{ x: [-0-9.]+, y: [-0-9.]+ \};/,

@@ -81,6 +81,16 @@ export class Renderer {
   fitScale = 1;
   coverScale = 1;
 
+  /** Wie weit man hoechstens herausziehen darf.
+   *
+   *  Die eine Stelle, an der diese Regel steht. Vorher stand sie zweimal -
+   *  einmal beim Zoomen, einmal beim Nachkorrigieren - und die Gegenprobe
+   *  konnte den Fehler nicht nachstellen, weil die jeweils andere Stelle ihn
+   *  gleich wieder ausbuegelte. Eine Regel an zwei Stellen ist eine Regel,
+   *  die man nicht pruefen kann. */
+  private get minZoom(): number { return this.coverScale; }
+  private get maxZoom(): number { return this.coverScale * 3; }
+
   resize(): void {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
@@ -102,7 +112,7 @@ export class Renderer {
   /** Grenzen einhalten: nie ueber den Rand des Feldes hinaus, und wenn das
    *  Feld in einer Richtung kleiner ist als der Bildschirm, mittig. */
   private clamp(): void {
-    this.zoom = Math.min(Math.max(this.zoom, this.coverScale), this.coverScale * 3);
+    this.zoom = Math.min(Math.max(this.zoom, this.minZoom), this.maxZoom);
     const halfW = this.cssW / 2 / this.zoom;
     const halfH = this.cssH / 2 / this.zoom;
     this.camX = halfW * 2 >= WORLD_W
@@ -128,7 +138,7 @@ export class Renderer {
    *  immer der falsche Ausschnitt weg. */
   zoomAt(factor: number, sx: number, sy: number): void {
     const before = this.screenToWorld(sx, sy);
-    this.zoom = Math.min(Math.max(this.zoom * factor, this.coverScale), this.coverScale * 3);
+    this.zoom = Math.min(Math.max(this.zoom * factor, this.minZoom), this.maxZoom);
     this.clamp();
     const after = this.screenToWorld(sx, sy);
     this.camX += before.x - after.x;

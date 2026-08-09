@@ -125,10 +125,8 @@ const PROBEN = [
   {
     name: 'Uebersicht zeigt schwarze Raender',
     datei: 'src/gfx/renderer.ts',
-    // Begrenzt wird beim Zoomen selbst, nicht erst im Nachhinein - der erste
-    // Eingriff traf die Nachkorrektur und blieb wirkungslos.
-    regel: /this\.zoom = Math\.min\(Math\.max\(this\.zoom \* factor, this\.coverScale\), this\.coverScale \* 3\);/,
-    ersatz: 'this.zoom = Math.min(Math.max(this.zoom * factor, this.fitScale), this.coverScale * 3);',
+    regel: /private get minZoom\(\): number \{ return this\.coverScale; \}/,
+    ersatz: 'private get minZoom(): number { return this.fitScale; }',
     tor: 'smoke',
   },
   {

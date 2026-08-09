@@ -125,8 +125,10 @@ const PROBEN = [
   {
     name: 'Uebersicht zeigt schwarze Raender',
     datei: 'src/gfx/renderer.ts',
-    regel: /this\.zoom = Math\.min\(Math\.max\(this\.zoom, this\.coverScale\), this\.coverScale \* 3\);/,
-    ersatz: 'this.zoom = Math.min(Math.max(this.zoom, this.fitScale), this.coverScale * 3);',
+    // Begrenzt wird beim Zoomen selbst, nicht erst im Nachhinein - der erste
+    // Eingriff traf die Nachkorrektur und blieb wirkungslos.
+    regel: /this\.zoom = Math\.min\(Math\.max\(this\.zoom \* factor, this\.coverScale\), this\.coverScale \* 3\);/,
+    ersatz: 'this.zoom = Math.min(Math.max(this.zoom * factor, this.fitScale), this.coverScale * 3);',
     tor: 'smoke',
   },
   {

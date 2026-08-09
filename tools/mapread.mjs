@@ -62,7 +62,7 @@ for (let i = 0; i < B * H; i++) {
   sw.push(max === 0 ? 0 : (max - min) / max);
 }
 const mittlereSaettigung = sw.reduce((a, b) => a + b, 0) / sw.length;
-const ueberHelligkeit = mittlereSaettigung < 0.35;
+
 
 /** Schwelle und Richtung durch Ausprobieren finden.
  *
@@ -81,12 +81,19 @@ const ueberHelligkeit = mittlereSaettigung < 0.35;
  *  alle Schwellen durchprobiert, und genommen wird die, bei der das
  *  gefundene Gebiet am schlanksten ist.
  */
+/** Der Messwert je Punkt: Helligkeit oder Saettigung. */
+const kanal = (i, ueberSaettigung) => {
+  const r = data[i*4], g = data[i*4+1], b = data[i*4+2];
+  if (ueberSaettigung) {
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+    return mx === 0 ? 0 : (mx - mn) / mx;
+  }
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+};
+
 const schlankheit = (istWeg) => {
   const maske = new Uint8Array(B * H);
-  for (let i = 0; i < B * H; i++) {
-    const l = (0.2126 * data[i*4] + 0.7152 * data[i*4+1] + 0.0722 * data[i*4+2]) / 255;
-    maske[i] = istWeg(l) ? 1 : 0;
-  }
+  for (let i = 0; i < B * H; i++) maske[i] = istWeg(i) ? 1 : 0;
   const gesehen = new Uint8Array(B * H);
   let bestFlaeche = 0, bestUmfang = 0;
   for (let start = 0; start < B * H; start++) {
@@ -110,17 +117,38 @@ const schlankheit = (istWeg) => {
     if (flaeche > bestFlaeche) { bestFlaeche = flaeche; bestUmfang = umfang; }
   }
   // Ein Gebiet, das fast das ganze Bild fuellt, ist der Boden - kein Weg.
-  if (!bestFlaeche || bestFlaeche > B * H * 0.45) return { wert: 0, flaeche: bestFlaeche };
+  // Ein Gebiet, das mehr als ein Viertel des Bildes fuellt, ist der Boden -
+  // auch wenn es schlank wirkt, weil Felsen Loecher hineinschneiden. Bei 45
+  // Prozent Obergrenze hielt die Wueste den Sand fuer den Weg.
+  if (!bestFlaeche || bestFlaeche > B * H * 0.25) return { wert: 0, flaeche: bestFlaeche };
   return { wert: (bestUmfang * bestUmfang) / bestFlaeche, flaeche: bestFlaeche };
 };
 
-let schwelle = 0.45, wegIstDunkel = true, bestWert = -1;
-for (let t = 0.14; t <= 0.86; t += 0.03) {
-  for (const dunkel of [true, false]) {
-    const r = schlankheit((l) => (dunkel ? l < t : l >= t));
-    // Zu kleine Gebiete sind Rauschen, keine Wege.
-    if (r.flaeche < B * H * 0.02) continue;
-    if (r.wert > bestWert) { bestWert = r.wert; schwelle = t; wegIstDunkel = dunkel; }
+/** Beide Kanaele durchprobieren, nicht nur einen.
+ *
+ *  Vorher entschied die mittlere Saettigung, ob ueber Saettigung oder ueber
+ *  Helligkeit getrennt wird. Bei drei farbigen Lieferungen ging das schief:
+ *  In der Wueste ist alles orange - Sand wie Pflaster - und die
+ *  Saettigungstrennung fand genau EINEN Wegpunkt. Die Helligkeit haette dort
+ *  sauber getrennt, kam aber wegen der Vorentscheidung nie zum Zug.
+ *
+ *  Jetzt entscheidet dasselbe Maß wie bei der Schwelle: Schlankheit. Es wird
+ *  ueber beide Kanaele und alle Schwellen gesucht, und genommen wird, was am
+ *  meisten nach einem Weg aussieht.
+ */
+let schwelle = 0.45, wegIstDunkel = true, bestWert = -1, ueberSaettigung = false;
+for (const satt of [false, true]) {
+  for (let t = 0.14; t <= 0.86; t += 0.03) {
+    for (const dunkel of [true, false]) {
+      const r = schlankheit((i) => {
+        const v = kanal(i, satt);
+        return dunkel ? v < t : v >= t;
+      });
+      if (r.flaeche < B * H * 0.02) continue;
+      if (r.wert > bestWert) {
+        bestWert = r.wert; schwelle = t; wegIstDunkel = dunkel; ueberSaettigung = satt;
+      }
+    }
   }
 }
 // Von Hand uebersteuern: --schwelle 0.52 --dunkel  bzw.  --hell
@@ -136,20 +164,18 @@ for (let t = 0.14; t <= 0.86; t += 0.03) {
   if (i > 0 && argv[i + 1]) schwelle = Number(argv[i + 1]);
   if (argv.includes('--hell')) wegIstDunkel = false;
   if (argv.includes('--dunkel')) wegIstDunkel = true;
+  if (argv.includes('--saettigung')) ueberSaettigung = true;
+  if (argv.includes('--helligkeit')) ueberSaettigung = false;
 }
-console.log(`Helligkeitsschwelle ${schwelle.toFixed(2)}, Weg ist `
-  + `${wegIstDunkel ? 'dunkler' : 'heller'} als der Boden (Schlankheit ${bestWert.toFixed(0)})`);
-console.log(`Trennung ueber ${ueberHelligkeit ? 'Helligkeit' : 'Saettigung'} `
-  + `(mittlere Saettigung ${mittlereSaettigung.toFixed(2)})`);
+console.log(`Trennung ueber ${ueberSaettigung ? 'Saettigung' : 'Helligkeit'} `
+  + `bei ${schwelle.toFixed(2)}, Weg ist `
+  + `${wegIstDunkel ? 'niedriger' : 'hoeher'} (Schlankheit ${bestWert.toFixed(0)})`);
+
 
 const grau = new Uint8Array(B * H);
 for (let i = 0; i < B * H; i++) {
-  if (ueberHelligkeit) {
-    const l = (0.2126 * data[i*4] + 0.7152 * data[i*4+1] + 0.0722 * data[i*4+2]) / 255;
-    grau[i] = (l < schwelle) === wegIstDunkel ? 1 : 0;
-  } else {
-    grau[i] = sw[i] < 0.42 ? 1 : 0;
-  }
+  const v = kanal(i, ueberSaettigung);
+  grau[i] = (v < schwelle) === wegIstDunkel ? 1 : 0;
 }
 
 /** Zusammenhängende Gebiete finden. */
@@ -281,7 +307,36 @@ function einstiege() {
   return treffer.sort((a, b) => b.groesse - a.groesse);
 }
 
-const zugaenge = einstiege();
+let zugaenge = einstiege();
+
+/** Zugaenge, die nicht am Bildrand liegen.
+ *
+ *  Bisher begann jede Bahn dort, wo der Weg die Bildkante beruehrt. Bei den
+ *  neuen Lieferungen liegen die Tore INNERHALB des Bildes - ein Steinbogen
+ *  mitten in der Wueste, ein Steg, der am Sumpfrand beginnt. Dann findet die
+ *  Randsuche nichts und es gibt gar keine Bahn.
+ *
+ *  Ersatzweise werden die Enden des Wegnetzes gesucht: Punkte, die weit vom
+ *  Mittelpunkt des Netzes entfernt liegen und untereinander Abstand halten.
+ *  Das sind genau die Sackgassen - Tore und Endplatz.
+ */
+if (!zugaenge.length) {
+  const punkte = [];
+  for (let i = 0; i < B * H; i++) if (grau[i]) punkte.push({ x: i % B, y: (i / B) | 0 });
+  const mx = punkte.reduce((a, p) => a + p.x, 0) / punkte.length;
+  const my = punkte.reduce((a, p) => a + p.y, 0) / punkte.length;
+  const sortiert = punkte
+    .map((p) => ({ ...p, d: Math.hypot(p.x - mx, p.y - my) }))
+    .sort((a, b) => b.d - a.d);
+  const enden = [];
+  for (const p of sortiert) {
+    if (enden.length >= 6) break;
+    if (enden.some((e) => Math.hypot(e.x - p.x, e.y - p.y) < 55)) continue;
+    enden.push(p);
+  }
+  zugaenge = enden;
+  console.log(`Keine Randberuehrung - ${enden.length} Netzenden als Zugaenge genommen.`);
+}
 console.log(`Randberuehrungen: ${zugaenge.length} (${zugaenge.map((z) => `${Math.round(z.x)}/${Math.round(z.y)}`).join(', ')})`);
 
 // Der laengste Lauf ist die Hauptbahn, danach die uebrigen Zuwege.

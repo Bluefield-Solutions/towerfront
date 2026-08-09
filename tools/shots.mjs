@@ -382,6 +382,22 @@ takes.push(['spalter', () => shot('spalter', 844, 390, (s, r) => {
   return 0;
 })]);
 
+takes.push(['schwenk', () => shot('schwenk', 844, 390, (s, r) => {
+  s.reset(1, 'normal', 'spiralhain');
+  stock(s, 5);
+  s.waveIndex = 7;
+  s.startWave();
+  for (let i = 0; i < 60 * 12; i++) s.update(DT);
+  const turm = s.towers.find((t) => t.target) ?? s.towers[0];
+  if (turm) {
+    r.resize();
+    r.zoomAt(2.6, 422, 195);
+    const p = r.worldToScreen(turm.x, turm.y);
+    r.panBy(422 - p.x, 195 - p.y);
+  }
+  return 2;
+})]);
+
 takes.push(['welle8', () => shot('welle8', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 10);

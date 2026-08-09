@@ -706,11 +706,28 @@ export class Renderer {
           ctx.restore();
         }
 
+        // Der Turm dreht sich zum Ziel - aber nur der obere Teil.
+        //
+        // Ein Turm ist ein Bauwerk: dreht man das ganze Bild, kippt der Sockel
+        // mit und die Burg legt sich schief in die Landschaft. Gedreht wird
+        // deshalb um einen Punkt hoch oben im Bild, und nur um einen Teil des
+        // Zielwinkels. Das liest sich als "die Kanone schwenkt", ohne dass das
+        // Gebaeude umfaellt.
+        //
+        // Bis der Bildsatz eine eigene Waffenebene bekommt, ist das die
+        // ehrlichste Naeherung: es behauptet nicht, ein Drehkranz zu sein.
         const facingLeft = Math.cos(t.angle) < 0;
         const rec = t.recoil * 3;
         ctx.save();
         ctx.translate(t.x, t.y - rec * 0.4);
         if (facingLeft) ctx.scale(-1, 1);
+        // Der Winkel zum Ziel, gespiegelt mitgerechnet, auf die Waagerechte
+        // bezogen und gedaempft.
+        const roh = facingLeft ? Math.PI - t.angle : t.angle;
+        const schwenk = Math.max(-0.15, Math.min(0.15, roh * 0.2));
+        ctx.translate(0, -h * 0.22);
+        ctx.rotate(schwenk);
+        ctx.translate(0, h * 0.22);
         // Der frisch gebaute Turm federt einmal ein und schwingt aus.
         if (t.spring > 0.01) {
           const q = Math.sin(t.spring * Math.PI * 2.2) * t.spring * 0.16;

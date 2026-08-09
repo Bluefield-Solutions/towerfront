@@ -839,7 +839,17 @@ export class Renderer {
   private artMasse(
     id: TowerId, branch: BranchIndex, level: number, art: HTMLCanvasElement,
   ): { w: number; h: number; oben: number } {
-    const anteil = artBreite(art, `${id}:${branch}:${level}`);
+    // Der Massstab kommt IMMER von Stufe 1, nie von der gezeigten Stufe.
+    //
+    // Gemessen waechst die Figurenbreite mit dem Ausbau - beim Frostturm von
+    // 50 auf 80 Prozent der Kachel, weil Eiskronen seitlich herauswachsen.
+    // Rechnete man je Stufe aus, schrumpfte der Turmkoerper genau dann, wenn
+    // der Turm staerker wird: auf Stufe 6 um ueber ein Drittel.
+    //
+    // Mit Stufe 1 als Bezug bleibt der Koerper gleich gross, und was
+    // dazukommt, ragt darueber hinaus. Genau so soll ein Ausbau aussehen.
+    const grund = getTowerArt(id, branch, 1) ?? art;
+    const anteil = artBreite(grund, `${id}:${branch}:1`);
     const w = (TOWERS[id].footprint * DRAW_SCALE * towerArtScale(level)) / Math.max(0.3, anteil);
     return { w, h: w, oben: -w * 0.72 };
   }

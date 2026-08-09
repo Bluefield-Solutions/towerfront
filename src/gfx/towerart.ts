@@ -194,10 +194,24 @@ export function getTowerArt(
   return cv;
 }
 
-/** Groesse des Turms nach Ausbaustufe. Stufe 2 nutzt dasselbe Bild wie
- *  Stufe 3, steht aber kleiner da. */
+/** Groesse des Turms nach Ausbaustufe.
+ *
+ *  Frueher wuchs der Turm mit der Stufe - 78 Prozent auf Stufe 1, volle
+ *  Groesse ab Stufe 3. Das war die richtige Antwort, solange sich alle Stufen
+ *  ein einziges Bild teilten: der Zuwachs war das einzige sichtbare Zeichen
+ *  eines Ausbaus.
+ *
+ *  Seit jede Stufe ihr eigenes Bild hat, sagt das Bild selbst, wie weit
+ *  ausgebaut wurde. Ein zusaetzlich wachsender Massstab stoert dann zweimal:
+ *  der Platzbedarf bleibt gleich, waehrend das Bild groesser wird, und beim
+ *  Ausbau springt der Turm. Deshalb ist die Groesse jetzt fuer alle Stufen
+ *  dieselbe.
+ *
+ *  Die Funktion bleibt, weil sie an vier Stellen aufgerufen wird und weil ein
+ *  spaeterer Grund fuer eine Stufenabhaengigkeit hier landen wuerde. */
 export function towerArtScale(level: number): number {
-  return level >= 3 ? 1 : level === 2 ? 0.88 : 0.78;
+  void level;
+  return 1;
 }
 
 export const hasTowerArt = (id: TowerId, branch: BranchIndex): boolean =>

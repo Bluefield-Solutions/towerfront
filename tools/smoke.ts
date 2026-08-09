@@ -499,6 +499,24 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Alle Ausbaustufen sind gleich gross.
+//
+// Frueher wuchs der Turm mit der Stufe, weil sich alle Stufen ein Bild
+// teilten und der Zuwachs das einzige Zeichen eines Ausbaus war. Seit jede
+// Stufe ihr eigenes Bild hat, springt der Turm dabei nur noch - und der
+// Platzbedarf bleibt ohnehin gleich.
+{
+  const { towerArtScale } = await import('../src/gfx/towerart');
+  for (let l = 2; l <= MAX_LEVEL; l++) {
+    if (Math.abs(towerArtScale(l) - towerArtScale(1)) > 1e-6) {
+      problems.push(
+        `Turmgroesse: Stufe ${l} wird mit ${towerArtScale(l)} gezeichnet, Stufe 1 mit ` +
+        `${towerArtScale(1)} - alle Stufen sollen gleich gross sein.`,
+      );
+    }
+  }
+}
+
 // Die Waffenebene braucht immer beide Teile.
 //
 // Ein Sockel MIT eingebauter Waffe plus eine zweite Waffe darueber waere

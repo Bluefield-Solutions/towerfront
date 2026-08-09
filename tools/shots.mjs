@@ -405,6 +405,29 @@ takes.push(['schwenk', () => shot('schwenk', 844, 390, (s, r) => {
   return 2;
 })]);
 
+takes.push(['stufen', () => shot('stufen', 844, 390, (s, r) => {
+  s.reset(1, 'normal', 'spiralhain');
+  s.gold = 900000;
+  // Vier Frosttuerme nebeneinander auf Stufe 1, 3, 5 und 6 - der Koerper muss
+  // bei allen gleich gross sein, nur die Aufbauten wachsen.
+  const stufen = [1, 3, 5, 6];
+  let i = 0;
+  for (const sp of candidateSpots(s)) {
+    if (i >= 4) break;
+    if (!s.build(sp.x, sp.y, 'frost')) continue;
+    const t = s.towers[s.towers.length - 1];
+    for (let k = 1; k < stufen[i]; k++) s.upgrade(t, 0);
+    i++;
+  }
+  if (s.towers[0]) {
+    r.resize();
+    r.zoomAt(1.9, 422, 195);
+    const p = r.worldToScreen(s.towers[0].x, s.towers[0].y);
+    r.panBy(422 - p.x + 150, 195 - p.y);
+  }
+  return 4;
+})]);
+
 takes.push(['welle8', () => shot('welle8', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 10);

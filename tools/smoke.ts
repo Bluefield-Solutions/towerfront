@@ -525,14 +525,17 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 // nur die Haelfte enthaelt.
 {
   const { OBJECT_ART } = await import('../src/gfx/assets/objects');
+  // Jetzt auch je Ausbaustufe: `waffe_frost_4` braucht `sockel_frost_4`.
   for (const id of ['arrow', 'frost', 'mortar', 'prism']) {
-    const hatWaffe = `waffe_${id}` in OBJECT_ART;
-    const hatSockel = `sockel_${id}` in OBJECT_ART;
-    if (hatWaffe !== hatSockel) {
-      problems.push(
-        `Waffenebene ${id}: ${hatWaffe ? 'Waffe ohne Sockel' : 'Sockel ohne Waffe'} - ` +
-        'die Ebene braucht beide Teile, sonst bleibt sie ungenutzt.',
-      );
+    for (const suffix of ['', '_1', '_2', '_3', '_4', '_5', '_6']) {
+      const hatWaffe = `waffe_${id}${suffix}` in OBJECT_ART;
+      const hatSockel = `sockel_${id}${suffix}` in OBJECT_ART;
+      if (hatWaffe !== hatSockel) {
+        problems.push(
+          `Waffenebene ${id}${suffix}: ${hatWaffe ? 'Waffe ohne Sockel' : 'Sockel ohne Waffe'} - ` +
+          'die Ebene braucht beide Teile, sonst bleibt sie ungenutzt.',
+        );
+      }
     }
   }
 }

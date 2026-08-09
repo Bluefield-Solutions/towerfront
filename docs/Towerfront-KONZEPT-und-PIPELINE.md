@@ -1,6 +1,6 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v76 · 08.08.2026
+Stand: v83 · 08.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Towerfront.html`
 
 > **Aufbau dieses Dokuments.** Die Abschnitte 1 bis 3.4 beschreiben den
@@ -335,6 +335,19 @@ den Ausbauzweig. Herzkristall und Tor der Leere sind ebenfalls Bilder — im
 Spielfeld ist damit keine gezeichnete Form mehr übrig. Türme schwenken beim
 Zielen leicht mit; gedreht wird nur der obere Teil und gedämpft, sonst legt
 sich das Bauwerk schief in die Landschaft.
+
+**Einbettung seit v81:** Jede Figur bekommt zwei Schatten — einen
+Schlagschatten in Lichtrichtung und einen engen Kontaktschatten darunter — und
+einen Sonnenanstrich aus der Lichtfarbe der Karte. Ohne beides liegen die
+Figuren auf der Landschaft statt darin. `npm run einbettung` misst dazu,
+entscheidet aber nicht: vier Versuche, daraus ein Tor zu machen, haben jedes
+Mal die Figur statt den Boden getroffen.
+
+**Waffenebene seit v79:** Liegen für einen Turm ein Sockel *ohne* Waffe und
+die Waffe allein vor, steht der Sockel still und die Waffe dreht sich zum
+Ziel. Beides auch je Ausbaustufe (`waffe_frost_4`), mit derselben
+Rückfallkette wie bei den Turmbildern. Fehlt ein Teil, bleibt es beim
+gedämpften Schwenk des Ganzbilds.
 
 **Reichweiten seit v71:** ein System statt 45 handgeschriebener Zahlen —
 Anteil der Feldbreite, gemeinsame Stufenkurve bis ×1,62, Zweigneigung mit

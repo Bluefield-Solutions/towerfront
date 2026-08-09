@@ -16,7 +16,7 @@ import { drawMenu } from './menurender';
 import type { Menu } from '../game/menu';
 import { backgroundVersion, getBackground } from './backgrounds';
 import { artBreite, getTowerArt, towerArtScale, towerArtVersion } from './towerart';
-import { getObjectArt } from './objectart';
+import { getObjectArt, getObjectArtStufe } from './objectart';
 import { enemyArtWidth, getEnemyArt } from './enemyart';
 import {
   drawSprite, getEnemySprite, getShadow, getTowerBase, getTowerWeapon, ENEMY_FRAMES,
@@ -745,14 +745,24 @@ export class Renderer {
         // Waffe allein, mit dem Drehpunkt in der Bildmitte. Fehlt eines von
         // beiden, bleibt es beim gedaempften Schwenk darunter; ein Sockel mit
         // eingebauter Waffe plus zweiter Waffe darueber waere doppelt.
-        const waffe = getObjectArt(`waffe_${t.def}`);
-        const sockel = getObjectArt(`sockel_${t.def}`);
+        const waffe = getObjectArtStufe(`waffe_${t.def}`, t.level);
+        const sockel = getObjectArtStufe(`sockel_${t.def}`, t.level);
         if (waffe && sockel) {
+          // Die Groesse kommt aus dem SOCKELBILD, nicht aus dem Ganzbild.
+          //
+          // `w` oben stammt aus artMasse und rechnet den Breitenanteil des
+          // Ganzbilds heraus - das fuellt seine Kachel nur zur Haelfte. Auf
+          // den Sockel angewandt war er dadurch fast doppelt so gross und
+          // schob den Kristall aus dem Bild. Die Einzelobjekte sind mit
+          // Fuellgrad 0,94 gepackt (siehe art/objekte.json), also fuellt die
+          // Figur die Kachel fast ganz.
+          const FUELLUNG = 0.94;
+          const bw = (TOWERS[def.id].footprint * DRAW_SCALE) / FUELLUNG;
           const rec2 = t.recoil * 4;
           ctx.save();
           ctx.translate(t.x, t.y);
-          const sh = w * (sockel.height / sockel.width);
-          ctx.drawImage(sockel, -w / 2, -sh * 0.72, w, sh);
+          const sh = bw * (sockel.height / sockel.width);
+          ctx.drawImage(sockel, -bw / 2, -sh * 0.72, bw, sh);
           // Die Waffe sitzt auf der Plattform, nicht auf dem Boden.
           // Auf die Plattform, nicht in den Schaft.
           ctx.translate(0, -sh * 0.60);
@@ -760,7 +770,7 @@ export class Renderer {
           ctx.rotate(t.angle + Math.PI / 2);
           // Rueckstoss laeuft entgegen der Schussrichtung.
           ctx.translate(0, rec2);
-          const ww = w * 0.56;
+          const ww = bw * 0.56;
           const wh = ww * (waffe.height / waffe.width);
           ctx.drawImage(waffe, -ww / 2, -wh / 2, ww, wh);
           ctx.restore();

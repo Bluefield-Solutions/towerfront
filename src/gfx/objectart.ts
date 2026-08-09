@@ -15,6 +15,20 @@ let stand = 0;
  *  gezeichnet werden muessen. */
 export const objectArtVersion = (): number => stand;
 
+/** Das genaueste vorhandene Bild aus einer Rueckfallkette.
+ *
+ *  Fuer die Waffenebene gibt es Bilder je Ausbaustufe - `waffe_frost_4`. Fehlt
+ *  eine Stufe, wird die naechstniedrigere genommen, zuletzt das stufenlose
+ *  `waffe_frost`. So kann ein Satz Stueck fuer Stueck wachsen, ohne dass
+ *  zwischendurch eine Luecke entsteht. Dieselbe Kette wie bei den Tuermen. */
+export function getObjectArtStufe(basis: string, level: number): HTMLImageElement | null {
+  for (let l = Math.max(1, Math.round(level)); l >= 1; l--) {
+    const treffer = getObjectArt(`${basis}_${l}`);
+    if (treffer) return treffer;
+  }
+  return getObjectArt(basis);
+}
+
 export function getObjectArt(id: keyof typeof OBJECT_ART): HTMLImageElement | null {
   const fertig = geladen.get(id);
   if (fertig) return fertig;

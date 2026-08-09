@@ -226,6 +226,37 @@ for (const p of weg.punkte) istWeg[p] = 1;
 const R = 16;                 // Sichtweite je Schritt
 const SCHRITT = 10;
 
+/** Der Endplatz: die breiteste Stelle des Wegnetzes.
+ *
+ *  Auf jeder gelieferten Karte ist das Ziel ein weiter runder Platz. Gesucht
+ *  wird der Wegpunkt mit dem groessten Abstand zum Rand des Weges - das ist
+ *  die Mitte der breitesten Stelle. Der Lauf benutzt ihn, um sich an
+ *  Gabelungen zu entscheiden.
+ */
+function endplatzFinden() {
+  // Grobe Abstandsmessung: in vier Richtungen zaehlen, das Minimum nehmen.
+  let bestX = 0, bestY = 0, best = -1;
+  for (let y = 2; y < H - 2; y += 2) {
+    for (let x = 2; x < B - 2; x += 2) {
+      if (!istWeg[y * B + x]) continue;
+      let min = 99;
+      for (const [ex, ey] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) {
+        let d = 0;
+        while (d < 60) {
+          const nx = x + ex * (d + 1), ny = y + ey * (d + 1);
+          if (nx < 0 || ny < 0 || nx >= B || ny >= H || !istWeg[ny * B + nx]) break;
+          d++;
+        }
+        if (d < min) min = d;
+      }
+      if (min > best) { best = min; bestX = x; bestY = y; }
+    }
+  }
+  return { x: bestX, y: bestY, breite: best };
+}
+const endplatz = endplatzFinden();
+console.log(`Endplatz bei ${endplatz.x}/${endplatz.y}, Halbbreite ${endplatz.breite}`);
+
 
 /** Von einem Punkt aus die Mittellinie ablaufen.
  *
@@ -243,18 +274,78 @@ function ablaufen(startX, startY, richtung, bestehende) {
   const kurve = [{ x: cx, y: cy }];
   const besucht = new Uint8Array(B * H);
   for (let schritt = 0; schritt < 400; schritt++) {
-    let sx = 0, sy = 0, n = 0;
+    // Die Punkte vor uns in Winkelsektoren sortieren.
+    //
+    // Vorher wurde ueber ALLE Punkte gemittelt. Auf gerader Strecke ist das
+    // richtig; an einer Kreuzung liegt der Mittelwert genau im Zentrum, der
+    // Lauf steuert hinein und bleibt stehen, weil dort alles schon besucht
+    // ist. Genau daran sind die Karten mit Sternplatz gescheitert.
+    //
+    // Jetzt zaehlt jeder Sektor fuer sich. Gibt es mehrere, wird der gewaehlt,
+    // der am ehesten zum Endplatz fuehrt - mit einem Bonus fuer Geradeaus,
+    // damit der Lauf nicht bei jedem Schlenker die Richtung wechselt.
+    const SEKTOREN = 16;
+    const sekX = new Float64Array(SEKTOREN), sekY = new Float64Array(SEKTOREN);
+    const sekN = new Int32Array(SEKTOREN);
+    let n = 0;
     for (let y = Math.max(0, Math.round(cy - R)); y <= Math.min(H - 1, Math.round(cy + R)); y++) {
       for (let x = Math.max(0, Math.round(cx - R)); x <= Math.min(B - 1, Math.round(cx + R)); x++) {
         if (!istWeg[y * B + x] || besucht[y * B + x]) continue;
         const ax = x - cx, ay = y - cy;
         if (ax * ax + ay * ay > R * R) continue;
         if (ax * dx + ay * dy <= 0) continue;
-        sx += x; sy += y; n++;
+        const w = Math.atan2(ay, ax);
+        const k = ((Math.round((w / (Math.PI * 2)) * SEKTOREN) % SEKTOREN) + SEKTOREN) % SEKTOREN;
+        sekX[k] += x; sekY[k] += y; sekN[k]++; n++;
       }
     }
     if (n < 6) break;
-    const zx = sx / n, zy = sy / n;
+
+    // Benachbarte Sektoren zu Aesten zusammenfassen.
+    const aeste = [];
+    const genommen = new Uint8Array(SEKTOREN);
+    for (let k = 0; k < SEKTOREN; k++) {
+      if (!sekN[k] || genommen[k]) continue;
+      let px = 0, py = 0, pn = 0;
+      for (let d = 0; d < SEKTOREN; d++) {
+        const j = (k + d) % SEKTOREN;
+        if (!sekN[j] || genommen[j]) break;
+        genommen[j] = 1; px += sekX[j]; py += sekY[j]; pn += sekN[j];
+      }
+      if (pn >= 3) aeste.push({ x: px / pn, y: py / pn, n: pn });
+    }
+    if (!aeste.length) break;
+
+    // Nur bei einer ECHTEN Gabelung entscheiden.
+    //
+    // Der erste Versuch wendete die Sektorregel auf jeden Schritt an - auch
+    // auf gerader Strecke, wo die Wolke durch das Besuchtmarkieren in
+    // Fetzen zerfaellt. Die Bahnen brachen dadurch frueher ab als vorher.
+    // Eine Gabelung liegt erst vor, wenn mindestens zwei Aeste je ein Viertel
+    // der Punkte tragen.
+    const stark = aeste.filter((a) => a.n >= n * 0.25);
+
+    let zx, zy;
+    if (stark.length < 2) {
+      let sx = 0, sy = 0;
+      for (const a of aeste) { sx += a.x * a.n; sy += a.y * a.n; }
+      zx = sx / n; zy = sy / n;
+    } else if (aeste.length === 1) {
+      zx = aeste[0].x; zy = aeste[0].y;
+    } else {
+      // Mehrere Aeste: der beste zeigt zum Endplatz und moeglichst geradeaus.
+      let bestWert = -Infinity;
+      for (const a of stark) {
+        const ax = a.x - cx, ay = a.y - cy;
+        const len = Math.hypot(ax, ay) || 1;
+        const geradeaus = (ax * dx + ay * dy) / len;
+        const zx2 = endplatz.x - cx, zy2 = endplatz.y - cy;
+        const zlen = Math.hypot(zx2, zy2) || 1;
+        const zumZiel = (ax * zx2 + ay * zy2) / (len * zlen);
+        const wert = zumZiel * 1.0 + geradeaus * 0.6;
+        if (wert > bestWert) { bestWert = wert; zx = a.x; zy = a.y; }
+      }
+    }
     const len = Math.hypot(zx - cx, zy - cy) || 1;
     dx = (zx - cx) / len; dy = (zy - cy) / len;
     cx += dx * SCHRITT; cy += dy * SCHRITT;

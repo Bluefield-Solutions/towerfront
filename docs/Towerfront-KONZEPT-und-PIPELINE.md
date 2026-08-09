@@ -1,6 +1,6 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v69 · 08.08.2026
+Stand: v76 · 08.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Towerfront.html`
 
 > **Aufbau dieses Dokuments.** Die Abschnitte 1 bis 3.4 beschreiben den
@@ -331,7 +331,15 @@ Türme und sieben Gegner sind neu und in einem Stil mit den Karten. Bogen- und
 Frostturm haben je sechs eigene Ausbaustufen; welches Bild eine Stufe bekommt,
 entscheidet eine Rückfallkette vom Genauen zum Allgemeinen. Die Gegner sind
 Aufsichten und drehen sich mit der Laufrichtung. Ein Farbring am Turmfuß zeigt
-den Ausbauzweig. Das Licht kommt überall von
+den Ausbauzweig. Herzkristall und Tor der Leere sind ebenfalls Bilder — im
+Spielfeld ist damit keine gezeichnete Form mehr übrig. Türme schwenken beim
+Zielen leicht mit; gedreht wird nur der obere Teil und gedämpft, sonst legt
+sich das Bauwerk schief in die Landschaft.
+
+**Reichweiten seit v71:** ein System statt 45 handgeschriebener Zahlen —
+Anteil der Feldbreite, gemeinsame Stufenkurve bis ×1,62, Zweigneigung mit
+Schadensausgleich je Turm. Panzerung schluckt seit v72 einen Anteil statt
+einer festen Zahl. Das Licht kommt überall von
 oben links; die Richtung steht als `LICHT` an einer Stelle.
 
 **Heutiger Umfang:** drei Karten, vier Türme mit je zwei Ausbauzweigen und

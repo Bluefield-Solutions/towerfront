@@ -456,6 +456,22 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
     if (renderer.scale > renderer.coverScale * 3 + 1e-6) {
       problems.push(`Kamera bei ${w}x${h}: Zoom nicht begrenzt.`);
     }
+
+    // Und von Hand ganz herausziehen darf ebenfalls keinen Rand zeigen.
+    //
+    // Vorher prueften wir nur das Umschalten - dabei wird ein fester Wert
+    // gesetzt, und der war richtig. Der gemeldete Fehler entstand beim
+    // Herausziehen mit zwei Fingern, wo die Grenze greift. Eine Pruefung, die
+    // nur den bequemen Weg geht, findet den Fehler nicht.
+    renderer.zoomAt(0.05, w / 2, h / 2);
+    const wtl = renderer.screenToWorld(0, 0);
+    const wbr = renderer.screenToWorld(w, h);
+    if (wtl.x < -0.5 || wtl.y < -0.5 || wbr.x > WORLD_W + 0.5 || wbr.y > WORLD_H + 0.5) {
+      problems.push(
+        `Kamera bei ${w}x${h}: von Hand herausgezogen liegt ein Rand im Bild ` +
+        `(${wtl.x.toFixed(0)}/${wtl.y.toFixed(0)} bis ${wbr.x.toFixed(0)}/${wbr.y.toFixed(0)}).`,
+      );
+    }
     renderer.toggleOverview();
   }
   sizeCanvas(canvas, 844, 390);

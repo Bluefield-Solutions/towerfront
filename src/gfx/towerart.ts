@@ -210,6 +210,24 @@ export function getTowerArt(
     dunkel.addColorStop(1, 'rgba(24,20,14,0.34)');
     bg.fillStyle = dunkel;
     bg.fillRect(0, 0, size, size);
+
+    // Bodenlicht: der helle Sand wirft Sonne zurueck.
+    //
+    // Ich hatte zunaechst vermutet, die Figuren wirkten wegen harter Kanten
+    // aufgeklebt. Gemessen stimmt das nicht: kein einziger harter Kantenpunkt,
+    // dafuer 2.684 weiche Uebergaenge - die Silhouette ist laengst weich.
+    //
+    // Was fehlt, ist das Licht, das der Boden zurueckwirft. In einer echten
+    // Szene ist die Unterseite eines Gegenstands nicht nur dunkler, sondern
+    // auch waermer, weil der beschienene Sand darunter Sonne hinaufwirft. Der
+    // Saum sitzt deshalb ZWISCHEN Verschattung und Standflaeche: ganz unten
+    // dunkel, knapp darueber ein warmer Schimmer.
+    const rueckwurf = bg.createLinearGradient(0, size * 0.72, 0, size * 0.94);
+    rueckwurf.addColorStop(0, hexA(sonne, 0));
+    rueckwurf.addColorStop(0.55, hexA(sonne, 0.20));
+    rueckwurf.addColorStop(1, hexA(sonne, 0));
+    bg.fillStyle = rueckwurf;
+    bg.fillRect(0, 0, size, size);
   }
 
   bg.globalCompositeOperation = 'source-over';

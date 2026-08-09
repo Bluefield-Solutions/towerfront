@@ -105,6 +105,15 @@ export function getEnemyArt(
     dunkel.addColorStop(1, 'rgba(24,20,14,0.26)');
     bg.fillStyle = dunkel;
     bg.fillRect(0, 0, size, size);
+
+    // Bodenlicht, wie bei den Tuermen - schwaecher, weil Gegner kleiner sind
+    // und ihr Saum sonst die Koerperfarbe ueberdeckt.
+    const rueckwurf = bg.createLinearGradient(0, size * 0.74, 0, size * 0.96);
+    rueckwurf.addColorStop(0, hexA(sonne, 0));
+    rueckwurf.addColorStop(0.55, hexA(sonne, 0.14));
+    rueckwurf.addColorStop(1, hexA(sonne, 0));
+    bg.fillStyle = rueckwurf;
+    bg.fillRect(0, 0, size, size);
   }
   bg.globalCompositeOperation = 'source-over';
   g.drawImage(body, 0, 0);

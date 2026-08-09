@@ -117,7 +117,7 @@ export const MAP_SPIRALHAIN: GameMap = {
     { x: 1069, y: 1004, r: 27 }, { x: 1433, y: 953, r: 25 },
   ],
   pfadImBild: true,
-  hint: { x: 260, y: 100 },
+  hint: { x: 300, y: 120 },
   waves: PLAN_SPIRALHAIN,
   balance: { hpMul: 0.85, goldMul: 1.15 },
 };

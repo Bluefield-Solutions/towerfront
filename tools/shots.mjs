@@ -446,6 +446,28 @@ takes.push(['einbettung', () => shot('einbettung', 844, 390, (s, r) => {
   return 3;
 })]);
 
+takes.push(['vier', () => shot('vier', 844, 390, (s, r) => {
+  // Alle vier Turmsorten nebeneinander auf freiem Boden, gleiche Stufe.
+  s.reset(1, 'normal', 'spiralhain');
+  s.gold = 900000;
+  // Freie Plaetze suchen, statt feste Punkte zu raten - der erste Versuch
+  // baute nur einen Turm, die anderen Stellen lagen auf Fels oder Weg.
+  const sorten = ['arrow', 'frost', 'mortar', 'prism'];
+  const gesetzt = [];
+  for (const sp of candidateSpots(s)) {
+    if (gesetzt.length >= 4) break;
+    if (gesetzt.some((g) => Math.hypot(g.x - sp.x, g.y - sp.y) < 210)) continue;
+    if (s.build(sp.x, sp.y, sorten[gesetzt.length])) gesetzt.push({ x: sp.x, y: sp.y });
+  }
+  const mx = gesetzt.reduce((a, g) => a + g.x, 0) / Math.max(1, gesetzt.length);
+  const my = gesetzt.reduce((a, g) => a + g.y, 0) / Math.max(1, gesetzt.length);
+  r.resize();
+  r.zoomAt(1.7, 422, 195);
+  const p = r.worldToScreen(mx, my);
+  r.panBy(422 - p.x, 195 - p.y);
+  return 3;
+})]);
+
 takes.push(['welle8', () => shot('welle8', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 10);

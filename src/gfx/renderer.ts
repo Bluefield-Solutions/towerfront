@@ -699,14 +699,30 @@ export class Renderer {
         );
         ctx.fill();
 
-        ctx.globalAlpha = 0.62;
+        // Weich auslaufend statt als Flecken.
+        //
+        // Zwei uebereinandergelegte Ellipsen mit fester Deckung sahen selbst
+        // wie ein Aufkleber aus - ein dunkler Ring mit sichtbarer Kante unter
+        // dem Turm. Ein echter Kontaktschatten ist innen dicht und verliert
+        // sich nach aussen. Ausserdem war er breiter als der Turm; jetzt
+        // endet er knapp innerhalb der Standflaeche.
+        ctx.globalAlpha = 1;
+        const kontakt = ctx.createRadialGradient(
+          t.x, t.y + fuss * 0.08, fuss * 0.12,
+          t.x, t.y + fuss * 0.08, fuss * 0.92,
+        );
+        kontakt.addColorStop(0, hexA(C.ink, 0.52));
+        kontakt.addColorStop(0.55, hexA(C.ink, 0.26));
+        kontakt.addColorStop(1, hexA(C.ink, 0));
+        ctx.save();
+        ctx.translate(t.x, t.y + fuss * 0.08);
+        ctx.scale(1, 0.38);
+        ctx.translate(-t.x, -(t.y + fuss * 0.08));
+        ctx.fillStyle = kontakt;
         ctx.beginPath();
-        ctx.ellipse(t.x, t.y + fuss * 0.10, fuss * 1.02, fuss * 0.40, 0, 0, Math.PI * 2);
+        ctx.arc(t.x, t.y + fuss * 0.08, fuss * 0.92, 0, Math.PI * 2);
         ctx.fill();
-        ctx.globalAlpha = 0.40;
-        ctx.beginPath();
-        ctx.ellipse(t.x, t.y + fuss * 0.06, fuss * 1.32, fuss * 0.52, 0, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.restore();
         ctx.restore();
 
         // Ein Farbring am Fuss zeigt den Ausbauzweig.

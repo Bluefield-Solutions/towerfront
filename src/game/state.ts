@@ -928,7 +928,21 @@ export class GameState {
   ): void {
     if (e.dead) return;
     const def = ENEMIES[e.def];
-    const dmg = Math.max(1, Math.round(raw * this.perks.damageMul) - Math.max(0, def.armor - pierce));
+    // Panzerung schluckt einen ANTEIL, nicht eine feste Zahl.
+    //
+    // Vorher war sie ein Abzug: `Schaden minus Panzerung`. Am Anfang wirkte
+    // das - beim Leerentitan schluckte Panzerung 6 noch drei Viertel eines
+    // Bogenschusses. Ueber sechs Ausbaustufen waechst der Schaden aber auf
+    // das 33-fache, und derselbe Abzug schluckte am Ende noch 2 Prozent.
+    // Panzerung verschwand als Spielelement genau dann, wenn der Boss kam,
+    // und der Moerser verlor seine Rolle als Panzerbrecher.
+    //
+    // Jetzt zaehlt das Verhaeltnis: jeder Punkt Panzerung nimmt 11 Prozent,
+    // gedeckelt bei zwei Dritteln. Sechs Punkte lassen also ein Drittel
+    // durch - auf jeder Stufe gleich. Durchschlag (`pierce`) zieht vorher ab.
+    const rest = Math.max(0, def.armor - pierce);
+    const schluck = Math.min(0.66, rest * 0.11);
+    const dmg = Math.max(1, Math.round(raw * this.perks.damageMul * (1 - schluck)));
     e.hp -= dmg;
     e.hitFlash = 1;
     e.squash = Math.min(1, e.squash + 0.55);

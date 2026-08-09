@@ -312,6 +312,22 @@ takes.push(['infanterie', () => shot('infanterie', 844, 390, (s) => {
   return 60 * 9;
 })]);
 
+takes.push(['neue-gegner', () => shot('neue-gegner', 844, 390, (s, r) => {
+  s.reset(1, 'normal', 'spiralhain');
+  stock(s, 5);
+  s.waveIndex = 6;
+  s.startWave();
+  for (let i = 0; i < 60 * 10; i++) s.update(DT);
+  const ziel = s.enemies[0];
+  if (ziel) {
+    r.resize();
+    r.zoomAt(2.2, 422, 195);
+    const p = r.worldToScreen(ziel.x, ziel.y);
+    r.panBy(422 - p.x, 195 - p.y);
+  }
+  return 0;
+})]);
+
 takes.push(['welle8', () => shot('welle8', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 10);

@@ -15,24 +15,45 @@
   },
   "items": {
     "crawler": {
-      "file": "enemy_light_tank_01.png",
-      "fill": 0.78
+      "file": "gegner_schleicher.png",
+      "comment": "Neu geliefert, Aufsicht mit Blick nach oben - wird im Spiel gedreht.",
+      "center": true,
+      "fill": 0.9,
+      "entrauschen": 0.9,
+      "schwarzHeben": 0,
+      "helligkeit": 1.22,
+      "farbe": 0.78
     },
     "runner": {
-      "file": "enemy_armored_scout_01.png",
-      "fill": 0.7
+      "file": "gegner_spaeher.png",
+      "comment": "Neu geliefert, Aufsicht mit Blick nach oben - wird im Spiel gedreht.",
+      "center": true,
+      "fill": 0.9,
+      "entrauschen": 0.9,
+      "schwarzHeben": 0,
+      "helligkeit": 0.8,
+      "farbe": 0.72
     },
     "brute": {
       "file": "enemy_heavy_tank_01.png",
       "fill": 0.98
     },
     "flyer": {
-      "file": "enemy_energy_tank_01.png",
-      "fill": 0.78
+      "file": "gegner_gleiter.png",
+      "comment": "Neu geliefert, Aufsicht mit Blick nach oben - wird im Spiel gedreht.",
+      "center": true,
+      "fill": 0.9,
+      "entrauschen": 0.9,
+      "schwarzHeben": 0,
+      "helligkeit": 0.62,
+      "farbe": 0.7
     },
     "splitter": {
       "file": "enemy_medium_tank_01.png",
-      "fill": 0.92
+      "fill": 0.92,
+      "farbe": 2.6,
+      "helligkeit": 1.15,
+      "comment": "Altbild - farblich vom neuen Spaeher weggezogen."
     },
     "splitling": {
       "file": "enemy_light_tank_02.png",

@@ -626,12 +626,8 @@ export class Renderer {
       // drehen wird gespiegelt, sobald das Ziel links steht.
       const art = getTowerArt(t.def, t.branch, t.level, s.map.id);
       if (art) {
-        const k = towerArtScale(t.level);
-        // Die Kachel wird so gross gezeichnet, dass die FIGUR darin den
-        // Platzbedarf ausfuellt - nicht die Kachel selbst.
-        const anteil = artBreite(art, `${t.def}:${t.branch}:${t.level}`);
-        const w = (TOWERS[def.id].footprint * DRAW_SCALE * k) / Math.max(0.3, anteil);
-        const h = w;
+        const masse = this.artMasse(t.def, t.branch, t.level, art);
+        const w = masse.w, h = masse.h;
 
         // Ein Schlagschatten in Lichtrichtung.
         //
@@ -757,15 +753,29 @@ export class Renderer {
    *  Vorher wurde hier die gezeichnete Silhouette gemalt, waehrend gebaute
    *  Tuerme das gerenderte Bild zeigen. Man sah beim Bauen also etwas anderes
    *  als das, was danach dastand. */
+  /** Wie gross ein Turmbild gezeichnet wird - die eine Stelle dafuer.
+   *
+   *  Die Kachel wird so gross gezeichnet, dass die FIGUR darin den
+   *  Platzbedarf ausfuellt, nicht die Kachel selbst. Vorher stand diese
+   *  Rechnung an zwei Stellen: einmal fuer gebaute Tuerme, einmal fuer die
+   *  Bauvorschau - und nur die erste kannte den Breitenausgleich. Die
+   *  Vorschau war dadurch rund 40 Prozent kleiner als das, was danach dort
+   *  stand. Man entschied ueber eine Groesse, die man nicht sah. */
+  private artMasse(
+    id: TowerId, branch: BranchIndex, level: number, art: HTMLCanvasElement,
+  ): { w: number; h: number; oben: number } {
+    const anteil = artBreite(art, `${id}:${branch}:${level}`);
+    const w = (TOWERS[id].footprint * DRAW_SCALE * towerArtScale(level)) / Math.max(0.3, anteil);
+    return { w, h: w, oben: -w * 0.72 };
+  }
+
   private paintTower(
     def: TowerDef, level: number, x: number, y: number, time: number, mapId = 'spiralhain',
   ): void {
     const art = getTowerArt(def.id, null, level, mapId);
     if (art) {
-      const k = towerArtScale(level);
-      const w = TOWERS[def.id].footprint * DRAW_SCALE * k;
-      const h = w;
-      this.ctx.drawImage(art, x - w / 2, y - h * 0.72, w, h);
+      const m = this.artMasse(def.id, null, level, art);
+      this.ctx.drawImage(art, x - m.w / 2, y + m.oben, m.w, m.h);
       return;
     }
     drawSprite(this.ctx, getTowerBase(def.id, null, level), x, y);

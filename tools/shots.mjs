@@ -348,6 +348,24 @@ takes.push(['zweige', () => shot('zweige', 844, 390, (s, r) => {
   return 6;
 })]);
 
+takes.push(['bauvorschau', () => shot('bauvorschau', 844, 390, (s, r) => {
+  s.reset(1, 'normal', 'spiralhain');
+  s.gold = 9000;
+  const spots = candidateSpots(s);
+  // Ein echter Turm, daneben die Vorschau desselben Turms - beide muessen
+  // gleich gross sein.
+  const echt = spots.find((p) => s.build(p.x, p.y, 'frost'));
+  s.buildChoice = 'frost';
+  if (echt) s.hoverPoint = { x: echt.x + 190, y: echt.y };
+  if (echt) {
+    r.resize();
+    r.zoomAt(2.6, 422, 195);
+    const p = r.worldToScreen(echt.x + 95, echt.y);
+    r.panBy(422 - p.x, 195 - p.y);
+  }
+  return 4;
+})]);
+
 takes.push(['welle8', () => shot('welle8', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 10);

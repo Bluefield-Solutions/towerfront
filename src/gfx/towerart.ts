@@ -18,8 +18,20 @@ import { mapById } from '../data/maps';
  *  Zweitens bekommen sie eine helle Kante. Auf dem dunklen Untergrundbild
  *  verschwaende ein dunkler Turm sonst schlicht. */
 /** Saum um eine Silhouette: das Bild achtfach versetzt in einer Farbe,
- *  darunter gelegt. Zweieinhalb Punkte reichen und kosten zur Laufzeit
- *  nichts, weil das Ergebnis gebacken wird. */
+ *  darunter gelegt.
+ *
+ *  Der Saum stammt aus v33 und war die richtige Antwort auf ein anderes
+ *  Problem: dunkle, gerenderte Figuren auf einem dunklen Waldfoto - elf von
+ *  zwoelf lagen im selben Helligkeitsband wie der Boden und waren nur an
+ *  ihrem Saum zu erkennen.
+ *
+ *  Seit die Bilder und die Karten neu sind, gilt das nicht mehr. Die Figuren
+ *  sind heller als der Boden und tragen ihre Form selbst. Der helle Saum ist
+ *  dadurch von einer Notmassnahme zu einem Fehler geworden - im Spiel sah man
+ *  weisse Umrandungen um jeden Turm und jeden Gegner.
+ *
+ *  Er bleibt im Code, weil er fuer die verbliebenen Altbilder noch gebraucht
+ *  wird; welche Figur ihn bekommt, entscheidet `brauchtSaum`. */
 export function drawRim(
   g: CanvasRenderingContext2D, img: HTMLImageElement | HTMLCanvasElement,
   size: number, colour: string, width = 2.5,
@@ -38,6 +50,14 @@ export function drawRim(
   g.drawImage(mask, 0, 0);
   g.globalAlpha = 1;
 }
+
+/** Welche Bilder brauchen noch einen Saum?
+ *
+ *  Die neu gelieferten tragen ihre Form selbst und sind heller als der Boden.
+ *  Ein Saum wuerde sie mit einer weissen Linie umranden. Die Liste schrumpft
+ *  mit jeder Lieferung; steht sie leer, kann `drawRim` ganz weg. */
+const OHNE_SAUM = new Set<string>(['arrow', 'frost', 'mortar', 'prism']);
+export const brauchtSaum = (id: string): boolean => !OHNE_SAUM.has(id);
 
 const tinted = new Map<string, HTMLCanvasElement>();
 
@@ -113,7 +133,8 @@ export function getTowerArt(
 
   // Erst der Saum, dann der eingefaerbte Koerper darueber - so bleibt die
   // Kante sauber und wird nicht mit eingefaerbt.
-  drawRim(g, img, size, rim);
+  // Nur noch fuer Altbilder, siehe Kommentar an drawRim.
+  if (brauchtSaum(id)) drawRim(g, img, size, rim, 2.0);
 
   const body = document.createElement('canvas');
   body.width = size; body.height = size;

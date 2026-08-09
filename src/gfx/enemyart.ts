@@ -3,6 +3,7 @@ import { ENEMIES, type EnemyId } from '../data/enemies';
 import { hexA } from './glow';
 import { mapById } from '../data/maps';
 import { drawRim } from './towerart';
+import { ENEMIES as ALLE } from '../data/enemies';
 
 /** Gerenderte Gegnerbilder.
  *
@@ -49,7 +50,10 @@ export function getEnemyArt(
   const cv = document.createElement('canvas');
   cv.width = size; cv.height = size;
   const g = cv.getContext('2d')!;
-  if (!flash) drawRim(g, img, size, rim);
+  // Aufsichten sind neu geliefert, hell genug und tragen ihre Form selbst -
+  // ein Saum wuerde sie weiss umranden. Nur die verbliebenen Seitenansichten
+  // aus dem Altbestand brauchen ihn noch.
+  if (!flash && !ALLE[id].topdown) drawRim(g, img, size, rim, 2.0);
 
   const body = document.createElement('canvas');
   body.width = size; body.height = size;

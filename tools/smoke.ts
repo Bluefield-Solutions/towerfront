@@ -432,13 +432,25 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
       }
     }
 
-    // Ganz herauszoomen zeigt alles, ganz hinein bleibt begrenzt.
+    // Die Uebersicht fuellt den Bildschirm - weiter heraus geht nicht.
+    //
+    // Vorher wurde hier geprueft, dass in der Uebersicht das GANZE Feld zu
+    // sehen ist. Genau das war der Fehler, der aus dem Spiel gemeldet wurde:
+    // dann liegen schwarze Balken um das Kartenbild. Jetzt wird das Gegenteil
+    // geprueft - kein Rand darf ins Bild.
+    // Erst hineinziehen, sonst schaltet das Umschalten in die Nahsicht -
+    // seit die Uebersicht der Startzustand ist, ist sie schon aktiv.
+    renderer.zoomAt(2.5, w / 2, h / 2);
     renderer.toggleOverview();
     if (!renderer.atOverview) problems.push(`Kamera bei ${w}x${h}: Uebersicht laesst sich nicht einschalten.`);
     const tl = renderer.screenToWorld(0, 0);
     const br = renderer.screenToWorld(w, h);
-    if (tl.x > 0.5 || tl.y > 0.5 || br.x < WORLD_W - 0.5 || br.y < WORLD_H - 0.5) {
-      problems.push(`Kamera bei ${w}x${h}: in der Uebersicht ist nicht das ganze Feld zu sehen.`);
+    if (tl.x < -0.5 || tl.y < -0.5 || br.x > WORLD_W + 0.5 || br.y > WORLD_H + 0.5) {
+      problems.push(
+        `Kamera bei ${w}x${h}: in der Uebersicht liegt ein Rand im Bild ` +
+        `(${tl.x.toFixed(0)}/${tl.y.toFixed(0)} bis ${br.x.toFixed(0)}/${br.y.toFixed(0)}) - ` +
+        'dort waere schwarz.',
+      );
     }
     renderer.zoomAt(6, w / 2, h / 2);
     if (renderer.scale > renderer.coverScale * 3 + 1e-6) {
@@ -465,6 +477,25 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
   if (Math.hypot(LICHT.x, LICHT.y) < 0.5) {
     problems.push('Licht: die Schattenrichtung ist zu kurz - die Schatten liegen unter dem Objekt.');
+  }
+}
+
+// Ausbauen muss ohne Rollen erreichbar sein.
+//
+// Gemeldet aus dem Spiel: der Ausbauknopf lag auf einem Querformat-Bildschirm
+// unter dem Rand des Pruefstegs, man musste erst scrollen. Das ist die
+// Handlung, derentwegen man den Steg oeffnet.
+{
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const iUps = html.indexOf('id="i-ups"');
+  const iStats = html.indexOf('id="i-stats"');
+  if (iUps < 0 || iStats < 0) {
+    problems.push('Pruefsteg: Ausbau- oder Werteblock fehlt.');
+  } else if (iUps > iStats) {
+    problems.push('Pruefsteg: die Werteliste steht vor dem Ausbauen - der Knopf rutscht unter den Rand.');
+  }
+  if (!/\.insp-stats \{[^}]*overflow-y: auto/.test(readFileSync(new URL('../src/style.css', import.meta.url), 'utf8'))) {
+    problems.push('Pruefsteg: die Werteliste rollt nicht eigenstaendig - dann wandern die Knoepfe mit aus dem Bild.');
   }
 }
 

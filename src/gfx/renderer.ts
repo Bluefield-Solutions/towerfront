@@ -66,9 +66,15 @@ export class Renderer {
    *  - `fitScale`  - alles ist sichtbar, es bleiben Raender
    *  - `coverScale`- der Bildschirm ist gefuellt, es wird beschnitten
    *
-   *  Der Startwert ist `coverScale`. Wer mehr Uebersicht will, zieht heraus
-   *  bis `fitScale`; wer Genaues braucht, zieht hinein. Verschieben ist immer
-   *  so begrenzt, dass kein Rand des Feldes ins Bild rutscht. */
+   *  **`coverScale` ist die Untergrenze, nicht `fitScale`.** Solange das Feld
+   *  ein gezeichnetes Brett war, waren Raender daneben vertretbar. Seit die
+   *  Karte ein Bild ist, sind sie es nicht: wer herauszog, sah schwarze
+   *  Balken um das Bild, und weil die Himmelsschicht sich dabei je Bild neu
+   *  aufbaute, flackerte es dazu. Gemeldet aus dem Spiel, und zu Recht.
+   *
+   *  Der Startwert ist `coverScale`. Herausziehen endet dort; wer Genaues
+   *  braucht, zieht hinein. Verschieben ist immer so begrenzt, dass kein Rand
+   *  des Feldes ins Bild rutscht. */
   private zoom = 1;
   private camX = WORLD_W / 2;
   private camY = WORLD_H / 2;
@@ -96,7 +102,7 @@ export class Renderer {
   /** Grenzen einhalten: nie ueber den Rand des Feldes hinaus, und wenn das
    *  Feld in einer Richtung kleiner ist als der Bildschirm, mittig. */
   private clamp(): void {
-    this.zoom = Math.min(Math.max(this.zoom, this.fitScale), this.coverScale * 3);
+    this.zoom = Math.min(Math.max(this.zoom, this.coverScale), this.coverScale * 3);
     const halfW = this.cssW / 2 / this.zoom;
     const halfH = this.cssH / 2 / this.zoom;
     this.camX = halfW * 2 >= WORLD_W
@@ -122,7 +128,7 @@ export class Renderer {
    *  immer der falsche Ausschnitt weg. */
   zoomAt(factor: number, sx: number, sy: number): void {
     const before = this.screenToWorld(sx, sy);
-    this.zoom = Math.min(Math.max(this.zoom * factor, this.fitScale), this.coverScale * 3);
+    this.zoom = Math.min(Math.max(this.zoom * factor, this.coverScale), this.coverScale * 3);
     this.clamp();
     const after = this.screenToWorld(sx, sy);
     this.camX += before.x - after.x;
@@ -168,15 +174,21 @@ export class Renderer {
     return { x: wx * this.scale + this.offX, y: wy * this.scale + this.offY };
   }
 
-  /** Zwischen "alles sichtbar" und "Bildschirm gefuellt" umschalten. */
+  /** Zwischen Uebersicht und Nahsicht umschalten.
+   *
+   *  Die Uebersicht ist jetzt `coverScale` - weiter heraus geht nicht mehr.
+   *  Die Nahsicht ist das Doppelte davon. */
   toggleOverview(): void {
-    const atCover = Math.abs(this.zoom - this.coverScale) < 1e-3;
-    this.zoom = atCover ? this.fitScale : this.coverScale;
+    // Die Grenze ist anteilig, nicht absolut: bei einem sehr breiten Fenster
+    // liegt coverScale weit ueber 1, und ein fester Schwellwert traf dann
+    // nie zu. Schon der vierte Fall dieser Art.
+    const atCover = this.zoom <= this.coverScale * 1.001;
+    this.zoom = atCover ? this.coverScale * 2 : this.coverScale;
     this.clamp();
   }
 
   get atOverview(): boolean {
-    return Math.abs(this.zoom - this.fitScale) < 1e-3;
+    return this.zoom <= this.coverScale * 1.001;
   }
 
   /** Passt das Bildraster der Leinwand noch zu ihrer Flaeche auf dem

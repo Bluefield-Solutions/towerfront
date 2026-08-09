@@ -506,6 +506,33 @@ export class Renderer {
     stampGlow(ctx, C.crystal, x, y, glowR, hi ? 0.9 : 0.55);
     if (s.crystalHit > 0) stampGlow(ctx, C.danger, x, y, 125, s.crystalHit * 0.8);
 
+    // Ist das Bild da, wird es gezeichnet - sonst die gemalte Form darunter.
+    const burg = getObjectArt('crystal');
+    if (burg) {
+      const b = 300 * pulse;
+      const h = b * (burg.height / burg.width);
+      ctx.save();
+      // Schatten in Lichtrichtung, wie bei allem anderen.
+      ctx.globalAlpha = 0.34;
+      ctx.fillStyle = C.ink;
+      ctx.beginPath();
+      ctx.ellipse(x + LICHT.x * 60, y + LICHT.y * 26, b * 0.36, b * 0.13, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      // Bei Treffern zuckt die Burg rot, wie jeder andere Getroffene auch.
+      ctx.drawImage(burg, x - b / 2, y - h * 0.74, b, h);
+      if (s.crystalHit > 0.01) {
+        ctx.globalAlpha = s.crystalHit * 0.5;
+        ctx.globalCompositeOperation = 'source-atop';
+        ctx.fillStyle = C.danger;
+        ctx.fillRect(x - b / 2, y - h * 0.74, b, h);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = 1;
+      }
+      ctx.restore();
+      return;
+    }
+
     ctx.save();
     ctx.translate(x, y);
     ctx.fillStyle = hexA(C.ink, 0.45);

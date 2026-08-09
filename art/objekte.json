@@ -3,7 +3,7 @@
   "source": "roh/objekte",
   "output": "objects.ts",
   "exportName": "OBJECT_ART",
-  "budgetKb": 120,
+  "budgetKb": 220,
   "defaults": {
     "size": 256,
     "fill": 0.92,
@@ -17,6 +17,14 @@
       "entrauschen": 1.6,
       "farbe": 0.8,
       "helligkeit": 1.0
+    },
+    "crystal": {
+      "file": "kristall.png",
+      "comment": "Der Herzkristall als Burg. Gemessen 10,5 Detaildichte - fuer ein Einzelobjekt sehr unruhig, entrauscht. Er soll den Blick tragen, nicht flimmern.",
+      "entrauschen": 1.4,
+      "farbe": 0.86,
+      "helligkeit": 0.92,
+      "fill": 0.96
     }
   }
 }

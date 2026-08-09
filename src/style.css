@@ -667,3 +667,30 @@ html, body {
   .card .primary { padding: 11px 18px; font-size: 14px; }
   .choice { padding: 9px 12px; }
 }
+
+/* Pausenmenue — liegt ueber dem Feld, nicht daneben.
+   Es erscheint mit der Pause und verschwindet mit ihr; ein eigener Schalter
+   waere eine zweite Wahrheit ueber denselben Zustand. */
+.pause-menu {
+  position: absolute; inset: 0; z-index: 6;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(8, 11, 20, 0.62); backdrop-filter: blur(3px);
+}
+.pause-menu[hidden] { display: none; }
+.pause-card {
+  display: flex; flex-direction: column; gap: 10px;
+  min-width: 240px; padding: 22px;
+  background: var(--panel); border: 1px solid var(--edge); border-radius: 18px;
+}
+.pause-title {
+  font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 4px; text-align: center;
+}
+.pause-btn {
+  padding: 13px 18px; min-height: 46px;
+  font: inherit; font-size: 15px; color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--edge); border-radius: 12px; cursor: pointer;
+}
+.pause-btn:active { transform: scale(0.98); }
+.pause-btn.primary { background: var(--accent); color: #04121a; font-weight: 700; border-color: transparent; }

@@ -30,6 +30,19 @@
     <button class="chip" id="b-pause" aria-label="Pause">Pause</button>
   </header>
 
+  <!-- Pausenmenue.
+       Bis v93 hielt "Pause" nur die Zeit an - wer eine Partie verlassen oder
+       neu anfangen wollte, musste die Seite neu laden. Beides gehoert an die
+       Stelle, an der man ohnehin innehaelt. -->
+  <div class="pause-menu" id="pause-menu" hidden>
+    <div class="pause-card">
+      <span class="pause-title">Pause</span>
+      <button class="pause-btn primary" id="p-resume">Weiter spielen</button>
+      <button class="pause-btn" id="p-restart">Level neu starten</button>
+      <button class="pause-btn" id="p-quit">Zurück zur Karte</button>
+    </div>
+  </div>
+
   <div class="dock" id="dock">
     <button class="dock-toggle" id="dock-toggle" aria-label="Leiste einklappen">
       <span id="dock-toggle-i">▾</span>

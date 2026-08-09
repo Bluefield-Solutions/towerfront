@@ -85,6 +85,28 @@ menu.onRetry = () => {
   ui.setSpielansicht(true);
 };
 
+/** Level neu starten - dieselbe Karte, derselbe Grad, von Welle eins.
+ *
+ *  Der Fortschritt der laufenden Partie ist damit weg; das ist gewollt, denn
+ *  genau dafuer druecken Leute "neu starten". Der Spielstand anderer Karten
+ *  bleibt unberuehrt, weil `reset` nur die laufende Partie ersetzt. */
+ui.onRestart = () => {
+  state.reset(undefined, state.difficulty, state.map.id, { endless: menu.endless });
+  menu.result = null;
+  renderer.menu = null;
+  ui.hideScreen();
+  ui.setSpielansicht(true);
+};
+
+/** Zurueck zur Kartenuebersicht.
+ *
+ *  Vorher gespeichert, damit die Partie beim naechsten Aufruf fortgesetzt
+ *  werden kann - wer eine Karte verlaesst, will sie nicht verlieren. */
+ui.onQuit = () => {
+  if (state.phase === 'playing') saveGame(state.snapshot());
+  ui.openMenu();
+};
+
 layout();
 bindInput(canvas, state, renderer);
 

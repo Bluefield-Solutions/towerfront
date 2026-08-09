@@ -468,6 +468,15 @@ takes.push(['vier', () => shot('vier', 844, 390, (s, r) => {
   return 3;
 })]);
 
+takes.push(['pause', () => shot('pause', 844, 390, (s) => {
+  s.reset(3, 'normal', 'spiralhain');
+  stock(s, 4);
+  s.startWave();
+  for (let i = 0; i < 60 * 6; i++) s.update(DT);
+  s.paused = true;
+  return 0;
+})]);
+
 takes.push(['welle8', () => shot('welle8', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 10);

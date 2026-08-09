@@ -21,12 +21,17 @@ import type { GameState } from '../game/state';
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
 export class UI {
+  /** Was das Pausenmenue ausloest. Setzt `main.ts`. */
+  onRestart: (() => void) | null = null;
+  onQuit: (() => void) | null = null;
+
   private gold = $('v-gold');
   private lives = $('v-lives');
   private wave = $('v-wave');
   private bSound = $<HTMLButtonElement>('b-sound');
   private bSpeed = $<HTMLButtonElement>('b-speed');
   private bPause = $<HTMLButtonElement>('b-pause');
+  private pauseMenu = $<HTMLElement>('pause-menu');
   private bWave = $<HTMLButtonElement>('b-wave');
   private bWaveT = $('b-wave-t');
   private bWaveB = $('b-wave-b');
@@ -218,6 +223,15 @@ export class UI {
       this.s.speed = SPEEDS[(i + 1) % SPEEDS.length];
     });
     this.bPause.addEventListener('click', () => { this.s.paused = !this.s.paused; });
+    $<HTMLButtonElement>('p-resume').addEventListener('click', () => { this.s.paused = false; });
+    $<HTMLButtonElement>('p-restart').addEventListener('click', () => {
+      this.s.paused = false;
+      this.onRestart?.();
+    });
+    $<HTMLButtonElement>('p-quit').addEventListener('click', () => {
+      this.s.paused = false;
+      this.onQuit?.();
+    });
     this.bWave.addEventListener('click', () => { Sfx.unlock(); this.s.startWave(); });
     $('i-close').addEventListener('click', () => {
       this.s.selectedTower = null;
@@ -608,6 +622,9 @@ export class UI {
     this.bSound.textContent = getSettings().sound ? 'Ton' : 'Stumm';
     this.bSpeed.textContent = `${s.speed}×`;
     this.bPause.textContent = s.paused ? 'Weiter' : 'Pause';
+    // Das Pausenmenue haengt am Pausenzustand, nicht an einem eigenen
+    // Schalter - sonst gaebe es zwei Wahrheiten ueber denselben Zustand.
+    this.pauseMenu.hidden = !s.paused || s.phase !== 'playing';
     this.bWave.disabled = !s.canStartWave;
     this.bWaveT.textContent = s.waveActive
       ? 'Welle läuft'

@@ -872,6 +872,34 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Das Pausenmenue haengt am Pausenzustand.
+//
+// Es liegt in HTML, nicht auf der Leinwand - die Bildabnahme sieht es also
+// nicht. Geprueft wird deshalb hier: erscheint es mit der Pause, verschwindet
+// es mit ihr, und sind die drei Knoepfe da und gross genug?
+{
+  const menue = document.getElementById('pause-menu');
+  if (!menue) {
+    problems.push('Pausenmenue: fehlt im Dokument.');
+  } else {
+    // Ganz am Ende, denn `reset` loescht die Auswertung des vorigen Tests -
+    // genau daran ist dieser Block beim ersten Mal gescheitert.
+    state.reset(3, 'normal', 'spiralhain');
+    state.paused = false;
+    ui.sync();
+    if (!menue.hidden) problems.push('Pausenmenue: sichtbar, obwohl nicht pausiert.');
+    state.paused = true;
+    ui.sync();
+    if (menue.hidden) problems.push('Pausenmenue: bleibt verborgen, obwohl pausiert.');
+    for (const id of ['p-resume', 'p-restart', 'p-quit']) {
+      if (!document.getElementById(id)) problems.push(`Pausenmenue: Knopf ${id} fehlt.`);
+    }
+    state.paused = false;
+    ui.sync();
+  }
+}
+
+
 // Jede Karte muss sich aufbauen und zeichnen lassen. Ein Pfad, der ins Leere
 // fuehrt, oder eine Farbwelt mit Luecke faellt sonst erst beim Antippen auf.
 {

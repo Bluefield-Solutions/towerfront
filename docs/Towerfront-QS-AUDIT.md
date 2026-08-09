@@ -67,6 +67,79 @@ Spiel.
 
 ---
 
+# Dritter Durchgang · v70 bis v72 · Der Motor
+
+**Drei Fehler gefunden, alle behoben. Zwei davon hätte niemand im Spiel
+bemerkt — und genau deshalb waren sie gefährlich.**
+
+### B17 — Das Ausbaumenü versprach etwas anderes, als der Ausbau lieferte
+
+Nach der Umstellung auf das Reichweitensystem lief `statsFor` durch die neue
+Berechnung, `nextFor` aber nicht — das Menü zeigte weiter die alten
+handgeschriebenen Zahlen.
+
+```
+Stufe 5:  Menü sagt 519 px   ·   gebaut werden 600 px
+```
+
+Bei jeder Stufe klaffte es, zwischen 3 und 16 Prozent. **Ein Menü, das etwas
+anderes verspricht als es liefert, ist schlimmer als gar keins** — man trifft
+Kaufentscheidungen auf falscher Grundlage.
+
+Behoben, indem `nextFor` durch dieselbe Aufbereitung läuft. Und im Rauchtest
+wird jetzt für alle vier Türme, beide Zweige und alle Stufen geprüft, dass
+Versprechen und Lieferung in Reichweite, Schaden, Kosten und Takt
+übereinstimmen.
+
+### B18 — Panzerung verschwand genau dann, wenn der Boss kam
+
+Panzerung war ein fester Abzug: `Schaden minus Panzerung`. Am Anfang wirkte
+das — beim Leerentitan schluckte Panzerung 6 noch drei Viertel eines
+Bogenschusses. Über sechs Ausbaustufen wächst der Schaden aber auf das
+33-fache:
+
+```
+Stufe 1:  75 % geschluckt      Stufe 6:  2 % geschluckt
+```
+
+Damit war Panzerung als Spielelement tot, sobald man ausgebaut hatte — und
+der Mörser verlor seine Rolle als Panzerbrecher. Das ist dieselbe Falle wie
+bei den Grenzwerten: **eine absolute Zahl in einer Welt, die anteilig wächst.**
+
+Jetzt schluckt jeder Punkt Panzerung 11 Prozent, gedeckelt bei zwei Dritteln.
+Sechs Punkte lassen ein Drittel durch — auf jeder Stufe gleich.
+
+### B19 — 44 tote Werte in den Daten
+
+Nach der Einführung des Reichweitensystems standen die alten Reichweiten
+weiter in den Stufendaten und wurden ignoriert. Wer sie geändert hätte, hätte
+nichts bewirkt — und es nicht gemerkt.
+
+Entfernt. Das Feld `range` ist jetzt optional und im Typ als *Ergebnis, nie
+Eingabe* gekennzeichnet; `statsFor` gibt einen eigenen Typ mit gesetzter
+Reichweite zurück. Vier weitere Stellen, die noch die Rohdaten lasen —
+Bauvorschau, Prüfsteg, zwei Wächterprüfungen — laufen jetzt über das System.
+Der Wächter rechnete dabei die Panzerung noch als Abzug; auch das war eine
+Kopie der Regel und stimmt jetzt mit dem Spiel überein.
+
+### Was geprüft wurde und in Ordnung war
+
+- **Schadenswachstum je Zweig** schwankt stark (Prisma ×5,4 gegen ×24,1),
+  ist aber erklärt: Verzweigung trifft neun Zusatzziele, Bündelung zwei. Die
+  Rohzahl allein sagt hier nichts, und die Simulation bestätigt: beide Zweige
+  landen bei 11 von 60 Kristall.
+- Kosten steigen über alle Stufen, Verkaufswert liegt nie über dem Einsatz.
+- Alle sieben Gegnerarten kommen in Wellenplänen vor; die Späne fehlt zu
+  Recht, sie entsteht beim Zerfall.
+- Speichern und Laden über alle neun Kombinationen aus Karte und Grad, mit
+  ausgebautem Turm — sauber.
+- Determinismus bei gleicher Aussaat: zwei Läufe, identisches Ergebnis.
+- Schwierigkeitsgrade streng aufsteigend, jeder Gegner hat Kopfgeld,
+  Kristallschaden und Tempo, drei von vier Türmen treffen Flieger.
+- 22 Gegenproben, alle schlagen an.
+
+---
+
 # Zweiter Durchgang · v49 bis v59 · Grafikblock
 
 **Sechs Befunde, alle behoben. Zwei davon sind Wiederholungstäter.**

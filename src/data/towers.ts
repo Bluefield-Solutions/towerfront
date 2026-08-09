@@ -292,11 +292,17 @@ export function statsFor(def: TowerDef, branch: BranchIndex, level: number): Tow
   return { ...roh, damage: schaden, range: rangeFor(def.id, branch, level) };
 }
 
-/** Werte der naechsten Stufe innerhalb eines Zweiges, oder null am Ende. */
+/** Werte der naechsten Stufe innerhalb eines Zweiges, oder null am Ende.
+ *
+ *  **Muss durch dieselbe Aufbereitung laufen wie `statsFor`.** Sonst zeigt das
+ *  Ausbaumenue etwas anderes an, als der Ausbau dann liefert - und genau das
+ *  war nach der Umstellung auf das Reichweitensystem der Fall: im Menue stand
+ *  die alte handgeschriebene Zahl, gebaut wurde die berechnete. Bei Stufe 5
+ *  klafften 519 gegen 600 Pixel. */
 export function nextFor(def: TowerDef, branch: BranchIndex, level: number): TowerLevel | null {
   if (level >= MAX_LEVEL) return null;
   if (branch === null) return null; // Der Zweig muss erst gewaehlt werden.
-  return def.branches[branch].levels[level - 1];
+  return statsFor(def, branch, level + 1);
 }
 
 /** Farbe, die den gewaehlten Zweig sichtbar macht. */

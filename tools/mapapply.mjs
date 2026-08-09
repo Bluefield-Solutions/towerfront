@@ -132,6 +132,23 @@ const glatt = fertig.map((b) => {
     if (d > Math.PI) d = Math.PI * 2 - d;
     if (d > (100 * Math.PI) / 180) { ohneZacken.pop(); continue; }
     ohneZacken.push(p);
+    // Scharfe, aber keine kehrtwendenden Knicke abrunden.
+    //
+    // Der Waechter verlangt Kurven statt Ecken - alles ueber 35 Grad zwischen
+    // zwei Stuetzpunkten liest sich als Ecke. Das entsteht beim Ausduennen:
+    // die Wegsuche liefert eine weiche Linie, jeder 14. Punkt daraus kann
+    // einen Knick ergeben. Statt gruende Punkte zu entfernen, wird der Knick
+    // durch einen Zwischenpunkt entschaerft.
+    if (d > (35 * Math.PI) / 180 && ohneZacken.length >= 3) {
+      const drei = ohneZacken.length - 1;
+      const v = ohneZacken[drei - 1], w = ohneZacken[drei];
+      ohneZacken[drei - 1] = {
+        x: Math.round((v.x + c.x) / 2), y: Math.round((v.y + c.y) / 2), w: v.w,
+      };
+      ohneZacken[drei] = {
+        x: Math.round((w.x + c.x) / 2), y: Math.round((w.y + c.y) / 2), w: w.w,
+      };
+    }
   }
   const ohneDoppel = [ohneZacken[0]];
   for (const p of ohneZacken.slice(1)) {
@@ -175,13 +192,39 @@ const bereinigt = glatt.map((b) => {
   return [...rest, { ...ziel }];
 });
 
+// --- 4a. Glätten.
+//
+// Erst habe ich einzelne Knicke abgerundet, dann feiner ausgedünnt - beides
+// hat den Wächter nicht zufriedengestellt, weil jeder Eingriff neue Winkel
+// erzeugte. Ein gleitender Mittelwert über die Innenpunkte glättet dagegen
+// alles gleichmäßig: jeder Punkt rückt ein Stück auf die Verbindung seiner
+// Nachbarn zu. Anfang und Ende bleiben fest, dort stehen Tor und Kristall.
+const geglaettet = bereinigt.map((b) => {
+  if (b.length < 5) return b;
+  let punkte = b;
+  for (let runde = 0; runde < 3; runde++) {
+    const neu = [punkte[0]];
+    for (let i = 1; i < punkte.length - 1; i++) {
+      const a = punkte[i - 1], c = punkte[i], d = punkte[i + 1];
+      neu.push({
+        x: Math.round(c.x * 0.5 + a.x * 0.25 + d.x * 0.25),
+        y: Math.round(c.y * 0.5 + a.y * 0.25 + d.y * 0.25),
+        w: c.w,
+      });
+    }
+    neu.push(punkte[punkte.length - 1]);
+    punkte = neu;
+  }
+  return punkte;
+});
+
 // --- 4b. Doppelgänger verwerfen — nach dem Ausrichten, nicht davor.
 //
 // Der erste Filter läuft vor dem Umdrehen der Hauptbahn. Danach können zwei
 // Bahnen denselben Startpunkt haben, ohne dass es vorher zu sehen war: bei
 // der Probe kamen zwei von drei Bahnen aus derselben Ecke.
 const einzeln = [];
-for (const b of bereinigt) {
+for (const b of geglaettet) {
   if (einzeln.some((o) => abstand(b[0], o[0]) < 220)) continue;
   einzeln.push(b);
 }

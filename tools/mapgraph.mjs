@@ -303,7 +303,13 @@ const stuetz = (pfad) => {
   // Bahnen, die sich nie treffen. Vom Ziel aus gezaehlt fallen sie zusammen.
   const rueck = [...pfad].reverse();
   const aus = [];
-  for (let n = 0; n < rueck.length; n += 14) {
+  // Alle 9 Punkte statt alle 14.
+  //
+  // Je weiter die Stuetzpunkte auseinanderliegen, desto groesser der Winkel
+  // zwischen ihnen - und der Waechter liest alles ueber 35 Grad als Ecke.
+  // Feiner ausduennen kostet ein paar Punkte mehr in der Datei und loest das
+  // Problem an der Wurzel, statt Knicke hinterher zu glaetten.
+  for (let n = 0; n < rueck.length; n += 9) {
     const i = rueck[n];
     aus.push({
       x: Math.round((i % B) * k),

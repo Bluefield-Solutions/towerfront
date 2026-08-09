@@ -294,22 +294,31 @@ console.log(`Tore: ${gefunden.length} genommen, ${bahnen.length} mit Weg zum End
 
 // Ausdünnen und auf Weltmaß bringen.
 const stuetz = (pfad) => {
+  // Vom ZIEL aus ausduennen, nicht vom Tor.
+  //
+  // Zwei Bahnen, die sich an einer Kreuzung treffen, teilen sich danach jeden
+  // Punkt - der Dijkstra-Baum sorgt dafuer. Duennt man vom Tor aus aus, liegen
+  // die Stuetzpunkte auf dem gemeinsamen Stueck trotzdem versetzt, weil die
+  // Zaehlung bei jeder Bahn woanders beginnt. Der Waechter sah dann zwei
+  // Bahnen, die sich nie treffen. Vom Ziel aus gezaehlt fallen sie zusammen.
+  const rueck = [...pfad].reverse();
   const aus = [];
-  for (let n = 0; n < pfad.length; n += 14) {
-    const i = pfad[n];
+  for (let n = 0; n < rueck.length; n += 14) {
+    const i = rueck[n];
     aus.push({
       x: Math.round((i % B) * k),
       y: Math.round(((i / B) | 0) * k),
       w: Math.max(40, Math.round(dist[i] * 2 * k)),
     });
   }
-  const letzte = pfad[pfad.length - 1];
+  const letzte = rueck[rueck.length - 1];
   aus.push({
     x: Math.round((letzte % B) * k),
     y: Math.round(((letzte / B) | 0) * k),
     w: Math.max(40, Math.round(dist[letzte] * 2 * k)),
   });
-  return aus;
+  // Wieder in Laufrichtung drehen: Tor zuerst, Ziel zuletzt.
+  return aus.reverse();
 };
 const lanes = bahnen.map(stuetz);
 

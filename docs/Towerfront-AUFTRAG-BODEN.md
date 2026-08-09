@@ -48,6 +48,26 @@ sortiert, doppelt vereinigt, am falschen Punkt verbunden, doppelte Punkte
 stehen gelassen. Alle vier sind im Werkzeug behoben. Es verarbeitet bis zu
 vier Zuwege und verwirft Doppelgaenger.
 
+## Die Auslesung kann jetzt Netze — der Engpass ist die Wegbreite
+
+**Stand v92.** Die Auslesung wurde als Wegsuche neu gebaut (`npm run
+karte-lesen`, `tools/mapgraph.mjs`) und bewaeltigt Kreuzungen, Schleifen und
+mehrere Tore. Nachgewiesen an acht gelieferten Karten: alle acht liefern
+Bahnen vom Tor zum Endplatz.
+
+**Was jetzt blockiert, ist die Wegbreite.** Sauber gemessen liegen die Wege
+aller Lieferungen bei rund 40 Weltpixeln - **2 Prozent der Feldbreite.**
+Unsere groessten Gegner sind 58 und 68 Pixel breit; sie passen nicht hinein.
+
+Gebraucht wird das Doppelte: **der Weg soll etwa 4 Prozent der Bildbreite
+messen**, an Engstellen 3, an breiten Stellen 6. Bei 3840 Bildpunkten sind das
+rund 115 bis 230 Punkte - deutlich breiter, als es im Bild "richtig" aussieht.
+Ein Wegnetz fuer ein Tower-Defense ist keine Wanderkarte: dort laufen
+Kolosse nebeneinander.
+
+Alternative ohne neue Bilder: die Gegner verkleinern. Das kostet aber
+Lesbarkeit - der Span liegt schon bei 17 Bildschirmpunkten.
+
 ## Offen: Verzweigungen in der Auslesung
 
 **Stand v89.** Die gelieferten Karten mit Kreuzung oder Sternplatz lassen sich

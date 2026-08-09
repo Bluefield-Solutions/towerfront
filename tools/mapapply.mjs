@@ -53,7 +53,7 @@ let bahnen = [...daten.lanes].sort((a, b) => laenge(b) - laenge(a));
 const behalten = [];
 for (const b of bahnen) {
   if (b.length < 3) continue;
-  if (behalten.some((o) => abstand(b[0], o[0]) < 260)) continue;
+  if (behalten.some((o) => abstand(b[0], o[0]) < 150)) continue;
   behalten.push(b);
   if (behalten.length >= MAX_BAHNEN) break;
 }
@@ -62,8 +62,15 @@ if (!behalten.length) {
   process.exit(1);
 }
 
-// --- 2. Ausrichten: Ziel ist das Ende der längsten Bahn, das am weitesten von
-//        allen anderen Bahnanfängen entfernt liegt.
+// --- 2. Ausrichten.
+//
+// Daten aus `tools/mapgraph.mjs` sind schon gerichtet: jede Bahn läuft vom Tor
+// zum Endplatz, weil sie als Weg dorthin gesucht wurde. Dann darf hier nichts
+// mehr gedreht werden - sonst landet der Kristall am Tor. Erkennbar daran,
+// dass alle Bahnen denselben letzten Punkt haben.
+const schonGerichtet = behalten.length > 0 && behalten.every(
+  (b) => abstand(b[b.length - 1], behalten[0][behalten[0].length - 1]) < 30,
+);
 let haupt = behalten[0];
 const andere = behalten.slice(1);
 
@@ -76,7 +83,7 @@ const andere = behalten.slice(1);
 // Der Endplatz ist auf jeder gelieferten Karte ein weiter runder Platz, also
 // die breiteste Stelle. Das ist ein Merkmal des Bildes, keine Vermutung ueber
 // die Anordnung.
-{
+if (!schonGerichtet) {
   let bestW = -1, bestEnde = null;
   for (const b of behalten) {
     for (const ende of [b[0], b[b.length - 1]]) {

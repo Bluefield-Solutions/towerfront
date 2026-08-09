@@ -355,17 +355,25 @@ function breiteBei(kurve, i) {
   const ang = Math.atan2(b.y - a.y, b.x - a.x) + Math.PI / 2;
   const p = kurve[i];
   let links = 0, rechts = 0;
-  for (let d = 1; d < 40; d++) {
+  for (let d = 1; d < 60; d++) {
     const x = Math.round(p.x + Math.cos(ang) * d), y = Math.round(p.y + Math.sin(ang) * d);
     if (x < 0 || y < 0 || x >= B || y >= H || !istWeg[y * B + x]) break;
     links = d;
   }
-  for (let d = 1; d < 40; d++) {
+  for (let d = 1; d < 60; d++) {
     const x = Math.round(p.x - Math.cos(ang) * d), y = Math.round(p.y - Math.sin(ang) * d);
     if (x < 0 || y < 0 || x >= B || y >= H || !istWeg[y * B + x]) break;
     rechts = d;
   }
-  return (links + rechts) / 2;
+  // Breite, nicht Halbbreite.
+  //
+  // Hier stand `(links + rechts) / 2` - das ist der Mittelwert der beiden
+  // Halbbreiten, also die Halbbreite selbst. Jede ausgelesene Karte kam
+  // dadurch mit halb so breiten Wegen ins Spiel und landete an der
+  // Untergrenze von 40. Ich hatte das zweimal als "die gelieferten Wege sind
+  // zu schmal" gedeutet und Nachbesserungen bestellt, die gar nicht noetig
+  // waren.
+  return links + rechts;
 }
 
 // Auf Weltmaß umrechnen (1920 x 1080) und ausdünnen: die Kurve braucht

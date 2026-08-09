@@ -48,12 +48,34 @@ sortiert, doppelt vereinigt, am falschen Punkt verbunden, doppelte Punkte
 stehen gelassen. Alle vier sind im Werkzeug behoben. Es verarbeitet bis zu
 vier Zuwege und verwirft Doppelgaenger.
 
+## Offen: Verzweigungen in der Auslesung
+
+**Stand v89.** Die gelieferten Karten mit Kreuzung oder Sternplatz lassen sich
+noch nicht einbauen. Die Wegverfolgung laeuft vom Zugang los und **endet an
+der ersten Verzweigung** - bei der Frostkarte stoppten alle drei Bahnen an der
+mittleren Kreuzung statt am Endplatz.
+
+Was dafuer noch fehlt: An einer Verzweigung muss die Verfolgung den Ast
+waehlen, der zum Ziel fuehrt, statt anzuhalten. Das Ziel selbst ist erkennbar -
+es ist die breiteste Stelle des Netzes, der runde Endplatz.
+
+Bis dahin sind Karten einbaubar, deren Weg **ohne Verzweigung** vom Zugang
+zum Endplatz laeuft. Mehrere Zugaenge sind kein Problem, solange sie sich
+nicht unterwegs treffen.
+
 ## Die Wege muessen breit genug fuer die Gegner sein
 
 **Der wichtigste Wert, und der am leichtesten zu uebersehende.** Die
 Lieferung "Kristallgrund" hatte ein vorbildlich verschlungenes Wegnetz - aber
 die Wege waren im Mittel 43 Weltpixel breit. Unsere groessten Gegner sind 58
 und 68 Pixel breit; sie haetten neben dem Weg gelaufen.
+
+**Nachtrag v89: Die Messung war falsch.** Sie gab `(links + rechts) / 2`
+zurueck - den Mittelwert der beiden Halbbreiten, also die Halbbreite selbst.
+Jede ausgelesene Karte kam mit halb so breiten Wegen ins Spiel und landete an
+der Untergrenze von 40. Ich hatte das zweimal als "die gelieferten Wege sind
+zu schmal" gedeutet und Nachbesserungen bestellt, die gar nicht noetig waren.
+Die Vorgabe unten stimmt trotzdem - jetzt wird sie nur richtig gemessen.
 
 Als Vorgabe fuer das Bild: **der Weg ist an seiner schmalsten Stelle etwa ein
 Vierzigstel der Bildbreite, an seiner breitesten ein Zwanzigstel.** Bei 3840

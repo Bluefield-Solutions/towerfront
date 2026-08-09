@@ -66,10 +66,27 @@ if (!behalten.length) {
 //        allen anderen Bahnanfängen entfernt liegt.
 let haupt = behalten[0];
 const andere = behalten.slice(1);
-const starts = andere.length ? andere.map((b) => b[0]) : [haupt[0]];
-const dAnfang = Math.min(...starts.map((s) => abstand(haupt[0], s)));
-const dEnde = Math.min(...starts.map((s) => abstand(haupt[haupt.length - 1], s)));
-if (dAnfang > dEnde) haupt = [...haupt].reverse();
+
+// Das Ziel ist die BREITESTE Stelle des Netzes.
+//
+// Vorher galt: das Ende der laengsten Bahn, das am weitesten von den anderen
+// Anfaengen entfernt liegt. Das traf oft, aber nicht immer - bei der
+// Frostkarte lag das Ziel danach links statt auf dem runden Endplatz rechts.
+//
+// Der Endplatz ist auf jeder gelieferten Karte ein weiter runder Platz, also
+// die breiteste Stelle. Das ist ein Merkmal des Bildes, keine Vermutung ueber
+// die Anordnung.
+{
+  let bestW = -1, bestEnde = null;
+  for (const b of behalten) {
+    for (const ende of [b[0], b[b.length - 1]]) {
+      if (ende.w > bestW) { bestW = ende.w; bestEnde = ende; }
+    }
+  }
+  if (bestEnde && abstand(haupt[haupt.length - 1], bestEnde) > abstand(haupt[0], bestEnde)) {
+    haupt = [...haupt].reverse();
+  }
+}
 let ziel = haupt[haupt.length - 1];
 
 const fertig = [haupt];

@@ -437,7 +437,9 @@ export class Renderer {
     if (!at || !s.buildChoice) return;
     const ctx = this.ctx;
     const def = TOWERS[s.buildChoice];
-    const lvl = def.base;
+    // Ueber statsFor, damit die Vorschau dieselbe Reichweite zeigt wie der
+    // gebaute Turm - die Rohdaten tragen keine mehr.
+    const lvl = statsFor(def, null, 1);
     const x = snap(at.x), y = snap(at.y);
     const ok = s.canPlace(s.buildChoice, x, y) && s.gold >= lvl.cost;
     const tone = ok ? def.accent : C.danger;

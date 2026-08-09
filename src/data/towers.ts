@@ -13,7 +13,13 @@ export type AttackKind =
 export interface TowerLevel {
   cost: number;
   damage: number;
-  range: number;
+  /** Nur noch Ergebnis, nie Eingabe.
+   *
+   *  Die Reichweite kommt aus `rangeFor` und wird von `statsFor` eingesetzt.
+   *  Ein hier eingetragener Wert wird ueberschrieben - deshalb steht in den
+   *  Daten auch keiner mehr. Wer die Reichweite aendern will, aendert
+   *  REICHWEITE_GRUND, REICHWEITE_STUFE oder REICHWEITE_ZWEIG. */
+  range?: number;
   cooldown: number;
   slow?: number;      // 0..1
   slowTime?: number;  // Sekunden
@@ -77,28 +83,28 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     blurb: 'Günstig und schnell. Trägt die frühen Wellen.',
     color: '#D8DCE8', accent: '#F2C14E',
     attack: 'single', hitsAir: true, projectileSpeed: 840,
-    base: { cost: 55, damage: 8, range: 240, cooldown: 0.55 },
+    base: { cost: 55, damage: 8, cooldown: 0.55 },
     branches: [
       {
         id: 'sniper', name: 'Scharfschütze', color: '#F2C14E',
         blurb: 'Weite Reichweite, harter Einzelschuss, durchschlägt Panzerung.',
         levels: [
-          { cost: 70, damage: 29, range: 330, cooldown: 0.8, pierce: 2 },
-          { cost: 130, damage: 63, range: 408, cooldown: 0.75, pierce: 4 },
-          { cost: 265, damage: 102, range: 442, cooldown: 0.73, pierce: 4 },
-          { cost: 545, damage: 166, range: 479, cooldown: 0.71, pierce: 5 },
-          { cost: 1115, damage: 268, range: 519, cooldown: 0.69, pierce: 5 },
+          { cost: 70, damage: 29, cooldown: 0.8, pierce: 2 },
+          { cost: 130, damage: 63, cooldown: 0.75, pierce: 4 },
+          { cost: 265, damage: 102, cooldown: 0.73, pierce: 4 },
+          { cost: 545, damage: 166, cooldown: 0.71, pierce: 5 },
+          { cost: 1115, damage: 268, cooldown: 0.69, pierce: 5 },
         ],
       },
       {
         id: 'volley', name: 'Salve', color: '#FF9B54',
         blurb: 'Halbe Wucht, doppelte Schlagzahl. Gegen Masse, nicht gegen Panzer.',
         levels: [
-          { cost: 70, damage: 16, range: 300, cooldown: 0.27, pierce: 1 },
-          { cost: 145, damage: 26, range: 319, cooldown: 0.20, pierce: 2 },
-          { cost: 295, damage: 35, range: 326, cooldown: 0.17, pierce: 2 },
-          { cost: 605, damage: 47, range: 333, cooldown: 0.15, pierce: 3 },
-          { cost: 1240, damage: 64, range: 340, cooldown: 0.14, pierce: 3 },
+          { cost: 70, damage: 16, cooldown: 0.27, pierce: 1 },
+          { cost: 145, damage: 26, cooldown: 0.20, pierce: 2 },
+          { cost: 295, damage: 35, cooldown: 0.17, pierce: 2 },
+          { cost: 605, damage: 47, cooldown: 0.15, pierce: 3 },
+          { cost: 1240, damage: 64, cooldown: 0.14, pierce: 3 },
         ],
       },
     ],
@@ -108,28 +114,28 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     blurb: 'Kein Geschoss. Pulst im Umkreis und bremst alles gleichzeitig.',
     color: '#BFE9F2', accent: '#7FE7E0',
     attack: 'aura', hitsAir: true, projectileSpeed: 0,
-    base: { cost: 80, damage: 5, range: 169, cooldown: 0.85, slow: 0.3, slowTime: 1.5 },
+    base: { cost: 80, damage: 5, cooldown: 0.85, slow: 0.3, slowTime: 1.5 },
     branches: [
       {
         id: 'eternal', name: 'Ewiges Eis', color: '#7FE7E0',
         blurb: 'Weiter Umkreis, harte Bremse, kaum Schaden. Reine Kontrolle.',
         levels: [
-          { cost: 90, damage: 11, range: 220, cooldown: 0.7, slow: 0.37, slowTime: 1.98 },
-          { cost: 150, damage: 22, range: 282, cooldown: 0.58, slow: 0.54, slowTime: 3.06 },
-          { cost: 310, damage: 35, range: 310, cooldown: 0.53, slow: 0.61, slowTime: 3.65 },
-          { cost: 635, damage: 56, range: 341, cooldown: 0.49, slow: 0.62, slowTime: 4.34 },
-          { cost: 1300, damage: 89, range: 375, cooldown: 0.45, slow: 0.62, slowTime: 5.17 },
+          { cost: 90, damage: 11, cooldown: 0.7, slow: 0.37, slowTime: 1.98 },
+          { cost: 150, damage: 22, cooldown: 0.58, slow: 0.54, slowTime: 3.06 },
+          { cost: 310, damage: 35, cooldown: 0.53, slow: 0.61, slowTime: 3.65 },
+          { cost: 635, damage: 56, cooldown: 0.49, slow: 0.62, slowTime: 4.34 },
+          { cost: 1300, damage: 89, cooldown: 0.45, slow: 0.62, slowTime: 5.17 },
         ],
       },
       {
         id: 'shard', name: 'Splitterfrost', color: '#9FD4FF',
         blurb: 'Bremst weniger, schneidet dafür. Ein Schadenspuls statt einer Fessel.',
         levels: [
-          { cost: 110, damage: 25, range: 237, cooldown: 0.64, slow: 0.25, slowTime: 1.4, pierce: 2 },
-          { cost: 200, damage: 40, range: 264, cooldown: 0.56, slow: 0.3, slowTime: 1.6, pierce: 2 },
-          { cost: 410, damage: 54, range: 274, cooldown: 0.53, slow: 0.32, slowTime: 1.68, pierce: 2 },
-          { cost: 840, damage: 73, range: 286, cooldown: 0.5, slow: 0.33, slowTime: 1.76, pierce: 3 },
-          { cost: 1720, damage: 98, range: 297, cooldown: 0.47, slow: 0.35, slowTime: 1.85, pierce: 3 },
+          { cost: 110, damage: 25, cooldown: 0.64, slow: 0.25, slowTime: 1.4, pierce: 2 },
+          { cost: 200, damage: 40, cooldown: 0.56, slow: 0.3, slowTime: 1.6, pierce: 2 },
+          { cost: 410, damage: 54, cooldown: 0.53, slow: 0.32, slowTime: 1.68, pierce: 2 },
+          { cost: 840, damage: 73, cooldown: 0.5, slow: 0.33, slowTime: 1.76, pierce: 3 },
+          { cost: 1720, damage: 98, cooldown: 0.47, slow: 0.35, slowTime: 1.85, pierce: 3 },
         ],
       },
     ],
@@ -139,28 +145,28 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     blurb: 'Langsam und teuer, trifft eine ganze Traube. Erreicht keine Flieger.',
     color: '#C3B39A', accent: '#F08A3C',
     attack: 'splash', hitsAir: false, projectileSpeed: 384,
-    base: { cost: 125, damage: 41, range: 300, cooldown: 1.9, splash: 74 },
+    base: { cost: 125, damage: 41, cooldown: 1.9, splash: 74 },
     branches: [
       {
         id: 'cluster', name: 'Streubombe', color: '#F08A3C',
         blurb: 'Weiter Wirkradius, schnellere Folge, weniger Wucht je Treffer.',
         levels: [
-          { cost: 140, damage: 47, range: 330, cooldown: 1.35, splash: 115 },
-          { cost: 235, damage: 74, range: 360, cooldown: 1.1, splash: 149 },
-          { cost: 480, damage: 97, range: 371, cooldown: 1.0, splash: 164 },
-          { cost: 985, damage: 129, range: 383, cooldown: 0.91, splash: 181 },
-          { cost: 2020, damage: 170, range: 395, cooldown: 0.83, splash: 200 },
+          { cost: 140, damage: 47, cooldown: 1.35, splash: 115 },
+          { cost: 235, damage: 74, cooldown: 1.1, splash: 149 },
+          { cost: 480, damage: 97, cooldown: 1.0, splash: 164 },
+          { cost: 985, damage: 129, cooldown: 0.91, splash: 181 },
+          { cost: 2020, damage: 170, cooldown: 0.83, splash: 200 },
         ],
       },
       {
         id: 'breaker', name: 'Brecher', color: '#D6564A',
         blurb: 'Enger Radius, gewaltige Wucht, durchschlägt schwere Panzerung.',
         levels: [
-          { cost: 160, damage: 106, range: 318, cooldown: 2.1, splash: 62, pierce: 4 },
-          { cost: 280, damage: 224, range: 348, cooldown: 2.0, splash: 70, pierce: 8 },
-          { cost: 575, damage: 355, range: 359, cooldown: 1.96, splash: 73, pierce: 8 },
-          { cost: 1180, damage: 563, range: 371, cooldown: 1.92, splash: 76, pierce: 9 },
-          { cost: 2420, damage: 894, range: 383, cooldown: 1.88, splash: 79, pierce: 9 },
+          { cost: 160, damage: 106, cooldown: 2.1, splash: 62, pierce: 4 },
+          { cost: 280, damage: 224, cooldown: 2.0, splash: 70, pierce: 8 },
+          { cost: 575, damage: 355, cooldown: 1.96, splash: 73, pierce: 8 },
+          { cost: 1180, damage: 563, cooldown: 1.92, splash: 76, pierce: 9 },
+          { cost: 2420, damage: 894, cooldown: 1.88, splash: 79, pierce: 9 },
         ],
       },
     ],
@@ -170,28 +176,28 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     blurb: 'Sofortstrahl, springt auf Nachbarn über.',
     color: '#E4D3FF', accent: '#B07CFF',
     attack: 'chain', hitsAir: true, projectileSpeed: 0,
-    base: { cost: 140, damage: 20, range: 222, cooldown: 0.95, chains: 2, falloff: 0.65 },
+    base: { cost: 140, damage: 20, cooldown: 0.95, chains: 2, falloff: 0.65 },
     branches: [
       {
         id: 'fork', name: 'Verzweigung', color: '#B07CFF',
         blurb: 'Mehr Sprünge, kaum Abfall. Legt sich über eine ganze Kette.',
         levels: [
-          { cost: 165, damage: 21, range: 246, cooldown: 0.85, chains: 5, falloff: 0.85 },
-          { cost: 285, damage: 32, range: 276, cooldown: 0.75, chains: 8, falloff: 0.92 },
-          { cost: 585, damage: 43, range: 288, cooldown: 0.71, chains: 8, falloff: 0.92 },
-          { cost: 1200, damage: 55, range: 300, cooldown: 0.67, chains: 9, falloff: 0.92 },
-          { cost: 2460, damage: 72, range: 313, cooldown: 0.63, chains: 9, falloff: 0.92 },
+          { cost: 165, damage: 21, cooldown: 0.85, chains: 5, falloff: 0.85 },
+          { cost: 285, damage: 32, cooldown: 0.75, chains: 8, falloff: 0.92 },
+          { cost: 585, damage: 43, cooldown: 0.71, chains: 8, falloff: 0.92 },
+          { cost: 1200, damage: 55, cooldown: 0.67, chains: 9, falloff: 0.92 },
+          { cost: 2460, damage: 72, cooldown: 0.63, chains: 9, falloff: 0.92 },
         ],
       },
       {
         id: 'lens', name: 'Bündelung', color: '#FF7ADF',
         blurb: 'Ein Sprung weniger, dafür ein Strahl, der wirklich wehtut.',
         levels: [
-          { cost: 175, damage: 54, range: 258, cooldown: 0.9, chains: 1, falloff: 0.5 },
-          { cost: 300, damage: 108, range: 288, cooldown: 0.85, chains: 1, falloff: 0.5, pierce: 3 },
-          { cost: 615, damage: 166, range: 300, cooldown: 0.83, chains: 1, falloff: 0.5, pierce: 3 },
-          { cost: 1260, damage: 254, range: 312, cooldown: 0.81, chains: 2, falloff: 0.5, pierce: 4 },
-          { cost: 2585, damage: 391, range: 325, cooldown: 0.79, chains: 2, falloff: 0.5, pierce: 4 },
+          { cost: 175, damage: 54, cooldown: 0.9, chains: 1, falloff: 0.5 },
+          { cost: 300, damage: 108, cooldown: 0.85, chains: 1, falloff: 0.5, pierce: 3 },
+          { cost: 615, damage: 166, cooldown: 0.83, chains: 1, falloff: 0.5, pierce: 3 },
+          { cost: 1260, damage: 254, cooldown: 0.81, chains: 2, falloff: 0.5, pierce: 4 },
+          { cost: 2585, damage: 391, cooldown: 0.79, chains: 2, falloff: 0.5, pierce: 4 },
         ],
       },
     ],
@@ -279,7 +285,12 @@ export function rangeFor(id: TowerId, branch: BranchIndex, level: number): numbe
   return Math.round(grund * (1 + zuwachs * neigung));
 }
 
-export function statsFor(def: TowerDef, branch: BranchIndex, level: number): TowerLevel {
+/** Was aus `statsFor` herauskommt: dieselben Werte, aber die Reichweite ist
+ *  gesetzt. Die Trennung macht im Typ sichtbar, was der Kommentar an `range`
+ *  sagt - Eingabe ohne, Ergebnis mit. */
+export type TowerStats = TowerLevel & { range: number };
+
+export function statsFor(def: TowerDef, branch: BranchIndex, level: number): TowerStats {
   const roh = level <= 1 || branch === null
     ? def.base
     : def.branches[branch].levels[Math.min(level, MAX_LEVEL) - 2];
@@ -299,7 +310,7 @@ export function statsFor(def: TowerDef, branch: BranchIndex, level: number): Tow
  *  war nach der Umstellung auf das Reichweitensystem der Fall: im Menue stand
  *  die alte handgeschriebene Zahl, gebaut wurde die berechnete. Bei Stufe 5
  *  klafften 519 gegen 600 Pixel. */
-export function nextFor(def: TowerDef, branch: BranchIndex, level: number): TowerLevel | null {
+export function nextFor(def: TowerDef, branch: BranchIndex, level: number): TowerStats | null {
   if (level >= MAX_LEVEL) return null;
   if (branch === null) return null; // Der Zweig muss erst gewaehlt werden.
   return statsFor(def, branch, level + 1);

@@ -10,7 +10,7 @@ const START_GOLD = NORMAL.startGold;
 const START_LIVES = NORMAL.startLives;
 import { MAPS, goalOf, lanePaths } from '../src/data/maps';
 import { GameState } from '../src/game/state';
-import { TOWERS, TOWER_ORDER, MAX_LEVEL, DRAW_SCALE, rangeFor } from '../src/data/towers';
+import { TOWERS, TOWER_ORDER, MAX_LEVEL, DRAW_SCALE, rangeFor, statsFor } from '../src/data/towers';
 import { ENEMIES, type EnemyId } from '../src/data/enemies';
 import { enemyArtWidth } from '../src/gfx/enemyart';
 
@@ -178,7 +178,7 @@ for (const map of MAPS) {
     // per Definition kein Turm stehen. Diese Punkte als unerreichbar zu
     // melden ist ein Fehlalarm; er trat auf, sobald die Tuerme mehr Platz
     // brauchten und die Meldung dadurch ueber die Schwelle rutschte.
-    const reach = Math.max(...TOWER_ORDER.map((t) => TOWERS[t].base.range));
+    const reach = Math.max(...TOWER_ORDER.map((t) => rangeFor(t, null, 1)));
     let uncovered = 0, total = 0;
     for (const p of paths) {
       for (let k = 0; k < p.pts.length; k += 6) {
@@ -390,7 +390,7 @@ for (const id of TOWER_ORDER) {
     const lv = chain(br);
     for (let i = 0; i < lv.length; i++) {
       const l = lv[i];
-      if (l.cost <= 0 || l.damage <= 0 || l.range <= 0 || l.cooldown <= 0) {
+      if (l.cost <= 0 || l.damage <= 0 || l.cooldown <= 0) {
         fail(`Turm ${id}, Zweig ${b.id}, Stufe ${i + 1}: Wert kleiner oder gleich null.`);
       }
       if (i > 0) {
@@ -400,9 +400,8 @@ for (const id of TOWER_ORDER) {
         if (l.damage / l.cooldown <= p.damage / p.cooldown) {
           fail(`Turm ${id}, Zweig ${b.id}, Stufe ${i + 1}: Schaden je Sekunde steigt nicht.`);
         }
-        if (l.range < p.range * 0.9) {
-          fail(`Turm ${id}, Zweig ${b.id}, Stufe ${i + 1}: Reichweite faellt um mehr als ein Zehntel.`);
-        }
+        // Die Reichweite steht nicht mehr in den Stufendaten - sie kommt aus
+        // dem System und wird weiter oben eigens geprueft.
       }
     }
   }
@@ -421,7 +420,9 @@ for (const id of TOWER_ORDER) {
     const rel = (x: number, y: number) => (x + y === 0 ? 0 : Math.abs(x - y) / ((x + y) / 2));
     const spread = Math.max(
       rel(a.damage / a.cooldown, b.damage / b.cooldown),
-      rel(a.range, b.range),
+      // Die Reichweite kommt aus dem System und unterscheidet die Zweige
+      // ohnehin - sie stammt nicht mehr aus diesen Daten.
+      rel(rangeFor(id, 0, 2), rangeFor(id, 1, 2)),
       rel(a.splash ?? 0, b.splash ?? 0),
       rel(a.chains ?? 0, b.chains ?? 0),
       rel(a.slow ?? 0, b.slow ?? 0),
@@ -472,11 +473,14 @@ for (const id of TOWER_ORDER) {
 
   const worth = (id: typeof TOWER_ORDER[number], br: 0 | 1): number => {
     const t = TOWERS[id];
-    const l = t.branches[br].levels[1];
+    // Ueber statsFor: nur so tragen die Werte die Reichweite aus dem System
+    // und den Schadensausgleich des Wucht-Zweiges.
+    const l = statsFor(t, br, 3);
     const invest = t.base.cost + t.branches[br].levels[0].cost + l.cost;
-    // Panzerung frisst pro Treffer, nicht pro Sekunde - schnelle Tuerme
-    // verlieren dadurch mehr.
-    const perHit = Math.max(1, l.damage - Math.max(0, avgArmor - (l.pierce ?? 0)));
+    // Panzerung schluckt einen Anteil, nicht eine feste Zahl - dieselbe
+    // Rechnung wie im Spiel.
+    const schluck = Math.min(0.66, Math.max(0, avgArmor - (l.pierce ?? 0)) * 0.11);
+    const perHit = Math.max(1, l.damage * (1 - schluck));
     let dps = perHit / l.cooldown;
     if (l.splash) dps *= 1 + l.splash / 90;
     if (l.chains) dps *= 1 + l.chains * 0.5 * (l.falloff ?? 0.6);

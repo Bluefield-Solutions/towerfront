@@ -2,7 +2,7 @@ import { SPEEDS, VERSION } from '../data/config';
 import { ENEMIES } from '../data/enemies';
 import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
 import {
-  TOWERS, TOWER_ORDER, MAX_LEVEL, accentFor, nextFor, sellValue,
+  TOWERS, TOWER_ORDER, MAX_LEVEL, accentFor, nextFor, sellValue, statsFor,
   type TowerId,
 } from '../data/towers';
 import { Sfx } from '../core/audio';
@@ -624,7 +624,7 @@ export class UI {
     // planen - und Planen ist der ganze Reiz des Genres.
     if (!sel && s.buildChoice) {
       const def = TOWERS[s.buildChoice];
-      const l1 = def.base;
+      const l1 = statsFor(def, null, 1);
       this.insp.hidden = false;
       this.iName.textContent = `${def.name} · ${def.role}`;
       this.iStats.innerHTML = [

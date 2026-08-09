@@ -14,60 +14,6 @@
     "farbe": 2.3
   },
   "items": {
-    "mortar_1": {
-      "file": "turm_moerser.png",
-      "comment": "Gemessen 0,28 Helligkeit, 0,34 Saettigung, 3,1 % Schwarz - alles drei nachgezogen.",
-      "entrauschen": 0.8,
-      "schwarzHeben": 0.06,
-      "farbe": 1.35,
-      "helligkeit": 1.1,
-      "fill": 0.94
-    },
-    "mortar_cluster": {
-      "file": "turm_moerser.png",
-      "comment": "Gemessen 0,28 Helligkeit, 0,34 Saettigung, 3,1 % Schwarz - alles drei nachgezogen.",
-      "entrauschen": 0.8,
-      "schwarzHeben": 0.06,
-      "farbe": 1.35,
-      "helligkeit": 1.1,
-      "fill": 0.94
-    },
-    "mortar_breaker": {
-      "file": "turm_moerser.png",
-      "comment": "Gemessen 0,28 Helligkeit, 0,34 Saettigung, 3,1 % Schwarz - alles drei nachgezogen.",
-      "entrauschen": 0.8,
-      "schwarzHeben": 0.06,
-      "farbe": 1.35,
-      "helligkeit": 1.1,
-      "fill": 0.94
-    },
-    "prism_1": {
-      "file": "turm_prisma.png",
-      "comment": "Neu geliefert, in einem Stil mit den Kartenbildern. Die Zweige nutzen vorerst dasselbe Bild.",
-      "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 1.0,
-      "helligkeit": 0.84,
-      "fill": 0.94
-    },
-    "prism_fork": {
-      "file": "turm_prisma.png",
-      "comment": "Neu geliefert, in einem Stil mit den Kartenbildern. Die Zweige nutzen vorerst dasselbe Bild.",
-      "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 1.0,
-      "helligkeit": 0.84,
-      "fill": 0.94
-    },
-    "prism_lens": {
-      "file": "turm_prisma.png",
-      "comment": "Neu geliefert, in einem Stil mit den Kartenbildern. Die Zweige nutzen vorerst dasselbe Bild.",
-      "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 1.0,
-      "helligkeit": 0.84,
-      "fill": 0.94
-    },
     "arrow_1_1": {
       "file": "turm_bogen_1.png",
       "comment": "Sechs Ausbaustufen des Bogenturms.",
@@ -176,6 +122,116 @@
       "schwarzHeben": 0,
       "farbe": 0.9,
       "helligkeit": 0.8,
+      "fill": 0.94,
+      "randOk": true
+    },
+    "mortar_1_1": {
+      "file": "turm_moerser_1.png",
+      "comment": "Sechs Ausbaustufen des Moersers. Gemessen 0,26-0,31 Helligkeit - aufgehellt; die Saettigung steigt mit der Stufe und wird entsprechend zurueckgenommen.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.04,
+      "farbe": 1.0,
+      "helligkeit": 1.16,
+      "fill": 0.94
+    },
+    "prism_1_1": {
+      "file": "turm_prisma_1.png",
+      "comment": "Sechs Ausbaustufen des Prismas.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.02,
+      "farbe": 1.0,
+      "helligkeit": 1.06,
+      "fill": 0.94
+    },
+    "mortar_1_2": {
+      "file": "turm_moerser_2.png",
+      "comment": "Sechs Ausbaustufen des Moersers. Gemessen 0,26-0,31 Helligkeit - aufgehellt; die Saettigung steigt mit der Stufe und wird entsprechend zurueckgenommen.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.04,
+      "farbe": 0.92,
+      "helligkeit": 1.16,
+      "fill": 0.94
+    },
+    "prism_1_2": {
+      "file": "turm_prisma_2.png",
+      "comment": "Sechs Ausbaustufen des Prismas.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.02,
+      "farbe": 0.92,
+      "helligkeit": 1.06,
+      "fill": 0.94
+    },
+    "mortar_1_3": {
+      "file": "turm_moerser_3.png",
+      "comment": "Sechs Ausbaustufen des Moersers. Gemessen 0,26-0,31 Helligkeit - aufgehellt; die Saettigung steigt mit der Stufe und wird entsprechend zurueckgenommen.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.04,
+      "farbe": 0.84,
+      "helligkeit": 1.16,
+      "fill": 0.94
+    },
+    "prism_1_3": {
+      "file": "turm_prisma_3.png",
+      "comment": "Sechs Ausbaustufen des Prismas.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.02,
+      "farbe": 0.84,
+      "helligkeit": 1.06,
+      "fill": 0.94
+    },
+    "mortar_1_4": {
+      "file": "turm_moerser_4.png",
+      "comment": "Sechs Ausbaustufen des Moersers. Gemessen 0,26-0,31 Helligkeit - aufgehellt; die Saettigung steigt mit der Stufe und wird entsprechend zurueckgenommen.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.04,
+      "farbe": 0.85,
+      "helligkeit": 1.16,
+      "fill": 0.94
+    },
+    "prism_1_4": {
+      "file": "turm_prisma_4.png",
+      "comment": "Sechs Ausbaustufen des Prismas.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.02,
+      "farbe": 0.85,
+      "helligkeit": 1.06,
+      "fill": 0.94
+    },
+    "mortar_1_5": {
+      "file": "turm_moerser_5.png",
+      "comment": "Sechs Ausbaustufen des Moersers. Gemessen 0,26-0,31 Helligkeit - aufgehellt; die Saettigung steigt mit der Stufe und wird entsprechend zurueckgenommen.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.04,
+      "farbe": 0.8,
+      "helligkeit": 1.16,
+      "fill": 0.94
+    },
+    "prism_1_5": {
+      "file": "turm_prisma_5.png",
+      "comment": "Sechs Ausbaustufen des Prismas.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.02,
+      "farbe": 0.8,
+      "helligkeit": 1.06,
+      "fill": 0.94
+    },
+    "mortar_1_6": {
+      "file": "turm_moerser_6.png",
+      "comment": "Sechs Ausbaustufen des Moersers. Gemessen 0,26-0,31 Helligkeit - aufgehellt; die Saettigung steigt mit der Stufe und wird entsprechend zurueckgenommen. Stufe 6 oben angeschnitten (27 % der Kante) - hingenommen, der Turmkoerper ist vollstaendig.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.04,
+      "farbe": 0.72,
+      "helligkeit": 1.16,
+      "fill": 0.94,
+      "randOk": true
+    },
+    "prism_1_6": {
+      "file": "turm_prisma_6.png",
+      "comment": "Sechs Ausbaustufen des Prismas. Stufe 6 oben angeschnitten (21 % der Kante) - hingenommen, der Turmkoerper ist vollstaendig.",
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.02,
+      "farbe": 0.72,
+      "helligkeit": 1.06,
       "fill": 0.94,
       "randOk": true
     }

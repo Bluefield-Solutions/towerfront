@@ -889,6 +889,21 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
       problems.push(`Uebersicht: Punkt ${Math.round(n.x)}/${Math.round(n.y)} liegt am Rand oder ausserhalb.`);
     }
   }
+  // Und die Punkte muessen die Breite auch ausnutzen.
+  //
+  // Die reine Anzahl reicht als Pruefung nicht: rechnet die Verteilung mit
+  // einer falschen Kartenzahl, kommen trotzdem so viele Punkte heraus, wie es
+  // Karten gibt - sie draengen sich nur auf der linken Haelfte. Genau das hat
+  // die erste Fassung dieser Pruefung durchgelassen.
+  if (m.nodes.length > 1) {
+    const letzter = m.nodes[m.nodes.length - 1].x;
+    if (letzter < WORLD_W * 0.7) {
+      problems.push(
+        `Uebersicht: der letzte Punkt liegt bei ${Math.round((letzter / WORLD_W) * 100)} % `
+        + 'der Breite - die Karten draengen sich links.',
+      );
+    }
+  }
 }
 
 // Die Baufeldpunkte bleiben oertlich.

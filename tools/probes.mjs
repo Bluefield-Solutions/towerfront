@@ -147,7 +147,9 @@ const PROBEN = [
     name: 'Uebersichtskarte mit festen Punkten',
     datei: 'src/game/menu.ts',
     regel: /const n = MAPS\.length;/,
-    ersatz: 'const n = 3;',
+    // Fuenf, nicht drei - bei drei Karten waere der Fehler heute unsichtbar
+    // und die Probe damit wertlos.
+    ersatz: 'const n = 5;',
     tor: 'smoke',
   },
   {

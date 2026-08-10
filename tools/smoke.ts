@@ -872,6 +872,25 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Die Uebersichtskarte traegt jede Kartenzahl.
+//
+// Bis v98 standen dort drei feste Koordinaten - eine vierte Karte waere
+// unsichtbar geblieben, eine dritte weniger haette einen Punkt ins Leere
+// gelassen. Geprueft wird deshalb: ein Punkt je Karte, und alle im Bild.
+{
+  const { Menu } = await import('../src/game/menu');
+  const { MAPS } = await import('../src/data/maps');
+  const m = new Menu();
+  if (m.nodes.length !== MAPS.length) {
+    problems.push(`Uebersicht: ${m.nodes.length} Punkte fuer ${MAPS.length} Karten.`);
+  }
+  for (const n of m.nodes) {
+    if (n.x < 60 || n.y < 60 || n.x > WORLD_W - 60 || n.y > WORLD_H - 60) {
+      problems.push(`Uebersicht: Punkt ${Math.round(n.x)}/${Math.round(n.y)} liegt am Rand oder ausserhalb.`);
+    }
+  }
+}
+
 // Die Baufeldpunkte bleiben oertlich.
 //
 // Auf der Frostkarte sind 311 Rasterstellen bebaubar. Zeigt man sie alle, liegt

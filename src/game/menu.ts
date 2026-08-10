@@ -66,11 +66,27 @@ export class Menu {
 
   /** Die Orte auf der Karte. Bewusst ungleich verteilt und mit einem Weg
    *  verbunden - eine Reihe gleicher Kacheln wäre wieder eine Liste. */
-  readonly nodes = [
-    { x: WORLD_W * 0.22, y: WORLD_H * 0.62 },
-    { x: WORLD_W * 0.5, y: WORLD_H * 0.36 },
-    { x: WORLD_W * 0.78, y: WORLD_H * 0.6 },
-  ];
+  /** Die Punkte der Uebersichtskarte - einer je Karte.
+   *
+   *  Bis v98 standen hier drei feste Koordinaten. Die Uebersicht konnte damit
+   *  genau drei Karten zeigen; eine vierte waere unsichtbar geblieben, eine
+   *  Karte weniger haette einen Punkt ins Leere gelassen.
+   *
+   *  Jetzt entstehen sie aus der Zahl der Karten: gleichmaessig verteilt auf
+   *  einer sanften Welle, damit der Weg nicht schnurgerade wirkt. Bei einer
+   *  einzigen Karte steht ihr Punkt in der Mitte. */
+  get nodes(): { x: number; y: number }[] {
+    const n = MAPS.length;
+    if (n === 1) return [{ x: WORLD_W * 0.5, y: WORLD_H * 0.5 }];
+    const rand = 0.2;
+    return MAPS.map((_, i) => {
+      const t = i / (n - 1);
+      return {
+        x: WORLD_W * (rand + t * (1 - rand * 2)),
+        y: WORLD_H * (0.5 + Math.sin(t * Math.PI * 1.3 + 0.5) * 0.16),
+      };
+    });
+  }
 
   get endless(): boolean { return getSettings().endless === true; }
   set endless(v: boolean) { saveSettings({ endless: v }); }

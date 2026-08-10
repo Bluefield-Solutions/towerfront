@@ -144,6 +144,13 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    name: 'Uebersichtskarte mit festen Punkten',
+    datei: 'src/game/menu.ts',
+    regel: /const n = MAPS\.length;/,
+    ersatz: 'const n = 3;',
+    tor: 'smoke',
+  },
+  {
     name: 'Tuerme verschieden gross',
     datei: 'src/data/towers.ts',
     // Einem Turm einen eigenen Platzbedarf geben.

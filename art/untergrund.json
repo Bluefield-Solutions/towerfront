@@ -15,19 +15,20 @@
   },
   "items": {
     "spiralhain": {
-      "file": "06_sandweg.png",
-      "comment": "Erstes Bild mit gemaltem Weg. Gemessen 0,50 Helligkeit - auf Zielwert heruntergezogen.",
+      "file": "12_laubbreit.png",
+      "comment": "Laubwald mit breiten Wegen.",
       "helligkeit": 0.62,
       "waerme": 0.0,
-      "farbe": 1.0
+      "farbe": 0.8,
+      "weich": 1.6
     },
     "ascheschlucht": {
-      "file": "07_laubweg.png",
-      "comment": "Gemessen Dichte 11,2 und Saettigung 0,72 - beides heruntergezogen.",
-      "helligkeit": 0.92,
+      "file": "13_aschebreit.png",
+      "comment": "Aschefeld mit breiten Wegen und Glutrissen.",
+      "helligkeit": 0.78,
       "waerme": 0.0,
-      "farbe": 0.72,
-      "weich": 2.4
+      "farbe": 0.85,
+      "weich": 1.5
     },
     "frostspalte": {
       "file": "11_frostbreit.png",

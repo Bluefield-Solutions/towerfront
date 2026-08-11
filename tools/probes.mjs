@@ -49,7 +49,10 @@ const PROBEN = [
     // Als Regel, nicht als fester Wert: Wegkoordinaten aendern sich mit jeder
     // neuen Karte, und eine Probe, die daran haengt, veraltet lautlos.
     regel: /(lanes: \[\n\s*\[\n\s*\{[^}]*\}, \{ x: \d+, y: )(\d+)/,
-    ersatz: '$1950',
+    // Nicht 950: bei Karten, deren erste Bahn ohnehin unten verlaeuft, waere
+    // das kaum eine Aenderung. Null zieht den Punkt zuverlaessig an den
+    // oberen Rand und erzeugt damit den scharfen Knick, den die Probe braucht.
+    ersatz: '$10',
     tor: 'guards',
   },
   {

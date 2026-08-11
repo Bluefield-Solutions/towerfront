@@ -144,6 +144,13 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    name: 'Turmwahl faellt aus der Zeichenkennung',
+    datei: 'src/ui/ui.ts',
+    regel: /      s\.buildAt \? `\$\{Math\.round\(s\.buildAt\.x\)\}:\$\{Math\.round\(s\.buildAt\.y\)\}` : '-',/,
+    ersatz: "      '-',",
+    tor: 'smoke',
+  },
+  {
     name: 'Uebersichtskarte mit festen Punkten',
     datei: 'src/game/menu.ts',
     regel: /const n = MAPS\.length;/,

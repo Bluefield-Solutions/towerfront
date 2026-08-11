@@ -91,6 +91,12 @@ export class GameState {
   aiming: AbilityId | null = null;
 
   buildChoice: TowerId | null = null;
+  /** Wohin gebaut werden soll, wenn die Turmwahl offen ist.
+   *
+   *  Bis v101 musste man erst in der Leiste einen Turm waehlen und dann aufs
+   *  Feld tippen - zwei Schritte, und die Leiste klappte dabei auf und zu.
+   *  Jetzt tippt man zuerst auf den Platz; die Wahl erscheint dort. */
+  buildAt: { x: number; y: number } | null = null;
   selectedTower: Tower | null = null;
   /** Weltpunkt unter dem Zeiger. */
   hoverPoint: Vec | null = null;

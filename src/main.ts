@@ -107,6 +107,11 @@ ui.onQuit = () => {
   ui.openMenu();
 };
 
+// Die Turmwahl am Bauplatz braucht zweierlei aus dem Hauptteil: wo die Stelle
+// auf dem Schirm liegt, und was beim Antippen geschehen soll.
+ui.worldToScreen = (x, y) => renderer.worldToScreen(x, y);
+ui.onPick = (id, x, y) => { if (state.build(x, y, id)) Sfx.play('build'); };
+
 layout();
 bindInput(canvas, state, renderer);
 

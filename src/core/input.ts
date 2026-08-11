@@ -1,4 +1,9 @@
-import { TOWERS } from '../data/towers';
+import { TOWERS, TOWER_ORDER } from '../data/towers';
+
+/** Der guenstigste Turm - er entscheidet, ob ein Platz ueberhaupt taugt.
+ *  Was dort nicht steht, steht nirgends. */
+const guenstigster = () =>
+  TOWER_ORDER.reduce((a, b) => (TOWERS[a].base.cost <= TOWERS[b].base.cost ? a : b));
 import { ABILITIES, ABILITY_ORDER } from '../data/abilities';
 import { Sfx } from './audio';
 import type { GameState } from '../game/state';
@@ -168,8 +173,12 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
       }
       return;
     }
-    s.selectedTower = existing ?? null;
-    if (existing) Sfx.play('tap');
+    if (existing) { s.selectedTower = existing; s.buildAt = null; Sfx.play('tap'); return; }
+    s.selectedTower = null;
+
+    // Freier Platz: die Turmwahl oeffnet sich dort, wo getippt wurde.
+    s.buildAt = s.canPlace(guenstigster(), c.x, c.y) ? { x: c.x, y: c.y } : null;
+    if (s.buildAt) Sfx.play('tap');
   };
 
   canvas.addEventListener('pointerup', finish);

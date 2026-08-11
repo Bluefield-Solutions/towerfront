@@ -726,3 +726,28 @@ html, body {
   border-color: rgba(242, 193, 78, 0.42);
 }
 .pause-btn.warn:hover { background: rgba(242, 193, 78, 0.18); }
+
+/* Turmwahl am Bauplatz.
+   Sie liegt ueber dem Feld und wird von der Oberflaeche an die getippte
+   Stelle gesetzt. Vier Knoepfe nebeneinander, jeder mit Namen und Preis -
+   mehr braucht die Entscheidung nicht. */
+.pick { position: absolute; z-index: 5; transform: translate(-50%, -100%); }
+.pick[hidden] { display: none; }
+.pick-row {
+  display: flex; gap: 8px; padding: 10px;
+  background: var(--panel); border: 1px solid var(--edge);
+  border-radius: 16px; box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+}
+.pick-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  min-width: 76px; min-height: 60px; padding: 8px 6px;
+  font: inherit; color: var(--text);
+  background: rgba(231, 236, 247, 0.07);
+  border: 1px solid rgba(231, 236, 247, 0.16);
+  border-radius: 12px; cursor: pointer;
+}
+.pick-btn:active { transform: scale(0.97); }
+.pick-btn[disabled] { opacity: 0.42; cursor: default; }
+.pick-name { font-size: 13px; font-weight: 600; }
+.pick-cost { font-size: 12px; color: var(--gold); }
+.pick-btn[disabled] .pick-cost { color: var(--danger); }

@@ -26,6 +26,8 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
   /** Alle liegenden Finger - fuer das Kneifen. */
   const points = new Map<number, { x: number; y: number }>();
   let pinchDist = 0;
+  let pinchX: number | null = null;
+  let pinchY: number | null = null;
   let lastTap = 0;
 
   const local = (ev: { clientX: number; clientY: number }) => {
@@ -37,13 +39,23 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
     const p = local(ev);
     if (points.has(ev.pointerId)) points.set(ev.pointerId, p);
 
-    // Zwei Finger: kneifen. Der Punkt zwischen den Fingern bleibt stehen.
+    // Zwei Finger: kneifen UND schieben.
+    //
+    // Vorher wurde nur der Abstand ausgewertet und am Mittelpunkt gezoomt.
+    // Der Mittelpunkt wandert aber mit den Fingern, und diese Bewegung wurde
+    // verschluckt - das Bild rutschte beim Kneifen weg. Zwei Finger machen in
+    // Wahrheit zweierlei: ihr Abstand ist der Zoom, ihre gemeinsame Mitte die
+    // Verschiebung. Beides muss gelten.
     if (points.size >= 2) {
       const [a, b] = [...points.values()];
       const d = Math.hypot(a.x - b.x, a.y - b.y);
+      const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
       if (pinchDist > 0 && d > 0) {
-        r.zoomAt(d / pinchDist, (a.x + b.x) / 2, (a.y + b.y) / 2);
+        r.zoomAt(d / pinchDist, mx, my);
+        if (pinchX !== null && pinchY !== null) r.panBy(mx - pinchX, my - pinchY);
       }
+      pinchX = mx;
+      pinchY = my;
       pinchDist = d;
       dragging = true;
       s.pendingPoint = null;
@@ -111,7 +123,7 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
       return;
     }
     points.delete(ev.pointerId);
-    if (points.size < 2) pinchDist = 0;
+    if (points.size < 2) { pinchDist = 0; pinchX = null; pinchY = null; }
     if (!down) return;
     down = false;
     const wasDragging = dragging;
@@ -163,7 +175,7 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
   canvas.addEventListener('pointerup', finish);
   canvas.addEventListener('pointercancel', (ev) => {
     points.delete(ev.pointerId);
-    if (points.size < 2) pinchDist = 0;
+    if (points.size < 2) { pinchDist = 0; pinchX = null; pinchY = null; }
     down = false; dragging = false; s.pendingPoint = null;
   });
 

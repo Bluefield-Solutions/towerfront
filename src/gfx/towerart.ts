@@ -88,8 +88,20 @@ export function artBreite(art: HTMLCanvasElement, schluessel: string): number {
   if (hit !== undefined) return hit;
   const g = art.getContext('2d')!;
   const { data } = g.getImageData(0, 0, art.width, art.height);
+  // Gemessen wird der FUSS, nicht die groesste Ausdehnung.
+  //
+  // Vorher zaehlte die Gesamtbreite. Rechnerisch waren damit alle Tuerme
+  // gleich breit - im Bild nicht: beim Frostturm ragen Eiszinnen seitlich
+  // heraus, also wurde sein Koerper kleiner gezeichnet, damit die
+  // Gesamtbreite stimmt. Der Bogenturm hat keine Auswuechse und stand
+  // dadurch groesser da.
+  //
+  // Was ein Turm an Groesse ausstrahlt, ist seine Standflaeche. Also wird
+  // nur das untere Viertel des Bildes gemessen; was oben herausragt, darf
+  // herausragen.
   let minX = art.width, maxX = -1;
-  for (let y = 0; y < art.height; y += 2) {
+  const vonY = Math.floor(art.height * 0.62);
+  for (let y = vonY; y < art.height; y += 2) {
     for (let x = 0; x < art.width; x++) {
       if (data[(y * art.width + x) * 4 + 3] < 40) continue;
       if (x < minX) minX = x;

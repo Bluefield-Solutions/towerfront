@@ -971,6 +971,23 @@ export class Renderer {
   private artMasse(
     id: TowerId, branch: BranchIndex, level: number, art: HTMLCanvasElement,
   ): { w: number; h: number; oben: number } {
+    // Alle Turmbilder werden gleich gross gezeichnet - ohne Ausgleich.
+    //
+    // Zweimal habe ich versucht, die Groesse aus dem Bild zu errechnen: erst
+    // aus der Gesamtbreite der Figur, dann aus der Breite ihres Fusses.
+    // Beide Male waren die Tuerme rechnerisch gleich und im Bild
+    // verschieden - nur jedes Mal andersherum. Ein Ausgleich, der die
+    // Bildinhalte gegeneinander normiert, kaempft gegen die Gestaltung an.
+    //
+    // Die Bilder kommen aus einer Serie und sind alle mit demselben
+    // Fuellgrad gepackt. Also fuellen sie ihre Kachel schon gleich, und die
+    // richtige Antwort ist: gar nichts ausgleichen. Was der Bildagent als
+    // gross gezeichnet hat, ist gross.
+    void artBreite;
+    const FUELLUNG = 0.94;
+    const w0 = (TOWERS[id].footprint * DRAW_SCALE * towerArtScale(level)) / FUELLUNG;
+    return { w: w0, h: w0, oben: -w0 * 0.72 };
+
     // Der Massstab kommt IMMER von Stufe 1, nie von der gezeigten Stufe.
     //
     // Gemessen waechst die Figurenbreite mit dem Ausbau - beim Frostturm von

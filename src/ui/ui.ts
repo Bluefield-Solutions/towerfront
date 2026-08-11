@@ -21,6 +21,12 @@ import type { GameState } from '../game/state';
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
 export class UI {
+  /** Wird gerufen, wenn in der Turmwahl ein Turm angetippt wurde. */
+  onPick: ((id: TowerId, x: number, y: number) => void) | null = null;
+  /** Rechnet Weltkoordinaten in Bildschirmpunkte um - setzt `main.ts`,
+   *  damit die Turmwahl an der richtigen Stelle sitzt. */
+  worldToScreen: ((x: number, y: number) => { x: number; y: number }) | null = null;
+
   /** Was das Pausenmenue ausloest. Setzt `main.ts`. */
   onRestart: (() => void) | null = null;
   onQuit: (() => void) | null = null;
@@ -32,6 +38,9 @@ export class UI {
   private bSpeed = $<HTMLButtonElement>('b-speed');
   private bPause = $<HTMLButtonElement>('b-pause');
   private pauseMenu = $<HTMLElement>('pause-menu');
+  private pick = $<HTMLElement>('pick');
+  private pickRow = $<HTMLElement>('pick-row');
+  private pickKey = '';
   private bWave = $<HTMLButtonElement>('b-wave');
   private bWaveT = $('b-wave-t');
   private bWaveB = $('b-wave-b');
@@ -625,6 +634,7 @@ export class UI {
     // Das Pausenmenue haengt am Pausenzustand, nicht an einem eigenen
     // Schalter - sonst gaebe es zwei Wahrheiten ueber denselben Zustand.
     this.pauseMenu.hidden = !s.paused || s.phase !== 'playing';
+    this.syncPick(s);
     this.bWave.disabled = !s.canStartWave;
     this.bWaveT.textContent = s.waveActive
       ? 'Welle läuft'
@@ -687,6 +697,50 @@ export class UI {
       this.insp.hidden = true;
     }
   }
+  /** Die Turmwahl an der angetippten Stelle zeigen.
+   *
+   *  Sie haengt an `state.buildAt`, nicht an einem eigenen Schalter - dieselbe
+   *  Regel wie beim Pausenmenue. Die Knoepfe werden nur neu gebaut, wenn sich
+   *  Ort oder Gold aendern; sonst flackerte die Auswahl bei jedem Bild.
+   *
+   *  **Sichtbarkeit und Position sind getrennt.** Beim ersten Anlauf hingen
+   *  sie zusammen: fehlte die Umrechnung, blieb die Wahl verborgen. Im
+   *  Rauchtest ist kein Renderer angeschlossen, und die Pruefung meldete eine
+   *  Wahl, die es sehr wohl geben sollte.
+   */
+  private syncPick(s: GameState): void {
+    const at = s.buildAt;
+    if (!at || s.phase !== 'playing' || s.paused) { this.pick.hidden = true; return; }
+    this.pick.hidden = false;
+
+    const schluessel = `${Math.round(at.x)}|${Math.round(at.y)}|${s.gold}`;
+    if (schluessel !== this.pickKey) {
+      this.pickKey = schluessel;
+      this.pickRow.innerHTML = TOWER_ORDER.map((id) => {
+        const def = TOWERS[id];
+        const reicht = s.gold >= def.base.cost;
+        return `<button class="pick-btn" data-turm="${id}"${reicht ? '' : ' disabled'}>`
+          + `<span class="pick-name">${def.name}</span>`
+          + `<span class="pick-cost">${def.base.cost}</span></button>`;
+      }).join('');
+      for (const b of this.pickRow.querySelectorAll<HTMLButtonElement>('.pick-btn')) {
+        b.addEventListener('click', () => {
+          const ziel = s.buildAt;
+          if (!ziel) return;
+          s.buildAt = null;
+          this.pickKey = '';
+          this.onPick?.(b.dataset.turm as TowerId, ziel.x, ziel.y);
+        });
+      }
+    }
+
+    const p = this.worldToScreen?.(at.x, at.y);
+    if (p) {
+      this.pick.style.left = `${p.x}px`;
+      this.pick.style.top = `${p.y - 18}px`;
+    }
+  }
+
 
   /** Auf Stufe 1 stehen zwei Zweige zur Wahl, die sich ausschliessen. Danach
    *  gibt es nur noch den einen Weg innerhalb des gewaehlten Zweiges. */

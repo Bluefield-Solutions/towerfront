@@ -872,6 +872,38 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Die Turmwahl erscheint am angetippten Platz.
+//
+// Bis v101 musste man erst in der Leiste einen Turm waehlen und dann aufs Feld
+// tippen - zwei Schritte, und die Leiste klappte dabei auf und zu.
+{
+  const wahl = document.getElementById('pick');
+  if (!wahl) {
+    problems.push('Turmwahl: fehlt im Dokument.');
+  } else {
+    state.reset(3, 'normal', 'frostspalte');
+    state.buildAt = null;
+    ui.sync();
+    if (!wahl.hidden) problems.push('Turmwahl: sichtbar, obwohl kein Platz gewaehlt ist.');
+
+    state.buildAt = { x: state.map.hint.x, y: state.map.hint.y };
+    ui.sync();
+    if (wahl.hidden) problems.push('Turmwahl: bleibt verborgen, obwohl ein Platz gewaehlt ist.');
+    const knoepfe = wahl.querySelectorAll('.pick-btn').length;
+    if (knoepfe !== TOWER_ORDER.length) {
+      problems.push(`Turmwahl: ${knoepfe} Knoepfe fuer ${TOWER_ORDER.length} Turmsorten.`);
+    }
+
+    // Im Menue und in der Pause hat sie nichts zu suchen.
+    state.paused = true;
+    ui.sync();
+    if (!wahl.hidden) problems.push('Turmwahl: sichtbar, obwohl pausiert.');
+    state.paused = false;
+    state.buildAt = null;
+    ui.sync();
+  }
+}
+
 // Die Uebersichtskarte traegt jede Kartenzahl.
 //
 // Bis v98 standen dort drei feste Koordinaten - eine vierte Karte waere

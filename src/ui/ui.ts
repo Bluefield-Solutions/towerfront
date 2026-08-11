@@ -592,6 +592,10 @@ export class UI {
     const sig = [
       s.gold, s.lives, s.waveNumber, s.waveActive, s.speed, s.paused,
       s.buildChoice, s.phase, getSettings().sound,
+      // buildAt gehoert dazu: aendert sich nur der gewaehlte Bauplatz, muss
+      // die Oberflaeche trotzdem neu zeichnen - sonst bleibt die Turmwahl
+      // unsichtbar, obwohl der Zustand sie verlangt.
+      s.buildAt ? `${Math.round(s.buildAt.x)}:${Math.round(s.buildAt.y)}` : '-',
       sel ? `${sel.id}:${sel.level}:${sel.branch}` : '-',
     ].join('|');
 

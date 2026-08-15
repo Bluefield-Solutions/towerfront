@@ -3,3 +3,15 @@ dist
 bilder/
 schleife/
 .eichen-sicherung.json
+
+# Rohbilder bleiben ausserhalb von Git.
+#
+# 79 MB gegen 1,2 MB: Die gelieferten Kartenbilder und Turmvorlagen liegen bei
+# 2 bis 4 MB je Stueck, die daraus gepackten Fassungen in src/gfx/assets/ bei
+# insgesamt 1,2 MB. Zum Bauen und Spielen werden nur die gepackten gebraucht -
+# geprueft: Build und Rauchtest laufen ohne art/roh durch.
+#
+# Wer neue Bilder einbaut, legt sie hier ab, laesst `npx tsx tools/pack-art.mjs`
+# laufen und checkt das ERGEBNIS ein. Die Rohbilder selbst gehoeren ins
+# Archiv, nicht in die Versionsgeschichte.
+art/roh/

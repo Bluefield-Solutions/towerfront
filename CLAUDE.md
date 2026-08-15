@@ -6,6 +6,16 @@ Browser-Tower-Defense, deutsch, eine autarke HTML-Datei. TypeScript 5 + Vite +
 **Diese Datei wird zu Beginn jeder Sitzung gelesen. Sie ist kurz gehalten, weil
 eine lange Datei nicht gelesen wird. Alles Ausführliche steht in `docs/`.**
 
+## Nach dem Umzug: Rohbilder liegen nicht in Git
+
+`art/roh/` ist ausgenommen (79 MB gegen 1,2 MB gepackt). Zum Bauen und Spielen
+werden nur die gepackten Fassungen in `src/gfx/assets/` gebraucht - geprueft,
+Build und Rauchtest laufen ohne die Rohbilder durch.
+
+**Wer neue Bilder einbaut:** ablegen unter `art/roh/`, `npx tsx
+tools/pack-art.mjs` laufen lassen, das ERGEBNIS einchecken. Wer nur am Code
+arbeitet, braucht sie gar nicht.
+
 ---
 
 ## Wie hier gearbeitet wird

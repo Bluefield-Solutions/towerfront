@@ -7,7 +7,12 @@ name: Bauen und ausliefern
 
 on:
   push:
-    branches: [main]
+    # Beide Namen, damit der Plan nicht am Zweignamen scheitert.
+    #
+    # Er lauschte nur auf `main`, das Repository heisst aber `master` - der
+    # Plan waere nie gelaufen, und die Torkette vor der Auslieferung damit
+    # wirkungslos gewesen. Genau das, wovor die Datei selbst warnt.
+    branches: [main, master]
   workflow_dispatch:
 
 permissions:

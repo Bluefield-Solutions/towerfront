@@ -129,10 +129,19 @@ const PROBEN = [
     tor: 'doku',
   },
   {
+    // Als Regel, nicht als festes Zahlwort.
+    //
+    // Sie stand auf "vierzehn Prüfungen" und fiel aus, sobald die Kette um
+    // ein Tor wuchs - "Muster fehlt", genau Fall 3 aus dem Kopf dieser
+    // Datei. Eine Probe, die auf die Zahl zeigt, die sie prüfen soll,
+    // veraltet zwangsläufig mit ihr. Die Regel trifft jedes Zahlwort und
+    // überlebt jede weitere Torrunde.
     name: 'Doku zählt die Tore falsch',
     datei: 'CLAUDE.md',
-    suche: 'vierzehn Prüfungen',
-    ersatz: 'sieben Prüfungen',
+    regel: /(drei|vier|fünf|sechs|sieben|acht|neun|zehn|elf|zwölf|dreizehn|vierzehn|fünfzehn|sechzehn|siebzehn|achtzehn|neunzehn|zwanzig) Prüfungen/,
+    // "drei" ist nie richtig, solange die Kette mehr als drei Schritte hat -
+    // und sie hat seit v11 nie weniger gehabt.
+    ersatz: 'drei Prüfungen',
     tor: 'doku',
   },
   {

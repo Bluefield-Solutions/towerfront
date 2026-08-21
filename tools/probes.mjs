@@ -70,10 +70,20 @@ const PROBEN = [
     tor: 'lesbarkeit',
   },
   {
+    // Diese Probe griff bis v104 am Rohwert an - und lief seit der
+    // zusammenziehenden Anhebung ins Leere: der Zug zur Zielbreite holte den
+    // eingebauten Fehler wieder heraus, bevor das Tor ihn sehen konnte
+    // (Spaeher 20 statt 51 Rohbreite, gezogen auf 56 - unauffaellig).
+    //
+    // Das ist die dritte Fassung von Fall 3 aus dem Kopf dieser Datei: der
+    // Eingriff KAM an, das Muster passte, und trotzdem bewies der Lauf
+    // nichts. Ein Eingriff, den der Code selbst repariert, sieht genauso aus
+    // wie ein bestandenes Tor. Deshalb greift die Probe jetzt am Ergebnis an,
+    // hinter der letzten Rechnung - dort kann nichts mehr dazwischenkommen.
     name: 'Gegner zu klein zum Erkennen',
     datei: 'src/gfx/enemyart.ts',
-    suche: 'Math.max(ENEMIES[id].radius * 3.0, 50)',
-    ersatz: 'ENEMIES[id].radius * 1.2',
+    regel: /return roh >= ZIELBREITE \? roh : roh \+ \(ZIELBREITE - roh\) \* ZUG;/,
+    ersatz: 'return roh * 0.35;',
     tor: 'lesbarkeit',
   },
   {

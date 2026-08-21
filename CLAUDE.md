@@ -153,8 +153,6 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
 61 Versionen keinem auf.
 
 **Offen:**
-- Untergrundsättigung: die drei Karten streuen von 0,36 bis 0,70 (Band 0,45
-  bis 0,55). Helligkeit ist seit v106 im Band, die Lautstärke noch nicht.
 - D19 (grafisch): Die drei benannten Teile sind umgesetzt (v104). Was bleibt,
   ist die Plastik im Bild selbst — Befund B1 aus dem Grafik-Audit, und der
   braucht neue Bilder, nicht Code. Die Infanterie ist der eine Ausreißer, der

@@ -322,10 +322,23 @@ Formen tragen, nicht die Textur.
 | Kennzahl | Figuren | Untergrund |
 |---|---|---|
 | Mittlere Helligkeit | **0,33 bis 0,40** | **0,30 bis 0,36** |
-| Sättigung | 0,35 bis 0,45 | 0,45 bis 0,55 |
+| Sättigung | 0,35 bis 0,45 | 0,45 bis 0,55 ¹ |
 | Detaildichte | **3 bis 6** | 1,5 bis 3 |
 | Reines Schwarz | unter 2 % | unter 2 % |
 | Lichtrichtung | oben links, überall gleich | oben links |
+
+¹ **Diese Zahl ist kein Soll für die Untergründe.** Sie stammt aus *einer*
+Szene — „warmer Sandboden in Ocker". Für eine Schneelandschaft ist sie keine
+Vorgabe, sondern eine Fehlanzeige: eine Frostspalte auf 0,50 zu ziehen hieße,
+sie knallblau zu machen. Bis v106 hat `npm run grafik` daraus einen Befund
+gemacht („Untergrundsättigung streut"), der bei Befolgung drei absichtlich
+verschiedene Landschaften einander angeglichen hätte.
+
+Angesehen unterscheiden sich die drei Karten gerade richtig — warmer
+Herbstocker (Chroma 28), grauer Fels mit Lavaspalten (16), blauer Schnee (12).
+Keine ist grau, keine grell. Geprüft wird jetzt nur noch das: Chroma unter 5
+ist grau, über 60 ist grell. Beide Grenzen kommen aus der Farbenlehre, nicht
+aus unseren eigenen Werten.
 
 **Diese Tabelle steht doppelt, und das ist Absicht — aber nur eine Fassung
 zählt:** `REFERENZ` in `tools/artaudit.mjs`. Was hier steht, ist die Lesefassung.

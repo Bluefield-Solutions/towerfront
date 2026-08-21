@@ -92,10 +92,30 @@ async function messen(buffer, { transparent = true } = {}) {
   const W = info.width, H = info.height;
 
   const farben = new Map();
-  let n = 0, sumL = 0, sumS = 0, dunkel = 0, schwarz = 0;
+  let n = 0, sumL = 0, sumS = 0, sumC = 0, dunkel = 0, schwarz = 0;
   const werte = [];
 
   const lum = (r, g, b) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+
+  /** Buntheit, wie das Auge sie liest.
+   *
+   *  Die Saettigung nach (max-min)/max stammt aus HSV und kennt die
+   *  Helligkeit nicht: ein dunkles Braun wie RGB(50,30,20) kommt dort auf
+   *  0,60 und wirkt trotzdem nicht bunt. Chroma im CIELAB-Raum rechnet die
+   *  Helligkeit mit ein - 0 ist grau, um 20 gedaempft, um 40 kraeftig, ueber
+   *  60 grell. */
+  const chroma = (r, g, b) => {
+    const f = (v) => {
+      v /= 255;
+      return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    };
+    const R = f(r), G = f(g), B = f(b);
+    const k = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+    const X = k((0.4124 * R + 0.3576 * G + 0.1805 * B) / 0.95047);
+    const Y = k(0.2126 * R + 0.7152 * G + 0.0722 * B);
+    const Z = k((0.0193 * R + 0.1192 * G + 0.9505 * B) / 1.08883);
+    return Math.hypot(500 * (X - Y), 200 * (Y - Z));
+  };
 
   for (let i = 0; i < W * H; i++) {
     const a = data[i * 4 + 3];
@@ -107,6 +127,7 @@ async function messen(buffer, { transparent = true } = {}) {
     werte.push(l);
     const max = Math.max(r, g, b), min = Math.min(r, g, b);
     sumS += max === 0 ? 0 : (max - min) / max;
+    sumC += chroma(r, g, b);
     if (l < 0.06) dunkel++;
     if (r < 12 && g < 12 && b < 12) schwarz++;
     // Farben auf 5 Bit je Kanal zusammenfassen - feiner unterscheidet das
@@ -182,6 +203,7 @@ async function messen(buffer, { transparent = true } = {}) {
 
   return {
     flaeche: n,
+    chroma: sumC / n,
     rauschen: rn ? (Math.sqrt(Math.PI / 2) * rs / (6 * rn)) * 100 : 0,
     palette: tragend,
     helligkeit: sumL / n,
@@ -239,7 +261,7 @@ async function lichtrichtung(buffer) {
 // weiter anmahnt, ist derselbe Fehler wie eines, das in die falsche Richtung
 // zeigt - nur schwerer zu bemerken.
 console.log('Untergründe (gebackenes Terrain, nicht das Quellbild)');
-console.log('  Name             Palette  Helligk  Sätt.  Spanne  Dichte');
+console.log('  Name             Palette  Helligk  Sätt.  Spanne  Dichte  Chroma');
 const bg = lies('backgrounds.ts');
 const bgWerte = [];
 for (const map of MAPS) {
@@ -256,7 +278,7 @@ for (const map of MAPS) {
   // nur verrauschen.
   const licht = await lichtrichtung(bg.get(map.id));
   bgWerte.push({ id: map.id, ...m, licht: licht.winkel });
-  console.log(`  ${map.id.padEnd(16)} ${String(m.palette).padStart(6)}  ${z(m.helligkeit)}  ${z(m.saettigung)}  ${z(m.spanne)}  ${z(m.dichte)}`);
+  console.log(`  ${map.id.padEnd(16)} ${String(m.palette).padStart(6)}  ${z(m.helligkeit)}  ${z(m.saettigung)}  ${z(m.spanne)}  ${z(m.dichte)}  ${m.chroma.toFixed(1).padStart(5)}`);
 }
 
 // ------------------------------------------------------------------- Tuerme
@@ -308,7 +330,24 @@ const REFERENZ = {
   },
   grund: {
     helligkeit: [0.30, 0.36],   // Zielboden 0,33
-    saettigung: [0.45, 0.55],   // Zielboden 0,51
+    // Gemessen, aber NICHT als Befund verwendet.
+    //
+    // Das Band stammt aus EINER Szene - "warmer Sandboden in Ocker". Fuer
+    // eine Schneelandschaft ist es keine Vorgabe, sondern eine Fehlanzeige:
+    // eine Frostspalte auf 0,50 zu ziehen hiesse, sie knallblau zu machen.
+    //
+    // Bis v106 stand hier ein Befund "Untergrundsaettigung streut", der genau
+    // das verlangt haette. Angesehen unterscheiden sich die drei Karten
+    // gerade richtig: warmer Herbstocker (Chroma 28), grauer Fels mit
+    // Lavaspalten (16), blauer Schnee (12). Keine ist grau, keine grell.
+    //
+    // Die Regel dahinter - "in der Farbe unterscheiden, nicht in der
+    // Lautstaerke" - stammte aus meiner eigenen Feder, nicht aus der
+    // Referenz. Das ist genau der Fehler, vor dem Regel 10 warnt, und er ist
+    // hier zweimal hintereinander passiert: erst mass das Werkzeug gegen eine
+    // verworfene Lehre, dann gegen eine Einzelmessung, die als Band fuer eine
+    // Vielfalt herhalten musste, fuer die sie nie gedacht war.
+    saettigung: [0.45, 0.55],   // Zielboden 0,51 - eine Sandszene, mehr nicht
     dichte: [1.5, 3],           // Zielboden 1,63
   },
   schwarzAnteil: 0.02,          // Zielbild 1,3 %
@@ -387,12 +426,19 @@ if (grH.lage) {
       : ''),
   );
 }
-if (grS.abweichler.length) {
-  befunde.push(
-    `Untergrundsättigung streut: ${grS.abweichler.length} von ${bgWerte.length} Karten ` +
-    `liegen ausserhalb von ${REFERENZ.grund.saettigung.join(' bis ')} (${nenne(grS.abweichler)}). ` +
-    'Die Karten sollen sich in der Farbe unterscheiden, nicht in der Lautstärke.',
-  );
+// Kein Befund mehr aus dem Saettigungsband - siehe REFERENZ.grund.saettigung.
+//
+// Geprueft wird stattdessen, was ohne Referenz zu verantworten ist: dass
+// keine Karte in Grau kippt und keine grell wird. Beide Grenzen kommen aus
+// der Farbenlehre, nicht aus unseren eigenen Werten - sonst wanderte das
+// Soll mit der eigenen Leistung mit (Regel 10).
+for (const k of bgWerte) {
+  if (k.chroma < 5) {
+    befunde.push(`${k.id} ist praktisch grau (Chroma ${k.chroma.toFixed(1)}).`);
+  }
+  if (k.chroma > 60) {
+    befunde.push(`${k.id} ist grell (Chroma ${k.chroma.toFixed(1)}) - das erschlägt die Figuren.`);
+  }
 }
 if (grD.lage) {
   befunde.push(

@@ -94,9 +94,16 @@ html, body {
 .dock[data-folded="1"] .dock-body {
   opacity: 0; transform: translateY(12px) scale(0.94); pointer-events: none;
 }
+/* 44 Punkte, nicht 34.
+ *
+ * Der Richtwert stand seit je in `npm run beruehrung` - nur stand dieser
+ * Knopf nicht auf dessen Liste, und das Werkzeug sagte das sogar laut
+ * ("Knopfklasse dock-toggle wird nicht gemessen"). Eine bekannte Luecke ist
+ * eine Luecke. Gefunden hat es das Browsertor, das nicht nach einer Liste
+ * geht, sondern nach dem, was sichtbar ist. */
 .dock-toggle {
   pointer-events: auto; cursor: pointer; flex: none;
-  width: 34px; height: 34px; border-radius: 10px;
+  width: 44px; height: 44px; border-radius: 10px;
   display: grid; place-items: center; font-size: 15px; line-height: 1;
   color: var(--text); font-family: var(--ui);
   background: rgba(9, 14, 30, 0.5);

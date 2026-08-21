@@ -376,6 +376,18 @@ export class UI {
   setSpielansicht(anzeigen: boolean): void {
     this.hud.hidden = !anzeigen;
     this.dock.hidden = !anzeigen;
+    // Der Startknopf gehoert dazu - und fehlte hier bis v105.
+    //
+    // Er stand auf der Landkarte gross und tuerkis unten rechts und war
+    // anklickbar: "Welle 1 starten", 148 mal 46 Punkte, an vier Rasterpunkten
+    // ueber der Karte. Dritter Bruch derselben Regel, und wieder hat es kein
+    // Tor gesehen - der Rauchtest laeuft in jsdom und prueft `hidden`, aber
+    // dieses Feld war nie gesetzt worden. Gefunden hat es erst das
+    // Browsertor, das nachsieht, was TATSAECHLICH im Bild steht.
+    //
+    // Die Lehre ist nicht "eine Zeile vergessen", sondern: eine Ableitung
+    // schuetzt nur das, was sie auch aufzaehlt.
+    this.bWave.hidden = !anzeigen;
     if (!anzeigen) {
       this.insp.hidden = true;
       this.s.selectedTower = null;

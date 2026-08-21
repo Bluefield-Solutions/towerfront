@@ -1,6 +1,6 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v104 · 21.08.2026
+Stand: v105 · 21.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Towerfront.html`
 
 > **Aufbau dieses Dokuments.** Die Abschnitte 1 bis 3.4 beschreiben den
@@ -192,7 +192,7 @@ Innerhalb von Schritt 1 gilt weiterhin:
 3. **`git diff` prüfen.** Nur die beabsichtigten Zeilen.
 4. **Erst einchecken, dann gegenproben.** Gegenproben arbeiten mit
    `git checkout` und löschen sonst die frische Arbeit. Dreimal passiert.
-5. **`npm run gate`** — vierzehn Prüfungen, rund 80 Sekunden. Alles grün, sonst
+5. **`npm run gate`** — fünfzehn Prüfungen, rund 60 Sekunden. Alles grün, sonst
    wird nicht ausgeliefert.
 6. **Ausliefern**, committen, `git tag vN`.
 
@@ -204,17 +204,19 @@ Ein Befehl fährt alles: `npm run gate`
 |---|---|---|---|
 | 1 | Typen | `npm run tsc` | Typfehler, ungenutzte Variablen, fehlende Fälle — in `src` **und** `tools` |
 | 2 | Datenwächter | `npm run guards` | widersprüchlichen Inhaltsdaten: Wegknicke über 25°, Umwegfaktor unter 1,8, zu wenig Richtungswechsel, fehlende Engstellen, zu enge oder zu weite Bauflächen |
-| 3 | Bildvorrat | `npm run art` | Rohbildern, die nicht ins Bündel gebacken wurden |
-| 4 | Determinismus | `npm run determinism` | abweichendem Verlauf bei gleicher Aussaat oder nach Sichern/Laden |
-| 5 | Balance | `npm run sim` | kaputter Schwierigkeitskurve, dominierender Turmsorte, totem Ausbaupfad, unerreichbaren Sternen |
-| 6 | Messung Simulation | `npm run bench` | mehr als 4 ms Simulationszeit je Bild |
-| 7 | Messung Zeichnen | `npm run bench-draw` | mehr als 3.000 Zeichenbefehlen **oder** 24 MB gebackenen Bildern |
-| 8 | Lesbarkeit | `npm run lesbarkeit` | zu schwachem Saumkontrast, zu kleiner Silhouette, zu ähnlichen Gegnerfarben |
-| 9 | Berührungsflächen | `npm run beruehrung` | Bedienelementen unter 44 Bildschirmpunkten — auf der Leinwand gerechnet, im HTML aus der Stilvorlage gelesen |
-| 10 | Bildabnahme | `npm run bildtor` | einfarbiger Fläche, falscher Helligkeit, nicht dekodierten Bildern |
-| 11 | Rauchtest | `npm run smoke` | Fehlern beim Zeichnen, in der Oberfläche, bei der Eingabe; unerreichbaren Menüwegen; zu kleinen Trefferflächen |
-| 12 | Build | `npm run build` | Bündelfehler |
-| 13 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id, Ersatzschreibung statt Umlaut |
+| 3 | Dokumentenwächter | `npm run doku` | Befehlen, die es nicht gibt; falscher Torzahl; überholten Begriffen im gültigen Teil; Standangaben, die weit zurückliegen |
+| 4 | Bildvorrat | `npm run art` | Rohbildern, die nicht ins Bündel gebacken wurden |
+| 5 | Determinismus | `npm run determinism` | abweichendem Verlauf bei gleicher Aussaat oder nach Sichern/Laden |
+| 6 | Balance | `npm run sim` | kaputter Schwierigkeitskurve, dominierender Turmsorte, totem Ausbaupfad, unerreichbaren Sternen |
+| 7 | Messung Simulation | `npm run bench` | mehr als 4 ms Simulationszeit je Bild |
+| 8 | Messung Zeichnen | `npm run bench-draw` | mehr als 3.000 Zeichenbefehlen **oder** 24 MB gebackenen Bildern |
+| 9 | Lesbarkeit | `npm run lesbarkeit` | zu schwachem Saumkontrast, zu kleiner Silhouette, zu ähnlichen Gegnerfarben |
+| 10 | Berührungsflächen | `npm run beruehrung` | Bedienelementen unter 44 Bildschirmpunkten — auf der Leinwand gerechnet, im HTML aus der Stilvorlage gelesen |
+| 11 | Bildabnahme | `npm run bildtor` | einfarbiger Fläche, falscher Helligkeit, nicht dekodierten Bildern |
+| 12 | Rauchtest | `npm run smoke` | Fehlern beim Zeichnen, in der Oberfläche, bei der Eingabe; unerreichbaren Menüwegen; zu kleinen Trefferflächen |
+| 13 | Build | `npm run build` | Bündelfehler |
+| 14 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id, Ersatzschreibung statt Umlaut |
+| 15 | Browser | `npm run browser` | Konsolenfehlern; Spielbedienung, die im Menü sichtbar ist; Bedienung, die über der Landkarte liegt; einem Spiel, in das man nicht hineinkommt; Knöpfen, die gerechnet unter 44 Punkten liegen oder verdeckt sind — als einziges Tor mit gerechneter Kaskade, im echten Chromium auf 844 × 390 |
 | — | Genre-Abgleich | `npm run bericht` | nichts — er meldet, er bricht nicht ab |
 
 Daneben zwei Werkzeuge, die nicht Teil der Kette sind:

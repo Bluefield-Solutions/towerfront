@@ -1,8 +1,13 @@
 # Auslieferung nach GitHub Pages.
 #
 # Der wichtigste Satz steht in Zeile "Torkette": gebaut und veroeffentlicht
-# wird nur, wenn alle elf Pruefungen gruen sind. Ein rotes Tor darf nie live
-# gehen - sonst waere die ganze Kette Zierrat.
+# wird nur, wenn alle fuenfzehn Pruefungen gruen sind. Ein rotes Tor darf nie
+# live gehen - sonst waere die ganze Kette Zierrat.
+#
+# (Hier stand "elf", waehrend die Kette schon vierzehn Schritte hatte. Der
+# Dokumentenwaechter zaehlt die Torschritte gegen die Prosa - aber er liest
+# nur Markdown, und dieser Plan ist YAML. Eine Zahl in einem Kommentar, die
+# niemand prueft, veraltet genauso lautlos wie eine in der Doku.)
 name: Bauen und ausliefern
 
 on:
@@ -36,6 +41,18 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      # Chromium fuer das Browsertor.
+      #
+      # Es laedt die fertig gebaute Datei in einem echten Browser - das ist
+      # der einzige Weg, die Kaskade zu pruefen, und damit der einzige Weg,
+      # Fehler wie v50 zu fangen (Turmleiste ueber der Landkarte, man kam
+      # nicht ins Spiel, alle Tore gruen).
+      #
+      # Ohne Browser bricht das Tor ab, statt sich still zu ueberspringen.
+      # Das ist Absicht: eine Pruefung, die bei fehlendem Werkzeug Gruen
+      # meldet, ist schlimmer als keine.
+      - name: Chromium
+        run: npx playwright install --with-deps chromium
       # Die vollstaendige Kette. Sie baut auch, deshalb liegt dist danach
       # bereit und muss nicht ein zweites Mal erzeugt werden.
       - name: Torkette

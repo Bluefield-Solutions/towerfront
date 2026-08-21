@@ -269,6 +269,35 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    // Der dritte Bruch von Regel 6 - genau der Fehler, den dieses Tor bei
+    // seinem ersten Lauf gefunden hat. Er stand sichtbar auf der Landkarte,
+    // und dreizehn andere Tore hatten ihn durchgelassen.
+    name: 'Startknopf steht im Menue',
+    datei: 'src/ui/ui.ts',
+    regel: /this\.bWave\.hidden = !anzeigen;/,
+    ersatz: 'this.bWave.hidden = false;',
+    tor: 'browsertor',
+  },
+  {
+    // Gross genug ist eine Zusage der Stilvorlage; gemessen wird sie erst
+    // im Browser. Deshalb steht diese Probe neben der fuer `beruehrung` und
+    // nicht statt ihrer - zwei Wege zur selben Zahl.
+    name: 'Knopf im Spiel unter dem Richtwert',
+    datei: 'src/style.css',
+    regel: /(\.dock-toggle \{\n  pointer-events: auto; cursor: pointer; flex: none;\n  width: )44px; height: 44px;/,
+    ersatz: '$130px; height: 30px;',
+    tor: 'browsertor',
+  },
+  {
+    // v50, woertlich nachgestellt: die Landkarte nimmt keine Tipper mehr an,
+    // und man kommt nicht ins Spiel. Damals waren alle vierzehn Tore gruen.
+    name: 'Man kommt nicht mehr ins Spiel',
+    datei: 'src/game/menu.ts',
+    regel: /const hit = this\.hotspots\.find\(\(h\) => inside\(h, x, y\)\);/,
+    ersatz: 'const hit = undefined;',
+    tor: 'browsertor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

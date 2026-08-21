@@ -45,7 +45,7 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 ## Befehle
 
 ```
-npm run gate        vierzehn Prüfungen, ~80 s. Muss vor jedem Commit grün sein.
+npm run gate        fünfzehn Prüfungen, ~60 s. Muss vor jedem Commit grün sein.
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
 npm run bilder      alle 13 Aufnahmen (echte PNG ohne Browser)
 npm run bildtor     der Querschnitt, den die Torkette prüft
@@ -58,7 +58,12 @@ npm run kritik      Wertung nach Testerkategorien, Ziel über 90
 ```
 
 Die Torkette: `tsc` → `guards` → `doku` → `art` → `determinism` → `sim` → `bench` →
-`bench-draw` → `lesbarkeit` → `beruehrung` → `bildtor` → `smoke` → `build` → `autarkie` → `bericht`.
+`bench-draw` → `lesbarkeit` → `beruehrung` → `bildtor` → `smoke` → `build` → `autarkie` →
+`browser` → `bericht`.
+
+`npm run browser` lädt die **gebaute** Datei in Chromium (iPhone quer) und ist
+damit das einzige Tor, das die Kaskade wirklich rechnet. Einzeln aufgerufen
+verlangt es einen frischen Build; `npm run browsertor` baut selbst.
 
 ---
 
@@ -136,7 +141,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v104. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v105. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, sieben
 Gegnerarten in den Wellen plus den Span, in den der Spalter zerfällt, drei
 Grade, Endlosmodus. Genre-Abgleich 27 von 30, gewichtet 93 %.
@@ -148,9 +153,6 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
 61 Versionen keinem auf.
 
 **Offen:**
-- T12: Kein Tor lädt die gebaute Datei in einem echten Browser. jsdom rechnet
-  die Kaskade nicht, deshalb ist die Berührungsprüfung im HTML nur die Zusage
-  der Stilvorlage und keine Messung. Genau diese Lücke war v50.
 - D19 (grafisch): Die drei benannten Teile sind umgesetzt (v104). Was bleibt,
   ist die Plastik im Bild selbst — Befund B1 aus dem Grafik-Audit, und der
   braucht neue Bilder, nicht Code. Die Infanterie ist der eine Ausreißer, der
@@ -162,6 +164,11 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   Genre-Abgleich. Sie waren hinter T15 gesperrt; die Sperre ist gefallen.
 
 **Erledigt und hier zu lange falsch stehen geblieben** (nachgemessen in v103):
+- T12 ist geschlossen (v105). `npm run browser` lädt `dist/index.html` in
+  Chromium auf 844 × 390 und misst, was jsdom nicht kann: was wirklich
+  sichtbar ist, was worüber liegt, wie groß ein Knopf gerechnet ist und ob
+  man durch Tippen ins Spiel kommt. Beim ersten Lauf fand es drei Fehler,
+  die dreizehn andere Tore durchgelassen hatten.
 - T15 ist gelöst. `npm run sim` misst W12:4 W13:7 W14:16 W15:10 — vier Wellen
   tragen die Verluste, 27 % liegen in der letzten. Das Ziel waren höchstens
   60 % bei mindestens drei Wellen, und der Hinweis `OFFEN (T15)` bleibt im

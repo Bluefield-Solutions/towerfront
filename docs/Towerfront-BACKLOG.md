@@ -1,6 +1,6 @@
 # Towerfront — Rückstandsverzeichnis
 
-Stand: v104 · 21.08.2026
+Stand: v105 · 21.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Towerfront-BENCHMARK.md` und läuft mit `npm run bericht` in jedem Lauf mit.
 
@@ -40,7 +40,6 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 
 | # | Punkt | Nutzen | Aufw. |
 |---|---|---|---|
-| T12 | Sichtprüfung im Tor: gebaute Datei in einem echten Browser laden und ein Bild vergleichen (jsdom kann die Kaskade nicht) | ●●● | L |
 | T8 | Kristall je Rissstufe backen (letztes Objekt mit Pfaden in jedem Bild) | ● | S |
 | T9 | Bildpuffer bei Größenwechsel gezielt verwerfen statt alles neu zu backen | ● | S |
 | T10 | Aussaat eingebbar machen (Lauf gezielt nachstellen, geteilte Herausforderung) | ●● | S |
@@ -80,6 +79,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
 | S73 | **T15 gelöst.** Verluste jetzt auf drei Wellen verteilt, 45 % in der letzten (Ziel 60 %) | Der zweite Anlauf gelang, weil ich diesmal **den ganzen Raum gemessen habe statt nacheinander zu justieren**: ein Eichskript setzt eine Kurve und berichtet alle Kennzahlen auf einmal. Vier Werte durchprobiert, den passenden gewählt, dann in fester Reihenfolge Türme, Sterne, Karten. |
+| S80 | **T12 geschlossen — und das neue Tor fand bei seinem ERSTEN Lauf drei Fehler**, die dreizehn andere durchgelassen hatten: der Startknopf „Welle 1 starten" stand sichtbar auf der Landkarte (148 × 46, an vier Rasterpunkten über der Karte), und der Einklappknopf war 34 statt 44 Punkte groß | Dritter Bruch von Regel 6, und wieder von keinem Tor gesehen. `setSpielansicht` blendet `hud` und `dock` aus — der Startknopf stand nicht auf der Liste. **Eine Ableitung schützt nur, was sie aufzählt.** Beim Einklappknopf sagte `npm run beruehrung` seine eigene Lücke sogar laut an („Knopfklasse dock-toggle wird nicht gemessen"). Eine bekannte Lücke ist eine Lücke. |
+| S81 | **Ein Tor, das ein Erzeugnis prüft, hat eine Falle, die kein anderes hat.** `npm run browser` liest `dist/index.html` — wer den Quelltext ändert und nicht neu baut, prüft den Stand von vorhin | Auch die Gegenprobe wäre daran gescheitert: Eingriff in den Quelltext, Tor lädt die alte Datei, meldet Grün — und sieht aus wie ein Tor, das nicht anschlägt. Das Tor vergleicht jetzt die Zeitstempel und bricht ab, wenn `dist` älter ist als `src`. Dritte Ausprägung derselben Familie: Muster fehlt · Code repariert den Eingriff · Eingriff erreicht das Erzeugnis nicht. |
 | S77 | **Ein gemeinsamer Faktor war die falsche Antwort auf „Gegner größer".** Alle mal 1,3 - der Wächter stoppte es: der Leerentitan war 166 % der engsten Wegstelle. Nachgerechnet ist ein gemeinsamer Faktor überhaupt nur bis **1,06** möglich, weil der Titan mit 102 Punkten schon dicht an der Grenze von 108 liegt | Zu klein waren Späher (14 px), Infanterie (16) und Span (17) - der Koloss mit 41 px war nie das Problem. Ein gemeinsamer Faktor gibt den Großen, was die Kleinen brauchen. Jetzt ein **Zug zu einer Zielbreite**: wer darunter liegt, wird 60 % des Wegs dorthin gezogen, wer darüber liegt, bleibt. Gemessen: Späher 18, Span 23, Schleicher 25, Titan und Koloss unverändert. **Wenn eine Anhebung an der Obergrenze scheitert, war meist die Gleichverteilung falsch, nicht die Anhebung.** |
 | S78 | **Türme wirkten flach, weil das Bild quadratisch ist.** In die Breite ging nichts mehr: bei DRAW_SCALE 1,32 überdecken sich Nachbarn zu 21 %, erlaubt sind 22 % | Breite kostet Boden, Höhe nicht. Ein eigener Faktor `TURM_HOEHE` streckt nur die Höhe, der Fuß bleibt liegen. Zwei Fallen dabei: die Zeichenstelle rechnete die Oberkante ein **zweites Mal** aus (`-h * 0.72`) und wäre auseinandergedriftet, und der Bogenturm läuft über einen eigenen Zeichenweg (Sockel- und Waffenbild getrennt) - ohne Nacharbeit hätten drei Türme die neue Höhe gehabt und einer die alte. |
 | S79 | **Der Zierrat blieb zurück, als die Gegner wuchsen.** Lebensbalken lagen auf dem Panzer statt darüber, Markierungsringe schnitten mitten durch die Figur | Balken, Ringe und Schatten hingen am `radius` - der ist Spielmodell und durfte sich nicht mitbewegen (Regel 4). Neu ist `enemySichtRadius`, abgeleitet aus der Zeichenbreite. Für die kleinen Arten war der Ring schon vorher zu eng; das fiel nur nie auf, weil alles gleich falsch war. |

@@ -357,6 +357,25 @@ async function packGroup(name) {
   const rows = [];
   let total = 0;
   const problems = [];
+  const uebersprungen = [];
+
+  /** Steht der Schluessel schon gepackt im Quelltext? */
+  const fertigVorhanden = (spec, key) => {
+    const ziel = join(ROOT, 'src/gfx/assets', spec.output ?? '');
+    if (!spec.output || !existsSync(ziel)) return false;
+    return readFileSync(ziel, 'utf8').includes(`'${key}':`);
+  };
+
+  // Ein Buendel wird nie geleert.
+  //
+  // Beim Probelauf ohne art/roh hat dieses Werkzeug alle vier Buendel mit
+  // einer leeren Liste ueberschrieben - 1,2 MB gepackte Bilder waren weg, und
+  // nur weil sie eingecheckt waren, liessen sie sich zurueckholen. Fehlen alle
+  // Quellen, ist die richtige Antwort: nichts tun.
+  if (!existsSync(srcDir) || readdirSync(srcDir).filter((f) => f.endsWith('.png')).length === 0) {
+    console.log(`  ${name}: keine Rohbilder da, gepackte Fassung bleibt unangetastet.`);
+    return [];
+  }
 
   const stamp = fingerprint(spec, srcDir);
   const target = join(OUT, spec.output);
@@ -371,7 +390,22 @@ async function packGroup(name) {
     const file = typeof entry === 'string' ? entry : entry.file;
     const item = { ...spec.defaults, ...(typeof entry === 'string' ? {} : entry) };
     const srcPath = join(srcDir, file);
-    if (!existsSync(srcPath)) { problems.push(`${key}: Datei ${file} fehlt.`); continue; }
+    if (!existsSync(srcPath)) {
+      // Fehlt das Rohbild, ist das nur dann ein Fehler, wenn auch die
+      // gepackte Fassung fehlt.
+      //
+      // Seit dem Umzug liegen die Rohbilder nicht mehr in Git (79 MB gegen
+      // 1,2 MB gepackt). Auf einem frischen Klon gibt es sie also nicht -
+      // gebraucht werden sie aber nur, um NEU zu packen. Das Ergebnis steht
+      // eingecheckt in src/gfx/assets/ und reicht zum Bauen und Spielen
+      // vollstaendig aus.
+      //
+      // Ohne diese Ausnahme scheiterte die Torkette auf jedem frischen Klon,
+      // obwohl alles vorhanden war, was das Spiel braucht.
+      if (fertigVorhanden(spec, key)) { uebersprungen.push(key); continue; }
+      problems.push(`${key}: Datei ${file} fehlt, und es gibt keine gepackte Fassung.`);
+      continue;
+    }
     try {
       const r = spec.mode === 'background'
         ? await processBackground(srcPath, item)

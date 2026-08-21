@@ -10,7 +10,7 @@ const START_GOLD = NORMAL.startGold;
 const START_LIVES = NORMAL.startLives;
 import { MAPS, goalOf, lanePaths } from '../src/data/maps';
 import { GameState } from '../src/game/state';
-import { TOWERS, TOWER_ORDER, MAX_LEVEL, DRAW_SCALE, rangeFor, statsFor } from '../src/data/towers';
+import { TOWERS, TOWER_ORDER, MAX_LEVEL, DRAW_SCALE, TURM_HOEHE, rangeFor, statsFor } from '../src/data/towers';
 import { ENEMIES, type EnemyId } from '../src/data/enemies';
 import { enemyArtWidth } from '../src/gfx/enemyart';
 
@@ -363,6 +363,20 @@ for (const map of MAPS) {
   }
   if (DRAW_SCALE < 1.05) {
     warn(`Zeichenmassstab ${DRAW_SCALE} - der Turm wirkt in seinen Platz gequetscht.`);
+  }
+  // Hoehe kostet keinen Boden - aber sie ist nicht umsonst.
+  //
+  // Das Turmbild ist quadratisch gerendert. Wird es gestreckt, streckt sich
+  // alles mit, auch der runde Sockel. Ab etwa einem Viertel sieht man dem
+  // Oval an, dass es eines ist, und die Ansicht kippt optisch nach oben,
+  // waehrend Boden, Weg und Gegner in ihrer Neigung bleiben. Dann stehen
+  // wieder zwei Bildsprachen im selben Bild - genau der Befund B3 aus dem
+  // Grafik-Audit, nur andersherum.
+  if (TURM_HOEHE > 1.25) {
+    fail(`Turmhoehe ${TURM_HOEHE} - darueber sieht man dem Bild die Streckung an.`);
+  }
+  if (TURM_HOEHE < 1) {
+    fail(`Turmhoehe ${TURM_HOEHE} - unter 1 waere der Turm breiter als hoch.`);
   }
   // Zwei Tuerme dicht nebeneinander duerfen sich hoechstens leicht ueberdecken.
   for (const a of TOWER_ORDER) {

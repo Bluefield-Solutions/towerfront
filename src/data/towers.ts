@@ -93,6 +93,22 @@ export const FOOTPRINT = 96;
 
 export const DRAW_SCALE = 1.32;
 
+/** Wieviel hoeher als breit ein Turm gezeichnet wird.
+ *
+ *  In die Breite geht nichts mehr: bei DRAW_SCALE 1,32 ueberdecken sich zwei
+ *  Nachbarn schon zu 21 % und der Waechter laesst 22 % zu. Breite kostet
+ *  Boden, Hoehe nicht - ein Turm waechst nach oben aus seiner Standflaeche
+ *  heraus, und die Standflaeche bleibt, was sie war.
+ *
+ *  Das ist zugleich der Grund, warum die Tuerme flach wirkten: das Bild ist
+ *  quadratisch, also war ein Turm so hoch wie sein Grundriss breit. Ein
+ *  Gebaeude in Dreiviertelansicht ist das nie.
+ *
+ *  Die Grenze liegt bei 1,25. Darueber sieht man dem quadratisch gerenderten
+ *  Bild die Streckung an - der Sockel wird zum Oval, und die Ansicht kippt
+ *  optisch nach oben, waehrend der Rest der Szene bleibt. */
+export const TURM_HOEHE = 1.16;
+
 export const TOWERS: Record<TowerId, TowerDef> = {
   arrow: {
     id: 'arrow', footprint: FOOTPRINT, name: 'Bogenturm', role: 'Dauerfeuer',

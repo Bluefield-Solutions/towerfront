@@ -151,7 +151,62 @@ export function bakeTerrain(
   g.fillStyle = vg;
   g.fillRect(0, 0, WORLD_W, WORLD_H);
 
+  saum(g, photo !== null);
+
   return cv;
+}
+
+/** Der Kartenrand.
+ *
+ *  Die Vignette allein reicht nicht, und der Grund ist Geometrie: sie ist
+ *  rund, das Feld ist rechteckig. Gemessen liegt ihre Deckung in der Mitte
+ *  der langen Kante bei 23 %, in der Ecke bei 28 % - an der Kante, wo der
+ *  Abbruch stattfindet, ist sie am schwaechsten. Das Bild hoert dort einfach
+ *  auf: Fels, Lavaspalte und selbst der Torbogen des Weges werden mitten im
+ *  Gegenstand abgeschnitten.
+ *
+ *  Ein rundes Mittel gegen ein rechteckiges Problem. Deshalb hier vier
+ *  Verlaeufe, einer je Seite, die dem Rand folgen statt einem Kreis.
+ *
+ *  Was sie erzaehlen sollen: das Gelaende faellt ins Dunkle ab. Nicht "hier
+ *  ist der Bildschirm zu Ende", sondern "weiter hinten sieht man nichts
+ *  mehr". Deshalb laeuft die Deckung mit einer Kurve aus und nicht gerade -
+ *  ein linearer Verlauf setzt eine sichtbare Linie dorthin, wo er endet, und
+ *  eine Linie ist wieder eine Kante.
+ *
+ *  Und deshalb ist der aeusserste Rand nicht ganz deckend: eine schwarze
+ *  Leiste ringsum waere ein Rahmen, kein Gelaende. Was man am Rand noch
+ *  ahnt, macht den Unterschied zwischen einem Abgrund und einem Passepartout. */
+function saum(g: CanvasRenderingContext2D, photo: boolean): void {
+  // Auf dem Foto flacher als auf gemaltem Grund - das Foto bringt schon
+  // eigene dunkle Ecken mit, und zweimal dasselbe wird zur Roehre.
+  const tiefe = Math.min(WORLD_W, WORLD_H) * (photo ? 0.085 : 0.115);
+  const deckung = photo ? 0.78 : 0.9;
+
+  // Fuenf Stufen statt zwei: der Verlauf soll nach innen schnell schwaecher
+  // werden und dann lange ausduennen. Mit nur Anfang und Ende bekaeme man
+  // eine gleichmaessige Rampe, und die sieht man als Band.
+  const stufen: [number, number][] = [
+    [0, 1], [0.18, 0.62], [0.4, 0.3], [0.7, 0.09], [1, 0],
+  ];
+
+  const seiten: [number, number, number, number, number, number][] = [
+    // x0, y0, x1, y1 des Verlaufs, dann Breite und Hoehe der Flaeche.
+    [0, 0, tiefe, 0, tiefe, WORLD_H],
+    [WORLD_W, 0, WORLD_W - tiefe, 0, tiefe, WORLD_H],
+    [0, 0, 0, tiefe, WORLD_W, tiefe],
+    [0, WORLD_H, 0, WORLD_H - tiefe, WORLD_W, tiefe],
+  ];
+
+  for (const [x0, y0, x1, y1, bw, bh] of seiten) {
+    const lg = g.createLinearGradient(x0, y0, x1, y1);
+    for (const [t, a] of stufen) lg.addColorStop(t, hexA(C.voidDeep, a * deckung));
+    g.fillStyle = lg;
+    // Die Flaeche beginnt am Rand, nicht am Verlaufsanfang: bei der rechten
+    // und der unteren Seite laeuft der Verlauf von aussen nach innen, das
+    // Rechteck aber immer von der kleineren Koordinate aus.
+    g.fillRect(Math.min(x0, x1), Math.min(y0, y1), bw, bh);
+  }
 }
 
 function drawRock(

@@ -122,12 +122,58 @@ export function getEnemyArt(
   return cv;
 }
 
-/** Wie breit der Gegner im Spiel gezeichnet wird - abgeleitet aus seinem
- *  Radius, damit Bild und Treffererkennung zusammenpassen. */
 /** Wie breit der Gegner gezeichnet wird. Der Mindestwert ist bewusst von der
  *  Treffererkennung entkoppelt: der Span hatte bei seinem Radius nur elf
- *  Bildschirmpunkte, und darunter ist nichts mehr zu erkennen. */
-export const enemyArtWidth = (id: EnemyId): number =>
-  Math.max(ENEMIES[id].radius * 3.0, 50);
+ *  Bildschirmpunkte, und darunter ist nichts mehr zu erkennen.
+ *
+ *  Gemessen wurde vor der Anhebung: Spaeher 14, Infanterie 16, Span 17
+ *  Bildschirmpunkte im schlechtesten Fall - bei einer Erkennbarkeitsgrenze
+ *  von 13. Vier von acht Gegnerarten lagen damit im Bereich von ein bis vier
+ *  Punkten ueber dem, was ueberhaupt noch als Form durchgeht, und der
+ *  Lebensbalken darueber war breiter als das Wesen, zu dem er gehoert.
+ *
+ *  `radius` bleibt unberuehrt. Er ist Spielmodell - Treffer, Zielwahl,
+ *  Flaechenschaden haengen daran. Waere die Zeichengroesse dasselbe wie der
+ *  Radius, wuerde diese Runde die Balance mitverschieben, und niemand koennte
+ *  hinterher trennen, was von der Grafik kam und was vom Modell.
+ *
+ *  Angehoben wird ZUSAMMENZIEHEND, nicht mit einem gemeinsamen Faktor. Der
+ *  erste Versuch nahm alle mal 1,3 und wurde vom Waechter gestoppt: der
+ *  Leerentitan war danach 166 % der engsten Wegstelle und passte nicht mehr
+ *  auf die Strasse. Nachgerechnet ist ein gemeinsamer Faktor ueberhaupt nur
+ *  bis 1,06 moeglich - der Titan liegt mit 102 Punkten schon dicht an der
+ *  Obergrenze von 108.
+ *
+ *  Das war ohnehin die falsche Frage. Zu klein waren Spaeher, Span und
+ *  Schleicher mit 14 bis 21 Bildschirmpunkten; der Koloss mit 41 war nie das
+ *  Problem. Ein gemeinsamer Faktor haette den Grossen gegeben, was die
+ *  Kleinen brauchen - und die Strasse verstopft.
+ *
+ *  Deshalb ein Zug in Richtung einer Zielbreite: wer darunter liegt, wird
+ *  einen Teil des Wegs dorthin gezogen, wer darueber liegt, bleibt. Gross
+ *  und klein ruecken zusammen, ohne dass die Rangfolge kippt - ein Koloss
+ *  bleibt groesser als ein Spaeher. */
+const ZIELBREITE = 80;
+const ZUG = 0.6;
+
+export const enemyArtWidth = (id: EnemyId): number => {
+  const roh = Math.max(ENEMIES[id].radius * 3.0, 50);
+  return roh >= ZIELBREITE ? roh : roh + (ZIELBREITE - roh) * ZUG;
+};
+
+/** Der Radius, an dem sich alles ausrichtet, was zum Gegner GEHOERT:
+ *  Schatten, Lebensbalken, Markierungsringe, Bossglanz.
+ *
+ *  Getrennt von `radius` aus zwei Gruenden. Der erste ist Regel 4 - das
+ *  Modell darf nicht an der Darstellung haengen, sonst verschiebt eine
+ *  Grafikrunde die Balance mit. Der zweite ist praktischer: als die Figuren
+ *  um 30 % wuchsen, blieben Balken und Ringe zurueck. Der Lebensbalken lag
+ *  ploetzlich auf dem Panzer statt darueber, und der Ring, der einen
+ *  gebremsten Gegner markiert, schnitt mitten durch ihn hindurch.
+ *
+ *  Vor der Anhebung war dieser Wert fuer die meisten Arten genau `radius`;
+ *  fuer die kleinen, die an der Mindestbreite haengen, war er schon damals
+ *  groesser - dort sassen die Ringe schon immer zu eng. */
+export const enemySichtRadius = (id: EnemyId): number => enemyArtWidth(id) / 3.0;
 
 export const hasEnemyArt = (id: EnemyId): boolean => id in ENEMY_ART;

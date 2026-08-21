@@ -136,7 +136,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v103. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v104. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, sieben
 Gegnerarten in den Wellen plus den Span, in den der Spalter zerfällt, drei
 Grade, Endlosmodus. Genre-Abgleich 27 von 30, gewichtet 93 %.
@@ -151,8 +151,12 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
 - T12: Kein Tor lädt die gebaute Datei in einem echten Browser. jsdom rechnet
   die Kaskade nicht, deshalb ist die Berührungsprüfung im HTML nur die Zusage
   der Stilvorlage und keine Messung. Genau diese Lücke war v50.
-- D19 (grafisch): Türme höher und plastischer, Gegner größer, Kartenrand als
-  gestaltete Kante statt hartem Abbruch.
+- D19 (grafisch): Die drei benannten Teile sind umgesetzt (v104). Was bleibt,
+  ist die Plastik im Bild selbst — Befund B1 aus dem Grafik-Audit, und der
+  braucht neue Bilder, nicht Code. Die Infanterie ist der eine Ausreißer, der
+  nicht mitgewachsen ist: ihr Bild füllt seine Kachel nur zu 0,22 statt 0,35
+  Bildschirmpunkten je Weltpunkt, sie bleibt deshalb bei 17 px. Das ist am
+  Bild zu beheben, nicht am Maßstab — und dafür braucht es `art/roh/`.
 - B6: Ziellogik je Turm wählbar — vorderster, stärkster, nächster, schwächster.
 - R4 und G5: Blockturm und Schildträger, die letzten beiden ●● im
   Genre-Abgleich. Sie waren hinter T15 gesperrt; die Sperre ist gefallen.

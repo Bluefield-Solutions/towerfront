@@ -3,7 +3,7 @@ import { ENEMIES } from '../data/enemies';
 import {
   TOWERS, accentFor, statsFor,
   type BranchIndex, type TowerDef, type TowerId, type TowerLevel,
-  DRAW_SCALE,
+  DRAW_SCALE, TURM_HOEHE,
 } from '../data/towers';
 import { ABILITIES } from '../data/abilities';
 import { makeRng } from '../core/math';
@@ -17,7 +17,7 @@ import type { Menu } from '../game/menu';
 import { backgroundVersion, getBackground } from './backgrounds';
 import { artBreite, getTowerArt, towerArtScale, towerArtVersion } from './towerart';
 import { getObjectArt, getObjectArtStufe } from './objectart';
-import { enemyArtWidth, getEnemyArt } from './enemyart';
+import { enemyArtWidth, enemySichtRadius, getEnemyArt } from './enemyart';
 import {
   drawSprite, getEnemySprite, getShadow, getTowerBase, getTowerWeapon, ENEMY_FRAMES,
 } from './sprites';
@@ -767,8 +767,15 @@ export class Renderer {
         ctx.globalAlpha = 0.30;
         ctx.fillStyle = C.ink;
         ctx.beginPath();
+        // Die Laenge des Schlagschattens ist das, was die Hoehe erzaehlt.
+        //
+        // Wuchs der Turm nach oben, ohne dass der Schatten mitwaechst, liest
+        // das Auge keinen hoeheren Turm, sondern einen naeher stehenden -
+        // Schattenlaenge ist bei fester Sonne die einzige Angabe zur Hoehe,
+        // die ein Bild von oben ueberhaupt machen kann.
         ctx.ellipse(
-          t.x + LICHT.x * fuss * 0.85, t.y + LICHT.y * fuss * 0.42,
+          t.x + LICHT.x * fuss * 0.85 * TURM_HOEHE,
+          t.y + LICHT.y * fuss * 0.42 * TURM_HOEHE,
           fuss * 1.05, fuss * 0.44, 0.32, 0, Math.PI * 2,
         );
         ctx.fill();
@@ -851,11 +858,24 @@ export class Renderer {
           const rec2 = t.recoil * 4;
           ctx.save();
           ctx.translate(t.x, t.y);
-          const sh = bw * (sockel.height / sockel.width);
-          ctx.drawImage(sockel, -bw / 2, -sh * 0.72, bw, sh);
+          // Auch dieser Weg bekommt die Hoehe - sonst waere der Bogenturm der
+          // einzige, der nicht mitwaechst.
+          //
+          // Er ist der einzige Turm mit eigenem Sockel- und Waffenbild und
+          // laeuft deshalb hier durch statt durch artMasse. Ohne diese Zeile
+          // haetten drei Tuerme die neue Hoehe und einer die alte - genau der
+          // Fall, gegen den die Gegenprobe "Tuerme verschieden gross" steht.
+          const sh0 = bw * (sockel.height / sockel.width);
+          const sh = sh0 * TURM_HOEHE;
+          // Fuss bleibt liegen: die Unterkante war 0,28 * Sockelhoehe unter
+          // der Mitte und bleibt es. Gewachsen wird nach oben.
+          const oben = 0.28 * sh0 - sh;
+          ctx.drawImage(sockel, -bw / 2, oben, bw, sh);
           // Die Waffe sitzt auf der Plattform, nicht auf dem Boden.
-          // Auf die Plattform, nicht in den Schaft.
-          ctx.translate(0, -sh * 0.60);
+          // Auf die Plattform, nicht in den Schaft. Ihr Platz wird von der
+          // Oberkante aus gemessen, nicht von der Mitte - die Plattform ist
+          // ein Punkt IM Bild und wandert mit ihm nach oben.
+          ctx.translate(0, oben + sh * 0.12);
           // Das Bild blickt nach oben, der Winkel zaehlt von rechts.
           ctx.rotate(t.angle + Math.PI / 2);
           // Rueckstoss laeuft entgegen der Schussrichtung.
@@ -894,9 +914,14 @@ export class Renderer {
           const q = Math.sin(t.spring * Math.PI * 2.2) * t.spring * 0.16;
           ctx.scale(1 - q, 1 + q);
         }
-        // Der Fuss des Bildes liegt bei 86 % - so steht der Turm auf der
-        // Kachel statt darueber zu schweben.
-        ctx.drawImage(art, -w / 2, -h * 0.72, w, h);
+        // Die Oberkante kommt aus artMasse, nicht aus einer zweiten Rechnung.
+        //
+        // Hier stand `-h * 0.72`. Solange Bild und Grundriss gleich hoch
+        // waren, war das dasselbe Ergebnis - seit die Hoehe eigenstaendig
+        // ist, waere es der Punkt, an dem der Turm vom Boden abhebt: die
+        // Oberkante waechst mit der Hoehe mit, die Unterkante nicht.
+        // Zwei Stellen, die dieselbe Zahl ausrechnen, driften auseinander.
+        ctx.drawImage(art, -w / 2, masse.oben, w, h);
         ctx.restore();
       } else {
         this.paintWeapon(t.def, t.branch, t.level, t.x, t.y, t.angle, t.recoil, t.pulse, s.crystalPulse);
@@ -986,7 +1011,18 @@ export class Renderer {
     void artBreite;
     const FUELLUNG = 0.94;
     const w0 = (TOWERS[id].footprint * DRAW_SCALE * towerArtScale(level)) / FUELLUNG;
-    return { w: w0, h: w0, oben: -w0 * 0.72 };
+    // Hoehe getrennt von der Breite - und der Fuss bleibt, wo er war.
+    //
+    // Der Turm waechst nach OBEN aus seiner Standflaeche heraus, nicht um
+    // seine Mitte. Waechst er um die Mitte, sinkt er zugleich in den Boden
+    // ein: die Unterkante rutscht nach unten, der Kontaktschatten sitzt
+    // ploetzlich im Bauch statt am Fuss, und der Turm steht einen halben
+    // Meter tief im Gelaende.
+    //
+    // Unterkante war und bleibt y + 0,28 * Breite. Daraus folgt die
+    // Oberkante, nicht umgekehrt.
+    const h0 = w0 * TURM_HOEHE;
+    return { w: w0, h: h0, oben: 0.28 * w0 - h0 };
 
     // Der Massstab kommt IMMER von Stufe 1, nie von der gezeigten Stufe.
     //
@@ -1030,13 +1066,14 @@ export class Renderer {
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
       const def = ENEMIES[e.def];
+      const sicht = enemySichtRadius(e.def);
       // Der Schatten faellt in Lichtrichtung, nicht senkrecht nach unten -
       // dieselbe Richtung wie im Kartenbild.
       if (def.flying) {
         // Ein Flieger steht hoch ueber dem Boden, sein Schatten liegt weiter weg.
         const alt = this.altitude(e, s.time, true);
         ctx.globalAlpha = 0.4;
-        drawSprite(ctx, getShadow(def.radius),
+        drawSprite(ctx, getShadow(sicht),
           e.x + LICHT.x * alt * 0.9, e.y + LICHT.y * alt * 0.5, 0.8);
         ctx.globalAlpha = 1;
       } else {
@@ -1044,14 +1081,14 @@ export class Renderer {
         // die Sonne kommt, der Kontaktschatten setzt den Gegner auf den Boden.
         // Bei einem laufenden Wesen ist die Kontaktzone kleiner und dichter -
         // es beruehrt den Boden nur mit den Fuessen.
-        const weit = def.radius * 0.85;
-        drawSprite(ctx, getShadow(def.radius),
+        const weit = sicht * 0.85;
+        drawSprite(ctx, getShadow(sicht),
           e.x + LICHT.x * weit * 0.7, e.y + LICHT.y * weit);
         ctx.save();
         ctx.globalAlpha = 0.42;
         ctx.fillStyle = C.ink;
         ctx.beginPath();
-        ctx.ellipse(e.x, e.y + def.radius * 0.16, def.radius * 0.72, def.radius * 0.28,
+        ctx.ellipse(e.x, e.y + sicht * 0.16, sicht * 0.72, sicht * 0.28,
           0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
@@ -1066,7 +1103,8 @@ export class Renderer {
         for (let i = 0; i < list.length; i++) {
           const e = list[i];
           const def = ENEMIES[e.def];
-          if (def.boss) stampGlowFast(ctx, def.trim, e.x, e.y, def.radius * 2.4, 0.6);
+          const sicht = enemySichtRadius(e.def);
+          if (def.boss) stampGlowFast(ctx, def.trim, e.x, e.y, sicht * 2.4, 0.6);
         }
         endGlowBatch(ctx);
       }
@@ -1075,6 +1113,7 @@ export class Renderer {
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
       const def = ENEMIES[e.def];
+      const sicht = enemySichtRadius(e.def);
       const wob = Math.sin(s.time * 9 + e.wobble) * 2;
       const alt = this.altitude(e, s.time, !!def.flying);
       const art = getEnemyArt(e.def, false, s.map.id);
@@ -1119,7 +1158,7 @@ export class Renderer {
           ctx.translate(e.x, e.y - alt);
           ctx.rotate(s.time * 0.8);
           ctx.strokeStyle = hexA(def.trim, 0.7); ctx.lineWidth = 3;
-          ctx.beginPath(); ctx.arc(0, 0, def.radius * 1.35, 0, Math.PI * 1.3); ctx.stroke();
+          ctx.beginPath(); ctx.arc(0, 0, sicht * 1.35, 0, Math.PI * 1.3); ctx.stroke();
           ctx.restore();
         }
       } else {
@@ -1143,7 +1182,7 @@ export class Renderer {
           if (def.boss) {
             ctx.rotate(s.time * 0.8);
             ctx.strokeStyle = hexA(def.trim, 0.7); ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.arc(0, 0, def.radius * 1.35, 0, Math.PI * 1.3); ctx.stroke();
+            ctx.beginPath(); ctx.arc(0, 0, sicht * 1.35, 0, Math.PI * 1.3); ctx.stroke();
           }
           ctx.restore();
         } else {
@@ -1159,7 +1198,7 @@ export class Renderer {
       if (e.slowLeft > 0) {
         ctx.strokeStyle = hexA(C.crystal, 0.7);
         ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(e.x, e.y - alt, def.radius + 4, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(e.x, e.y - alt, sicht + 4, 0, Math.PI * 2); ctx.stroke();
       }
     }
 
@@ -1180,10 +1219,11 @@ export class Renderer {
       const e = list[i];
       if (e.hp >= e.hpMax) continue;
       const def = ENEMIES[e.def];
-      const w = Math.max(def.radius * 2.1, def.boss ? 90 : 0);
+      const sicht = enemySichtRadius(e.def);
+      const w = Math.max(sicht * 2.1, def.boss ? 90 : 0);
       const h = def.boss ? 7 : 4;
       const a = this.altitude(e, s.time, !!def.flying);
-      ctx.fillRect(e.x - w / 2 - 1, e.y - a - def.radius - 13, w + 2, h + 2);
+      ctx.fillRect(e.x - w / 2 - 1, e.y - a - sicht - 13, w + 2, h + 2);
     }
     // Zuerst der Nachlauf: der Teil, der gerade verloren geht, bleibt kurz
     // als heller Streifen stehen. Erst dadurch sieht man, *wieviel* ein
@@ -1193,11 +1233,12 @@ export class Renderer {
       const e = list[i];
       if (e.hpShown <= e.hp || e.hpShown >= e.hpMax) continue;
       const def = ENEMIES[e.def];
-      const w = Math.max(def.radius * 2.1, def.boss ? 90 : 0);
+      const sicht = enemySichtRadius(e.def);
+      const w = Math.max(sicht * 2.1, def.boss ? 90 : 0);
       const h = def.boss ? 7 : 4;
       const a = this.altitude(e, s.time, !!def.flying);
       const x0 = e.x - w / 2 + w * (e.hp / e.hpMax);
-      ctx.fillRect(x0, e.y - a - def.radius - 12, w * ((e.hpShown - e.hp) / e.hpMax), h);
+      ctx.fillRect(x0, e.y - a - sicht - 12, w * ((e.hpShown - e.hp) / e.hpMax), h);
     }
 
     const tones = ['#5FD08A', C.gold, C.danger];
@@ -1211,10 +1252,11 @@ export class Renderer {
         if (b !== band) continue;
         if (!drew) { ctx.fillStyle = tones[band]; drew = true; }
         const def = ENEMIES[e.def];
-        const w = Math.max(def.radius * 2.1, def.boss ? 90 : 0);
+        const sicht = enemySichtRadius(e.def);
+        const w = Math.max(sicht * 2.1, def.boss ? 90 : 0);
         const h = def.boss ? 7 : 4;
         const a = this.altitude(e, s.time, !!def.flying);
-        ctx.fillRect(e.x - w / 2, e.y - a - def.radius - 12, w * p, h);
+        ctx.fillRect(e.x - w / 2, e.y - a - sicht - 12, w * p, h);
       }
     }
   }

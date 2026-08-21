@@ -249,6 +249,16 @@ const PROBEN = [
     meldetNicht: 'verwendet "Kachelraster" im gültigen Teil',
   },
   {
+    // Neu mit der Hoehe: der Waechter deckelt sie bei 1,25. Ohne Probe waere
+    // das eine Grenze, von der niemand weiss, ob sie greift - und eine
+    // Grenze, die nicht greift, ist eine Erlaubnis.
+    name: 'Turm ins Unmassstaebliche gestreckt',
+    datei: 'src/data/towers.ts',
+    regel: /export const TURM_HOEHE = [0-9.]+;/,
+    ersatz: 'export const TURM_HOEHE = 1.5;',
+    tor: 'guards',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

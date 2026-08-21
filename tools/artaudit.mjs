@@ -39,8 +39,42 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { createCanvas, Image as NativeImage } from '@napi-rs/canvas';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+// --- Eine Zeichenflaeche, damit das Terrain hier gebacken werden kann.
+//
+// Dieselbe Notloesung wie in der Bildabnahme: die Zeichenschicht braucht ein
+// Dokument, das Flaechen anlegt, und eine Bildklasse, die Datenadressen
+// annimmt. Kein DOM, kein Browser.
+globalThis.document = {
+  createElement: (tag) => {
+    if (tag !== 'canvas') throw new Error(`nur canvas, nicht ${tag}`);
+    return createCanvas(1, 1);
+  },
+};
+globalThis.window = { devicePixelRatio: 2, innerWidth: 844, innerHeight: 390 };
+let offen = 0;
+globalThis.Image = class extends NativeImage {
+  set src(wert) {
+    offen++;
+    const fertig = () => { offen--; };
+    const vorLoad = this.onload, vorErr = this.onerror;
+    this.onload = () => { fertig(); vorLoad?.(); };
+    this.onerror = () => { fertig(); vorErr?.(); };
+    super.src = wert;
+  }
+  get src() { return super.src; }
+};
+const warten = async () => {
+  for (let i = 0; i < 40 && offen > 0; i++) await new Promise((r) => setTimeout(r, 25));
+};
+
+const { MAPS } = await import('../src/data/maps.ts');
+const { bakeTerrain } = await import('../src/gfx/terrain.ts');
+const { getBackground } = await import('../src/gfx/backgrounds.ts');
+const { GameState } = await import('../src/game/state.ts');
 
 const lies = (datei) => {
   const text = readFileSync(join(ROOT, 'src/gfx/assets', datei), 'utf8');
@@ -192,15 +226,37 @@ async function lichtrichtung(buffer) {
 }
 
 // ------------------------------------------------------------- Untergruende
-console.log('Untergründe');
+//
+// Gemessen wird das GEBACKENE Terrain, nicht das Quellbild.
+//
+// Bis v105 stand hier das Quellbild, und das war falsch - dazwischen liegen
+// der Weg, die Randsteine, die Felsen, die Tonwertangleichung, die Vignette
+// und der Saum. Beim Quellbild misst man etwas, das niemand zu sehen bekommt.
+//
+// Aufgefallen ist es, als die Angleichung eingebaut wurde: das gebackene
+// Terrain sprang von 0,20 auf 0,30 Helligkeit, und das Werkzeug meldete
+// unveraendert 0,22 und "zu niedrig". Ein Werkzeug, das eine behobene Sache
+// weiter anmahnt, ist derselbe Fehler wie eines, das in die falsche Richtung
+// zeigt - nur schwerer zu bemerken.
+console.log('Untergründe (gebackenes Terrain, nicht das Quellbild)');
 console.log('  Name             Palette  Helligk  Sätt.  Spanne  Dichte');
 const bg = lies('backgrounds.ts');
 const bgWerte = [];
-for (const [id, buf] of bg) {
-  const m = await messen(buf, { transparent: false });
-  const licht = await lichtrichtung(buf);
-  bgWerte.push({ id, ...m, licht: licht.winkel });
-  console.log(`  ${id.padEnd(16)} ${String(m.palette).padStart(6)}  ${z(m.helligkeit)}  ${z(m.saettigung)}  ${z(m.spanne)}  ${z(m.dichte)}`);
+for (const map of MAPS) {
+  const s = new GameState(map, 'normal');
+  getBackground(map.id);
+  await warten();
+  const cv = bakeTerrain(map, s.lanes, map.palette, getBackground(map.id));
+  const roh = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
+  const m = await messen(await sharp(Buffer.from(roh.data), {
+    raw: { width: cv.width, height: cv.height, channels: 4 },
+  }).png().toBuffer(), { transparent: false });
+  // Die Lichtrichtung kommt weiter aus dem Quellbild: sie ist eine
+  // Eigenschaft des gelieferten Bildes, und Weg und Vignette wuerden sie
+  // nur verrauschen.
+  const licht = await lichtrichtung(bg.get(map.id));
+  bgWerte.push({ id: map.id, ...m, licht: licht.winkel });
+  console.log(`  ${map.id.padEnd(16)} ${String(m.palette).padStart(6)}  ${z(m.helligkeit)}  ${z(m.saettigung)}  ${z(m.spanne)}  ${z(m.dichte)}`);
 }
 
 // ------------------------------------------------------------------- Tuerme

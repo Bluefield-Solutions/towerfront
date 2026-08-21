@@ -141,6 +141,22 @@ export function bakeTerrain(
     }
   }
 
+  // --- Tonwert, NACH allem was zum Boden gehoert und VOR der Vignette.
+  //
+  // Die Reihenfolge ist der ganze Punkt, und ich hatte sie erst falsch. Beim
+  // ersten Versuch stand die Angleichung direkt hinter dem Foto - Ergebnis:
+  // die Karte war zwar hell, aber flau, und Weg und Boden verschmolzen fast.
+  //
+  // Der Grund: das Foto kommt aus der Datei, Weg, Randsteine und Felsen
+  // kommen aus der Palette. Hebt man nur das Foto, waechst der Boden dem Weg
+  // entgegen, und der Abstand, der ihn lesbar macht, schrumpft. Hier hinten
+  // wandert alles gemeinsam - die Verhaeltnisse bleiben, die Szene wird Tag.
+  //
+  // Vor der Vignette, weil die dunkel bleiben soll: sie ist kein Boden,
+  // sondern das Abfallen ins Nichts. Sie mit aufzuhellen hiesse, den Rand
+  // wieder aufzumachen, den v104 geschlossen hat.
+  if (photo) angleichen(g);
+
   // --- Vignette
   const vg = g.createRadialGradient(
     WORLD_W / 2, WORLD_H / 2, Math.min(WORLD_W, WORLD_H) * 0.3,
@@ -154,6 +170,130 @@ export function bakeTerrain(
   saum(g, photo !== null);
 
   return cv;
+}
+
+// ------------------------------------------------------- Tonwert der Karten
+
+/** Wohin der Boden soll. Aus `REFERENZ` in `tools/artaudit.mjs`, Band
+ *  0,30 bis 0,36 - hier die Mitte.
+ *
+ *  Hochgerechnet auf VOR der Vignette: sie und der Saum ziehen gemessen rund
+ *  ein Zehntel ab (Spiralhain 0,224 im Quellbild, 0,202 im gebackenen
+ *  Terrain). Wer auf 0,33 korrigiert, landet hinterher bei 0,30. */
+const BODEN_HELL = 0.355;
+
+/** Wieviel Kontrast nach dem Aufhellen zurueckgeholt wird.
+ *
+ *  Gemessen, nicht geschaetzt: der Abstand zwischen Weg (p80) und Boden (p35)
+ *  betraegt im Rohbild 0,185 bei einer mittleren Helligkeit von 0,224 -
+ *  relativ also 0,83. Nach dem Aufhellen auf 0,38 waechst der Abstand
+ *  rechnerisch leicht auf 0,199, faellt relativ aber auf 0,53.
+ *
+ *  Und das Auge misst relativ. Deshalb sah der erste Versuch flau aus,
+ *  obwohl jede Kennzahl besser geworden war: Helligkeit im Band, Spanne ueber
+ *  dem Zielwert, Weg-Boden-Abstand groesser. Nur der Blick sagte nein.
+ *
+ *  Die Spreizung um den neuen Mittelwert holt einen Teil zurueck: bei 1,2 und
+ *  einem etwas niedrigeren Helligkeitsziel liegt der relative Abstand bei 0,73
+ *  statt 0,53. Vollstaendig zurueckholen hiesse Faktor 1,57 - dann brennen die
+ *  Lichter aus. Der Rest ist nicht zu holen, und das ist der eigentliche
+ *  Befund: eine Nachtszene wird durch Aufhellen keine Tagszene. Sie bezieht
+ *  ihre Tiefe aus dem Dunkel. Den Rest von Abstand A schliessen nur neue
+ *  Bilder, so wie es in Abschnitt 5.4 steht. */
+const BODEN_KONTRAST = 1.2;
+
+/** Und wie bunt. Band 0,45 bis 0,55, ebenfalls die Mitte.
+ *
+ *  Gezogen wird nur zur Haelfte. Die drei Karten SOLLEN verschieden aussehen -
+ *  gemessen streuen sie von 0,30 bis 0,85, und das ist ein Unterschied in der
+ *  Lautstaerke, nicht in der Farbe. Halbes Ziehen halbiert die Streuung und
+ *  laesst jeder Karte ihren Charakter. Ganzes Ziehen machte aus Frostspalte
+ *  und Spiralhain dasselbe Bild in zwei Farbtoenen. */
+const BODEN_SATT = 0.50;
+const SATT_ZUG = 0.5;
+
+/** Helligkeit eines Bildpunkts. */
+const leuchte = (r: number, g: number, b: number): number =>
+  0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+/** Den Untergrund auf die Referenz ziehen.
+ *
+ *  Warum ueberhaupt: das Zielbild aus dem Grafik-Audit ist eine Tagszene, das
+ *  unsere eine Nachtszene - Boden 0,33 gegen 0,20. Das ist Abstand A, der
+ *  groesste einzelne, und er zieht sich durch alles: Farbwelt, Leuchten,
+ *  Stimmung. Keine Detailarbeit an Einzelbildern holt ihn auf.
+ *
+ *  Warum hier und nicht im Bildvorrat: die gepackten Bilder ein zweites Mal
+ *  zu komprimieren kostet Qualitaet genau dort, wo aufgehellt wird - in den
+ *  Schatten. Hier wird verlustfrei gerechnet, die Quelldateien bleiben, wie
+ *  sie geliefert wurden, und ein neues Kartenbild bekommt die Korrektur
+ *  automatisch.
+ *
+ *  Warum Gamma und nicht ein Faktor: ein Faktor brennt die Lichter aus. Gamma
+ *  hebt die Mitten und laesst Weiss weiss.
+ *
+ *  Warum je Karte gerechnet und nicht als Tabelle: die drei Karten starten bei
+ *  0,20, 0,19 und 0,25 - ein gemeinsamer Wert kann sie nicht alle treffen. Der
+ *  noetige Gammawert wird aus dem Bild selbst bestimmt. Damit stimmt er auch
+ *  fuer die vierte Karte, die es noch nicht gibt. Das ist Regel 2: anteilig
+ *  statt absolut. */
+function angleichen(g: CanvasRenderingContext2D): void {
+  const bild = g.getImageData(0, 0, WORLD_W, WORLD_H);
+  const d = bild.data;
+
+  // Erst messen - auf einer Stichprobe, nicht auf allen 3,2 Millionen Punkten.
+  // Fuer einen Mittelwert reicht jeder 37. Punkt; die Primzahl verhindert,
+  // dass die Stichprobe sich auf ein Muster im Bild legt.
+  let n = 0, summeL = 0, summeS = 0;
+  for (let i = 0; i < d.length; i += 4 * 37) {
+    const r = d[i] / 255, gr = d[i + 1] / 255, b = d[i + 2] / 255;
+    summeL += leuchte(r, gr, b);
+    const max = Math.max(r, gr, b), min = Math.min(r, gr, b);
+    summeS += max === 0 ? 0 : (max - min) / max;
+    n++;
+  }
+  const istHell = summeL / n, istSatt = summeS / n;
+  if (istHell <= 0.001) return;
+
+  // Das Gamma, das die gemessene Helligkeit auf die gewuenschte hebt.
+  // Naeherung ueber den Mittelwert: hell^(1/gamma) = ziel. Sie ist nicht
+  // exakt - der Mittelwert einer Potenz ist nicht die Potenz des Mittelwerts -
+  // aber der Fehler liegt bei wenigen Hundertsteln, und nachjustiert wird
+  // ohnehin an der gemessenen Ausgabe.
+  const gamma = Math.log(istHell) / Math.log(Math.min(0.95, BODEN_HELL));
+  const invGamma = 1 / Math.max(0.5, Math.min(2.5, gamma));
+
+  // Sattheit: der Faktor gilt fuer das ganze Bild, nicht je Punkt. Je Punkt
+  // gerechnet wuerde jeden fast grauen Punkt auf Zielsaettigung reissen -
+  // aus Nebel wuerde Farbe.
+  const sattFaktor = istSatt > 0.01
+    ? 1 + (BODEN_SATT / istSatt - 1) * SATT_ZUG
+    : 1;
+
+  // Nachschlagetabelle statt Math.pow je Punkt: 256 Werte gegen 3,2 Millionen
+  // Wurzelrechnungen. Gemessen macht das den Unterschied zwischen einem
+  // spuerbaren Ruckler beim Kartenwechsel und keinem.
+  const tabelle = new Uint8Array(256);
+  for (let v = 0; v < 256; v++) {
+    tabelle[v] = Math.round(Math.pow(v / 255, invGamma) * 255);
+  }
+
+  // Die Mitte, um die gespreizt wird - der Zielwert, nicht der gemessene.
+  // Um den gemessenen zu spreizen hiesse, die Korrektur von sich selbst
+  // abhaengig zu machen.
+  const mitte = BODEN_HELL * 255;
+  for (let i = 0; i < d.length; i += 4) {
+    const r = tabelle[d[i]], gr = tabelle[d[i + 1]], b = tabelle[d[i + 2]];
+    const l = leuchte(r, gr, b);
+    // Erst Sattheit um die eigene Helligkeit, dann Kontrast um die Bildmitte.
+    const kr = mitte + (l + (r - l) * sattFaktor - mitte) * BODEN_KONTRAST;
+    const kg = mitte + (l + (gr - l) * sattFaktor - mitte) * BODEN_KONTRAST;
+    const kb = mitte + (l + (b - l) * sattFaktor - mitte) * BODEN_KONTRAST;
+    d[i] = Math.max(0, Math.min(255, kr));
+    d[i + 1] = Math.max(0, Math.min(255, kg));
+    d[i + 2] = Math.max(0, Math.min(255, kb));
+  }
+  g.putImageData(bild, 0, 0);
 }
 
 /** Der Kartenrand.

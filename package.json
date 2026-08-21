@@ -27,7 +27,7 @@
     "beruehrung": "tsx tools/touch.mjs",
     "proben": "node tools/probes.mjs",
     "kritik": "node tools/review.mjs",
-    "grafik": "node tools/artaudit.mjs",
+    "grafik": "tsx tools/artaudit.mjs",
     "einbettung": "tsx tools/embed.mjs",
     "karte-einbauen": "node tools/mapapply.mjs",
     "karte-lesen": "node tools/mapgraph.mjs",

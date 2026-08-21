@@ -141,7 +141,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v105. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v106. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, sieben
 Gegnerarten in den Wellen plus den Span, in den der Spalter zerfällt, drei
 Grade, Endlosmodus. Genre-Abgleich 27 von 30, gewichtet 93 %.
@@ -153,6 +153,8 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
 61 Versionen keinem auf.
 
 **Offen:**
+- Untergrundsättigung: die drei Karten streuen von 0,36 bis 0,70 (Band 0,45
+  bis 0,55). Helligkeit ist seit v106 im Band, die Lautstärke noch nicht.
 - D19 (grafisch): Die drei benannten Teile sind umgesetzt (v104). Was bleibt,
   ist die Plastik im Bild selbst — Befund B1 aus dem Grafik-Audit, und der
   braucht neue Bilder, nicht Code. Die Infanterie ist der eine Ausreißer, der
@@ -164,6 +166,12 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   Genre-Abgleich. Sie waren hinter T15 gesperrt; die Sperre ist gefallen.
 
 **Erledigt und hier zu lange falsch stehen geblieben** (nachgemessen in v103):
+- Abstand A ist geschlossen, soweit er ohne neue Bilder zu schliessen ist
+  (v106). `bakeTerrain` zieht den Untergrund auf die Referenz: Helligkeit von
+  0,20 auf 0,30, Band 0,30 bis 0,36. Das Gamma wird je Karte aus dem Bild
+  selbst gerechnet, gilt also auch für die vierte Karte. Der Rest ist nicht
+  zu holen — eine Nachtszene wird durch Aufhellen keine Tagszene, sie bezieht
+  ihre Tiefe aus dem Dunkel.
 - T12 ist geschlossen (v105). `npm run browser` lädt `dist/index.html` in
   Chromium auf 844 × 390 und misst, was jsdom nicht kann: was wirklich
   sichtbar ist, was worüber liegt, wie groß ein Knopf gerechnet ist und ob

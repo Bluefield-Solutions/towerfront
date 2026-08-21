@@ -288,8 +288,16 @@ Gemessen und ausprobiert:
 
 - ~~**Entrauschen wirkt**~~ — siehe Kasten. Widerlegt.
 - **Schwarz anheben** ist ein Zweizeiler im Bildwerkzeug.
-- **Untergründe aufhellen und wärmen** — die vorhandenen Fotos lassen sich
-  umfärben. Das schließt A nicht ganz, aber deutlich.
+- **Untergründe aufhellen und wärmen** — **erledigt in v106**, und der
+  Halbsatz „schließt A nicht ganz" war richtig. `bakeTerrain` zieht den
+  Untergrund auf 0,30 (Band 0,30 bis 0,36), das Gamma je Karte aus dem Bild
+  selbst gerechnet. Drei Anläufe, und die ersten beiden waren lehrreich:
+  hinter dem Foto angesetzt liess es Weg und Felsen zurück, ans Ende
+  verschoben half es kaum, weil Gamma Hell und Dunkel grundsätzlich
+  annähert. Erst eine Kontrastspreizung um die Zielmitte hielt die Tiefe.
+  Was bleibt, ist nicht zu holen: eine Nachtszene bezieht ihre Tiefe aus dem
+  Dunkel, und der relative Kontrast fällt beim Aufhellen von 0,83 auf 0,73,
+  ganz gleich wie man rechnet.
 
 ### 5.4 Was neue Bilder braucht
 

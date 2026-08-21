@@ -127,7 +127,7 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
-**Kein Kachelraster mehr.** Wege sind Catmull-Rom-Kurven mit
+**Kein Gitter mehr.** Wege sind Catmull-Rom-Kurven mit
 Bogenlängen-Tabelle; ein Gegner hat als einzige Zustandsgröße die
 zurückgelegte Strecke. Gebaut wird frei, begrenzt durch Platzbedarf je
 Turmsorte, Abstand zum Weg und unwegsames Gelände.
@@ -136,15 +136,38 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Version v42. Feld 1920 × 1080 (16:9). Drei Karten, vier Türme mit je zwei
-Zweigen und sechs Stufen, sieben Gegnerarten, drei Grade, Endlosmodus.
-Genre-Abgleich 27 von 30.
+Stand: v103. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, sieben
+Gegnerarten in den Wellen plus den Span, in den der Spalter zerfällt, drei
+Grade, Endlosmodus. Genre-Abgleich 27 von 30, gewichtet 93 %.
+
+Die Zahl hinter „Stand" muss zu `VERSION` in `src/data/config.ts` passen —
+`npm run doku` vergleicht beide und schlägt ab sechs Versionen Rückstand an.
+Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
+„Version vNN" kennt der Wächter nicht, also fiel der Rückstand von
+61 Versionen keinem auf.
 
 **Offen:**
-- T15: Verluste liegen noch zu stark in der letzten Welle (Ziel 60 %).
-- Sieg- und Niederlagebildschirm sind noch HTML und passen nicht zur Landkarte.
-- Berührungsflächen im Spiel sind ungemessen (im Menü geprüft).
-- Doku in `docs/` steht teilweise noch auf dem Rastermodell.
+- T12: Kein Tor lädt die gebaute Datei in einem echten Browser. jsdom rechnet
+  die Kaskade nicht, deshalb ist die Berührungsprüfung im HTML nur die Zusage
+  der Stilvorlage und keine Messung. Genau diese Lücke war v50.
+- D19 (grafisch): Türme höher und plastischer, Gegner größer, Kartenrand als
+  gestaltete Kante statt hartem Abbruch.
+- B6: Ziellogik je Turm wählbar — vorderster, stärkster, nächster, schwächster.
+- R4 und G5: Blockturm und Schildträger, die letzten beiden ●● im
+  Genre-Abgleich. Sie waren hinter T15 gesperrt; die Sperre ist gefallen.
+
+**Erledigt und hier zu lange falsch stehen geblieben** (nachgemessen in v103):
+- T15 ist gelöst. `npm run sim` misst W12:4 W13:7 W14:16 W15:10 — vier Wellen
+  tragen die Verluste, 27 % liegen in der letzten. Das Ziel waren höchstens
+  60 % bei mindestens drei Wellen, und der Hinweis `OFFEN (T15)` bleibt im
+  Lauf aus.
+- Der Sieg- und Niederlagebildschirm wird auf der Leinwand gezeichnet
+  (`drawResult` in `src/gfx/menurender.ts`), nicht in HTML. `npm run bildtor`
+  nimmt ihn als `menu-sieg` ab.
+- Die Berührungsflächen im Spiel sind gemessen: `npm run beruehrung` rechnet
+  die Turmtreffer auf der Leinwand aus Platzbedarf, Trefferzugabe und dem
+  kleinsten Maßstab aus.
 
 ---
 

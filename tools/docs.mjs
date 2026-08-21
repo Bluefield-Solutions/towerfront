@@ -95,6 +95,32 @@ const veraltet = [
   ['Rasterzelle', 'src/core/path.ts', 'gebaut wird frei, nicht auf Zellen'],
   ['20 × 11', 'src/data/config.ts', 'das Feld ist 1920 x 1080'],
 ];
+// Ein Begriff allein sagt nichts. "Kein Kachelraster mehr" und "bis v35 lag
+// das Spiel auf einem Gitter" sind genau die Saetze, die den Umbau
+// festhalten - sie zu melden heisst, richtige Prosa anzumahnen.
+//
+// Das war kein Schoenheitsfehler: fuenf der sechs Hinweise in v103 waren von
+// dieser Art. Ein Hinweis, der bei richtigem Text anschlaegt, wird nach dem
+// dritten Mal ueberlesen, und dann geht der sechste - der echte - mit unter.
+// Deshalb entscheidet der Satz, nicht das Wort.
+const abgegolten = /\b(kein|keine|keinen|keiner|nicht|nie|statt|ohne|überholt|früher|damals|vormals|ehemals|war|waren|lag|lagen)\b|\b(bis|seit|vor|ab|in) v\d+/i;
+
+/** Der Satz, in dem der Begriff steht - begrenzt durch Punkt, Zeilenende
+ *  oder Doppelpunkt. Weiter zu greifen hiesse, sich die Entlastung aus einem
+ *  Nachbarsatz zu holen. */
+const satzUm = (text, i, laenge) => {
+  const links = Math.max(
+    ...['.', '\n', ':', '·'].map((z) => text.lastIndexOf(z, i)),
+  );
+  const rechts = Math.min(
+    ...['.', '\n', ':', '·'].map((z) => {
+      const j = text.indexOf(z, i + laenge);
+      return j < 0 ? text.length : j;
+    }),
+  );
+  return text.slice(links + 1, rechts);
+};
+
 for (const [name, text] of alle) {
   const register = text.indexOf('# Fundregister');
   const aktuell = register >= 0 ? text.slice(0, register) : text;
@@ -102,8 +128,13 @@ for (const [name, text] of alle) {
   if (/ACHTUNG — in drei Punkten überholt|Fundregister in umgekehrter Zeitfolge/.test(aktuell)
       && name !== 'Towerfront-KONZEPT-und-PIPELINE.md') continue;
   for (const [begriff, , grund] of veraltet) {
-    if (aktuell.includes(begriff)) {
-      warn(`${name}: verwendet "${begriff}" im gültigen Teil - ${grund}.`);
+    let i = aktuell.indexOf(begriff);
+    while (i >= 0) {
+      if (!abgegolten.test(satzUm(aktuell, i, begriff.length))) {
+        warn(`${name}: verwendet "${begriff}" im gültigen Teil - ${grund}.`);
+        break;
+      }
+      i = aktuell.indexOf(begriff, i + begriff.length);
     }
   }
 }

@@ -3,6 +3,20 @@
 *Version 1.0 · 08.08.2026 · nach 34 Versionen, geschrieben nach Recherche zu
 Kingdom Rush, Bloons TD 6 und der Frage nach dem richtigen Unterbau*
 
+> **ACHTUNG — in drei Punkten überholt.** Dies ist der Plan von v34, nicht die
+> Beschreibung des heutigen Spiels. Er ist seither ausgeführt worden, und der
+> Bruch, den Abschnitt 8 als Risiko beschreibt, hat stattgefunden.
+>
+> 1. Das Kachelraster in Abschnitt 0 und 8 gibt es seit v36 nicht mehr. Wege
+>    sind Catmull-Rom-Kurven, gebaut wird auf freien Weltpositionen.
+> 2. Das Feldverhältnis ist nicht 20:11, sondern 1920 × 1080.
+> 3. Der „Rest von T15" in Etappe 6 ist erledigt — gemessen in v103 liegen
+>    27 % der Verluste in der letzten Welle, verteilt über vier Wellen.
+>
+> Wer wissen will, wie das Spiel heute steht, liest `CLAUDE.md` und
+> `Towerfront-BACKLOG.md`. Dieses Dokument bleibt, weil die Begründung des
+> Schnitts noch trägt — nicht als Zustandsbeschreibung.
+
 ---
 
 ## 0. Der ehrliche Befund zuerst

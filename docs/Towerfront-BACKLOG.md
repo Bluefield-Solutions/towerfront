@@ -1,6 +1,6 @@
 # Towerfront — Rückstandsverzeichnis
 
-Stand: nach v44 · 08.08.2026
+Stand: v103 · 21.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Towerfront-BENCHMARK.md` und läuft mit `npm run bericht` in jedem Lauf mit.
 
@@ -31,7 +31,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | C7 | Schildgegner, absorbiert die ersten n Treffer | ●● | S |
 | C27 | Endlos-Bestenliste je Karte, die zeigt, wie weit andere Läufe kamen | ● | S |
 | C24 | Karte 4 mit einer Mechanik statt nur einer Form (bewegliche Brücke, Tor, das sich schließt) | ●● | L |
-| C26 | Ascheschlucht und Spiralhain verlangen noch fast dasselbe (Wächterhinweis, Abstand 0,22) — die Mischung stärker trennen | ●● | S |
+| C26 | Laubschlucht (Kennung `ascheschlucht`) und Spiralhain verlangen noch fast dasselbe (Wächterhinweis, Abstand 0,22) — die Mischung stärker trennen | ●● | S |
 | C17 | Dritte Fähigkeit, die Gold statt Schaden bringt (Ernte mit Abklingzeit) | ●● | S |
 | C18 | Fähigkeiten zwischen Karten freischalten statt von Anfang an verfügbar | ●● | M |
 | C23 | Vierter Grad „Unmöglich" mit eigenen Regeln statt nur härteren Zahlen (kein Verkaufen, keine Fähigkeiten) | ●● | M |
@@ -40,7 +40,6 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 
 | # | Punkt | Nutzen | Aufw. |
 |---|---|---|---|
-| **T15** | **BLOCKER: Die Verluste liegen fast nur in der letzten Welle. Druck über die Wellen 10 bis 15 verteilen.** Solange das so ist, kippt jede Ergänzung am Sortiment die Balance, statt sie zu verschieben — siehe S41. Vor R4 und G5 zu erledigen | ●●● | M |
 | T12 | Sichtprüfung im Tor: gebaute Datei in einem echten Browser laden und ein Bild vergleichen (jsdom kann die Kaskade nicht) | ●●● | L |
 | T8 | Kristall je Rissstufe backen (letztes Objekt mit Pfaden in jedem Bild) | ● | S |
 | T9 | Bildpuffer bei Größenwechsel gezielt verwerfen statt alles neu zu backen | ● | S |
@@ -80,6 +79,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
 | S73 | **T15 gelöst.** Verluste jetzt auf drei Wellen verteilt, 45 % in der letzten (Ziel 60 %) | Der zweite Anlauf gelang, weil ich diesmal **den ganzen Raum gemessen habe statt nacheinander zu justieren**: ein Eichskript setzt eine Kurve und berichtet alle Kennzahlen auf einmal. Vier Werte durchprobiert, den passenden gewählt, dann in fester Reihenfolge Türme, Sterne, Karten. |
+| S76 | **T15 ist erledigt, und das Verzeichnis hat es 59 Versionen lang nicht gemerkt.** Gemessen in v103: W12:4 W13:7 W14:16 W15:10 — vier Wellen tragen die Verluste, **27 % in der letzten** bei einem Ziel von höchstens 60 %. `npm run sim` gibt den Hinweis `OFFEN (T15)` nicht mehr aus | Nicht die Messung fehlte, sondern der Rückweg von ihr in die Doku. Die Zahl stand in jedem Lauf auf dem Schirm, während drei Dokumente drei verschiedene, ältere Zahlen behaupteten (75 %, 45 %, „zu stark"). Der Wächter konnte das nicht sehen: er prüft Befehle, Torzahl und Begriffe, aber keine Kennzahl. **Wer eine Zahl in ein Dokument schreibt, schreibt den Befehl daneben, der sie erzeugt.** |
 | S74 | Der Frostturm trug das Spiel allein (55 von 60 Kristall ohne jeden anderen Turm) | Nicht der Schaden war die Ursache, sondern die **Bremse**: sie wirkt auf alle Türme in Reichweite. Bremsstärke und Wirkdauer zurückgenommen, dafür Mörser und Prisma gestärkt. |
 | S75 | Sternschwellen zum dritten Mal verschoben — diesmal **aus der Messung statt geschätzt** | Der beste Bot-Lauf holt auf der Einsteigerkarte 49 von 60, auf der schwersten 26. Drei Sterne bei 66 %, zwei bei 33 %. Vorher waren es 90/55, dann 85/45, beide an einem leichteren Spielstand geeicht. |
 | S69 | **T15 ist lösbar — aber nicht mit einer glatten Kurve.** Der erste Versuch (gleichmäßiger Anstieg über alle Wellen) ändert gar nichts: die Verluste bleiben zu 100 % in der letzten Welle | Der Grund: die Feldstärke wächst in **Stufen** (gemessen 15 → 36 → 84 → 140 → 234 → 388), die Wellen gleichmäßig. Ist das Feld ab Welle 11 fertig, sind die Wellen 12 bis 15 je 1,6-fach schwerer als die vorige — nur die letzte kann beißen. |

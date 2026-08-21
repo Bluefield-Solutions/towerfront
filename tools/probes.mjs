@@ -220,6 +220,35 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // Der Waechter darf den Begriff nicht nur suchen, er muss den Satz lesen.
+    // Diese drei Proben gehoeren zusammen: die erste zeigt, dass er einen
+    // echten Rueckschritt findet, die zweite, dass er richtige Prosa in Ruhe
+    // laesst. Ohne die zweite waere die erste wertlos - ein Waechter, der
+    // jedes Vorkommen meldet, besteht sie auch.
+    name: 'Doku faellt auf das Kachelraster zurueck',
+    datei: 'CLAUDE.md',
+    regel: /^## Stand$/m,
+    ersatz: '## Stand\n\nDas Spielfeld ist ein Kachelraster mit festen Rasterzellen.',
+    tor: 'doku',
+    meldet: 'verwendet "Kachelraster" im gültigen Teil',
+  },
+  {
+    name: 'Doku nennt wieder das alte Feldmass',
+    datei: 'CLAUDE.md',
+    regel: /^## Stand$/m,
+    ersatz: '## Stand\n\nDas Feld misst 20 × 11 Zellen.',
+    tor: 'doku',
+    meldet: 'verwendet "20 × 11" im gültigen Teil',
+  },
+  {
+    name: 'Waechter mahnt richtige Prosa an',
+    datei: 'CLAUDE.md',
+    regel: /^## Stand$/m,
+    ersatz: '## Stand\n\nEin Kachelraster gibt es hier nicht mehr.',
+    tor: 'doku',
+    meldetNicht: 'verwendet "Kachelraster" im gültigen Teil',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,
@@ -270,15 +299,38 @@ for (const p of liste) {
 
   writeFileSync(pfad, nachher);
   let schlaegtAn = false;
+  let ausgabe = '';
   try {
-    execSync(`npm run ${p.tor}`, { cwd: ROOT, stdio: 'pipe' });
-  } catch {
+    ausgabe = execSync(`npm run ${p.tor}`, { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' });
+  } catch (e) {
     schlaegtAn = true;
+    ausgabe = `${e.stdout ?? ''}${e.stderr ?? ''}`;
   }
   zuruecknehmen();
 
-  console.log(`  ${p.name.padEnd(42)} ${p.tor.padEnd(11)} ${schlaegtAn ? 'schlägt an' : 'SCHLÄGT NICHT AN'}`);
-  if (!schlaegtAn) fehler.push(`${p.name}: "${p.tor}" bleibt grün, obwohl der Fehler eingebaut ist.`);
+  // Nicht jede Pruefung bricht ab. Der Dokumentenwaechter meldet Veraltetes
+  // als Hinweis und laeuft weiter - mit Absicht, denn eine schiefe Formulierung
+  // soll die Lieferung nicht aufhalten. Bis v103 hiess das aber auch: dieser
+  // Teil liess sich gar nicht gegenproben, und genau dort sass der Fehler
+  // (fuenf von sechs Hinweisen schlugen bei richtiger Prosa an).
+  //
+  // `meldet` prueft deshalb den Text statt den Abbruch, `meldetNicht` die
+  // Stille. Beide zusammen sind erst der Beweis: dass etwas anschlaegt, sagt
+  // nichts, solange es bei allem anschlaegt.
+  const erfuellt = p.meldet
+    ? ausgabe.includes(p.meldet)
+    : p.meldetNicht
+      ? !ausgabe.includes(p.meldetNicht)
+      : schlaegtAn;
+  const art = p.meldet ? 'meldet' : p.meldetNicht ? 'schweigt' : 'schlägt an';
+  const grund = p.meldet
+    ? `"${p.tor}" meldet "${p.meldet}" nicht, obwohl der Fehler eingebaut ist.`
+    : p.meldetNicht
+      ? `"${p.tor}" meldet "${p.meldetNicht}", obwohl der Text richtig ist.`
+      : `"${p.tor}" bleibt grün, obwohl der Fehler eingebaut ist.`;
+
+  console.log(`  ${p.name.padEnd(42)} ${p.tor.padEnd(11)} ${erfuellt ? art : art.toUpperCase() + ' NICHT'}`);
+  if (!erfuellt) fehler.push(`${p.name}: ${grund}`);
 }
 
 zuruecknehmen();

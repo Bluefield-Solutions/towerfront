@@ -93,6 +93,11 @@ async function messen(buffer, { transparent = true } = {}) {
 
   // Detaildichte: mittlere Helligkeitsaenderung zwischen Nachbarpunkten.
   // Ein Foto hat viel davon, eine flaechige Zeichnung wenig.
+  //
+  // ACHTUNG, ihre Grenze: sie unterscheidet Korn nicht von Form. Eine Niete
+  // und ein Kompressionsartefakt sehen fuer sie gleich aus, und jeder Filter,
+  // der das eine senkt, senkt das andere mit. Deshalb steht darunter der
+  // Rauschschaetzer - siehe `npm run entrauschprobe`.
   let kanten = 0, kn = 0;
   for (let y = 1; y < H - 1; y += 2) {
     for (let x = 1; x < W - 1; x += 2) {
@@ -107,8 +112,43 @@ async function messen(buffer, { transparent = true } = {}) {
     }
   }
 
+  // Rauschen nach Immerkaer.
+  //
+  // Der Kern [[1,-2,1],[-2,4,-2],[1,-2,1]] antwortet auf glatte Verlaeufe und
+  // auf gerade Kanten mit Null - was durchkommt, ist eher Korn als Form. Das
+  // ist die Kennzahl, die die Dichte nicht liefern kann.
+  //
+  // Zur Einordnung gemessen: eine glatte Flaeche 0,00; dieselbe mit
+  // Gauss-Rauschen der Staerke 12 dann 1,17. Unsere Untergruende liegen bei
+  // 0,11 bis 0,14, unsere Figuren bei 0,68 bis 0,91.
+  let rs = 0, rn = 0;
+  const lxy = (x, y) => {
+    const i = (y * W + x) * 4;
+    return lum(data[i], data[i + 1], data[i + 2]);
+  };
+  for (let y = 1; y < H - 1; y++) {
+    for (let x = 1; x < W - 1; x++) {
+      let voll = true;
+      if (transparent) {
+        for (let dy = -1; dy <= 1 && voll; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (data[((y + dy) * W + x + dx) * 4 + 3] < 200) { voll = false; break; }
+          }
+        }
+      }
+      if (!voll) continue;
+      rs += Math.abs(
+        lxy(x - 1, y - 1) - 2 * lxy(x, y - 1) + lxy(x + 1, y - 1)
+        - 2 * lxy(x - 1, y) + 4 * lxy(x, y) - 2 * lxy(x + 1, y)
+        + lxy(x - 1, y + 1) - 2 * lxy(x, y + 1) + lxy(x + 1, y + 1),
+      );
+      rn++;
+    }
+  }
+
   return {
     flaeche: n,
+    rauschen: rn ? (Math.sqrt(Math.PI / 2) * rs / (6 * rn)) * 100 : 0,
     palette: tragend,
     helligkeit: sumL / n,
     saettigung: sumS / n,
@@ -258,8 +298,10 @@ if (figD.lage === 'zu hoch') {
     `Figuren rauschen: Detaildichte ${figD.m.toFixed(2)} gegen ein Band von ` +
     `${REFERENZ.figur.dichte.join(' bis ')} (Zielturm 3,44). ` +
     `${figD.abweichler.length} von ${figuren.length} liegen daneben (${nenne(figD.abweichler)}). ` +
-    'Das ist Befund B1: kleingerechnete Renderings mit Kompressionskörnung, ' +
-    'nicht mehr Inhalt. Entrauschen hilft, neue Bilder helfen mehr.',
+    'Das ist Befund B1. Nachbearbeitung hilft NICHT: Weichzeichnen und Median ' +
+    'bringen die Zahl ins Band, kosten aber sichtbar Form - Panzerplatten, ' +
+    'Armbrust, Beine. Nachgewiesen mit `npm run entrauschprobe`. ' +
+    'Der Weg führt über neue Bilder nach Abschnitt 5.4, nicht über Filter.',
   );
 }
 if (figH.lage) {
@@ -348,6 +390,16 @@ if (mitSchwarz.length) {
 // zwischen gezeichnet und gerendert zeigt - aber er ist kein Befund.
 console.log(`  Palette: Figuren im Mittel ${mittel(figuren, (f) => f.palette).toFixed(0)} Farben, ` +
   'Zielturm 889 - kein Befund, siehe Abschnitt 5.4.');
+
+// --- Rauschen: gemessen, aber ohne Band.
+//
+// Fuer diese Kennzahl gibt es keine Referenz - das Zielbild liegt nicht mehr
+// vor, und eine Grenze aus unseren eigenen Werten abzuleiten waere genau der
+// Fehler aus Regel 10. Sie steht hier, weil sie die Frage beantwortet, die
+// die Dichte offen laesst: ist das Korn oder ist das Form?
+console.log(`  Rauschen: Figuren ${mittel(figuren, (f) => f.rauschen).toFixed(2)}, ` +
+  `Untergrund ${mittel(bgWerte, (f) => f.rauschen).toFixed(2)} ` +
+  '(glatte Fläche 0,00 - sichtbares Korn ab etwa 1,00) - kein Band, siehe Kopf.');
 
 console.log(`\n─── ${befunde.length} Befund(e) ───\n`);
 for (const b of befunde) console.log(`  • ${b}\n`);

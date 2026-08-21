@@ -260,11 +260,33 @@ falsch, weil es den Boden entfärbt und die Szene tot wirken lässt.
 
 ### 5.3 Was ohne neue Bilder geht
 
+> **Widerlegt in v105, erster Punkt.** Hier stand: *„Entrauschen wirkt … die
+> Form bleibt vollständig erhalten."* Der erste Halbsatz stimmt, der zweite
+> nicht. Nachgemessen und **angesehen** mit `npm run entrauschprobe`:
+>
+> | Verfahren | Rauschen | Dichte | Was das Bild zeigt |
+> |---|---|---|---|
+> | ohne | 0,78 | 8,37 | scharf, alle Details da |
+> | median 3 | 0,82 | 6,50 | Plattenkanten weg |
+> | median 5 | 0,62 | 4,86 | der Koloss ist ein Klumpen |
+> | Weichzeichnen 1,4 | 0,12 | 5,10 | Armbrust und Beine verschwinden |
+>
+> Jeder Weg bringt die Dichte ins Zielband von 3 bis 6. Jeder kostet sichtbar
+> Form. Der Grund ist Auflösung: die Figur liegt als 256er Bild vor und wird
+> mit rund 108 Gerätepunkten gezeichnet — bei dieser Größe liegen Korn und
+> Form im selben Frequenzband, und kein Filter trennt, was physisch nicht
+> getrennt ist.
+>
+> **Der Satz „gemessen und ausprobiert" war zur Hälfte wahr.** Gemessen wurde,
+> ausprobiert nicht — sonst hätte man es gesehen. Genau dafür steht Regel 8:
+> kein Tor ersetzt den Blick.
+>
+> Damit ist B1 ohne neue Bilder nicht zu lösen. Die beiden anderen Punkte
+> unten stehen noch aus und sind davon unberührt.
+
 Gemessen und ausprobiert:
 
-- **Entrauschen wirkt** — anders als das Staffeln. Eine milde Weichzeichnung
-  bringt den Koloss von 13,5 auf 6,3 Detaildichte, und die Form bleibt
-  vollständig erhalten. Damit kommt man in die Nähe der 3,4.
+- ~~**Entrauschen wirkt**~~ — siehe Kasten. Widerlegt.
 - **Schwarz anheben** ist ein Zweizeiler im Bildwerkzeug.
 - **Untergründe aufhellen und wärmen** — die vorhandenen Fotos lassen sich
   umfärben. Das schließt A nicht ganz, aber deutlich.

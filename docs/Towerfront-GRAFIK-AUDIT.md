@@ -153,7 +153,16 @@ worden.
 
 ### 4.1 Die Vorschrift, messbar *(überholt, siehe 5.4)*
 
-Jedes neue Bild muss diese Werte treffen. `npm run grafik` prüft sie.
+> **Achtung — bis v105 hat `npm run grafik` gegen DIESE Tabelle gemessen**,
+> obwohl sie seit v55 als überholt markiert ist. Der Satz darunter lautete
+> „`npm run grafik` prüft sie", und das stimmte. Der Widerspruch stand also
+> wörtlich in dieser Datei: eine Vorschrift, die als überholt gekennzeichnet
+> ist, und direkt daneben die Aussage, dass ein Werkzeug sie durchsetzt.
+>
+> Seit v105 misst das Werkzeug gegen 5.4. Die Bänder stehen dort, wo sie
+> ausgeführt werden — als `REFERENZ` in `tools/artaudit.mjs`.
+
+Jedes neue Bild musste diese Werte treffen.
 
 | Kennzahl | Figuren (Türme, Gegner) | Untergrund |
 |---|---|---|
@@ -288,13 +297,45 @@ Formen tragen, nicht die Textur.
 | Reines Schwarz | unter 2 % | unter 2 % |
 | Lichtrichtung | oben links, überall gleich | oben links |
 
+**Diese Tabelle steht doppelt, und das ist Absicht — aber nur eine Fassung
+zählt:** `REFERENZ` in `tools/artaudit.mjs`. Was hier steht, ist die Lesefassung.
+Weicht `npm run grafik` davon ab, hat das Werkzeug recht und diese Tabelle
+ist zu berichtigen. Zwei Stellen mit derselben Zahl driften, und es war schon
+zweimal so — bei T15 und hier.
+
+### 5.5 Was das Werkzeug bis v105 gemeldet hat, und warum es falsch war
+
+Drei seiner sechs Befunde standen gegen die eigene Messung aus Abschnitt 5:
+
+| Befund des Werkzeugs | Was das Zielbild sagt |
+|---|---|
+| „Zu viele Farben: über 40 je Figur" | Ein einzelner Turm im Zielbild trägt **889** Farben, der Boden 294. Unsere 707 im Mittel liegen **darunter**. |
+| „Kein Sättigungsgefälle: Figuren müssen gesättigter sein" | Im Zielbild ist der **Boden** mit 0,51 gesättigter als der Turm mit 0,37. Genau umgekehrt — und in 5.2 seit v55 als hinfällig vermerkt. |
+| „Figuren liegen im Helligkeitsband des Untergrunds" | Im Zielbild liegen Turm (0,36) und Boden (0,33) **0,03** auseinander. Das Zielbild wäre an dieser Prüfung durchgefallen. |
+
+Ein vierter, die Detaildichte, schlug aus dem richtigen Grund an, maß aber
+das falsche Ding: er forderte „gleiche Dichte über alle Ebenen", während das
+Zielbild die Figuren mit 3,44 gegen 1,63 gut **doppelt** so dicht zeichnet.
+
+**Wer den alten Befunden gefolgt wäre**, hätte die Farbzahl auf 40 gedrückt,
+den Boden entfärbt und die Figuren aufgehellt: drei Schritte, jeder von der
+Referenz weg. Ein Werkzeug, das misst, ist nicht besser als eines, das
+schätzt, solange es das Falsche misst — es ist gefährlicher, weil es Zahlen
+liefert.
+
+Was jetzt herauskommt, deckt sich mit den drei harten Abständen aus 5.1:
+Figuren rauschen (7,59 gegen ein Band von 3 bis 6), der Untergrund ist zu
+dunkel (0,24 gegen 0,30 bis 0,36 — Abstand A), der Untergrund ist zu glatt
+(1,24 gegen 1,5 bis 3), und die Sättigung der drei Karten streut von 0,33
+bis 0,85.
+
 ---
 
 ## 6. Was ich von dir brauche
 
 **Entweder** du erzeugst die Bilder nach der Vorgabe aus 5.4 — dann schicke
 ich dir je Los eine fertige Liste mit Beschreibungen, und ich prüfe die
-Lieferung gegen 4.1.
+Lieferung gegen 5.4.
 
 **Oder** wir arbeiten mit dem, was da ist, und akzeptieren, dass das Bild aus
 drei Bildsprachen besteht. Das ist eine vertretbare Entscheidung — aber dann

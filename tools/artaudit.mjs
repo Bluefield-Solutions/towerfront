@@ -3,22 +3,35 @@
  * Grafik-Audit — misst unsere Bilder gegen die Prinzipien, nach denen die
  * gut bewerteten Vertreter des Genres gebaut sind.
  *
- * Die Prinzipien sind nicht von mir. Sie stammen aus der Recherche und lassen
- * sich alle in Zahlen fassen:
+ * Die Prinzipien sind nicht von mir — und seit v105 auch nicht mehr aus der
+ * Lehre, sondern aus der **Messung am Zielbild**.
  *
- *  1. **Begrenzte Farbzahl je Objekt.** Der Kingdom-Rush-Grafiker beschreibt
- *     seine Technik selbst so: drei bis vier Farben je Form, die den Eindruck
- *     von Körperlichkeit erzeugen. Nicht zwei-, nicht zweitausend.
- *  2. **Kein reines Schwarz**, und Farben leicht gedämpft — "die Gamma mit
- *     einem Hauch Grau".
- *  3. **Werthierarchie.** Was zuerst gelesen werden muss, hat den höchsten
- *     Helligkeitskontrast zum Hintergrund. Deko bleibt in engerem Wertebereich.
- *  4. **Sättigungsgefälle.** Der Hintergrund ist weniger gesättigt als die
- *     Spielfiguren. Der Blick geht zum Gesättigtsten.
- *  5. **Gleiche Detaildichte.** Gemischte Dichten wirken unfertig — ein
- *     detailarmer Turm neben einem fotorealistischen Boden fällt auseinander.
- *  6. **Lesbar in Graustufen.** Wer die Farbe wegnimmt und die Teile nicht
- *     mehr auseinanderhält, hat zu wenig Wertkontrast.
+ * Das ist der Unterschied, an dem dieses Werkzeug drei Jahre lang in die
+ * falsche Richtung gezeigt hat. Die erste Fassung maß gegen die Lehre zur
+ * flachen Zeichnung: drei bis vier Farben je Form, Figuren gesättigter als
+ * der Boden, Figuren heller als der Boden. Dann hat der Grafik-Audit ein
+ * echtes Zielbild vermessen (Abschnitt 5) und dabei genau diese drei Sätze
+ * widerlegt — im Zielbild trägt ein einzelner Turm **889 Farben**, ist der
+ * Boden mit 0,51 **gesättigter** als der Turm mit 0,37, und Turm und Boden
+ * liegen mit 0,36 gegen 0,33 im **selben** Helligkeitsband.
+ *
+ * Die Korrektur steht seit v55 in Abschnitt 5.2 des Dokuments. Nur stand sie
+ * nirgends im Werkzeug — es hat sie in jedem Lauf weiter als Fehler gemeldet.
+ * Wer danach gehandelt hätte, hätte die Farbzahl auf 40 gedrückt, den Boden
+ * entfärbt und die Figuren aufgehellt: drei Schritte, jeder von der Referenz
+ * WEG.
+ *
+ * Deshalb steht die Referenz jetzt hier als eine Tabelle, in einer Fassung,
+ * und die Befunde werden aus ihr gerechnet. Was gilt:
+ *
+ *  - **In einer gerenderten Szene macht das Licht die Hierarchie, nicht die
+ *    Farbe.** Türme stehen in der Sonne, werfen Schatten, haben Glanzkanten.
+ *    Ein Sättigungsgefälle wäre dort sogar falsch — es entfärbt den Boden.
+ *  - **Kein reines Schwarz.** Das gilt unverändert, und es ist gemessen:
+ *    1,3 % im Zielbild.
+ *  - **Eine Sonne über alle Karten.** Gilt ebenfalls unverändert.
+ *  - **Die Dichte trägt die Bildsprache.** Nicht "überall gleich", sondern
+ *    im Band: Figuren dichter als der Boden, aber beide gedeckelt.
  *
  * Aufruf: npm run grafik
  */
@@ -181,51 +194,122 @@ for (const b of bgWerte) console.log(`  ${b.id.padEnd(16)} ${b.licht.toFixed(0).
 const mittel = (arr, f) => arr.reduce((a, b) => a + f(b), 0) / arr.length;
 const figuren = [...twWerte, ...enWerte];
 
+/** Die Referenz, in einer Fassung.
+ *
+ *  Herkunft: `docs/Towerfront-GRAFIK-AUDIT.md`, Abschnitt 5.4 — abgeleitet
+ *  aus der Messung eines echten Zielbilds (Abschnitt 5). Die Zahlen in
+ *  Klammern sind die dort gemessenen Werte des Zielbilds selbst.
+ *
+ *  Steht eine Zahl in beiden Dateien, driftet sie. Deshalb ist DIESE hier
+ *  die Fassung, die zählt, und das Dokument verweist hierher - dieselbe
+ *  Lehre wie aus S76: wer eine Zahl in ein Dokument schreibt, schreibt den
+ *  Befehl daneben, der sie erzeugt. */
+const REFERENZ = {
+  figur: {
+    helligkeit: [0.33, 0.40],   // Zielturm 0,36
+    saettigung: [0.35, 0.45],   // Zielturm 0,37
+    dichte: [3, 6],             // Zielturm 3,44
+  },
+  grund: {
+    helligkeit: [0.30, 0.36],   // Zielboden 0,33
+    saettigung: [0.45, 0.55],   // Zielboden 0,51
+    dichte: [1.5, 3],           // Zielboden 1,63
+  },
+  schwarzAnteil: 0.02,          // Zielbild 1,3 %
+  lichtSpanne: 40,
+  lichtMitte: [-175, -95],
+};
+
 console.log('\n─── Befunde ───\n');
 
-// 1. Palette je Objekt
-const gross = figuren.filter((f) => f.palette > 40);
-console.log(`1. Palette: Figuren tragen im Mittel ${mittel(figuren, (f) => f.palette).toFixed(0)} Farben`);
-console.log(`   (die 90 % der Fläche tragen). Referenz: drei bis vier je Form.`);
-if (gross.length) {
+/** Liegt der Wert im Band? Und wenn nicht, in welche Richtung? */
+const ausserhalb = (wert, [min, max]) =>
+  wert < min ? 'zu niedrig' : wert > max ? 'zu hoch' : null;
+
+/** Eine Kennzahl über eine Gruppe, gegen ihr Band. */
+function pruefen(gruppe, name, feld, band, einheit = '') {
+  const m = mittel(gruppe, (f) => f[feld]);
+  const abweichler = gruppe
+    .map((f) => ({ id: f.id, wert: f[feld], wie: ausserhalb(f[feld], band) }))
+    .filter((f) => f.wie);
+  const lage = ausserhalb(m, band);
+  console.log(
+    `  ${name.padEnd(24)} ${m.toFixed(2)}${einheit}  Band ${band[0]}-${band[1]}` +
+    `  ${lage ? lage.toUpperCase() : 'im Band'}` +
+    `  (${abweichler.length}/${gruppe.length} daneben)`,
+  );
+  return { m, lage, abweichler };
+}
+
+console.log('Gegen die Referenz aus Abschnitt 5.4:\n');
+
+const figH = pruefen(figuren, 'Figuren Helligkeit', 'helligkeit', REFERENZ.figur.helligkeit);
+const figS = pruefen(figuren, 'Figuren Sättigung', 'saettigung', REFERENZ.figur.saettigung);
+const figD = pruefen(figuren, 'Figuren Detaildichte', 'dichte', REFERENZ.figur.dichte);
+const grH = pruefen(bgWerte, 'Untergrund Helligkeit', 'helligkeit', REFERENZ.grund.helligkeit);
+const grS = pruefen(bgWerte, 'Untergrund Sättigung', 'saettigung', REFERENZ.grund.saettigung);
+const grD = pruefen(bgWerte, 'Untergrund Detaildichte', 'dichte', REFERENZ.grund.dichte);
+
+const nenne = (a) => a.slice(0, 3).map((f) => `${f.id} ${f.wert.toFixed(2)}`).join(', ');
+
+// --- Die Figuren.
+if (figD.lage === 'zu hoch') {
   befunde.push(
-    `Zu viele Farben: ${gross.length} von ${figuren.length} Figuren tragen über 40 Farben ` +
-    `(${gross.slice(0, 3).map((f) => `${f.id} ${f.palette}`).join(', ')}). Das ist gerendert, ` +
-    'nicht gezeichnet - und es ist der Hauptgrund, warum die Figuren nicht wie aus einer Hand wirken.',
+    `Figuren rauschen: Detaildichte ${figD.m.toFixed(2)} gegen ein Band von ` +
+    `${REFERENZ.figur.dichte.join(' bis ')} (Zielturm 3,44). ` +
+    `${figD.abweichler.length} von ${figuren.length} liegen daneben (${nenne(figD.abweichler)}). ` +
+    'Das ist Befund B1: kleingerechnete Renderings mit Kompressionskörnung, ' +
+    'nicht mehr Inhalt. Entrauschen hilft, neue Bilder helfen mehr.',
+  );
+}
+if (figH.lage) {
+  befunde.push(
+    `Figuren im Mittel ${figH.lage}: Helligkeit ${figH.m.toFixed(2)} gegen ` +
+    `${REFERENZ.figur.helligkeit.join(' bis ')} (Zielturm 0,36).`,
+  );
+}
+if (figS.lage) {
+  befunde.push(
+    `Figuren im Mittel ${figS.lage} gesättigt: ${figS.m.toFixed(2)} gegen ` +
+    `${REFERENZ.figur.saettigung.join(' bis ')} (Zielturm 0,37).`,
   );
 }
 
-// 2. Sättigungsgefälle
-const sBg = mittel(bgWerte, (f) => f.saettigung);
-const sFig = mittel(figuren, (f) => f.saettigung);
-console.log(`\n2. Sättigung: Untergrund ${sBg.toFixed(2)}, Figuren ${sFig.toFixed(2)}`);
-console.log('   Referenz: Figuren deutlich gesättigter als der Untergrund.');
-if (sFig < sBg * 1.25) {
+// --- Der Untergrund.
+//
+// Abstand A aus dem Audit: das Zielbild ist eine Tagszene, unsere eine
+// Nachtszene. Der groesste einzelne Abstand, und keine Detailarbeit an
+// Einzelbildern holt ihn auf.
+if (grH.lage) {
   befunde.push(
-    `Kein Sättigungsgefälle: Figuren ${sFig.toFixed(2)} gegen Untergrund ${sBg.toFixed(2)}. ` +
-    'Der Blick wird nicht geführt - alles ist gleich laut.',
+    `Untergrund ${grH.lage}: Helligkeit ${grH.m.toFixed(2)} gegen ` +
+    `${REFERENZ.grund.helligkeit.join(' bis ')} (Zielboden 0,33). ` +
+    (grH.lage === 'zu niedrig'
+      ? 'Das ist Abstand A: das Zielbild ist eine Tagszene, unseres eine Nachtszene.'
+      : ''),
+  );
+}
+if (grS.abweichler.length) {
+  befunde.push(
+    `Untergrundsättigung streut: ${grS.abweichler.length} von ${bgWerte.length} Karten ` +
+    `liegen ausserhalb von ${REFERENZ.grund.saettigung.join(' bis ')} (${nenne(grS.abweichler)}). ` +
+    'Die Karten sollen sich in der Farbe unterscheiden, nicht in der Lautstärke.',
+  );
+}
+if (grD.lage) {
+  befunde.push(
+    `Untergrund ${grD.lage === 'zu niedrig' ? 'zu glatt' : 'zu unruhig'}: Detaildichte ` +
+    `${grD.m.toFixed(2)} gegen ${REFERENZ.grund.dichte.join(' bis ')} (Zielboden 1,63). ` +
+    (grD.lage === 'zu niedrig'
+      ? 'Der Boden trägt zu wenig Struktur - Fels und Grasbüschel fehlen IM Bild.'
+      : ''),
   );
 }
 
-// 3. Detaildichte
-const dBg = mittel(bgWerte, (f) => f.dichte);
-const dFig = mittel(figuren, (f) => f.dichte);
-console.log(`\n3. Detaildichte: Untergrund ${dBg.toFixed(2)}, Figuren ${dFig.toFixed(2)}`);
-console.log('   Referenz: gleiche Dichte über alle Ebenen, Untergrund eher ruhiger.');
-const verhaeltnis = dBg / dFig;
-if (verhaeltnis > 1.15 || verhaeltnis < 0.5) {
-  befunde.push(
-    `Detaildichte fällt auseinander: Figuren ${dFig.toFixed(2)} gegen Untergrund ${dBg.toFixed(2)} ` +
-    `- die Figuren tragen ${(dFig / dBg).toFixed(1)}-mal so viel Feindetail wie der Boden. ` +
-    'Drei Bildsprachen auf einem Bild: weich gezeichneter Untergrund, flächig gezeichneter ' +
-    'Weg, fotorealistisch gerenderte Figuren. Gemischte Dichten wirken unfertig.',
-  );
-}
-
-// 4. Reines Schwarz
-const mitSchwarz = figuren.filter((f) => f.schwarzAnteil > 0.02);
-console.log(`\n4. Reines Schwarz: ${mitSchwarz.length} von ${figuren.length} Figuren über 2 % Fläche`);
-console.log('   Referenz: kein reines Schwarz, Farben leicht ins Graue gedämpft.');
+// --- Reines Schwarz. Unveraendert gueltig, und gemessen: 1,3 % im Zielbild.
+const mitSchwarz = figuren.filter((f) => f.schwarzAnteil > REFERENZ.schwarzAnteil);
+console.log(`\n  Reines Schwarz: ${mitSchwarz.length} von ${figuren.length} Figuren über ` +
+  `${(REFERENZ.schwarzAnteil * 100).toFixed(0)} % Fläche (Zielbild 1,3 %)`);
 if (mitSchwarz.length) {
   befunde.push(
     `Reines Schwarz in ${mitSchwarz.length} Figuren ` +
@@ -234,38 +318,36 @@ if (mitSchwarz.length) {
   );
 }
 
-// 5. Wertspanne der Figuren gegen den Untergrund
-const lBg = mittel(bgWerte, (f) => f.helligkeit);
-const eng = figuren.filter((f) => Math.abs(f.helligkeit - lBg) < 0.1);
-console.log(`\n5. Werthierarchie: Untergrund ${lBg.toFixed(2)}, ${eng.length} Figuren liegen weniger als 0,10 davon entfernt`);
-console.log('   Referenz: was zuerst gelesen wird, hat den höchsten Helligkeitskontrast.');
-if (eng.length > figuren.length * 0.4) {
-  befunde.push(
-    `${eng.length} von ${figuren.length} Figuren liegen im selben Helligkeitsband wie der ` +
-    'Untergrund. Sie werden nur durch ihren Saum sichtbar, nicht durch ihre Form.',
-  );
-}
-
-// 6. Steht die Sonne ueberall gleich?
+// --- Eine Sonne. Ebenfalls unveraendert gueltig.
 {
   const winkel = bgWerte.map((b) => b.licht);
   const spanne = Math.max(...winkel) - Math.min(...winkel);
-  console.log(`\n6. Lichtrichtung: Spanne ${spanne.toFixed(0)}° über alle Karten`);
-  console.log('   Referenz: eine Sonne, höchstens 40° Unterschied.');
-  if (spanne > 40) {
+  const mitte = winkel.reduce((a, b) => a + b, 0) / winkel.length;
+  console.log(`  Lichtrichtung: Spanne ${spanne.toFixed(0)}°, Mitte ${mitte.toFixed(0)}° ` +
+    `(erlaubt bis ${REFERENZ.lichtSpanne}°, ${REFERENZ.lichtMitte.join(' bis ')}°)`);
+  if (spanne > REFERENZ.lichtSpanne) {
     befunde.push(
       `Die Sonne steht je Karte woanders (Spanne ${spanne.toFixed(0)}°). ` +
       'Figurenschatten passen dann auf einer Karte und auf der nächsten nicht.',
     );
   }
-  const mittel2 = winkel.reduce((a, b) => a + b, 0) / winkel.length;
-  if (mittel2 > -95 || mittel2 < -175) {
+  if (mitte > REFERENZ.lichtMitte[1] || mitte < REFERENZ.lichtMitte[0]) {
     befunde.push(
-      `Die Sonne steht im Mittel bei ${mittel2.toFixed(0)}°, erwartet oben links ` +
-      '(zwischen -175 und -95). Die Schatten im Renderer zeigen in die falsche Richtung.',
+      `Die Sonne steht im Mittel bei ${mitte.toFixed(0)}°, erwartet oben links. ` +
+      'Die Schatten im Renderer zeigen in die falsche Richtung.',
     );
   }
 }
+
+// --- Die Farbzahl: gemessen, aber NICHT als Befund.
+//
+// Sie stand hier als Fehler, sobald eine Figur ueber 40 Farben trug - alle
+// zwoelf taten das. Das Zielbild traegt 889 Farben in einem einzigen Turm.
+// Eine Pruefung, die die Referenz selbst durchfallen liesse, misst das
+// falsche Ding. Der Wert bleibt in der Ausgabe, weil er den Unterschied
+// zwischen gezeichnet und gerendert zeigt - aber er ist kein Befund.
+console.log(`  Palette: Figuren im Mittel ${mittel(figuren, (f) => f.palette).toFixed(0)} Farben, ` +
+  'Zielturm 889 - kein Befund, siehe Abschnitt 5.4.');
 
 console.log(`\n─── ${befunde.length} Befund(e) ───\n`);
 for (const b of befunde) console.log(`  • ${b}\n`);

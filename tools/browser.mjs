@@ -72,6 +72,18 @@ const weltMass = (name) => {
 };
 const WELT_B = weltMass('WORLD_W'), WELT_H = weltMass('WORLD_H');
 
+/** Der leere Grund hinter dem eingepassten Menue, als "r,g,b" wie
+ *  `getImageData` ihn liefert - aus der Konfiguration gelesen. */
+const LEER = (() => {
+  const t = /voidDeep: '#([0-9a-fA-F]{6})'/.exec(KONF);
+  if (!t) {
+    console.error('BROWSERTOR: voidDeep steht nicht in src/data/config.ts.');
+    process.exit(1);
+  }
+  const n = parseInt(t[1], 16);
+  return `${(n >> 16) & 255},${(n >> 8) & 255},${n & 255}`;
+})();
+
 const einpassung = (w, h) => Math.min(w / WELT_B, h / WELT_H);
 const nachWelt = (sx, sy, w, h) => {
   const k = einpassung(w, h);
@@ -666,6 +678,50 @@ if (streuung < 6) {
     if (deckel.length) {
       fail(`Schreibtischprobe ${name} (${w}x${h}, Maus): ${deckel.join(', ')} liegt `
         + 'ueber der ganzen Flaeche. Am Rechner gibt es nichts zu drehen.');
+    }
+
+    // Liegt das BILD auf derselben Einpassung wie die TREFFERFLAECHE?
+    //
+    // Zwei Formeln, dieselbe Zahl - `drawMenuFrame` passt das Menue ein,
+    // `screenToWorld` rechnet zurueck. Gehen sie auseinander, trifft man
+    // ueberall daneben, und zwar an jeder Fenstergroesse anders. Der Weg
+    // unten faende trotzdem hinein, denn er rechnet mit derselben falschen
+    // Formel: er bezeugte die Sache, ohne sie je zu pruefen (Regel 13).
+    //
+    // Geprueft wird am Bild, nicht an der Rechnung: bei einem Fenster, das
+    // nicht 16:9 ist, MUSS oben und unten der leere Grund stehen, genau so
+    // breit wie die Einpassung es vorhersagt. Wird stattdessen formatfuellend
+    // gezeichnet, steht dort Inhalt.
+    {
+      const k = einpassung(w, h);
+      const randY = (h - WELT_H * k) / 2;
+      if (randY < 24) {
+        fail(`Schreibtischprobe ${name}: kein Balken vorhergesagt (${randY.toFixed(0)} px) - `
+          + 'die Probe misst nicht, was sie messen soll.');
+      } else {
+        const punkte = await s3.evaluate(([mx, by, fy]) => {
+          const cv = document.querySelector('canvas');
+          const g = cv.getContext('2d');
+          const d = Math.min(devicePixelRatio || 1, 2);
+          const lies = (x, y) => {
+            const q = g.getImageData(Math.round(x * d), Math.round(y * d), 1, 1).data;
+            return `${q[0]},${q[1]},${q[2]}`;
+          };
+          return { balken: lies(mx, by), feld: lies(mx, fy) };
+        }, [w / 2, randY / 2, randY + Math.min(60, WELT_H * k * 0.12)]);
+
+        if (punkte.balken !== LEER) {
+          fail(`Schreibtischprobe ${name} (${w}x${h}): im Balken oben steht `
+            + `rgb(${punkte.balken}) statt des leeren Grundes rgb(${LEER}). Bild und `
+            + 'Trefferflaeche benutzen verschiedene Einpassungen - man trifft daneben.');
+        }
+        // Regel 13, an der Probe selbst: waere BEIDES leer, bewiese der Test
+        // nichts - dann stuende das Menue schlicht woanders.
+        if (punkte.feld === LEER) {
+          fail(`Schreibtischprobe ${name} (${w}x${h}): auch im Feld steht der leere `
+            + 'Grund - der Vergleich unterscheidet nichts.');
+        }
+      }
     }
 
     // Und die eigentliche Frage: kommt man rein?

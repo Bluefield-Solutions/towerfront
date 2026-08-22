@@ -638,6 +638,31 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
+    // Der Gegenfall zur Probe darueber, und der eigentliche Befund S138: ein
+    // Deckel, der NUR am Schreibtisch erscheint. Auf dem Telefonfenster ist
+    // er unsichtbar - alle sechs alten Pruefungen bleiben gruen. Nur die
+    // Schreibtischprobe kann ihn sehen. Genau so ist `.rotate` sechs Runden
+    // lang durchgekommen.
+    name: 'Ein Deckel, den nur der Schreibtisch sieht',
+    datei: 'src/style.css',
+    regel: /#quer \{ display: none; \}/,
+    ersatz: '#quer { display: none; }\n'
+      + '@media (pointer: fine) { #quer { display: flex; position: fixed;'
+      + ' inset: 0; z-index: 200; background: #080B18; } }',
+    tor: 'browsertor',
+  },
+  {
+    // Traegt die Umrechnung Zeiger -> Welt im Menue ueberhaupt? Wenn Bild und
+    // Trefferflaeche verschieden eingepasst werden, trifft man daneben - und
+    // zwar an jeder Fenstergroesse anders. Das Nachspielen des Weges auf
+    // fremden Seitenverhaeltnissen faellt darauf herein, wenn es sie gibt.
+    name: 'Menue wird anders gezeichnet als getroffen',
+    datei: 'src/gfx/renderer.ts',
+    regel: /const k = Math\.min\(this\.cssW \/ WORLD_W, this\.cssH \/ WORLD_H\);\n    ctx\.save\(\);/,
+    ersatz: 'const k = Math.max(this.cssW / WORLD_W, this.cssH / WORLD_H);\n    ctx.save();',
+    tor: 'browsertor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

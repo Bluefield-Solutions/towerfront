@@ -838,7 +838,20 @@ for (const map of MAPS) {
       diff += Math.abs((a.m.get(key) ?? 0) / a.total - (b.m.get(key) ?? 0) / b.total);
     }
     if (diff < 0.25) {
-      warn(`${map.id} und ${other.id} verlangen fast dasselbe (Abstand ${diff.toFixed(2)}) - die Karten unterscheiden sich nur in der Form.`);
+      // Bis v116 nur ein Hinweis - und Hinweise scrollen vorbei, einunddreissig
+      // Stueck sind es. C26 stand deshalb vier Runden im Verzeichnis mit einer
+      // Zahl (0,22), die niemand nachgemessen hatte; sie war laengst auf 0,34
+      // gestiegen. Ein geschlossener Punkt, den kein Tor haelt, kann still
+      // wieder aufgehen, und ein offener kann still zufallen. Beides ist
+      // passiert.
+      //
+      // Das Soll kommt von aussen (Regel 10): Kingdom Rush und Plants vs.
+      // Zombies geben jeder Stufe ein eigenes Aufgebot. Heute liegen alle drei
+      // Paare bei 0,34 bis 0,44 - die Grenze ist mit Abstand gehalten, also
+      // kostet die Verschaerfung nichts und haelt kuenftig etwas.
+      fail(`${map.id} und ${other.id} verlangen fast dasselbe (Abstand ${diff.toFixed(2)}, `
+        + 'noetig sind 0,25) - dann sind es zwei Namen fuer dieselbe Karte, und die '
+        + 'zweite stellt keine eigene Frage.');
     }
   }
 }

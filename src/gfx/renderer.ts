@@ -1105,6 +1105,32 @@ export class Renderer {
         // Waffe allein, mit dem Drehpunkt in der Bildmitte. Fehlt eines von
         // beiden, bleibt es beim gedaempften Schwenk darunter; ein Sockel mit
         // eingebauter Waffe plus zweiter Waffe darueber waere doppelt.
+        // --- Ruhebewegung (D18): der Turm atmet.
+        //
+        // Ein ruhendes Feld war bis v116 ein Standbild - zwischen zwei Wellen
+        // bewegte sich nichts ausser dem Nebel. Kingdom Rush und Bloons lassen
+        // ihre Tuerme leicht atmen; das kostet nichts und macht aus einem
+        // Diagramm einen Ort.
+        //
+        // HIER berechnet, nicht weiter unten: es gibt ZWEI Zeichenwege. Tuerme
+        // mit eigenem Sockel- und Waffenbild (der Bogenturm) laufen durch den
+        // Zweig gleich darunter und enden dort mit `continue`. Mein erster
+        // Versuch stand hinter diesem `continue` - bei Amplitude 60, also
+        // einem halben Turm Versatz, bewegte sich nichts. Zwei Aufnahmen
+        // nebeneinander haben es gezeigt, keine Kennzahl.
+        //
+        // Drei Entscheidungen:
+        //  - KLEIN, aber nicht unsichtbar. 2 Weltpunkte sind bei kleinstem
+        //    Massstab rund 1,6 Bildschirmpunkte. Der erste Wert (0,75) waere
+        //    ein halber Punkt gewesen - Regel 12: beurteilt wird in
+        //    Anzeigegroesse, und ein halber Punkt ist keine Bewegung.
+        //  - VERSETZT. Die Phase kommt aus der Standposition, sonst atmet das
+        //    ganze Feld im Gleichtakt. Aus der Position und nicht aus einem
+        //    Zufall, damit sie ueber Sichern und Laden dieselbe bleibt.
+        //  - OHNE SCHATTEN. Der Schatten liegt schon und bleibt liegen. Bewegt
+        //    er sich mit, schwebt der Turm; bleibt er, hebt sich der Turm.
+        const atem = Math.sin(s.time * 1.9 + (t.x + t.y * 1.7) * 0.03) * 2;
+
         const waffe = getObjectArtStufe(`waffe_${t.def}`, t.level);
         const sockel = getObjectArtStufe(`sockel_${t.def}`, t.level);
         if (waffe && sockel) {
@@ -1120,7 +1146,7 @@ export class Renderer {
           const bw = (TOWERS[def.id].footprint * DRAW_SCALE) / FUELLUNG;
           const rec2 = t.recoil * 4;
           ctx.save();
-          ctx.translate(t.x, t.y);
+          ctx.translate(t.x, t.y + atem);
           // Auch dieser Weg bekommt die Hoehe - sonst waere der Bogenturm der
           // einzige, der nicht mitwaechst.
           //
@@ -1184,7 +1210,25 @@ export class Renderer {
         // ist, waere es der Punkt, an dem der Turm vom Boden abhebt: die
         // Oberkante waechst mit der Hoehe mit, die Unterkante nicht.
         // Zwei Stellen, die dieselbe Zahl ausrechnen, driften auseinander.
-        ctx.drawImage(art, -w / 2, masse.oben, w, h);
+        // --- Ruhebewegung (D18): der Turm atmet.
+        //
+        // Ein ruhendes Feld war bis v116 ein Standbild - zwischen zwei Wellen
+        // bewegte sich nichts ausser dem Nebel. Kingdom Rush und Bloons lassen
+        // ihre Tuerme leicht atmen; das kostet nichts und macht aus einem
+        // Diagramm einen Ort.
+        //
+        // Drei Entscheidungen, jede mit Grund:
+        //  - KLEIN. Eineinhalb Weltpunkte, bei kleinstem Massstab gut ein
+        //    Bildschirmpunkt. Mehr laese sich als Rueckstoss, also als
+        //    Handlung - und eine Ruhebewegung, die nach Handlung aussieht,
+        //    luegt.
+        //  - VERSETZT. Die Phase kommt aus der Standposition, sonst atmet das
+        //    ganze Feld im Gleichtakt und wirkt wie ein Fehler. Aus der
+        //    Position und nicht aus einem Zufall, damit sie ueber Sichern und
+        //    Laden dieselbe bleibt.
+        //  - OHNE SCHATTEN. Der Schatten liegt schon und bleibt liegen. Bewegt
+        //    er sich mit, schwebt der Turm; bleibt er, hebt sich der Turm.
+        ctx.drawImage(art, -w / 2, masse.oben + atem, w, h);
         ctx.restore();
       } else {
         this.paintWeapon(t.def, t.branch, t.level, t.x, t.y, t.angle, t.recoil, t.pulse, s.crystalPulse);

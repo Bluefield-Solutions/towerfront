@@ -577,6 +577,24 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
+    // D18: ein ruhendes Feld darf kein Standbild sein.
+    name: 'Tuerme atmen nicht mehr',
+    datei: 'src/gfx/renderer.ts',
+    regel: /        const atem = Math\.sin\(s\.time \* 1\.9 \+ \(t\.x \+ t\.y \* 1\.7\) \* 0\.03\) \* 2;/,
+    ersatz: '        const atem = 0;',
+    tor: 'bildtor',
+  },
+  {
+    // C26: zwei Karten duerfen nicht dasselbe verlangen. Eingebaut wird der
+    // ECHTE Fehler - zwei Karten mit demselben Wellenplan -, nicht das
+    // Entfernen der Pruefung (S119).
+    name: 'Zwei Karten mit demselben Wellenplan',
+    datei: 'src/data/maps.ts',
+    regel: /  waves: PLAN_ASCHESCHLUCHT,/,
+    ersatz: '  waves: PLAN_SPIRALHAIN,',
+    tor: 'guards',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

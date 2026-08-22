@@ -12,7 +12,7 @@
  *  Das Werkzeug bricht nichts ab. Es legt das Delta auf den Tisch.
  *  Aufruf: npx tsx tools/benchmark.ts */
 import { GameState } from '../src/game/state';
-import { TOWERS, TOWER_ORDER } from '../src/data/towers';
+import { TOWERS, TOWER_ORDER, nextFor } from '../src/data/towers';
 import { ENEMIES } from '../src/data/enemies';
 import type { Wave } from '../src/data/waves';
 import { ABILITIES, ABILITY_ORDER } from '../src/data/abilities';
@@ -222,8 +222,11 @@ const CRITERIA: Criterion[] = [
   {
     id: 'K4', area: 'Karten', from: 'Kingdom Rush (Endlosmodus)',
     text: 'Endlosmodus nach der letzten Welle.',
-    measured: false, weight: 2,
-    check: () => true, // seit v20
+    measured: true, weight: 2,
+    // Bis v116 stand hier `() => true` bei `measured: false` - also eine
+    // Behauptung. Der Endlosmodus ist aber schlicht ablesbar.
+    check: () => DIFFICULTY_ORDER.length > 0 && MAPS.some((m: { waves: Wave[] }) => m.waves.length > 0)
+      && typeof (new GameState()).endless === 'boolean', // seit v20
     gap: 'Nach Welle 15 fortlaufend skalierende Wellen.',
   },
   {
@@ -263,8 +266,14 @@ const CRITERIA: Criterion[] = [
   {
     id: 'P4', area: 'Politur', from: 'mobiler Alltag',
     text: 'Laufende Partie sichern und fortsetzen.',
-    measured: false, weight: 2,
-    check: () => true,
+    measured: true, weight: 2,
+    // Sichern und Fortsetzen wird im Rauchtest ohnehin durchgespielt; hier
+    // wird gemessen, dass es den Weg ueberhaupt gibt.
+    check: () => {
+      const g = new GameState();
+      const stand = g.snapshot();
+      return !!stand && typeof stand.v === 'number' && g.restore(stand);
+    },
   },
   {
     id: 'P6', area: 'Politur', from: 'Kingdom Rush ("spectacular detail, color and animation")',
@@ -290,8 +299,13 @@ const CRITERIA: Criterion[] = [
   {
     id: 'P5', area: 'Politur', from: 'Kingdom Rush (Turm-Infofenster)',
     text: 'Turm-Inspektor mit Vorschau der naechsten Stufe.',
-    measured: false, weight: 2,
-    check: () => true,
+    measured: true, weight: 2,
+    // Vorschau der naechsten Stufe: gibt es zu jeder Stufe unter der
+    // hoechsten einen Nachfolger, dessen Werte sich zeigen lassen?
+    check: () => TOWER_ORDER.every((id) => {
+      const def = TOWERS[id];
+      return def.branches.every((_b, i) => !!nextFor(def, i as 0 | 1, 1));
+    }),
   },
 ];
 
@@ -302,9 +316,32 @@ const open = CRITERIA.filter((c) => !c.check());
 const total = CRITERIA.reduce((a, c) => a + c.weight, 0);
 const score = met.reduce((a, c) => a + c.weight, 0);
 
+// --- Wieviel von der Zahl ist gemessen, und wieviel behauptet?
+//
+// Bis v116 stand nur eine Zahl da, und zehn der dreissig Kriterien trugen
+// `measured: false` - sie zaehlten voll mit, ohne dass irgendetwas sie
+// prueft. Wer "gewichtet 99 %" liest, liest dann eine Zahl, die zu einem
+// Teil aus Behauptungen besteht, und weiss es nicht.
+//
+// Das ist keine Kleinigkeit: G5 und R4 standen jahrelang falsch, WEIL eine
+// Behauptung wie eine Messung aussah. Also werden beide Zahlen genannt.
+const gemessen = CRITERIA.filter((c) => c.measured);
+const behauptet = CRITERIA.filter((c) => !c.measured);
+const gemessenGewicht = gemessen.reduce((a, c) => a + c.weight, 0);
+const gemessenErfuellt = gemessen.filter((c) => c.check()).reduce((a, c) => a + c.weight, 0);
+
 console.log(
   `GENRE-BERICHT (kein Tor): ${met.length}/${CRITERIA.length} Kriterien erfuellt ` +
   `(gewichtet ${Math.round((score / total) * 100)} %)`,
+);
+console.log(
+  `  davon GEMESSEN: ${gemessenErfuellt}/${gemessenGewicht} Gewicht `
+  + `(${Math.round((gemessenErfuellt / gemessenGewicht) * 100)} %) ueber ${gemessen.length} Kriterien.`,
+);
+console.log(
+  `  BEHAUPTET (von Hand beurteilt, nichts prueft sie): ${behauptet.length} Kriterien, `
+  + `Gewicht ${behauptet.reduce((a, c) => a + c.weight, 0)} von ${total} `
+  + `(${Math.round((behauptet.reduce((a, c) => a + c.weight, 0) / total) * 100)} % der Zahl oben).`,
 );
 
 const areas = [...new Set(CRITERIA.map((c) => c.area))];

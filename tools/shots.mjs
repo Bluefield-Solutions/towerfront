@@ -233,6 +233,9 @@ const wanted = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 // Dreifache waechst. Die Bildabnahme von Hand nimmt weiterhin alles auf.
 
 const takes = [];
+/** Messungen ohne Bild - sie pruefen etwas, das eine einzelne Aufnahme
+ *  nicht zeigen kann. */
+const pruefungen = [];
 
 // --- Handy quer, das wichtigste Format
 // --- Das Menue: seit v42 auf der Leinwand, also endlich sichtbar.
@@ -589,6 +592,15 @@ takes.push(['d17-geschosse', () => shot('d17-geschosse', 844, 390, (s) => {
   return 0;
 })]);
 
+takes.push(['d18-atem-a', () => shot('d18-atem-a', 844, 390, (s) => {
+  s.reset(9, 'normal', 'spiralhain'); stock(s, 8, ['arrow']); return 0;
+})]);
+takes.push(['d18-atem-b', () => shot('d18-atem-b', 844, 390, (s) => {
+  s.reset(9, 'normal', 'spiralhain'); stock(s, 8, ['arrow']);
+  for (let i = 0; i < 50; i++) s.update(DT);
+  return 0;
+})]);
+
 takes.push(['welle15', () => shot('welle15', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 12);
@@ -596,6 +608,92 @@ takes.push(['welle15', () => shot('welle15', 844, 390, (s) => {
   s.startWave();
   return 60 * 16;
 })]);
+
+// --- Lebt ein ruhendes Feld, und zwar wegen der TUERME? (D18)
+//
+// Kein Bild, sondern eine Messung: zwischen zwei Wellen wurde bis v116 nichts
+// bewegt, was zum Spiel gehoert. Kingdom Rush und Bloons lassen ihre Tuerme
+// atmen; das macht aus einem Diagramm einen Ort.
+//
+// Der erste Entwurf verglich einfach zwei Aufnahmen desselben ruhenden
+// Feldes - und meldete 3,41 % bewegte Bildpunkte. Mit abgeschalteter Atmung
+// meldete er GENAU DIESELBEN 3,41 %: gemessen hatte er den Bodennebel, der
+// sich ohnehin bewegt. Eine Pruefung, die auch ohne die Sache besteht,
+// bezeugt sie nicht.
+//
+// Also ein Unterschied von Unterschieden: dasselbe Feld einmal MIT und
+// einmal OHNE Tuerme, jeweils zwei Zeitpunkte. Was der Nebel beitraegt,
+// steht in beiden Zahlen und kuerzt sich heraus.
+pruefungen.push(async () => {
+  const bewegung = async (mitTuermen) => {
+    const canvas = createCanvas(844 * 2, 390 * 2);
+    Object.defineProperty(canvas, 'clientWidth', { get: () => 844 });
+    Object.defineProperty(canvas, 'clientHeight', { get: () => 390 });
+    const s = new GameState();
+    const r = new Renderer(canvas);
+    r.menu = null;
+    s.reset(9, 'normal', 'spiralhain');
+    // NUR Bogentuerme. Der Frostturm pulst im Umkreis und das Prisma
+    // leuchtet - beides bewegt sich von selbst und uebertoente die Atmung um
+    // zwei Groessenordnungen. Ein Messplatz ist erst dann einer, wenn das
+    // Gesuchte das Lauteste darauf ist.
+    if (mitTuermen) stock(s, 8, ['arrow']);
+    // KEINE Welle starten: gemessen wird genau der ruhende Zustand.
+    //
+    // Und in NIEDRIGER Qualitaet, weil dort das Leuchten entfaellt. Mit
+    // Leuchten war der Beitrag der Tuerme 2,37 % - und blieb 2,37 %, wenn man
+    // die Atmung ganz abschaltete. Gemessen wurde also das Pulsieren des
+    // Leuchtens, nicht die Bewegung. Ein Messplatz, auf dem das Gesuchte im
+    // Rauschen liegt, misst das Rauschen (Regel 12: die Messstelle gehoert
+    // zur Zahl).
+    s.quality = 'niedrig';
+    r.resize();
+    r.draw(s);
+    for (const k of Object.keys(OBJECT_ART)) getObjectArt(k);
+    getBackground(s.map.id);
+    for (const id of TOWER_ORDER) getTowerArt(id, null, 1, s.map.id);
+    await settle();
+    r.kartenaufbauAbschliessen(s);
+
+    const g = canvas.getContext('2d');
+    const nimm = () => {
+      r.draw(s);
+      return Uint8ClampedArray.from(g.getImageData(0, 0, canvas.width, canvas.height).data);
+    };
+    // Fehlen Bilder, faellt die Zeichnung auf gemalte Ersatztuerme zurueck -
+    // und die atmen nicht. Dann maesse dieser Platz etwas anderes als gemeint.
+    const fehlt = r.fehlendeBilder(s);
+    if (fehlt.length) throw new Error(`Ruhepruefung ohne Bilder: ${fehlt.slice(0, 3).join(', ')}`);
+
+    const a = nimm();
+    // Ein VIERTEL der Atemperiode weiter, nicht die Haelfte.
+    //
+    // Der erste Aufbau lief 100 Bilder, also 1,67 s - bei 1,9 rad/s ist das
+    // fast genau eine halbe Periode. Von sin(0) nach sin(pi): beide Male
+    // null. Ich habe zwei Nulldurchgaenge verglichen und daraus geschlossen,
+    // die Bewegung gebe es nicht. Ein Messzeitpunkt ist Teil der Messstelle
+    // (Regel 12).
+    for (let i = 0; i < 50; i++) s.update(1 / 60);
+    const b = nimm();
+    let anders = 0;
+    for (let i = 0; i < a.length; i += 4) {
+      if (Math.abs(a[i] - b[i]) > 3 || Math.abs(a[i + 1] - b[i + 1]) > 3) anders++;
+    }
+    return (100 * anders) / (a.length / 4);
+  };
+
+  const mit = await bewegung(true);
+  const ohne = await bewegung(false);
+  const durchTuerme = mit - ohne;
+  console.log(`  ruhendes Feld: ${mit.toFixed(2)} % bewegt, ohne Tuerme ${ohne.toFixed(2)} % `
+    + `- die Tuerme tragen ${durchTuerme.toFixed(2)} % bei`);
+  if (durchTuerme < 0.15) {
+    throw new Error(
+      `die Tuerme bewegen sich im ruhenden Feld nicht (${durchTuerme.toFixed(3)} % gegenueber `
+      + 'dem Feld ohne sie) - zwischen zwei Wellen steht das Spiel still.',
+    );
+  }
+});
 
 // --- Die anderen Karten
 for (const m of MAPS.slice(1)) {
@@ -647,6 +745,15 @@ for (const [, run] of list) {
     (b.probleme.length ? `   ${b.probleme.join(', ')}` : ''),
   );
   for (const p of b.probleme) probleme.push(`${r.name}: ${p}`);
+}
+
+// Messungen ohne Bild - nach den Aufnahmen, damit der Bildvorrat steht.
+for (const pruefung of pruefungen) {
+  try {
+    await pruefung();
+  } catch (e) {
+    probleme.push(e.message);
+  }
 }
 
 if (probleme.length) {

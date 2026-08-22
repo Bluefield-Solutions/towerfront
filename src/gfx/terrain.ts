@@ -451,24 +451,27 @@ function tonwertAnwenden(
  *
  *  Die Staerke ist durchprobiert, nicht geschaetzt (Regel 9):
  *
- *      Korn   Bodendichte   Verhaeltnis Figur:Boden
- *       0,0      1,52            9,7      (2 von 3 Karten UNTER dem Band)
- *       2,0      1,86            7,9
- *       3,2      2,20            6,7
- *       4,5      2,62            5,6      gewaehlt
- *       6,0      3,13            4,7      ueber dem Band
+ *      Korn   Boden im Mittel   Verhaeltnis   engste Karte (Decke 3,0)
+ *       0,0        1,52             9,7        2 von 3 UNTER dem Band
+ *       2,0        1,86             7,9
+ *       3,6        2,32             6,3        2,72
+ *       4,0        2,45             6,0        2,84   gewaehlt
+ *       4,5        2,62             5,6        2,99   nur 0,01 Rand
+ *       6,0        3,13             4,7        ueber dem Band
  *
- *  4,5 ist die Obergrenze, die die Referenz selbst zieht - darueber verlaesst
- *  der Boden sein eigenes Band. Die Helligkeit bleibt in jedem Schritt bei
- *  0,30, das Korn verschiebt also nur die Feinstruktur.
+ *  Gewaehlt ist 4,0 und nicht 4,5, obwohl 4,5 das bessere Verhaeltnis gibt:
+ *  dort steht die Frostspalte mit 2,99 einen Hundertstel unter der Decke. Ein
+ *  Wert, der das Tor gerade so haelt, reisst es beim naechsten Kartenbild.
+ *  Die Helligkeit bleibt in jedem Schritt bei 0,30 - das Korn verschiebt nur
+ *  die Feinstruktur.
  *
  *  Und die ehrliche Einschraenkung: das schliesst die MESSLUECKE, nicht
  *  zwingend den Befund. Bei tatsaechlicher Anzeigegroesse ist das Korn nicht
  *  als Korn zu sehen. Ob B1 damit wahrnehmbar besser wird, sagt keine Zahl -
  *  die Entrauschprobe hat genau in dieser Frage schon einmal gezeigt, dass
- *  Kennzahl und Auge auseinanderlaufen. Was bleibt, sind 5,6 gegen erlaubte
+ *  Kennzahl und Auge auseinanderlaufen. Was bleibt, sind 6,0 gegen erlaubte
  *  3,0, und dafuer braucht es Figurenbilder. */
-const KORN_STAERKE = 4.5;
+const KORN_STAERKE = 4.0;
 
 /** 256 vorgerechnete Kornwerte. Eine Tabelle statt einer Rechnung je Punkt -
  *  derselbe Grund wie bei den Tonwertkurven. */

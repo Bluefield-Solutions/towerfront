@@ -568,15 +568,27 @@ if (!befunde.length) console.log('  Keine. Alle Prinzipien erfüllt.\n');
 // `npm run grafik` war kein Tor, und Ausgaben ohne Tor liest man beim
 // dritten Mal nicht mehr.
 if (process.argv.includes('--tor')) {
-  const bodenDichte = mittel(bgWerte, (f) => f.dichte);
   const band = REFERENZ.grund.dichte;
-  if (bodenDichte < band[0] || bodenDichte > band[1]) {
-    console.error(`\nGRAFIKTOR: die Untergrunddichte liegt bei ${bodenDichte.toFixed(2)}, `
-      + `das Band geht von ${band[0]} bis ${band[1]}.`);
-    console.error('  Zu wenig heisst: der Boden ist eine Flaeche, und die Figuren stechen');
-    console.error('  noch staerker heraus (Befund B1). Zu viel heisst: er rauscht.');
+  // JE KARTE, nicht im Mittel.
+  //
+  // Der erste Entwurf pruefte den Mittelwert - und die Gegenprobe blieb
+  // gruen: ohne Korn liegt das Mittel bei 1,52 und damit knapp IM Band,
+  // waehrend zwei von drei Karten darunter liegen. Ein Mittelwert kann jede
+  // einzelne Karte verfehlen und trotzdem passen; er ist die falsche Frage.
+  // Die Ausgabe zaehlte die Ausreisser die ganze Zeit mit ("2/3 daneben") -
+  // ich hatte sie nur nicht zur Bedingung gemacht.
+  const daneben = bgWerte.filter((f) => f.dichte < band[0] || f.dichte > band[1]);
+  if (daneben.length) {
+    console.error(`\nGRAFIKTOR: ${daneben.length} von ${bgWerte.length} Untergruenden `
+      + `liegen ausserhalb des Bandes ${band[0]} bis ${band[1]}:`);
+    for (const f of daneben) {
+      console.error(`  ${f.id}: ${f.dichte.toFixed(2)} - `
+        + (f.dichte < band[0]
+          ? 'zu wenig, der Boden ist eine Flaeche und die Figuren stechen heraus (B1).'
+          : 'zu viel, er rauscht.'));
+    }
     process.exit(1);
   }
-  console.log(`GRAFIKTOR: Untergrunddichte ${bodenDichte.toFixed(2)} im Band `
-    + `${band[0]} bis ${band[1]}.`);
+  console.log(`GRAFIKTOR: alle ${bgWerte.length} Untergruende im Band ${band[0]} bis ${band[1]} `
+    + `(${bgWerte.map((f) => f.dichte.toFixed(2)).join(', ')}).`);
 }

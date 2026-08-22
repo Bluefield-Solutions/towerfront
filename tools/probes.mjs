@@ -334,6 +334,16 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
+    // Versetzen waehrend der Welle waere keine Korrektur mehr, sondern eine
+    // neue Mechanik - jeder Turm haette faktisch die Reichweite des halben
+    // Feldes. Die Schranke muss halten.
+    name: 'Turm laesst sich mitten in der Welle versetzen',
+    datei: 'src/game/state.ts',
+    regel: /return !this\.waveActive && this\.phase === 'playing';/,
+    ersatz: "return this.phase === 'playing';",
+    tor: 'smoke',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

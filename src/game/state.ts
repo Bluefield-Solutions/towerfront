@@ -202,7 +202,12 @@ export class GameState {
    *
    *  Der Platzbedarf haengt an der Turmsorte - genau darin besteht die
    *  Entscheidung beim freien Bauen. */
-  canPlace(id: TowerId, x: number, y: number): boolean {
+  /** Darf hier gebaut werden?
+   *
+   *  `ausser` nimmt einen Turm von der Kollisionspruefung aus. Das braucht
+   *  das Versetzen: ein Turm, der ein Stueck zur Seite rutscht, ueberlappt
+   *  sich sonst mit sich selbst und der Platz gilt als besetzt. */
+  canPlace(id: TowerId, x: number, y: number, ausser: Tower | null = null): boolean {
     const r = TOWERS[id].footprint / 2;
     if (x - r < 0 || y - r < 0 || x + r > WORLD_W || y + r > WORLD_H) return false;
     // Abstand zur Wegmitte minus der oertlichen halben Breite: an einer
@@ -215,8 +220,49 @@ export class GameState {
       if (Math.hypot(g.x - x, g.y - y) < g.r + r) return false;
     }
     for (const t of this.towers) {
+      if (t === ausser) continue;
       if (Math.hypot(t.x - x, t.y - y) < r + TOWERS[t.def].footprint / 2 + 4) return false;
     }
+    return true;
+  }
+
+  /** Werden gerade alle Reichweiten gezeigt? Gesetzt vom Halten auf leerer
+   *  Flaeche, geloescht beim Loslassen. Kein Schalter, den man vergessen
+   *  koennte - er haengt am Finger. */
+  zeigeReichweiten = false;
+
+  /** Der Turm, der gerade gezogen wird, und wohin. Beides null, wenn nicht. */
+  movingTower: Tower | null = null;
+  movePoint: { x: number; y: number } | null = null;
+
+  /** Darf dieser Turm ueberhaupt versetzt werden?
+   *
+   *  Nur zwischen den Wellen, und das ist eine Entscheidung mit Grund. B11
+   *  steht im Verzeichnis als "gegen Fehlplatzierung" - also als Korrektur,
+   *  nicht als Werkzeug. Waehrend einer Welle waere Versetzen etwas ganz
+   *  anderes: man schoebe den Turm dorthin, wo es gerade brennt, und das ist
+   *  eine neue Mechanik, keine Korrektur. Sie wuerde die Balance
+   *  verschieben, und zwar deutlich - jeder Turm haette faktisch die
+   *  Reichweite des halben Feldes.
+   *
+   *  Kostenlos, weil das Gegenteil schon existiert: Verkaufen und neu bauen
+   *  kostet den Verkaufsabschlag. Waere Versetzen auch kostenpflichtig,
+   *  waere es nur ein zweiter Weg zum selben Ergebnis. */
+  canMove(): boolean {
+    return !this.waveActive && this.phase === 'playing';
+  }
+
+  /** Einen Turm versetzen. Gibt zurueck, ob es geklappt hat. */
+  moveTower(t: Tower, x: number, y: number): boolean {
+    if (!this.canMove()) return false;
+    if (!this.canPlace(t.def, x, y, t)) return false;
+    t.x = x;
+    t.y = y;
+    // Das gespeicherte Ziel gilt nicht mehr - es kann ausser Reichweite
+    // liegen, und ein Turm, der ins Leere zielt, sieht kaputt aus.
+    t.target = null;
+    t.retargetIn = 0;
+    this.towersVersion++;
     return true;
   }
 

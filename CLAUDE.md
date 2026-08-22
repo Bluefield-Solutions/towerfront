@@ -141,7 +141,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v107. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v108. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, sieben
 Gegnerarten in den Wellen plus den Span, in den der Spalter zerfällt, drei
 Grade, Endlosmodus. Genre-Abgleich 27 von 30, gewichtet 93 %.
@@ -163,6 +163,14 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   Genre-Abgleich. Sie waren hinter T15 gesperrt; die Sperre ist gefallen.
 
 **Erledigt und hier zu lange falsch stehen geblieben** (nachgemessen in v103):
+- B11, B13, B14 sind umgesetzt (v108). Türme lassen sich **zwischen den
+  Wellen** ziehen — nur der ausgewählte, sonst wäre jedes Schwenken ein
+  Glücksspiel. Während einer Welle abgelehnt: das wäre keine Korrektur mehr,
+  sondern eine neue Mechanik. Halten auf leerer Fläche zeigt alle
+  Reichweiten. Am Kristall warnt ein roter Ring, sobald jemand die letzten
+  260 Weltpunkte erreicht.
+- B13 und B14 sind rein sichtbar und von **keinem Tor** geprüft — nur
+  angesehen. Der Rauchtest deckt B11 ab (Wirkung, Weg, laufende Welle).
 - B6 ist umgesetzt (v107). Jeder Turm einzeln: vorn, stark, nah, schwach —
   vier Knöpfe im Prüfsteg. Standard bleibt „vorn", weil die ganze Balance
   dagegen geeicht ist. Der Rauchtest misst die Wirkung an dem, was die Türme

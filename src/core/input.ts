@@ -27,6 +27,20 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
    *  Ohne diese Schwelle setzt jedes Verschieben einen Turm. */
   const DRAG_THRESHOLD = 11;
   let dragging = false;
+  /** Wo das Ziehen in Weltkoordinaten begann - fuer das Versetzen. */
+  let startWeltX = 0, startWeltY = 0;
+  /** Der Wecker fuer das Halten. Nach dieser Zeit ohne Bewegung erscheinen
+   *  alle Reichweiten.
+   *
+   *  350 ms, und die Zahl hat einen Grund: unter etwa 300 loest die Geste
+   *  bei jedem etwas langsameren Tipp aus, ueber 500 haelt niemand so lange
+   *  still, ohne zu glauben, es sei nichts passiert. */
+  const HALTEZEIT = 350;
+  let halteWecker: ReturnType<typeof setTimeout> | null = null;
+  const halteAus = () => {
+    if (halteWecker !== null) { clearTimeout(halteWecker); halteWecker = null; }
+    s.zeigeReichweiten = false;
+  };
   let startX = 0, startY = 0, lastX = 0, lastY = 0;
   /** Alle liegenden Finger - fuer das Kneifen. */
   const points = new Map<number, { x: number; y: number }>();
@@ -75,6 +89,29 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
       if (!dragging && Math.hypot(p.x - startX, p.y - startY) > DRAG_THRESHOLD) {
         dragging = true;
         s.pendingPoint = null;
+        halteAus();
+        // Beginnt das Ziehen auf dem AUSGEWAEHLTEN Turm, wird versetzt statt
+        // geschwenkt.
+        //
+        // Die Einschraenkung auf den ausgewaehlten ist der ganze Trick. Ohne
+        // sie waere jedes Schwenken ein Gluecksspiel: wer die Karte
+        // verschieben will und dabei einen Turm erwischt, haette ihn
+        // mitgenommen. Ausgewaehlt heisst: der Pruefsteg steht offen, man hat
+        // diesen Turm gerade angetippt, man meint ihn.
+        const sel = s.selectedTower;
+        if (sel && s.canMove()) {
+          const w = toWorld(ev);
+          const fuss = TOWERS[sel.def].footprint / 2 + 24;
+          if (Math.hypot(sel.x - startWeltX, sel.y - startWeltY) < fuss) {
+            s.movingTower = sel;
+            s.movePoint = w;
+          }
+        }
+      }
+      if (s.movingTower) {
+        s.movePoint = toWorld(ev);
+        lastX = p.x; lastY = p.y;
+        return;
       }
       if (dragging) {
         r.panBy(p.x - lastX, p.y - lastY);
@@ -113,10 +150,27 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
     dragging = false;
     if (s.aiming) r.aimPoint = r.screenToWorld(p.x, p.y);
     startX = lastX = p.x; startY = lastY = p.y;
+    {
+      const w = toWorld(ev);
+      startWeltX = w.x; startWeltY = w.y;
+    }
     if (s.phase !== 'playing') return;
     const c = toWorld(ev);
     s.hoverPoint = c;
     s.pendingPoint = s.buildChoice || s.aiming ? c : null;
+
+    // Halten auf LEERER Flaeche zeigt alle Reichweiten.
+    //
+    // Leer heisst: kein Turm darunter, keine Turmsorte gewaehlt, nicht am
+    // Zielen. Sonst waere die Geste zweideutig - wer einen Turm haelt, will
+    // ihn versetzen, und wer eine Faehigkeit zielt, will zielen.
+    halteAus();
+    if (!s.buildChoice && !s.aiming && !s.towerUnder(c.x, c.y, r.scale)) {
+      halteWecker = setTimeout(() => {
+        halteWecker = null;
+        if (down && !dragging) s.zeigeReichweiten = true;
+      }, HALTEZEIT);
+    }
   });
 
   const finish = (ev: PointerEvent) => {
@@ -133,8 +187,28 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
     down = false;
     const wasDragging = dragging;
     dragging = false;
+    const hieltReichweiten = s.zeigeReichweiten;
+    halteAus();
     const at = s.pendingPoint;
     s.pendingPoint = null;
+
+    // Wer gehalten hat, wollte sehen - nicht bauen. Ohne das oeffnet sich
+    // beim Loslassen die Turmwahl an der Stelle, auf der der Finger lag.
+    if (hieltReichweiten) return;
+
+    // Wurde ein Turm gezogen, entscheidet das Loslassen.
+    //
+    // Klappt es nicht, bleibt der Turm einfach stehen - ohne Meldung. Das
+    // Ziel ist sichtbar rot markiert, solange man zieht; wer trotzdem
+    // loslaesst, hat es gesehen und braucht keinen Hinweis hinterher.
+    if (s.movingTower) {
+      const t = s.movingTower, ziel = s.movePoint;
+      s.movingTower = null;
+      s.movePoint = null;
+      if (ziel && s.moveTower(t, ziel.x, ziel.y)) Sfx.play('tap');
+      return;
+    }
+
     // Geschoben statt getippt: nichts bauen, nichts auswaehlen.
     if (wasDragging) return;
 
@@ -186,6 +260,8 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
     points.delete(ev.pointerId);
     if (points.size < 2) { pinchDist = 0; pinchX = null; pinchY = null; }
     down = false; dragging = false; s.pendingPoint = null;
+    s.movingTower = null; s.movePoint = null;
+    halteAus();
   });
 
   // Am Schreibtisch: Mausrad zoomt um den Zeiger.

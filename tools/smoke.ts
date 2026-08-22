@@ -1064,6 +1064,53 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Laesst sich ein Turm versetzen - und zwar nur, wenn er darf?
+//
+// Zwei Behauptungen, und die zweite ist die wichtigere. Ein Versetzen
+// waehrend der Welle waere keine Korrektur mehr, sondern eine neue Mechanik:
+// man schoebe den Turm dorthin, wo es gerade brennt. Das haette die Balance
+// verschoben, ohne dass eine einzige Zahl angefasst wurde.
+{
+  const { candidateSpots } = await import('./spots');
+  state.reset(777, 'normal', 'spiralhain');
+  state.gold = 99999;
+  const plaetze = candidateSpots(state);
+  state.build(plaetze[0].x, plaetze[0].y, 'arrow');
+  const turm = state.towers[0];
+
+  if (!turm) {
+    problems.push('Versetzen: es liess sich kein Turm zum Pruefen bauen.');
+  } else {
+    // Zwischen den Wellen: muss gehen.
+    const frei = plaetze.find((p) => state.canPlace('arrow', p.x, p.y, turm)
+      && Math.hypot(p.x - turm.x, p.y - turm.y) > 1);
+    if (!frei) {
+      problems.push('Versetzen: kein zweiter freier Platz zum Pruefen gefunden.');
+    } else if (!state.moveTower(turm, frei.x, frei.y)) {
+      problems.push('Versetzen: zwischen den Wellen abgelehnt, obwohl es gehen muesste.');
+    } else if (Math.round(turm.x) !== Math.round(frei.x)) {
+      problems.push('Versetzen: gemeldet als erledigt, aber der Turm steht noch am alten Ort.');
+    }
+
+    // Auf den Weg: muss abgelehnt werden.
+    const auf = state.lanes[0].at(state.lanes[0].length * 0.5);
+    const vorher = { x: turm.x, y: turm.y };
+    if (state.moveTower(turm, auf.x, auf.y)) {
+      problems.push('Versetzen: ein Turm liess sich mitten auf den Weg stellen.');
+    } else if (turm.x !== vorher.x || turm.y !== vorher.y) {
+      problems.push('Versetzen: abgelehnt, aber der Turm ist trotzdem gewandert.');
+    }
+
+    // Waehrend der Welle: muss abgelehnt werden.
+    state.startWave();
+    const zurueck = plaetze.find((p) => state.canPlace('arrow', p.x, p.y, turm)
+      && Math.hypot(p.x - turm.x, p.y - turm.y) > 1);
+    if (zurueck && state.moveTower(turm, zurueck.x, zurueck.y)) {
+      problems.push('Versetzen: waehrend einer laufenden Welle erlaubt - das ist keine Korrektur mehr.');
+    }
+  }
+}
+
 // Jede Karte muss sich aufbauen und zeichnen lassen. Ein Pfad, der ins Leere
 // fuehrt, oder eine Farbwelt mit Luecke faellt sonst erst beim Antippen auf.
 {

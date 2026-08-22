@@ -272,6 +272,8 @@ export class Renderer {
     drawGroundFog(ctx, s.crystalPulse, hi, s.map.palette.haze);
     this.drawMeteors(s, hi);
     this.drawGhost(s);
+    this.drawVersetzen(s);
+    this.drawAlleReichweiten(s);
     this.drawAim(s);
     this.drawCoach(s);
     this.drawFloats(s);
@@ -506,6 +508,76 @@ export class Renderer {
     ctx.restore();
   }
 
+  /** Die Vorschau beim Versetzen.
+   *
+   *  Absichtlich dieselbe Formensprache wie die Bauvorschau: gestrichelter
+   *  Kreis fuer den Platzbedarf, voller Kreis fuer die Reichweite, rot wenn
+   *  es nicht geht. Wer einmal gebaut hat, muss nichts Neues lernen - es ist
+   *  dieselbe Frage ("passt der Turm hier hin?") und verdient dieselbe
+   *  Antwort.
+   *
+   *  Zusaetzlich eine Linie vom alten zum neuen Ort. Ohne sie sieht man zwei
+   *  Kreise und weiss nicht, welcher der Turm ist, den man gerade haelt. */
+  private drawVersetzen(s: GameState): void {
+    const t = s.movingTower, ziel = s.movePoint;
+    if (!t || !ziel) return;
+    const ctx = this.ctx;
+    const def = TOWERS[t.def];
+    const st = s.towerStats(t);
+    const x = ziel.x, y = ziel.y;
+    const ok = s.canPlace(t.def, x, y, t);
+    const tone = ok ? accentFor(def, t.branch) : C.danger;
+
+    ctx.save();
+    ctx.strokeStyle = hexA(tone, 0.5);
+    ctx.lineWidth = 3;
+    ctx.setLineDash([8, 6]);
+    ctx.beginPath();
+    ctx.moveTo(t.x, t.y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+    ctx.fillStyle = hexA(tone, 0.2);
+    ctx.beginPath(); ctx.arc(x, y, def.footprint / 2, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = hexA(tone, 0.9); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, def.footprint / 2, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = hexA(tone, 0.1);
+    ctx.beginPath(); ctx.arc(x, y, st.range, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = hexA(tone, 0.6); ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(x, y, st.range, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+
+  /** Alle Reichweiten auf einmal - solange der Finger liegen bleibt.
+   *
+   *  Wozu: welche Ecke des Feldes niemand abdeckt, sieht man einem Feld aus
+   *  zwoelf Tuermen nicht an. Einzeln antippen beantwortet die Frage nicht,
+   *  weil man immer nur einen Ring zur Zeit sieht und den vorigen schon
+   *  wieder vergessen hat.
+   *
+   *  Sehr blass gezeichnet, und mit Absicht: zwoelf Ringe in voller Deckung
+   *  waeren eine weisse Flaeche. Was zaehlt, ist wo sich NICHTS ueberlagert. */
+  private drawAlleReichweiten(s: GameState): void {
+    if (!s.zeigeReichweiten) return;
+    const ctx = this.ctx;
+    ctx.save();
+    for (const t of s.towers) {
+      const def = TOWERS[t.def];
+      const st = s.towerStats(t);
+      const tone = accentFor(def, t.branch);
+      // Deckung angehoben nach dem ersten Blick: bei 0,07 Fuellung und 0,42
+      // Linie war auf dem Untergrund kaum etwas zu sehen, und eine Anzeige,
+      // die man suchen muss, beantwortet keine Frage.
+      ctx.fillStyle = hexA(tone, 0.11);
+      ctx.beginPath(); ctx.arc(t.x, t.y, st.range, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = hexA(tone, 0.7); ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(t.x, t.y, st.range, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   private drawGhost(s: GameState): void {
     const at = s.pendingPoint ?? (s.buildChoice ? s.hoverPoint : null);
     if (!at || !s.buildChoice) return;
@@ -560,10 +632,59 @@ export class Renderer {
 
 
 
+  /** Wie nah der naechste Gegner dem Kristall schon ist - 0 bis 1.
+   *
+   *  Gemessen an der RESTSTRECKE, nicht am Luftabstand: ein Gegner kann
+   *  zwanzig Weltpunkte neben dem Kristall stehen und noch eine halbe Runde
+   *  vor sich haben. Die Strecke ist das, was zaehlt.
+   *
+   *  Die letzten 260 Weltpunkte sind der Warnbereich. Bei der langsamsten
+   *  Art (Leerentitan, 53 Punkte je Sekunde) sind das fuenf Sekunden, bei
+   *  der schnellsten (Spaeher, 206) eineinviertel - genug, um eine Faehigkeit
+   *  zu zuenden, und zu wenig, um noch einen Turm zu bauen. Genau das soll
+   *  die Warnung sagen: jetzt oder nie. */
+  private kristallNot(s: GameState): number {
+    const WARNSTRECKE = 260;
+    let naehe = 0;
+    for (const e of s.enemies) {
+      if (e.dead) continue;
+      const bahn = s.lanes[e.lane] ?? s.lanes[0];
+      const rest = bahn.length - e.travelled;
+      if (rest > WARNSTRECKE) continue;
+      naehe = Math.max(naehe, 1 - Math.max(0, rest) / WARNSTRECKE);
+    }
+    return naehe;
+  }
+
   private drawCrystal(s: GameState, hi: boolean): void {
     const ctx = this.ctx;
     const { x, y } = s.goal;
     const t = s.crystalPulse;
+
+    // --- Warnung: es kommt jemand durch.
+    //
+    // Sie liegt UNTER dem Bauwerk, nicht darueber. Eine Warnung, die den
+    // Kristall verdeckt, nimmt einem den Blick auf das, wovor sie warnt.
+    {
+      const not = this.kristallNot(s);
+      if (not > 0.01) {
+        const takt = 0.55 + 0.45 * Math.sin(s.time * (5 + not * 6));
+        const r = 150 + not * 120;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(1, 0.55);
+        const g = ctx.createRadialGradient(0, 0, r * 0.35, 0, 0, r);
+        g.addColorStop(0, hexA(C.danger, 0));
+        g.addColorStop(0.72, hexA(C.danger, 0.10 + 0.26 * not * takt));
+        g.addColorStop(1, hexA(C.danger, 0));
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = hexA(C.danger, 0.25 + 0.5 * not * takt);
+        ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(0, 0, r * 0.92, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      }
+    }
     const health = Math.max(0, s.lives) / Math.max(1, s.maxLives);
     // Das Bauwerk steht still.
     //

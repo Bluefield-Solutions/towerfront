@@ -1,6 +1,6 @@
 # Towerfront — Rückstandsverzeichnis
 
-Stand: v107 · 21.08.2026
+Stand: v108 · 21.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Towerfront-BENCHMARK.md` und läuft mit `npm run bericht` in jedem Lauf mit.
 
@@ -13,10 +13,7 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 
 | # | Punkt | Nutzen | Aufw. |
 |---|---|---|---|
-| B11 | Turm per Ziehen auf eine andere Zelle versetzen (gegen Fehlplatzierung) | ●● | M |
 | B15 | Zweite, kürzere Einführung beim ersten Besuch einer neuen Karte | ●● | S |
-| B13 | Reichweiten aller Türme gleichzeitig einblenden (Halten auf leerer Fläche) | ●● | S |
-| B14 | Warnmarkierung am Kristall, wenn ein Gegner die letzten Meter erreicht | ●● | S |
 
 ## Offen — Phase C (Tiefe)
 
@@ -78,6 +75,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
 | S73 | **T15 gelöst.** Verluste jetzt auf drei Wellen verteilt, 45 % in der letzten (Ziel 60 %) | Der zweite Anlauf gelang, weil ich diesmal **den ganzen Raum gemessen habe statt nacheinander zu justieren**: ein Eichskript setzt eine Kurve und berichtet alle Kennzahlen auf einmal. Vier Werte durchprobiert, den passenden gewählt, dann in fester Reihenfolge Türme, Sterne, Karten. |
+| S92 | **B11: die Geste musste sich vom Schwenken abgrenzen, und die Balance vom Werkzeug.** Ziehen auf der Leinwand verschiebt die Kamera — ein Turm-Ziehen wäre sonst ein Glücksspiel gewesen | Zwei Schranken: gezogen wird nur der **ausgewählte** Turm (der Prüfsteg steht offen, man meint ihn), und nur **zwischen den Wellen**. Während einer Welle wäre Versetzen keine Korrektur mehr, sondern eine neue Mechanik — man schöbe den Turm dorthin, wo es brennt, und jeder Turm hätte faktisch die Reichweite des halben Feldes. Kostenlos, weil Verkaufen und Neubauen als kostenpflichtiger Weg schon existiert. `canPlace` musste einen `ausser`-Parameter bekommen: ein Turm, der ein Stück zur Seite rutscht, blockierte sich sonst selbst. |
+| S93 | **B13 und B14 haben kein Tor — und das ist hier die ehrliche Lage.** Beide sind rein sichtbar: Reichweitenringe beim Halten, ein Warnring am Kristall | Der erste Entwurf der Ringe war mit 0,07 Füllung und 0,42 Linie **praktisch unsichtbar** — angesehen, nicht gemessen. Eine Anzeige, die man suchen muss, beantwortet keine Frage. Auf 0,11 und 0,7 angehoben. Beim Prüfbild ist mir zweimal der Aufbau misslungen (Kristall ausserhalb des Ausschnitts, Türme räumten die Welle ab, bevor jemand ankam) — **auch ein Prüfbild braucht einen Aufbau, der die Sache zeigt.** |
 | S89 | **B6 umgesetzt — und der Fehler saß nicht im Modell, sondern in der Anzeige.** Der Rauchtest mass, dass die Türme anders zielen; die Knöpfe zeigten trotzdem den alten Stand. `sync` schreibt nur bei geänderter Signatur ins DOM, und die Signatur zählte `id:level:branch` auf — die Zielwahl fehlte | **Zweiter Fall derselben Art nach dem Startknopf in v105: eine Ableitung schützt nur, was sie aufzählt.** Gefunden hat es wieder das Browsertor; jsdom kann es nicht, weil dort kein Durchlauf durch die echte Schleife stattfindet. Neu im Tor: nach dem Antippen eines Zielknopfes muss genau dieser aktiv sein. |
 | S90 | **Die vier neuen Knöpfe schoben „Verkaufen" aus dem Prüfsteg.** Inhalt 284 Punkte hoch bei 238 sichtbaren, Überlauf `hidden` | Gegen das FENSTER gemessen sah alles gut aus — der Knopf endete bei 318 von 390. Abgeschnitten hat ihn sein **Behälter**, nicht der Bildschirm. Zwei Zeilen wurden eine (Kurzformen „Vorn/Stark/Nah/Schwach"), und das Browsertor prüft jetzt auf Beschnitt durch den Vorfahren statt nur auf Lage im Fenster. **Eine neue Einstellung darf keine alte Handlung verdrängen.** |
 | S91 | **D22 geschlossen: Figurendichte in Anzeigegröße, Soll als Verhältnis.** Am Quellbild misst der Bogenturm 8,46, in Anzeigegröße 13,55 | Das Band 3 bis 6 stammt aus einem Zielbild, dessen Auflösung nirgends steht — als Absolutgrenze unbrauchbar. Das Verhältnis überlebt das, weil beide Zahlen aus DEMSELBEN Bild stammen und sich die Unbekannte herauskürzt: Zielbild 2,1-fach, wir **9,7**-fach. Regel 2 in einer neuen Kleidung. |

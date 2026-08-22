@@ -1,7 +1,7 @@
 # Auslieferung nach GitHub Pages.
 #
 # Der wichtigste Satz steht in Zeile "Torkette": gebaut und veroeffentlicht
-# wird nur, wenn alle fuenfzehn Pruefungen gruen sind. Ein rotes Tor darf nie
+# wird nur, wenn alle sechzehn Pruefungen gruen sind. Ein rotes Tor darf nie
 # live gehen - sonst waere die ganze Kette Zierrat.
 #
 # (Hier stand "elf", waehrend die Kette schon vierzehn Schritte hatte. Der

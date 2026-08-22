@@ -45,7 +45,7 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 ## Befehle
 
 ```
-npm run gate        fünfzehn Prüfungen, ~60 s. Muss vor jedem Commit grün sein.
+npm run gate        sechzehn Prüfungen, ~70 s. Muss vor jedem Commit grün sein.
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
 npm run bilder      alle 13 Aufnahmen (echte PNG ohne Browser)
 npm run bildtor     der Querschnitt, den die Torkette prüft
@@ -55,11 +55,13 @@ npm run doku        prüft die Dokumente gegen die Wirklichkeit
 npm run beruehrung  prüft, ob alles mit dem Daumen zu treffen ist
 npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen
 npm run kritik      Wertung nach Testerkategorien, Ziel über 90
+npm run kartenwechsel  was ein Kartenaufbau an Bildpunkten kostet
+                    (mit `-- --browser` zusätzlich im Browser mit Telefondrossel)
 ```
 
 Die Torkette: `tsc` → `guards` → `doku` → `art` → `determinism` → `sim` → `bench` →
-`bench-draw` → `lesbarkeit` → `beruehrung` → `bildtor` → `smoke` → `build` → `autarkie` →
-`browser` → `bericht`.
+`bench-draw` → `kartenwechsel` → `lesbarkeit` → `beruehrung` → `bildtor` → `smoke` →
+`build` → `autarkie` → `browser` → `bericht`.
 
 `npm run browser` lädt die **gebaute** Datei in Chromium (iPhone quer) und ist
 damit das einzige Tor, das die Kaskade wirklich rechnet. Einzeln aufgerufen
@@ -141,7 +143,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v111. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v112. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 29 von 30,
@@ -167,6 +169,12 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   anzuzeigen — auf dem iPhone quer endet sie mitten in einer Zeile. Technisch
   richtig, sichtbar wie ein Fehler. Gefunden durch Hinsehen, von keinem Tor
   gemeldet: das Browsertor prüft Beschnitt nur an Knöpfen, nicht an Text.
+- D25 (technisch): Der Kartenaufbau liegt mit 660–1320 ms (vierfache
+  Drossel) weit über der Norm von 50 ms. In v112 gemessen und halbiert, aber
+  nicht gelöst. Die Vorbilder bauen eine Stufe **hinter einem Ladeschritt**
+  auf, nie in einem laufenden Bild — das ist der eigentliche Weg, und er ist
+  eine Architekturänderung, keine Optimierung. `npm run kartenwechsel` hält
+  den Stand fest und meldet den Abstand bei jedem Lauf.
 
 **Erledigt und hier zu lange falsch stehen geblieben** (nachgemessen in v103):
 - B15 und C7 sind umgesetzt (v109). Beim ersten Betreten einer Karte

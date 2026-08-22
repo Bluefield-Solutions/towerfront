@@ -461,6 +461,25 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    // Der Kern von D23: ein zusaetzlicher Punktdurchlauf ueber das ganze Feld
+    // kostet auf dem Telefon eine Viertelsekunde eingefrorenes Bild - und war
+    // bis v111 von keinem Tor zu sehen.
+    name: 'Ein zweiter Punktdurchlauf im Kartenbacken',
+    datei: 'src/gfx/terrain.ts',
+    regel: /  g\.putImageData\(bild, 0, 0\);/,
+    ersatz: '  g.putImageData(bild, 0, 0); g.putImageData(g.getImageData(0, 0, WORLD_W, WORLD_H), 0, 0);',
+    tor: 'kartenwechsel',
+  },
+  {
+    // Und die Gegenrichtung: der Zaehler selbst darf nicht blind werden.
+    // Ein Haken, der nichts mehr sieht, sieht aus wie ein bestandenes Tor.
+    name: 'Der Bildpunktzaehler haengt nicht mehr ein',
+    datei: 'tools/kartenwechsel.mjs',
+    regel: /      g\.__gezaehlt = true;/,
+    ersatz: '      g.__gezaehlt = true; return g;',
+    tor: 'kartenwechsel',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

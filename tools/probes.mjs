@@ -600,7 +600,7 @@ const PROBEN = [
     // damals kein Tor war.
     name: 'Der Boden verliert seine Feinstruktur',
     datei: 'src/gfx/terrain.ts',
-    regel: /const KORN_STAERKE = 4\.5;/,
+    regel: /const KORN_STAERKE = 4\.0;/,
     ersatz: 'const KORN_STAERKE = 0;',
     tor: 'grafiktor',
   },
@@ -608,7 +608,7 @@ const PROBEN = [
     // Und die Gegenrichtung: zu viel Korn ist Rauschen.
     name: 'Der Boden rauscht',
     datei: 'src/gfx/terrain.ts',
-    regel: /const KORN_STAERKE = 4\.5;/,
+    regel: /const KORN_STAERKE = 4\.0;/,
     ersatz: 'const KORN_STAERKE = 9;',
     tor: 'grafiktor',
   },

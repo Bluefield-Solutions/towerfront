@@ -13,6 +13,8 @@ const START_GOLD = NORMAL.startGold;
 const START_LIVES = NORMAL.startLives;
 import { MAPS, goalOf, lanePaths } from '../src/data/maps';
 import { GameState } from '../src/game/state';
+import { projektilform } from '../src/gfx/renderer';
+import type { Tower } from '../src/game/types';
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, DRAW_SCALE, TURM_HOEHE, rangeFor, statsFor } from '../src/data/towers';
 import { ENEMIES, type EnemyId } from '../src/data/enemies';
 import { enemyArtWidth } from '../src/gfx/enemyart';
@@ -671,6 +673,51 @@ for (const [id, e] of Object.entries(ENEMIES)) {
     fail('Die Sternvergabe ist nicht monoton: makellos, knapp und verloren muessen sich unterscheiden.');
   }
   console.log(`  Fortschritt: ${totalCost} Sterne fuer alle Verbesserungen, ${maxStars} erreichbar`);
+}
+
+// --- Zwei Zweige duerfen nicht gleich aussehen (D17).
+//
+// R3 verlangt, dass der Ausbau sich verzweigt und die Wahl eine Wahl ist. Bis
+// v115 schoss jeder Zweig denselben Punkt, nur in anderer Farbe - wer die
+// Farben nicht auswendig kann, sah acht Endausbauten gleich schiessen. Die
+// Vorbilder machen es anders: bei Kingdom Rush und Bloons nennt die
+// SILHOUETTE die Waffe.
+//
+// Geprueft wird die Sache, nicht die Zeichnung: bekommen zwei Zweige
+// desselben Turms verschiedene Formen? Eine Zeichnung laesst sich hier nicht
+// pruefen, eine Zuordnung schon.
+{
+  const formenJeTurm = new Map<string, Set<string>>();
+  for (const id of TOWER_ORDER) {
+    const def = TOWERS[id];
+    // Nur Tuerme, die ueberhaupt etwas fliegen lassen. Frostturm (Umkreis)
+    // und Prisma (Blitz) haben kein Geschoss - dort waere die Frage sinnlos.
+    if (def.attack === 'aura' || def.attack === 'chain') continue;
+    const menge = new Set<string>();
+    for (let zweig = 0; zweig < def.branches.length; zweig++) {
+      const form = projektilform({
+        owner: { def: id, branch: zweig } as unknown as Tower,
+        splash: def.attack === 'splash' ? 1 : 0,
+      });
+      menge.add(form);
+    }
+    formenJeTurm.set(id, menge);
+    if (menge.size < def.branches.length) {
+      fail(`Turm ${id}: beide Zweige schiessen dieselbe Form (${[...menge].join(', ')}) - `
+        + 'die Wahl ist dann nur an der Farbe zu erkennen.');
+    }
+  }
+  // Und ueber die Tuerme hinweg: keine Form doppelt vergeben.
+  const alle = [...formenJeTurm.values()].flatMap((m) => [...m]);
+  if (new Set(alle).size !== alle.length) {
+    fail(`Zwei verschiedene Zweige schiessen dieselbe Form: ${alle.join(', ')}`);
+  }
+  // Regel 3 an der Pruefung selbst: hat sie ueberhaupt etwas gesehen?
+  if (alle.length < 4) {
+    fail(`Die Geschossformen-Pruefung hat nur ${alle.length} Formen gefunden - `
+      + 'das Muster passt nicht mehr, und die Pruefung lief ins Leere.');
+  }
+  console.log(`  Geschossformen: ${alle.join(', ')}`);
 }
 
 // ------------------------------------------------------------ Faehigkeiten

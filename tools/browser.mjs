@@ -418,6 +418,17 @@ if (start) {
       }
     }
 
+    // --- 10. Die Messtafel darf im Spiel NICHT auftauchen (D27).
+    //
+    // Sie hat dieselbe Eigenschaft wie die Spielbedienung im Menue: sie
+    // gehoert nur an eine Stelle, und wer sie sonst sieht, sieht einen
+    // Fehler. Regel 6 in neuer Kleidung - deshalb wird hier beides geprueft,
+    // nicht nur das Auftauchen mit Raute.
+    const tafelImSpiel = await seite.evaluate(() => !!document.getElementById('messtafel'));
+    if (tafelImSpiel) {
+      fail('Die Messtafel steht im Spiel, obwohl "#messung" nicht in der Adresse steht.');
+    }
+
     // --- 9. Zeigt die Wellenvorschau Bilder statt Namen? (D20)
     //
     // Auf dem Telefon war die Zeile zu lang: drei Gegnerarten mit Namen
@@ -516,6 +527,36 @@ const streuung = await seite.evaluate(() => {
 });
 if (streuung < 6) {
   fail(`Das Bild ist praktisch einfarbig (Streuung ${streuung}).`);
+}
+
+// --- Und einmal MIT Raute: die Messung muss laufen und etwas melden.
+//
+// Ein Messgeraet, das nur da ist, misst nichts. Geprueft wird deshalb, dass
+// die Tafel das Zeichenwerk nennt und eine Bilddauer ausweist - denn genau
+// diese beiden Zeilen sind der Grund, warum es das Geraet gibt (D27).
+{
+  const ctx2 = await browser.newContext({
+    viewport: { width: BREIT, height: HOCH }, deviceScaleFactor: 2,
+  });
+  const s2 = await ctx2.newPage();
+  await s2.goto(`file://${DATEI}#messung`);
+  await s2.waitForTimeout(2500);
+  const tafel = await s2.evaluate(() => {
+    const t = document.getElementById('messtafel');
+    return t ? (t.textContent || '').replace(/\s+/g, ' ') : null;
+  });
+  if (!tafel) {
+    fail('Mit "#messung" erscheint keine Messtafel - das Messgeraet fuer D27 fehlt.');
+  } else {
+    if (!/Bilddauer Mitte\s*[\d.]+ ms/.test(tafel)) {
+      fail(`Die Messtafel nennt keine Bilddauer: "${tafel.slice(0, 120)}"`);
+    }
+    if (!/Bilder gemessen\s*[1-9]/.test(tafel)) {
+      fail('Die Messtafel hat kein einziges Bild gemessen.');
+    }
+    console.log(`\nMesstafel (#messung): ${tafel.slice(0, 150)}`);
+  }
+  await ctx2.close();
 }
 
 await browser.close();

@@ -29,6 +29,38 @@ import { drawAurora, drawGroundFog, getMoodLayer } from './atmosphere';
  *  folgt - sonst kaeme bei einem knappen Budget nie etwas voran. */
 const TERRAIN_BUDGET_MS = 6;
 
+/** Die vier Geschossformen (D17).
+ *
+ *  `laenge > 0` heisst laenglich und wird als Strich in Flugrichtung
+ *  gezeichnet; sonst rund. Die Masse sind fuer die Anzeigegroesse gewaehlt,
+ *  nicht fuer die Weltgroesse: bei kleinstem Massstab wird ein Weltpunkt zu
+ *  rund 0,8 Bildschirmpunkten, ein Pfeil von 13 misst also gut zehn - lang
+ *  genug, dass die Richtung ablesbar ist (Regel 12). */
+export const PROJEKTILFORMEN = [
+  { id: 'pfeil', laenge: 13, breite: 2.6, radius: 0, doppelt: 0 },
+  // Die Salve schiesst ZWEI kurze Bolzen nebeneinander. Der erste Entwurf gab
+  // ihr nur einen kuerzeren, dickeren Strich - herangezoomt unterscheidbar,
+  // im Spiel nicht. Zwei nebeneinander sind es sofort, und sie sagen
+  // ausserdem, was der Zweig heisst.
+  { id: 'bolzen', laenge: 8, breite: 2.4, radius: 0, doppelt: 3 },
+  { id: 'granate', laenge: 0, breite: 0, radius: 6, doppelt: 0 },
+  { id: 'brocken', laenge: 0, breite: 0, radius: 8.5, doppelt: 0 },
+] as const;
+
+type Projektilform = (typeof PROJEKTILFORMEN)[number]['id'];
+
+/** Welche Form gehoert zu diesem Geschoss?
+ *
+ *  Abgeleitet aus dem Turm und seinem Zweig, nicht am Geschoss gespeichert.
+ *  Damit aendert sich weder der Speicherplan noch der Spielstand - und ein
+ *  Turm, der den Zweig wechselt, schiesst sofort richtig. */
+export function projektilform(p: { owner: Tower | null; splash: number }): Projektilform {
+  if (!p.owner) return p.splash ? 'granate' : 'pfeil';
+  const def = TOWERS[p.owner.def];
+  if (def.attack === 'splash') return p.owner.branch === 1 ? 'brocken' : 'granate';
+  return p.owner.branch === 1 ? 'bolzen' : 'pfeil';
+}
+
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
   private terrain: HTMLCanvasElement | null = null;
@@ -1571,11 +1603,65 @@ export class Renderer {
       }
     }
 
-    for (let i = 0; i < list.length; i++) {
-      const p = list[i];
-      const py = p.kind === 'ballistic' ? p.y - Math.sin(p.t * Math.PI) * 46 : p.y;
-      ctx.fillStyle = p.color;
-      ctx.beginPath(); ctx.arc(p.x, py, p.splash ? 7 : 4.5, 0, Math.PI * 2); ctx.fill();
+    // --- Die Form nennt die Waffe, nicht die Farbe (D17).
+    //
+    // Bis v115 war jedes Geschoss derselbe Punkt; wer die acht Endausbauten
+    // auseinanderhalten wollte, musste die Farbe kennen. Kingdom Rush, Bloons
+    // und Defense Grid machen es alle drei anders: Pfeil, Granate und Strahl
+    // sind eigene Silhouetten, und im Flug liest man daran ab, welcher Turm
+    // gerade schiesst. Genau das ist bei zwei Zweigen je Turm die Frage.
+    //
+    // Gezeichnet wird NACH FORM GRUPPIERT, ein Pfad je Form statt eines je
+    // Geschoss. Damit haengt die Zahl der Zeichenbefehle nicht mehr an der
+    // Zahl der Geschosse - und genau dort haette sie sonst gestanden, denn
+    // `bench-draw` zaehlt Befehle, nicht Bilder.
+    for (const art of PROJEKTILFORMEN) {
+      let offen = false;
+      for (let i = 0; i < list.length; i++) {
+        const p = list[i];
+        if (projektilform(p) !== art.id) continue;
+        if (!offen) {
+          ctx.beginPath();
+          offen = true;
+        }
+        const py = p.kind === 'ballistic' ? p.y - Math.sin(p.t * Math.PI) * 46 : p.y;
+        if (art.laenge > 0) {
+          // Laenglich, und zwar in Flugrichtung. Ein Pfeil, der quer steht,
+          // ist kein Pfeil.
+          const zx = p.target && !p.target.dead ? p.target.x : p.tx;
+          const zy = p.target && !p.target.dead ? p.target.y : p.ty;
+          let dx = zx - p.x, dy = zy - py;
+          const len = Math.hypot(dx, dy);
+          if (len < 0.001) { dx = 1; dy = 0; } else { dx /= len; dy /= len; }
+          const hx = p.x + dx * art.laenge * 0.35, hy = py + dy * art.laenge * 0.35;
+          const rx = p.x - dx * art.laenge, ry = py - dy * art.laenge;
+          if (art.doppelt) {
+            // Quer zur Flugrichtung versetzt - zwei Bolzen nebeneinander.
+            const qx = -dy * art.doppelt, qy = dx * art.doppelt;
+            ctx.moveTo(rx + qx, ry + qy); ctx.lineTo(hx + qx, hy + qy);
+            ctx.moveTo(rx - qx, ry - qy); ctx.lineTo(hx - qx, hy - qy);
+          } else {
+            ctx.moveTo(rx, ry); ctx.lineTo(hx, hy);
+          }
+        } else {
+          ctx.moveTo(p.x + art.radius, py);
+          ctx.arc(p.x, py, art.radius, 0, Math.PI * 2);
+        }
+      }
+      if (!offen) continue;
+      // Die Farbe kommt weiter vom Zweig - sie faellt nicht weg, sie ist nur
+      // nicht mehr das Einzige. Genommen wird die des ersten Geschosses
+      // dieser Form; innerhalb einer Form ist sie ohnehin gleich.
+      const erstes = list.find((p) => projektilform(p) === art.id);
+      if (art.laenge > 0) {
+        ctx.strokeStyle = erstes ? erstes.color : '#fff';
+        ctx.lineWidth = art.breite;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = erstes ? erstes.color : '#fff';
+        ctx.fill();
+      }
     }
   }
 

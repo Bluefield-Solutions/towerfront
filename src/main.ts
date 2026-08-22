@@ -11,6 +11,7 @@ import { GameState } from './game/state';
 import { saveGame } from './game/save';
 import { Renderer } from './gfx/renderer';
 import { UI } from './ui/ui';
+import { messungGewuenscht, messungStarten } from './core/messung';
 
 const canvas = document.getElementById('view') as HTMLCanvasElement;
 const state = new GameState();
@@ -208,3 +209,13 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('pagehide', saveNow);
 
 loop.start();
+
+// --- Die Messung auf dem Zielgeraet (D27).
+//
+// Nur mit `#messung` in der Adresse. Ohne die Raute passiert nichts: kein
+// Knopf, keine Anzeige, kein Rechenaufwand. Dieselbe Ueberlegung wie Regel 6 -
+// was nicht hingehoert, darf nicht versehentlich auftauchen koennen.
+//
+// Sie laeuft NEBEN dem Spiel her und misst, was das Spiel ohnehin tut. Ein
+// eigener Pruefablauf wuerde sich selbst messen.
+if (messungGewuenscht()) messungStarten();

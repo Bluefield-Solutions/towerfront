@@ -553,6 +553,30 @@ const PROBEN = [
     tor: 'bench-draw',
   },
   {
+    // D17: zwei Zweige duerfen nicht gleich aussehen.
+    name: 'Beide Bogenzweige schiessen dieselbe Form',
+    datei: 'src/gfx/renderer.ts',
+    regel: /  return p\.owner\.branch === 1 \? 'bolzen' : 'pfeil';/,
+    ersatz: "  return 'pfeil';",
+    tor: 'guards',
+  },
+  {
+    // D27: das Messgeraet darf im Spiel nicht auftauchen - Regel 6 sinngemaess.
+    name: 'Messtafel steht auch ohne Raute im Spiel',
+    datei: 'src/main.ts',
+    regel: /if \(messungGewuenscht\(\)\) messungStarten\(\);/,
+    ersatz: 'messungStarten();',
+    tor: 'browsertor',
+  },
+  {
+    // Und die Gegenrichtung: ein Messgeraet, das nichts misst, ist keines.
+    name: 'Messtafel misst nichts',
+    datei: 'src/core/messung.ts',
+    regel: /    abstaende\.push\(jetzt - vorher\);/,
+    ersatz: '    void jetzt;',
+    tor: 'browsertor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

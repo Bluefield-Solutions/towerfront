@@ -537,6 +537,58 @@ takes.push(['r4-bollwerk', () => shot('r4-bollwerk', 844, 390, (s) => {
   return 26;   // 0,43 s bei 0,8 s Lebensdauer: der Ring ist gross und noch da
 })]);
 
+takes.push(['d17-geschosse', () => shot('d17-geschosse', 844, 390, (s) => {
+  // Alle vier Geschossformen zugleich in der Luft: beide Bogenzweige und
+  // beide Moerserzweige. Sonst zeigt das Bild eine Form und beweist nichts.
+  const aufbauen = (st) => {
+    st.gold = 1000000;
+    let i = 0;
+    for (const sp of candidateSpots(st)) {
+      if (i >= 8) break;
+      const art = i % 2 === 0 ? 'arrow' : 'mortar';
+      if (!st.build(sp.x, sp.y, art)) continue;
+      const t = st.towerUnder(sp.x, sp.y, 1);
+      if (!t) continue;
+      // Auf Stufe 2 heben und den Zweig setzen - erst dort trennen sich die
+      // Formen. Gerade und ungerade Zaehler bekommen verschiedene Zweige.
+      const zweig = (i >> 1) % 2;
+      st.upgrade(t, zweig);
+      st.upgrade(t, zweig);
+      i++;
+    }
+  };
+  s.reset(3, 'normal', 'spiralhain');
+  aufbauen(s);
+  s.waveIndex = 9;
+  s.startWave();
+  // Den Augenblick suchen, in dem am meisten fliegt - statt eine Zeit zu
+  // raten. Beim ersten Versuch war genau EIN Geschoss in der Luft, weil die
+  // Gegner die Tuerme noch nicht erreicht hatten (S93: auch ein Pruefbild
+  // braucht einen Aufbau, der die Sache zeigt).
+  let bestF = 0, bestN = -1;
+  const zaehlen = () => {
+    const formen = new Set();
+    for (const p of s.projectiles) {
+      if (p.dead || !p.owner) continue;
+      formen.add(`${p.owner.def}|${p.owner.branch}`);
+    }
+    // Vielfalt zaehlt mehr als Menge: vier Formen sind der Beleg.
+    return formen.size * 100 + s.projectiles.length;
+  };
+  for (let f = 0; f < 60 * 30; f++) {
+    s.update(DT);
+    const n = zaehlen();
+    if (n > bestN) { bestN = n; bestF = f; }
+  }
+  s.reset(3, 'normal', 'spiralhain');
+  aufbauen(s);
+  s.waveIndex = 9;
+  s.startWave();
+  for (let f = 0; f < bestF; f++) s.update(DT);
+  console.log(`  (d17: ${Math.floor(bestN / 100)} Formen, ${bestN % 100} Geschosse bei Bild ${bestF})`);
+  return 0;
+})]);
+
 takes.push(['welle15', () => shot('welle15', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 12);

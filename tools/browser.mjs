@@ -554,8 +554,13 @@ if (streuung < 6) {
     // Die tragbare Zahl MUSS dastehen: auf dem Zielgeraet meldet Safari keine
     // langen Aufgaben, und dann bliebe sonst genau die Zeile leer, um die es
     // bei der 50-ms-Norm geht.
-    if (!/Längste Bildlücke\s*\d+ ms/.test(tafel)) {
-      fail('Die Messtafel nennt keine längste Bildlücke - auf Safari bliebe sie damit stumm.');
+    // GROESSER als null. Der erste Entwurf liess `\d+` zu - und "0 ms" ist
+    // eine Ziffer, also blieb das Tor gruen, als die Gegenprobe das Mitzaehlen
+    // ausbaute. Eine Bildluecke ist nie null: zwischen zwei Bildern liegen
+    // immer mindestens rund sechzehn Millisekunden.
+    if (!/Längste Bildlücke\s*[1-9]\d* ms/.test(tafel)) {
+      fail('Die Messtafel nennt keine längste Bildlücke über null - auf Safari bliebe '
+        + 'sie damit stumm, und genau dort wird gemessen.');
     }
     console.log(`\nMesstafel (#messung): ${tafel.slice(0, 150)}`);
   }

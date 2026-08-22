@@ -41,6 +41,17 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
  *  Kurvenwert — veralten bei jeder Balance-Runde. Zweimal hat das Verzeichnis
  *  deshalb "Muster fehlt" gemeldet, ohne dass an den Toren etwas falsch war.
  *  Eine Regel wie `hpEnd: [0-9.]+, hpCurve: 2\.4` überlebt das. */
+/** Ein gueltiges, aber leeres Symbol: 180 x 180, einfarbig dunkel.
+ *  Von Hand als PNG gebaut, damit die Probe keine Bibliothek braucht - und
+ *  weil genau diese Datei der Fehler aus S136 ist. */
+const LEERES_SYMBOL = await (async () => {
+  const sharp = (await import('sharp')).default;
+  const b = await sharp({
+    create: { width: 180, height: 180, channels: 3, background: '#080B18' },
+  }).png().toBuffer();
+  return b.toString('base64');
+})();
+
 const PROBEN = [
   {
     name: 'Weg knickt scharf ab',
@@ -685,17 +696,6 @@ const PROBEN = [
 ];
 
 // ------------------------------------------------------------------- Schutz
-/** Ein gueltiges, aber leeres Symbol: 180 x 180, einfarbig dunkel.
- *  Von Hand als PNG gebaut, damit die Probe keine Bibliothek braucht - und
- *  weil genau diese Datei der Fehler aus S136 ist. */
-const LEERES_SYMBOL = await (async () => {
-  const sharp = (await import('sharp')).default;
-  const b = await sharp({
-    create: { width: 180, height: 180, channels: 3, background: '#080B18' },
-  }).png().toBuffer();
-  return b.toString('base64');
-})();
-
 const dreckig = execSync('git status --porcelain', { cwd: ROOT, encoding: 'utf8' }).trim();
 if (dreckig) {
   console.error('PROBEN: der Baum ist nicht sauber.\n');

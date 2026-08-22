@@ -595,6 +595,24 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    // B1: der Boden muss Feinstruktur tragen. Ohne Korn lagen zwei von drei
+    // Karten UNTER dem Band - und niemand hat es gemerkt, weil `grafik`
+    // damals kein Tor war.
+    name: 'Der Boden verliert seine Feinstruktur',
+    datei: 'src/gfx/terrain.ts',
+    regel: /const KORN_STAERKE = 4\.5;/,
+    ersatz: 'const KORN_STAERKE = 0;',
+    tor: 'grafiktor',
+  },
+  {
+    // Und die Gegenrichtung: zu viel Korn ist Rauschen.
+    name: 'Der Boden rauscht',
+    datei: 'src/gfx/terrain.ts',
+    regel: /const KORN_STAERKE = 4\.5;/,
+    ersatz: 'const KORN_STAERKE = 9;',
+    tor: 'grafiktor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

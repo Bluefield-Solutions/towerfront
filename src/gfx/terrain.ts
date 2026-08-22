@@ -219,7 +219,7 @@ export function terrainAuftrag(
         }
         const hoehe = Math.min(BAND_HOEHE, WORLD_H - zeile);
         const band = g.getImageData(0, zeile, WORLD_W, hoehe);
-        tonwertAnwenden(band.data, kurven);
+        tonwertAnwenden(band.data, kurven, zeile, WORLD_W);
         g.putImageData(band, 0, zeile);
         zeile += hoehe;
         // Mindestens ein Band je Aufruf, sonst kaeme bei einem Budget von
@@ -414,16 +414,73 @@ const PROBE_B = 480, PROBE_H = 270;
  *
  *  `d` ist ein Uint8ClampedArray: die Zuweisung begrenzt und rundet selbst,
  *  ein Math.max/Math.min davor waere doppelte Arbeit. */
-function tonwertAnwenden(d: Uint8ClampedArray, k: TonwertKurven): void {
+function tonwertAnwenden(
+  d: Uint8ClampedArray, k: TonwertKurven, zeile0: number, breite: number,
+): void {
   const { TA, TWr, TWg, TWb, C: c } = k;
-  for (let i = 0; i < d.length; i += 4) {
+  for (let i = 0, p = 0; i < d.length; i += 4, p++) {
     const r = d[i], gr = d[i + 1], b = d[i + 2];
     const L = c + TWr[r] + TWg[gr] + TWb[b];
-    d[i] = L + TA[r];
-    d[i + 1] = L + TA[gr];
-    d[i + 2] = L + TA[b];
+    // Feinkorn auf dem Boden - siehe KORN_STAERKE.
+    //
+    // An der WELTPOSITION festgemacht, nicht am Zaehler im Band: sonst
+    // faenden der gestueckelte und der sofortige Weg verschiedene Werte, und
+    // die beiden muessen bitgleich bleiben.
+    const x = p % breite, y = zeile0 + ((p / breite) | 0);
+    const n = KORN[((x * 73856093) ^ (y * 19349663)) & 255];
+    d[i] = L + TA[r] + n;
+    d[i + 1] = L + TA[gr] + n;
+    d[i + 2] = L + TA[b] + n;
   }
 }
+
+/** Wieviel Feinkorn der Boden bekommt, in Helligkeitsstufen.
+ *
+ *  Warum ueberhaupt: Befund B1 sagt, die Figuren tragen 9,7-mal so viel
+ *  Feindetail wie der Untergrund; im Zielbild sind es 2,1. Ich habe zwei
+ *  Runden lang nur den ZAEHLER angegriffen - Entrauschen, Median,
+ *  Weichzeichnen - und `npm run entrauschprobe` hat jedesmal belegt, dass
+ *  dabei die Form verlorengeht. Ein Verhaeltnis hat aber zwei Terme.
+ *
+ *  Der Nenner lag bei 1,52 - am UNTERSTEN Rand seines eigenen Bandes, das
+ *  bis 3,0 reicht. Das Band stammt aus dem Zielbild (Regel 10), es ist also
+ *  nicht meine Erfindung, dass dort mehr Korn hingehoert.
+ *
+ *  Deterministisch aus der Position, nie zufaellig: der gebackene Untergrund
+ *  muss bitgleich reproduzierbar bleiben.
+ *
+ *  Die Staerke ist durchprobiert, nicht geschaetzt (Regel 9):
+ *
+ *      Korn   Bodendichte   Verhaeltnis Figur:Boden
+ *       0,0      1,52            9,7      (2 von 3 Karten UNTER dem Band)
+ *       2,0      1,86            7,9
+ *       3,2      2,20            6,7
+ *       4,5      2,62            5,6      gewaehlt
+ *       6,0      3,13            4,7      ueber dem Band
+ *
+ *  4,5 ist die Obergrenze, die die Referenz selbst zieht - darueber verlaesst
+ *  der Boden sein eigenes Band. Die Helligkeit bleibt in jedem Schritt bei
+ *  0,30, das Korn verschiebt also nur die Feinstruktur.
+ *
+ *  Und die ehrliche Einschraenkung: das schliesst die MESSLUECKE, nicht
+ *  zwingend den Befund. Bei tatsaechlicher Anzeigegroesse ist das Korn nicht
+ *  als Korn zu sehen. Ob B1 damit wahrnehmbar besser wird, sagt keine Zahl -
+ *  die Entrauschprobe hat genau in dieser Frage schon einmal gezeigt, dass
+ *  Kennzahl und Auge auseinanderlaufen. Was bleibt, sind 5,6 gegen erlaubte
+ *  3,0, und dafuer braucht es Figurenbilder. */
+const KORN_STAERKE = 4.5;
+
+/** 256 vorgerechnete Kornwerte. Eine Tabelle statt einer Rechnung je Punkt -
+ *  derselbe Grund wie bei den Tonwertkurven. */
+const KORN = (() => {
+  const t = new Float32Array(256);
+  let z = 2463534242;
+  for (let i = 0; i < 256; i++) {
+    z ^= z << 13; z >>>= 0; z ^= z >> 17; z ^= z << 5; z >>>= 0;
+    t[i] = ((z / 4294967296) * 2 - 1) * KORN_STAERKE;
+  }
+  return t;
+})();
 
 /** Der Kartenrand.
  *

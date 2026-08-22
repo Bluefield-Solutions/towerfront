@@ -553,3 +553,30 @@ console.log(`  Rauschen: Figuren ${mittel(figuren, (f) => f.rauschen).toFixed(2)
 console.log(`\n─── ${befunde.length} Befund(e) ───\n`);
 for (const b of befunde) console.log(`  • ${b}\n`);
 if (!befunde.length) console.log('  Keine. Alle Prinzipien erfüllt.\n');
+
+// --- Als Tor: nur das, was wir halten koennen.
+//
+// Mit `--tor` bricht dieser Lauf ab, wenn der UNTERGRUND sein Band verlaesst.
+// Nur der Untergrund, und das ist Absicht: die Figurendichte liegt mit 14,7
+// weit ueber ihrem Band, dort ist der Befund B1 offen und braucht neue
+// Bilder. Ein Tor, das an einem bekannten offenen Punkt dauerrot steht, wird
+// abgeschaltet - und dann haelt es auch das nicht mehr, was es halten
+// koennte.
+//
+// Der Untergrund dagegen ist seit v118 im Band und laesst sich halten. Bis
+// dahin lagen zwei von drei Karten DARUNTER, ohne dass es jemandem auffiel:
+// `npm run grafik` war kein Tor, und Ausgaben ohne Tor liest man beim
+// dritten Mal nicht mehr.
+if (process.argv.includes('--tor')) {
+  const bodenDichte = mittel(bgWerte, (f) => f.dichte);
+  const band = REFERENZ.grund.dichte;
+  if (bodenDichte < band[0] || bodenDichte > band[1]) {
+    console.error(`\nGRAFIKTOR: die Untergrunddichte liegt bei ${bodenDichte.toFixed(2)}, `
+      + `das Band geht von ${band[0]} bis ${band[1]}.`);
+    console.error('  Zu wenig heisst: der Boden ist eine Flaeche, und die Figuren stechen');
+    console.error('  noch staerker heraus (Befund B1). Zu viel heisst: er rauscht.');
+    process.exit(1);
+  }
+  console.log(`GRAFIKTOR: Untergrunddichte ${bodenDichte.toFixed(2)} im Band `
+    + `${band[0]} bis ${band[1]}.`);
+}

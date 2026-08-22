@@ -45,7 +45,7 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 ## Befehle
 
 ```
-npm run gate        sechzehn Prüfungen, ~70 s. Muss vor jedem Commit grün sein.
+npm run gate        siebzehn Prüfungen, ~90 s. Muss vor jedem Commit grün sein.
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
 npm run bilder      alle 13 Aufnahmen (echte PNG ohne Browser)
 npm run bildtor     der Querschnitt, den die Torkette prüft
@@ -62,7 +62,7 @@ npm run kartenwechsel  was ein Kartenaufbau an Bildpunkten kostet
 ```
 
 Die Torkette: `tsc` → `guards` → `doku` → `art` → `determinism` → `sim` → `bench` →
-`bench-draw` → `kartenwechsel` → `lesbarkeit` → `beruehrung` → `bildtor` → `smoke` →
+`bench-draw` → `kartenwechsel` → `grafiktor` → `lesbarkeit` → `beruehrung` → `bildtor` → `smoke` →
 `build` → `autarkie` → `browser` → `bericht`.
 
 `npm run browser` lädt die **gebaute** Datei in Chromium (iPhone quer) und ist
@@ -155,7 +155,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v117. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v118. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 29 von 30,

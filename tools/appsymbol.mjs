@@ -54,7 +54,7 @@ import { fileURLToPath } from 'node:url';
 import { createCanvas } from '@napi-rs/canvas';
 import sharp from 'sharp';
 import {
-  F, mit, kristallZeichnen, scheinBacken, bogenZeichnen, formPruefen,
+  F, mit, kristallZeichnen, turmZeichnen, scheinBacken, bogenZeichnen, formPruefen,
 } from './marke.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -95,7 +95,7 @@ async function symbolBauen() {
     g.beginPath(); g.arc(x, y, (0.5 + zufall() * 1.2) * UEBER, 0, Math.PI * 2); g.fill();
   }
 
-  bogenZeichnen(g, G / 2, G * 1.30, G * 0.56, 5.5 * UEBER);
+  bogenZeichnen(g, G / 2, G * 1.42, G * 0.62, 5.0 * UEBER);
 
   // Eine Vignette. Sie kostet nichts und sammelt den Blick in der Mitte - bei
   // 60 Punkten ist das der Unterschied zwischen einer Kachel und einem Zeichen.
@@ -107,9 +107,16 @@ async function symbolBauen() {
     g.fillRect(0, 0, G, G);
   }
 
-  const CX = G / 2, CY = G * 0.455, BREIT = G * 0.45, HOCH = G * 0.68;
-  const schein = await scheinBacken(G, G, CX, CY, BREIT, HOCH, 14 * UEBER / 4);
-  const kristall = kristallZeichnen(G, G, CX, CY, BREIT, HOCH, 1.5 * UEBER);
+  // Der Turm unten, der Kristall darueber - er schwebt ueber den Zinnen und
+  // ist das, was der Turm haelt.
+  const CX = G / 2;
+  const TURM_Y = G * 0.605, TURM_B = G * 0.66, TURM_H = G * 0.62;
+  const KRIS_Y = G * 0.255, KRIS_B = G * 0.27, KRIS_H = G * 0.32;
+
+  const schein = await scheinBacken(G, G, CX, KRIS_Y, KRIS_B * 1.5, KRIS_H * 1.5,
+    16 * UEBER / 4);
+  const turm = turmZeichnen(G, G, CX, TURM_Y, TURM_B, TURM_H);
+  const kristall = kristallZeichnen(G, G, CX, KRIS_Y, KRIS_B, KRIS_H, 1.4 * UEBER);
 
   // Erst schichten, DANN verkleinern - und zwar in zwei getrennten Laeufen.
   // `sharp` verkleinert naemlich VOR dem Zusammensetzen, ganz gleich in
@@ -120,8 +127,11 @@ async function symbolBauen() {
   const geschichtet = await sharp(cv.toBuffer('image/png'))
     .composite([
       // Zweimal derselbe Schein: einmal ist er zu zaghaft gegen das Dunkel.
+      // Der Schein liegt UNTER dem Turm: so leuchtet der Kristall auf die
+      // Zinnen und nicht durch sie hindurch.
       { input: schein, blend: 'over' },
       { input: schein, blend: 'over' },
+      { input: turm.toBuffer('image/png'), blend: 'over' },
       { input: kristall.toBuffer('image/png'), blend: 'over' },
     ])
     .png().toBuffer();
@@ -186,14 +196,27 @@ async function startbildBauen(w, h) {
   g.fillStyle = mit(F.kristall, 0.92);
   g.font = `700 ${Math.round(kurz * 0.058)}px sans-serif`;
   g.textAlign = 'center';
-  g.fillText('TOWERFRONT', CX, CY + HOCH * 0.5 + kurz * 0.135);
+  // Unter den Turmfuss, nicht hinein. Der erste Anlauf rechnete den Abstand
+  // vom Kristall aus - dann stand die Schrift mitten im Mauerwerk, seit der
+  // Turm dazugekommen ist. Jetzt haengt sie am Fuss des Turms, also an dem,
+  // was wirklich darueber steht.
+  const turmFuss = CY + HOCH * 0.30 + HOCH * 0.95 * 0.5;
+  g.fillText('TOWERFRONT', CX, turmFuss + kurz * 0.11);
 
+  // Dieselbe Marke wie auf dem Symbol - Turm mit Kristall darueber. Zwei
+  // verschiedene Zeichen fuer dieselbe App waeren eines zu viel: man tippt
+  // auf einen Turm und bekommt einen Edelstein zu sehen.
+  const turm = turmZeichnen(w, h, CX, CY + HOCH * 0.30, BREIT * 1.45, HOCH * 0.95, true);
   const kristall = kristallZeichnen(
-    w, h, CX, CY, BREIT, HOCH, Math.max(2, kurz * 0.004), true,
+    w, h, CX, CY - HOCH * 0.34, BREIT * 0.62, HOCH * 0.50,
+    Math.max(2, kurz * 0.004), true,
   );
 
   return sharp(cv.toBuffer('image/png'))
-    .composite([{ input: kristall.toBuffer('image/png'), blend: 'over' }])
+    .composite([
+      { input: turm.toBuffer('image/png'), blend: 'over' },
+      { input: kristall.toBuffer('image/png'), blend: 'over' },
+    ])
     // Acht Farben, kein Rauschen. Eine flach schattierte Figur braucht nicht
     // mehr, und das ist der Unterschied zwischen 6 und 26 KB je Bild.
     //

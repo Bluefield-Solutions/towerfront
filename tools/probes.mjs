@@ -698,6 +698,25 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
+    // Ohne Einrasten gilt der Tippunkt wieder woertlich - genau der Zustand,
+    // ueber den sich der Nutzer beschwert hat: "an manchen Stellen kann man
+    // gar nicht hinbauen, man muss ganz gross reinzoomen".
+    name: 'Der Tippunkt gilt wieder woertlich',
+    datei: 'src/game/state.ts',
+    regel: /    if \(radius <= 0\) return null;/,
+    ersatz: '    return null;',
+    tor: 'smoke',
+  },
+  {
+    // Ein Bauplatz ohne Begruendung: alles gilt als erlaubt, und die
+    // Turmwahl kann nicht mehr sagen, was nicht passt.
+    name: 'Bauverbote nennen keinen Grund mehr',
+    datei: 'src/game/state.ts',
+    regel: /      if \(lane\.distanceTo\(x, y\) < r \+ PATH_CLEARANCE \+ lane\.halfNear\(x, y\)\) return 'Weg';/,
+    ersatz: "      if (lane.distanceTo(x, y) < r + PATH_CLEARANCE + lane.halfNear(x, y)) return 'Rand';",
+    tor: 'smoke',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

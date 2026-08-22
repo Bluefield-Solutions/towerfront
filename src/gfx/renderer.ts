@@ -18,7 +18,8 @@ import { artBreite, getTowerArt, towerArtScale, towerArtVersion } from './towera
 import { getObjectArt, getObjectArtStufe } from './objectart';
 import { enemyArtWidth, enemySichtRadius, getEnemyArt } from './enemyart';
 import {
-  drawSprite, getEnemySprite, getShadow, getTowerBase, getTowerWeapon, ENEMY_FRAMES,
+  drawSprite, getEnemySprite, getShadow, getTowerBase, getTowerWeapon, roundRect,
+  ENEMY_FRAMES,
 } from './sprites';
 import { drawAurora, drawGroundFog, getMoodLayer } from './atmosphere';
 
@@ -413,7 +414,9 @@ export class Renderer {
     this.drawParticles(s);
     drawGroundFog(ctx, s.crystalPulse, hi, s.map.palette.haze);
     this.drawMeteors(s, hi);
+    this.drawBauplatz(s);
     this.drawGhost(s);
+    this.drawHinweis(s);
     this.drawVersetzen(s);
     this.drawAlleReichweiten(s);
     this.drawAim(s);
@@ -757,16 +760,87 @@ export class Renderer {
     ctx.restore();
   }
 
-  private drawGhost(s: GameState): void {
-    const at = s.pendingPoint ?? (s.buildChoice ? s.hoverPoint : null);
-    if (!at || !s.buildChoice) return;
+  /** Warum hier nichts gebaut werden konnte - ein Wort, dort wo der Finger
+   *  war, und nach einer Sekunde weg.
+   *
+   *  Bewusst auf der Leinwand und nicht in HTML: er gehoert an eine Stelle im
+   *  FELD, und die verschiebt sich beim Schwenken mit. Ein HTML-Kaestchen
+   *  muesste jedes Bild nachgerechnet werden - dieselbe Doppelung, die Regel
+   *  15 meint. */
+  private drawHinweis(s: GameState): void {
+    const h = s.hinweis;
+    if (!h) return;
+    const rest = h.bis - s.time;
+    if (rest <= 0) { s.hinweis = null; return; }
     const ctx = this.ctx;
-    const def = TOWERS[s.buildChoice];
+    // Die letzten 0,35 s ausblenden, damit er nicht abgeschnitten verschwindet.
+    const a = Math.min(1, rest / 0.35);
+    // Er steigt ein Stueck - so unterscheidet er sich von allem, was steht.
+    const y = h.y - 26 - (1 - Math.min(1, rest / 1.1)) * 14;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.font = '700 26px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const b = ctx.measureText(h.text).width + 34;
+    ctx.fillStyle = hexA(C.ink, 0.82);
+    roundRect(ctx, h.x - b / 2, y - 21, b, 42, 12);
+    ctx.fill();
+    ctx.strokeStyle = hexA(C.danger, 0.85);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = C.danger;
+    ctx.fillText(h.text, h.x, y);
+    ctx.restore();
+  }
+
+  /** Wo wird gebaut? Ein Ring an der gewaehlten Stelle.
+   *
+   *  Bis v124 gab es ihn nicht: man tippte, irgendwo erschien ein Menue, und
+   *  auf welchen Punkt es sich bezog, stand nirgends. Ein Menue ohne Anker
+   *  ist ein Menue ueber nichts.
+   *
+   *  Gezeigt wird der Platzbedarf des kleinsten Turms - er ist der, der ueber
+   *  "geht hier ueberhaupt etwas" entscheidet. */
+  private drawBauplatz(s: GameState): void {
+    if (!s.buildAt || s.vorschau || s.buildChoice) return;
+    const ctx = this.ctx;
+    const { x, y } = s.buildAt;
+    const r = Math.min(...TOWER_ORDER.map((id) => TOWERS[id].footprint)) / 2;
+    const puls = 0.75 + Math.sin(s.time * 4) * 0.25;
+    ctx.save();
+    ctx.fillStyle = hexA(C.crystal, 0.14);
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = hexA(C.crystal, 0.5 + puls * 0.4);
+    ctx.lineWidth = 3;
+    ctx.setLineDash([9, 7]);
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    // Ein Kreuz in der Mitte: der Ring allein sagt "hier herum", das Kreuz
+    // sagt "genau hier". Beim Einrasten ist das der Unterschied zwischen
+    // "der hat meinen Tipp verschoben" und "der hat ihn verstanden".
+    ctx.strokeStyle = hexA(C.crystal, 0.9);
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(x - 13, y); ctx.lineTo(x + 13, y);
+    ctx.moveTo(x, y - 13); ctx.lineTo(x, y + 13);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  private drawGhost(s: GameState): void {
+    // Die Vorfuehrung hat Vorrang: sie beantwortet gerade eine Frage.
+    const v = s.vorschau;
+    const at = v ? { x: v.x, y: v.y } : (s.pendingPoint ?? (s.buildChoice ? s.hoverPoint : null));
+    const wahl = v ? v.id : s.buildChoice;
+    if (!at || !wahl) return;
+    const ctx = this.ctx;
+    const def = TOWERS[wahl];
     // Ueber statsFor, damit die Vorschau dieselbe Reichweite zeigt wie der
     // gebaute Turm - die Rohdaten tragen keine mehr.
     const lvl = statsFor(def, null, 1);
     const x = snap(at.x), y = snap(at.y);
-    const ok = s.canPlace(s.buildChoice, x, y) && s.gold >= lvl.cost;
+    const ok = s.canPlace(wahl, x, y) && s.gold >= lvl.cost;
     const tone = ok ? def.accent : C.danger;
 
     ctx.save();

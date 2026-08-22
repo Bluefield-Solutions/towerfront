@@ -812,34 +812,84 @@ export class UI {
    */
   private syncPick(s: GameState): void {
     const at = s.buildAt;
-    if (!at || s.phase !== 'playing' || s.paused) { this.pick.hidden = true; return; }
+    if (!at || s.phase !== 'playing' || s.paused) {
+      this.pick.hidden = true;
+      // Kein Schalter, den man vergessen kann: ohne Wahl keine Vorfuehrung.
+      s.vorschau = null;
+      return;
+    }
     this.pick.hidden = false;
 
-    const schluessel = `${Math.round(at.x)}|${Math.round(at.y)}|${s.gold}`;
+    // Die Turmzahl gehoert in den Schluessel: baut jemand nebenan, aendert
+    // sich, was hier noch passt - und die Wahl muesste es zeigen. Ohne sie
+    // bliebe die Beschriftung von vorhin stehen.
+    const schluessel = `${Math.round(at.x)}|${Math.round(at.y)}|${s.gold}|${s.towers.length}`;
     if (schluessel !== this.pickKey) {
       this.pickKey = schluessel;
       this.pickRow.innerHTML = TOWER_ORDER.map((id) => {
         const def = TOWERS[id];
         const reicht = s.gold >= def.base.cost;
-        return `<button class="pick-btn" data-turm="${id}"${reicht ? '' : ' disabled'}>`
-          + `<span class="pick-name">${def.name}</span>`
-          + `<span class="pick-cost">${def.base.cost}</span></button>`;
+        // Zwei verschiedene Gruende, nicht einer. Bis v124 wurde nur
+        // ausgegraut, was man nicht BEZAHLEN konnte - nie das, was nicht
+        // PASST. Wer den Moerser waehlte, wo nur der Bogenturm hinpasst,
+        // druckte ins Leere: der Knopf sah benutzbar aus, der Bau kam nie
+        // zustande, und es stand nirgends warum.
+        //
+        // Der Platzbedarf ist die eigentliche Entscheidung beim freien Bauen
+        // (er unterscheidet die Tuerme staerker als der Preis). Dann muss er
+        // auch in der Wahl stehen.
+        const grund = s.warumNicht(id, at.x, at.y);
+        const sperre = !reicht || grund !== null;
+        const marke = grund !== null
+          ? `<span class="pick-nein">${grund}</span>`
+          : `<span class="pick-cost">${def.base.cost}</span>`;
+        return `<button class="pick-btn${grund !== null ? ' eng' : ''}" data-turm="${id}"`
+          + `${sperre ? ' disabled' : ''}`
+          + ` title="${grund !== null ? `Passt hier nicht: ${grund}` : def.name}">`
+          + `<span class="pick-name">${def.name}</span>${marke}</button>`;
       }).join('');
       for (const b of this.pickRow.querySelectorAll<HTMLButtonElement>('.pick-btn')) {
+        const id = b.dataset.turm as TowerId;
+        // Solange ein Finger auf dem Knopf liegt, steht der Turm im Feld:
+        // Platzbedarf, Reichweite, und welche Wegstuecke er ueberdeckt. Das
+        // ist die Antwort auf "welchen Turm kann ich hierhin bauen" - der
+        // Name und der Preis sind es nicht.
+        //
+        // Auch fuer gesperrte Knoepfe. Gerade dort: wer sehen will, WARUM der
+        // Moerser hier nicht hinpasst, sieht es an seinem Platzbedarf ueber
+        // dem Weg - ein Wort daneben erklaert es nicht halb so gut.
+        const zeigen = (): void => {
+          const ziel = s.buildAt;
+          if (ziel) s.vorschau = { id, x: ziel.x, y: ziel.y };
+        };
+        const weg = (): void => { s.vorschau = null; };
+        b.addEventListener('pointerdown', zeigen);
+        b.addEventListener('pointerenter', zeigen);
+        b.addEventListener('pointerleave', weg);
+        b.addEventListener('pointercancel', weg);
         b.addEventListener('click', () => {
           const ziel = s.buildAt;
+          s.vorschau = null;
           if (!ziel) return;
           s.buildAt = null;
           this.pickKey = '';
-          this.onPick?.(b.dataset.turm as TowerId, ziel.x, ziel.y);
+          this.onPick?.(id, ziel.x, ziel.y);
         });
       }
     }
 
     const p = this.worldToScreen?.(at.x, at.y);
     if (p) {
-      this.pick.style.left = `${p.x}px`;
-      this.pick.style.top = `${p.y - 18}px`;
+      // Am Rand kippen und einhalten. Eine Wahl, die halb aus dem Fenster
+      // ragt, ist genau am Rand unbrauchbar - und am Rand wird gebaut.
+      const b = this.pick.getBoundingClientRect();
+      const halb = (b.width || 260) / 2;
+      const hoehe = b.height || 70;
+      const unten = p.y - hoehe - 26 < 0;
+      this.pick.classList.toggle('unten', unten);
+      this.pick.style.left =
+        `${Math.min(Math.max(p.x, halb + 8), window.innerWidth - halb - 8)}px`;
+      this.pick.style.top = `${unten ? p.y + 26 : p.y - 26}px`;
     }
   }
 

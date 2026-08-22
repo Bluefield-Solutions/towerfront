@@ -1465,6 +1465,61 @@ step('Groessenwechsel', () => {
   renderer.draw(state);
 });
 
+// --- Einrasten und Begruendung.
+//
+// Beides ist neu in v125 und beides betrifft genau die Beschwerde, mit der
+// die Runde anfing: "an manchen Stellen kann man gar nicht hinbauen, man muss
+// ganz gross reinzoomen". Der Grund war, dass der Tippunkt WOERTLICH galt -
+// zwei Punkte zu nah am Weg, und es geschah gar nichts.
+//
+// Geprueft wird beides an einer Stelle, von der bekannt ist, dass dort nicht
+// gebaut werden darf: der Wegmitte. Regel 13 - erst nachweisen, dass die
+// Stelle wirklich gesperrt ist, sonst prueft der Test nichts.
+step('Einrasten', () => {
+  const probe = new GameState();
+  probe.reset();
+  const lane = probe.lanes[0];
+  const p = lane.at(lane.length * 0.5);
+
+  const grund = probe.warumNicht('arrow', p.x, p.y);
+  if (grund !== 'Weg') {
+    throw new Error(`Die Wegmitte gilt nicht als Weg, sondern als "${grund}" - `
+      + 'die Probe misst nicht, was sie messen soll.');
+  }
+  if (probe.canPlace('arrow', p.x, p.y)) {
+    throw new Error('Auf der Wegmitte darf gebaut werden - dann prueft das Einrasten nichts.');
+  }
+
+  // Ohne Radius bleibt es bei der Ablehnung: das Einrasten darf nicht
+  // heimlich immer etwas finden.
+  if (probe.einrasten('arrow', p.x, p.y, 0) !== null) {
+    throw new Error('Einrasten mit Radius 0 findet trotzdem einen Platz.');
+  }
+
+  // Mit Fingerbreite muss es einen finden - und der muss erlaubt sein.
+  const ziel = probe.einrasten('arrow', p.x, p.y, 220);
+  if (!ziel) throw new Error('Einrasten findet neben dem Weg keinen Platz.');
+  if (!probe.canPlace('arrow', ziel.x, ziel.y)) {
+    throw new Error('Einrasten liefert einen Platz, auf dem nicht gebaut werden darf.');
+  }
+  if (Math.hypot(ziel.x - p.x, ziel.y - p.y) > 220 + 1) {
+    throw new Error('Einrasten springt weiter als der Radius erlaubt.');
+  }
+
+  // Zweimal dasselbe Ergebnis - sonst waere es im Determinismus-Tor ein
+  // Wackelkandidat und im Spiel unheimlich.
+  const nochmal = probe.einrasten('arrow', p.x, p.y, 220);
+  if (!nochmal || nochmal.x !== ziel.x || nochmal.y !== ziel.y) {
+    throw new Error('Einrasten liefert bei gleicher Lage zwei verschiedene Plaetze.');
+  }
+
+  // Und die zweite Begruendung: neben einem Turm sperrt der Turm.
+  probe.build(ziel.x, ziel.y, 'arrow');
+  if (probe.warumNicht('arrow', ziel.x, ziel.y) !== 'Turm') {
+    throw new Error('Ein besetzter Platz nennt nicht "Turm" als Grund.');
+  }
+});
+
 if (problems.length) {
   console.error('RAUCHTEST: nicht bestanden');
   for (const p of problems) console.error('  - ' + p);

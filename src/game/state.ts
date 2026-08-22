@@ -101,6 +101,36 @@ export class GameState {
    *  Feld tippen - zwei Schritte, und die Leiste klappte dabei auf und zu.
    *  Jetzt tippt man zuerst auf den Platz; die Wahl erscheint dort. */
   buildAt: { x: number; y: number } | null = null;
+
+  /** Der Grund, warum an einer Stelle nichts gebaut werden konnte - kurz
+   *  eingeblendet, dort wo der Finger war.
+   *
+   *  Bis v124 geschah in diesem Fall GAR NICHTS: kein Bau, kein Hinweis,
+   *  keine Ablehnung. Ein Tipp, der spurlos verpufft, ist fuer den Spieler
+   *  nicht von einem verschluckten Tipp zu unterscheiden - und wer nicht
+   *  weiss, ob er danebengetippt hat oder ob es verboten ist, zoomt hinein
+   *  und probiert. Genau das war der Vorwurf.
+   *
+   *  Er lebt eine Sekunde und wird von der Zeit geloescht, nicht von einem
+   *  Schalter, den man vergessen kann. */
+  hinweis: { x: number; y: number; text: string; bis: number } | null = null;
+
+  /** Welcher Turm wird gerade an der gewaehlten Stelle VORGEFUEHRT?
+   *
+   *  Gesetzt, solange ein Finger auf einem Knopf der Turmwahl liegt. Damit
+   *  beantwortet die Wahl die Frage, die sie stellt: "welchen Turm kann ich
+   *  hierhin bauen" heisst nicht "wie heisst er und was kostet er", sondern
+   *  "wie viel Platz braucht er und wie weit reicht er - HIER".
+   *
+   *  Getrennt von `buildChoice`, weil das etwas anderes bedeutet: `buildChoice`
+   *  heisst "der naechste Tipp aufs Feld baut diesen Turm". Eine Vorfuehrung
+   *  darf nichts bauen. */
+  vorschau: { id: TowerId; x: number; y: number } | null = null;
+
+  /** Einen Grund einblenden. `null` heisst: es gibt keinen zu nennen. */
+  bauHinweis(x: number, y: number, text: string | null): void {
+    this.hinweis = text ? { x, y, text, bis: this.time + 1.1 } : null;
+  }
   selectedTower: Tower | null = null;
   /** Weltpunkt unter dem Zeiger. */
   hoverPoint: Vec | null = null;
@@ -211,22 +241,74 @@ export class GameState {
    *  das Versetzen: ein Turm, der ein Stueck zur Seite rutscht, ueberlappt
    *  sich sonst mit sich selbst und der Platz gilt als besetzt. */
   canPlace(id: TowerId, x: number, y: number, ausser: Tower | null = null): boolean {
+    return this.warumNicht(id, x, y, ausser) === null;
+  }
+
+  /** Warum nicht? Dasselbe Urteil wie `canPlace`, nur mit Begruendung.
+   *
+   *  Es gibt genau EINE Stelle, an der die Bauregeln stehen - `canPlace` ist
+   *  nur noch die Frage "gibt es einen Grund?". Zwei Fassungen derselben
+   *  Regel waeren eine zu viel: gepflegt wuerde die eine, geurteilt haette
+   *  die andere (Regel 15).
+   *
+   *  Der Text ist EIN Wort, weil er im Spiel neben dem Daumen steht. */
+  warumNicht(
+    id: TowerId, x: number, y: number, ausser: Tower | null = null,
+  ): 'Rand' | 'Weg' | 'Gelände' | 'Turm' | null {
     const r = TOWERS[id].footprint / 2;
-    if (x - r < 0 || y - r < 0 || x + r > WORLD_W || y + r > WORLD_H) return false;
+    if (x - r < 0 || y - r < 0 || x + r > WORLD_W || y + r > WORLD_H) return 'Rand';
     // Abstand zur Wegmitte minus der oertlichen halben Breite: an einer
     // Engstelle darf naeher gebaut werden als an einer breiten Stelle, und
     // genau das macht Engstellen wertvoll.
     for (const lane of this.lanes) {
-      if (lane.distanceTo(x, y) < r + PATH_CLEARANCE + lane.halfNear(x, y)) return false;
+      if (lane.distanceTo(x, y) < r + PATH_CLEARANCE + lane.halfNear(x, y)) return 'Weg';
     }
     for (const g of this.map.rough) {
-      if (Math.hypot(g.x - x, g.y - y) < g.r + r) return false;
+      if (Math.hypot(g.x - x, g.y - y) < g.r + r) return 'Gelände';
     }
     for (const t of this.towers) {
       if (t === ausser) continue;
-      if (Math.hypot(t.x - x, t.y - y) < r + TOWERS[t.def].footprint / 2 + 4) return false;
+      if (Math.hypot(t.x - x, t.y - y) < r + TOWERS[t.def].footprint / 2 + 4) return 'Turm';
     }
-    return true;
+    return null;
+  }
+
+  /** Den naechsten Punkt suchen, an dem dieser Turm stehen darf.
+   *
+   *  Warum es das braucht: ein Daumen ist kein Zeiger. Bei kleiner
+   *  Vergroesserung deckt er hundert Weltpunkte ab, und bis v124 wurde der
+   *  Tipppunkt WOERTLICH genommen - lag er zwei Punkte zu nah am Weg, geschah
+   *  gar nichts. Kein Hinweis, keine Ablehnung, nichts. Wer bauen wollte,
+   *  musste hineinzoomen, bis der Finger genauer war als die Regel.
+   *
+   *  Der Suchradius kommt deshalb NICHT aus einer festen Zahl, sondern aus
+   *  der Ungenauigkeit des Fingers selbst: er wird in Bildschirmpunkten
+   *  hereingereicht und hier in Weltpunkte umgerechnet. Weit herausgezoomt
+   *  rastet es grosszuegig ein, herangezoomt kaum - beides Mal genau so weit,
+   *  wie der Finger daneben liegen kann.
+   *
+   *  Ringweise nach aussen und mit fester Winkelfolge, damit zwei gleiche
+   *  Laeufe denselben Platz finden. Ein Einrasten, das wuerfelt, waere im
+   *  Determinismus-Tor sofort auffaellig - und im Spiel unheimlich.
+   *
+   *  Das Einrasten sitzt in der BEDIENUNG, nicht im Modell: `build` bekommt
+   *  weiterhin einen fertigen Punkt. Sonst haenge die Balance daran, wie
+   *  genau jemand tippt (Regel 4). */
+  einrasten(
+    id: TowerId, x: number, y: number, radius: number,
+  ): { x: number; y: number } | null {
+    if (this.canPlace(id, x, y)) return { x, y };
+    if (radius <= 0) return null;
+    const RINGE = 6, WINKEL = 16;
+    for (let i = 1; i <= RINGE; i++) {
+      const r = (radius * i) / RINGE;
+      for (let w = 0; w < WINKEL; w++) {
+        const a = (w / WINKEL) * Math.PI * 2;
+        const px = x + Math.cos(a) * r, py = y + Math.sin(a) * r;
+        if (this.canPlace(id, px, py)) return { x: px, y: py };
+      }
+    }
+    return null;
   }
 
   /** Werden gerade alle Reichweiten gezeigt? Gesetzt vom Halten auf leerer

@@ -4,6 +4,18 @@ import { TOWERS, TOWER_ORDER } from '../data/towers';
  *  Was dort nicht steht, steht nirgends. */
 const guenstigster = () =>
   TOWER_ORDER.reduce((a, b) => (TOWERS[a].base.cost <= TOWERS[b].base.cost ? a : b));
+
+/** Wie weit ein Daumen danebenliegen darf, in Weltpunkten.
+ *
+ *  22 Bildschirmpunkte ist der halbe Daumen aus derselben Rechnung, aus der
+ *  `npm run beruehrung` seine 44 nimmt - nur hier nach innen gewandt: dort
+ *  ist es die Groesse, die ein Knopf haben muss, hier die Ungenauigkeit, die
+ *  ein Tipp haben darf.
+ *
+ *  Geteilt durch den Massstab, weil ein Bildschirmpunkt weit herausgezoomt
+ *  viele Weltpunkte bedeutet und herangezoomt wenige. Eine feste Weltzahl
+ *  waere bei einer Vergroesserung zu grob und bei der anderen zu fein. */
+const fingerInWelt = (massstab: number): number => 22 / Math.max(massstab, 0.05);
 import { ABILITIES, ABILITY_ORDER } from '../data/abilities';
 import { Sfx } from './audio';
 import type { GameState } from '../game/state';
@@ -241,18 +253,25 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
     if (s.buildChoice) {
       if (existing) { s.selectedTower = existing; s.buildChoice = null; Sfx.play('tap'); return; }
       const choice = s.buildChoice;
-      if (s.build(c.x, c.y, choice)) {
+      const ziel = s.einrasten(choice, c.x, c.y, fingerInWelt(r.scale));
+      if (ziel && s.build(ziel.x, ziel.y, choice)) {
         // Reicht das Gold nicht mehr fuer den naechsten Turm, Auswahl loesen.
         if (s.gold < TOWERS[choice].base.cost) s.buildChoice = null;
+      } else {
+        s.bauHinweis(c.x, c.y, s.warumNicht(choice, c.x, c.y));
       }
       return;
     }
     if (existing) { s.selectedTower = existing; s.buildAt = null; Sfx.play('tap'); return; }
     s.selectedTower = null;
 
-    // Freier Platz: die Turmwahl oeffnet sich dort, wo getippt wurde.
-    s.buildAt = s.canPlace(guenstigster(), c.x, c.y) ? { x: c.x, y: c.y } : null;
+    // Freier Platz: die Turmwahl oeffnet sich dort, wo getippt wurde - oder,
+    // wenn es dort nicht geht, an der naechsten Stelle, an der wenigstens der
+    // kleinste Turm steht. Wer mit dem Daumen irgendwohin faellt, will sehen,
+    // was dort hin kann, und nicht raten, warum nichts passiert ist.
+    s.buildAt = s.einrasten(guenstigster(), c.x, c.y, fingerInWelt(r.scale));
     if (s.buildAt) Sfx.play('tap');
+    else s.bauHinweis(c.x, c.y, s.warumNicht(guenstigster(), c.x, c.y));
   };
 
   canvas.addEventListener('pointerup', finish);

@@ -195,3 +195,123 @@ export async function formPruefen(png, name, unten, oben) {
   }
   return anteil;
 }
+
+/** Der Turm — die Marke, seit v125.
+ *
+ *  Warum ein Turm und nicht nur der Kristall: das Genre heisst Tower Defense,
+ *  und ein Symbol soll in der Reihe der anderen Apps sagen, WAS das hier ist.
+ *  Ein Edelstein sagt "Puzzle" oder "Kleinod". Eine Zinne mit einem
+ *  leuchtenden Kern darueber sagt: hier wird etwas verteidigt.
+ *
+ *  Der Kristall bleibt - aber als das, was der Turm SCHUETZT, nicht als
+ *  Hauptfigur. Damit tragen Symbol, Startbild und Spiel dieselbe Geschichte.
+ *
+ *  Gebaut aus wenigen Flaechen mit hartem Umriss, aus demselben Grund wie
+ *  vorher: bei 60 Punkten zaehlt die Silhouette, nicht das Detail. Zwei
+ *  Wangen, damit der Turm rund wirkt; die helle Seite steht dort, wo `LICHT`
+ *  sie verlangt.
+ *
+ *  `flach` schaltet die Verlaeufe ab - siehe `kristallZeichnen`, dieselbe
+ *  Preisfrage. */
+export function turmZeichnen(w, h, cx, cy, B, H, flach = false) {
+  const lw = createCanvas(w, h);
+  const g = lw.getContext('2d');
+  const X = (t) => cx + t * B;
+  const Y = (t) => cy + t * H;
+  const V = HELL_LINKS ? -1 : 1;      // Richtung zur Schattenseite
+
+  const zug = (p) => {
+    g.beginPath();
+    g.moveTo(p[0][0], p[0][1]);
+    for (let i = 1; i < p.length; i++) g.lineTo(p[i][0], p[i][1]);
+    g.closePath();
+  };
+  const flaeche = (p, oben, unten) => {
+    zug(p);
+    if (flach) {
+      g.fillStyle = oben;
+    } else {
+      // Bis Y(0.72) statt Y(0.5): so laeuft der Verlauf ueber das Bild
+      // hinaus und die Lichtseite bleibt im sichtbaren Teil hell. Endete er
+      // am Fuss, war der ganze Schaft dunkel und die beiden Wangen wieder
+      // ununterscheidbar - der Fehler, den die vier Toene gerade beheben.
+      const v = g.createLinearGradient(0, Y(-0.42), 0, Y(0.72));
+      v.addColorStop(0, oben);
+      v.addColorStop(1, unten);
+      g.fillStyle = v;
+    }
+    g.fill();
+  };
+
+  // Vier Toene, nicht drei. Der erste Entwurf setzte die beiden Wangen auf
+  // benachbarte Toene - der Turm sah flach aus, weil "hell" und "dunkel" fast
+  // dasselbe waren. Eine Rundung entsteht aus dem ABSTAND zwischen den
+  // Flaechen, nicht daraus, dass es zwei sind.
+  const ZINNE = '#C6CEE0';            // Zinnen und Kragen fangen das Licht
+  const STEIN_HELL = '#AEB8CE';       // beleuchtete Wange
+  const STEIN_TIEF = '#495171';       // Schattenwange
+  const FUSS = '#3E4661';             // unten laeuft beides ins Dunkle
+  const hell = HELL_LINKS ? STEIN_HELL : STEIN_TIEF;
+  const dunkel = HELL_LINKS ? STEIN_TIEF : STEIN_HELL;
+
+  // --- Der Schaft, leicht nach oben verjuengt. Zwei Wangen an einer
+  // senkrechten Kante, die zur Schattenseite versetzt ist: dadurch wirkt er
+  // rund, ohne dass ein Verlauf noetig waere.
+  const kante = X(V * 0.07);
+  const oL = X(-0.30), oR = X(0.30), uL = X(-0.40), uR = X(0.40);
+  const oy = Y(-0.20), uy = Y(0.46);
+  flaeche([[oL, oy], [kante, oy], [kante, uy], [uL, uy]], hell, FUSS);
+  flaeche([[kante, oy], [oR, oy], [uR, uy], [kante, uy]], dunkel, FUSS);
+
+  // --- Der Kragen unter den Zinnen: er springt vor und gibt dem Turm eine
+  // Schulter. Ohne ihn ist es ein Kegel mit Zacken.
+  const kL = X(-0.46), kR = X(0.46);
+  flaeche([[kL, Y(-0.30)], [kR, Y(-0.30)], [X(0.38), Y(-0.19)], [X(-0.38), Y(-0.19)]],
+    ZINNE, STEIN_HELL);
+
+  // --- Die Zinnen. Drei Zacken mit breiten Luecken: bei 60 Punkten ist jeder
+  // Zacken fuenf Punkte breit, und mehr davon verschmieren zu einem Balken.
+  const zH = Y(-0.44), zU = Y(-0.30);
+  for (const [a, b] of [[-0.46, -0.20], [-0.09, 0.09], [0.20, 0.46]]) {
+    flaeche([[X(a), zH], [X(b), zH], [X(b), zU], [X(a), zU]], ZINNE, STEIN_HELL);
+  }
+
+  // --- Zwei Steinfugen quer ueber den Schaft. Ohne sie ist er eine graue
+  // Platte; mit ihnen ist er gemauert. Sie enden an der Wangenkante, damit
+  // sie die Rundung nicht durchschneiden, und sie sind duenn genug, um bei
+  // 40 Punkten zu verschwinden statt zu verschmieren.
+  g.save();
+  g.strokeStyle = 'rgba(8,11,24,0.30)';
+  g.lineWidth = Math.max(1, B * 0.010);
+  for (const t of [0.02, 0.24]) {
+    const br = 0.30 + (0.40 - 0.30) * ((t + 0.20) / 0.66);
+    g.beginPath();
+    g.moveTo(X(-br), Y(t));
+    g.lineTo(X(br), Y(t));
+    g.stroke();
+  }
+  g.restore();
+
+  // --- Die Schiessscharte: ein dunkler Schlitz. Sie ist das einzige Detail,
+  // und sie traegt viel - ohne sie ist der Schaft eine leere Flaeche.
+  g.fillStyle = 'rgba(8,11,24,0.72)';
+  const sB = B * 0.075, sO = Y(-0.10), sU = Y(0.14);
+  g.beginPath();
+  g.moveTo(cx - sB, sO + sB);
+  g.quadraticCurveTo(cx, sO - sB * 0.6, cx + sB, sO + sB);
+  g.lineTo(cx + sB, sU);
+  g.lineTo(cx - sB, sU);
+  g.closePath();
+  g.fill();
+
+  // --- Der Umriss. Ein duenner heller Saum haelt die Form gegen das Dunkel
+  // zusammen, sobald verkleinert wird - dieselbe Ueberlegung wie beim
+  // Kristall.
+  g.strokeStyle = mit('#FFFFFF', 0.30);
+  g.lineWidth = Math.max(1.2, B * 0.012);
+  zug([[uL, uy], [oL, oy], [X(-0.38), Y(-0.19)], [kL, Y(-0.30)], [kL, zH],
+    [kR, zH], [kR, Y(-0.30)], [X(0.38), Y(-0.19)], [oR, oy], [uR, uy]]);
+  g.stroke();
+
+  return lw;
+}

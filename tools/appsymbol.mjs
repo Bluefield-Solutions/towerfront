@@ -1,29 +1,33 @@
 #!/usr/bin/env node
 /**
- * App-Symbol — das Bild, das auf dem Startbildschirm steht.
+ * App-Symbol und Startbild — was iOS zeigt, bevor das Spiel da ist.
  *
- * Warum als Werkzeug und nicht von Hand: das Symbol traegt die Farbwelt des
+ * Zwei Bilder aus einer Zeichnung: das Symbol auf dem Startbildschirm
+ * (180 x 180) und das Startbild, das waehrend des Ladens steht. Der Kristall
+ * selbst liegt in `tools/marke.mjs`, damit er nicht zweimal dasteht.
+ *
+ * Warum als Werkzeug und nicht von Hand: die Bilder tragen die Farbwelt des
  * Spiels, und die steht in `src/data/config.ts`. Ein von Hand eingefuegter
  * Zeichenblock waere nach der naechsten Farbaenderung still falsch - dieselbe
  * Familie, die in diesem Verzeichnis schon eine veraltete Zahl vier Runden
  * lang weitergetragen hat.
  *
- * Warum als Datenadresse im Kopf der Seite und nicht als eigene Datei:
+ * Warum als Datenadressen im Kopf der Seite und nicht als eigene Dateien:
  * Regel 0 dieses Projekts ist die EINE autarke HTML-Datei. Eine
  * `apple-touch-icon.png` daneben waere eine zweite, und wer die Datei
  * weitergibt, gaebe ein Symbol weniger weiter. Das Autarkie-Tor beanstandet
  * nur absolute Adressen, `data:` ist ihm recht.
  *
  * Warum statisch im Kopf und nicht zur Laufzeit eingehaengt: Safari liest den
- * Kopf, wenn jemand "Zum Home-Bildschirm" antippt. Ein nachtraeglich per
- * JavaScript eingesetzter Verweis wuerde vermutlich auch gelesen - aber
- * "vermutlich" ist auf einem Geraet, das ich nicht habe, kein Grund.
+ * Kopf, wenn jemand "Zum Home-Bildschirm" antippt, und das Startbild sucht es
+ * VOR dem ersten Bild. Ein nachtraeglich per JavaScript eingesetzter Verweis
+ * kaeme fuer beides zu spaet.
  *
  * ---
  *
  * Warum GEZEICHNET und nicht das Festungsbild aus dem Vorrat:
  *
- * Bis v122 stand hier die Kristallfestung aus `src/gfx/assets/` - ein
+ * Bis v122 stand als Symbol die Kristallfestung aus `src/gfx/assets/` - ein
  * feingezeichnetes Gebaeude, auf 180 Punkte geschrumpft. Auf dem
  * Startbildschirm ist ein Symbol aber rund 60 Punkte gross, und dort war
  * davon nur noch ein blauer Fleck uebrig: kein Umriss, keine Silhouette,
@@ -31,14 +35,16 @@
  * ueber 200 Weltpunkte richtig ist, ist als Symbol falsch - **eine Zahl
  * traegt ihre Messstelle mit, ein Bild seine Anzeigegroesse** (Regel 12).
  *
- * Deshalb eine Form statt einer Szene: ein Kristall aus wenigen Flaechen,
- * gross, mit hartem Umriss. Gezeichnet und nicht skaliert - dann ist die
- * Kante bei jeder Groesse scharf. Die Farben kommen aus `C`, damit Symbol,
- * Statusleiste und Spiel zusammengehoeren.
+ * ---
  *
- * Gerechnet wird vierfach und dann verkleinert. Direkt bei 180 gezeichnet
- * werden die schraegen Facettenkanten treppig; das Verkleinern aus 720
- * glaettet sie so, wie es kein Kantenausgleich beim Zeichnen tut.
+ * Warum das Startbild FLACH ist und keinen Verlauf hat:
+ *
+ * Gemessen, nicht entschieden. Mit senkrechtem Verlauf kostet ein Startbild
+ * 12 KB, flach 3,5 KB - ueber zehn Geraetegroessen also 120 KB gegen 35 KB.
+ * Ein Verlauf ueber 2500 Zeilen laesst sich nicht in eine Farbtafel packen,
+ * eine Flaeche schon. Den Unterschied zahlt jeder Ladevorgang, auch am
+ * Schreibtisch, wo es gar kein Startbild gibt. Das Symbol behaelt seinen
+ * Verlauf: es ist 180 Punkte gross, dort kostet er nichts.
  *
  * Aufruf: npm run appsymbol
  */
@@ -47,246 +53,197 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas } from '@napi-rs/canvas';
 import sharp from 'sharp';
+import {
+  F, mit, kristallZeichnen, scheinBacken, bogenZeichnen, formPruefen,
+} from './marke.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+// ============================================================== Das Symbol
 
 /** 180 Punkte ist das, was iOS fuer neuere Geraete anfordert. Kleiner wird
  *  von iOS hochgerechnet und sieht weich aus. */
 const KANTE = 180;
 
-/** Vierfach zeichnen, dann verkleinern - siehe Kopf. */
+/** Vierfach zeichnen, dann verkleinern. Direkt bei 180 gezeichnet werden die
+ *  schraegen Facettenkanten treppig; das Verkleinern aus 720 glaettet sie so,
+ *  wie es kein Kantenausgleich beim Zeichnen tut. */
 const UEBER = 4;
-const G = KANTE * UEBER;
 
-// --- Die Farbwelt aus der Konfiguration LESEN, nicht abschreiben.
-const KONF = readFileSync(join(ROOT, 'src/data/config.ts'), 'utf8');
-const farbe = (name) => {
-  const t = new RegExp(`${name}: '(#[0-9a-fA-F]{6})'`).exec(KONF);
-  if (!t) {
-    console.error(`APPSYMBOL: Farbe "${name}" steht nicht in src/data/config.ts.`);
-    process.exit(1);
-  }
-  return t[1];
-};
-const VOID_TIEF = farbe('voidDeep');
-const VOID_MITTE = farbe('voidMid');
-const KRISTALL = farbe('crystal');
-const KRISTALL_TIEF = farbe('crystalDeep');
-const PFAD = farbe('path');
+async function symbolBauen() {
+  const G = KANTE * UEBER;
+  const cv = createCanvas(G, G);
+  const g = cv.getContext('2d');
 
-/** Woher faellt das Licht? Steht als einzige Stelle in `config.ts`, und
- *  `LICHT` ist die SCHATTEN-Richtung: faellt der Schatten nach rechts, kommt
- *  das Licht von links. Abgeleitet statt entschieden - sonst leuchtet das
- *  Symbol eines Tages von der anderen Seite als jede Figur im Spiel, und es
- *  faellt niemandem auf. */
-const LICHT_X = (() => {
-  const t = /LICHT = \{ x: (-?[0-9.]+),/.exec(KONF);
-  if (!t) {
-    console.error('APPSYMBOL: LICHT steht nicht in src/data/config.ts.');
-    process.exit(1);
-  }
-  return Number(t[1]);
-})();
-/** Die beleuchtete Wange: bei Schatten nach rechts ist es die linke. */
-const HELL_LINKS = LICHT_X > 0;
-
-const mit = (hex, a) => {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-};
-
-// --------------------------------------------------------------- Der Grund
-const cv = createCanvas(G, G);
-const g = cv.getContext('2d');
-
-const grund = g.createLinearGradient(0, 0, 0, G);
-grund.addColorStop(0, VOID_MITTE);
-grund.addColorStop(1, VOID_TIEF);
-g.fillStyle = grund;
-g.fillRect(0, 0, G, G);
-
-// Ein paar Sterne, wie auf der Landkarte. Feste Folge, damit zwei Laeufe
-// dasselbe Symbol ergeben - ein Symbol, das bei jedem Bau anders aussieht,
-// waere im Verzeichnis ein staendiger Unterschied ohne Aussage.
-let saat = 20250822;
-const zufall = () => {
-  saat = (saat * 1103515245 + 12345) & 0x7fffffff;
-  return saat / 0x7fffffff;
-};
-for (let i = 0; i < 40; i++) {
-  const x = zufall() * G, y = zufall() * G * 0.8;
-  const r = (0.5 + zufall() * 1.2) * UEBER;
-  g.fillStyle = mit('#FFFFFF', 0.08 + zufall() * 0.22);
-  g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
-}
-
-// Die Front: ein knochenfarbener Bogen im unteren Drittel. Er gibt dem
-// Kristall einen Boden - ohne ihn schwebt er - und bringt die zweite Farbe
-// des Spiels ins Bild, ohne Detail hinzuzufuegen.
-g.save();
-g.strokeStyle = mit(PFAD, 0.78);
-g.lineWidth = 5.5 * UEBER;
-g.lineCap = 'round';
-g.beginPath();
-g.arc(G / 2, G * 1.30, G * 0.56, Math.PI * 1.22, Math.PI * 1.78);
-g.stroke();
-g.strokeStyle = mit(PFAD, 0.20);
-g.lineWidth = 15 * UEBER;
-g.stroke();
-g.restore();
-
-// Eine Vignette. Sie kostet nichts und sammelt den Blick in der Mitte -
-// bei 60 Punkten ist das der Unterschied zwischen einer Kachel und einem Zeichen.
-{
-  const v = g.createRadialGradient(G / 2, G * 0.46, G * 0.18, G / 2, G * 0.5, G * 0.78);
-  v.addColorStop(0, 'rgba(0,0,0,0)');
-  v.addColorStop(1, 'rgba(0,0,0,0.55)');
-  g.fillStyle = v;
+  const grund = g.createLinearGradient(0, 0, 0, G);
+  grund.addColorStop(0, F.voidMitte);
+  grund.addColorStop(1, F.voidTief);
+  g.fillStyle = grund;
   g.fillRect(0, 0, G, G);
+
+  // Ein paar Sterne, wie auf der Landkarte. Feste Folge, damit zwei Laeufe
+  // dasselbe Symbol ergeben - ein Symbol, das bei jedem Bau anders aussieht,
+  // waere im Verzeichnis ein staendiger Unterschied ohne Aussage.
+  let saat = 20250822;
+  const zufall = () => {
+    saat = (saat * 1103515245 + 12345) & 0x7fffffff;
+    return saat / 0x7fffffff;
+  };
+  for (let i = 0; i < 40; i++) {
+    const x = zufall() * G, y = zufall() * G * 0.8;
+    g.fillStyle = mit('#FFFFFF', 0.08 + zufall() * 0.22);
+    g.beginPath(); g.arc(x, y, (0.5 + zufall() * 1.2) * UEBER, 0, Math.PI * 2); g.fill();
+  }
+
+  bogenZeichnen(g, G / 2, G * 1.30, G * 0.56, 5.5 * UEBER);
+
+  // Eine Vignette. Sie kostet nichts und sammelt den Blick in der Mitte - bei
+  // 60 Punkten ist das der Unterschied zwischen einer Kachel und einem Zeichen.
+  {
+    const v = g.createRadialGradient(G / 2, G * 0.46, G * 0.18, G / 2, G * 0.5, G * 0.78);
+    v.addColorStop(0, 'rgba(0,0,0,0)');
+    v.addColorStop(1, 'rgba(0,0,0,0.55)');
+    g.fillStyle = v;
+    g.fillRect(0, 0, G, G);
+  }
+
+  const CX = G / 2, CY = G * 0.455, BREIT = G * 0.45, HOCH = G * 0.68;
+  const schein = await scheinBacken(G, G, CX, CY, BREIT, HOCH, 14 * UEBER / 4);
+  const kristall = kristallZeichnen(G, G, CX, CY, BREIT, HOCH, 1.5 * UEBER);
+
+  // Erst schichten, DANN verkleinern - und zwar in zwei getrennten Laeufen.
+  // `sharp` verkleinert naemlich VOR dem Zusammensetzen, ganz gleich in
+  // welcher Reihenfolge man es hinschreibt: in einem Zug bekaeme der schon
+  // verkleinerte Grund eine viermal zu grosse Ebene aufgelegt und bricht ab.
+  // Das ist keine Eigenart, die man sich merkt, sondern eine, die man
+  // aufschreibt.
+  const geschichtet = await sharp(cv.toBuffer('image/png'))
+    .composite([
+      // Zweimal derselbe Schein: einmal ist er zu zaghaft gegen das Dunkel.
+      { input: schein, blend: 'over' },
+      { input: schein, blend: 'over' },
+      { input: kristall.toBuffer('image/png'), blend: 'over' },
+    ])
+    .png().toBuffer();
+
+  return sharp(geschichtet)
+    .resize(KANTE, KANTE, { kernel: 'lanczos3' })
+    .png({ compressionLevel: 9 })
+    .toBuffer();
 }
 
-// --------------------------------------------------------- Der Kristall
-//
-// Auf einer EIGENEN, durchsichtigen Ebene. Der Schein muss zwischen Grund und
-// Kristall liegen: darueber waere er Dunst, darunter ist er Licht. Auf einer
-// gemeinsamen Leinwand ginge das nicht.
-//
-// Sechs Punkte, drei Flaechen: linke Wange dunkel, rechte Wange mittel, in
-// der Mitte ein heller Grat. Das ist die ganze Plastik - mehr Facetten
-// verschwinden bei 60 Punkten ohnehin und machen die Form nur unruhig.
-const CX = G / 2, CY = G * 0.455;
-const BREIT = G * 0.45, HOCH = G * 0.68;
-const P = (x, y) => [CX + x * BREIT, CY + y * HOCH];
+// ========================================================== Die Startbilder
 
-const SPITZE = P(0, -0.5);
-const SCHULTER_R = P(0.5, -0.16);
-const HUEFTE_R = P(0.37, 0.24);
-const FUSS = P(0, 0.5);
-const HUEFTE_L = P(-0.37, 0.24);
-const SCHULTER_L = P(-0.5, -0.16);
+/** Die iPhone-Groessen, die es heute in Stueckzahlen gibt.
+ *
+ *  Aeltere stehen NICHT hier. Sie bekommen dann das, was sie heute schon
+ *  bekommen - iOS faellt auf seinen eigenen Grund zurueck. Kein Rueckschritt,
+ *  nur kein Fortschritt, und jede Zeile kostet 4 KB in jeder Datei.
+ *
+ *  Nur hochkant: der Startbildschirm des iPhones steht hochkant, von dort
+ *  wird getippt. Quer noch einmal dieselben zehn Bilder waere die doppelte
+ *  Rechnung fuer den selteneren Fall. */
+const GERAETE = [
+  ['SE 2/3, 8', 375, 667, 2],
+  ['XR, 11', 414, 896, 2],
+  ['X, XS, 11 Pro, 12/13 mini', 375, 812, 3],
+  ['XS Max, 11 Pro Max', 414, 896, 3],
+  ['12, 13, 14, 12/13 Pro', 390, 844, 3],
+  ['12/13 Pro Max, 14 Plus', 428, 926, 3],
+  ['14 Pro, 15, 15 Pro, 16', 393, 852, 3],
+  ['14 Pro Max, 15 Plus, 16 Plus', 430, 932, 3],
+  ['16 Pro', 402, 874, 3],
+  ['16 Pro Max', 440, 956, 3],
+];
 
-const kristallLw = createCanvas(G, G);
-const kg = kristallLw.getContext('2d');
+async function startbildBauen(w, h) {
+  const cv = createCanvas(w, h);
+  const g = cv.getContext('2d');
 
-const zug = (punkte) => {
-  kg.beginPath();
-  kg.moveTo(...punkte[0]);
-  for (let i = 1; i < punkte.length; i++) kg.lineTo(...punkte[i]);
-  kg.closePath();
-};
+  // Flach, siehe Kopf: der Verlauf kostet hier das Dreifache.
+  g.fillStyle = F.voidTief;
+  g.fillRect(0, 0, w, h);
 
-// Der gebackene Schein. Regel 11 verbietet `filter: blur` zur LAUFZEIT auf
-// Safari - hier wird er einmal beim Bauen gerechnet und ist danach ein Bild.
-const scheinLw = createCanvas(G, G);
-{
-  const s = scheinLw.getContext('2d');
-  s.fillStyle = KRISTALL;
-  s.beginPath();
-  s.moveTo(...SPITZE);
-  for (const p of [SCHULTER_R, HUEFTE_R, FUSS, HUEFTE_L, SCHULTER_L]) s.lineTo(...p);
-  s.closePath();
-  s.fill();
+  const kurz = Math.min(w, h);
+  const CX = w / 2, CY = h * 0.46;
+  const BREIT = kurz * 0.30, HOCH = kurz * 0.46;
+
+  // Kein Bogen und kein Schein. Beide sind weiche Flaechen ueber viel Raum,
+  // und genau das kostet: der Bogen 1,8 KB je Bild, der Schein 3. Ueber zehn
+  // Geraetegroessen sind das 48 KB fuer zwei Dinge, die auf einem hohen
+  // Startbild kaum zu sehen sind. Auf dem Symbol bleiben beide - dort ist die
+  // Flaeche klein und der Preis null.
+
+  // Der Schriftzug. Er steht hier und nicht auf dem Symbol: unter dem Symbol
+  // steht der Name ohnehin schon, auf dem Startbild steht sonst nichts.
+  //
+  // In der KRISTALLFARBE, und zwar absichtlich. Der erste Entwurf setzte ihn
+  // in Steingrau - bei acht Farben warf die Quantisierung das Grau weg und
+  // bildete ihn auf den Kristallton ab. Das Ergebnis sah gut aus, war aber
+  // nicht gewaehlt, sondern uebriggeblieben. Das Grau zu behalten kostet
+  // zwoelf Farben und 29 KB; die Kristallfarbe ist die Akzentfarbe des Spiels
+  // und kostet nichts. Also wird sie gezeichnet, statt zu entstehen.
+  g.fillStyle = mit(F.kristall, 0.92);
+  g.font = `700 ${Math.round(kurz * 0.058)}px sans-serif`;
+  g.textAlign = 'center';
+  g.fillText('TOWERFRONT', CX, CY + HOCH * 0.5 + kurz * 0.135);
+
+  const kristall = kristallZeichnen(
+    w, h, CX, CY, BREIT, HOCH, Math.max(2, kurz * 0.004), true,
+  );
+
+  return sharp(cv.toBuffer('image/png'))
+    .composite([{ input: kristall.toBuffer('image/png'), blend: 'over' }])
+    // Acht Farben, kein Rauschen. Eine flach schattierte Figur braucht nicht
+    // mehr, und das ist der Unterschied zwischen 6 und 26 KB je Bild.
+    //
+    // Die Quantisierung greift NUR ohne Alphakanal: mit Alpha liefert `sharp`
+    // stillschweigend dasselbe Bild zurueck, ganz gleich welche Farbzahl
+    // dasteht. Das hat beim Bau dieser Datei eine Messung verdorben - 48 und
+    // 16 Farben ergaben aufs Byte dieselbe Groesse, und das sah aus, als
+    // wirkte die Farbtafel gar nicht.
+    .removeAlpha()
+    .png({ palette: true, dither: 0, colours: 8, compressionLevel: 9 })
+    .toBuffer();
 }
 
-// Die beiden Wangen - welche die helle ist, sagt die Lichtrichtung.
-const wange = (schulter, huefte, hell) => {
-  zug([SPITZE, schulter, huefte, FUSS]);
-  const v = kg.createLinearGradient(...SPITZE, ...huefte);
-  if (hell) {
-    v.addColorStop(0, KRISTALL);
-    v.addColorStop(1, KRISTALL_TIEF);
-  } else {
-    v.addColorStop(0, KRISTALL_TIEF);
-    v.addColorStop(1, mit(KRISTALL_TIEF, 0.5));
-  }
-  kg.fillStyle = v;
-  kg.fill();
-};
-wange(SCHULTER_L, HUEFTE_L, HELL_LINKS);
-wange(SCHULTER_R, HUEFTE_R, !HELL_LINKS);
+// ================================================================ Ausfuehren
 
-// Der Grat in der Mitte - der hellste Streifen, und das, was die Form bei
-// kleiner Anzeige als Kristall lesbar macht.
-// Der Grat sitzt leicht auf der Lichtseite, nicht in der Mitte: eine
-// spiegelsymmetrische Figur wirkt gezeichnet, eine leicht verschobene wirkt
-// beleuchtet.
-const V = HELL_LINKS ? -1 : 1;
-zug([SPITZE, P(0.13 + V * 0.03, -0.10), P(0.09 + V * 0.03, 0.26), FUSS,
-  P(-0.09 + V * 0.03, 0.26), P(-0.13 + V * 0.03, -0.10)]);
-const grat = kg.createLinearGradient(...SPITZE, ...FUSS);
-grat.addColorStop(0, '#FFFFFF');
-grat.addColorStop(0.42, KRISTALL);
-grat.addColorStop(1, mit(KRISTALL, 0.75));
-kg.fillStyle = grat;
-kg.fill();
+const symbol = await symbolBauen();
+const symbolAnteil = await formPruefen(symbol, 'Das Symbol', 0.04, 0.45);
+console.log(`APPSYMBOL: Symbol ${KANTE}x${KANTE} aus ${KANTE * UEBER}x${KANTE * UEBER} `
+  + `verkleinert, ${(symbol.length / 1024).toFixed(0)} KB, `
+  + `${(symbolAnteil * 100).toFixed(1)} % helle Flaeche.`);
 
-// Aussenkante: ein duenner heller Saum. Ohne ihn franst die Form gegen den
-// dunklen Grund aus, sobald verkleinert wird.
-zug([SPITZE, SCHULTER_R, HUEFTE_R, FUSS, HUEFTE_L, SCHULTER_L]);
-kg.strokeStyle = mit('#FFFFFF', 0.5);
-kg.lineWidth = 1.5 * UEBER;
-kg.stroke();
+const zeilen = [
+  `<link rel="apple-touch-icon" href="data:image/png;base64,${symbol.toString('base64')}" />`,
+];
+let summe = symbol.length;
 
-// --------------------------------------------------- Zusammensetzen
-//
-// Der Schein wird weichgezeichnet und UNTER das Bild gelegt, nicht darueber:
-// darueber waere es Dunst, darunter ist es Licht.
-const scheinBild = await sharp(scheinLw.toBuffer('image/png'))
-  .blur(14 * UEBER / 4)
-  .modulate({ brightness: 1.15 })
-  .png().toBuffer();
-
-// Erst schichten, DANN verkleinern - und zwar in zwei getrennten Laeufen.
-// `sharp` verkleinert naemlich VOR dem Zusammensetzen, ganz gleich in welcher
-// Reihenfolge man es hinschreibt: in einem Zug bekaeme der schon verkleinerte
-// Grund eine viermal zu grosse Ebene aufgelegt und bricht ab. Das ist keine
-// Eigenart, die man sich merkt, sondern eine, die man aufschreibt.
-const geschichtet = await sharp(cv.toBuffer('image/png'))
-  .composite([
-    // Zweimal derselbe Schein: einmal ist er zu zaghaft, um gegen den
-    // dunklen Grund zu leuchten.
-    { input: scheinBild, blend: 'over' },
-    { input: scheinBild, blend: 'over' },
-    { input: kristallLw.toBuffer('image/png'), blend: 'over' },
-  ])
-  .png().toBuffer();
-
-const png = await sharp(geschichtet)
-  .resize(KANTE, KANTE, { kernel: 'lanczos3' })
-  .png({ compressionLevel: 9 })
-  .toBuffer();
-
-// ------------------------------------------------- Regel 13, an der Ausgabe
-//
-// Zwei Fragen, nicht eine. Ist ueberhaupt etwas Helles drauf - und ist es
-// eine FORM? Ein Symbol, das nur aus Grund und Schein besteht, hat dieselbe
-// Dateigroesse und faellt sonst niemandem auf; genau so ist in v121 ein
-// leeres Symbol durchgegangen (S136). Ein Symbol, das ganz hell ist, ist
-// ebenso falsch - dann fehlt der Grund.
-{
-  const roh = await sharp(png).removeAlpha().raw().toBuffer();
-  const punkte = roh.length / 3;
-  let hell = 0;
-  for (let i = 0; i < roh.length; i += 3) {
-    if (roh[i] * 0.30 + roh[i + 1] * 0.59 + roh[i + 2] * 0.11 > 110) hell++;
-  }
-  const anteil = hell / punkte;
-  if (anteil < 0.04 || anteil > 0.45) {
-    console.error(`APPSYMBOL: ${(anteil * 100).toFixed(1)} % helle Flaeche - erwartet `
-      + 'werden 4 bis 45 %. Darunter fehlt die Figur, darueber der Grund.');
-    process.exit(1);
-  }
-  console.log(`APPSYMBOL: ${(anteil * 100).toFixed(1)} % helle Flaeche - die Form steht.`);
+for (const [name, cw, ch, d] of GERAETE) {
+  const w = cw * d, h = ch * d;
+  const bild = await startbildBauen(w, h);
+  // Auf einem Startbild ist die Figur klein - der Grund ist fast alles.
+  // Deshalb ein anderes Band als beim Symbol, und ein enges: waere es weit,
+  // bewiese es nichts (Regel 13).
+  const anteil = await formPruefen(bild, `Startbild ${w}x${h}`, 0.004, 0.10);
+  summe += bild.length;
+  zeilen.push(
+    '<link rel="apple-touch-startup-image"'
+    + ` media="(device-width: ${cw}px) and (device-height: ${ch}px)`
+    + ` and (-webkit-device-pixel-ratio: ${d}) and (orientation: portrait)"`
+    + ` href="data:image/png;base64,${bild.toString('base64')}" />`,
+  );
+  console.log(`  ${String(w).padStart(4)}x${String(ch * d).padEnd(4)} `
+    + `${(bild.length / 1024).toFixed(1)} KB  ${(anteil * 100).toFixed(2)} %  ${name}`);
 }
-
-const adresse = `data:image/png;base64,${png.toString('base64')}`;
 
 // --- In den Kopf der Seite schreiben, zwischen zwei Marken.
 const seite = join(ROOT, 'index.html');
 let html = readFileSync(seite, 'utf8');
 const AUF = '<!-- appsymbol:anfang -->';
 const ZU = '<!-- appsymbol:ende -->';
-const block = `${AUF}\n<link rel="apple-touch-icon" href="${adresse}" />\n${ZU}`;
+const block = `${AUF}\n${zeilen.join('\n')}\n${ZU}`;
 
 if (html.includes(AUF) && html.includes(ZU)) {
   html = html.replace(new RegExp(`${AUF}[\\s\\S]*?${ZU}`), block);
@@ -295,6 +252,6 @@ if (html.includes(AUF) && html.includes(ZU)) {
 }
 writeFileSync(seite, html);
 
-console.log(`APPSYMBOL: ${KANTE}x${KANTE} aus ${G}x${G} verkleinert, `
-  + `${(png.length / 1024).toFixed(0)} KB `
-  + `(${(adresse.length / 1024).toFixed(0)} KB als Zeichenkette) in index.html geschrieben.`);
+console.log(`\nAPPSYMBOL: 1 Symbol + ${GERAETE.length} Startbilder, `
+  + `${(summe / 1024).toFixed(0)} KB roh, `
+  + `${(zeilen.join('').length / 1024).toFixed(0)} KB als Zeichenkette in index.html.`);

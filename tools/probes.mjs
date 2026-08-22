@@ -687,6 +687,17 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
+    // Ein Startbild, dessen Masse nicht zu seiner Anmeldung passen. iOS
+    // uebergeht so eines STILLSCHWEIGEND - kein Fehler, keine Meldung, nur
+    // wieder der weisse Blitz. Genau die Sorte Fehler, die ohne Tor jahrelang
+    // stehenbleibt, weil niemand etwas vermisst, das er nie gesehen hat.
+    name: 'Startbild passt nicht zu seiner Anmeldung',
+    datei: 'index.html',
+    regel: /\(device-width: 390px\) and \(device-height: 844px\)/,
+    ersatz: '(device-width: 391px) and (device-height: 844px)',
+    tor: 'browsertor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

@@ -32,9 +32,11 @@
  *      hochkant, liegt nichts ueber dem Feld und man kommt hinein. Das
  *      war v121 - ein vergessener zweiter Hochkant-Hinweis ohne
  *      Zeigerpruefung deckte jedes schmale Fenster zu.
- *   8. Das Startbildschirm-Symbol steht in der ausgelieferten Datei, misst
- *      180x180 und zeigt eine Form. Ein leeres Symbol ist in v121 durch
- *      alle Tore gekommen (S136).
+ *   8. Symbol und Startbilder stehen in der ausgelieferten Datei. Das Symbol
+ *      misst 180x180 und zeigt eine Form - ein leeres ist in v121 durch alle
+ *      Tore gekommen (S136). Jedes Startbild wird gegen die Masse geprueft,
+ *      mit denen es angemeldet ist: passt es nicht aufs Bildpunkt, uebergeht
+ *      iOS es stillschweigend.
  *
  * Aufruf: npm run browser
  */
@@ -793,6 +795,37 @@ if (streuung < 6) {
     }
     console.log(`Startbildschirm-Symbol: ${masse.width}x${masse.height}, `
       + `${(anteil * 100).toFixed(1)} % helle Flaeche, ${(roh.length / 1024).toFixed(0)} KB.`);
+  }
+
+  // --- Und die Startbilder, die iOS beim Oeffnen zeigt.
+  //
+  // Sie haben eine eigene Falle: iOS nimmt ein Startbild NUR, wenn seine
+  // Masse aufs Bildpunkt genau zu der Medienabfrage passen, mit der es
+  // angemeldet ist. Ein Bild mit falscher Groesse wird stillschweigend
+  // ignoriert - kein Fehler, keine Meldung, nur wieder der weisse Blitz.
+  // Genau deshalb wird hier das Bild GEGEN SEINE EIGENE ANMELDUNG geprueft
+  // und nicht gegen eine Liste: eine Liste waere eine zweite Wahrheit.
+  const start = [...html.matchAll(
+    /rel="apple-touch-startup-image" media="\(device-width: (\d+)px\) and \(device-height: (\d+)px\) and \(-webkit-device-pixel-ratio: (\d)\)[^"]*" href="data:image\/png;base64,([^"]+)"/g,
+  )];
+  if (!start.length) {
+    fail('In der gebauten Datei steht kein Startbild (apple-touch-startup-image). '
+      + 'Beim Oeffnen vom Startbildschirm zeigt iOS dann seinen weissen Grund.');
+  } else {
+    const sharp = (await import('sharp')).default;
+    let gesamt = 0;
+    for (const [, cw, ch, d, b64] of start) {
+      const bild = Buffer.from(b64, 'base64');
+      gesamt += bild.length;
+      const m = await sharp(bild).metadata();
+      const sollB = Number(cw) * Number(d), sollH = Number(ch) * Number(d);
+      if (m.width !== sollB || m.height !== sollH) {
+        fail(`Startbild fuer ${cw}x${ch}@${d} ist ${m.width}x${m.height} statt `
+          + `${sollB}x${sollH} - iOS uebergeht es stillschweigend.`);
+      }
+    }
+    console.log(`Startbilder: ${start.length} Groessen, `
+      + `${(gesamt / 1024).toFixed(0)} KB zusammen.`);
   }
 }
 

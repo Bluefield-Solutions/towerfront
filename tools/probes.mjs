@@ -572,8 +572,8 @@ const PROBEN = [
     // Und die Gegenrichtung: ein Messgeraet, das nichts misst, ist keines.
     name: 'Messtafel misst nichts',
     datei: 'src/core/messung.ts',
-    regel: /    abstaende\.push\(jetzt - vorher\);/,
-    ersatz: '    void jetzt;',
+    regel: /      if \(luecke > groessteLuecke\) groessteLuecke = luecke;/,
+    ersatz: '      void luecke;',
     tor: 'browsertor',
   },
   {

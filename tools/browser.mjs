@@ -551,8 +551,11 @@ if (streuung < 6) {
     if (!/Bilddauer Mitte\s*[\d.]+ ms/.test(tafel)) {
       fail(`Die Messtafel nennt keine Bilddauer: "${tafel.slice(0, 120)}"`);
     }
-    if (!/Bilder gemessen\s*[1-9]/.test(tafel)) {
-      fail('Die Messtafel hat kein einziges Bild gemessen.');
+    // Die tragbare Zahl MUSS dastehen: auf dem Zielgeraet meldet Safari keine
+    // langen Aufgaben, und dann bliebe sonst genau die Zeile leer, um die es
+    // bei der 50-ms-Norm geht.
+    if (!/Längste Bildlücke\s*\d+ ms/.test(tafel)) {
+      fail('Die Messtafel nennt keine längste Bildlücke - auf Safari bliebe sie damit stumm.');
     }
     console.log(`\nMesstafel (#messung): ${tafel.slice(0, 150)}`);
   }

@@ -27,11 +27,20 @@
  *  weitergeschickt, nicht angetippt.
  */
 
-/** Grenze aus der Web-Norm: darüber blockiert eine Aufgabe die Eingabe. */
+/** Grenze aus der Web-Norm: darueber blockiert eine Aufgabe die Eingabe. */
 const SOLL_MS = 50;
 
-/** So lange wird der Dauerbetrieb beobachtet. */
-const MESSDAUER_MS = 6000;
+/** Wieviele Bildabstaende in das gleitende Fenster gehen. Bei 60 Bildern je
+ *  Sekunde sind 600 rund zehn Sekunden - lang genug, dass eine Welle
+ *  hineinpasst, kurz genug, dass die Zahl noch von JETZT handelt. */
+const FENSTER = 600;
+
+/** Wie lange nach dem Laden nichts gezaehlt wird.
+ *
+ *  Der erste Augenblick enthaelt Entpacken, Uebersetzen und das erste Bild -
+ *  Dinge, die genau einmal vorkommen. Sie wuerden den Ausschlag fuer immer
+ *  bestimmen und die eigentliche Frage zudecken. */
+const AUFWAERM_MS = 2000;
 
 export function messungGewuenscht(): boolean {
   return typeof location !== 'undefined' && location.hash.toLowerCase() === '#messung';
@@ -73,7 +82,11 @@ export function messungStarten(): void {
 
   const start = performance.now();
   let vorher = start;
-  let fertig = false;
+  /** Groesste Bildluecke seit dem Aufwaermen - der tragbare Ersatz fuer die
+   *  lange Aufgabe. Ein Bild, das 300 ms auf sich warten laesst, hat 300 ms
+   *  lang etwas anderes gemacht; ob der Browser das "long task" nennt, ist
+   *  fuer den Spieler ohne Belang. */
+  let groessteLuecke = 0;
 
   const zeigen = (): void => {
     const sortiert = [...abstaende].sort((a, b) => a - b);
@@ -81,37 +94,43 @@ export function messungStarten(): void {
     const p95 = sortiert.length ? sortiert[Math.floor(sortiert.length * 0.95)] : 0;
     const schlimmste = langeAufgaben.length ? Math.max(...langeAufgaben) : 0;
     const bilderJeSek = mitte > 0 ? 1000 / mitte : 0;
+    const laeuft = performance.now() - start < AUFWAERM_MS;
 
     const zeile = (name: string, wert: string, warnung = false): string =>
       `<div class="mz${warnung ? ' warn' : ''}"><span>${name}</span><b>${wert}</b></div>`;
 
     tafel.innerHTML =
-      `<h2>Messung${fertig ? '' : ' läuft …'}</h2>`
+      `<h2>Messung${laeuft ? ' · wärmt auf' : ''}</h2>`
       + `<div class="mw">${zeichenwerk()}</div>`
       + zeile('Bildpunkte', `${Math.round(window.innerWidth)} × ${Math.round(window.innerHeight)}`
         + ` · ${window.devicePixelRatio || 1}×`)
-      + zeile('Bilder gemessen', String(abstaende.length))
       + zeile('Bilddauer Mitte', `${mitte.toFixed(1)} ms  (${bilderJeSek.toFixed(0)}/s)`, mitte > 20)
       + zeile('Bilddauer p95', `${p95.toFixed(1)} ms`, p95 > 33)
+      // Die tragbare Zahl steht OBEN, die browserabhaengige darunter.
+      + zeile('Längste Bildlücke', `${groessteLuecke.toFixed(0)} ms`, groessteLuecke > SOLL_MS)
       + (beobachterLaeuft
-        ? zeile('Längste Aufgabe', `${schlimmste} ms`, schlimmste > SOLL_MS)
-        : zeile('Längste Aufgabe', 'nicht messbar (Safari)'))
-      + `<div class="mh">Norm: eine Aufgabe über ${SOLL_MS} ms blockiert die Eingabe.`
-      + ' Diese Tafel gehört abfotografiert — die Entwicklungsmaschine hat keine'
-      + ' Grafikkarte und kann diese Zahlen nicht selbst erzeugen.</div>';
+        ? zeile('davon als Aufgabe', `${schlimmste} ms`, schlimmste > SOLL_MS)
+        : zeile('davon als Aufgabe', 'meldet dieser Browser nicht'))
+      + `<div class="mh"><b>Tippe in eine Karte und spiele eine Welle</b> — im Menü misst`
+      + ' diese Tafel das Menü. Sie läuft weiter und rechnet über die letzten'
+      + ` ${Math.round(FENSTER / 60)} Sekunden.<br><br>Norm: eine Aufgabe über ${SOLL_MS} ms`
+      + ' blockiert die Eingabe. Diese Tafel gehört abfotografiert — die'
+      + ' Entwicklungsmaschine hat keine Grafikkarte und kann diese Zahlen nicht'
+      + ' selbst erzeugen.</div>';
   };
 
   const takt = (jetzt: number): void => {
-    abstaende.push(jetzt - vorher);
+    const luecke = jetzt - vorher;
     vorher = jetzt;
-    if (jetzt - start < MESSDAUER_MS) {
-      requestAnimationFrame(takt);
-      // Nicht in jedem Bild neu schreiben - das waere selbst eine Last.
-      if (abstaende.length % 30 === 0) zeigen();
-    } else {
-      fertig = true;
-      zeigen();
+    // Erst nach dem Aufwaermen zaehlen - siehe AUFWAERM_MS.
+    if (jetzt - start >= AUFWAERM_MS) {
+      abstaende.push(luecke);
+      if (abstaende.length > FENSTER) abstaende.shift();
+      if (luecke > groessteLuecke) groessteLuecke = luecke;
     }
+    requestAnimationFrame(takt);
+    // Nicht in jedem Bild neu schreiben - das waere selbst eine Last.
+    if (abstaende.length % 30 === 0) zeigen();
   };
   // Das erste Bild wird verworfen: sein Abstand enthaelt alles, was vorher lag.
   requestAnimationFrame((t) => { vorher = t; requestAnimationFrame(takt); });

@@ -1111,6 +1111,74 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Die kurze Einfuehrung je Karte: gibt es sie fuer JEDE Karte, und nennt
+// sie die Karte beim Namen?
+//
+// Der Text wird abgeleitet, nicht je Karte geschrieben - deshalb ist die
+// interessante Frage nicht "steht da ein Satz", sondern "steht da ein Satz
+// fuer die vierte Karte, die es noch nicht gibt". Diese Pruefung laeuft ueber
+// alle vorhandenen und faellt in dem Moment aus, in dem eine hinzukommt, fuer
+// die die Ableitung nicht traegt.
+{
+  const { MAPS } = await import('../src/data/maps');
+  const { kartenEinfuehrung } = await import('../src/game/tutorial');
+  for (const m of MAPS) {
+    state.reset(1, 'normal', m.id);
+    const kette = kartenEinfuehrung(state);
+    if (kette.length !== 1) {
+      problems.push(`Karteneinfuehrung ${m.name}: ${kette.length} Schritte statt genau einem.`);
+      continue;
+    }
+    const [schritt] = kette;
+    if (!schritt.text.includes(m.name)) {
+      problems.push(`Karteneinfuehrung ${m.name}: nennt die Karte nicht beim Namen.`);
+    }
+    if (schritt.text.length > 160) {
+      problems.push(`Karteneinfuehrung ${m.name}: ${schritt.text.length} Zeichen - das ist keine kurze mehr.`);
+    }
+    if (schritt.done(state)) {
+      problems.push(`Karteneinfuehrung ${m.name}: gilt sofort als erledigt und erscheint nie.`);
+    }
+  }
+}
+
+// Schluckt der Schild wirklich Treffer - und nur die ersten n?
+//
+// Gemessen am Lebensstand, nicht daran, dass das Feld gesetzt ist. Ein
+// Schild, der im Datensatz steht und im Kampf nichts tut, sieht von aussen
+// aus wie ein eingebauter Schild.
+{
+  const { MAPS } = await import('../src/data/maps');
+  const geplant = MAPS.reduce((n, m) => n + m.waves.reduce(
+    (a, w) => a + w.groups.filter((g) => g.shield).reduce((b, g) => b + g.count, 0), 0), 0);
+  if (geplant === 0) {
+    problems.push('Schild: keine einzige Wellengruppe traegt einen - die Mechanik ist tot.');
+  }
+
+  state.reset(31, 'normal', 'spiralhain');
+  const e = state.spawnZumPruefen('infantry', 3);
+  if (!e) {
+    problems.push('Schild: es liess sich kein Gegner zum Pruefen setzen.');
+  } else {
+    const voll = e.hp;
+    state.trefferZumPruefen(e, 9999);
+    if (e.hp !== voll) problems.push('Schild: der erste Treffer ging durch.');
+    if (e.shield !== 2) problems.push(`Schild: nach einem Treffer ${e.shield} statt 2 uebrig.`);
+    state.trefferZumPruefen(e, 9999);
+    state.trefferZumPruefen(e, 9999);
+    if (e.shield !== 0) problems.push('Schild: haelt laenger als die vorgesehenen Treffer.');
+    if (e.hp !== voll) problems.push('Schild: einer der drei Treffer ging trotzdem durch.');
+    // Und jetzt der vierte - der MUSS ankommen.
+    //
+    // Er fehlte im ersten Anlauf, und die Pruefung meldete prompt "schluckt
+    // auch noch, nachdem er aufgebraucht ist". Der Schild war in Ordnung;
+    // die Pruefung hatte drei Treffer gegen drei Schildpunkte gesetzt und
+    // sich dann gewundert, dass nichts durchkam.
+    state.trefferZumPruefen(e, 9999);
+    if (e.hp === voll) problems.push('Schild: schluckt auch noch, nachdem er aufgebraucht ist.');
+  }
+}
+
 // Jede Karte muss sich aufbauen und zeichnen lassen. Ein Pfad, der ins Leere
 // fuehrt, oder eine Farbwelt mit Luecke faellt sonst erst beim Antippen auf.
 {

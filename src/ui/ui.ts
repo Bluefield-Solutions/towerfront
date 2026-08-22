@@ -7,7 +7,8 @@ import {
 } from '../data/towers';
 import { Sfx } from '../core/audio';
 import {
-  buyPerk, freeStars, getBest, getSettings, getStars, saveSettings, setPerkCost, totalStars,
+  buyPerk, ersterBesuch, freeStars, getBest, getSettings, getStars, saveSettings, setPerkCost,
+  totalStars,
 } from '../core/storage';
 import { PERKS, PERK_ORDER, type PerkId } from '../data/perks';
 import { ZIELWAHL_NAMEN, ZIELWAHL_ORDNUNG, type Tower, type Zielwahl } from '../game/types';
@@ -16,7 +17,7 @@ import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../data/diffi
 import { MAPS, mapById } from '../data/maps';
 import { spriteCount } from '../gfx/sprites';
 import { clearGame, loadGame } from '../game/save';
-import { TUTORIAL, type TutorialStep } from '../game/tutorial';
+import { TUTORIAL, kartenEinfuehrung, type TutorialStep } from '../game/tutorial';
 import type { GameState } from '../game/state';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -113,6 +114,13 @@ export class UI {
   private view: (w: 'main' | 'choose' | 'progress') => void = () => {};
   private lastScreen: 'title' | 'won' | 'lost' = 'title';
   private tutStep = -1;
+  /** Welche Kette gerade laeuft.
+   *
+   *  Es gibt zwei: die grosse Einfuehrung ins Spiel und der eine Satz je
+   *  Karte. Statt einer zweiten Maschinerie daneben laeuft beides durch
+   *  dieselbe - sie unterscheiden sich nur im Inhalt, nicht im Verhalten.
+   *  Zwei Wege, die dasselbe tun, driften auseinander. */
+  private tutKette: TutorialStep[] = TUTORIAL;
   private tutTarget: HTMLElement | null = null;
   private lastSig = '';
   private lastBonus = -1;
@@ -272,7 +280,7 @@ export class UI {
       this.s.reset(undefined, getSettings().difficulty, getSettings().map,
         { endless: this.endlessWanted });
       // Die Einfuehrung laeuft nur bei einem neuen Spiel, nie beim Fortsetzen.
-      this.tutStep = getSettings().tutorial ? 0 : -1;
+      this.starteEinfuehrung();
     });
     this.sPerf.addEventListener('click', () => this.togglePerf());
     this.sTut.addEventListener('click', () => {
@@ -509,18 +517,43 @@ export class UI {
       bestLine + leakLine + abilityLine;
   }
 
+  /** Welche Einfuehrung passt zu dieser Partie?
+   *
+   *  Die grosse hat Vorrang: wer das Spiel noch nicht kennt, braucht keinen
+   *  Hinweis zur Kartenform. Sie laeuft nur einmal ueberhaupt; danach greift
+   *  bei jeder neuen Karte der eine Satz.
+   *
+   *  `ersterBesuch` vermerkt den Besuch gleich beim Fragen - deshalb wird es
+   *  auch dann gerufen, wenn die grosse Einfuehrung laeuft. Sonst kaeme der
+   *  Kartensatz beim zweiten Besuch der Startkarte nach, und das waere
+   *  genau verkehrt herum. */
+  private starteEinfuehrung(): void {
+    const erst = ersterBesuch(this.s.map.id);
+    if (getSettings().tutorial) {
+      this.tutKette = TUTORIAL;
+      this.tutStep = 0;
+      return;
+    }
+    if (erst) {
+      this.tutKette = kartenEinfuehrung(this.s);
+      this.tutStep = 0;
+      return;
+    }
+    this.tutStep = -1;
+  }
+
   /** Die Einfuehrung ruecht weiter, sobald der Handgriff gemacht wurde.
    *  Sie blockiert nichts und wartet auf nichts ausser auf den Spieler. */
   private updateTutorial(): void {
     if (this.tutStep < 0) return;
     if (this.s.phase !== 'playing') { this.hideCoach(); return; }
 
-    while (this.tutStep < TUTORIAL.length && TUTORIAL[this.tutStep].done(this.s)) {
+    while (this.tutStep < this.tutKette.length && this.tutKette[this.tutStep].done(this.s)) {
       this.tutStep++;
     }
-    if (this.tutStep >= TUTORIAL.length) { this.endTutorial(); return; }
+    if (this.tutStep >= this.tutKette.length) { this.endTutorial(); return; }
 
-    const step = TUTORIAL[this.tutStep];
+    const step = this.tutKette[this.tutStep];
     if (step.wait?.(this.s)) { this.hideCoach(); return; }
     this.showCoach(step);
   }
@@ -576,7 +609,7 @@ export class UI {
    *  Gitterzelle legen. */
   get coachHint(): 'build' | 'tower' | null {
     if (this.tutStep < 0 || this.coach.hidden) return null;
-    const step = TUTORIAL[this.tutStep];
+    const step = this.tutKette[this.tutStep];
     if (!step || step.target !== 'world') return null;
     return step.id === 'place' ? 'build' : 'tower';
   }

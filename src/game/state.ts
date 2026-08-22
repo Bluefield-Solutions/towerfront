@@ -30,7 +30,9 @@ import type {
 } from './types';
 import { ZIELWAHL_ORDNUNG } from './types';
 
-interface PendingSpawn { time: number; enemy: EnemyId; hpMul: number; lane: number; }
+interface PendingSpawn {
+  time: number; enemy: EnemyId; hpMul: number; lane: number; shield?: number;
+}
 
 function emptyStats(): RunStats {
   return {
@@ -231,6 +233,21 @@ export class GameState {
    *  koennte - er haengt am Finger. */
   zeigeReichweiten = false;
 
+  /** Zwei Haken fuer den Rauchtest.
+   *
+   *  Sie stehen hier und nicht im Werkzeug, weil `spawnEnemy` und `damage`
+   *  privat sind - und privat sollen sie bleiben. Ein Test, der auf private
+   *  Innereien greift, haelt sie fest; ein schmaler benannter Zugang laesst
+   *  sie frei. */
+  spawnZumPruefen(id: EnemyId, shield: number): Enemy | undefined {
+    this.spawnEnemy(id, 1, 0, shield);
+    return this.enemies[this.enemies.length - 1];
+  }
+
+  trefferZumPruefen(e: Enemy, schaden: number): void {
+    this.damage(e, schaden, null, '#fff', 0, 0);
+  }
+
   /** Der Turm, der gerade gezogen wird, und wohin. Beides null, wenn nicht. */
   movingTower: Tower | null = null;
   movePoint: { x: number; y: number } | null = null;
@@ -425,6 +442,7 @@ export class GameState {
         this.pending.push({
           time: g.delay + (i * g.gap) / dense,
           enemy: g.enemy, hpMul: g.hpMul ?? 1,
+          shield: g.shield ?? 0,
           lane: laneTurn % laneCount,
         });
         laneTurn++;
@@ -589,7 +607,7 @@ export class GameState {
       this.waveTime += dt;
       while (this.pending.length && this.pending[0].time <= this.waveTime) {
         const p = this.pending.shift()!;
-        this.spawnEnemy(p.enemy, p.hpMul, p.lane);
+        this.spawnEnemy(p.enemy, p.hpMul, p.lane, p.shield ?? 0);
       }
       if (!this.pending.length && !this.enemies.length) this.finishWave();
     }
@@ -615,7 +633,7 @@ export class GameState {
     }
   }
 
-  private spawnEnemy(id: EnemyId, hpMul: number, lane: number): void {
+  private spawnEnemy(id: EnemyId, hpMul: number, lane: number, shield = 0): void {
     const def = ENEMIES[id];
     const ln = lane % this.lanes.length;
     const p0 = this.lanes[ln].pts[0];
@@ -628,7 +646,7 @@ export class GameState {
       id: this.nextId++, def: id, x: p0.x, y: p0.y + off,
       hp, hpMax: hp, speed: def.speed, lane: ln, heading: 0,
       side: (this.rng.next() * 2 - 1) * 0.85, travelled: 0,
-      slowFactor: 1, slowLeft: 0, healIn: 0,
+      slowFactor: 1, slowLeft: 0, healIn: 0, shield,
       hitFlash: 0, squash: 0, hpShown: hp, wobble: this.rng.next() * 9,
       dead: false, leaked: false,
     });
@@ -645,7 +663,10 @@ export class GameState {
         id: this.nextId++, def: rule.into,
         x: parent.x + spread, y: parent.y + (this.rng.next() - 0.5) * 10,
         hp, hpMax: hp, speed: child.speed,
-        lane: parent.lane, heading: parent.heading, healIn: 0,
+        // Spaene erben den Schild NICHT. Ein Spalter mit Schild waere sonst
+        // ein Gegner mit drei Schilden - einer fuer sich, zwei fuer die
+        // Bruchstuecke -, und das steht in keiner Wellenzeile.
+        lane: parent.lane, heading: parent.heading, healIn: 0, shield: 0,
         // Spaene stieben zur Seite auseinander.
         side: Math.max(-1, Math.min(1, parent.side + (this.rng.next() - 0.5) * 0.9)),
         travelled: Math.max(0, parent.travelled - 6),
@@ -1003,6 +1024,22 @@ export class GameState {
   ): void {
     if (e.dead) return;
     const def = ENEMIES[e.def];
+
+    // Der Schild schluckt ganze Treffer, nicht Anteile.
+    //
+    // Er zaehlt TREFFER, nicht Schaden - deshalb hilft Schnellfeuer und nicht
+    // Wucht. Genau umgekehrt zur Panzerung, und das ist der Sinn: der Spieler
+    // soll seine gewohnte Antwort einmal nicht geben koennen.
+    //
+    // Flaechenschaden und Kettenblitz zaehlen mit, jeder getroffene Gegner
+    // fuer sich. Anders waere ein Moerser die Loesung fuer alles, und der
+    // Schild waere keine Frage mehr.
+    if (e.shield > 0) {
+      e.shield--;
+      e.hitFlash = 1;
+      this.ring(e.x, e.y, ENEMIES[e.def].radius * 1.6, '#9FD4FF', 0.28, 3);
+      return;
+    }
     // Panzerung schluckt einen ANTEIL, nicht eine feste Zahl.
     //
     // Vorher war sie ein Abzug: `Schaden minus Panzerung`. Am Anfang wirkte
@@ -1266,7 +1303,7 @@ export class GameState {
       ]) as unknown as SaveGame['towers'],
       enemies: this.enemies.map((e) => [
         e.def, e.x, e.y, e.hp, e.hpMax, e.travelled, e.slowFactor, e.slowLeft, e.wobble,
-        e.lane, e.healIn, e.side,
+        e.lane, e.healIn, e.side, e.shield,
       ]),
     };
   }
@@ -1337,12 +1374,13 @@ export class GameState {
       }
     this.towersVersion++;
 
-    for (const [def, x, y, hp, hpMax, travelled, slowFactor, slowLeft, wobble, lane, healIn, side]
-      of save.enemies) {
+    for (const [def, x, y, hp, hpMax, travelled, slowFactor, slowLeft, wobble, lane, healIn, side,
+      shield] of save.enemies) {
       this.enemies.push({
         id: this.nextId++, def, x, y, hp, hpMax,
         speed: ENEMIES[def].speed, lane: lane ?? 0, heading: 0, travelled,
-        slowFactor, slowLeft, healIn: healIn ?? 0, hitFlash: 0, squash: 0, hpShown: hp,
+        slowFactor, slowLeft, healIn: healIn ?? 0, shield: shield ?? 0,
+        hitFlash: 0, squash: 0, hpShown: hp,
         side: side ?? 0,
         wobble,
         dead: false, leaked: false,

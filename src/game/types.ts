@@ -19,6 +19,8 @@ export interface Enemy {
    *  gehoert er zum Gegner und nicht zur Bewegung. */
   side: number;
   /** Rest bis zum naechsten Heilpuls eines Webers. */
+  /** Wieviele Treffer der Schild noch schluckt. 0 heisst: keiner mehr. */
+  shield: number;
   healIn: number;
   /** Stauchen nach einem Treffer: 1 = frisch getroffen, klingt ab.
    *  Aus der Animationslehre - was Kraft abbekommt, verformt sich. */

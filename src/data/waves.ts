@@ -6,6 +6,19 @@ export interface WaveGroup {
   gap: number;    // Sekunden zwischen zwei Gegnern dieser Gruppe
   delay: number;  // Sekunden nach Wellenstart, bis die Gruppe beginnt
   hpMul?: number;
+  /** Ein Schild, der die ersten n Treffer VOLLSTAENDIG schluckt.
+   *
+   *  Warum an der Wellengruppe und nicht an der Gegnerart: dann braucht es
+   *  keine neue Art und kein neues Bild. Der Schild ist ein sichtbarer Ring
+   *  um einen bekannten Gegner - man erkennt sofort, WAS da kommt, und
+   *  zugleich, dass es diesmal anders ist.
+   *
+   *  Und er ist etwas anderes als Panzerung. Panzerung nimmt einen Anteil
+   *  jedes Treffers; der Schild nimmt ganze Treffer. Gegen Panzerung hilft
+   *  harter Schaden, gegen den Schild hilft Schnellfeuer - drei billige
+   *  Pfeile raeumen ihn genauso weg wie drei teure Granaten. Das ist der
+   *  Sinn: er dreht die uebliche Antwort um. */
+  shield?: number;
 }
 
 export interface Wave {
@@ -45,9 +58,17 @@ export const PLAN_SPIRALHAIN: Wave[] = [
   { bonus: 211, note: 'Erste Gleiter — der Mörser erreicht sie nicht', groups: [
     { enemy: 'crawler', count: 29, gap: 0.42, delay: 0 },
     { enemy: 'flyer', count: 6, gap: 1.6, delay: 7 } ] },
-  { bonus: 216, groups: [
-    { enemy: 'brute', count: 6, gap: 2.2, delay: 0 },
-    { enemy: 'splitter', count: 8, gap: 1.5, delay: 4 } ] },
+  { bonus: 216, note: 'Schilde — sie schlucken ganze Treffer, nicht Schaden', groups: [
+    // Der erste Schild im Spiel. Bewusst hier, in der neunten Welle des
+    // Spiralhains: frueh genug, dass man ihn kennt, bevor es eng wird, und
+    // spaet genug, dass ein ausgebautes Feld dasteht, an dem man den
+    // Unterschied merkt.
+    //
+    // Zwei Treffer, nicht mehr. Er soll eine Frage stellen ("warum passiert
+    // nichts?"), nicht die Welle entscheiden.
+    { enemy: 'infantry', count: 5, gap: 1.2, delay: 0, shield: 2 },
+    { enemy: 'brute', count: 6, gap: 2.2, delay: 3 },
+    { enemy: 'splitter', count: 8, gap: 1.5, delay: 7 } ] },
   { bonus: 238, groups: [
     { enemy: 'crawler', count: 39, gap: 0.4, delay: 0 },
     { enemy: 'runner', count: 25, gap: 0.4, delay: 5 },
@@ -170,7 +191,13 @@ export const PLAN_FROSTSPALTE: Wave[] = [
   { bonus: 440, note: 'Leerentitan — Panzerung 6, bremsresistent', groups: [
     { enemy: 'titan', count: 2, gap: 1, delay: 0 },
     { enemy: 'crawler', count: 9, gap: 0.6, delay: 6 } ] },
-  { bonus: 229, note: 'Panzerwand', groups: [
+  { bonus: 229, note: 'Panzerwand mit Schilden — Schnellfeuer räumt sie weg', groups: [
+    // Der erste Schild im Spiel, und bewusst spaet.
+    //
+    // Zwei Treffer, nicht mehr: er soll die Frage stellen ("warum passiert
+    // nichts?"), nicht die Welle entscheiden. Und auf der Infanterie, weil
+    // die langsam genug laeuft, um den Ring zu sehen, bevor sie vorbei ist.
+    { enemy: 'infantry', count: 5, gap: 1.0, delay: 2, shield: 2 },
     { enemy: 'brute', count: 7, gap: 1.5, delay: 0 },
     { enemy: 'splitter', count: 4, gap: 1.3, delay: 5 } ] },
   { bonus: 249, groups: [

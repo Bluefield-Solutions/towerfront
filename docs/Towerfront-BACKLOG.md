@@ -1,6 +1,6 @@
 # Towerfront — Rückstandsverzeichnis
 
-Stand: v108 · 21.08.2026
+Stand: v109 · 21.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Towerfront-BENCHMARK.md` und läuft mit `npm run bericht` in jedem Lauf mit.
 
@@ -13,7 +13,6 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 
 | # | Punkt | Nutzen | Aufw. |
 |---|---|---|---|
-| B15 | Zweite, kürzere Einführung beim ersten Besuch einer neuen Karte | ●● | S |
 
 ## Offen — Phase C (Tiefe)
 
@@ -24,7 +23,6 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | C21 | **G5** Heiler oder Schildträger, der die Zielreihenfolge erzwingt | ●● | M |
 | C16 | Turm, der ausschließlich Luftziele trifft (Gegenstück zum Mörser) | ●● | M |
 | C6 | Heiler, regeneriert Umstehende | ●● | M |
-| C7 | Schildgegner, absorbiert die ersten n Treffer | ●● | S |
 | C27 | Endlos-Bestenliste je Karte, die zeigt, wie weit andere Läufe kamen | ● | S |
 | C24 | Karte 4 mit einer Mechanik statt nur einer Form (bewegliche Brücke, Tor, das sich schließt) | ●● | L |
 | C26 | Laubschlucht (Kennung `ascheschlucht`) und Spiralhain verlangen noch fast dasselbe (Wächterhinweis, Abstand 0,22) — die Mischung stärker trennen | ●● | S |
@@ -75,6 +73,8 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
 | S73 | **T15 gelöst.** Verluste jetzt auf drei Wellen verteilt, 45 % in der letzten (Ziel 60 %) | Der zweite Anlauf gelang, weil ich diesmal **den ganzen Raum gemessen habe statt nacheinander zu justieren**: ein Eichskript setzt eine Kurve und berichtet alle Kennzahlen auf einmal. Vier Werte durchprobiert, den passenden gewählt, dann in fester Reihenfolge Türme, Sterne, Karten. |
+| S94 | **Der Schild landete im falschen Wellenplan — und die Balance meldete deshalb: alles unverändert.** Ich hatte die erste Fundstelle von „Panzerwand" ersetzt, ohne zu prüfen, in welchem der drei Pläne sie liegt. Sie lag in der Frostspalte; `npm run sim` misst den Spiralhain | **Regel 3, wörtlich: „Prüfen, ob der Eingriff angekommen ist."** Und das Tückische: eine unveränderte Balance sah nach einem behutsamen Eingriff aus, nicht nach einem ausgebliebenen. Gemessen nach der Korrektur: 2596 Bilder mit aktivem Schild, und die Verluste verteilen sich sogar gleichmäßiger (24 % statt 27 % in der letzten Welle). Eine Gegenprobe prüft jetzt, dass überhaupt eine Wellengruppe einen Schild trägt. |
+| S95 | **Zwei Prüfaufbauten hintereinander falsch, beide sahen nach einem Fehler in der Sache aus.** Erst gab ich drei Treffer gegen drei Schildpunkte und wunderte mich, dass nichts durchkam. Dann rendere ich ein Prüfbild, bevor der Bildvorrat geladen war, und sah die gemalte Ersatzgrafik | Beide Male war die Sache in Ordnung und die Prüfung falsch. **Nach S93 der zweite und dritte Fall in zwei Runden** — ein Prüfaufbau ist selbst Code und verdient dieselbe Skepsis wie das Geprüfte. Beim Rendern gilt: erst zeichnen (das fordert die Bilder an), dann warten, dann noch einmal zeichnen. |
 | S92 | **B11: die Geste musste sich vom Schwenken abgrenzen, und die Balance vom Werkzeug.** Ziehen auf der Leinwand verschiebt die Kamera — ein Turm-Ziehen wäre sonst ein Glücksspiel gewesen | Zwei Schranken: gezogen wird nur der **ausgewählte** Turm (der Prüfsteg steht offen, man meint ihn), und nur **zwischen den Wellen**. Während einer Welle wäre Versetzen keine Korrektur mehr, sondern eine neue Mechanik — man schöbe den Turm dorthin, wo es brennt, und jeder Turm hätte faktisch die Reichweite des halben Feldes. Kostenlos, weil Verkaufen und Neubauen als kostenpflichtiger Weg schon existiert. `canPlace` musste einen `ausser`-Parameter bekommen: ein Turm, der ein Stück zur Seite rutscht, blockierte sich sonst selbst. |
 | S93 | **B13 und B14 haben kein Tor — und das ist hier die ehrliche Lage.** Beide sind rein sichtbar: Reichweitenringe beim Halten, ein Warnring am Kristall | Der erste Entwurf der Ringe war mit 0,07 Füllung und 0,42 Linie **praktisch unsichtbar** — angesehen, nicht gemessen. Eine Anzeige, die man suchen muss, beantwortet keine Frage. Auf 0,11 und 0,7 angehoben. Beim Prüfbild ist mir zweimal der Aufbau misslungen (Kristall ausserhalb des Ausschnitts, Türme räumten die Welle ab, bevor jemand ankam) — **auch ein Prüfbild braucht einen Aufbau, der die Sache zeigt.** |
 | S89 | **B6 umgesetzt — und der Fehler saß nicht im Modell, sondern in der Anzeige.** Der Rauchtest mass, dass die Türme anders zielen; die Knöpfe zeigten trotzdem den alten Stand. `sync` schreibt nur bei geänderter Signatur ins DOM, und die Signatur zählte `id:level:branch` auf — die Zielwahl fehlte | **Zweiter Fall derselben Art nach dem Startknopf in v105: eine Ableitung schützt nur, was sie aufzählt.** Gefunden hat es wieder das Browsertor; jsdom kann es nicht, weil dort kein Durchlauf durch die echte Schleife stattfindet. Neu im Tor: nach dem Antippen eines Zielknopfes muss genau dieser aktiv sein. |

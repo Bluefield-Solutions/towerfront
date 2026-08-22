@@ -1274,6 +1274,22 @@ export class Renderer {
           }
         }
         ctx.restore();
+        // Der Schild: ein Ring, dessen Staerke die Restzahl zeigt.
+        //
+        // Kein Zahlentext. Wieviele Treffer noch kommen muessen, liest man an
+        // der Dicke ab - und wer es genau wissen will, sieht beim naechsten
+        // Treffer, dass es duenner wird. Ein Text an einem 25 Punkte grossen
+        // Gegner waere ohnehin nicht zu lesen.
+        if (e.shield > 0) {
+          const rs = sicht * 1.35;
+          ctx.save();
+          ctx.translate(e.x, e.y - alt);
+          ctx.strokeStyle = hexA('#9FD4FF', 0.45 + 0.12 * Math.sin(s.time * 4 + e.wobble));
+          ctx.lineWidth = 2 + Math.min(4, e.shield) * 1.4;
+          ctx.beginPath(); ctx.arc(0, 0, rs, 0, Math.PI * 2); ctx.stroke();
+          ctx.restore();
+        }
+
         if (def.boss) {
           ctx.save();
           ctx.translate(e.x, e.y - alt);

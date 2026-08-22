@@ -34,6 +34,13 @@ export interface Progress {
   stars: Partial<Record<string, number>>;
   /** Gekaufte dauerhafte Verbesserungen. */
   perks: string[];
+  /** Karten, deren kurze Einfuehrung schon gelaufen ist.
+   *
+   *  Getrennt von den Sternen, obwohl beides je Karte gilt: Sterne
+   *  entstehen erst am Ende einer Partie, der Hinweis muss aber schon beim
+   *  Betreten weg sein. Wer eine Karte dreimal verliert, will nicht dreimal
+   *  denselben Satz lesen. */
+  seenMaps?: string[];
 }
 
 interface Store { settings: Settings; best: BestMap; progress: Progress; }
@@ -41,7 +48,7 @@ interface Store { settings: Settings; best: BestMap; progress: Progress; }
 const DEFAULTS: Store = {
   settings: { sound: true, quality: 'auto', perf: false, tutorial: true, difficulty: 'normal', map: 'spiralhain', endless: false },
   best: {},
-  progress: { stars: {}, perks: [] },
+  progress: { stars: {}, perks: [], seenMaps: [] },
 };
 
 function read(): Store {
@@ -138,4 +145,18 @@ export function recordRun(
     store.best[key] = { wave, lives };
     write(store);
   }
+}
+
+/** War der Spieler schon einmal auf dieser Karte?
+ *
+ *  Beim ersten Mal wird sie gleich als besucht vermerkt und `true`
+ *  zurueckgegeben. Das ist Absicht: der Aufrufer soll nicht daran denken
+ *  muessen, es hinterher zu setzen - genau dort wuerde es vergessen.
+ */
+export function ersterBesuch(mapId: string): boolean {
+  const liste = store.progress.seenMaps ?? (store.progress.seenMaps = []);
+  if (liste.includes(mapId)) return false;
+  liste.push(mapId);
+  write(store);
+  return true;
 }

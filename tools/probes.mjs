@@ -344,6 +344,32 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // Der Schild muss Treffer schlucken. Hier faellt das Schlucken weg.
+    name: 'Schild schluckt nichts',
+    datei: 'src/game/state.ts',
+    regel: /if \(e\.shield > 0\) \{\n      e\.shield--;/,
+    ersatz: 'if (false) {\n      e.shield--;',
+    tor: 'smoke',
+  },
+  {
+    // Und er muss in einem Wellenplan STEHEN. Eine Mechanik, die nirgends
+    // vorkommt, ist keine - genau das war sie eine Stunde lang, weil der
+    // Eingriff im falschen Plan landete.
+    name: 'Schild kommt in keiner Welle vor',
+    datei: 'src/data/waves.ts',
+    regel: /delay: 0, shield: 2 \},/,
+    ersatz: 'delay: 0 },',
+    tor: 'smoke',
+  },
+  {
+    // Der Kartensatz muss die Karte nennen. Ohne Namen waere er beliebig.
+    name: 'Karteneinfuehrung nennt die Karte nicht',
+    datei: 'src/game/tutorial.ts',
+    regel: /\$\{s\.map\.name\}: ein Zuweg/,
+    ersatz: 'Diese Karte: ein Zuweg',
+    tor: 'smoke',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

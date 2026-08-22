@@ -141,7 +141,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v108. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v109. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, sieben
 Gegnerarten in den Wellen plus den Span, in den der Spalter zerfällt, drei
 Grade, Endlosmodus. Genre-Abgleich 27 von 30, gewichtet 93 %.
@@ -163,6 +163,16 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   Genre-Abgleich. Sie waren hinter T15 gesperrt; die Sperre ist gefallen.
 
 **Erledigt und hier zu lange falsch stehen geblieben** (nachgemessen in v103):
+- B15 und C7 sind umgesetzt (v109). Beim ersten Betreten einer Karte
+  erscheint **ein** Satz, aus Bahnzahl und engster Stelle abgeleitet — nicht
+  je Karte geschrieben, damit er auch für die vierte gilt. Und Wellengruppen
+  können einen **Schild** tragen, der ganze Treffer schluckt statt Anteile:
+  gegen Panzerung hilft Wucht, gegen den Schild Schnellfeuer. Er sitzt an der
+  Wellengruppe, nicht an einer neuen Gegnerart — deshalb braucht er kein
+  neues Bild.
+- C7 schließt **G5 nicht**: der Genre-Punkt verlangt einen Gegner, der die
+  Zielreihenfolge *erzwingt* (Heiler, Schildträger für andere). Der Schild
+  schützt nur sich selbst.
 - B11, B13, B14 sind umgesetzt (v108). Türme lassen sich **zwischen den
   Wellen** ziehen — nur der ausgewählte, sonst wäre jedes Schwenken ein
   Glücksspiel. Während einer Welle abgelehnt: das wäre keine Korrektur mehr,

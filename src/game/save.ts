@@ -71,9 +71,11 @@ export interface SaveGame {
   /** [Gegnerart, x, y, hp, hpMax, Segment, Strecke, Bremsfaktor, Bremsrest, Wackeln] */
   /** [Gegnerart, x, y, hp, hpMax, Segment, Strecke, Bremsfaktor, Bremsrest,
    *  Wackeln, Bahn] */
+  /** ... zuletzt die Schildreste. Angehaengt wie die Zielwahl bei den
+   *  Tuermen: ein Stand ohne das Feld laedt weiter und bekommt Null. */
   enemies: [
     EnemyId, number, number, number, number, number, number, number, number, number, number,
-    number,
+    number, number?,
   ][];
 }
 

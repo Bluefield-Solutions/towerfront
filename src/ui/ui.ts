@@ -1,5 +1,6 @@
 import { SPEEDS, VERSION } from '../data/config';
-import { ENEMIES } from '../data/enemies';
+import { ENEMIES, type EnemyId } from '../data/enemies';
+import { getEnemyArt } from '../gfx/enemyart';
 import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
 import {
   TOWERS, TOWER_ORDER, MAX_LEVEL, accentFor, nextFor, sellValue, statsFor,
@@ -889,13 +890,63 @@ export class UI {
     for (const [id, n] of counts) {
       const d = ENEMIES[id as keyof typeof ENEMIES];
       // Flieger und Zerfaller bekommen einen Zusatz - man soll vor dem Start
-      // wissen, wogegen man baut.
+      // wissen, wogegen man baut. Der NAME faellt dagegen weg (D20): auf dem
+      // Telefon war die Zeile zu lang, und die Vorbilder zeigen ohnehin das
+      // Bild, nicht den Namen. Kingdom Rush, Bloons und Plants vs. Zombies
+      // machen es alle drei so - das Bild traegt die Erkennung, die Zahl die
+      // Menge. Wer den Namen braucht, haelt drauf (title).
       const mark = d.flying ? ' <span class="tag">Luft</span>'
         : d.split ? ' <span class="tag">zerfällt</span>' : '';
-      parts.push(`<i><b style="background:${d.body}"></b>${n}× ${d.name}${mark}</i>`);
+      const bild = this.gegnerSymbol(id as EnemyId, s.map.id);
+      // Solange der Bildvorrat nicht geladen ist, bleibt der Farbtupfer von
+      // frueher stehen. Eine Vorschau, die auf Bilder wartet, waere leer -
+      // und leer ist schlechter als grob.
+      const symbol = bild
+        ? `<img class="next-bild" src="${bild}" alt="">`
+        : `<b style="background:${d.body}"></b>`;
+      parts.push(`<i title="${d.name}">${symbol}${n}×${mark}</i>`);
     }
     if (w.note) parts.push(`<i class="next-note">${w.note}</i>`);
     this.nList.innerHTML = parts.join('');
+  }
+
+  /** Gegnerbild als Adresse, einmal je Gegner und Karte gerechnet.
+   *
+   *  Das gebackene Bild gehoert dem Zeichenwerk und wird jedes Bild benutzt -
+   *  es in die Seite zu haengen wuerde es dort wegnehmen. Also eine Kopie als
+   *  Datenadresse, und die gemerkt: `toDataURL` ueber acht Gegner in jedem
+   *  Wellenwechsel waere sonst Arbeit fuer nichts.
+   *
+   *  Nicht gemerkt wird der leere Fall. Ist der Vorrat noch nicht geladen,
+   *  soll der naechste Aufruf es erneut versuchen - sonst bliebe der
+   *  Farbtupfer fuer immer stehen. */
+  /** Kantenlaenge des abgelegten Symbols in Geraetepunkten: 20 Punkte
+   *  Anzeige mal zwei fuer die doppelte Aufloesung des iPhone. */
+  private static readonly SYMBOL = 40;
+
+  private gegnerSymbole = new Map<string, string>();
+
+  private gegnerSymbol(id: EnemyId, karte: string): string {
+    const schluessel = `${id}|${karte}`;
+    const da = this.gegnerSymbole.get(schluessel);
+    if (da) return da;
+    const cv = getEnemyArt(id, false, karte);
+    if (!cv) return '';
+    // In ANZEIGEGROESSE ablegen, nicht in Quellgroesse.
+    //
+    // Das gebackene Bild ist rund hundert Punkte breit; angezeigt werden
+    // zwanzig. Direkt umgewandelt ergab das 34 bis 116 KB je Gegner, also
+    // ueber ein halbes Megabyte Zeichenketten fuer acht Symbole - fuer
+    // Bildpunkte, die nie jemand sieht. Derselbe Fehler wie in S84 und S91,
+    // nur an anderer Stelle: gemessen und abgelegt wird, was ankommt.
+    const klein = document.createElement('canvas');
+    klein.width = UI.SYMBOL; klein.height = UI.SYMBOL;
+    const g = klein.getContext('2d');
+    if (!g) return '';
+    g.drawImage(cv, 0, 0, UI.SYMBOL, UI.SYMBOL);
+    const url = klein.toDataURL();
+    this.gegnerSymbole.set(schluessel, url);
+    return url;
   }
 
   /** Zeigt die Werteliste an, dass es weitergeht - und nur dann.

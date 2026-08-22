@@ -120,6 +120,16 @@ zweites Mal kosten.
    einer Sekunde, auf dem Schreibtisch unauffällig. Alles Leuchten wird
    gebacken.
 
+12. **Jede Zahl trägt ihre Messstelle mit.** Gemessen woran, in welcher
+   Auflösung, in welcher Umgebung. Fünf Runden kosteten genau das: die
+   Figurendichte am Quellbild statt in Anzeigegröße (S84), der Untergrund am
+   Foto statt am gebackenen Terrain (S86), der Kartenwechsel in Node statt im
+   Browser (S105, Faktor zehn daneben), ein Vergleich mit Vignette gegen einen
+   ohne (S110). Und zuletzt: die Browserzahlen entstehen unter **SwiftShader,
+   also ohne Grafikkarte**. Der JavaScript-Anteil trägt auf ein Telefon über,
+   Rastern und Zusammensetzen nicht. `npm run kartenwechsel -- --browser`
+   schreibt das jetzt selbst über jeden Lauf — eine nackte Millisekundenzahl
+   ist in diesem Verzeichnis kein Beleg mehr.
 ---
 
 ## Aufbau
@@ -143,7 +153,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v113. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v114. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 29 von 30,
@@ -165,13 +175,14 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
 - Kein ●● im Genre-Abgleich mehr offen. Von 30 Kriterien sind 29 erfüllt;
   das letzte (P8, antippbare Kleinigkeiten in der Karte) ist von Hand
   beurteilt und steht als D14.
-- D26 (technisch): Beim Betreten einer Karte bleiben 430–620 ms schlimmste
-  Aufgabe (vierfache Drossel), Norm sind 50 ms. Der Kartenaufbau ist daran
-  seit v113 **nicht mehr beteiligt** — schaltet man den Tonwertabgleich ganz
-  ab, ändert sich die Zahl nicht. Ein Profillauf legt 19,5 von 22 s unter
-  `(program)`: browserinterne Arbeit, kein JavaScript von uns. Der nächste
-  Hebel wäre das Dekodieren (`createImageBitmap`), und dort ist Vorsicht
-  geboten — Safari ist bei Bildpfaden schon einmal aufgefallen (Regel 11).
+- D26 ist **geschlossen, aber nicht durch eine Änderung**: der vermutete
+  Hebel gab es nicht. Ein Ablaufmitschnitt zeigt **kein einziges
+  Bild-Dekodieren** unter den teuren Posten; 16,8 von 22,9 s liegen auf
+  `ProduceCanvasResource`, also auf Rastern und Zusammensetzen. Und das
+  wiederum ist ein Artefakt der Messumgebung: hier rechnet **SwiftShader**,
+  eine Software-Rasterung ohne Grafikkarte. `createImageBitmap` hätte an der
+  falschen Stelle gezogen. Was offen bleibt, steht als D27 — aber erst,
+  wenn eine Messung auf echter Hardware es belegt.
 
 **Erledigt und hier zu lange falsch stehen geblieben** (nachgemessen in v103):
 - B15 und C7 sind umgesetzt (v109). Beim ersten Betreten einer Karte

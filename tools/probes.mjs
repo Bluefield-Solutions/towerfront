@@ -505,6 +505,14 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
+    // D20: die Vorschau muss Bilder zeigen, nicht Namen.
+    name: 'Wellenvorschau faellt auf Farbtupfer zurueck',
+    datei: 'src/ui/ui.ts',
+    regel: /    const cv = getEnemyArt\(id, false, karte\);/,
+    ersatz: '    const cv = null;',
+    tor: 'browsertor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

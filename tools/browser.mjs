@@ -418,6 +418,47 @@ if (start) {
       }
     }
 
+    // --- 9. Zeigt die Wellenvorschau Bilder statt Namen? (D20)
+    //
+    // Auf dem Telefon war die Zeile zu lang: drei Gegnerarten mit Namen
+    // stapelten sich auf drei Zeilen ueber dem Spielfeld. Die Vorbilder
+    // zeigen alle drei das Bild, nicht den Namen.
+    //
+    // Geprueft wird das Ergebnis, nicht die Umsetzung: hat jeder Eintrag der
+    // Vorschau ein Bild? Der Farbtupfer von frueher ist als Rueckfall
+    // erlaubt, solange der Bildvorrat laedt - aber hier, eine Sekunde nach
+    // dem Betreten, ist er ein Fehler.
+    const vorschau = await seite.evaluate(() => {
+      const l = document.getElementById('n-list');
+      if (!l || document.getElementById('next')?.hidden) return null;
+      const eintraege = [...l.querySelectorAll('i')].filter((e) => !e.classList.contains('next-note'));
+      return {
+        eintraege: eintraege.length,
+        bilder: l.querySelectorAll('img.next-bild').length,
+        tupfer: l.querySelectorAll('b').length,
+        hoehe: Math.round(document.getElementById('next').getBoundingClientRect().height),
+        fenster: innerHeight,
+      };
+    });
+    if (vorschau && vorschau.eintraege > 0) {
+      if (vorschau.bilder === 0) {
+        fail(
+          `Wellenvorschau zeigt ${vorschau.eintraege} Gegnerart(en), aber kein einziges Bild ` +
+          `(${vorschau.tupfer} Farbtupfer). Auf dem Telefon wird daraus wieder eine Textzeile.`,
+        );
+      }
+      // Und sie darf das Spielfeld nicht zustellen.
+      const anteil = vorschau.hoehe / vorschau.fenster;
+      if (anteil > 0.22) {
+        fail(
+          `Wellenvorschau nimmt ${Math.round(anteil * 100)} % der Bildhoehe ` +
+          `(${vorschau.hoehe} von ${vorschau.fenster}) - sie steht ueber dem Spielfeld.`,
+        );
+      }
+      console.log(`\nWellenvorschau: ${vorschau.eintraege} Art(en), ${vorschau.bilder} Bild(er), `
+        + `${vorschau.hoehe} von ${vorschau.fenster} Punkten hoch.`);
+    }
+
     // Und die Gegenrichtung wirklich pruefen, statt sie nur zu behaupten.
     //
     // Der erste Entwurf prüfte beide Richtungen in EINER Momentaufnahme -

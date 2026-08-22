@@ -26,7 +26,34 @@ export async function messenImBrowser(ROOT) {
   const { chromium } = await import('playwright');
   const browser = await starten(chromium);
 
+  // --- Erst sagen, WORAUF gemessen wird. Sonst wandert die Zahl als
+  // "so ist es auf dem Telefon" weiter, und das waere gelogen.
+  const umgebung = await (async () => {
+    const ctx = await browser.newContext();
+    const seite = await ctx.newPage();
+    await seite.goto('about:blank');
+    const r = await seite.evaluate(() => {
+      const gl = document.createElement('canvas').getContext('webgl');
+      if (!gl) return 'kein WebGL';
+      const e = gl.getExtension('WEBGL_debug_renderer_info');
+      return String(e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+    });
+    await ctx.close();
+    return r;
+  })();
+  const software = /swiftshader|llvmpipe|software/i.test(umgebung);
+
   console.log(`\nIm Browser, ${DROSSEL}-fache CPU-Drossel, ${LAEUFE} Laeufe:`);
+  console.log(`  Zeichenwerk: ${umgebung.slice(0, 96)}`);
+  if (software) {
+    console.log('  ACHTUNG: das ist eine SOFTWARE-Rasterung, keine Grafikkarte. Was das heisst:');
+    console.log('    - Der JavaScript-Anteil (unsere Rechnung) traegt auf ein Telefon ueber.');
+    console.log('    - Rastern und Zusammensetzen NICHT: die zahlt hier die CPU, dort die GPU.');
+    console.log('    - Ein Ablaufmitschnitt legte 16,8 von 22,9 s auf ProduceCanvasResource,');
+    console.log('      also auf genau den Teil, der hier teurer ist als auf dem Zielgeraet.');
+    console.log('  Die Zahl taugt als Vergleich gegen sich selbst, nicht als Aussage ueber');
+    console.log('  das iPhone. Wer sie so zitiert, zitiert sie falsch.');
+  }
   const schlimmste = [];
   for (let lauf = 1; lauf <= LAEUFE; lauf++) {
     const ctx = await browser.newContext({

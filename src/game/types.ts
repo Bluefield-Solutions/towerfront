@@ -21,7 +21,14 @@ export interface Enemy {
   /** Rest bis zum naechsten Heilpuls eines Webers. */
   /** Wieviele Treffer der Schild noch schluckt. 0 heisst: keiner mehr. */
   shield: number;
-  healIn: number;
+  /** Wieviel Schild dieser Gegner an NACHBARN vergibt. 0 = kein Traeger. */
+  traeger: number;
+  /** Sekunden bis zur naechsten Vergabe.
+   *
+   *  Hiess bis v110 `healIn` und war ein totes Feld: nirgends gelesen, nur
+   *  angelegt und mitgespeichert. Ein Ueberbleibsel eines Heilers, den es nie
+   *  gab. Jetzt traegt es den Takt des Schildtraegers - und heisst danach. */
+  auraIn: number;
   /** Stauchen nach einem Treffer: 1 = frisch getroffen, klingt ab.
    *  Aus der Animationslehre - was Kraft abbekommt, verformt sich. */
   squash: number;

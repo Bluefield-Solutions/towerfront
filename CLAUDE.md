@@ -141,10 +141,10 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v109. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v110. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, sieben
 Gegnerarten in den Wellen plus den Span, in den der Spalter zerfällt, drei
-Grade, Endlosmodus. Genre-Abgleich 27 von 30, gewichtet 93 %.
+Grade, Endlosmodus. Genre-Abgleich 28 von 30, gewichtet 96 %.
 
 Die Zahl hinter „Stand" muss zu `VERSION` in `src/data/config.ts` passen —
 `npm run doku` vergleicht beide und schlägt ab sechs Versionen Rückstand an.
@@ -159,8 +159,8 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   nicht mitgewachsen ist: ihr Bild füllt seine Kachel nur zu 0,22 statt 0,35
   Bildschirmpunkten je Weltpunkt, sie bleibt deshalb bei 17 px. Das ist am
   Bild zu beheben, nicht am Maßstab — und dafür braucht es `art/roh/`.
-- R4 und G5: Blockturm und Schildträger, die letzten beiden ●● im
-  Genre-Abgleich. Sie waren hinter T15 gesperrt; die Sperre ist gefallen.
+- R4: Blockturm, der Gegner bindet statt sie zu töten. Der letzte ●● im
+  Genre-Abgleich.
 
 **Erledigt und hier zu lange falsch stehen geblieben** (nachgemessen in v103):
 - B15 und C7 sind umgesetzt (v109). Beim ersten Betreten einer Karte
@@ -170,9 +170,11 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   gegen Panzerung hilft Wucht, gegen den Schild Schnellfeuer. Er sitzt an der
   Wellengruppe, nicht an einer neuen Gegnerart — deshalb braucht er kein
   neues Bild.
-- C7 schließt **G5 nicht**: der Genre-Punkt verlangt einen Gegner, der die
-  Zielreihenfolge *erzwingt* (Heiler, Schildträger für andere). Der Schild
-  schützt nur sich selbst.
+- G5 ist geschlossen (v110). Der **Schildträger** lädt die Schilde seiner
+  Nachbarn nach, solange er lebt — und sich selbst nie. Wer ihn stehen lässt,
+  kommt gegen den Pulk nicht an, ganz gleich wieviel Schaden er auffährt. Ein
+  gestrichelter Ring markiert ihn, Fäden zeigen, wen er versorgt: die
+  Reihenfolge muss man **sehen**, nicht erschließen.
 - B11, B13, B14 sind umgesetzt (v108). Türme lassen sich **zwischen den
   Wellen** ziehen — nur der ausgewählte, sonst wäre jedes Schwenken ein
   Glücksspiel. Während einer Welle abgelehnt: das wäre keine Korrektur mehr,

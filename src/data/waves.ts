@@ -19,6 +19,20 @@ export interface WaveGroup {
    *  Pfeile raeumen ihn genauso weg wie drei teure Granaten. Das ist der
    *  Sinn: er dreht die uebliche Antwort um. */
   shield?: number;
+  /** Ein Schildtraeger: gibt UMSTEHENDEN Gegnern immer wieder Schild.
+   *
+   *  Der Unterschied zu `shield` ist der ganze Punkt. Ein eigener Schild
+   *  kostet den Spieler ein paar Treffer mehr und ist dann weg. Ein Traeger
+   *  laedt die Schilde der anderen nach, solange er lebt - wer ihn stehen
+   *  laesst, kommt gegen den Pulk nicht an, ganz gleich wieviel Schaden er
+   *  auffaehrt.
+   *
+   *  Das ist G5 aus dem Genre-Abgleich: ein Gegner, der die Reihenfolge
+   *  ERZWINGT. Nicht "es waere gut, ihn zuerst zu nehmen", sondern "sonst
+   *  geht es nicht".
+   *
+   *  Die Zahl ist, wieviel Schild er einem Nachbarn hoechstens gibt. */
+  traeger?: number;
 }
 
 export interface Wave {
@@ -80,9 +94,19 @@ export const PLAN_SPIRALHAIN: Wave[] = [
   { bonus: 277, note: 'Gleiter aus der Luft', groups: [
     { enemy: 'flyer', count: 20, gap: 0.9, delay: 0 },
     { enemy: 'runner', count: 36, gap: 0.34, delay: 5 } ] },
-  { bonus: 308, note: 'Doppelte Kolosswand', groups: [
-    { enemy: 'brute', count: 6, gap: 1.5, delay: 0 },
-    { enemy: 'splitter', count: 6, gap: 1.2, delay: 4 } ] },
+  { bonus: 308, note: 'Schildträger — erst ihn, dann die Wand', groups: [
+    // Der Traeger, und er kommt spaeter als der einfache Schild aus Welle 9.
+    //
+    // Die Reihenfolge ist Absicht: erst lernt man, dass ein Schild Treffer
+    // schluckt und weggeht, dann trifft man auf jemanden, der ihn wieder
+    // aufbaut. Andersherum waere die zweite Lektion die erste gewesen und
+    // haette die erste ueberfluessig gemacht.
+    //
+    // Zwei Traeger, nicht einer. Bei einem waere die Welle mit einem
+    // Gluecksschuss entschieden; bei zweien muss man es wollen.
+    { enemy: 'infantry', count: 2, gap: 6, delay: 0, traeger: 2 },
+    { enemy: 'brute', count: 6, gap: 1.5, delay: 2 },
+    { enemy: 'splitter', count: 6, gap: 1.2, delay: 6 } ] },
   { bonus: 334, groups: [
     { enemy: 'runner', count: 16, gap: 0.3, delay: 0 },
     { enemy: 'splitter', count: 6, gap: 1.2, delay: 5 },

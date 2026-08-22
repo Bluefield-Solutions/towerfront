@@ -161,7 +161,17 @@ const CRITERIA: Criterion[] = [
     id: 'G5', area: 'Gegner', from: 'Kingdom Rush, Plants vs. Zombies',
     text: 'Unterstuetzende Gegner - Heiler, Schildtraeger, Beschwoerer.',
     measured: true, weight: 2,
-    check: () => false,
+    // Bis v110 stand hier `() => false` - fest verdrahtet auf "nicht
+    // erfuellt". Ein Kriterium, das IMMER falsch meldet, misst genauso wenig
+    // wie eines, das immer wahr meldet: es haette auch dann noch offen
+    // gestanden, als der Traeger laengst im Spiel war.
+    //
+    // Gemessen wird jetzt die Sache selbst: traegt irgendeine Wellengruppe
+    // einen Gegner, der ANDEREN hilft? Nicht "gibt es einen Gegner mit
+    // besonderer Eigenschaft" - das waere schon mit dem Schild aus C7
+    // erfuellt gewesen, und der schuetzt nur sich selbst.
+    check: () => MAPS.some((m: { waves: Wave[] }) =>
+      m.waves.some((w) => w.groups.some((g) => (g.traeger ?? 0) > 0))),
     gap: 'Heiler oder Schildtraeger, der die Reihenfolge der Ziele erzwingt.',
   },
   {

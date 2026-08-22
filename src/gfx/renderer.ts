@@ -1274,6 +1274,42 @@ export class Renderer {
           }
         }
         ctx.restore();
+        // Der Schildtraeger: ein eigener Ring plus Faeden zu denen, die er
+        // versorgt.
+        //
+        // Der Ring allein reichte nicht. Zwei Gegner mit blauem Schildring
+        // und einer davon mit violettem Traegerring - das sieht nach zwei
+        // Sorten Schild aus, nicht nach Ursache und Wirkung. Erst die Faeden
+        // sagen, WOHER der Schild kommt, und damit, wen man zuerst nehmen
+        // muss. Das ist der ganze Sinn von G5: die Reihenfolge muss man
+        // SEHEN, nicht erschliessen.
+        if (e.traeger > 0) {
+          ctx.save();
+          const puls = 0.55 + 0.35 * Math.sin(s.time * 3 + e.wobble);
+          // Deckung angehoben nach dem ersten Blick, wie bei den
+          // Reichweitenringen in v108: bei 0,35 waren die Faeden im Gewimmel
+          // nicht auszumachen, und damit war nicht zu sehen, WER die Quelle
+          // ist. Genau das muessen sie zeigen.
+          ctx.strokeStyle = hexA('#C9A0FF', 0.55 + 0.25 * puls);
+          ctx.lineWidth = 3;
+          for (const o of s.enemies) {
+            if (o === e || o.dead || o.shield <= 0) continue;
+            const dx = o.x - e.x, dy = o.y - e.y;
+            if (dx * dx + dy * dy > 190 * 190) continue;
+            ctx.beginPath();
+            ctx.moveTo(e.x, e.y - alt);
+            ctx.lineTo(o.x, o.y);
+            ctx.stroke();
+          }
+          ctx.translate(e.x, e.y - alt);
+          ctx.strokeStyle = hexA('#C9A0FF', 0.7 + 0.3 * puls);
+          ctx.lineWidth = 4;
+          ctx.setLineDash([7, 5]);
+          ctx.beginPath(); ctx.arc(0, 0, sicht * 1.75, 0, Math.PI * 2); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+        }
+
         // Der Schild: ein Ring, dessen Staerke die Restzahl zeigt.
         //
         // Kein Zahlentext. Wieviele Treffer noch kommen muessen, liest man an

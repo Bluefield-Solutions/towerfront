@@ -1189,6 +1189,52 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Der Schildtraeger: laedt er die Nachbarn nach - und sich selbst NICHT?
+//
+// Beide Haelften zaehlen. Ein Traeger, der sich selbst versorgt, waere ein
+// unsterblicher Einzelgaenger, und die Zielreihenfolge waere wieder egal:
+// man koennte ihn stehen lassen und den Rest raeumen. Genau das soll G5
+// verhindern.
+{
+  const { MAPS } = await import('../src/data/maps');
+  const start = MAPS[0];
+  const imPlan = start.waves.reduce(
+    (a, w) => a + w.groups.filter((g) => g.traeger).reduce((b, g) => b + g.count, 0), 0);
+  if (imPlan === 0) {
+    problems.push(`Schildtraeger: auf ${start.name} kommt keiner vor - die Mechanik ist tot.`);
+  }
+
+  state.reset(77, 'normal', 'spiralhain');
+  const t = state.spawnZumPruefen('infantry', 0, 2);
+  const n = state.spawnZumPruefen('crawler', 0, 0);
+  if (!t || !n) {
+    problems.push('Schildtraeger: es liessen sich keine zwei Gegner zum Pruefen setzen.');
+  } else {
+    n.x = t.x + 40; n.y = t.y;
+    // Weit genug fuer mehrere Takte.
+    for (let i = 0; i < 60 * 6; i++) state.update(1 / 60);
+    if (n.shield <= 0) {
+      problems.push('Schildtraeger: der Nachbar hat nach sechs Sekunden immer noch keinen Schild.');
+    }
+    if (n.shield > 2) {
+      problems.push(`Schildtraeger: gibt ${n.shield} Schild statt hoechstens 2.`);
+    }
+    if (t.shield > 0) {
+      problems.push('Schildtraeger: versorgt sich selbst - dann muss man ihn nicht zuerst nehmen.');
+    }
+
+    // Und ausser Reichweite darf nichts ankommen.
+    const fern = state.spawnZumPruefen('crawler', 0, 0);
+    if (fern) {
+      fern.x = t.x + 600; fern.y = t.y;
+      for (let i = 0; i < 60 * 4; i++) state.update(1 / 60);
+      if (fern.shield > 0) {
+        problems.push('Schildtraeger: wirkt ueber das ganze Feld statt in seinem Umkreis.');
+      }
+    }
+  }
+}
+
 // Jede Karte muss sich aufbauen und zeichnen lassen. Ein Pfad, der ins Leere
 // fuehrt, oder eine Farbwelt mit Luecke faellt sonst erst beim Antippen auf.
 {

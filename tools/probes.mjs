@@ -370,6 +370,22 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // Der Traeger muss den Nachbarn Schild geben.
+    name: 'Schildtraeger versorgt niemanden',
+    datei: 'src/game/state.ts',
+    regel: /if \(e\.shield >= t\.traeger\) continue;/,
+    ersatz: 'if (true) continue;',
+    tor: 'smoke',
+  },
+  {
+    // Und sich selbst NICHT - sonst muss man ihn nicht zuerst nehmen.
+    name: 'Schildtraeger versorgt sich selbst',
+    datei: 'src/game/state.ts',
+    regel: /if \(e === t \|\| e\.dead\) continue;/,
+    ersatz: 'if (e.dead) continue;',
+    tor: 'smoke',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

@@ -31,7 +31,8 @@ import type {
 import { ZIELWAHL_ORDNUNG } from './types';
 
 interface PendingSpawn {
-  time: number; enemy: EnemyId; hpMul: number; lane: number; shield?: number;
+  time: number; enemy: EnemyId; hpMul: number; lane: number;
+  shield?: number; traeger?: number;
 }
 
 function emptyStats(): RunStats {
@@ -239,8 +240,8 @@ export class GameState {
    *  privat sind - und privat sollen sie bleiben. Ein Test, der auf private
    *  Innereien greift, haelt sie fest; ein schmaler benannter Zugang laesst
    *  sie frei. */
-  spawnZumPruefen(id: EnemyId, shield: number): Enemy | undefined {
-    this.spawnEnemy(id, 1, 0, shield);
+  spawnZumPruefen(id: EnemyId, shield: number, traeger = 0): Enemy | undefined {
+    this.spawnEnemy(id, 1, 0, shield, traeger);
     return this.enemies[this.enemies.length - 1];
   }
 
@@ -443,6 +444,7 @@ export class GameState {
           time: g.delay + (i * g.gap) / dense,
           enemy: g.enemy, hpMul: g.hpMul ?? 1,
           shield: g.shield ?? 0,
+          traeger: g.traeger ?? 0,
           lane: laneTurn % laneCount,
         });
         laneTurn++;
@@ -607,7 +609,7 @@ export class GameState {
       this.waveTime += dt;
       while (this.pending.length && this.pending[0].time <= this.waveTime) {
         const p = this.pending.shift()!;
-        this.spawnEnemy(p.enemy, p.hpMul, p.lane, p.shield ?? 0);
+        this.spawnEnemy(p.enemy, p.hpMul, p.lane, p.shield ?? 0, p.traeger ?? 0);
       }
       if (!this.pending.length && !this.enemies.length) this.finishWave();
     }
@@ -633,7 +635,9 @@ export class GameState {
     }
   }
 
-  private spawnEnemy(id: EnemyId, hpMul: number, lane: number, shield = 0): void {
+  private spawnEnemy(
+    id: EnemyId, hpMul: number, lane: number, shield = 0, traeger = 0,
+  ): void {
     const def = ENEMIES[id];
     const ln = lane % this.lanes.length;
     const p0 = this.lanes[ln].pts[0];
@@ -646,7 +650,7 @@ export class GameState {
       id: this.nextId++, def: id, x: p0.x, y: p0.y + off,
       hp, hpMax: hp, speed: def.speed, lane: ln, heading: 0,
       side: (this.rng.next() * 2 - 1) * 0.85, travelled: 0,
-      slowFactor: 1, slowLeft: 0, healIn: 0, shield,
+      slowFactor: 1, slowLeft: 0, auraIn: 0, shield, traeger,
       hitFlash: 0, squash: 0, hpShown: hp, wobble: this.rng.next() * 9,
       dead: false, leaked: false,
     });
@@ -666,7 +670,7 @@ export class GameState {
         // Spaene erben den Schild NICHT. Ein Spalter mit Schild waere sonst
         // ein Gegner mit drei Schilden - einer fuer sich, zwei fuer die
         // Bruchstuecke -, und das steht in keiner Wellenzeile.
-        lane: parent.lane, heading: parent.heading, healIn: 0, shield: 0,
+        lane: parent.lane, heading: parent.heading, auraIn: 0, shield: 0, traeger: 0,
         // Spaene stieben zur Seite auseinander.
         side: Math.max(-1, Math.min(1, parent.side + (this.rng.next() - 0.5) * 0.9)),
         travelled: Math.max(0, parent.travelled - 6),
@@ -678,7 +682,40 @@ export class GameState {
     this.ring(parent.x, parent.y, 46, child.trim, 0.3, 3);
   }
 
+  /** Wie weit ein Schildtraeger wirkt, und wie oft. */
+  private static readonly TRAEGER_REICHWEITE = 190;
+  private static readonly TRAEGER_TAKT = 1.6;
+
+  /** Die Schildtraeger laden ihre Nachbarn nach.
+   *
+   *  Getrennt von der Hauptschleife, weil hier ueber PAARE gelaufen wird:
+   *  jeder Traeger sieht alle anderen. Bei einem Dutzend Gegnern in
+   *  Reichweite kostet das nichts; bei einem Traeger, der jedes Bild rechnet,
+   *  schon - deshalb der Takt.
+   *
+   *  Der Traeger gibt NUR anderen, nie sich selbst. Sonst waere er ein
+   *  unsterblicher Einzelgaenger statt einer Stuetze, und die Zielreihenfolge
+   *  waere wieder egal: man koennte ihn stehen lassen und den Rest raeumen.
+   */
+  private updateTraeger(dt: number): void {
+    const R2 = GameState.TRAEGER_REICHWEITE ** 2;
+    for (const t of this.enemies) {
+      if (t.dead || t.traeger <= 0) continue;
+      t.auraIn -= dt;
+      if (t.auraIn > 0) continue;
+      t.auraIn = GameState.TRAEGER_TAKT;
+      for (const e of this.enemies) {
+        if (e === t || e.dead) continue;
+        if (e.shield >= t.traeger) continue;
+        if (dist2(t.x, t.y, e.x, e.y) > R2) continue;
+        e.shield++;
+        this.ring(e.x, e.y, ENEMIES[e.def].radius * 1.3, '#B07CFF', 0.22, 2);
+      }
+    }
+  }
+
   private updateEnemies(dt: number): void {
+    this.updateTraeger(dt);
     let leaked = false;
     for (const e of this.enemies) {
       if (e.slowLeft > 0) {
@@ -1303,7 +1340,7 @@ export class GameState {
       ]) as unknown as SaveGame['towers'],
       enemies: this.enemies.map((e) => [
         e.def, e.x, e.y, e.hp, e.hpMax, e.travelled, e.slowFactor, e.slowLeft, e.wobble,
-        e.lane, e.healIn, e.side, e.shield,
+        e.lane, e.auraIn, e.side, e.shield, e.traeger,
       ]),
     };
   }
@@ -1374,12 +1411,12 @@ export class GameState {
       }
     this.towersVersion++;
 
-    for (const [def, x, y, hp, hpMax, travelled, slowFactor, slowLeft, wobble, lane, healIn, side,
-      shield] of save.enemies) {
+    for (const [def, x, y, hp, hpMax, travelled, slowFactor, slowLeft, wobble, lane, auraIn, side,
+      shield, traeger] of save.enemies) {
       this.enemies.push({
         id: this.nextId++, def, x, y, hp, hpMax,
         speed: ENEMIES[def].speed, lane: lane ?? 0, heading: 0, travelled,
-        slowFactor, slowLeft, healIn: healIn ?? 0, shield: shield ?? 0,
+        slowFactor, slowLeft, auraIn: auraIn ?? 0, shield: shield ?? 0, traeger: traeger ?? 0,
         hitFlash: 0, squash: 0, hpShown: hp,
         side: side ?? 0,
         wobble,

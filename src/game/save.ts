@@ -75,7 +75,7 @@ export interface SaveGame {
    *  Tuermen: ein Stand ohne das Feld laedt weiter und bekommt Null. */
   enemies: [
     EnemyId, number, number, number, number, number, number, number, number, number, number,
-    number, number?,
+    number, number?, number?,
   ][];
 }
 

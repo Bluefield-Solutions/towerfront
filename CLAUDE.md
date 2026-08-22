@@ -141,10 +141,11 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v110. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
-Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, sieben
-Gegnerarten in den Wellen plus den Span, in den der Spalter zerfällt, drei
-Grade, Endlosmodus. Genre-Abgleich 28 von 30, gewichtet 96 %.
+Stand: v111. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
+Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
+Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 29 von 30,
+gewichtet 99 %.
 
 Die Zahl hinter „Stand" muss zu `VERSION` in `src/data/config.ts` passen —
 `npm run doku` vergleicht beide und schlägt ab sechs Versionen Rückstand an.
@@ -159,8 +160,13 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   nicht mitgewachsen ist: ihr Bild füllt seine Kachel nur zu 0,22 statt 0,35
   Bildschirmpunkten je Weltpunkt, sie bleibt deshalb bei 17 px. Das ist am
   Bild zu beheben, nicht am Maßstab — und dafür braucht es `art/roh/`.
-- R4: Blockturm, der Gegner bindet statt sie zu töten. Der letzte ●● im
-  Genre-Abgleich.
+- Kein ●● im Genre-Abgleich mehr offen. Von 30 Kriterien sind 29 erfüllt;
+  das letzte (P8, antippbare Kleinigkeiten in der Karte) ist von Hand
+  beurteilt und steht als D14.
+- D24 (grafisch, klein): Im Prüfsteg rollt die Werteliste, ohne es
+  anzuzeigen — auf dem iPhone quer endet sie mitten in einer Zeile. Technisch
+  richtig, sichtbar wie ein Fehler. Gefunden durch Hinsehen, von keinem Tor
+  gemeldet: das Browsertor prüft Beschnitt nur an Knöpfen, nicht an Text.
 
 **Erledigt und hier zu lange falsch stehen geblieben** (nachgemessen in v103):
 - B15 und C7 sind umgesetzt (v109). Beim ersten Betreten einer Karte

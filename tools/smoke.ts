@@ -78,6 +78,7 @@ const { GameState } = await import('../src/game/state');
 const { Renderer } = await import('../src/gfx/renderer');
 const { UI } = await import('../src/ui/ui');
 const { bindInput } = await import('../src/core/input');
+const { ABILITIES } = await import('../src/data/abilities');
 const { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, statsFor } = await import('../src/data/towers');
 
 const { TUTORIAL } = await import('../src/game/tutorial');
@@ -1232,6 +1233,112 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
         problems.push('Schildtraeger: wirkt ueber das ganze Feld statt in seinem Umkreis.');
       }
     }
+  }
+}
+
+// Bollwerk (R4): haelt es wirklich AUF, und toetet es wirklich NICHT?
+//
+// Beide Haelften zaehlen, und zwar getrennt. Ein "Halt", der nebenbei
+// Schaden macht, ist ein Meteor mit Bremse; eine Bremse, die nicht auf null
+// geht, ist der Frostschlag. R4 verlangt genau die Mitte davon.
+//
+// Gemessen wird an der zurueckgelegten Strecke, nicht am Tempowert. Der
+// Tempowert ist das, was der Code setzt - die Strecke ist das, was der
+// Spieler sieht. Waere `slowFactor` gesetzt, aber irgendwo nicht angewandt,
+// meldete eine Pruefung auf den Wert nichts.
+{
+  state.reset(91, 'normal', 'spiralhain');
+  const drin = state.spawnZumPruefen('crawler', 0);      // slowResist 0
+  const zaeh = state.spawnZumPruefen('titan', 0);        // slowResist 0.55
+  const raus = state.spawnZumPruefen('crawler', 0);
+  if (!drin || !zaeh || !raus) {
+    problems.push('Bollwerk: es liessen sich keine Gegner zum Pruefen setzen.');
+  } else {
+    const R = ABILITIES.bollwerk.radius ?? 150;
+    zaeh.x = drin.x + 20; zaeh.y = drin.y;
+    raus.x = drin.x + R * 3; raus.y = drin.y;
+    const hpVorher = drin.hp;
+    const weg = (e: { travelled: number }) => e.travelled;
+    const s0 = weg(drin), z0 = weg(zaeh), f0 = weg(raus);
+
+    state.abilityCd.bollwerk = 0;
+    if (!state.cast('bollwerk', drin.x, drin.y)) {
+      problems.push('Bollwerk: liess sich nicht ausloesen.');   // Regel 3
+    }
+    for (let i = 0; i < 60 * 2; i++) state.update(1 / 60);
+
+    if (weg(drin) - s0 > 1) {
+      problems.push(`Bollwerk: der Gegner im Umkreis lief ${(weg(drin) - s0).toFixed(1)} weiter - es haelt nicht auf.`);
+    }
+    if (weg(zaeh) - z0 <= 1) {
+      problems.push('Bollwerk: der Leerentitan steht genauso still wie der Schleicher - der Widerstand wirkt nicht.');
+    }
+    if (weg(raus) - f0 <= 1) {
+      problems.push('Bollwerk: auch ausserhalb des Umkreises steht alles - es wirkt aufs ganze Feld.');
+    }
+    if (drin.hp < hpVorher) {
+      problems.push('Bollwerk: macht Schaden. Dann haelt es nicht auf, sondern toetet langsamer.');
+    }
+    if (state.ready('bollwerk')) {
+      problems.push('Bollwerk: ist sofort wieder bereit - die Abklingzeit greift nicht.');
+    }
+  }
+}
+
+// Ernte (C17): bringt sie Gold, und laesst sie das Feld in Ruhe?
+//
+// Die zweite Haelfte ist die wichtigere. Eine Faehigkeit, die Gold bringt UND
+// etwas auf dem Feld tut, waere keine Entscheidung mehr - man zoege sie
+// immer. Der Sinn ist der Verzicht.
+{
+  state.reset(92, 'normal', 'spiralhain');
+  const zeuge = state.spawnZumPruefen('infantry', 0);
+  const goldVorher = state.gold;
+  const hpVorher = zeuge ? zeuge.hp : 0;
+  const anzahlVorher = state.enemies.filter((e) => !e.dead).length;
+
+  state.abilityCd.ernte = 0;
+  if (!state.cast('ernte', 0, 0)) {
+    problems.push('Ernte: liess sich nicht ausloesen.');       // Regel 3
+  }
+  const erwartet = ABILITIES.ernte.gold ?? 0;
+  if (erwartet <= 0) {
+    problems.push('Ernte: ist gar kein Goldbringer mehr - `gold` ist nicht gesetzt.');
+  }
+  if (state.gold - goldVorher !== erwartet) {
+    problems.push(`Ernte: bringt ${state.gold - goldVorher} Gold statt ${erwartet}.`);
+  }
+  if (zeuge && zeuge.hp < hpVorher) {
+    problems.push('Ernte: macht Schaden. Dann ist sie keine Entscheidung gegen Schaden mehr.');
+  }
+  if (state.enemies.filter((e) => !e.dead).length !== anzahlVorher) {
+    problems.push('Ernte: raeumt das Feld ab, statt nur Gold zu bringen.');
+  }
+  if (state.ready('ernte')) {
+    problems.push('Ernte: ist sofort wieder bereit - die Abklingzeit greift nicht.');
+  }
+}
+
+// Beide neuen Faehigkeiten muessen ueber das Sichern kommen. Die Abklingzeit
+// ist Teil des Spielstands; faellt sie beim Laden auf null, waere Sichern und
+// Laden ein Weg, sie zu umgehen.
+{
+  state.reset(93, 'normal', 'spiralhain');
+  state.abilityCd.bollwerk = 0; state.abilityCd.ernte = 0;
+  state.cast('bollwerk', state.goal.x, state.goal.y);
+  state.cast('ernte', 0, 0);
+  const vorher = { b: state.abilityCd.bollwerk, e: state.abilityCd.ernte };
+  if (vorher.b <= 0 || vorher.e <= 0) {
+    problems.push('Faehigkeiten: nach dem Ausloesen laeuft keine Abklingzeit.');
+  }
+  const stand = state.snapshot();
+  state.reset(93, 'normal', 'spiralhain');
+  if (!state.restore(stand)) {
+    problems.push('Faehigkeiten: der Spielstand liess sich nicht zurueckladen.');
+  }
+  if (Math.abs(state.abilityCd.bollwerk - vorher.b) > 0.01
+    || Math.abs(state.abilityCd.ernte - vorher.e) > 0.01) {
+    problems.push('Faehigkeiten: die Abklingzeit von Bollwerk oder Ernte ueberlebt das Laden nicht.');
   }
 }
 

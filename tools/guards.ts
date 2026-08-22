@@ -1,6 +1,9 @@
 /** Datenwaechter. Laeuft vor jedem Build und prueft die Inhaltsdateien auf
  *  Widersprueche, die im Spiel erst spaet oder gar nicht auffallen wuerden.
  *  Aufruf: npx tsx tools/guards.ts */
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { WORLD_W, WORLD_H } from '../src/data/config';
 import { DIFFICULTIES, DIFFICULTY_ORDER, hpScale } from '../src/data/difficulty';
 import { PERKS, PERK_ORDER, starsFor } from '../src/data/perks';
@@ -16,6 +19,7 @@ import { enemyArtWidth } from '../src/gfx/enemyart';
 
 import { ABILITIES, ABILITY_ORDER } from '../src/data/abilities';
 
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const errors: string[] = [];
 const warnings: string[] = [];
 const fail = (m: string) => errors.push(m);
@@ -677,12 +681,31 @@ for (const id of ABILITY_ORDER) {
   if (!isHex(a.color)) fail(`Faehigkeit ${id}: ungueltige Farbe.`);
   if (a.cooldown < 10) fail(`Faehigkeit ${id}: Abklingzeit ${a.cooldown} s ist zu kurz.`);
   if (!a.key || a.key.length !== 1) fail(`Faehigkeit ${id}: Tastenkuerzel fehlt.`);
-  if (a.kind === 'aimed' && (!a.radius || !a.delay)) {
-    fail(`Faehigkeit ${id}: gezielte Faehigkeit braucht Radius und Anflugzeit.`);
+  // Eine gezielte Faehigkeit braucht immer einen Radius - ohne ihn waere die
+  // Stelle, die der Spieler antippt, ohne Bedeutung. Eine Anflugzeit
+  // dagegen nur dann, wenn sie zuschlaegt: ein Brocken fliegt, eine Sperre
+  // steht sofort. Bis v110 verlangte die Regel beides, weil es nur eine
+  // gezielte Faehigkeit gab und die zufaellig beides hatte.
+  if (a.kind === 'aimed' && !a.radius) {
+    fail(`Faehigkeit ${id}: gezielte Faehigkeit ohne Radius - die angetippte Stelle waere ohne Bedeutung.`);
   }
-  if (!a.damage && !a.slow) fail(`Faehigkeit ${id}: wirkt weder ueber Schaden noch ueber Bremsen.`);
-  if (a.slow !== undefined && (a.slow <= 0 || a.slow >= 1)) {
-    fail(`Faehigkeit ${id}: Bremswert ${a.slow} muss zwischen 0 und 1 liegen.`);
+  if (a.kind === 'aimed' && a.damage && !a.delay) {
+    fail(`Faehigkeit ${id}: schlaegt gezielt zu, aber ohne Anflugzeit - dem Treffer fehlt die Ansage.`);
+  }
+  if (!a.damage && !a.slow && !a.gold) {
+    fail(`Faehigkeit ${id}: wirkt weder ueber Schaden noch ueber Bremsen noch ueber Gold.`);
+  }
+  // Ein Bremswert von genau 1 ist der volle Halt - das ist R4 und
+  // ausdruecklich erlaubt. Darueber hinaus waere es kein Tempo mehr,
+  // sondern ein Rueckwaertsgang.
+  if (a.slow !== undefined && (a.slow <= 0 || a.slow > 1)) {
+    fail(`Faehigkeit ${id}: Bremswert ${a.slow} muss groesser als 0 und hoechstens 1 sein.`);
+  }
+  // Eine Faehigkeit, die Gold bringt UND auf dem Feld wirkt, ist keine
+  // Entscheidung mehr - man zoege sie immer. Der Sinn von C17 ist der
+  // Verzicht.
+  if (a.gold && (a.damage || a.slow)) {
+    fail(`Faehigkeit ${id}: bringt Gold und wirkt zusaetzlich auf dem Feld - dann gibt es nichts abzuwaegen.`);
   }
 }
 if (new Set(ABILITY_ORDER.map((id) => ABILITIES[id].key)).size !== ABILITY_ORDER.length) {
@@ -770,6 +793,43 @@ for (const map of MAPS) {
     if (diff < 0.25) {
       warn(`${map.id} und ${other.id} verlangen fast dasselbe (Abstand ${diff.toFixed(2)}) - die Karten unterscheiden sich nur in der Form.`);
     }
+  }
+}
+
+// --- Kein Genre-Kriterium darf behaupten, gemessen zu sein, und dabei
+// konstant antworten.
+//
+// R4 und G5 standen zusammen ueber sechzig Versionen auf `check: () => false`
+// bei `measured: true`. Beide waren damit keine Massstaebe mehr, sondern
+// Behauptungen: G5 blieb rot, als der Schildtraeger laengst im Spiel war,
+// und R4 waere rot geblieben, egal was jemand baut. Aufgefallen ist es
+// keinem Tor - der Genre-Bericht ist selbst keines.
+//
+// Die Regel ist scharf, weil die Daten scharf sind: von zehn konstanten
+// Pruefungen sind heute zehn mit `measured: false` gekennzeichnet, also
+// ausdruecklich von Hand beurteilt. Das ist der erlaubte Fall. Konstant UND
+// als gemessen ausgewiesen ist keiner - und soll keiner werden.
+{
+  const quelle = readFileSync(join(ROOT, 'tools/benchmark.ts'), 'utf8');
+  // Die Bloecke beginnen mit einer Zeile, die nur "  {" enthaelt.
+  const bloecke = quelle.split(/\n {2}\{\n/).slice(1);
+  let gesehen = 0;
+  for (const b of bloecke) {
+    const id = /id: '([A-Z0-9]+)'/.exec(b);
+    if (!id) continue;
+    gesehen++;
+    const konstant = /check: \(\) => (true|false)[,\s]/.exec(b);
+    const gemessen = /measured: true/.test(b);
+    if (konstant && gemessen) {
+      fail(`Genre-Kriterium ${id[1]} ist als gemessen ausgewiesen, antwortet aber immer `
+        + `"${konstant[1]}". Entweder wirklich messen oder auf "measured: false" `
+        + `setzen - eine Behauptung ist kein Massstab.`);
+    }
+  }
+  // Regel 3, an der Pruefung selbst: findet sie ueberhaupt etwas?
+  if (gesehen < 25) {
+    fail(`Der Genre-Waechter hat nur ${gesehen} Kriterien gefunden - das Muster passt `
+      + 'nicht mehr auf tools/benchmark.ts, und die Pruefung lief ins Leere.');
   }
 }
 

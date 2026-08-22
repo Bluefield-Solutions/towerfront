@@ -386,6 +386,76 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // R4 lebt davon, dass das Bollwerk VOLL stoppt. Bremst es nur, ist es
+    // ein zweiter Frostschlag - und das Genre-Kriterium meldet zu Recht
+    // nichts mehr.
+    name: 'Bollwerk bremst nur, statt zu stoppen',
+    datei: 'src/data/abilities.ts',
+    regel: /slow: 1, slowTime: 3,/,
+    ersatz: 'slow: 0.5, slowTime: 3,',
+    tor: 'smoke',
+  },
+  {
+    // Die andere Haelfte von R4: es darf NICHT toeten.
+    name: 'Bollwerk macht nebenbei Schaden',
+    datei: 'src/game/state.ts',
+    regel: /e\.slowLeft = Math\.max\(e\.slowLeft, def\.slowTime \?\? 3\);/,
+    ersatz: 'e.slowLeft = Math.max(e.slowLeft, def.slowTime ?? 3); e.hp -= 1;',
+    tor: 'smoke',
+  },
+  {
+    // Der Widerstand der Gegner muss weiter wirken - sonst steht der
+    // Leerentitan so lange wie der kleinste Schleicher.
+    name: 'Bollwerk ignoriert den Widerstand der Gegner',
+    datei: 'src/game/state.ts',
+    regel: /const w = 1 - ENEMIES\[e\.def\]\.slowResist;/,
+    ersatz: 'const w = 1;',
+    tor: 'smoke',
+  },
+  {
+    // Oertlich, nicht ueberall. Sonst waere es der Frostschlag mit Stopp.
+    name: 'Bollwerk wirkt auf das ganze Feld',
+    datei: 'src/game/state.ts',
+    regel: /if \(dist2\(x, y, e\.x, e\.y\) > r2\) continue;/,
+    ersatz: 'if (false) continue;',
+    tor: 'smoke',
+  },
+  {
+    // C17: die Ernte muss das Gold auch wirklich auszahlen.
+    name: 'Ernte zahlt kein Gold aus',
+    datei: 'src/game/state.ts',
+    regel: /this\.gold \+= def\.gold;/,
+    ersatz: 'this.gold += 0;',
+    tor: 'smoke',
+  },
+  {
+    // R4 als Genre-Kriterium darf nicht wieder fest verdrahtet werden - in
+    // beide Richtungen. Hier: immer gruen.
+    name: 'R4 ist wieder fest verdrahtet',
+    datei: 'tools/benchmark.ts',
+    regel: /return \(a\.slow \?\? 0\) >= 1 && !\(a\.damage \?\? 0\);/,
+    ersatz: 'return true;',
+    tor: 'guards',
+  },
+  {
+    // Die Umkehrung: der Waechter muss auch anschlagen, wenn ein Kriterium
+    // fest auf "nicht erfuellt" steht. Genau so lagen R4 und G5 ueber
+    // sechzig Versionen lang.
+    name: 'Ein gemessenes Kriterium steht fest auf falsch',
+    datei: 'tools/benchmark.ts',
+    regel: /check: \(\) => TOWER_ORDER\.length >= 4,/,
+    ersatz: 'check: () => false,',
+    tor: 'guards',
+  },
+  {
+    // Gold UND Wirkung auf dem Feld waere keine Abwaegung mehr.
+    name: 'Ernte bringt Gold und macht Schaden',
+    datei: 'src/data/abilities.ts',
+    regel: /gold: 120,/,
+    ersatz: 'gold: 120, damage: 50,',
+    tor: 'guards',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

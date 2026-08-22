@@ -220,6 +220,35 @@ function useAbilities(s: GameState): void {
     const near = s.enemies.filter((e) => e.travelled > s.pathTotal * 0.75).length;
     if (near >= 4) s.cast('freeze', 0, 0);
   }
+
+  // Bollwerk: auf die dichteste Traube, aber nur wenn sie schon WEIT ist.
+  //
+  // Es macht keinen Schaden, es kauft Zeit - und Zeit ist nur dort etwas
+  // wert, wo sonst gleich etwas durchkommt. Frueh gezogen verpufft es.
+  if (s.ready('bollwerk')) {
+    const r2 = (ABILITIES.bollwerk.radius ?? 150) ** 2;
+    const spaet = s.enemies.filter((e) => e.travelled > s.pathTotal * 0.6);
+    let best = null, bestN = 0;
+    for (const a of spaet) {
+      let n = 0;
+      for (const b of spaet) {
+        if ((a.x - b.x) ** 2 + (a.y - b.y) ** 2 <= r2) n++;
+      }
+      if (n > bestN) { bestN = n; best = a; }
+    }
+    if (best && bestN >= 3) s.cast('bollwerk', best.x, best.y);
+  }
+
+  // Ernte: wenn das Gold fuer den naechsten Schritt nicht reicht.
+  //
+  // Nicht "sobald bereit". Ein Spieler zieht sie, wenn ihm etwas fehlt -
+  // und ein Bot, der sie sofort zieht, misst eine Faehigkeit, die niemand so
+  // benutzt. Die Schwelle ist der teuerste Turm: darunter ist man
+  // handlungsunfaehig.
+  if (s.ready('ernte')) {
+    const teuerster = Math.max(...TOWER_ORDER.map((id) => TOWERS[id].base.cost));
+    if (s.gold < teuerster) s.cast('ernte', 0, 0);
+  }
 }
 
 const strategies: Record<string, TowerId[]> = {

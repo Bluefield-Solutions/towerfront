@@ -90,7 +90,7 @@ export class GameState {
 
   meteors: Meteor[] = [];
   /** Restliche Abklingzeit je Faehigkeit. Null heisst einsatzbereit. */
-  abilityCd: Record<AbilityId, number> = { meteor: 0, freeze: 0 };
+  abilityCd: Record<AbilityId, number> = { meteor: 0, freeze: 0, bollwerk: 0, ernte: 0 };
   /** Gezielte Faehigkeit, die auf einen Tipp aufs Feld wartet. */
   aiming: AbilityId | null = null;
 
@@ -501,6 +501,45 @@ export class GameState {
         radius: def.radius ?? 100, damage: def.damage ?? 100,
       });
       Sfx.play('meteor');
+      return true;
+    }
+
+    // Ernte: Gold statt Schaden.
+    //
+    // Sie ist die einzige Faehigkeit, die nichts auf dem Feld tut - und
+    // deshalb die einzige, bei der man sich fragt, WANN. Frueh gezogen kauft
+    // sie einen Turm mehr, spaet gezogen rettet sie eine Welle. Genau das
+    // ist der Sinn von C17: eine Entscheidung, die nicht "wo", sondern
+    // "wann" heisst.
+    if (def.gold) {
+      this.gold += def.gold;
+      this.stats.goldEarned += def.gold;
+      this.float(this.goal.x, this.goal.y - 90, `Ernte  +${def.gold}`, def.color, 26);
+      this.ring(this.goal.x, this.goal.y, 260, def.color, 0.5, 5);
+      Sfx.play('tap');
+      return true;
+    }
+
+    // Bollwerk: haelt Gegner in einem Umkreis fest.
+    //
+    // Dieselbe Bremsmechanik wie der Frostschlag, nur oertlich und mit
+    // vollem Stopp. Der Widerstand der Gegner wirkt weiter - ein
+    // Leerentitan steht kuerzer als ein Schleicher.
+    if (id === 'bollwerk') {
+      const r2 = (def.radius ?? 150) ** 2;
+      let gefasst = 0;
+      for (const e of this.enemies) {
+        if (e.dead) continue;
+        if (dist2(x, y, e.x, e.y) > r2) continue;
+        const w = 1 - ENEMIES[e.def].slowResist;
+        e.slowFactor = Math.min(e.slowFactor, 1 - (def.slow ?? 1) * w);
+        e.slowLeft = Math.max(e.slowLeft, def.slowTime ?? 3);
+        this.ring(e.x, e.y, ENEMIES[e.def].radius * 2.2, def.color, 0.3, 2);
+        gefasst++;
+      }
+      this.ring(x, y, def.radius ?? 150, def.color, 0.8, 6);
+      this.float(x, y - 60, gefasst ? `Bollwerk  ${gefasst}` : 'Bollwerk', def.color, 24);
+      Sfx.play('freeze');
       return true;
     }
 
@@ -1279,7 +1318,7 @@ export class GameState {
     this.rings.length = 0; this.bolts.length = 0; this.meteors.length = 0;
     this.husks.length = 0;
     this.flashT = 0;
-    this.abilityCd = { meteor: 0, freeze: 0 };
+    this.abilityCd = { meteor: 0, freeze: 0, bollwerk: 0, ernte: 0 };
     this.aiming = null;
     this.grid.clear();
     this.towersVersion++;

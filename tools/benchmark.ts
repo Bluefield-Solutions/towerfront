@@ -15,7 +15,7 @@ import { GameState } from '../src/game/state';
 import { TOWERS, TOWER_ORDER } from '../src/data/towers';
 import { ENEMIES } from '../src/data/enemies';
 import type { Wave } from '../src/data/waves';
-import { ABILITY_ORDER } from '../src/data/abilities';
+import { ABILITIES, ABILITY_ORDER } from '../src/data/abilities';
 import { MAPS } from '../src/data/maps';
 import { SPEEDS } from '../src/data/config';
 import { DIFFICULTY_ORDER } from '../src/data/difficulty';
@@ -116,8 +116,24 @@ const CRITERIA: Criterion[] = [
     id: 'R4', area: 'Rollen', from: 'Kingdom Rush (Kaserne)',
     text: 'Etwas, das Gegner aufhaelt statt sie zu toeten (Blocker, Verstaerkung).',
     measured: true, weight: 2,
-    check: () => false,
-    gap: 'Blockturm, der Gegner bindet, oder Verstaerkung auf Abruf.',
+    // Bis v110 stand hier `() => false`, genau wie bei G5. Damit war das
+    // Kriterium kein Massstab mehr, sondern eine Behauptung: es haette auch
+    // dann noch offen gestanden, wenn die Sache laengst im Spiel waere.
+    //
+    // Gemessen wird jetzt, was der Satz verlangt - AUFHALTEN statt TOETEN.
+    // Beides muss stimmen, und beides einzeln waere zu wenig:
+    //
+    //   `slow >= 1`   ein voller Halt, keine Bremse. Der Frostschlag bremst
+    //                 auf 0,68 und erfuellt R4 damit ausdruecklich NICHT -
+    //                 sonst waere das Kriterium seit v40 still gruen.
+    //   kein Schaden  wer nebenbei toetet, haelt nicht auf, sondern toetet
+    //                 langsamer. Der Punkt ist die Entscheidung gegen
+    //                 Schaden, nicht ein Zusatz obendrauf.
+    check: () => ABILITY_ORDER.some((id) => {
+      const a = ABILITIES[id];
+      return (a.slow ?? 0) >= 1 && !(a.damage ?? 0);
+    }),
+    gap: 'Etwas, das voll aufhaelt und dabei keinen Schaden macht.',
   },
   {
     id: 'R5', area: 'Rollen', from: 'Kingdom Rush (Regen des Feuers, Verstaerkung)',

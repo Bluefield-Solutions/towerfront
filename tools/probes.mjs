@@ -466,8 +466,8 @@ const PROBEN = [
     // bis v111 von keinem Tor zu sehen.
     name: 'Ein zweiter Punktdurchlauf im Kartenbacken',
     datei: 'src/gfx/terrain.ts',
-    regel: /  g\.putImageData\(bild, 0, 0\);/,
-    ersatz: '  g.putImageData(bild, 0, 0); g.putImageData(g.getImageData(0, 0, WORLD_W, WORLD_H), 0, 0);',
+    regel: /    saum\(g, photo !== null\);/,
+    ersatz: '    saum(g, photo !== null); g.putImageData(g.getImageData(0, 0, WORLD_W, WORLD_H), 0, 0);',
     tor: 'kartenwechsel',
   },
   {

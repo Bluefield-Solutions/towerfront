@@ -417,8 +417,38 @@ if (start) {
         fail(`"${r.name}" ist unten angekommen, behauptet aber weiter, es ginge weiter.`);
       }
     }
+
+    // Und die Gegenrichtung wirklich pruefen, statt sie nur zu behaupten.
+    //
+    // Der erste Entwurf prüfte beide Richtungen in EINER Momentaufnahme -
+    // und die Gegenprobe "der Hinweis steht auch am Ende noch" blieb grün,
+    // weil die Liste in dieser Aufnahme nie unten ankam. Eine Bedingung, die
+    // im geprüften Zustand gar nicht auftreten kann, prüft nichts. Also wird
+    // jetzt ans Ende gerollt und noch einmal gefragt.
+    const amEnde = await seite.evaluate(() => {
+      const raus = [];
+      for (const e of document.querySelectorAll('*')) {
+        const st = getComputedStyle(e);
+        if (!/auto|scroll/.test(st.overflowY)) continue;
+        if (e.scrollHeight - e.clientHeight < 2) continue;
+        e.scrollTop = e.scrollHeight;
+        e.dispatchEvent(new Event('scroll'));
+        raus.push({ name: e.id || e.className || e.tagName, mehr: e.dataset ? e.dataset.mehr : undefined });
+      }
+      return raus;
+    });
+    for (const r of amEnde) {
+      if (r.mehr === '1') {
+        fail(
+          `"${r.name}" ist ans Ende gerollt, behauptet aber weiter, es ginge weiter. ` +
+          'Ein Hinweis, der immer steht, ist Deko.',
+        );
+      }
+    }
+
     if (rollend.length) {
-      console.log(`\nRollende Behälter: ${rollend.map((r) => `${r.name} (noch ${r.rest})`).join(', ')}`);
+      console.log(`\nRollende Behälter: ${rollend.map((r) => `${r.name} (noch ${r.rest})`).join(', ')}`
+        + ` — am Ende angekommen meldet ${amEnde.filter((r) => r.mehr !== '1').length} von ${amEnde.length} korrekt nichts mehr.`);
     }
   }
 }

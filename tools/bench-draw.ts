@@ -129,6 +129,22 @@ const DT = 1 / 60;
 // Aufwaermen: Untergrund, Himmel und alle Bilder werden hier gebacken.
 for (let f = 0; f < 60 * 20; f++) { s.update(DT); keepAlive(); r.draw(s); }
 
+// Erst messen, wenn nichts mehr im Aufbau ist.
+//
+// 1200 Bilder Vorlauf reichen fuer den Kartenaufbau (28 Bilder) mit weitem
+// Abstand - aber "reicht weit" ist eine Annahme, und Annahmen ueber
+// Fertigsein sind in v113 einmal falsch gewesen. Also nachfragen: sonst
+// misst die Zeichenmessung den Aufbau mit und nennt das Ergebnis
+// Dauerbetrieb. Nach Bildern wird hier NICHT gefragt - dieses Werkzeug hat
+// keinen Bilddekoder, dort kaeme nie eines an.
+{
+  const offen = r.imAufbau(s);
+  if (offen.length) {
+    console.error(`ZEICHENMESSUNG: nach 1200 Bildern noch im Aufbau: ${offen.join(', ')}`);
+    process.exit(1);
+  }
+}
+
 const FRAMES = 120;
 counting = true;
 for (let f = 0; f < FRAMES; f++) { s.update(DT); keepAlive(); r.draw(s); }

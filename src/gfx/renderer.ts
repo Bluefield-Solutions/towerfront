@@ -1,10 +1,9 @@
 import { C, LICHT, WORLD_H, WORLD_W } from '../data/config';
-import { ENEMIES } from '../data/enemies';
+import { ENEMIES, type EnemyId } from '../data/enemies';
 import {
   TOWERS, accentFor, statsFor,
   type BranchIndex, type TowerDef, type TowerId, type TowerLevel,
-  DRAW_SCALE, TURM_HOEHE,
-} from '../data/towers';
+  DRAW_SCALE, TURM_HOEHE, TOWER_ORDER } from '../data/towers';
 import { ABILITIES } from '../data/abilities';
 import { makeRng } from '../core/math';
 import { GameState } from '../game/state';
@@ -51,6 +50,63 @@ export class Renderer {
    *  Genau das ist in v114 passiert: die Aufnahmen zeigten den gemalten
    *  Ersatzuntergrund statt des Fotos, und alle sechzehn Tore blieben gruen.
    *  Gefunden wurde es durch Hinsehen (Regel 7). */
+  /** Arbeit, die die Zeichenschicht noch VOR SICH HAT.
+   *
+   *  Leere Liste heisst: was gerade gezeichnet wurde, aendert sich von selbst
+   *  nicht mehr. Gilt in jeder Umgebung - auch dort, wo es gar keinen
+   *  Bilddekoder gibt.
+   *
+   *  Warum es das gibt: in v113 wurde der Kartenaufbau ueber 28 Bilder
+   *  verteilt. Die Bildabnahme zeichnet zwei - also zeigte jede Aufnahme den
+   *  gemalten Ersatzuntergrund statt des Fotos, und alle sechzehn Tore
+   *  blieben gruen. Die Farbzaehlung faengt so etwas nicht: Tuerme und
+   *  Gegner bringen genug Farben mit.
+   *
+   *  Die Lehre ist allgemeiner als der eine Fall. Ein Werkzeug, das wenige
+   *  Bilder zeichnet, kann NICHT wissen, was die Zeichenschicht noch vor sich
+   *  hat - und wenn es das schaetzt, schaetzt es irgendwann falsch. Also
+   *  fragt es hier nach. Genauso macht es Espressos IdlingResource: nicht
+   *  warten, sondern das Teilsystem selbst melden lassen.
+   *
+   *  Wer etwas Neues verzoegert baut, traegt es HIER nach. */
+  imAufbau(s: GameState): string[] {
+    const offen: string[] = [];
+    if (this.menu) return offen;      // im Menue gibt es weder Karte noch Turmschicht
+    if (this.terrainArbeit) offen.push('Kartenaufbau laeuft noch');
+    // Nur wenn ein Foto ueberhaupt vorliegt. Ohne Dekoder gibt es keines,
+    // und dann ist der gemalte Untergrund richtig statt falsch.
+    if (getBackground(s.map.id) && !this.terrainMitFoto) {
+      offen.push(`Untergrund ${s.map.id} gemalt statt aus dem Foto gebacken`);
+    }
+    return offen;
+  }
+
+  /** Bilder, die noch nicht dekodiert sind.
+   *
+   *  BEWUSST getrennt von `imAufbau`. Der erste Anlauf warf beides in eine
+   *  Liste - und `smoke` wie `bench-draw` schlugen sofort an, weil dort gar
+   *  kein Bilddekoder laeuft und Bilder deshalb NIE ankommen. Das war kein
+   *  Fehler im Spiel, sondern eine Frage, die in jener Umgebung keinen Sinn
+   *  ergibt.
+   *
+   *  Die Unterscheidung ist der eigentliche Punkt: "noch nicht fertig" und
+   *  "kann hier gar nicht fertig werden" sehen gleich aus und bedeuten
+   *  Gegensaetzliches. Nur wer einen Dekoder hat, darf das hier fragen.
+   *
+   *  Nebenwirkung mit Absicht: die Abfragen fordern fehlende Bilder an. */
+  fehlendeBilder(s: GameState): string[] {
+    const fehlt: string[] = [];
+    if (this.menu) return fehlt;
+    if (!getBackground(s.map.id)) fehlt.push(`Untergrund ${s.map.id}`);
+    for (const id of TOWER_ORDER) {
+      if (!getTowerArt(id, null, 1, s.map.id)) fehlt.push(`Turmbild ${id}`);
+    }
+    for (const id of Object.keys(ENEMIES) as EnemyId[]) {
+      if (!getEnemyArt(id, false, s.map.id)) fehlt.push(`Gegnerbild ${id}`);
+    }
+    return fehlt;
+  }
+
   /** Traegt die gezeigte Karte ihr Foto? Fuer Pruefungen. */
   terrainHatFoto(): boolean { return this.terrainMitFoto; }
 

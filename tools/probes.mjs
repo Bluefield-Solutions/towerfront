@@ -525,6 +525,34 @@ const PROBEN = [
     tor: 'bildtor',
   },
   {
+    // Die Bildhaelfte der Fertigfrage: wartet die Bildabnahme nicht auf die
+    // Dekodierung, zeigt sie die gemalten Ersatzformen.
+    name: 'Bildabnahme wartet nicht auf die Bilder',
+    datei: 'tools/shots.mjs',
+    regel: /  await settle\(\);/,
+    ersatz: '  await Promise.resolve();',
+    tor: 'bildtor',
+  },
+  {
+    // Die Aufbauhaelfte, gepruefte Seite Rauchtest: bleibt der Kartenaufbau
+    // stehen, muss er auffallen - auch nach 2700 Bildern.
+    name: 'Kartenaufbau wird nie fertig',
+    datei: 'src/gfx/renderer.ts',
+    regel: /      if \(this\.terrainArbeit\.schritt\(TERRAIN_BUDGET_MS\)\) \{/,
+    ersatz: '      if (false) {',
+    tor: 'smoke',
+  },
+  {
+    // Derselbe Fehler, anderes Tor. Eine Probe, die nur die Pruefung
+    // entfernt, beweist nichts - es steht ja nichts aus. Sie muss den
+    // echten Fehler einbauen und dann fragen, ob DIESES Tor ihn sieht.
+    name: 'Zeichenmessung misst den Aufbau mit',
+    datei: 'src/gfx/renderer.ts',
+    regel: /      if \(this\.terrainArbeit\.schritt\(TERRAIN_BUDGET_MS\)\) \{/,
+    ersatz: '      if (false) {',
+    tor: 'bench-draw',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

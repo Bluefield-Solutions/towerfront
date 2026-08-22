@@ -1366,6 +1366,15 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
       if (!state.stats.kills && !state.leakedTotal) {
         throw new Error('in 45 Sekunden kam kein einziger Gegner an oder um.');
       }
+      // Nach 2700 Bildern darf nichts mehr im Aufbau sein. Gefragt wird nur
+      // nach dem Aufbau, NICHT nach Bildern: der Rauchtest laeuft in jsdom
+      // ohne Bilddekoder, dort kommt nie eines an. "Noch nicht fertig" und
+      // "kann hier gar nicht fertig werden" sehen gleich aus und bedeuten
+      // Gegensaetzliches.
+      const offen = renderer.imAufbau(state);
+      if (offen.length) {
+        throw new Error(`nach 45 Sekunden noch nicht fertig: ${offen.join(', ')}`);
+      }
     });
   }
 }

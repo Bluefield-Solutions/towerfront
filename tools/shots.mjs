@@ -124,24 +124,6 @@ async function shot(name, w, h, build) {
   }
   await settle();
 
-  // Sind die eingebetteten Bilder wirklich angekommen?
-  //
-  // Die Farbzaehlung taugt dafuer nicht - das hat die Gegenprobe gezeigt:
-  // ohne dekodierte Bilder malt die Ersatzschicht Verlaeufe, und die bringen
-  // genug Farben mit, um jede Schwelle zu passieren. Also wird direkt
-  // gefragt, statt geraten.
-  if (!r.menu) {
-    const fehlt = [];
-    if (!getBackground(s.map.id)) fehlt.push(`Untergrund ${s.map.id}`);
-    for (const id of TOWER_ORDER) if (!getTowerArt(id, null, 1, s.map.id)) fehlt.push(`Turm ${id}`);
-    for (const id of Object.keys(ENEMIES)) if (!getEnemyArt(id, false, s.map.id)) fehlt.push(`Gegner ${id}`);
-    if (fehlt.length) {
-      throw new Error(
-        `Bilder nicht dekodiert (${fehlt.length}): ${fehlt.slice(0, 4).join(', ')}` +
-        `${fehlt.length > 4 ? ' ...' : ''}`,
-      );
-    }
-  }
 
   // Simulieren ist billig, Zeichnen ist teuer: 200 Simulationsschritte kosten
   // 10 Millisekunden, ein gezeichnetes Bild 180. Frueher wurde jedes Bild
@@ -165,14 +147,16 @@ async function shot(name, w, h, build) {
 
   // Und dann nachfragen, statt es zu hoffen.
   //
-  // Die Farbzaehlung weiter unten faengt diesen Fall NICHT: Tuerme und Gegner
-  // bringen genug Farben mit, um jede Schwelle zu bestehen, auch wenn der
-  // Boden nur ein Verlauf ist. Genau so ist die Aufnahme einmal durch alle
-  // sechzehn Tore gekommen. Also wird die Zeichenschicht direkt gefragt.
-  if (!r.menu && getBackground(s.map.id) && !r.terrainHatFoto()) {
+  // Eine Aufnahme ist nur dann ein Beleg, wenn sie einen FERTIGEN Zustand
+  // zeigt. Was dazu gehoert, weiss die Zeichenschicht - nicht dieses
+  // Werkzeug. Frueher stand die Liste hier, und als in v113 der
+  // Kartenaufbau dazukam, wurde sie nicht nachgezogen: die Aufnahmen zeigten
+  // den gemalten Ersatzuntergrund, und alle sechzehn Tore blieben gruen.
+  const offen = [...r.imAufbau(s), ...r.fehlendeBilder(s)];
+  if (offen.length) {
     throw new Error(
-      `der Untergrund von ${s.map.id} wurde gemalt statt aus dem Foto gebacken - `
-      + 'die Aufnahme zeigt ein anderes Spiel als der Browser.',
+      `beim Ausloesen war noch nicht fertig (${offen.length}): `
+      + `${offen.slice(0, 4).join(', ')}${offen.length > 4 ? ' ...' : ''}`,
     );
   }
   r.draw(s);

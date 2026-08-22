@@ -513,6 +513,18 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
+    // Der Fall, der in v114 durch alle sechzehn Tore kam: der Aufbau ist seit
+    // v113 auf viele Bilder verteilt, die Bildabnahme zeichnet aber nur zwei.
+    // Ohne den Abschluss zeigt sie den gemalten Ersatzuntergrund - und die
+    // Farbzaehlung merkt es nicht, weil Tuerme und Gegner genug Farben
+    // mitbringen. Gefunden wurde es durch Hinsehen (Regel 7).
+    name: 'Aufnahme faengt vor dem fertigen Kartenaufbau',
+    datei: 'tools/shots.mjs',
+    regel: /  if \(!r\.menu\) r\.kartenaufbauAbschliessen\(s\);/,
+    ersatz: '  if (false) r.kartenaufbauAbschliessen(s);',
+    tor: 'bildtor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

@@ -37,6 +37,35 @@ export class Renderer {
   private terrainBgVersion = -1;
   /** Der laufende Kartenaufbau, solange er noch nicht fertig ist. */
   private terrainArbeit: TerrainAuftrag | null = null;
+  /** Wurde die gezeigte Karte aus dem Foto gebacken oder aus der Palette
+   *  gemalt? Nur zum Pruefen - im Spiel entscheidet das niemand. */
+  private terrainMitFoto = false;
+
+  /** Den laufenden Kartenaufbau sofort zu Ende rechnen.
+   *
+   *  Fuer alles, was NICHT viele Bilder zeichnet: Bildabnahme, Rauchtest,
+   *  Messwerkzeuge. Im Spiel verteilt sich der Aufbau ueber rund 28 Bilder
+   *  und ist nach einer halben Sekunde fertig - wer aber nur zwei Bilder
+   *  zeichnet, saehe fuer immer die vorherige Karte.
+   *
+   *  Genau das ist in v114 passiert: die Aufnahmen zeigten den gemalten
+   *  Ersatzuntergrund statt des Fotos, und alle sechzehn Tore blieben gruen.
+   *  Gefunden wurde es durch Hinsehen (Regel 7). */
+  /** Traegt die gezeigte Karte ihr Foto? Fuer Pruefungen. */
+  terrainHatFoto(): boolean { return this.terrainMitFoto; }
+
+  kartenaufbauAbschliessen(s: GameState): void {
+    // Erst einmal zeichnen, damit ein noetiger Auftrag ueberhaupt entsteht.
+    this.draw(s);
+    while (this.terrainArbeit) {
+      if (this.terrainArbeit.schritt(Infinity)) {
+        this.terrain = this.terrainArbeit.flaeche;
+        this.terrainMitFoto = !!getBackground(s.map.id);
+        this.terrainArbeit = null;
+        this.towerLayerVersion = -1;
+      }
+    }
+  }
   /** Weltpunkt, auf den gerade gezielt wird. */
   aimPoint: { x: number; y: number } | null = null;
   /** Ist gesetzt, solange das Menue offen ist - dann wird es statt des
@@ -256,6 +285,7 @@ export class Renderer {
     if (this.terrainArbeit) {
       if (this.terrainArbeit.schritt(TERRAIN_BUDGET_MS)) {
         this.terrain = this.terrainArbeit.flaeche;
+        this.terrainMitFoto = !!getBackground(s.map.id);
         this.terrainArbeit = null;
         this.towerLayerVersion = -1;
       } else if (!this.terrain) {

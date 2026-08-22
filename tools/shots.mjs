@@ -153,6 +153,28 @@ async function shot(name, w, h, build) {
     s.update(DT);
     if (r.menu) { r.menu.time += DT; r.menu.resultAge += DT; }
   }
+  // Den Kartenaufbau zu Ende rechnen, BEVOR das Bild faellt.
+  //
+  // Seit v113 verteilt sich der Aufbau ueber rund 28 Bilder. Hier werden nur
+  // zwei gezeichnet - ohne diese Zeile zeigt die Aufnahme den gemalten
+  // Ersatzuntergrund statt des Fotos. Genau so ist es passiert, und keines
+  // der sechzehn Tore hat es gemeldet: die Bildpruefung fragt nach
+  // einfarbigen Flaechen und falscher Helligkeit, und ein Farbverlauf besteht
+  // beides.
+  if (!r.menu) r.kartenaufbauAbschliessen(s);
+
+  // Und dann nachfragen, statt es zu hoffen.
+  //
+  // Die Farbzaehlung weiter unten faengt diesen Fall NICHT: Tuerme und Gegner
+  // bringen genug Farben mit, um jede Schwelle zu bestehen, auch wenn der
+  // Boden nur ein Verlauf ist. Genau so ist die Aufnahme einmal durch alle
+  // sechzehn Tore gekommen. Also wird die Zeichenschicht direkt gefragt.
+  if (!r.menu && getBackground(s.map.id) && !r.terrainHatFoto()) {
+    throw new Error(
+      `der Untergrund von ${s.map.id} wurde gemalt statt aus dem Foto gebacken - `
+      + 'die Aufnahme zeigt ein anderes Spiel als der Browser.',
+    );
+  }
   r.draw(s);
   s.update(DT);
   r.draw(s);

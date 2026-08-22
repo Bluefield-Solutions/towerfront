@@ -494,6 +494,43 @@ takes.push(['welle8', () => shot('welle8', 844, 390, (s) => {
   return 60 * 12;
 })]);
 
+takes.push(['r4-bollwerk', () => shot('r4-bollwerk', 844, 390, (s) => {
+  s.reset(5, 'normal', 'spiralhain');
+  stock(s, 10);
+  s.waveIndex = 9;
+  s.startWave();
+  for (let i = 0; i < 60 * 18; i++) s.update(DT);
+  // Den dichtesten Pulk suchen und DORT absperren - sonst zeigt das Bild
+  // einen Ring auf leerem Boden. (S93: auch ein Pruefbild braucht einen
+  // Aufbau, der die Sache zeigt.)
+  let best = null, bestN = 0;
+  for (const a of s.enemies) {
+    if (a.dead) continue;
+    // Nur Gegner in der Bildmitte: der Ausschnitt ist 844x390 auf einer Welt
+    // von 1920x1080, unten und oben wird beschnitten. Der erste Versuch
+    // sperrte den dichtesten Pulk ab - und der lag halb ausserhalb.
+    if (a.y < 300 || a.y > 800 || a.x < 350 || a.x > 1600) continue;
+    let n = 0;
+    for (const b of s.enemies) {
+      if (b.dead) continue;
+      if ((a.x - b.x) ** 2 + (a.y - b.y) ** 2 <= 150 ** 2) n++;
+    }
+    if (n > bestN) { bestN = n; best = a; }
+  }
+  if (!best) {
+    // Die Lage mitgeben, nicht nur "nichts gefunden". Beim Aufbau dieser
+    // Aufnahme habe ich zweimal daneben gegriffen - der Pulk lag erst halb
+    // ausserhalb des Ausschnitts, dann noch unterhalb des Fensters. Ohne die
+    // Koordinaten haette jeder Versuch neu geraten werden muessen.
+    const lage = s.enemies.filter((e) => !e.dead)
+      .map((e) => `${Math.round(e.x)},${Math.round(e.y)}`).join(' ');
+    throw new Error(`r4-bollwerk: kein Gegner im Fenster. Lage der Gegner: ${lage}`);
+  }
+  s.abilityCd.bollwerk = 0;
+  if (!s.cast('bollwerk', best.x, best.y)) throw new Error('r4-bollwerk: Bollwerk liess sich nicht ausloesen.');
+  return 26;   // 0,43 s bei 0,8 s Lebensdauer: der Ring ist gross und noch da
+})]);
+
 takes.push(['welle15', () => shot('welle15', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 12);

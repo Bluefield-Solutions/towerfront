@@ -168,7 +168,7 @@ export class GameState {
     t: 0, dur: 1, life: 0, dead: true,
   }), 200);
   private ringPool = new Pool<Ring>(() => ({
-    x: 0, y: 0, r: 0, rMax: 1, color: '#fff', life: 0, maxLife: 1, width: 1,
+    x: 0, y: 0, r: 0, rMin: 0, rMax: 1, color: '#fff', life: 0, maxLife: 1, width: 1,
   }), 120);
   private floatPool = new Pool<FloatText>(() => ({
     x: 0, y: 0, text: '', color: '#fff', life: 0, size: 20,
@@ -537,7 +537,19 @@ export class GameState {
         this.ring(e.x, e.y, ENEMIES[e.def].radius * 2.2, def.color, 0.3, 2);
         gefasst++;
       }
-      this.ring(x, y, def.radius ?? 150, def.color, 0.8, 6);
+      // Eine Grenze, keine Druckwelle.
+    //
+    // Der erste Entwurf nahm den ueblichen Ring: von null nach aussen,
+    // Deckkraft an der Restlebensdauer. Der ist auf der Aufnahme SCHWAECHER
+    // gewesen als die Reichweitenringe der Tuerme daneben - denn er
+    // erreicht seinen vollen Radius genau dann, wenn er unsichtbar wird.
+    // Fuer einen Stoss ist das richtig, fuer eine Sperre verkehrt herum.
+    //
+    // Jetzt steht er von Anfang an fast auf vollem Radius und haelt so
+    // lange wie der Halt selbst. Damit zeigt das Bild, was die Regel sagt:
+    // dieser Bereich ist fuer drei Sekunden dicht.
+    const rr = def.radius ?? 150;
+    this.ring(x, y, rr, def.color, def.slowTime ?? 3, 7, rr * 0.88);
       this.float(x, y - 60, gefasst ? `Bollwerk  ${gefasst}` : 'Bollwerk', def.color, 24);
       Sfx.play('freeze');
       return true;
@@ -1196,7 +1208,10 @@ export class GameState {
       compact(this.floats, (f) => f.life <= 0, (f) => this.floatPool.release(f));
     }
     if (this.rings.length) {
-      for (const r of this.rings) { r.life -= dt; r.r = r.rMax * (1 - r.life / r.maxLife); }
+      for (const r of this.rings) {
+        r.life -= dt;
+        r.r = r.rMin + (r.rMax - r.rMin) * (1 - r.life / r.maxLife);
+      }
       compact(this.rings, (r) => r.life <= 0, (r) => this.ringPool.release(r));
     }
     if (this.husks.length) {
@@ -1221,10 +1236,11 @@ export class GameState {
     this.floats.push(f);
   }
 
-  ring(x: number, y: number, rMax: number, color: string, life: number, width: number): void {
+  ring(x: number, y: number, rMax: number, color: string, life: number, width: number,
+    rMin = 0): void {
     if (this.quality === 'niedrig' && this.rings.length > 12) return;
     const r = this.ringPool.obtain();
-    r.x = x; r.y = y; r.r = 0; r.rMax = rMax; r.color = color;
+    r.x = x; r.y = y; r.r = rMin; r.rMin = rMin; r.rMax = rMax; r.color = color;
     r.life = life; r.maxLife = life; r.width = width;
     this.rings.push(r);
   }

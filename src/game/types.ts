@@ -145,6 +145,10 @@ export interface Husk {
 export interface Ring {
   x: number; y: number;
   r: number; rMax: number;
+  /** Startradius. Null heisst Druckwelle (von innen nach aussen), ein Wert
+   *  nahe rMax heisst Grenze: der Ring steht praktisch still und zeigt eine
+   *  Flaeche an, statt einen Stoss. */
+  rMin: number;
   color: string;
   life: number; maxLife: number;
   width: number;

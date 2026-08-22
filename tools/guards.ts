@@ -809,6 +809,12 @@ for (const map of MAPS) {
 // Pruefungen sind heute zehn mit `measured: false` gekennzeichnet, also
 // ausdruecklich von Hand beurteilt. Das ist der erlaubte Fall. Konstant UND
 // als gemessen ausgewiesen ist keiner - und soll keiner werden.
+//
+// Die Grenze der Zusage, damit sie niemand ueberdehnt: geprueft wird die
+// FESTE FORM, nicht die Bedeutung. Ein `return true` mitten in einem
+// laengeren Rumpf faellt hier nicht auf. Das ist vertretbar, weil die feste
+// Form genau das ist, was zweimal passiert ist - aber es ist eben eine
+// Formpruefung, und die Gegenprobe steht auf derselben Form.
 {
   const quelle = readFileSync(join(ROOT, 'tools/benchmark.ts'), 'utf8');
   // Die Bloecke beginnen mit einer Zeile, die nur "  {" enthaelt.

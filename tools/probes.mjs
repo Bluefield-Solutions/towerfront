@@ -433,8 +433,13 @@ const PROBEN = [
     // beide Richtungen. Hier: immer gruen.
     name: 'R4 ist wieder fest verdrahtet',
     datei: 'tools/benchmark.ts',
-    regel: /return \(a\.slow \?\? 0\) >= 1 && !\(a\.damage \?\? 0\);/,
-    ersatz: 'return true;',
+    // Ersetzt wird die GANZE Pruefung durch die feste Form. Ein `return true`
+    // mitten im Rumpf faellt dem Waechter naemlich NICHT auf - er liest Text,
+    // keine Bedeutung. Das ist keine Luecke, die hier versteckt wird, sondern
+    // die Grenze seiner Zusage: er faengt die feste Form ab, und genau die
+    // hatten R4 und G5 beide.
+    regel: /check: \(\) => ABILITY_ORDER\.some\(\(id\) => \{[\s\S]*?\}\),/,
+    ersatz: 'check: () => true,',
     tor: 'guards',
   },
   {

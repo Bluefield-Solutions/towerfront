@@ -687,7 +687,22 @@ const liste = filter.length
   ? PROBEN.filter((p) => filter.some((f) => `${p.name} ${p.tor}`.toLowerCase().includes(f.toLowerCase())))
   : PROBEN;
 
-const zuruecknehmen = () => execSync('git checkout -- .', { cwd: ROOT, stdio: 'pipe' });
+/** Den Quelltext zuruecknehmen - UND das gebaute Ergebnis mit.
+ *
+ *  Ohne den zweiten Teil bleibt nach jeder Probe an einem Tor, das die
+ *  gebaute Datei laedt, ein `dist/` mit dem eingebauten Fehler liegen. Der
+ *  Quelltext ist dann sauber, die Datei daneben nicht - und wer als
+ *  naechstes misst, misst den Fehler. Genau das ist beim Bau dieser Probe
+ *  passiert: eine Messung am Menue kam voellig verdreht heraus, und die
+ *  Ursache lag nicht im Spiel, sondern im liegengebliebenen Bau.
+ *
+ *  Neu gebaut wird nur nach den Toren, die ueberhaupt bauen oder bauen
+ *  lassen - sonst kostete jede der 71 Proben unnoetig eine Sekunde. */
+const BAUT = new Set(['browsertor', 'browser', 'build', 'autarkie', 'bildtor', 'smoke']);
+const zuruecknehmen = (tor) => {
+  execSync('git checkout -- .', { cwd: ROOT, stdio: 'pipe' });
+  if (BAUT.has(tor)) execSync('npm run build', { cwd: ROOT, stdio: 'pipe' });
+};
 
 console.log(`Gegenproben: ${liste.length} von ${PROBEN.length}\n`);
 
@@ -720,7 +735,7 @@ for (const p of liste) {
     schlaegtAn = true;
     ausgabe = `${e.stdout ?? ''}${e.stderr ?? ''}`;
   }
-  zuruecknehmen();
+  zuruecknehmen(p.tor);
 
   // Nicht jede Pruefung bricht ab. Der Dokumentenwaechter meldet Veraltetes
   // als Hinweis und laeuft weiter - mit Absicht, denn eine schiefe Formulierung
@@ -747,7 +762,8 @@ for (const p of liste) {
   if (!erfuellt) fehler.push(`${p.name}: ${grund}`);
 }
 
-zuruecknehmen();
+// Zum Schluss in jedem Fall: sauberer Quelltext UND sauberer Bau.
+zuruecknehmen('build');
 
 if (fehler.length) {
   console.error(`\nPROBEN: ${fehler.length} von ${liste.length} Toren beweisen nichts`);

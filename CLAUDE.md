@@ -267,5 +267,9 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
 - Nach jeder Runde: vier nächste Schritte, davon mindestens einer technisch
   und einer grafisch.
 - Die fertige Datei erreichbar — hier über Pages, nicht als Anhang.
-- Getestet wird auf dem iPhone quer. Das ist das Zielgerät, nicht der
-  Schreibtisch.
+- Getestet wird auf dem iPhone quer. Das ist das **Zielgerät** — dort wird
+  geurteilt, ob es gut ist.
+- Der Schreibtischbrowser ist seit v122 der **zweite** unterstützte Weg. Er
+  bestimmt nichts, aber er darf nicht ausgesperrt sein: Fenster lassen sich
+  ziehen, nicht drehen. Das Browsertor prüft ihn mit der Maus in beiden
+  Formaten (1400 × 900 und 700 × 850).

@@ -12,10 +12,32 @@ import { hexA } from './glow';
  *  und wechselnder Breite. Sobald echte Kartenbilder da sind, faellt auch das
  *  weg und das Bild bringt den Weg selbst mit.
  */
-export function bakeTerrain(
+/** Ein Kartenaufbau, der sich in Haeppchen abarbeiten laesst.
+ *
+ *  Warum ueberhaupt: der Aufbau lief bis v112 in EINEM Zug mitten im
+ *  laufenden Bild. Gemessen mit vierfacher CPU-Drossel stand das Bild dabei
+ *  820 ms still - das Sechzehnfache dessen, was die Norm als blockierend
+ *  ansieht (50 ms). Kingdom Rush und Bloons bauen eine Stufe hinter einem
+ *  Ladeschritt auf, nie in einem laufenden Bild; das hier ist dieselbe
+ *  Antwort, nur ohne Ladebildschirm.
+ *
+ *  Aufgeteilt wird das, was teuer ist, und nur das: das Zusammensetzen
+ *  (Foto, Weg, Felsen) kostet gemessen 2 bis 8 ms und laeuft in einem Zug.
+ *  Teuer ist allein der Tonwertabgleich, und der ist zeilenweise teilbar. */
+export interface TerrainAuftrag {
+  /** Die Flaeche. Vom ersten Augenblick an gueltig - nur eben noch nicht
+   *  fertig abgeglichen. Wer sie zu frueh zeigt, sieht ein dunkleres Bild,
+   *  kein kaputtes. */
+  readonly flaeche: HTMLCanvasElement;
+  /** Arbeitet hoechstens `budgetMs` Millisekunden weiter. Liefert `true`,
+   *  sobald nichts mehr zu tun ist. */
+  schritt(budgetMs: number): boolean;
+}
+
+export function terrainAuftrag(
   map: GameMap, lanes: LanePath[], pal: MapPalette,
   photo: HTMLImageElement | null = null,
-): HTMLCanvasElement {
+): TerrainAuftrag {
   const cv = document.createElement('canvas');
   cv.width = WORLD_W; cv.height = WORLD_H;
   // `willReadFrequently` haelt die Flaeche im Hauptspeicher statt auf der
@@ -159,20 +181,81 @@ export function bakeTerrain(
   // Vor der Vignette, weil die dunkel bleiben soll: sie ist kein Boden,
   // sondern das Abfallen ins Nichts. Sie mit aufzuhellen hiesse, den Rand
   // wieder aufzumachen, den v104 geschlossen hat.
-  if (photo) angleichen(g);
 
-  // --- Vignette
-  const vg = g.createRadialGradient(
-    WORLD_W / 2, WORLD_H / 2, Math.min(WORLD_W, WORLD_H) * 0.3,
-    WORLD_W / 2, WORLD_H / 2, Math.max(WORLD_W, WORLD_H) * 0.72,
-  );
-  vg.addColorStop(0, 'rgba(0,0,0,0)');
-  vg.addColorStop(1, hexA(C.voidDeep, photo ? 0.38 : 0.6));
-  g.fillStyle = vg;
-  g.fillRect(0, 0, WORLD_W, WORLD_H);
+  /** Rand und Abdunkelung. Kostet gemessen unter einer Millisekunde. */
+  const abschliessen = (): void => {
+    const vg = g.createRadialGradient(
+      WORLD_W / 2, WORLD_H / 2, Math.min(WORLD_W, WORLD_H) * 0.3,
+      WORLD_W / 2, WORLD_H / 2, Math.max(WORLD_W, WORLD_H) * 0.72,
+    );
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, hexA(C.voidDeep, photo ? 0.38 : 0.6));
+    g.fillStyle = vg;
+    g.fillRect(0, 0, WORLD_W, WORLD_H);
+    saum(g, photo !== null);
+  };
 
-  saum(g, photo !== null);
-  return cv;
+  // Ohne Foto gibt es nichts abzugleichen - der gemalte Untergrund ist in
+  // einem Zug fertig.
+  if (!photo) {
+    abschliessen();
+    return { flaeche: cv, schritt: () => true };
+  }
+
+  const kurven = tonwertKurven(g);
+  let zeile = 0;
+  let fertig = false;
+
+  return {
+    flaeche: cv,
+    schritt(budgetMs: number): boolean {
+      if (fertig) return true;
+      const bis = performance.now() + budgetMs;
+      do {
+        if (zeile >= WORLD_H) {
+          abschliessen();
+          fertig = true;
+          return true;
+        }
+        const hoehe = Math.min(BAND_HOEHE, WORLD_H - zeile);
+        const band = g.getImageData(0, zeile, WORLD_W, hoehe);
+        tonwertAnwenden(band.data, kurven);
+        g.putImageData(band, 0, zeile);
+        zeile += hoehe;
+        // Mindestens ein Band je Aufruf, sonst kaeme bei einem Budget von
+        // null nie etwas voran und der Auftrag haenge ewig.
+      } while (performance.now() < bis);
+      return false;
+    },
+  };
+}
+
+/** Wieviele Zeilen ein Haeppchen umfasst.
+ *
+ *  Gemessen statt geschaetzt: mit 60 Zeilen braucht der Abgleich 19 Baender
+ *  und 162 ms, also 8,5 ms je Band auf dem Schreibtisch. Auf einem vierfach
+ *  gedrosselten Telefon sind das rund 34 ms - unter der Schwelle von 50 ms,
+ *  ab der eine Aufgabe als blockierend gilt, aber nicht weit darunter.
+ *
+ *  Mit 40 Zeilen sind es 27 Baender zu rund 6 ms, gedrosselt 24 ms. Das ist
+ *  der Abstand, den ich haben will: die Schwelle ist eine Norm, kein Ziel,
+ *  und ein Band, das sie gerade so einhaelt, reisst sie auf dem naechsten
+ *  langsameren Geraet. Kleiner ginge auch, kostet aber je Band einen eigenen
+ *  getImageData-Aufruf. */
+const BAND_HOEHE = 40;
+
+/** Der bequeme Weg: alles auf einmal, fuer Werkzeuge und Pruefungen.
+ *
+ *  Ruft denselben Auftrag auf und laesst ihn ohne Zeitbudget durchlaufen. Es
+ *  gibt bewusst keine zweite Fassung der Rechnung - zwei Fassungen derselben
+ *  Tonwertlehre liefen auseinander, und zwar unbemerkt. */
+export function bakeTerrain(
+  map: GameMap, lanes: LanePath[], pal: MapPalette,
+  photo: HTMLImageElement | null = null,
+): HTMLCanvasElement {
+  const auftrag = terrainAuftrag(map, lanes, pal, photo);
+  while (!auftrag.schritt(Infinity)) { /* bis nichts mehr zu tun ist */ }
+  return auftrag.flaeche;
 }
 
 // ------------------------------------------------------- Tonwert der Karten
@@ -240,15 +323,37 @@ const leuchte = (r: number, g: number, b: number): number =>
  *  noetige Gammawert wird aus dem Bild selbst bestimmt. Damit stimmt er auch
  *  fuer die vierte Karte, die es noch nicht gibt. Das ist Regel 2: anteilig
  *  statt absolut. */
-function angleichen(g: CanvasRenderingContext2D): void {
-  const bild = g.getImageData(0, 0, WORLD_W, WORLD_H);
-  const d = bild.data;
+/** Die Kurven, die der Abgleich braucht - einmal je Karte gerechnet. */
+interface TonwertKurven {
+  TA: Float32Array;
+  TWr: Float32Array; TWg: Float32Array; TWb: Float32Array;
+  C: number;
+}
 
-  // Erst messen - auf einer Stichprobe, nicht auf allen 3,2 Millionen Punkten.
-  // Fuer einen Mittelwert reicht jeder 37. Punkt; die Primzahl verhindert,
-  // dass die Stichprobe sich auf ein Muster im Bild legt.
+/** Misst das Bild und leitet daraus die Kurven ab.
+ *
+ *  Gemessen wird auf einer verkleinerten Fassung, und zwar OHNE Glaetten.
+ *  Das ist kein Detail: mit Glaetten wuerde jeder Bildpunkt der kleinen
+ *  Fassung ein Mittel seiner Nachbarn, und Mitteln nimmt Farbigkeit weg. Die
+ *  gemessene Sattheit fiele zu niedrig aus, der Ausgleich zu hoch, und die
+ *  Karte wuerde bunter als gewollt. Ohne Glaetten ist die kleine Fassung eine
+ *  Stichprobe echter Bildpunkte - genau das, was die Zeile vorher mit
+ *  "jeder 37." erreicht hat, nur billiger.
+ *
+ *  Warum ueberhaupt verkleinert: die Kurven muessen VOR dem ersten Band
+ *  feststehen, sonst begaenne jedes Band mit einer anderen Rechnung. Ein
+ *  Messdurchgang ueber das ganze Bild waere aber selbst wieder die lange
+ *  Aufgabe, die hier gerade abgeschafft wird. */
+function tonwertKurven(g: CanvasRenderingContext2D): TonwertKurven {
+  const klein = document.createElement('canvas');
+  klein.width = PROBE_B; klein.height = PROBE_H;
+  const kg = klein.getContext('2d', { willReadFrequently: true })!;
+  kg.imageSmoothingEnabled = false;
+  kg.drawImage(g.canvas, 0, 0, PROBE_B, PROBE_H);
+  const d = kg.getImageData(0, 0, PROBE_B, PROBE_H).data;
+
   let n = 0, summeL = 0, summeS = 0;
-  for (let i = 0; i < d.length; i += 4 * 37) {
+  for (let i = 0; i < d.length; i += 4) {
     const r = d[i] / 255, gr = d[i + 1] / 255, b = d[i + 2] / 255;
     summeL += leuchte(r, gr, b);
     const max = Math.max(r, gr, b), min = Math.min(r, gr, b);
@@ -256,55 +361,39 @@ function angleichen(g: CanvasRenderingContext2D): void {
     n++;
   }
   const istHell = summeL / n, istSatt = summeS / n;
-  if (istHell <= 0.001) return;
 
   // Das Gamma, das die gemessene Helligkeit auf die gewuenschte hebt.
   // Naeherung ueber den Mittelwert: hell^(1/gamma) = ziel. Sie ist nicht
   // exakt - der Mittelwert einer Potenz ist nicht die Potenz des Mittelwerts -
   // aber der Fehler liegt bei wenigen Hundertsteln, und nachjustiert wird
   // ohnehin an der gemessenen Ausgabe.
-  const gamma = Math.log(istHell) / Math.log(Math.min(0.95, BODEN_HELL));
+  const gamma = istHell <= 0.001 ? 1 : Math.log(istHell) / Math.log(Math.min(0.95, BODEN_HELL));
   const invGamma = 1 / Math.max(0.5, Math.min(2.5, gamma));
 
   // Sattheit: der Faktor gilt fuer das ganze Bild, nicht je Punkt. Je Punkt
   // gerechnet wuerde jeden fast grauen Punkt auf Zielsaettigung reissen -
   // aus Nebel wuerde Farbe.
-  const sattFaktor = istSatt > 0.01
-    ? 1 + (BODEN_SATT / istSatt - 1) * SATT_ZUG
-    : 1;
+  const sattFaktor = istSatt > 0.01 ? 1 + (BODEN_SATT / istSatt - 1) * SATT_ZUG : 1;
 
-  // Nachschlagetabelle statt Math.pow je Punkt.
   const tabelle = new Uint8Array(256);
-  for (let v = 0; v < 256; v++) {
-    tabelle[v] = Math.round(Math.pow(v / 255, invGamma) * 255);
-  }
+  for (let v = 0; v < 256; v++) tabelle[v] = Math.round(Math.pow(v / 255, invGamma) * 255);
 
-  // Die Mitte, um die gespreizt wird - der Zielwert, nicht der gemessene.
-  // Um den gemessenen zu spreizen hiesse, die Korrektur von sich selbst
-  // abhaengig zu machen.
-  const mitte = BODEN_HELL * 255;
-
-  // --- Warum hier vier Tabellen stehen und keine Rechnung.
+  // --- Warum vier Tabellen und keine Rechnung je Punkt.
   //
-  // Ueber dieser Schleife stand bis v111 die Behauptung, die eine
-  // Nachschlagetabelle mache "den Unterschied zwischen einem spuerbaren
-  // Ruckler beim Kartenwechsel und keinem". Gemessen kostete der Vorgang
-  // trotzdem 243 ms je Karte, im Browser mit Telefondrossel ueber eine
-  // Sekunde. Die Behauptung stand im Kommentar, kein Tor hat sie je geprueft.
-  //
-  // Die Rechnung je Punkt ist in Wahrheit LINEAR in den drei
-  // tabellierten Kanaelen, und das laesst sich ausrechnen statt ausfuehren:
+  // Die Rechnung je Punkt ist LINEAR in den drei tabellierten Kanaelen, und
+  // das laesst sich ausrechnen statt ausfuehren:
   //
   //   k_r = M + (l + (r - l)*S - M)*K   mit  l = wr*r + wg*g + wb*b
   //       = M*(1-K)  +  K*S*r  +  K*(1-S)*l
   //       =    C     +   A*r   +     B*l
   //
-  // Also braucht es je Punkt keine Multiplikation mehr, sondern sechs
-  // Tabellenzugriffe und ein paar Additionen: `TA` traegt den eigenen
-  // Kanalanteil, die drei `TW` zusammen die Helligkeit.
+  // Also braucht es je Punkt sechs Tabellenzugriffe und ein paar Additionen:
+  // `TA` traegt den eigenen Kanalanteil, die drei `TW` zusammen die
+  // Helligkeit. Das ist NICHT der grosse Hebel gewesen - der Abgleich ist zu
+  // vier Fuenfteln Bildpunkt-Umzug - aber es ist geschenkt und bitgleich.
+  const mitte = BODEN_HELL * 255;
   const A = BODEN_KONTRAST * sattFaktor;
   const B = BODEN_KONTRAST * (1 - sattFaktor);
-  const C = mitte * (1 - BODEN_KONTRAST);
   const TA = new Float32Array(256);
   const TWr = new Float32Array(256), TWg = new Float32Array(256), TWb = new Float32Array(256);
   for (let v = 0; v < 256; v++) {
@@ -314,17 +403,26 @@ function angleichen(g: CanvasRenderingContext2D): void {
     TWg[v] = B * 0.7152 * t;
     TWb[v] = B * 0.0722 * t;
   }
+  return { TA, TWr, TWg, TWb, C: mitte * (1 - BODEN_KONTRAST) };
+}
 
-  // `d` ist ein Uint8ClampedArray: die Zuweisung begrenzt und rundet selbst.
-  // Das vorherige Math.max/Math.min davor war doppelte Arbeit.
+/** Groesse der Stichprobe. 480 x 270 sind 129 600 echte Bildpunkte - mehr als
+ *  die 56 000, mit denen die Zeile vorher gemessen hat. */
+const PROBE_B = 480, PROBE_H = 270;
+
+/** Wendet die Kurven auf ein Stueck Bild an. Arbeitet an Ort und Stelle.
+ *
+ *  `d` ist ein Uint8ClampedArray: die Zuweisung begrenzt und rundet selbst,
+ *  ein Math.max/Math.min davor waere doppelte Arbeit. */
+function tonwertAnwenden(d: Uint8ClampedArray, k: TonwertKurven): void {
+  const { TA, TWr, TWg, TWb, C: c } = k;
   for (let i = 0; i < d.length; i += 4) {
     const r = d[i], gr = d[i + 1], b = d[i + 2];
-    const L = C + TWr[r] + TWg[gr] + TWb[b];
+    const L = c + TWr[r] + TWg[gr] + TWb[b];
     d[i] = L + TA[r];
     d[i + 1] = L + TA[gr];
     d[i + 2] = L + TA[b];
   }
-  g.putImageData(bild, 0, 0);
 }
 
 /** Der Kartenrand.

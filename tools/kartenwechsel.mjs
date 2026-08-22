@@ -34,6 +34,21 @@
  * Schleife verbessert — die sichtbare Stelle — statt die Teile zu messen.
  * Regel 9 gilt auch innerhalb einer Funktion.
  *
+ * ## Was v113 daran geaendert hat
+ *
+ * Der Aufbau laeuft nicht mehr in einem Zug, sondern in 28 Haeppchen zu je
+ * 0,154 Mpx (`terrainAuftrag`). Bis er fertig ist, bleibt die vorherige Karte
+ * stehen - man sieht von der Aufteilung nichts. Gemessen fiel die
+ * schlimmste Aufgabe damit von 939-1322 auf 426-622 ms.
+ *
+ * Wichtiger als die Zahl ist der Nachweis, dass der Rest NICHT mehr von hier
+ * kommt: schaltet man den Tonwertabgleich vollstaendig ab (0,13 statt
+ * 4,28 Mpx), bleibt die schlimmste Aufgabe bei 507-875 ms - unveraendert.
+ * Ein Profillauf zeigt, warum: 19,5 von 22 Sekunden stehen unter
+ * `(program)`, also browserinterne Arbeit (Dekodieren, Rastern), nicht
+ * unser JavaScript. Weiter optimieren hiesse hier, an der falschen Stelle zu
+ * ziehen. Das steht als D26.
+ *
  * ## Warum das Tor keine Millisekunden zaehlt
  *
  * Weil es dann kein Tor waere, sondern ein Wuerfel. Sieben Laeufe bei
@@ -77,6 +92,18 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 // 1920x1080). Das Budget laesst genau einen weiteren halben Durchgang zu —
 // wer einen zweiten Punktdurchlauf einbaut, faellt auf.
 const BUDGET_MPX = 5.5;
+
+// --- Obergrenze fuer den GROESSTEN einzelnen Schritt.
+//
+// Das ist die eigentliche Zusage aus D25: der Aufbau darf nicht mehr in einem
+// Zug durchlaufen. Ohne diese Grenze bliebe die Aufteilung ungeprueft - die
+// Gesamtsumme aendert sich durch sie ja nicht, und genau deshalb faellt ihr
+// Wegfall der Summe nicht auf.
+//
+// Heute: 40 Zeilen mal 1920 Punkte, gelesen und geschrieben, also 0,154 Mpx.
+// Erlaubt ist das Vierfache - Luft fuer groessere Baender, aber weit unter
+// den 4,15 Mpx, die ein ungeteilter Durchlauf braeuchte.
+const BUDGET_HAEPPCHEN_MPX = 0.6;
 
 // Die Norm, gegen die gemessen wird. Nicht erreichbar mit dem heutigen
 // Aufbau, aber sie steht hier, damit der Abstand sichtbar bleibt.
@@ -123,7 +150,7 @@ globalThis.Image = class extends NativeImage {
 };
 
 const { MAPS } = await import('../src/data/maps.ts');
-const { bakeTerrain } = await import('../src/gfx/terrain.ts');
+const { terrainAuftrag } = await import('../src/gfx/terrain.ts');
 const { getBackground } = await import('../src/gfx/backgrounds.ts');
 const { GameState } = await import('../src/game/state.ts');
 
@@ -141,23 +168,37 @@ if (fehlend.length) {
 }
 
 console.log('KARTENWECHSEL\n');
-console.log('Karte             Bildpunkte   Durchgaenge      Zeit (nur Anhalt)');
+console.log('Karte            gesamt Mpx  Haeppchen  groesstes  Zeit (Anhalt)');
 
 let schlimmste = 0, schlimmsteKarte = '';
+let groesstesHaeppchen = 0, haeppchenKarte = '';
 for (const m of MAPS) {
   const s = new GameState(m.id);
   const bild = getBackground(m.id);
-  bakeTerrain(m, s.lanes, m.palette, bild);        // aufwaermen
+  terrainAuftrag(m, s.lanes, m.palette, bild).schritt(Infinity);   // aufwaermen
 
   punkte = 0; durchgaenge = 0;
   const t0 = performance.now();
-  bakeTerrain(m, s.lanes, m.palette, bild);
+  const auftrag = terrainAuftrag(m, s.lanes, m.palette, bild);
+  // Mit Budget null: jeder Aufruf macht genau ein Haeppchen. So wird
+  // sichtbar, was der GROESSTE einzelne Schritt bewegt - und genau das ist
+  // die Frage bei D25. Die Gesamtsumme allein wuerde nicht auffallen, wenn
+  // jemand die Aufteilung wieder entfernt: sie bliebe dieselbe.
+  let haeppchen = 0;
+  for (;;) {
+    const vorher = punkte;
+    const fertig = auftrag.schritt(0);
+    const dieses = punkte - vorher;
+    if (dieses > groesstesHaeppchen) { groesstesHaeppchen = dieses; haeppchenKarte = m.id; }
+    haeppchen++;
+    if (fertig) break;
+  }
   const ms = performance.now() - t0;
   const mpx = punkte / 1e6;
 
   if (mpx > schlimmste) { schlimmste = mpx; schlimmsteKarte = m.id; }
-  console.log(`${m.id.padEnd(16)}${mpx.toFixed(2).padStart(8)} Mpx${String(durchgaenge).padStart(9)}`
-    + `${ms.toFixed(0).padStart(15)} ms`);
+  console.log(`${m.id.padEnd(16)}${mpx.toFixed(2).padStart(8)}${String(haeppchen).padStart(11)}`
+    + `${(groesstesHaeppchen / 1e6).toFixed(3).padStart(11)}${ms.toFixed(0).padStart(11)} ms`);
 }
 
 // Regel 3, an der Messung selbst: hat der Zaehler ueberhaupt etwas gesehen?
@@ -172,16 +213,27 @@ if (schlimmste === 0) {
 
 console.log(`\nSchlimmste Karte: ${schlimmsteKarte} mit ${schlimmste.toFixed(2)} Mpx `
   + `(Budget ${BUDGET_MPX.toFixed(2)} Mpx)`);
+console.log(`Groesstes Haeppchen: ${(groesstesHaeppchen / 1e6).toFixed(3)} Mpx auf ${haeppchenKarte} `
+  + `(Budget ${BUDGET_HAEPPCHEN_MPX.toFixed(2)} Mpx) - der Aufbau ist aufgeteilt.`);
 console.log(`Abstand zur Norm: eine Aufgabe ueber ${SOLL_MS} ms blockiert Eingaben. `
-  + 'Im Browser mit\n  vierfacher Drossel liegt der Kartenwechsel bei 660 bis 1320 ms — '
-  + 'dem Dreizehn-\n  bis Sechsundzwanzigfachen. Das Tor haelt den Stand fest, es '
-  + 'behauptet nicht,\n  er sei gut.');
+  + 'Im Browser mit\n  vierfacher Drossel bleiben 430 bis 620 ms — das Neun- bis '
+  + 'Zwoelffache.\n  Der Kartenaufbau ist daran seit v113 nicht mehr beteiligt '
+  + '(nachgewiesen:\n  schaltet man den Tonwertabgleich ganz ab, aendert sich die Zahl '
+  + 'nicht).\n  Was bleibt, ist ueberwiegend keine Rechenzeit von uns - siehe D26.');
 
 if (process.argv.includes('--browser')) {
   const { messenImBrowser } = await import('./kartenwechsel-browser.mjs');
   await messenImBrowser(ROOT);
 }
 
+if (groesstesHaeppchen / 1e6 > BUDGET_HAEPPCHEN_MPX) {
+  console.error(`\nKARTENWECHSEL: ein einzelner Schritt bewegt `
+    + `${(groesstesHaeppchen / 1e6).toFixed(2)} Mpx (${haeppchenKarte}), erlaubt sind `
+    + `${BUDGET_HAEPPCHEN_MPX.toFixed(2)} Mpx.`);
+  console.error('  Der Kartenaufbau muss sich ueber mehrere Bilder verteilen. Ein Zug ueber');
+  console.error('  das ganze Feld friert das Bild auf dem Telefon fuer rund eine Sekunde ein.');
+  process.exit(1);
+}
 if (schlimmste > BUDGET_MPX) {
   console.error(`\nKARTENWECHSEL: ueber Budget — ${schlimmste.toFixed(2)} Mpx statt hoechstens `
     + `${BUDGET_MPX.toFixed(2)} Mpx je Kartenwechsel.`);

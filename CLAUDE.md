@@ -143,7 +143,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v112. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v113. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 29 von 30,
@@ -165,16 +165,13 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
 - Kein ●● im Genre-Abgleich mehr offen. Von 30 Kriterien sind 29 erfüllt;
   das letzte (P8, antippbare Kleinigkeiten in der Karte) ist von Hand
   beurteilt und steht als D14.
-- D24 (grafisch, klein): Im Prüfsteg rollt die Werteliste, ohne es
-  anzuzeigen — auf dem iPhone quer endet sie mitten in einer Zeile. Technisch
-  richtig, sichtbar wie ein Fehler. Gefunden durch Hinsehen, von keinem Tor
-  gemeldet: das Browsertor prüft Beschnitt nur an Knöpfen, nicht an Text.
-- D25 (technisch): Der Kartenaufbau liegt mit 660–1320 ms (vierfache
-  Drossel) weit über der Norm von 50 ms. In v112 gemessen und halbiert, aber
-  nicht gelöst. Die Vorbilder bauen eine Stufe **hinter einem Ladeschritt**
-  auf, nie in einem laufenden Bild — das ist der eigentliche Weg, und er ist
-  eine Architekturänderung, keine Optimierung. `npm run kartenwechsel` hält
-  den Stand fest und meldet den Abstand bei jedem Lauf.
+- D26 (technisch): Beim Betreten einer Karte bleiben 430–620 ms schlimmste
+  Aufgabe (vierfache Drossel), Norm sind 50 ms. Der Kartenaufbau ist daran
+  seit v113 **nicht mehr beteiligt** — schaltet man den Tonwertabgleich ganz
+  ab, ändert sich die Zahl nicht. Ein Profillauf legt 19,5 von 22 s unter
+  `(program)`: browserinterne Arbeit, kein JavaScript von uns. Der nächste
+  Hebel wäre das Dekodieren (`createImageBitmap`), und dort ist Vorsicht
+  geboten — Safari ist bei Bildpfaden schon einmal aufgefallen (Regel 11).
 
 **Erledigt und hier zu lange falsch stehen geblieben** (nachgemessen in v103):
 - B15 und C7 sind umgesetzt (v109). Beim ersten Betreten einer Karte

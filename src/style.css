@@ -211,6 +211,16 @@ html, body {
   margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px;
   overflow-y: auto; min-height: 0; flex: 1 1 auto;
 }
+/* Rollhinweis (D24).
+   Technisch rollte die Werteliste schon immer, sichtbar war es nicht: auf dem
+   iPhone quer endet sie mitten in einer Zeile, und ein halb abgeschnittenes
+   Wort liest sich als Fehler, nicht als Hinweis. iOS und Material markieren
+   die Kante - aber nur, solange wirklich etwas folgt. Genau das macht das
+   Attribut: es steht nur, wenn unterhalb noch etwas steht. */
+.insp-stats[data-mehr="1"] {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent);
+}
 .insp-stats dt {
   font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
   align-self: center;

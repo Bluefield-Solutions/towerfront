@@ -10,7 +10,7 @@ import { makeRng } from '../core/math';
 import { GameState } from '../game/state';
 import type { Tower } from '../game/types';
 import { beginGlowBatch, endGlowBatch, hexA, stampGlow, stampGlowFast } from './glow';
-import { bakeTerrain } from './terrain';
+import { terrainAuftrag, type TerrainAuftrag } from './terrain';
 import { snap } from '../data/maps';
 import { drawMenu } from './menurender';
 import type { Menu } from '../game/menu';
@@ -23,11 +23,20 @@ import {
 } from './sprites';
 import { drawAurora, drawGroundFog, getMoodLayer } from './atmosphere';
 
+/** Wieviel Zeit ein Bild in den Kartenaufbau stecken darf.
+ *
+ *  Sechs Millisekunden von den 16,7, die ein Bild bei 60 Hz hat. Ein Band
+ *  wird immer zu Ende gerechnet, das Budget entscheidet nur, ob ein zweites
+ *  folgt - sonst kaeme bei einem knappen Budget nie etwas voran. */
+const TERRAIN_BUDGET_MS = 6;
+
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
   private terrain: HTMLCanvasElement | null = null;
   private terrainFor = '';
   private terrainBgVersion = -1;
+  /** Der laufende Kartenaufbau, solange er noch nicht fertig ist. */
+  private terrainArbeit: TerrainAuftrag | null = null;
   /** Weltpunkt, auf den gerade gezielt wird. */
   aimPoint: { x: number; y: number } | null = null;
   /** Ist gesetzt, solange das Menue offen ist - dann wird es statt des
@@ -236,10 +245,25 @@ export class Renderer {
     // Untergrundbild fertig dekodiert ist.
     const bgV = backgroundVersion();
     if (!this.terrain || this.terrainFor !== s.map.id || this.terrainBgVersion !== bgV) {
-      this.terrain = bakeTerrain(s.map, s.lanes, s.map.palette, getBackground(s.map.id));
+      this.terrainArbeit = terrainAuftrag(s.map, s.lanes, s.map.palette, getBackground(s.map.id));
       this.terrainFor = s.map.id;
       this.terrainBgVersion = bgV;
-      this.towerLayerVersion = -1;
+    }
+    // Der Aufbau laeuft ueber mehrere Bilder statt in einem Zug. Bis er
+    // fertig ist, bleibt die VORHERIGE Karte stehen - deshalb sieht man von
+    // der Aufteilung nichts. Wer stattdessen die halbfertige Flaeche zeigte,
+    // saehe einen Helligkeitsstreifen von oben nach unten wandern.
+    if (this.terrainArbeit) {
+      if (this.terrainArbeit.schritt(TERRAIN_BUDGET_MS)) {
+        this.terrain = this.terrainArbeit.flaeche;
+        this.terrainArbeit = null;
+        this.towerLayerVersion = -1;
+      } else if (!this.terrain) {
+        // Beim allerersten Bild gibt es nichts Vorheriges. Dann lieber die
+        // dunklere Zwischenstufe als eine leere Flaeche - sie ist gueltig,
+        // nur noch nicht abgeglichen.
+        this.terrain = this.terrainArbeit.flaeche;
+      }
     }
     if (!this.sky) this.sky = this.bakeSky();
     const hi = s.quality === 'hoch';

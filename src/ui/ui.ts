@@ -164,6 +164,10 @@ export class UI {
       this.skillBtns.set(id, b);
     }
 
+    // Beim Rollen mitfuehren: unten angekommen verschwindet der Schleier
+    // wieder. Ein Hinweis, der auch am Ende noch steht, waere gelogen.
+    this.iStats.addEventListener('scroll', () => this.rollhinweis(), { passive: true });
+
     // Die Leiste laesst sich wegklappen. Wer den Ausschnitt studieren will,
     // bekommt den ganzen Bildschirm - der Startknopf bleibt trotzdem stehen.
     this.dockToggle.addEventListener('click', () => {
@@ -730,6 +734,7 @@ export class UI {
         l1.slow ? row('Bremse', pct(l1.slow)) : '',
         row('Luftziele', def.hitsAir ? 'ja' : 'nein'),
       ].join('');
+      this.rollhinweis();
       this.iHint.hidden = false;
       this.iHint.textContent = def.blurb;
       this.iActions.hidden = true;
@@ -756,6 +761,7 @@ export class UI {
         st.pierce ? row('Durchschlag', st.pierce, nx?.pierce) : '',
         row('Erledigt', sel.kills),
       ].join('');
+      this.rollhinweis();
       this.renderUpgrades();
       this.renderZielwahl(sel);
       this.iSell.textContent = `Verkaufen · ${sellValue(def, sel.branch, sel.level)}`;
@@ -890,6 +896,22 @@ export class UI {
     }
     if (w.note) parts.push(`<i class="next-note">${w.note}</i>`);
     this.nList.innerHTML = parts.join('');
+  }
+
+  /** Zeigt die Werteliste an, dass es weitergeht - und nur dann.
+   *
+   *  D24: gerollt hat sie immer schon, angezeigt hat sie es nie. Auf dem
+   *  iPhone quer endet sie mitten in einer Zeile, und ein halb
+   *  abgeschnittenes Wort liest sich als Fehler, nicht als Hinweis. iOS und
+   *  Material markieren die Kante, aber nur solange wirklich etwas folgt -
+   *  ein Schleier, der immer liegt, ist Deko und beantwortet keine Frage.
+   *
+   *  Bewusst EINE Stelle statt eines Schalters an jeder Schreibstelle: die
+   *  Werteliste wird an zwei Orten gefuellt, und die dritte kommt bestimmt.
+   *  Dieselbe Ueberlegung wie bei `istMenuOffen()` in Regel 6. */
+  private rollhinweis(): void {
+    const rest = this.iStats.scrollHeight - this.iStats.clientHeight - this.iStats.scrollTop;
+    this.iStats.dataset.mehr = rest > 1 ? '1' : '0';
   }
 }
 

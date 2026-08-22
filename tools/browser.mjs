@@ -375,6 +375,51 @@ if (start) {
         `der Steg bei ${b.grenze}. Im Fenster liegt er - im Behälter nicht.`,
       );
     }
+
+    // --- 8. Rollt etwas, ohne es anzuzeigen?
+    //
+    // Die Prüfung oben fragt nach Knöpfen, die abgeschnitten werden. D24 war
+    // der andere Fall: TEXT, der abgeschnitten wird, und zwar völlig
+    // regelkonform - der Behälter rollt ja. Nur sah man das nicht, und auf
+    // dem iPhone quer endete die Werteliste mitten in einer Zeile.
+    //
+    // Geprüft wird deshalb nicht "hat die Werteliste einen Schleier",
+    // sondern die Regel dahinter: **was rollt, muss es anzeigen.** Damit
+    // greift sie auch für die nächste rollende Liste, die noch niemand
+    // gebaut hat. Und die Gegenrichtung zählt mit: wer unten angekommen ist,
+    // darf keinen Hinweis mehr sehen - ein Hinweis, der immer steht, ist
+    // Deko.
+    const rollend = await seite.evaluate(() => {
+      const raus = [];
+      for (const e of document.querySelectorAll('*')) {
+        const st = getComputedStyle(e);
+        if (!/auto|scroll/.test(st.overflowY)) continue;
+        if (e.scrollHeight - e.clientHeight < 2) continue;      // rollt gar nicht
+        const r = e.getBoundingClientRect();
+        if (r.width < 1 || r.height < 1) continue;              // nicht sichtbar
+        const rest = e.scrollHeight - e.clientHeight - e.scrollTop;
+        raus.push({
+          name: e.id || e.className || e.tagName,
+          mehr: e.dataset ? e.dataset.mehr : undefined,
+          rest: Math.round(rest),
+        });
+      }
+      return raus;
+    });
+    for (const r of rollend) {
+      if (r.rest > 1 && r.mehr !== '1') {
+        fail(
+          `"${r.name}" rollt noch ${r.rest} Punkte weiter, zeigt es aber nicht an ` +
+          '(data-mehr fehlt). Technisch richtig, sichtbar wie ein Fehler.',
+        );
+      }
+      if (r.rest <= 1 && r.mehr === '1') {
+        fail(`"${r.name}" ist unten angekommen, behauptet aber weiter, es ginge weiter.`);
+      }
+    }
+    if (rollend.length) {
+      console.log(`\nRollende Behälter: ${rollend.map((r) => `${r.name} (noch ${r.rest})`).join(', ')}`);
+    }
   }
 }
 

@@ -480,6 +480,31 @@ const PROBEN = [
     tor: 'kartenwechsel',
   },
   {
+    // D25: der Aufbau darf nicht wieder in einem Zug durchlaufen. Die
+    // Gesamtsumme bliebe dabei gleich - nur das groesste Haeppchen faellt auf.
+    name: 'Kartenaufbau laeuft wieder in einem Zug',
+    datei: 'src/gfx/terrain.ts',
+    regel: /      \} while \(performance\.now\(\) < bis\);/,
+    ersatz: '      } while (true);',
+    tor: 'kartenwechsel',
+  },
+  {
+    // D24: was rollt, muss es anzeigen.
+    name: 'Rollhinweis der Werteliste abgeschaltet',
+    datei: 'src/ui/ui.ts',
+    regel: /    this\.iStats\.dataset\.mehr = rest > 1 \? '1' : '0';/,
+    ersatz: "    this.iStats.dataset.mehr = '0';",
+    tor: 'browsertor',
+  },
+  {
+    // Und die Gegenrichtung: ein Schleier, der immer liegt, ist Deko.
+    name: 'Rollhinweis steht auch am Ende noch',
+    datei: 'src/ui/ui.ts',
+    regel: /    this\.iStats\.dataset\.mehr = rest > 1 \? '1' : '0';/,
+    ersatz: "    this.iStats.dataset.mehr = '1';",
+    tor: 'browsertor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

@@ -146,6 +146,18 @@ zweites Mal kosten.
    obwohl zwei von drei Karten unter dem Band lagen: es mittelte.
    `npm run proben` setzt das für Tore längst durch. Für jede andere Messung
    ist es Handarbeit und dauert neunzig Sekunden.
+14. **Ein Raster ist nur so fein wie sein kleinstes Ziel.** Das Browsertor
+   suchte den Weg ins Spiel mit 45 Punkten Schritt — der „Spielen"-Knopf ist
+   im schmalen Fenster 33 Punkte hoch. Es traf ihn auf dem Telefon durch
+   Glück und meldete auf dem Schreibtisch „nicht spielbar", während das Spiel
+   einwandfrei lief. Ein zu grobes Raster beweist weder das eine noch das
+   andere. Der Weg wird jetzt einmal gefunden und in **Weltkoordinaten**
+   nachgespielt — gefunden am laufenden Spiel, nicht abgeschrieben.
+15. **Was zweimal dasteht, veraltet einmal.** Der Hochkant-Hinweis stand als
+   `.rotate` und als `#quer` in derselben Datei. Gepflegt wurde `#quer`,
+   ausgesperrt hat `.rotate`: ohne Zeigerprüfung deckte er jedes schmale
+   Schreibtischfenster zu, und siebzehn Tore meldeten grün.
+
 ---
 
 ## Aufbau
@@ -169,7 +181,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v121. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v122. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 29 von 30,

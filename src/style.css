@@ -265,16 +265,20 @@ html, body {
 }
 .primary:active { transform: scale(0.97); }
 
-/* ------------------------------------------------------------ Querformat */
+/* ------------------------------------------------------------ Querformat
 
-.rotate { display: none; }
-@media (orientation: portrait) and (max-height: 900px) {
-  .rotate {
-    display: grid; position: absolute; inset: 0; z-index: 20; margin: 0;
-    place-content: center; text-align: center; padding: 30px;
-    background: var(--void); color: var(--muted); font-size: 15px; letter-spacing: 0.02em;
-  }
-}
+   Hier stand bis v122 ein ZWEITER Hochkant-Hinweis (`.rotate`), abgegrenzt
+   nur durch `(orientation: portrait) and (max-height: 900px)` - ohne jede
+   Frage nach dem Zeiger. Ein gewoehnliches Schreibtischfenster von 700 x 850
+   bekam ihn deshalb ueber die ganze Flaeche gelegt und kam nicht ins Spiel.
+   Gemessen, nicht vermutet: im Browser bei 700 x 850 verdeckte `.rotate` die
+   Leinwand, bei 1400 x 900 nicht.
+
+   Er ist ersatzlos entfernt. Der Hinweis steht genau einmal, als `#quer` am
+   Ende dieser Datei, und der fragt den Zeiger. Zwei Regeln fuer dieselbe
+   Sache sind eine zu viel: die eine wird gepflegt, die andere veraltet
+   stumm - dieselbe Familie wie die Zahl, die hier vier Runden lang falsch
+   weiterlief (S124). */
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }

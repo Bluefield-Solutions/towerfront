@@ -16,7 +16,7 @@
  * Deshalb lädt dieses Tor die fertig gebaute Datei — dieselbe, die
  * ausgeliefert wird — in Chromium, auf dem Zielgerät: iPhone quer.
  *
- * Es prüft sechs Dinge, und jedes davon ist ein Fehler, der schon einmal
+ * Es prüft sieben Dinge, und jedes davon ist ein Fehler, der schon einmal
  * passiert ist oder unentdeckt geblieben wäre:
  *
  *   1. Die Datei lädt ohne Fehler in der Konsole.
@@ -28,10 +28,14 @@
  *   5. Jeder Knopf im Spiel ist daumengroß UND liegt obenauf. Ein Knopf,
  *      der groß genug ist, aber verdeckt wird, ist kein Knopf.
  *   6. Das Bild ist nicht einfarbig.
+ *   7. Der Schreibtisch ist nicht ausgesperrt: mit der Maus, quer wie
+ *      hochkant, liegt nichts ueber dem Feld und man kommt hinein. Das
+ *      war v121 - ein vergessener zweiter Hochkant-Hinweis ohne
+ *      Zeigerpruefung deckte jedes schmale Fenster zu.
  *
  * Aufruf: npm run browser
  */
-import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
@@ -49,6 +53,34 @@ const MINDEST = 44;
 
 /** Alles, was zur Spielbedienung gehört und im Menü nichts zu suchen hat. */
 const BEDIENUNG = ['#hud', '#dock', '#b-wave', '#inspector', '#pick', '#perf'];
+
+// --- Die eingepasste Abbildung des Menues.
+//
+// Sie steht in `drawMenuFrame` und in `screenToWorld` als dieselbe Formel;
+// hier ist sie ein drittes Mal noetig, um einen Tippweg von einer
+// Fenstergroesse auf eine andere zu uebertragen. Die Weltmasse werden aus
+// der Konfiguration GELESEN und nicht abgeschrieben - eine abgeschriebene
+// Zahl waere nach der naechsten Feldaenderung stumm falsch.
+const KONF = readFileSync(join(ROOT, 'src/data/config.ts'), 'utf8');
+const weltMass = (name) => {
+  const t = new RegExp(`export const ${name} = (\\d+)`).exec(KONF);
+  if (!t) {
+    console.error(`BROWSERTOR: ${name} steht nicht in src/data/config.ts.`);
+    process.exit(1);
+  }
+  return Number(t[1]);
+};
+const WELT_B = weltMass('WORLD_W'), WELT_H = weltMass('WORLD_H');
+
+const einpassung = (w, h) => Math.min(w / WELT_B, h / WELT_H);
+const nachWelt = (sx, sy, w, h) => {
+  const k = einpassung(w, h);
+  return { x: (sx - (w - WELT_B * k) / 2) / k, y: (sy - (h - WELT_H * k) / 2) / k };
+};
+const nachSchirm = (wx, wy, w, h) => {
+  const k = einpassung(w, h);
+  return [wx * k + (w - WELT_B * k) / 2, wy * k + (h - WELT_H * k) / 2];
+};
 
 const probleme = [];
 const fail = (m) => probleme.push(m);
@@ -217,10 +249,18 @@ if (verdeckt.length) {
 // Mensch tippt: ein Raster über die Leinwand, bis die Spielansicht auftaucht.
 // Das ist zugleich der ehrlichere Test - er fragt nicht "gibt es einen
 // Knopf", sondern "komme ich rein".
+//
+// Der Weg wird dabei MITGESCHRIEBEN, in Weltkoordinaten. Pruefung 7 spielt
+// ihn auf Schreibtischfenstern nach: das Menue ist an jeder Groesse dieselbe
+// eingepasste Welt, derselbe Weltpunkt trifft dort also dasselbe. Damit
+// braucht Pruefung 7 kein eigenes Raster - und vor allem keine Kopie der
+// Knopfkoordinaten, die nach der naechsten Umstellung still falsch waere.
 let start = null;
+const pfad = [];
 for (let y = 60; y < HOCH - 20 && !start; y += 50) {
   for (let x = 40; x < BREIT - 20 && !start; x += 60) {
     await seite.mouse.click(x, y);
+    pfad.push(nachWelt(x, y, BREIT, HOCH));
     await seite.waitForTimeout(90);
     const drin = await seite.evaluate(() => !document.getElementById('hud')?.hidden);
     if (drin) start = { x, y };
@@ -577,6 +617,84 @@ if (streuung < 6) {
     console.log(`\nMesstafel (#messung): ${tafel.slice(0, 150)}`);
   }
   await ctx2.close();
+}
+
+// --- 7. Der Schreibtisch. Nichts darf ihn aussperren.
+//
+// Bis v121 tat genau das ein zweiter, vergessener Hochkant-Hinweis: er fragte
+// nur nach Ausrichtung und Hoehe, nicht nach dem Zeiger. Ein ganz normales
+// Fenster von 700 x 850 bekam ihn ueber die volle Flaeche und kam nicht ins
+// Spiel - waehrend alle siebzehn Tore gruen meldeten. Wieder Regel 7, wieder
+// dieselbe Form wie v50.
+//
+// Geprueft werden BEIDE Formen, und das ist der Punkt: quer soll es laufen,
+// hochkant soll es AUCH laufen, denn ein Fenster kann man ziehen und ein
+// Schreibtisch laesst sich nicht drehen. Der Hinweis gehoert an Geraete, die
+// man kippt - `pointer: coarse` -, nicht an Fenster, die man zieht.
+{
+  for (const [name, w, h] of [['breit', 1400, 900], ['schmal', 700, 850]]) {
+    // Kein `isMobile`, kein `hasTouch`: das ist hier die ganze Frage. So
+    // meldet die Kaskade `pointer: fine`, also Maus.
+    const ctx3 = await browser.newContext({ viewport: { width: w, height: h } });
+    const s3 = await ctx3.newPage();
+    await s3.goto('file://' + DATEI);
+    await s3.waitForTimeout(800);
+
+    const zeiger = await s3.evaluate(() => matchMedia('(pointer: coarse)').matches);
+    if (zeiger) {
+      // Regel 3: kommt der Eingriff an? Ohne Maus prueft dieser Block nichts.
+      fail(`Schreibtischprobe ${name}: der Browser meldet einen groben Zeiger - `
+        + 'die Probe misst nicht, was sie messen soll.');
+      await ctx3.close();
+      continue;
+    }
+
+    // Was liegt ueber der ganzen Flaeche? Gefragt ist nicht "ist der Hinweis
+    // da", sondern "verdeckt IRGENDETWAS das Feld" - ein Tor auf einen
+    // bestimmten Klassennamen waere nach der naechsten Umbenennung blind.
+    const deckel = await s3.evaluate(() => [...document.querySelectorAll('body *')]
+      .filter((e) => {
+        const st = getComputedStyle(e), r = e.getBoundingClientRect();
+        return st.display !== 'none' && st.visibility !== 'hidden'
+          && st.opacity !== '0'
+          && r.width > innerWidth * 0.8 && r.height > innerHeight * 0.8
+          && (st.position === 'fixed' || st.position === 'absolute')
+          && Number(st.zIndex) > 10;
+      })
+      .map((e) => e.id ? '#' + e.id : '.' + String(e.className).split(' ')[0]));
+
+    if (deckel.length) {
+      fail(`Schreibtischprobe ${name} (${w}x${h}, Maus): ${deckel.join(', ')} liegt `
+        + 'ueber der ganzen Flaeche. Am Rechner gibt es nichts zu drehen.');
+    }
+
+    // Und die eigentliche Frage: kommt man rein?
+    //
+    // NICHT mit einem eigenen Raster. Ein Raster mit 45 Punkten Schritt ist
+    // groeber als der "Spielen"-Knopf, der im schmalen Fenster nur 33 Punkte
+    // hoch ist - es trifft ihn oder es trifft ihn nicht, je nachdem wie die
+    // Reihen fallen. Genau daran hat diese Pruefung im ersten Entwurf
+    // "NICHT spielbar" gemeldet, waehrend das Spiel einwandfrei lief; auf
+    // dem Telefon geht dasselbe Raster nur durch Glueck auf.
+    //
+    // Stattdessen der in Pruefung 4 mitgeschriebene Weg, umgerechnet. Der
+    // ist am laufenden Spiel gefunden, nicht abgeschrieben.
+    let drin = false;
+    for (const wp of pfad) {
+      await s3.mouse.click(...nachSchirm(wp.x, wp.y, w, h));
+      await s3.waitForTimeout(45);
+      drin = await s3.evaluate(() => !document.getElementById('hud')?.hidden);
+      if (drin) break;
+    }
+    if (!drin) {
+      fail(`Schreibtischprobe ${name} (${w}x${h}, Maus): derselbe Weg, der auf dem `
+        + 'Telefon ins Spiel fuehrt, fuehrt hier nicht hinein.');
+    }
+    console.log(`Schreibtisch ${name.padEnd(6)} ${w}x${h}: `
+      + `${drin ? 'spielbar' : 'NICHT spielbar'}`
+      + `${deckel.length ? `, verdeckt von ${deckel.join(', ')}` : ''}`);
+    await ctx3.close();
+  }
 }
 
 await browser.close();

@@ -663,6 +663,19 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
+    // Das Symbol ist einmal leer durchgekommen (S136): gueltiges PNG,
+    // richtige Masse, kein Bild darin. Hier wird genau das nachgestellt -
+    // der Kristall bleibt weg, Grund und Bogen bleiben.
+    name: 'Startbildschirm-Symbol ohne Figur',
+    datei: 'index.html',
+    regel: /rel="apple-touch-icon" href="data:image\/png;base64,[^"]+"/,
+    // Ein reiner dunkler Grund, 180x180: dieselbe Form, dieselbe Adresse,
+    // nur ohne Kristall. Genau das, was niemandem auffaellt.
+    ersatz: 'rel="apple-touch-icon" href="data:image/png;base64,'
+      + LEERES_SYMBOL + '"',
+    tor: 'browsertor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,
@@ -672,6 +685,17 @@ const PROBEN = [
 ];
 
 // ------------------------------------------------------------------- Schutz
+/** Ein gueltiges, aber leeres Symbol: 180 x 180, einfarbig dunkel.
+ *  Von Hand als PNG gebaut, damit die Probe keine Bibliothek braucht - und
+ *  weil genau diese Datei der Fehler aus S136 ist. */
+const LEERES_SYMBOL = await (async () => {
+  const sharp = (await import('sharp')).default;
+  const b = await sharp({
+    create: { width: 180, height: 180, channels: 3, background: '#080B18' },
+  }).png().toBuffer();
+  return b.toString('base64');
+})();
+
 const dreckig = execSync('git status --porcelain', { cwd: ROOT, encoding: 'utf8' }).trim();
 if (dreckig) {
   console.error('PROBEN: der Baum ist nicht sauber.\n');

@@ -16,7 +16,7 @@
  * Deshalb lädt dieses Tor die fertig gebaute Datei — dieselbe, die
  * ausgeliefert wird — in Chromium, auf dem Zielgerät: iPhone quer.
  *
- * Es prüft sieben Dinge, und jedes davon ist ein Fehler, der schon einmal
+ * Es prüft acht Dinge, und jedes davon ist ein Fehler, der schon einmal
  * passiert ist oder unentdeckt geblieben wäre:
  *
  *   1. Die Datei lädt ohne Fehler in der Konsole.
@@ -32,6 +32,9 @@
  *      hochkant, liegt nichts ueber dem Feld und man kommt hinein. Das
  *      war v121 - ein vergessener zweiter Hochkant-Hinweis ohne
  *      Zeigerpruefung deckte jedes schmale Fenster zu.
+ *   8. Das Startbildschirm-Symbol steht in der ausgelieferten Datei, misst
+ *      180x180 und zeigt eine Form. Ein leeres Symbol ist in v121 durch
+ *      alle Tore gekommen (S136).
  *
  * Aufruf: npm run browser
  */
@@ -750,6 +753,46 @@ if (streuung < 6) {
       + `${drin ? 'spielbar' : 'NICHT spielbar'}`
       + `${deckel.length ? `, verdeckt von ${deckel.join(', ')}` : ''}`);
     await ctx3.close();
+  }
+}
+
+// --- 8. Steht das Startbildschirm-Symbol in der AUSGELIEFERTEN Datei?
+//
+// Es wird von `npm run appsymbol` erzeugt und von Hand nie angefasst - genau
+// deshalb faellt es niemandem auf, wenn es fehlt oder leer ist. In v121 ist
+// ein leeres Symbol durchgegangen: 13 KB, gueltiges PNG, richtige Masse, kein
+// Bild darin (S136). Der Erzeuger prueft sich seitdem selbst, aber er laeuft
+// nur, wenn ihn jemand aufruft. Hier wird geprueft, was wirklich ausgeliefert
+// wird.
+{
+  const html = readFileSync(DATEI, 'utf8');
+  const t = /rel="apple-touch-icon"[^>]*href="data:image\/png;base64,([^"]+)"/.exec(html);
+  if (!t) {
+    fail('In der gebauten Datei steht kein Startbildschirm-Symbol (apple-touch-icon '
+      + 'als data:-Adresse). Ohne es zeigt iOS eine graue Bildschirmabnahme.');
+  } else {
+    const roh = Buffer.from(t[1], 'base64');
+    const sharp = (await import('sharp')).default;
+    const masse = await sharp(roh).metadata();
+    if (masse.width !== 180 || masse.height !== 180) {
+      fail(`Das Startbildschirm-Symbol ist ${masse.width}x${masse.height} statt 180x180 - `
+        + 'iOS rechnet es hoch, und das sieht weich aus.');
+    }
+    // Dieselbe Frage wie im Erzeuger, aber am Ergebnis: ist eine FORM drauf?
+    // Nur helle Punkte zu zaehlen genuegt nicht - ein ganz helles Feld waere
+    // ebenso falsch wie ein leeres.
+    const px = await sharp(roh).removeAlpha().raw().toBuffer();
+    let hell = 0;
+    for (let i = 0; i < px.length; i += 3) {
+      if (px[i] * 0.30 + px[i + 1] * 0.59 + px[i + 2] * 0.11 > 110) hell++;
+    }
+    const anteil = hell / (px.length / 3);
+    if (anteil < 0.04 || anteil > 0.45) {
+      fail(`Das Startbildschirm-Symbol hat ${(anteil * 100).toFixed(1)} % helle Flaeche `
+        + '(erwartet 4 bis 45 %). Darunter fehlt die Figur, darueber der Grund.');
+    }
+    console.log(`Startbildschirm-Symbol: ${masse.width}x${masse.height}, `
+      + `${(anteil * 100).toFixed(1)} % helle Flaeche, ${(roh.length / 1024).toFixed(0)} KB.`);
   }
 }
 

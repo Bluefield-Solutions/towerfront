@@ -59,7 +59,15 @@ export interface SaveGame {
    *  jeder Turm sofort neu, waehrend er ohne Unterbrechung noch bis zu
    *  120 ms an seinem alten Ziel geblieben waere. Genug, um den Verlauf zu
    *  veraendern. */
-  towers: [TowerId, number, number, number, number, number, number, number, BranchIndex, number][];
+  /** [Turmart, x, y, Stufe, Erledigt, Schaden, Nachladerest, Zielsuchrest,
+   *  Zweig, Zielindex, Zielwahl]
+   *
+   *  Die Zielwahl ist ANGEHAENGT, nicht eingeschoben. Ein Stand aus v106 hat
+   *  zehn Felder und laedt weiter - er bekommt den Standard. Deshalb bleibt
+   *  auch die Formatnummer, wo sie war: niemandem wird die laufende Partie
+   *  verworfen, nur weil ein Turm jetzt mehr weiss. */
+  towers: [TowerId, number, number, number, number, number, number, number, BranchIndex, number,
+    number?][];
   /** [Gegnerart, x, y, hp, hpMax, Segment, Strecke, Bremsfaktor, Bremsrest, Wackeln] */
   /** [Gegnerart, x, y, hp, hpMax, Segment, Strecke, Bremsfaktor, Bremsrest,
    *  Wackeln, Bahn] */

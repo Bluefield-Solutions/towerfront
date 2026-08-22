@@ -275,6 +275,109 @@ if (!start) {
   }
 }
 
+// --- 5b. Folgt die Anzeige dem Zustand?
+//
+// Ein Umschalter, der sich druecken laesst und im Modell wirkt, aber im Bild
+// nicht umspringt, ist ein kaputter Umschalter. Genau das ist bei der
+// Ziellogik passiert: der Rauchtest mass, dass die Tuerme anders zielen, und
+// die Knoepfe zeigten trotzdem den alten Stand - `sync` schreibt nur bei
+// geaenderter Signatur ins DOM, und die Zielwahl stand nicht darin.
+//
+// jsdom haette das nicht gefunden: dort ist `aria-pressed` genauso gesetzt
+// oder nicht. Was fehlte, war der Durchlauf durch die echte Schleife.
+if (start) {
+  const ziel = await seite.evaluate(async () => {
+    const bau = document.querySelector('.pick-btn');
+    return { hatWahl: !!bau };
+  });
+  void ziel;
+
+  // Einen Turm bauen und den Pruefsteg oeffnen - durch Tippen, wie ein Mensch.
+  let gebaut = false;
+  for (let y = 90; y < HOCH - 50 && !gebaut; y += 40) {
+    for (let x = 120; x < BREIT - 80 && !gebaut; x += 60) {
+      await seite.mouse.click(x, y);
+      await seite.waitForTimeout(70);
+      const wahlOffen = await seite.evaluate(() => !document.getElementById('pick')?.hidden);
+      if (!wahlOffen) continue;
+      await seite.evaluate(() => document.querySelector('.pick-btn')?.click());
+      await seite.waitForTimeout(280);
+      await seite.mouse.click(x, y);
+      await seite.waitForTimeout(280);
+      gebaut = await seite.evaluate(() => !document.getElementById('inspector')?.hidden);
+    }
+  }
+
+  if (!gebaut) {
+    fail('Es liess sich kein Turm bauen und antippen - der Prüfsteg ging nie auf.');
+  } else {
+    const stand = await seite.evaluate(async () => {
+      const knoepfe = [...document.querySelectorAll('.insp-ziel .ziel')];
+      if (!knoepfe.length) return { fehlt: true };
+      const anders = knoepfe.find((k) => k.getAttribute('aria-pressed') !== 'true');
+      if (!anders) return { keineAuswahl: true };
+      anders.click();
+      await new Promise((r) => setTimeout(r, 250));
+      return {
+        anzahl: knoepfe.length,
+        gewaehlt: anders.dataset.ziel,
+        an: [...document.querySelectorAll('.insp-ziel .ziel')]
+          .filter((k) => k.getAttribute('aria-pressed') === 'true')
+          .map((k) => k.dataset.ziel),
+      };
+    });
+    if (stand.fehlt) {
+      fail('Im Prüfsteg fehlen die Knöpfe für die Ziellogik.');
+    } else if (stand.keineAuswahl) {
+      fail('Alle Ziellogik-Knöpfe sind gleichzeitig aktiv.');
+    } else if (stand.an.length !== 1 || stand.an[0] !== stand.gewaehlt) {
+      fail(
+        `Ziellogik: nach dem Tippen auf "${stand.gewaehlt}" ist ` +
+        `${stand.an.length === 0 ? 'kein Knopf' : `"${stand.an.join(', ')}"`} aktiv. ` +
+        'Die Anzeige folgt dem Zustand nicht.',
+      );
+    } else {
+      console.log(`\nZiellogik: ${stand.anzahl} Knöpfe, Tippen auf "${stand.gewaehlt}" springt um.`);
+    }
+
+    // Und wird im offenen Steg etwas abgeschnitten?
+    //
+    // Das ist NICHT dieselbe Frage wie "liegt es im Fenster". Der Pruefsteg
+    // hat `overflow: hidden`, also schneidet ER ab, nicht der Bildschirm.
+    // Ein Knopf kann vollstaendig im Fenster liegen und trotzdem unsichtbar
+    // sein, weil sein Behaelter dort aufhoert.
+    //
+    // Genau so ist es passiert: die vier Ziel-Knoepfe machten den Inhalt 284
+    // Punkte hoch bei 238 sichtbaren, und "Verkaufen" verschwand. Gemessen
+    // gegen das Fenster sah alles gut aus - der Knopf endete bei 318 von 390.
+    // Eine neue Einstellung darf keine alte Handlung verdraengen.
+    const beschnitten = await seite.evaluate(() => {
+      const steg = document.getElementById('inspector');
+      if (!steg || steg.hidden) return [];
+      const aussen = steg.getBoundingClientRect();
+      const raus = [];
+      for (const e of steg.querySelectorAll('button')) {
+        const r = e.getBoundingClientRect();
+        if (r.width < 1 || r.height < 1) continue;
+        if (r.bottom > aussen.bottom + 1 || r.top < aussen.top - 1) {
+          raus.push({
+            name: e.id || e.className,
+            text: (e.textContent ?? '').trim().slice(0, 20),
+            unten: Math.round(r.bottom), grenze: Math.round(aussen.bottom),
+          });
+        }
+      }
+      return raus;
+    });
+    for (const b of beschnitten) {
+      fail(
+        `Prüfsteg schneidet "${b.text || b.name}" ab: der Knopf endet bei ${b.unten}, ` +
+        `der Steg bei ${b.grenze}. Im Fenster liegt er - im Behälter nicht.`,
+      );
+    }
+  }
+}
+
 // --- 6. Ein Bild, und es darf nicht einfarbig sein.
 //
 // Dieselbe Mindestprüfung wie in der Bildabnahme, nur diesmal aus dem echten

@@ -281,25 +281,52 @@ for (const map of MAPS) {
   console.log(`  ${map.id.padEnd(16)} ${String(m.palette).padStart(6)}  ${z(m.helligkeit)}  ${z(m.saettigung)}  ${z(m.spanne)}  ${z(m.dichte)}  ${m.chroma.toFixed(1).padStart(5)}`);
 }
 
+// --------------------------------------------------- Figuren in Anzeigegroesse
+//
+// Gemessen wird, was auf dem Schirm landet, nicht die Quelldatei.
+//
+// Die Bilder liegen als 256er vor und werden mit rund 108 (Turm) bis 58
+// (Schleicher) Geraetepunkten gezeichnet. Das ist kein Detail: die
+// Detaildichte zaehlt Nachbarpunkte, und Verkleinern ERHOEHT sie, weil es
+// dasselbe Detail auf weniger Punkte draengt. Gemessen liegt der Bogenturm
+// an der Quelle bei 8,46 und in Anzeigegroesse bei 13,55.
+//
+// Bis v106 stand hier die Quelle. Fuer die Untergruende ist die Messstelle
+// in v106 geradegerueckt worden, fuer die Figuren jetzt - derselbe Fehler,
+// zweimal dieselbe Datei.
+//
+// Der Massstab: die Leinwand misst auf dem iPhone quer 1688 x 780
+// Geraetepunkte bei einer Welt von 1920 x 1080. Gemessen im Browsertor,
+// nicht geschaetzt.
+const ANZEIGE_MASSSTAB = 0.8;
+const TURM_WELT = 96 * 1.32 / 0.94;
+
+/** Auf Anzeigegroesse bringen, dann messen. */
+async function messenAngezeigt(buf, weltbreite) {
+  const px = Math.max(8, Math.round(weltbreite * ANZEIGE_MASSSTAB));
+  return messen(await sharp(buf).ensureAlpha().resize(px).png().toBuffer());
+}
+
 // ------------------------------------------------------------------- Tuerme
-console.log('\nTürme');
+console.log('\nTürme (in Anzeigegröße gerechnet)');
 console.log('  Name             Palette  Helligk  Sätt.  Spanne  Dichte  Schwarz');
 const tw = lies('towers.ts');
 const twWerte = [];
 for (const [id, buf] of tw) {
   if (!/_1$/.test(id)) continue;
-  const m = await messen(buf);
+  const m = await messenAngezeigt(buf, TURM_WELT);
   twWerte.push({ id, ...m });
   console.log(`  ${id.padEnd(16)} ${String(m.palette).padStart(6)}  ${z(m.helligkeit)}  ${z(m.saettigung)}  ${z(m.spanne)}  ${z(m.dichte)}  ${z(m.schwarzAnteil * 100, 1)}%`);
 }
 
 // ------------------------------------------------------------------ Gegner
-console.log('\nGegner');
+console.log('\nGegner (in Anzeigegröße gerechnet)');
 console.log('  Name             Palette  Helligk  Sätt.  Spanne  Dichte  Schwarz');
 const en = lies('enemies.ts');
+const { enemyArtWidth } = await import('../src/gfx/enemyart.ts');
 const enWerte = [];
 for (const [id, buf] of en) {
-  const m = await messen(buf);
+  const m = await messenAngezeigt(buf, enemyArtWidth(id));
   enWerte.push({ id, ...m });
   console.log(`  ${id.padEnd(16)} ${String(m.palette).padStart(6)}  ${z(m.helligkeit)}  ${z(m.saettigung)}  ${z(m.spanne)}  ${z(m.dichte)}  ${z(m.schwarzAnteil * 100, 1)}%`);
 }
@@ -326,7 +353,8 @@ const REFERENZ = {
   figur: {
     helligkeit: [0.33, 0.40],   // Zielturm 0,36
     saettigung: [0.35, 0.45],   // Zielturm 0,37
-    dichte: [3, 6],             // Zielturm 3,44
+    // Gemessen, aber NICHT als Befund - siehe DICHTE_VERHAELTNIS.
+    dichte: [3, 6],             // Zielturm 3,44, Aufloesung unbekannt
   },
   grund: {
     helligkeit: [0.30, 0.36],   // Zielboden 0,33
@@ -350,6 +378,23 @@ const REFERENZ = {
     saettigung: [0.45, 0.55],   // Zielboden 0,51 - eine Sandszene, mehr nicht
     dichte: [1.5, 3],           // Zielboden 1,63
   },
+  /** Wieviel mehr Feindetail eine Figur tragen darf als der Boden.
+   *
+   *  Das Verhaeltnis statt der Absolutwerte, und der Grund ist Regel 2. Die
+   *  Detaildichte zaehlt Nachbarpunkte und haengt damit an der Aufloesung:
+   *  derselbe Bogenturm misst an der 256er Quelle 8,46 und in Anzeigegroesse
+   *  13,55. Das Band 3 bis 6 stammt aus einem Zielbild, dessen Aufloesung
+   *  nirgends steht - als Absolutgrenze ist es deshalb nicht zu gebrauchen.
+   *
+   *  Das Verhaeltnis ueberlebt das: im Zielbild traegt der Turm 3,44 gegen
+   *  1,63 beim Boden, also gut das Doppelte. Beide Zahlen stammen aus
+   *  DEMSELBEN Bild und damit derselben Aufloesung - was sich herauskuerzt,
+   *  ist genau die Unbekannte.
+   *
+   *  Die 3 statt 2,1 ist Toleranz, keine Absenkung: eine einzige Referenz
+   *  ergibt keine Streuung, aus der man eine Grenze ableiten koennte. */
+  dichteVerhaeltnis: 3,         // Zielbild 3,44 / 1,63 = 2,1
+
   schwarzAnteil: 0.02,          // Zielbild 1,3 %
   lichtSpanne: 40,
   lichtMitte: [-175, -95],
@@ -387,15 +432,17 @@ const grD = pruefen(bgWerte, 'Untergrund Detaildichte', 'dichte', REFERENZ.grund
 
 const nenne = (a) => a.slice(0, 3).map((f) => `${f.id} ${f.wert.toFixed(2)}`).join(', ');
 
-// --- Die Figuren.
-if (figD.lage === 'zu hoch') {
+// --- Die Figuren: das Verhaeltnis, nicht der Absolutwert.
+const verhaeltnis = figD.m / grD.m;
+console.log(`\n  Detaildichte Figur zu Untergrund: ${verhaeltnis.toFixed(1)}-fach ` +
+  `(Zielbild 2,1, erlaubt bis ${REFERENZ.dichteVerhaeltnis})`);
+if (verhaeltnis > REFERENZ.dichteVerhaeltnis) {
   befunde.push(
-    `Figuren rauschen: Detaildichte ${figD.m.toFixed(2)} gegen ein Band von ` +
-    `${REFERENZ.figur.dichte.join(' bis ')} (Zielturm 3,44). ` +
-    `${figD.abweichler.length} von ${figuren.length} liegen daneben (${nenne(figD.abweichler)}). ` +
+    `Figuren rauschen: sie tragen ${verhaeltnis.toFixed(1)}-mal so viel Feindetail wie der ` +
+    `Untergrund (${figD.m.toFixed(1)} gegen ${grD.m.toFixed(1)}), im Zielbild sind es 2,1. ` +
     'Das ist Befund B1. Nachbearbeitung hilft NICHT: Weichzeichnen und Median ' +
-    'bringen die Zahl ins Band, kosten aber sichtbar Form - Panzerplatten, ' +
-    'Armbrust, Beine. Nachgewiesen mit `npm run entrauschprobe`. ' +
+    'senken die Zahl, kosten aber sichtbar Form - Panzerplatten, Armbrust, Beine. ' +
+    'Nachgewiesen mit `npm run entrauschprobe`. ' +
     'Der Weg führt über neue Bilder nach Abschnitt 5.4, nicht über Filter.',
   );
 }

@@ -35,6 +35,41 @@ export interface Enemy {
   leaked: boolean;
 }
 
+/** Wonach ein Turm sein Ziel aussucht.
+ *
+ *  Vier Kriterien, und jedes hat eine Aufgabe, die die anderen nicht koennen:
+ *
+ *   - `vorn`    der am weitesten gelaufene. Der Standard, und der einzig
+ *               richtige fuer den letzten Turm vor dem Kristall.
+ *   - `stark`   der mit den meisten Lebenspunkten. Fuer Tuerme, die auf
+ *               Kolosse warten sollen, statt Schleicher zu erledigen.
+ *   - `nah`     der naechste. Haelt die Feuerrate hoch, weil der Turm nicht
+ *               quer durch seine Reichweite zielen muss.
+ *   - `schwach` der mit den wenigsten Lebenspunkten. Raeumt auf, statt
+ *               Schaden an einem Gegner zu verschwenden, den ein anderer
+ *               Turm ohnehin gleich erledigt.
+ *
+ *  Gemessen wird bei `stark` und `schwach` der AKTUELLE Lebensstand, nicht
+ *  der volle: der Spieler sieht den Balken ueber dem Gegner, und was er
+ *  sieht, muss das sein, wonach der Turm geht. */
+export type Zielwahl = 'vorn' | 'stark' | 'nah' | 'schwach';
+
+/** Kurzformen, und zwar aus Platzgruenden mit Mass.
+ *
+ *  Die Langformen ("Vorderster", "Schwächster") brauchten zwei Zeilen im
+ *  Pruefsteg. Gemessen war der Steginhalt danach 284 Punkte hoch bei 238
+ *  sichtbaren, und der Ueberlauf stand auf `hidden` - der Verkaufen-Knopf
+ *  wurde abgeschnitten. Eine neue Einstellung darf keine alte Handlung
+ *  verdraengen. */
+export const ZIELWAHL_NAMEN: Record<Zielwahl, string> = {
+  vorn: 'Vorn',
+  stark: 'Stark',
+  nah: 'Nah',
+  schwach: 'Schwach',
+};
+
+export const ZIELWAHL_ORDNUNG: Zielwahl[] = ['vorn', 'stark', 'nah', 'schwach'];
+
 export interface Tower {
   id: number;
   def: TowerId;
@@ -49,6 +84,7 @@ export interface Tower {
   /** Aufbau-Regung: der Turm federt beim Bauen und Ausbauen einmal ein. */
   spring: number;
   pulse: number;          // Sichtbarer Umkreispuls beim Frostturm
+  zielwahl: Zielwahl;     // Nach welchem Kriterium dieser Turm auswaehlt
   target: Enemy | null;   // Zwischengespeichertes Ziel
   retargetIn: number;     // Sekunden bis zur naechsten Zielsuche
   kills: number;

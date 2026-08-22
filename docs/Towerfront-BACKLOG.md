@@ -1,6 +1,6 @@
 # Towerfront — Rückstandsverzeichnis
 
-Stand: v106 · 21.08.2026
+Stand: v107 · 21.08.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Towerfront-BENCHMARK.md` und läuft mit `npm run bericht` in jedem Lauf mit.
 
@@ -13,7 +13,6 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 
 | # | Punkt | Nutzen | Aufw. |
 |---|---|---|---|
-| B6 | Ziellogik pro Turm wählbar: vorderster, stärkster, nächster, schwächster | ●●● | M |
 | B11 | Turm per Ziehen auf eine andere Zelle versetzen (gegen Fehlplatzierung) | ●● | M |
 | B15 | Zweite, kürzere Einführung beim ersten Besuch einer neuen Karte | ●● | S |
 | B13 | Reichweiten aller Türme gleichzeitig einblenden (Halten auf leerer Fläche) | ●● | S |
@@ -53,7 +52,6 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 |---|---|---|---|
 | D2 | Wetter je Karte als eigene Stimmungsschicht (Regen, Schneetreiben, Asche) | ●● | M |
 | D19 | **Rest von D19:** Plastik im Bild selbst (Befund B1 des Grafik-Audits — gerendert statt gezeichnet). Höhe, Gegnergröße und Kartenrand sind in v104 erledigt; dieser Teil braucht neue Bilder, nicht Code | ●●● | L |
-| D22 | Detaildichte am Anzeigemaßstab messen statt am Quellbild, und das Soll als Verhältnis Figur zu Untergrund führen statt als Absolutband (Zielbild 2,1-fach, wir 6,8-fach) | ●● | S |
 | D21 | Infanteriebild neu packen: es füllt seine Kachel schlechter als jedes andere (0,22 gegen 0,35 Bildschirmpunkte je Weltpunkt) und bleibt deshalb als einziger Gegner bei 17 px | ●● | S |
 | D20 | Wellenvorschau als Reihe kleiner Gegnersymbole statt Text — auf dem Handy ist die Zeile zu lang | ●● | S |
 | D14 | **P8** Antippbare Kleinigkeiten in der Karte — Vögel, Fackeln, Steine, die reagieren | ● | S |
@@ -80,6 +78,9 @@ Legende Aufwand: S klein (eine Iteration) · M mittel · L groß (mehrere)
 | S10 | Ab etwa 320 Gegnern liegt das Raster 15 % vorn | Bei Karte 2/3 und dem Endlosmodus erneut messen — dort soll sich der Abstand öffnen. |
 | S11 | 19.206 Zeichenbefehle je Bild vor v4, davon 4.792 allein `arcTo` | Gelöst durch Schichten und gebackene Bilder. Neue Zeichnungen ab jetzt gegen `npm run bench-draw` prüfen. |
 | S73 | **T15 gelöst.** Verluste jetzt auf drei Wellen verteilt, 45 % in der letzten (Ziel 60 %) | Der zweite Anlauf gelang, weil ich diesmal **den ganzen Raum gemessen habe statt nacheinander zu justieren**: ein Eichskript setzt eine Kurve und berichtet alle Kennzahlen auf einmal. Vier Werte durchprobiert, den passenden gewählt, dann in fester Reihenfolge Türme, Sterne, Karten. |
+| S89 | **B6 umgesetzt — und der Fehler saß nicht im Modell, sondern in der Anzeige.** Der Rauchtest mass, dass die Türme anders zielen; die Knöpfe zeigten trotzdem den alten Stand. `sync` schreibt nur bei geänderter Signatur ins DOM, und die Signatur zählte `id:level:branch` auf — die Zielwahl fehlte | **Zweiter Fall derselben Art nach dem Startknopf in v105: eine Ableitung schützt nur, was sie aufzählt.** Gefunden hat es wieder das Browsertor; jsdom kann es nicht, weil dort kein Durchlauf durch die echte Schleife stattfindet. Neu im Tor: nach dem Antippen eines Zielknopfes muss genau dieser aktiv sein. |
+| S90 | **Die vier neuen Knöpfe schoben „Verkaufen" aus dem Prüfsteg.** Inhalt 284 Punkte hoch bei 238 sichtbaren, Überlauf `hidden` | Gegen das FENSTER gemessen sah alles gut aus — der Knopf endete bei 318 von 390. Abgeschnitten hat ihn sein **Behälter**, nicht der Bildschirm. Zwei Zeilen wurden eine (Kurzformen „Vorn/Stark/Nah/Schwach"), und das Browsertor prüft jetzt auf Beschnitt durch den Vorfahren statt nur auf Lage im Fenster. **Eine neue Einstellung darf keine alte Handlung verdrängen.** |
+| S91 | **D22 geschlossen: Figurendichte in Anzeigegröße, Soll als Verhältnis.** Am Quellbild misst der Bogenturm 8,46, in Anzeigegröße 13,55 | Das Band 3 bis 6 stammt aus einem Zielbild, dessen Auflösung nirgends steht — als Absolutgrenze unbrauchbar. Das Verhältnis überlebt das, weil beide Zahlen aus DEMSELBEN Bild stammen und sich die Unbekannte herauskürzt: Zielbild 2,1-fach, wir **9,7**-fach. Regel 2 in einer neuen Kleidung. |
 | S87 | **Der Sättigungsbefund für die Untergründe war selbstgemacht und ist zurückgebaut.** Das Band 0,45 bis 0,55 stammt aus EINER Szene — „warmer Sandboden in Ocker". Als Vorgabe für drei absichtlich verschiedene Landschaften taugt es nicht: eine Frostspalte auf 0,50 zu ziehen hiesse, sie knallblau zu machen | Die Regel dahinter — „in der Farbe unterscheiden, nicht in der Lautstärke" — stammte aus **meiner eigenen Feder in v105**, nicht aus der Referenz. Genau der Fehler, vor dem Regel 10 warnt, und zweimal hintereinander: erst mass das Werkzeug gegen eine verworfene Lehre (S82), dann gegen eine Einzelmessung, die als Band für eine Vielfalt herhalten musste. Geprüft wird jetzt nur noch grau (Chroma unter 5) und grell (über 60) — Grenzen aus der Farbenlehre. Ein Befund bleibt: B1. |
 | S88 | **Chroma statt HSV-Sättigung, und ein Messfehler von mir auf dem Weg dahin.** `(max−min)/max` kennt die Helligkeit nicht: RGB(50,30,20) kommt auf 0,60 und wirkt trotzdem nicht bunt. Chroma im CIELAB-Raum rechnet sie mit | Beim Prüfen des Farbtons habe ich Punkte mit Chroma unter 6 verworfen, um Rauschen zu vermeiden — und damit ausgerechnet den grauen Fels, der die Laubschlucht ausmacht. Übrig blieb der Farbton der **Lavaspalten**, und die Messung meldete Spiralhain und Laubschlucht bei 70° und 68° als farbgleich. Der Blick auf die drei Karten hat es sofort widerlegt. **Ein Filter, der Rauschen entfernen soll, entfernt manchmal den Gegenstand.** |
 | S85 | **Abstand A geschlossen, soweit Code es kann — aber erst im dritten Anlauf, und die ersten beiden hat nur der Blick verworfen.** Angleichung hinter dem Foto: Karte hell, aber flau, weil Weg und Felsen aus der Palette kommen und zurückblieben. Ans Ende verschoben: kaum besser. Erst Gamma **plus Kontrastspreizung** hielt die Tiefe | Die Zahlen sagten zweimal „besser": Helligkeit im Band, Spanne über dem Zielwert, Weg-Boden-Abstand sogar gewachsen (0,185 → 0,199). Nur **relativ** fiel er von 0,83 auf 0,53 — und das Auge misst relativ. **Eine Kennzahl, die absolut rechnet, kann Wahrnehmung nicht abbilden.** Ergebnis: Helligkeit 0,20 → 0,30, Detaildichte 1,24 → 1,52 als Nebengewinn, beide im Band. Das Gamma wird je Karte aus dem Bild gerechnet, gilt also auch für die vierte. |

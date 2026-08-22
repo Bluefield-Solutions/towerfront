@@ -307,6 +307,33 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
+    // Die Ziellogik muss WIRKEN, nicht nur einstellbar sein. Hier faellt die
+    // Auswertung weg - alle Tuerme nehmen wieder den Vordersten.
+    name: 'Ziellogik ohne Wirkung',
+    datei: 'src/game/state.ts',
+    regel: /const wert = wahl === 'vorn' \? e\.travelled/,
+    ersatz: "const wert = true ? e.travelled",
+    tor: 'smoke',
+  },
+  {
+    // Und sie muss den Spielstand ueberleben.
+    name: 'Ziellogik ueberlebt das Sichern nicht',
+    datei: 'src/game/state.ts',
+    regel: /ZIELWAHL_ORDNUNG\.indexOf\(t\.zielwahl\),/,
+    ersatz: '0,',
+    tor: 'smoke',
+  },
+  {
+    // Die Anzeige muss dem Zustand folgen. Ohne die Zielwahl in der Signatur
+    // schreibt `sync` nicht ins DOM, und der angetippte Knopf bleibt aus -
+    // genau der Fehler, den das Browsertor bei seinem ersten Lauf fand.
+    name: 'Anzeige folgt dem Zustand nicht',
+    datei: 'src/ui/ui.ts',
+    regel: /:\$\{sel\.zielwahl\}` : '-',/,
+    ersatz: "` : '-',",
+    tor: 'browsertor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

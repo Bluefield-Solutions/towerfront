@@ -1007,6 +1007,63 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 }
 
 
+// Wirkt die Ziellogik ueberhaupt?
+//
+// Ein Knopf, der sich druecken laesst und ein Feld setzt, beweist nichts -
+// das ist genau die Sorte Pruefung, die immer gruen ist. Gemessen wird
+// deshalb, was die Tuerme TREFFEN: mit "schwach" muss der mittlere
+// Lebensstand des anvisierten Gegners unter dem mit "stark" liegen.
+//
+// Kein fester Schwellwert, sondern eine Ordnung. Absolute Grenzen an dieser
+// Stelle veralteten mit jeder Balance-Runde (Regel 2); die Ordnung nicht:
+// solange die Wahl wirkt, liegt schwach unter stark.
+{
+  const { ZIELWAHL_ORDNUNG } = await import('../src/game/types');
+  const { candidateSpots } = await import('./spots');
+  const staende: Record<string, number> = {};
+  for (const wahl of ZIELWAHL_ORDNUNG) {
+    state.reset(12345, 'normal', 'spiralhain');
+    state.gold = 99999;
+    for (const sp of candidateSpots(state).slice(0, 6)) state.build(sp.x, sp.y, 'arrow');
+    for (const t of state.towers) t.zielwahl = wahl;
+    state.startWave();
+    let summe = 0, n = 0;
+    for (let i = 0; i < 60 * 60 && state.phase === 'playing'; i++) {
+      state.update(1 / 60);
+      for (const t of state.towers) {
+        if (t.target) { summe += t.target.hp / t.target.hpMax; n++; }
+      }
+    }
+    staende[wahl] = n ? summe / n : 0;
+    if (!n) problems.push(`Ziellogik "${wahl}": kein Turm hat je ein Ziel gefasst.`);
+  }
+  if (staende.schwach >= staende.stark) {
+    problems.push(
+      `Ziellogik wirkt nicht: "schwach" visiert Gegner mit ${(staende.schwach * 100).toFixed(0)} % ` +
+      `Lebensstand an, "stark" mit ${(staende.stark * 100).toFixed(0)} % - ` +
+      'schwach muesste darunter liegen.',
+    );
+  }
+  // Und die Einstellung muss den Spielstand ueberleben.
+  {
+    state.reset(999, 'normal', 'spiralhain');
+    state.gold = 99999;
+    const sp = candidateSpots(state)[0];
+    state.build(sp.x, sp.y, 'arrow');
+    state.towers[0].zielwahl = 'schwach';
+    const stand = state.snapshot();
+    const zweit = new GameState();
+    if (!zweit.restore(stand)) {
+      problems.push('Ziellogik: der Spielstand liess sich nicht zurueckladen.');
+    } else if (zweit.towers[0]?.zielwahl !== 'schwach') {
+      problems.push(
+        `Ziellogik ueberlebt das Sichern nicht: gespeichert "schwach", geladen ` +
+        `"${zweit.towers[0]?.zielwahl}".`,
+      );
+    }
+  }
+}
+
 // Jede Karte muss sich aufbauen und zeichnen lassen. Ein Pfad, der ins Leere
 // fuehrt, oder eine Farbwelt mit Luecke faellt sonst erst beim Antippen auf.
 {

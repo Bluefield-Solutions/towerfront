@@ -10,6 +10,7 @@ import {
   buyPerk, freeStars, getBest, getSettings, getStars, saveSettings, setPerkCost, totalStars,
 } from '../core/storage';
 import { PERKS, PERK_ORDER, type PerkId } from '../data/perks';
+import { ZIELWAHL_NAMEN, ZIELWAHL_ORDNUNG, type Tower, type Zielwahl } from '../game/types';
 import { getProgress } from '../core/storage';
 import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../data/difficulty';
 import { MAPS, mapById } from '../data/maps';
@@ -54,6 +55,12 @@ export class UI {
   private iHint = $('i-hint');
   private iActions = document.querySelector('.insp-actions') as HTMLElement;
   private iUps = $('i-ups');
+  private iZiel = $('i-ziel');
+  /** Woraus die Knoepfe zuletzt gebaut wurden. Ohne diesen Schluessel baut
+   *  der Steg sie in jedem Bild neu, und ein Tipp trifft einen Knopf, den es
+   *  im naechsten Augenblick nicht mehr gibt. Dieselbe Regel wie bei der
+   *  Turmwahl. */
+  private zielKey = '';
   private iSell = $<HTMLButtonElement>('i-sell');
   private screen = $('screen');
   private sEyebrow = $('s-eyebrow');
@@ -608,7 +615,16 @@ export class UI {
       // die Oberflaeche trotzdem neu zeichnen - sonst bleibt die Turmwahl
       // unsichtbar, obwohl der Zustand sie verlangt.
       s.buildAt ? `${Math.round(s.buildAt.x)}:${Math.round(s.buildAt.y)}` : '-',
-      sel ? `${sel.id}:${sel.level}:${sel.branch}` : '-',
+      // Die Zielwahl gehoert dazu, und sie hat gefehlt.
+      //
+      // Der Zustand war richtig gesetzt - der Rauchtest hat gemessen, dass
+      // die Tuerme anders zielen - nur die Anzeige folgte nicht: die
+      // Signatur aenderte sich nicht, also schrieb `sync` nicht ins DOM, und
+      // der angetippte Knopf blieb aus. Gefunden hat es das Browsertor.
+      //
+      // Zweiter Fall derselben Art nach dem Startknopf in v105: eine
+      // Ableitung schuetzt nur, was sie aufzaehlt.
+      sel ? `${sel.id}:${sel.level}:${sel.branch}:${sel.zielwahl}` : '-',
     ].join('|');
 
     this.updateTutorial();
@@ -708,11 +724,41 @@ export class UI {
         row('Erledigt', sel.kills),
       ].join('');
       this.renderUpgrades();
+      this.renderZielwahl(sel);
       this.iSell.textContent = `Verkaufen · ${sellValue(def, sel.branch, sel.level)}`;
     } else {
       this.insp.hidden = true;
     }
   }
+  /** Die vier Knoepfe fuer die Ziellogik.
+   *
+   *  Sie stehen an EINEM Turm, nicht an der Turmsorte: zwei Bogentuerme an
+   *  verschiedenen Stellen haben verschiedene Aufgaben. Der eine vorn am
+   *  Eingang soll aufraeumen, der andere am Kristall den Vordersten nehmen.
+   *  Genau das ist der Sinn der Einstellung - eine Sorteneinstellung waere
+   *  keine Entscheidung, sondern eine zweite Balance-Schraube. */
+  private renderZielwahl(sel: Tower): void {
+    const schluessel = `${sel.id}|${sel.zielwahl}`;
+    if (schluessel === this.zielKey) return;
+    this.zielKey = schluessel;
+    this.iZiel.innerHTML = ZIELWAHL_ORDNUNG.map((z) =>
+      `<button class="ziel" data-ziel="${z}" aria-pressed="${z === sel.zielwahl}">`
+      + `${ZIELWAHL_NAMEN[z]}</button>`).join('');
+    for (const b of this.iZiel.querySelectorAll<HTMLButtonElement>('.ziel')) {
+      b.addEventListener('click', () => {
+        const t = this.s.selectedTower;
+        if (!t) return;
+        t.zielwahl = b.dataset.ziel as Zielwahl;
+        // Das gespeicherte Ziel faellt weg, sonst behielte der Turm bis zur
+        // naechsten Zielsuche das alte - und die Einstellung saehe aus, als
+        // haette sie nicht gewirkt.
+        t.target = null;
+        t.retargetIn = 0;
+        this.zielKey = '';
+      });
+    }
+  }
+
   /** Die Turmwahl an der angetippten Stelle zeigen.
    *
    *  Sie haengt an `state.buildAt`, nicht an einem eigenen Schalter - dieselbe

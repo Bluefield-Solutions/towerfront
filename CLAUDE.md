@@ -141,7 +141,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v106. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v107. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, sieben
 Gegnerarten in den Wellen plus den Span, in den der Spalter zerfällt, drei
 Grade, Endlosmodus. Genre-Abgleich 27 von 30, gewichtet 93 %.
@@ -159,11 +159,14 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   nicht mitgewachsen ist: ihr Bild füllt seine Kachel nur zu 0,22 statt 0,35
   Bildschirmpunkten je Weltpunkt, sie bleibt deshalb bei 17 px. Das ist am
   Bild zu beheben, nicht am Maßstab — und dafür braucht es `art/roh/`.
-- B6: Ziellogik je Turm wählbar — vorderster, stärkster, nächster, schwächster.
 - R4 und G5: Blockturm und Schildträger, die letzten beiden ●● im
   Genre-Abgleich. Sie waren hinter T15 gesperrt; die Sperre ist gefallen.
 
 **Erledigt und hier zu lange falsch stehen geblieben** (nachgemessen in v103):
+- B6 ist umgesetzt (v107). Jeder Turm einzeln: vorn, stark, nah, schwach —
+  vier Knöpfe im Prüfsteg. Standard bleibt „vorn", weil die ganze Balance
+  dagegen geeicht ist. Der Rauchtest misst die Wirkung an dem, was die Türme
+  treffen, nicht daran, dass sich das Feld setzen lässt.
 - Abstand A ist geschlossen, soweit er ohne neue Bilder zu schliessen ist
   (v106). `bakeTerrain` zieht den Untergrund auf die Referenz: Helligkeit von
   0,20 auf 0,30, Band 0,30 bis 0,36. Das Gamma wird je Karte aus dem Bild

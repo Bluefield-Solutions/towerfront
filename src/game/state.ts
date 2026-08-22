@@ -26,8 +26,9 @@ import { SpatialGrid } from '../core/spatialgrid';
 import { Pool, compact } from '../core/pool';
 import type {
   Bolt, Enemy, FloatText, Husk, Meteor, Particle, Phase, Projectile, Quality,
-  Ring, RunStats, Tower,
+  Ring, RunStats, Tower, Zielwahl,
 } from './types';
+import { ZIELWAHL_ORDNUNG } from './types';
 
 interface PendingSpawn { time: number; enemy: EnemyId; hpMul: number; lane: number; }
 
@@ -273,6 +274,7 @@ export class GameState {
       id: this.nextId++, def: id, x: c.x, y: c.y,
       level: 1, branch: null, cooldownLeft: 0, angle: -Math.PI / 2, recoil: 0, flash: 0,
       pulse: 0, spring: 1,
+      zielwahl: 'vorn',
       target: null, retargetIn: 0, kills: 0, damageDone: 0,
     };
     this.towers.push(t);
@@ -731,7 +733,7 @@ export class GameState {
       if (target && (target.dead || dist2(t.x, t.y, target.x, target.y) > r2)) target = null;
       t.retargetIn -= dt;
       if (!target || t.retargetIn <= 0) {
-        target = this.findTarget(t.x, t.y, st.range, def.hitsAir);
+        target = this.findTarget(t.x, t.y, st.range, def.hitsAir, t.zielwahl);
         t.retargetIn = 0.12;
       }
       t.target = target;
@@ -854,16 +856,37 @@ export class GameState {
   }
 
   /** Vorderstes Ziel in Reichweite - Standardstrategie in Tower Defense. */
-  private findTarget(x: number, y: number, range: number, airOk: boolean): Enemy | null {
+  /** Das Ziel eines Turms.
+   *
+   *  Bis v106 gab es nur ein Kriterium - der am weitesten Gelaufene - und es
+   *  steht bis heute als Standard fest. Das ist kein Zufall: die ganze
+   *  Balance ist dagegen geeicht, und ein anderer Standard haette jede Zahl
+   *  in `npm run sim` mitverschoben. Wer waehlt, waehlt bewusst.
+   *
+   *  Bei Gleichstand gewinnt der zuerst gefundene. Das ist wichtig fuer den
+   *  Determinismus: die Reihenfolge aus dem Gitter ist bei gleicher Aussaat
+   *  dieselbe, also ist es auch die Wahl. Deshalb steht ueberall ein striktes
+   *  Groesser oder Kleiner und nirgends ein Groessergleich. */
+  private findTarget(
+    x: number, y: number, range: number, airOk: boolean, wahl: Zielwahl = 'vorn',
+  ): Enemy | null {
     const cand = this.grid.query(x, y, range, this.qTarget);
     let best: Enemy | null = null;
+    let bestWert = 0;
     const r2 = range * range;
     for (let i = 0; i < cand.length; i++) {
       const e = cand[i];
       if (e.dead) continue;
       if (!airOk && ENEMIES[e.def].flying) continue;
-      if (dist2(x, y, e.x, e.y) > r2) continue;
-      if (!best || e.travelled > best.travelled) best = e;
+      const d2 = dist2(x, y, e.x, e.y);
+      if (d2 > r2) continue;
+      // Ein gemeinsames Mass, bei dem immer der groesste Wert gewinnt: dann
+      // steht die Vergleichslogik einmal da und nicht viermal.
+      const wert = wahl === 'vorn' ? e.travelled
+        : wahl === 'stark' ? e.hp
+          : wahl === 'schwach' ? -e.hp
+            : -d2;
+      if (!best || wert > bestWert) { best = e; bestWert = wert; }
     }
     return best;
   }
@@ -1189,6 +1212,11 @@ export class GameState {
       towers: this.towers.map((t) => [
         t.def, t.x, t.y, t.level, t.kills, t.damageDone, t.cooldownLeft, t.retargetIn, t.branch,
         t.target ? this.enemies.indexOf(t.target) : -1,
+        // Angehaengt, nicht eingeschoben: ein Spielstand aus v106 hat das
+        // Feld nicht und laedt trotzdem - er bekommt den Standard. Die
+        // Formatnummer bleibt deshalb, wo sie war, und niemandem wird die
+        // laufende Partie verworfen.
+        ZIELWAHL_ORDNUNG.indexOf(t.zielwahl),
       ]) as unknown as SaveGame['towers'],
       enemies: this.enemies.map((e) => [
         e.def, e.x, e.y, e.hp, e.hpMax, e.travelled, e.slowFactor, e.slowLeft, e.wobble,
@@ -1248,14 +1276,15 @@ export class GameState {
     }
 
     const targetIdx: number[] = [];
-    for (const [def, tx, ty, level, kills, damageDone, cooldownLeft, retargetIn, branch, tIdx]
-      of save.towers) {
+    for (const [def, tx, ty, level, kills, damageDone, cooldownLeft, retargetIn, branch, tIdx,
+      zIdx] of save.towers) {
       targetIdx.push(tIdx ?? -1);
       const t: Tower = {
         id: this.nextId++, def, x: tx, y: ty,
         level, branch: (branch ?? null) as BranchIndex,
         cooldownLeft: cooldownLeft ?? 0, angle: -Math.PI / 2, recoil: 0, flash: 0,
         pulse: 0, spring: 0,
+        zielwahl: ZIELWAHL_ORDNUNG[zIdx ?? 0] ?? 'vorn',
         target: null, retargetIn: retargetIn ?? 0, kills, damageDone,
       };
       this.towers.push(t);

@@ -110,6 +110,39 @@ html, body {
   border: 1px solid var(--edge);
   -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
 }
+/* Die Ziellogik: vier Knoepfe, einer davon an.
+ *
+ * Vier statt eines Durchtippers, obwohl der weniger Platz braucht. Ein
+ * Durchtipper zeigt nur den aktuellen Stand - man muss dreimal tippen, um zu
+ * sehen, was es sonst noch gibt, und viermal, um wieder dort zu sein, wo man
+ * war. Bei vier Moeglichkeiten ist das eine Zumutung fuer gesparte 100 Punkte
+ * Breite.
+ *
+ * 44 Punkte Hoehe, wie alles andere. Der Einklappknopf hat gezeigt, was
+ * passiert, wenn man das bei einem "kleinen" Knopf vergisst. */
+/* `flex: 0 0 auto`, damit die 44 Punkte Hoehe stehen bleiben.
+ *
+ * Ohne das gilt im Flex-Steg die Voreinstellung `0 1 auto` - die Knoepfe
+ * duerfen schrumpfen, und bei engem Platz waeren sie wieder unter dem
+ * Richtwert. Ein Mindestmass, das der Erste beste Platzmangel aushebelt, ist
+ * kein Mindestmass. */
+.insp-ziel {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+  margin: 8px 0; flex: 0 0 auto;
+}
+.insp-ziel .ziel {
+  min-height: 44px; padding: 6px 4px; border-radius: 10px;
+  font-family: var(--ui); font-size: 12px; line-height: 1.15;
+  color: var(--text); background: rgba(9, 14, 30, 0.5);
+  border: 1px solid var(--edge); cursor: pointer;
+}
+.insp-ziel .ziel[aria-pressed="true"] {
+  background: rgba(126, 231, 224, 0.16);
+  border-color: rgba(126, 231, 224, 0.75);
+  color: #fff;
+}
+.insp-ziel .ziel:active { transform: scale(0.97); }
+
 .dock-toggle:active { transform: scale(0.94); }
 .dock[data-folded="1"] .dock-toggle { background: rgba(9, 14, 30, 0.72); }
 .dock-row { display: flex; align-items: stretch; gap: 6px; flex-wrap: wrap; max-width: 62vw; }

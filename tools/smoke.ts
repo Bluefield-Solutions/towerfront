@@ -1149,10 +1149,20 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 // aus wie ein eingebauter Schild.
 {
   const { MAPS } = await import('../src/data/maps');
-  const geplant = MAPS.reduce((n, m) => n + m.waves.reduce(
-    (a, w) => a + w.groups.filter((g) => g.shield).reduce((b, g) => b + g.count, 0), 0), 0);
-  if (geplant === 0) {
-    problems.push('Schild: keine einzige Wellengruppe traegt einen - die Mechanik ist tot.');
+  // Auf der EINSTIEGSKARTE, nicht irgendwo.
+  //
+  // "Irgendwo ein Schild" war die erste Fassung, und die Gegenprobe hat sie
+  // sofort erledigt: sie nahm den Schild aus dem Spiralhain, die Frostspalte
+  // behielt ihren, und die Pruefung blieb gruen. Eine Mechanik, die man erst
+  // auf der dritten Karte kennenlernt, lernt man zu spaet - und eine
+  // Pruefung, die das durchgehen laesst, prueft das Falsche.
+  const start = MAPS[0];
+  const aufStart = start.waves.reduce(
+    (a, w) => a + w.groups.filter((g) => g.shield).reduce((b, g) => b + g.count, 0), 0);
+  if (aufStart === 0) {
+    problems.push(
+      `Schild: auf ${start.name} traegt keine Wellengruppe einen - dort lernt man ihn kennen.`,
+    );
   }
 
   state.reset(31, 'normal', 'spiralhain');

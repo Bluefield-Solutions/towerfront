@@ -835,3 +835,31 @@ html, body {
   margin-top: 8px; padding-top: 7px; font-size: 10.5px; color: #8A9AB6;
   border-top: 1px solid rgba(140, 160, 200, 0.2);
 }
+
+/* --- Hochkant-Hinweis.
+   Nur auf Geraeten, die man DREHEN kann. Der erste Entwurf schrankte auf
+   900 Punkte Breite ein - und ein schmales Schreibtischfenster (700 x 1000)
+   bekam die Aufforderung ebenfalls, wo sie sinnlos ist. Der richtige
+   Unterscheider ist nicht die Breite, sondern der Zeiger: `pointer: coarse`
+   heisst Finger, und ein Finger gehoert zu einem Geraet, das man kippt. */
+#quer { display: none; }
+@media (orientation: portrait) and (max-width: 900px) and (pointer: coarse) {
+  #quer {
+    display: flex; position: fixed; inset: 0; z-index: 200;
+    flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    background: #080B18; color: #E8EDF7; text-align: center; padding: 24px;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  #quer .q-bild {
+    font-size: 64px; line-height: 1; color: #7FE7E0;
+    transform: rotate(90deg); animation: querdreh 2.4s ease-in-out infinite;
+  }
+  #quer .q-text { font-size: 20px; font-weight: 700; letter-spacing: 0.01em; }
+  #quer .q-klein { font-size: 13px; color: #9FB0CC; max-width: 22em; line-height: 1.45; }
+  /* Das Spielfeld daruntern gar nicht erst zeichnen lassen waere schoener,
+     ist aber eine Zustandsfrage - hier reicht Verdecken. */
+}
+@keyframes querdreh {
+  0%, 45% { transform: rotate(90deg); }
+  70%, 100% { transform: rotate(0deg); }
+}

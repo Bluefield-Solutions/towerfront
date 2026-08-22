@@ -18,6 +18,7 @@
     "determinism": "tsx tools/determinism.ts",
     "pack-art": "node tools/pack-art.mjs",
     "rohbilder": "node tools/rohbilder.mjs",
+    "appsymbol": "node tools/appsymbol.mjs",
     "bericht": "tsx tools/benchmark.ts",
     "lesbarkeit": "tsx tools/readability.mjs",
     "bilder": "tsx tools/shots.mjs",

@@ -629,6 +629,15 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    // Der Hochkant-Hinweis darf im QUERFORMAT nicht auftauchen - er wuerde
+    // das ganze Spiel verdecken. Regel 6 sinngemaess.
+    name: 'Hochkant-Hinweis liegt ueber dem Spiel',
+    datei: 'src/style.css',
+    regel: /@media \(orientation: portrait\) and \(max-width: 900px\) and \(pointer: coarse\) \{/,
+    ersatz: '@media all {',
+    tor: 'browsertor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

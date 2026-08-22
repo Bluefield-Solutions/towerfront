@@ -424,6 +424,18 @@ if (start) {
     // gehoert nur an eine Stelle, und wer sie sonst sieht, sieht einen
     // Fehler. Regel 6 in neuer Kleidung - deshalb wird hier beides geprueft,
     // nicht nur das Auftauchen mit Raute.
+    // Der Hochkant-Hinweis gehoert im Querformat nicht auf den Schirm - er
+    // deckt sonst das ganze Spiel zu.
+    const querHinweis = await seite.evaluate(() => {
+      const q = document.getElementById('quer');
+      return q ? getComputedStyle(q).display !== 'none' : null;
+    });
+    if (querHinweis === null) {
+      fail('Der Hochkant-Hinweis fehlt ganz - aufrecht gehaltene Telefone sehen ein gequetschtes Feld.');
+    } else if (querHinweis) {
+      fail('Der Hochkant-Hinweis liegt im QUERFORMAT ueber dem Spiel.');
+    }
+
     const tafelImSpiel = await seite.evaluate(() => !!document.getElementById('messtafel'));
     if (tafelImSpiel) {
       fail('Die Messtafel steht im Spiel, obwohl "#messung" nicht in der Adresse steht.');

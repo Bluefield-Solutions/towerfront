@@ -1342,6 +1342,51 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Das Tor (C24): sperrt es wirklich, und lenkt es wirklich um?
+//
+// Nach Regel 13 zaehlt nicht, dass die Sperre haelt - das waere auch dann
+// gruen, wenn nie jemand ins Sperrfenster faellt. Gezaehlt wird der
+// UNTERSCHIED zur Verteilung ohne Tor, und die ist ausrechenbar: die Bahnen
+// werden reihum bedient, jede bekommt also ihren Drittelanteil. Liegt die
+// gesperrte Bahn darunter, hat das Tor umgelenkt.
+{
+  const { MAPS } = await import('../src/data/maps');
+  const karte = MAPS.find((m) => m.tor);
+  if (!karte) {
+    problems.push('Keine Karte traegt ein Tor - C24 ist nicht umgesetzt.');
+  } else {
+    const tor = karte.tor!;
+    if (tor.bahn >= karte.lanes.length) {
+      problems.push(`Tor auf ${karte.id}: Bahn ${tor.bahn}, die Karte hat nur ${karte.lanes.length}.`);
+    }
+    state.reset(31, 'normal', karte.id);
+    state.waveIndex = 6;
+    state.startWave();
+    for (let i = 0; i < 60 * 90 && state.waveActive; i++) {
+      state.update(DT);
+    }
+    const jeBahn = state.spawnsJeBahn;
+    const gesamt = jeBahn.reduce((a, b) => a + (b ?? 0), 0);
+    const reihum = gesamt / karte.lanes.length;
+
+    if (gesamt < 10) {
+      problems.push(`Tor: nur ${gesamt} Gegner in der Pruefwelle - zu wenig fuer eine Aussage.`);
+    }
+    if (state.spawnsTrotzSperre > 0) {
+      problems.push(
+        `Tor: ${state.spawnsTrotzSperre} Gegner erscheinen, obwohl ihre Bahn gesperrt ist.`,
+      );
+    }
+    const aufTorbahn = jeBahn[tor.bahn] ?? 0;
+    if (aufTorbahn >= reihum) {
+      problems.push(
+        `Tor: die gesperrte Bahn bekommt ${aufTorbahn} von ${gesamt} Gegnern, reihum waeren es `
+        + `${reihum.toFixed(1)} - es wird nichts umgelenkt (Regel 13: die Zahl muss fallen).`,
+      );
+    }
+  }
+}
+
 // Jede Karte muss sich aufbauen und zeichnen lassen. Ein Pfad, der ins Leere
 // fuehrt, oder eine Farbwelt mit Luecke faellt sonst erst beim Antippen auf.
 {

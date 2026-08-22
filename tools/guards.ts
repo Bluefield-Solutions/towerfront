@@ -720,6 +720,34 @@ for (const [id, e] of Object.entries(ENEMIES)) {
   console.log(`  Geschossformen: ${alle.join(', ')}`);
 }
 
+// --- Das Tor auf einer Karte (C24).
+{
+  for (const map of MAPS) {
+    const t = map.tor;
+    if (!t) continue;
+    if (t.bahn < 0 || t.bahn >= map.lanes.length) {
+      fail(`${map.id}: das Tor sitzt auf Bahn ${t.bahn}, die Karte hat ${map.lanes.length}.`);
+    }
+    // Auf einer einspurigen Karte waere ein Tor keine Umleitung, sondern eine
+    // Pause - der Druck kann nirgends hin.
+    if (map.lanes.length < 2) {
+      fail(`${map.id}: ein Tor auf einer einspurigen Karte lenkt nichts um, es haelt nur an.`);
+    }
+    if (t.zu <= 0 || t.auf <= 0) {
+      fail(`${map.id}: Torttakt ${t.zu}/${t.auf} - beide Haelften muessen groesser als null sein.`);
+    }
+    // Waere die Sperre laenger als eine ganze Welle dauert, gaebe es keinen
+    // Takt mehr, sondern eine dauerhaft tote Bahn.
+    if (t.zu > 25) {
+      fail(`${map.id}: das Tor bleibt ${t.zu} s zu - das ist keine Sperre mehr, sondern eine `
+        + 'Bahn weniger.');
+    }
+  }
+  const mitTor = MAPS.filter((m) => m.tor);
+  console.log(`  Tore: ${mitTor.length ? mitTor.map((m) => `${m.id} Bahn ${m.tor!.bahn} `
+    + `(${m.tor!.zu} zu / ${m.tor!.auf} auf)`).join(', ') : 'keins'}`);
+}
+
 // ------------------------------------------------------------ Faehigkeiten
 
 for (const id of ABILITY_ORDER) {

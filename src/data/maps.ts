@@ -66,6 +66,27 @@ export interface GameMap {
    *  drei Bildsprachen auf einem Bild - weich gezeichneter Untergrund,
    *  flaechig gezeichneter Weg, gerenderte Figuren - werden zu zweien. */
   pfadImBild?: boolean;
+  /** Ein Tor, das einen Zuweg im Takt sperrt (C24).
+   *
+   *  Der Punkt ist nicht die Sperre, sondern was sie erzwingt: der Druck
+   *  wandert auf die anderen Bahnen, und wer alles auf den belebtesten Zuweg
+   *  gestellt hat, steht ploetzlich falsch. Plants vs. Zombies oeffnet und
+   *  schliesst im Verlauf ganze Bahnen, Kingdom Rush sperrt Zuwege - beide
+   *  aus demselben Grund.
+   *
+   *  Gesperrt wird nur das ERSCHEINEN, nicht der Weg selbst: wer schon
+   *  unterwegs ist, laeuft zu Ende. Eine Bahn mitten im Lauf zu schliessen
+   *  hiesse, Gegner umzuleiten - und ein Gegner hat als einzige
+   *  Zustandsgroesse seine zurueckgelegte Strecke auf GENAU DIESER Kurve.
+   *  Umleiten waere ein anderes Spiel, nicht eine andere Karte. */
+  tor?: {
+    /** Welche Bahn. Zaehlt ab null. */
+    bahn: number;
+    /** Sekunden zu, dann Sekunden auf - der Takt beginnt mit jeder Welle neu,
+     *  damit er planbar bleibt. */
+    zu: number;
+    auf: number;
+  };
   /** Der Wellenplan dieser Karte. */
   waves: Wave[];
   /** Feinausgleich der Karte. Siehe Konzept, Abschnitt zur Balance. */
@@ -194,6 +215,25 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
   ],
   pfadImBild: true,
   hint: { x: 1120, y: 180 },
+  // Das Tor sitzt auf der mittleren Bahn (C24).
+  //
+  // Acht Sekunden zu, acht auf - symmetrisch, damit der Takt ablesbar ist,
+  // und beginnend OFFEN, damit die erste Welle nicht mit einer Sperre
+  // anfaengt. Auf der Laubschlucht, weil sie drei Zuwege hat und Abdeckung
+  // ohnehin ihre Frage ist.
+  //
+  // Durchprobiert gegen die Auslegung (Regel 9), Kristall am Ende:
+  //
+  //     ohne Tor        Meister 30  Breite 34  Sparsam 18
+  //     6 zu / 10 auf   Meister 29  Breite 32  Sparsam 18
+  //     8 zu /  8 auf   Meister 29  Breite 32  Sparsam 23   gewaehlt
+  //    10 zu /  6 auf   Meister 33  Breite 30  Sparsam 24
+  //
+  // Alle vier bleiben gruen. Bemerkenswert ist der sparsame Stil: er gewinnt
+  // dazu, weil der umgelenkte Druck sich verteilt statt sich an einer Stelle
+  // zu stauen. Das Tor macht die Karte also nicht schwerer, sondern anders -
+  // und genau darum ging es in C24.
+  tor: { bahn: 1, zu: 8, auf: 8 },
   waves: PLAN_ASCHESCHLUCHT,
   balance: { hpMul: 1.06, goldMul: 1.05 },
 };

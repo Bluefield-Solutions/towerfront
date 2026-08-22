@@ -660,7 +660,7 @@ export class GameState {
       this.waveTime += dt;
       while (this.pending.length && this.pending[0].time <= this.waveTime) {
         const p = this.pending.shift()!;
-        this.spawnEnemy(p.enemy, p.hpMul, p.lane, p.shield ?? 0, p.traeger ?? 0);
+        this.spawnEnemy(p.enemy, p.hpMul, this.offeneBahn(p.lane), p.shield ?? 0, p.traeger ?? 0);
       }
       if (!this.pending.length && !this.enemies.length) this.finishWave();
     }
@@ -686,9 +686,51 @@ export class GameState {
     }
   }
 
+  /** Nur zum Pruefen: wieviele Gegner je Bahn erschienen sind, und wieviele
+   *  davon, obwohl ihre Bahn gesperrt war (muss null bleiben).
+   *
+   *  Gezaehlt wird beim ERSCHEINEN, nicht durch Absuchen der Gegnerliste: die
+   *  Gegner kommen aus einem Vorrat und werden wiederverwendet, eine Zaehlung
+   *  ueber Objektidentitaet zaehlt also zu wenig. */
+  spawnsJeBahn: number[] = [];
+  spawnsTrotzSperre = 0;
+
+  /** Ist dieser Zuweg gerade gesperrt? (C24)
+   *
+   *  Der Takt haengt an `waveTime`, nicht an der Gesamtzeit: so beginnt er
+   *  mit jeder Welle gleich, und wer einmal gesehen hat, wann das Tor faellt,
+   *  kann damit planen. Ein Tor, dessen Takt man nicht vorhersagen kann, ist
+   *  kein Hindernis, sondern eine Laune.
+   */
+  torZu(bahn: number, zeit = this.waveTime): boolean {
+    const t = this.map.tor;
+    if (!t || t.bahn !== bahn) return false;
+    const takt = t.zu + t.auf;
+    if (takt <= 0) return false;
+    // Der Takt beginnt OFFEN: die erste Welle soll nicht mit einer Sperre
+    // anfangen, bevor jemand verstanden hat, dass es ein Tor gibt.
+    return ((zeit % takt) + takt) % takt >= t.auf;
+  }
+
+  /** Die Bahn, auf der jetzt wirklich erschienen wird.
+   *
+   *  Ist die vorgesehene gesperrt, rueckt es auf die naechste offene - und
+   *  zwar der Reihe nach, nicht zufaellig: derselbe Spielstand muss denselben
+   *  Ablauf ergeben (das Determinismus-Tor prueft genau das). */
+  private offeneBahn(bahn: number): number {
+    const n = this.lanes.length;
+    for (let i = 0; i < n; i++) {
+      const b = (bahn + i) % n;
+      if (!this.torZu(b)) return b;
+    }
+    return bahn;   // alle zu waere ein Datenfehler; der Waechter faengt ihn
+  }
+
   private spawnEnemy(
     id: EnemyId, hpMul: number, lane: number, shield = 0, traeger = 0,
   ): void {
+    this.spawnsJeBahn[lane] = (this.spawnsJeBahn[lane] ?? 0) + 1;
+    if (this.torZu(lane)) this.spawnsTrotzSperre++;
     const def = ENEMIES[id];
     const ln = lane % this.lanes.length;
     const p0 = this.lanes[ln].pts[0];
@@ -1335,6 +1377,8 @@ export class GameState {
     this.husks.length = 0;
     this.flashT = 0;
     this.abilityCd = { meteor: 0, freeze: 0, bollwerk: 0, ernte: 0 };
+    this.spawnsJeBahn = [];
+    this.spawnsTrotzSperre = 0;
     this.aiming = null;
     this.grid.clear();
     this.towersVersion++;

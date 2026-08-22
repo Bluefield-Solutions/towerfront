@@ -476,10 +476,44 @@ export class Renderer {
 
   /** Ein Tor je Bahn - auf mehrspurigen Karten sieht man auf einen Blick,
    *  aus wie vielen Richtungen es kommt. Das Tor dreht sich zur Bahn hin. */
+  /** Der Riegel vor einem gesperrten Zuweg (C24).
+   *
+   *  Zwei Dinge zugleich, und beide sind noetig: der Weg ist ZU (ein Balken
+   *  quer, kein Symbol - man soll nicht erst lernen muessen, was es
+   *  bedeutet), und er geht wieder AUF (der Balken hat dieselbe Farbe wie
+   *  die Sperrmarke am Kristall, also die Farbe von "Achtung", nicht die von
+   *  "kaputt").
+   *
+   *  Kein Zeitbalken: eine Uhr am Tor waere eine vierte Zahl auf dem Feld,
+   *  und der Takt ist mit acht Sekunden ohnehin schnell abgezaehlt. */
+  private torSperre(x: number, y: number, breite: number): void {
+    const ctx = this.ctx;
+    ctx.save();
+    // Der Durchgang wird abgedunkelt, damit der Riegel nicht auf hellem
+    // Stein verschwindet.
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = C.ink;
+    ctx.beginPath();
+    ctx.ellipse(x, y - breite * 0.22, breite * 0.3, breite * 0.26, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#F08A3C';
+    ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x - breite * 0.3, y - breite * 0.22);
+    ctx.lineTo(x + breite * 0.3, y - breite * 0.22);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   private drawPortal(s: GameState, hi: boolean): void {
     const ctx = this.ctx;
     const t = s.crystalPulse;
-    for (const lane of s.lanes) {
+    for (let bahnNr = 0; bahnNr < s.lanes.length; bahnNr++) {
+      const lane = s.lanes[bahnNr];
+      // Sperrt hier gerade ein Tor? (C24)
+      const zu = s.torZu(bahnNr);
       // Weit genug ins Feld hinein, damit das Tor auch zu sehen ist.
       //
       // Der Bahnanfang liegt bewusst vor der Bildkante - dort beginnt der Weg.
@@ -490,7 +524,9 @@ export class Renderer {
       const hinein = 150;
       const x = p.x + Math.cos(ang) * hinein;
       const y = p.y + Math.sin(ang) * hinein;
-      if (hi) stampGlow(ctx, C.voidling, x, y, 72, 0.5 + Math.sin(t * 2) * 0.1);
+      // Ein gesperrter Zuweg leuchtet nicht. Das Leuchten sagt "hier kommt
+      // etwas heraus" - genau das stimmt dann nicht.
+      if (hi && !zu) stampGlow(ctx, C.voidling, x, y, 72, 0.5 + Math.sin(t * 2) * 0.1);
 
       const art = getObjectArt('gate');
       if (art) {
@@ -509,6 +545,7 @@ export class Renderer {
         ctx.globalAlpha = 1;
         ctx.drawImage(art, x - b / 2, y - h * 0.78, b, h);
         ctx.restore();
+        if (zu) this.torSperre(x, y, b);
       } else {
         ctx.save();
         ctx.translate(x, y);

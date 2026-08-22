@@ -601,6 +601,21 @@ takes.push(['d18-atem-b', () => shot('d18-atem-b', 844, 390, (s) => {
   return 0;
 })]);
 
+takes.push(['c24-tor', () => shot('c24-tor', 844, 390, (s) => {
+  // Der Augenblick, in dem das Tor ZU ist - sonst zeigt das Bild ein
+  // offenes Tor und beweist nichts (S93).
+  s.reset(31, 'normal', 'ascheschlucht');
+  stock(s, 6);
+  s.waveIndex = 6;
+  s.startWave();
+  let f = 0;
+  while (f < 60 * 40 && !s.torZu(s.map.tor.bahn)) { s.update(DT); f++; }
+  // Ein Stueck in die Sperre hinein, damit der Riegel voll steht.
+  for (let i = 0; i < 90; i++) s.update(DT);
+  if (!s.torZu(s.map.tor.bahn)) throw new Error('c24-tor: das Tor war nie zu.');
+  return 0;
+})]);
+
 takes.push(['welle15', () => shot('welle15', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 12);

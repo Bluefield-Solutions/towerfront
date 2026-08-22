@@ -613,6 +613,22 @@ const PROBEN = [
     tor: 'grafiktor',
   },
   {
+    // C24: das Tor muss wirklich umlenken, nicht nur dastehen.
+    name: 'Das Tor sperrt nicht mehr',
+    datei: 'src/game/state.ts',
+    regel: /    if \(!t \|\| t\.bahn !== bahn\) return false;/,
+    ersatz: '    if (t) return false; if (!t || t.bahn !== bahn) return false;',
+    tor: 'smoke',
+  },
+  {
+    // Und es darf nicht dauerhaft sperren - dann waere es eine Bahn weniger.
+    name: 'Das Tor bleibt fuer immer zu',
+    datei: 'src/data/maps.ts',
+    regel: /  tor: \{ bahn: 1, zu: 8, auf: 8 \},/,
+    ersatz: '  tor: { bahn: 1, zu: 40, auf: 8 },',
+    tor: 'guards',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

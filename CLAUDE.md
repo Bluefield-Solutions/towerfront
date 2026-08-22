@@ -132,6 +132,16 @@ zweites Mal kosten.
    Rastern und Zusammensetzen nicht. `npm run kartenwechsel -- --browser`
    schreibt das jetzt selbst über jeden Lauf — eine nackte Millisekundenzahl
    ist in diesem Verzeichnis kein Beleg mehr.
+13. **Wer eine Wirkung misst, schaltet sie zuerst ab.** Eine Prüfung ist erst
+   dann eine, wenn die Zahl OHNE die Sache messbar fällt. Sonst misst sie
+   etwas anderes, das lauter ist — und bezeugt die Sache, ohne sie je
+   geprüft zu haben. Vier Fälle in einer Runde (S126): die Ruheprüfung maß
+   erst den Bodennebel, dann das Pulsieren der Türme, dann zwei
+   Nulldurchgänge, und zuletzt lief der geprüfte Zweig gar nicht — bei einem
+   halben Turm Versatz. Und im selben Zug meldete das Grafiktor grün,
+   obwohl zwei von drei Karten unter dem Band lagen: es mittelte.
+   `npm run proben` setzt das für Tore längst durch. Für jede andere Messung
+   ist es Handarbeit und dauert neunzig Sekunden.
 ---
 
 ## Aufbau
@@ -155,7 +165,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v118. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v119. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 29 von 30,

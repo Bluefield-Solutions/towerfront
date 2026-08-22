@@ -1359,29 +1359,55 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
     if (tor.bahn >= karte.lanes.length) {
       problems.push(`Tor auf ${karte.id}: Bahn ${tor.bahn}, die Karte hat nur ${karte.lanes.length}.`);
     }
-    state.reset(31, 'normal', karte.id);
-    state.waveIndex = 6;
-    state.startWave();
-    for (let i = 0; i < 60 * 90 && state.waveActive; i++) {
-      state.update(DT);
-    }
-    const jeBahn = state.spawnsJeBahn;
-    const gesamt = jeBahn.reduce((a, b) => a + (b ?? 0), 0);
-    const reihum = gesamt / karte.lanes.length;
+    /** Mehrere Wellen, einmal MIT und einmal OHNE Tor.
+     *
+     *  Ueber MEHRERE, nicht ueber eine: der erste Entwurf pruefte Welle 7 -
+     *  und dort faellt zufaellig kein Gegner der Torbahn ins Sperrfenster,
+     *  weil die Welle nach gut acht Sekunden durch ist. Gemessen ueber alle
+     *  fuenfzehn werden 11 von 71 umgelenkt, und zwar fast nur in den spaeten,
+     *  langen Wellen. Das ist die Sache selbst: kurze Wellen enden im ersten
+     *  offenen Fenster, lange kreuzen den Takt - das Tor wird wichtig, wenn
+     *  die Wellen lang werden, also wenn Abdeckung ohnehin die Frage ist. */
+    const aufTorbahn = (): number => {
+      let summe = 0;
+      for (let w = 8; w < karte.waves.length; w++) {
+        state.reset(31, 'normal', karte.id);
+        state.waveIndex = w;
+        state.startWave();
+        for (let i = 0; i < 60 * 120 && state.waveActive; i++) state.update(DT);
+        summe += state.spawnsJeBahn[tor.bahn] ?? 0;
+        if (state.spawnsTrotzSperre > 0) {
+          problems.push(`Tor: Welle ${w + 1} laesst ${state.spawnsTrotzSperre} Gegner `
+            + 'erscheinen, obwohl ihre Bahn gesperrt ist.');
+        }
+      }
+      return summe;
+    };
 
-    if (gesamt < 10) {
-      problems.push(`Tor: nur ${gesamt} Gegner in der Pruefwelle - zu wenig fuer eine Aussage.`);
+    const mit = aufTorbahn();
+    // Wirklich abschalten, nicht ausrechnen (Regel 13).
+    //
+    // Der erste Entwurf verglich gegen den idealen Drittelanteil - bei 22
+    // Gegnern auf drei Bahnen sind das 7,33, waehrend reihum 7 herauskommen.
+    // Sieben ist kleiner als 7,33, also meldete die Pruefung "umgelenkt",
+    // auch als die Gegenprobe das Tor ganz abgeschaltet hatte. Ein
+    // gerechneter Ersatz fuer den Vergleichslauf ist kein Vergleichslauf.
+    const echtesTor = karte.tor;
+    let ohne: number;
+    try {
+      (karte as { tor?: unknown }).tor = undefined;
+      ohne = aufTorbahn();
+    } finally {
+      (karte as { tor?: unknown }).tor = echtesTor;
     }
-    if (state.spawnsTrotzSperre > 0) {
-      problems.push(
-        `Tor: ${state.spawnsTrotzSperre} Gegner erscheinen, obwohl ihre Bahn gesperrt ist.`,
-      );
+
+    if (ohne < 10) {
+      problems.push(`Tor: nur ${ohne} Gegner auf der Torbahn - zu wenig fuer eine Aussage.`);
     }
-    const aufTorbahn = jeBahn[tor.bahn] ?? 0;
-    if (aufTorbahn >= reihum) {
+    if (mit >= ohne) {
       problems.push(
-        `Tor: die gesperrte Bahn bekommt ${aufTorbahn} von ${gesamt} Gegnern, reihum waeren es `
-        + `${reihum.toFixed(1)} - es wird nichts umgelenkt (Regel 13: die Zahl muss fallen).`,
+        `Tor: die gesperrte Bahn bekommt mit Tor ${mit} Gegner, ohne Tor ${ohne} - `
+        + 'es wird nichts umgelenkt.',
       );
     }
   }

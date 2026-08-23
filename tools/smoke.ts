@@ -82,6 +82,8 @@ const { ABILITIES } = await import('../src/data/abilities');
 const { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, statsFor } = await import('../src/data/towers');
 
 const { TUTORIAL } = await import('../src/game/tutorial');
+const { auswertung } = await import('../src/game/auswertung');
+const { getBest, getStars } = await import('../src/core/storage');
 const { candidateSpots } = await import('./spots');
 const { WORLD_W, WORLD_H } = await import('../src/data/config');
 
@@ -156,6 +158,8 @@ for (const step of TUTORIAL) {
 // Einfuehrung mit und ihre Positionsrechnung wird ausgefuehrt.
 (win.document.getElementById('s-action') as unknown as HTMLButtonElement).click();
 const spots = candidateSpots(state);
+// Der Sternestand VOR dieser Partie - fuer die Auswertung weiter unten.
+const sterneVorDerPartie = getStars(state.map.id, state.difficulty);
 let spotIdx = 0, si = 0, frames = 0;
 let outcome = 'playing';
 const plan = TOWER_ORDER;
@@ -202,6 +206,77 @@ step('Partie durchspielen', () => {
     frames++;
   }
   outcome = state.phase;
+});
+
+// --- Die Auswertung der eben gespielten Partie (P2).
+//
+// Der Genre-Abgleich misst sie an einer kurzen, kuenstlich beendeten Partie.
+// Hier steht die echte daneben: fuenfzehn Wellen, vier Turmarten, alles
+// gezeichnet. Und hier - nur hier - laesst sich die eine Zahl pruefen, die
+// vier Versionen lang falsch war: "Sterne vorher".
+step('Auswertung', () => {
+  const a = auswertung(state);
+  if (a.won !== (state.phase === 'won')) {
+    throw new Error(`Auswertung sagt won=${a.won}, der Zustand steht auf "${state.phase}".`);
+  }
+  if (a.kills !== state.stats.kills || a.built !== state.stats.towersBuilt) {
+    throw new Error(
+      `Auswertung zaehlt ${a.kills}/${a.built}, die Partie ${state.stats.kills}/`
+      + `${state.stats.towersBuilt}.`,
+    );
+  }
+  if (a.duration <= 0) throw new Error('Auswertung meldet eine Partie ohne Dauer.');
+  if (a.mapId !== state.map.id || a.waves !== state.totalWaves) {
+    throw new Error('Auswertung beschreibt eine andere Karte als die gespielte.');
+  }
+  // Der Kern: "vorher" ist der Stand VOR dieser Partie. Bis v134 wurde er
+  // gelesen, nachdem das Ergebnis schon eingetragen war - dann steht dort
+  // immer der neue Wert, und "Ein neuer Stern" erscheint nie.
+  if (a.before !== sterneVorDerPartie) {
+    throw new Error(
+      `Auswertung meldet ${a.before} Sterne vorher, vor der Partie standen `
+      + `${sterneVorDerPartie}.`,
+    );
+  }
+  // Eingetragen wird an EINER Stelle, im Spielzustand. Danach steht der
+  // bessere der beiden Werte im Fortschritt.
+  const jetzt = getStars(state.map.id, state.difficulty);
+  if (jetzt !== Math.max(sterneVorDerPartie, a.stars)) {
+    throw new Error(`Nach der Partie stehen ${jetzt} Sterne, erwartet war `
+      + `${Math.max(sterneVorDerPartie, a.stars)}.`);
+  }
+});
+
+// --- Der Bestwert nach einer NIEDERLAGE.
+//
+// Warum eine zweite Partie: die oben endet als Sieg, und beim Sieg ist
+// `waveNumber` gedeckelt - da faellt die eine Welle Unterschied gar nicht an.
+// Die Gegenprobe (wieder `waveNumber` eintragen statt der erreichten Welle)
+// lief deshalb gruen durch, obwohl der Fehler wieder drin war. Eine Pruefung,
+// die den Fehler nicht sehen KANN, ist keine (Regel 13).
+//
+// Also eine eigene, kurze: kein Turm, ein Kristall, die erste Welle laeuft
+// durch. Erreicht wurde damit Welle 0 - und genau das muss im Bestwert
+// stehen. Ein anderer Grad als oben, damit die Ablage einen eigenen
+// Schluessel hat und der Bestwert bei null anfaengt.
+step('Bestwert nach Niederlage', () => {
+  const probe = new GameState();
+  probe.reset(777, 'erbarmungslos', state.map.id);
+  probe.lives = 1;
+  for (let i = 0; i < 60 * 600 && probe.phase === 'playing'; i++) {
+    if (probe.canStartWave) probe.startWave();
+    probe.update(DT);
+  }
+  if (probe.phase !== 'lost') {
+    throw new Error(`Ohne Turm endet die Partie als "${probe.phase}" statt als Niederlage - `
+      + 'die Probe misst nicht, was sie messen soll.');
+  }
+  const erreicht = Math.max(0, probe.waveNumber - 1);
+  const best = getBest(probe.map.id, 'erbarmungslos');
+  if (best.wave !== erreicht) {
+    throw new Error(`Bestwert steht auf Welle ${best.wave}, ueberstanden wurde Welle `
+      + `${erreicht} (Welle ${probe.waveNumber} lief noch).`);
+  }
 });
 
 // Wenn die Partie in zwoelf Minuten Spielzeit nicht endet, haengt etwas -

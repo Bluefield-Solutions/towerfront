@@ -5,6 +5,7 @@ import {
   buyPerk, freeStars, getBest, getProgress, getSettings, getStars, saveSettings, totalStars,
 } from '../core/storage';
 import { WORLD_H, WORLD_W } from '../data/config';
+import type { Auswertung } from './auswertung';
 
 /** Das Menü als Landkarte.
  *
@@ -46,11 +47,7 @@ export class Menu {
    *  während das Menü längst auf der Leinwand war - zwei Formensprachen
    *  hintereinander. Und weil HTML in meiner Bildabnahme nicht erscheint,
    *  war es zugleich die letzte Fläche, die ich nie sehen konnte. */
-  result: {
-    won: boolean; mapId: string; mapName: string; wave: number; waves: number;
-    lives: number; maxLives: number; stars: number; before: number;
-    kills: number; built: number; damage: number; duration: number;
-  } | null = null;
+  result: Auswertung | null = null;
   /** Wie lange die Sterne schon auffliegen - für die Einblendung. */
   resultAge = 0;
 

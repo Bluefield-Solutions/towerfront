@@ -20,6 +20,10 @@ import { MAPS } from '../src/data/maps';
 import { SPEEDS } from '../src/data/config';
 import { DIFFICULTY_ORDER } from '../src/data/difficulty';
 import { PERK_ORDER, starsFor } from '../src/data/perks';
+import { fehltVorKauf } from '../src/game/turmwerte';
+import { auswertung } from '../src/game/auswertung';
+import { TUTORIAL } from '../src/game/tutorial';
+import { Sfx, type SfxName } from '../src/core/audio';
 
 const mem = new Map<string, string>();
 (globalThis as unknown as Record<string, unknown>).localStorage = {
@@ -82,6 +86,159 @@ function beruehrbareKleinigkeiten(): boolean {
   return s.beruehren(fern, 40) === false && s.particles.length === 0;
 }
 
+/** F4 - stehen vor dem Kauf ALLE Werte da?
+ *
+ *  Nicht "gibt es ein Fenster", sondern: welches Feld liefert `statsFor` auf
+ *  Stufe 1, und kommt jedes davon in der Liste vor, die die Bedienung zeigt?
+ *  Gefragt wird an den Turmdaten, geantwortet aus `turmwerte.ts` - eine
+ *  Liste, die sich aus den Feldern selbst baute, koennte nichts vergessen und
+ *  wuerde damit nichts beweisen (Regel 13).
+ *
+ *  Beim ersten Lauf war es rot: `slowTime` und `falloff` standen seit jeher
+ *  in den Daten und in keiner Liste. F4 galt trotzdem seit v11 als erfuellt -
+ *  weil es von Hand beurteilt war. */
+function alleWerteVorDemKauf(): boolean {
+  return TOWER_ORDER.every((id) => fehltVorKauf(TOWERS[id]).length === 0);
+}
+
+/** P1 - hat jede Handlung ihren Ton?
+ *
+ *  `Sfx.play` wird abgehoert, dann wird jede Handlung wirklich ausgefuehrt.
+ *  Drei Fragen, und die letzte ist die eigentliche:
+ *   1. Klingt jede Handlung ueberhaupt?
+ *   2. Klingt jede ANDERS? Ein einziges Klicken fuer alles waere kein
+ *      Unterschied, sondern ein Geraeusch.
+ *   3. Und schweigt es, wenn nichts geschieht? Ein abgelehnter Bau darf
+ *      nicht klingen wie ein gelungener - sonst misst die Pruefung nur, dass
+ *      ueberhaupt jemand `play` ruft (Regel 13). */
+function tonJeHandlung(): boolean {
+  const t = new GameState();
+  t.reset(4711);
+  t.gold = 9000;
+  const spot = platzAmWeg(t) ?? t.map.hint;
+  const lane = t.lanes[0];
+  const aufDemWeg = lane.at(lane.length * 0.5);
+
+  const gehoert: SfxName[] = [];
+  const echt = Sfx.play.bind(Sfx);
+  Sfx.play = (n: SfxName) => { gehoert.push(n); };
+  try {
+    const handlungen: (() => void)[] = [
+      () => { t.build(spot.x, spot.y, 'arrow'); },
+      () => { t.upgrade(t.towers[0], 0); },
+      () => { t.startWave(); },
+      () => { t.cast('meteor', t.goal.x, t.goal.y); },
+      () => { t.sell(t.towers[0]); },
+    ];
+    const toene = new Set<SfxName>();
+    for (const tun of handlungen) {
+      const vorher = gehoert.length;
+      tun();
+      const neu = gehoert.slice(vorher);
+      if (!neu.length) return false;
+      for (const n of neu) toene.add(n);
+    }
+    if (toene.size < handlungen.length) return false;
+
+    // Abschaltprobe: was nicht geschieht, klingt auch nicht.
+    if (t.canPlace('arrow', aufDemWeg.x, aufDemWeg.y)) return false;
+    const stumm = gehoert.length;
+    t.build(aufDemWeg.x, aufDemWeg.y, 'arrow');
+    return gehoert.length === stumm;
+  } finally {
+    Sfx.play = echt;
+  }
+}
+
+/** Ein Platz, an dem ein Turm auch etwas trifft.
+ *
+ *  NICHT `map.hint` - der liegt auf 200/200, also in der Ecke, und ein Turm
+ *  dort schiesst 45 Sekunden lang auf nichts. Genau daran ist die erste
+ *  Fassung von P2 gescheitert, und das ist die Nachricht: der Bauhinweis ist
+ *  ein Fingerzeig fuer den Anfaenger, kein guter Platz. Hier wird er am Weg
+ *  gesucht, mit derselben Einrastung, die auch der Finger benutzt. */
+function platzAmWeg(t: GameState, anteil = 0.35): { x: number; y: number } | null {
+  const lane = t.lanes[0];
+  const p = lane.at(lane.length * anteil);
+  return t.einrasten('arrow', p.x, p.y, 220);
+}
+
+/** P2 - gibt es nach der Partie eine Auswertung, und steht Wahres darin?
+ *
+ *  Zuerst die Abschaltprobe: vor der Partie muss alles auf null stehen.
+ *  Sonst misst der zweite Teil nur, dass Zahlen existieren.
+ *
+ *  Dann wird wirklich gespielt, bis die Partie zu Ende ist - der Kristall
+ *  wird dafuer auf den letzten Rest gesetzt, sonst dauerte es fuenfzehn
+ *  Wellen. Geprueft wird die fertige Auswertung: sie muss dieselbe Partie
+ *  beschreiben, die eben gelaufen ist. */
+function auswertungNachDerPartie(): boolean {
+  const t = new GameState();
+  t.reset(2024);
+  t.gold = 9000;
+  const leer = auswertung(t);
+  if (leer.kills || leer.built || leer.damage || leer.duration) return false;
+
+  const platz = platzAmWeg(t);
+  if (!platz || !t.build(platz.x, platz.y, 'arrow')) return false;
+  t.startWave();
+  for (let i = 0; i < 60 * 45 && t.phase === 'playing'; i++) t.update(1 / 60);
+  if (t.stats.kills === 0) return false;
+
+  // Und jetzt zu Ende bringen: ein einzelner Turm laesst genug durch, der
+  // Kristall steht auf dem letzten Rest. Die Wellen muessen dabei gestartet
+  // werden - von allein laeuft keine an.
+  t.lives = 1;
+  for (let i = 0; i < 60 * 300 && t.phase === 'playing'; i++) {
+    if (t.canStartWave) t.startWave();
+    t.update(1 / 60);
+  }
+  if (t.phase === 'playing') return false;
+
+  const a = auswertung(t);
+  return a.built === 1
+    && a.kills === t.stats.kills
+    && a.damage > 0
+    && a.duration > 0
+    && a.wave >= 1 && a.wave <= a.waves
+    && a.waves === t.totalWaves
+    && a.mapName === t.map.name
+    && a.maxLives > 0
+    && a.won === false;
+}
+
+/** P3 - wird im Spiel eingefuehrt statt vorweg?
+ *
+ *  Die Frage ist nicht, ob es Erklaertexte gibt. Sie ist, ob sie an
+ *  HANDGRIFFEN haengen: kein Schritt darf zu Beginn schon erledigt sein
+ *  (sonst laeuft die Einfuehrung an einer Textwand vorbei ins Leere), keiner
+ *  darf durch blosses Zuwarten weiterspringen, und jeder muss durch genau die
+ *  Handlung fallen, die er verlangt. */
+function einfuehrungImSpiel(): boolean {
+  if (TUTORIAL.length < 3) return false;
+  if (TUTORIAL.some((st) => !st.text || !st.target)) return false;
+
+  const t = new GameState();
+  t.reset(31415);
+  t.gold = 9000;
+  // Vorweg ist nichts erledigt - sonst waere die Einfuehrung schon vorbei,
+  // bevor sie beginnt.
+  if (TUTORIAL.some((st) => st.done(t))) return false;
+
+  // Abschaltprobe: zehn Sekunden Zuschauen bringen sie nicht weiter.
+  for (let i = 0; i < 600; i++) t.update(1 / 60);
+  if (TUTORIAL[0].done(t)) return false;
+
+  // Und jetzt die Handgriffe, in der Reihenfolge der Schritte.
+  t.buildChoice = 'arrow';
+  if (!TUTORIAL[0].done(t)) return false;
+  const platz = platzAmWeg(t);
+  if (!platz || !t.build(platz.x, platz.y, 'arrow')) return false;
+  if (!TUTORIAL[1].done(t)) return false;
+  t.startWave();
+  return TUTORIAL[2].done(t);
+}
+
 const CRITERIA: Criterion[] = [
   // --- Fokus und Klarheit (Defender's Quest)
   {
@@ -106,9 +263,11 @@ const CRITERIA: Criterion[] = [
   {
     id: 'F4', area: 'Fokus', from: 'Spielerkritik ("kann nicht planen, wenn ich nichts weiss")',
     text: 'Alle Werte eines Turms sind sichtbar, bevor man ihn kauft.',
-    measured: false, weight: 3,
-    check: () => true, // seit v11: Werte erscheinen im Inspektor, sobald eine Turmart gewaehlt ist
-    gap: 'Werte des gewaehlten Turms vor dem Bau anzeigen.',
+    // GEMESSEN seit v135. Vorher stand hier `check: () => true` mit dem
+    // Vermerk "seit v11 erfuellt" - und es war nicht erfuellt.
+    measured: true, weight: 3,
+    check: alleWerteVorDemKauf,
+    gap: 'Werte des gewaehlten Turms vor dem Bau anzeigen - vollstaendig.',
   },
 
   // --- Rollen und Entscheidungen (Kingdom Rush, Bloons TD 6)
@@ -266,21 +425,24 @@ const CRITERIA: Criterion[] = [
   // --- Rueckmeldung und Politur
   {
     id: 'P1', area: 'Politur', from: 'alle Referenzen',
-    text: 'Ton fuer jede Handlung.',
-    measured: false, weight: 2,
-    check: () => true,
+    text: 'Ton fuer jede Handlung - und je Handlung ein eigener.',
+    measured: true, weight: 2,
+    check: tonJeHandlung,
+    gap: 'Jeder Handlung einen eigenen Klang geben.',
   },
   {
     id: 'P2', area: 'Politur', from: '1945-Runde, Plants vs. Zombies',
-    text: 'Auswertung nach der Partie.',
-    measured: false, weight: 2,
-    check: () => true,
+    text: 'Auswertung nach der Partie - mit Zahlen aus dieser Partie.',
+    measured: true, weight: 2,
+    check: auswertungNachDerPartie,
+    gap: 'Ergebnisbildschirm mit Kristall, Abschuessen, Tuermen, Dauer.',
   },
   {
     id: 'P3', area: 'Politur', from: 'Plants vs. Zombies (schrittweise Einfuehrung)',
-    text: 'Einfuehrung im Spiel statt vorweg.',
-    measured: false, weight: 3,
-    check: () => true,
+    text: 'Einfuehrung im Spiel statt vorweg - an Handgriffen, nicht an Text.',
+    measured: true, weight: 3,
+    check: einfuehrungImSpiel,
+    gap: 'Schritte an Handlungen binden statt an einen Weiter-Knopf.',
   },
   {
     id: 'P4', area: 'Politur', from: 'mobiler Alltag',

@@ -17,6 +17,7 @@ import { projektilform } from '../src/gfx/renderer';
 import type { Tower } from '../src/game/types';
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, DRAW_SCALE, TURM_HOEHE, rangeFor, statsFor } from '../src/data/towers';
 import { ENEMIES, type EnemyId } from '../src/data/enemies';
+import { fehltVorKauf } from '../src/game/turmwerte';
 import { enemyArtWidth } from '../src/gfx/enemyart';
 
 import { ABILITIES, ABILITY_ORDER } from '../src/data/abilities';
@@ -888,6 +889,26 @@ for (const map of MAPS) {
         + 'noetig sind 0,25) - dann sind es zwei Namen fuer dieselbe Karte, und die '
         + 'zweite stellt keine eigene Frage.');
     }
+  }
+}
+
+// --- Jeder Wert eines Turms muss vor dem Kauf zu sehen sein (F4).
+//
+// Der Genre-Bericht misst das auch, aber er ist kein Tor. Hier ist es eines,
+// und zwar deshalb: der Fehler entsteht nicht durch Loeschen, sondern durch
+// WACHSEN. `pierce`, `slowTime` und `falloff` kamen nacheinander in die
+// Turmdaten, und jedes Mal hat niemand daran gedacht, sie auch anzuzeigen.
+// Zwei davon standen bis v134 in keiner der beiden Listen - der Frostturm
+// verschwieg, wie lange seine Bremse haelt.
+//
+// Gefragt wird an `statsFor`, geantwortet aus `turmwerte.ts`. Wer ein neues
+// Feld eintraegt, wird hier abgeholt.
+for (const id of TOWER_ORDER) {
+  const fehlt = fehltVorKauf(TOWERS[id]);
+  if (fehlt.length) {
+    fail(`${id}: ${fehlt.join(', ')} steht in den Turmdaten, aber in keiner Zeile vor `
+      + 'dem Kauf. Ohne alle Werte laesst sich nicht planen (F4) - Zeile in '
+      + 'src/game/turmwerte.ts nachtragen.');
   }
 }
 

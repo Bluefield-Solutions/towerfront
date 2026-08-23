@@ -783,6 +783,41 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // F4: ein Turmwert, der in den Daten steht und in keiner Zeile. Genau so
+    // sind `slowTime` und `falloff` bis v134 unsichtbar geblieben.
+    name: 'Ein Turmwert steht vor dem Kauf nicht da',
+    datei: 'src/game/turmwerte.ts',
+    regel: /if \(st\.slowTime\) z\.push\(\{ feld: 'slowTime', name: 'Bremsdauer', wert: dauer\(st\.slowTime\) \}\);/,
+    ersatz: '',
+    tor: 'guards',
+  },
+  {
+    // P2: "Sterne vorher" wird nicht mehr vor dem Eintragen festgehalten.
+    // Dann steht dort immer der neue Wert und "Ein neuer Stern" erscheint nie.
+    name: 'Sterne vorher stimmen nicht mehr',
+    datei: 'src/game/state.ts',
+    regel: /this\.sterneVorher = getStars\(this\.map\.id, this\.difficulty\);/,
+    ersatz: 'this.sterneVorher = 3;',
+    tor: 'smoke',
+  },
+  {
+    // P2: der Bestwert wird wieder mit der laufenden statt der ueberstandenen
+    // Welle eingetragen - eine Welle zuviel, bei jeder Partie.
+    name: 'Bestwert eine Welle zu weit',
+    datei: 'src/game/state.ts',
+    regel: /recordRun\(this\.map\.id, this\.difficulty, reached, won \? this\.lives : 0\);/,
+    ersatz: 'recordRun(this.map.id, this.difficulty, this.waveNumber, won ? this.lives : 0);',
+    tor: 'smoke',
+  },
+  {
+    // P2: die Auswertung beschreibt eine andere Partie als die gespielte.
+    name: 'Die Auswertung zaehlt nicht mit',
+    datei: 'src/game/auswertung.ts',
+    regel: /kills: s\.stats\.kills,/,
+    ersatz: 'kills: 0,',
+    tor: 'smoke',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

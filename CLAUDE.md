@@ -185,7 +185,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v134. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v135. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -204,11 +204,13 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   nicht mitgewachsen ist: ihr Bild füllt seine Kachel nur zu 0,22 statt 0,35
   Bildschirmpunkten je Weltpunkt, sie bleibt deshalb bei 17 px. Das ist am
   Bild zu beheben, nicht am Maßstab — und dafür braucht es `art/roh/`.
-- **Der Genre-Abgleich ist vollständig**: 30 von 30, gewichtet 100 %. Das
-  letzte offene Kriterium P8 ist in v134 nicht nur umgesetzt, sondern von
-  „behauptet" auf **gemessen** gewandert — geprüft wird, ob die Karte an einer
-  Kleinigkeit reagiert UND daneben nicht. Von Hand beurteilt sind noch sechs
-  Kriterien mit 15 von 73 Gewichtspunkten.
+- **Der Genre-Abgleich ist vollständig**: 30 von 30, gewichtet 100 % — und
+  seit v135 zu **100 % gemessen** statt zu 79 %. Von Hand beurteilt sind noch
+  P6 und P7 mit 5 von 73 Gewichtspunkten; beide sind rein sichtbar und in
+  einem Werkzeug ohne Bildschirm nicht zu messen.
+  Das Messen hat drei Fehler gefunden, die als „erfüllt" abgehakt waren: der
+  Frostturm verschwieg seine Bremsdauer, der Bestwert wurde eine Welle zu
+  weit eingetragen, und „Ein neuer Stern" konnte nie erscheinen.
 - D26 ist **geschlossen, aber nicht durch eine Änderung**: der vermutete
   Hebel gab es nicht. Ein Ablaufmitschnitt zeigt **kein einziges
   Bild-Dekodieren** unter den teuren Posten; 16,8 von 22,9 s liegen auf

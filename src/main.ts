@@ -1,13 +1,13 @@
 import './style.css';
 import { Loop } from './core/loop';
 import { Menu } from './game/menu';
-import { getStars, recordRun, recordStars, saveSettings } from './core/storage';
-import { starsFor } from './data/perks';
+import { saveSettings } from './core/storage';
 import { loadGame } from './game/save';
 import { bindInput } from './core/input';
 import { Sfx } from './core/audio';
 import { getSettings } from './core/storage';
 import { GameState } from './game/state';
+import { auswertung } from './game/auswertung';
 import { saveGame } from './game/save';
 import { Renderer } from './gfx/renderer';
 import { UI } from './ui/ui';
@@ -57,18 +57,10 @@ ui.openMenu = () => {
 
 /** Das Ergebnis einer Partie - auf der Leinwand, in derselben Formensprache
  *  wie die Landkarte. */
-function showResult(won: boolean): void {
-  const before = getStars(state.map.id, state.difficulty);
-  const stars = starsFor(won, state.lives, state.maxLives);
-  recordStars(state.map.id, state.difficulty, stars);
-  recordRun(state.map.id, state.difficulty, state.waveNumber, state.lives);
-  menu.result = {
-    won, mapId: state.map.id, mapName: state.map.name,
-    wave: state.waveNumber, waves: state.totalWaves,
-    lives: state.lives, maxLives: state.maxLives, stars, before,
-    kills: state.stats.kills, built: state.stats.towersBuilt,
-    damage: Math.round(state.stats.damage), duration: state.stats.duration,
-  };
+function showResult(): void {
+  // Eingetragen hat das Ergebnis der Spielzustand selbst, als die Partie zu
+  // Ende ging. Hier wird nur noch abgelesen - siehe auswertung.ts.
+  menu.result = auswertung(state);
   menu.resultAge = 0;
   menu.view = 'result';
   renderer.menu = menu;
@@ -158,7 +150,7 @@ const loop = new Loop(
       lastPhase = state.phase;
       if (state.phase === 'playing') ui.hideScreen();
       else if (state.phase === 'title') ui.openMenu();
-      else showResult(state.phase === 'won');
+      else showResult();
     }
     ui.sync();
     ui.perf(fpsAvg);

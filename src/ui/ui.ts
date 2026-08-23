@@ -3,7 +3,7 @@ import { ENEMIES, type EnemyId } from '../data/enemies';
 import { getEnemyArt } from '../gfx/enemyart';
 import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
 import {
-  TOWERS, TOWER_ORDER, MAX_LEVEL, accentFor, nextFor, sellValue, statsFor,
+  TOWERS, TOWER_ORDER, MAX_LEVEL, accentFor, nextFor, sellValue,
   type TowerId,
 } from '../data/towers';
 import { Sfx } from '../core/audio';
@@ -20,6 +20,7 @@ import { spriteCount } from '../gfx/sprites';
 import { clearGame, loadGame } from '../game/save';
 import { TUTORIAL, kartenEinfuehrung, type TutorialStep } from '../game/tutorial';
 import type { GameState } from '../game/state';
+import { werteAmTurm, werteVorKauf, type Wertzeile } from '../game/turmwerte';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
@@ -721,20 +722,9 @@ export class UI {
     // planen - und Planen ist der ganze Reiz des Genres.
     if (!sel && s.buildChoice) {
       const def = TOWERS[s.buildChoice];
-      const l1 = statsFor(def, null, 1);
       this.insp.hidden = false;
       this.iName.textContent = `${def.name} · ${def.role}`;
-      this.iStats.innerHTML = [
-        row('Kosten', `${l1.cost} Gold`),
-        row('Schaden', l1.damage),
-        row('Reichweite', Math.round(l1.range)),
-        row('Takt', `${l1.cooldown.toFixed(2)} s`),
-        row('Schaden/s', (l1.damage / l1.cooldown).toFixed(1)),
-        l1.splash ? row('Radius', Math.round(l1.splash)) : '',
-        l1.chains ? row('Sprünge', l1.chains) : '',
-        l1.slow ? row('Bremse', pct(l1.slow)) : '',
-        row('Luftziele', def.hitsAir ? 'ja' : 'nein'),
-      ].join('');
+      this.iStats.innerHTML = werteVorKauf(def).map(zeile).join('');
       this.rollhinweis();
       this.iHint.hidden = false;
       this.iHint.textContent = def.blurb;
@@ -746,22 +736,11 @@ export class UI {
 
     if (sel) {
       const def = TOWERS[sel.def];
-      const st = s.towerStats(sel);
-      const nx = nextFor(def, sel.branch, sel.level);
       this.insp.hidden = false;
       const branchName = sel.branch === null ? '' : ` · ${def.branches[sel.branch].name}`;
       this.iName.textContent = `${def.name}${branchName} · Stufe ${sel.level}`;
-      this.iStats.innerHTML = [
-        row('Schaden', st.damage, nx?.damage),
-        row('Reichweite', Math.round(st.range), nx ? Math.round(nx.range) : undefined),
-        row('Takt', `${st.cooldown.toFixed(2)} s`, nx ? `${nx.cooldown.toFixed(2)} s` : undefined),
-        st.splash ? row('Radius', Math.round(st.splash), nx?.splash ? Math.round(nx.splash) : undefined) : '',
-        st.chains ? row('Sprünge', st.chains, nx?.chains) : '',
-        st.slow ? row('Bremse', pct(st.slow), nx?.slow ? pct(nx.slow) : undefined) : '',
-        def.hitsAir ? '' : row('Luftziele', 'nein'),
-        st.pierce ? row('Durchschlag', st.pierce, nx?.pierce) : '',
-        row('Erledigt', sel.kills),
-      ].join('');
+      this.iStats.innerHTML = werteAmTurm(def, sel.branch, sel.level, sel.kills)
+        .map(zeile).join('');
       this.rollhinweis();
       this.renderUpgrades();
       this.renderZielwahl(sel);
@@ -1016,10 +995,13 @@ export class UI {
   }
 }
 
-const pct = (v: number) => `${Math.round(v * 100)} %`;
-
 function row(label: string, value: string | number, next?: string | number): string {
   const arrow = next !== undefined && String(next) !== String(value)
     ? ` <span style="color:#7FE7E0">→ ${next}</span>` : '';
   return `<dt>${label}</dt><dd>${value}${arrow}</dd>`;
 }
+
+/** Eine Wertzeile aus `turmwerte.ts` als HTML. Die Bedienung entscheidet ueber
+ *  die Form, nicht ueber den Inhalt - welche Werte gezeigt werden, steht
+ *  dort, und der Genre-Abgleich zaehlt sie genau dort ab. */
+const zeile = (z: Wertzeile): string => row(z.name, z.wert, z.danach);

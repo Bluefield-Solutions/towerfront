@@ -16,7 +16,7 @@ import type { LanePath } from '../core/path';
 import type { Vec } from '../core/math';
 import { dist, dist2 } from '../core/math';
 import { Sfx } from '../core/audio';
-import { getProgress, recordRun, recordStars } from '../core/storage';
+import { getProgress, getStars, recordRun, recordStars } from '../core/storage';
 import {
   NO_PERKS, perkEffect, starsFor, type PerkEffect,
 } from '../data/perks';
@@ -68,6 +68,15 @@ export class GameState {
   perks: PerkEffect = NO_PERKS;
   /** Sterne des letzten abgeschlossenen Laufs. */
   stars = 0;
+  /** Sterne, die auf dieser Karte VOR diesem Lauf standen.
+   *
+   *  Wird in `finishRun` festgehalten, bevor das Ergebnis eingetragen wird -
+   *  und genau darum geht es. Bis v134 holte sich der Ergebnisbildschirm die
+   *  Zahl selbst, aber erst NACHDEM `finishRun` sie ueberschrieben hatte:
+   *  "vorher" war dann immer schon "nachher", und die Zeile "Ein neuer Stern"
+   *  konnte gar nie erscheinen. Zwei Stellen, dieselbe Zahl, eine davon zu
+   *  spaet - Regel 15. */
+  sterneVorher = 0;
   gold = DIFFICULTIES.normal.startGold;
   lives = DIFFICULTIES.normal.startLives;
   maxLives = DIFFICULTIES.normal.startLives;
@@ -762,6 +771,8 @@ export class GameState {
     clearGame();
     const reached = won ? this.waveIndex : this.waveNumber - 1;
     recordRun(this.map.id, this.difficulty, reached, won ? this.lives : 0);
+    // Der Stand VOR diesem Lauf, festgehalten bevor er ueberschrieben wird.
+    this.sterneVorher = getStars(this.map.id, this.difficulty);
     // Im Endlosmodus gibt es keine Sterne - er hat kein Ende, an dem man
     // messen koennte, wie sauber man durchgekommen ist.
     this.stars = this.endless ? 0 : starsFor(won, this.lives, this.maxLives);
@@ -1525,6 +1536,7 @@ export class GameState {
     this.lives = Math.round(d.startLives * (1 + this.perks.livesShare));
     this.maxLives = this.lives;
     this.stars = 0;
+    this.sterneVorher = 0;
     this.waveIndex = 0;
     this.waveActive = false;
     this.enemies.length = 0; this.towers.length = 0; this.projectiles.length = 0;

@@ -14,6 +14,24 @@
  * Bodenfarbe an, und der Farbabstand ist null. Deshalb stehen hier zwei
  * gegenlaeufige, und das Tor prueft beide.
  *
+ * ZWEI EINSCHRAENKUNGEN, damit niemand mehr aus diesen Zahlen liest, als
+ * drinsteht:
+ *
+ * 1. Dieses Werkzeug rechnet die Einbettung NACH, es misst nicht die
+ *    eingebaute. Der Grund ist praktisch - die eingebaute braucht eine
+ *    Leinwand und einen Browser -, aber die Folge ist echt: aendert jemand
+ *    das VERFAHREN in src/gfx/einbettung.ts, sieht dieses Tor es nicht. Es
+ *    liest von dort genau eine Zahl, die Klimastaerke.
+ *
+ * 2. Deshalb ist die Helligkeits-Untergrenze hier derzeit NICHT beweisbar.
+ *    Der Farbtongriff laesst die Leuchtdichte konstruktionsbedingt in Ruhe -
+ *    ueber die Klimastaerke ist die Untergrenze also gar nicht zu erreichen.
+ *    Eine Gegenprobe dafuer wurde geschrieben und wieder entfernt, weil sie
+ *    nicht anschlug; eine Pruefung, die nie etwas meldet, ist kein Beweis
+ *    (Regel 5). Die Grenze steht trotzdem hier - sie faengt den Rueckfall auf
+ *    eine gewoehnliche Waschung ab, sobald das Werkzeug die eingebaute
+ *    Einbettung misst statt einer Kopie. Das ist der naechste Schritt.
+ *
  * Aufruf: npm run einbettung  (mit --tor als Pruefung)
  */
 import { readFileSync } from 'node:fs';

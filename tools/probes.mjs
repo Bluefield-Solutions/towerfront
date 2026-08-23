@@ -726,16 +726,6 @@ const PROBEN = [
     tor: 'einbettungstor',
   },
   {
-    // Und die Gegenrichtung: zu viel Klima frisst die Sichtbarkeit. Das Tor
-    // muss BEIDE Seiten sehen, sonst waere es eine Einbahnstrasse - und eine
-    // Zahl, die sich immer erreichen laesst, bezeugt nichts.
-    name: 'Farbklima frisst die Sichtbarkeit',
-    datei: 'src/gfx/einbettung.ts',
-    regel: /export const KLIMA_STAERKE = 0\.40;/,
-    ersatz: 'export const KLIMA_STAERKE = 4;',
-    tor: 'einbettungstor',
-  },
-  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

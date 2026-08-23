@@ -62,6 +62,19 @@ export function stampGlow(
 }
 
 /** #RRGGBB -> rgba() mit Alpha */
+/** Zwei Farben mischen. `t` = 0 gibt die erste, 1 die zweite.
+ *
+ *  Gebraucht wird sie, wo eine gemessene Farbe sichtbar gemacht werden muss:
+ *  Die Teilchen einer beruehrten Stelle tragen die Farbe DIESER Stelle - und
+ *  waeren in genau dieser Farbe unsichtbar, weil sie vor genau diesem Grund
+ *  fliegen. Der Farbton traegt die Zugehoerigkeit, die Helligkeit die
+ *  Sichtbarkeit; das ist dieselbe Trennung, auf der die Einbettung beruht. */
+export function mischen(a: string, b: string, t: number): string {
+  const zahl = (h: string, i: number) => parseInt(h.slice(1 + i * 2, 3 + i * 2), 16);
+  const teil = (i: number) => Math.round(zahl(a, i) + (zahl(b, i) - zahl(a, i)) * t);
+  return '#' + [0, 1, 2].map((i) => teil(i).toString(16).padStart(2, '0')).join('');
+}
+
 export function hexA(hex: string, a: number): string {
   const h = hex.replace('#', '');
   const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16);

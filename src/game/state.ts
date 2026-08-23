@@ -16,6 +16,7 @@ import type { LanePath } from '../core/path';
 import type { Vec } from '../core/math';
 import { dist, dist2 } from '../core/math';
 import { Sfx } from '../core/audio';
+import { mischen } from '../gfx/glow';
 import { getProgress, getStars, recordRun, recordStars } from '../core/storage';
 import {
   NO_PERKS, perkEffect, starsFor, type PerkEffect,
@@ -41,6 +42,11 @@ function emptyStats(): RunStats {
     kills: 0, leaksByWave: [], abilityUses: {}, duration: 0, towersBuilt: 0,
   };
 }
+
+/** Wie weit die Farbe eines beruehrten Flecks aufgehellt wird, bevor sie
+ *  fliegt. Steht hier und nicht in `beruehren`, damit der Rauchtest sie
+ *  nicht abschreiben muss - eine abgeschriebene Zahl veraltet (Regel 15). */
+export const ZIER_AUFHELLUNG = 0.45;
 
 export class GameState {
   /** Die Karte kann zwischen zwei Partien wechseln, deshalb ist hier nichts
@@ -155,7 +161,6 @@ export class GameState {
    *
    *  Gibt zurueck, ob etwas beruehrt wurde - fuer den Rauchtest. */
   beruehren(x: number, y: number): boolean {
-    const p = this.map.palette;
     let getroffen = false;
     for (const gr of this.map.rough) {
       // Grosszuegig: der Fels im Foto ist nicht auf den Punkt derselbe wie
@@ -163,35 +168,85 @@ export class GameState {
       if (Math.hypot(gr.x - x, gr.y - y) > gr.r * 1.1) continue;
       getroffen = true;
 
-      // Ein Stoss geht durch das Dickicht - vom Beruehrungspunkt weg.
-      // Zwoelf statt neun, und deutlich groesser als im ersten Entwurf.
-      // Dort waren es 3 bis 7 Weltpunkte - bei einem Feld von 1920 Punkten
-      // auf einem Telefonschirm sind das zwei Bildpunkte, und zwei Bildpunkte
-      // sind keine Reaktion, sondern ein Verdacht.
-      const n = this.quality === 'hoch' ? 12 : 6;
+      // Wie der Fleck reagiert, haengt daran, WORAUS er besteht - und das
+      // steht seit v136 an ihm dran, gemessen am Kartenbild (`npm run
+      // gelaende`). Drei Arten, drei Bewegungen:
+      //
+      //   hart    Pflaster, Mauer, blanker Stein: es splittert. Wenige,
+      //           kleine, schnelle Teilchen, die sofort zu Boden gehen.
+      //   kalt    Eis und Schmelzwasser: es spritzt. Ein Stoss nach OBEN,
+      //           der zurueckfaellt - das ist die Bewegung, an der man
+      //           Wasser erkennt.
+      //   locker  Asche, Laub, Lehm: es staubt. Viele, grosse, langsame
+      //           Teilchen, die stehen bleiben und vergehen.
+      //
+      // Die Farbe kommt vom Fleck selbst, nicht aus der Farbwelt der Karte.
+      // Bis v135 stob auf jeder Karte dasselbe Paar `mood`/`haze` auf - auf
+      // dem Pflaster genau wie im Lehm daneben.
+      const art = gr.art;
+      // Die Farbe des Flecks, aber nicht in seiner Helligkeit.
+      //
+      // Der erste Anlauf nahm sie genau so, wie sie gemessen ist - und das
+      // Ergebnis war auf der Aufnahme fast nicht zu sehen: ein Teilchen in
+      // der MITTLEREN Farbe seines Untergrunds fliegt vor genau diesem
+      // Untergrund. Es ist Befund B5 des Grafik-Audits im Kleinen.
+      //
+      // Also dieselbe Trennung wie bei der Einbettung: der Farbton sagt,
+      // WOHER es kommt, die Helligkeit macht es sichtbar. Aufgewirbeltes
+      // Material ist ohnehin heller als der Boden - es faengt Licht von
+      // allen Seiten.
+      // Und zwar in BEIDE Richtungen. Der erste Anlauf hellte nur auf - auf
+      // der Ascheschlucht war das eine sichtbare Staubwolke, auf dem Schnee
+      // der Frostspalte fast nichts. Ein Ton kann nicht vor jedem Grund
+      // stehen; zwei koennen es, und dann traegt immer einer von beiden.
+      const hellerTon = mischen(gr.farbe, '#FFFFFF', ZIER_AUFHELLUNG);
+      const dunklerTon = mischen(gr.farbe, '#000000', 0.40);
+      const hoch = this.quality === 'hoch';
+      const n = art === 'hart' ? (hoch ? 14 : 7)
+        : art === 'kalt' ? (hoch ? 20 : 9)
+        : (hoch ? 26 : 12);
       for (let i = 0; i < n; i++) {
         if (this.particles.length >= this.particleCap) break;
         const a = this.zierRng.next() * Math.PI * 2;
-        const sp = 40 + this.zierRng.next() * 90;
         const t = this.particlePool.obtain();
         // Sie starten am RAND des beruehrten Flecks, nicht in seiner Mitte -
         // aufgescheucht wird, was neben dem Finger sitzt.
-        const r0 = gr.r * (0.15 + this.zierRng.next() * 0.5);
+        const r0 = gr.r * (0.15 + this.zierRng.next() * 0.6);
         t.x = x + Math.cos(a) * r0; t.y = y + Math.sin(a) * r0;
-        t.vx = Math.cos(a) * sp; t.vy = Math.sin(a) * sp - 70 - this.zierRng.next() * 60;
-        t.life = 0.5 + this.zierRng.next() * 0.7; t.maxLife = 1.2;
-        t.size = 6 + this.zierRng.next() * 7;
-        // Aus der Farbwelt der Karte: im Laub fliegen Blaetter, im Frost
-        // stiebt Schnee, in der Asche Funken. Eine Farbe fuer alle drei waere
-        // an zwei von drei Stellen falsch.
-        t.color = this.zierRng.next() < 0.5 ? p.mood : p.haze;
-        t.gravity = 210;
-        t.grow = -1.5;
+        if (art === 'hart') {
+          const sp = 150 + this.zierRng.next() * 160;
+          t.vx = Math.cos(a) * sp; t.vy = Math.sin(a) * sp * 0.5 - 30;
+          t.life = 0.3 + this.zierRng.next() * 0.3; t.maxLife = 0.6;
+          t.size = 4 + this.zierRng.next() * 5;
+          t.gravity = 560;
+          t.grow = -5;
+        } else if (art === 'kalt') {
+          const sp = 60 + this.zierRng.next() * 90;
+          t.vx = Math.cos(a) * sp; t.vy = -190 - this.zierRng.next() * 140;
+          t.life = 0.5 + this.zierRng.next() * 0.45; t.maxLife = 0.95;
+          t.size = 5 + this.zierRng.next() * 6;
+          t.gravity = 700;
+          t.grow = -3;
+        } else {
+          const sp = 40 + this.zierRng.next() * 80;
+          t.vx = Math.cos(a) * sp; t.vy = Math.sin(a) * sp - 70 - this.zierRng.next() * 60;
+          t.life = 0.7 + this.zierRng.next() * 0.9; t.maxLife = 1.6;
+          t.size = 5 + this.zierRng.next() * 8;
+          t.gravity = 130;
+          t.grow = -3.5;
+        }
+        // Zwei Toene, damit es nicht wie ein Farbfleck aussieht: die eigene
+        // Farbe des Flecks und der Saum der Karte, der sie sichtbar macht.
+        t.color = this.zierRng.next() < 0.55 ? hellerTon : dunklerTon;
         this.particles.push(t);
       }
       // Ein flacher Ring am Boden: er sagt, dass die Beruehrung angekommen
-      // ist, auch wenn die Teilchen im hellen Untergrund untergehen.
-      this.ring(x, y, gr.r * 0.75, p.rim, 0.55, 5);
+      // ist, auch wenn die Teilchen im hellen Untergrund untergehen. Beim
+      // Spritzer weiter und heller - eine Welle laeuft nach aussen.
+      // Auch der Ring traegt die Farbe des Flecks - ein weisser Kreis sieht
+      // aus wie Bedienung, ein erdfarbener wie aufgeworfener Boden.
+      if (art === 'kalt') this.ring(x, y, gr.r * 1.1, hellerTon, 0.75, 7);
+      else this.ring(x, y, gr.r * 0.8, hellerTon, 0.6, 6);
       break;
     }
     return getroffen;

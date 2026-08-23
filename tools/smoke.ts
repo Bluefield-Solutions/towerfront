@@ -1635,6 +1635,90 @@ step('Beruehrbare Kleinigkeiten', () => {
   }
 });
 
+// --- Reagieren VERSCHIEDENE Flecke auch verschieden (v136)?
+//
+// Bis v135 stob ueberall dasselbe auf. Seit v136 haengt die Reaktion an der
+// Art des Flecks, und die ist am Kartenbild gemessen. Geprueft wird hier
+// nicht, dass es die Arten GIBT - das tut `npm run gelaendetor` -, sondern
+// dass sie sich im Spiel auch auswirken. Ohne diese Frage waere die
+// Unterscheidung eine Behauptung mit drei Namen (Regel 13).
+{
+  const { MAPS } = await import('../src/data/maps');
+  const { mischen } = await import('../src/gfx/glow');
+  const { ZIER_AUFHELLUNG } = await import('../src/game/state');
+  step('Flecke unterscheiden sich', () => {
+    const proben: Record<string, { mapId: string; x: number; y: number }> = {};
+    for (const m of MAPS) {
+      for (const g of m.rough) {
+        if (!proben[g.art]) proben[g.art] = { mapId: m.id, x: g.x, y: g.y };
+      }
+    }
+    const arten = Object.keys(proben);
+    if (arten.length < 3) {
+      throw new Error(`Nur ${arten.length} Gelaendearten in allen Karten zusammen `
+        + `(${arten.join(', ')}) - dann unterscheidet die Probe nichts.`);
+    }
+
+    /** Einen Fleck antippen und beschreiben, was aufgestoben ist. */
+    const stoss = (mapId: string, gx: number, gy: number) => {
+      const t = new GameState();
+      t.reset(2, 'normal', mapId);
+      t.particles.length = 0;
+      if (!t.beruehren(gx, gy)) throw new Error(`${mapId} ${gx}:${gy} reagiert gar nicht.`);
+      const ps = t.particles;
+      return {
+        anzahl: ps.length,
+        vy: ps.reduce((a, q) => a + q.vy, 0) / ps.length,
+        groesse: ps.reduce((a, q) => a + q.size, 0) / ps.length,
+        farben: new Set(ps.map((q) => q.color)),
+      };
+    };
+
+    const hart = stoss(proben.hart.mapId, proben.hart.x, proben.hart.y);
+    const kalt = stoss(proben.kalt.mapId, proben.kalt.x, proben.kalt.y);
+    const locker = stoss(proben.locker.mapId, proben.locker.x, proben.locker.y);
+
+    // Hart splittert: weniger und kleiner als der lockere Staub.
+    if (hart.anzahl >= locker.anzahl) {
+      throw new Error(`Hart wirft ${hart.anzahl} Teilchen, locker ${locker.anzahl} - `
+        + 'Pflaster staubt wie Asche.');
+    }
+    if (hart.groesse >= locker.groesse) {
+      throw new Error(`Splitter sind mit ${hart.groesse.toFixed(1)} nicht kleiner als `
+        + `Staub mit ${locker.groesse.toFixed(1)}.`);
+    }
+    // Kalt spritzt: der Stoss geht deutlich weiter nach oben als der Staub.
+    if (kalt.vy >= locker.vy - 40) {
+      throw new Error(`Kalt steigt mit ${kalt.vy.toFixed(0)}, locker mit `
+        + `${locker.vy.toFixed(0)} - der Spritzer ist keiner.`);
+    }
+
+    // Und die Farbe kommt vom Fleck, nicht aus der Farbwelt der Karte: zwei
+    // Flecke DERSELBEN Karte mit verschiedener Farbe muessen verschieden
+    // stauben. Ohne diese Frage bezeugte die Probe nur die Karte.
+    const karte = MAPS.find((m) => new Set(m.rough.map((g) => g.farbe)).size > 1);
+    if (!karte) {
+      throw new Error('Keine Karte mit zwei verschiedenen Fleckfarben - die Farbprobe '
+        + 'misst nichts.');
+    }
+    const sortiert = [...karte.rough].sort((u, v) => u.farbe.localeCompare(v.farbe));
+    const a = sortiert[0], b = sortiert[sortiert.length - 1];
+    const fa = stoss(karte.id, a.x, a.y).farben;
+    const fb = stoss(karte.id, b.x, b.y).farben;
+    // Nicht die gemessene Farbe selbst - die waere vor ihrem eigenen Grund
+    // unsichtbar -, sondern der daraus abgeleitete helle Ton.
+    const erwartet = mischen(a.farbe, '#FFFFFF', ZIER_AUFHELLUNG);
+    if (!fa.has(erwartet)) {
+      throw new Error(`Der Fleck ${a.x}:${a.y} ist ${a.farbe}, erwartet war ${erwartet} `
+        + `unter den Teilchenfarben, da stehen aber ${[...fa].join(', ')}.`);
+    }
+    if ([...fa].every((c) => fb.has(c)) && [...fb].every((c) => fa.has(c))) {
+      throw new Error(`Zwei Flecke derselben Karte (${a.farbe}, ${b.farbe}) stauben in `
+        + 'denselben Farben - die Farbe kommt nicht vom Fleck.');
+    }
+  });
+}
+
 if (problems.length) {
   console.error('RAUCHTEST: nicht bestanden');
   for (const p of problems) console.error('  - ' + p);

@@ -818,6 +818,33 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // Die Gelaendeart eines Kreises passt nicht mehr zum Bild - so, wie sie
+    // nach einem neuen Kartenbild oder einem verschobenen Kreis dastuende.
+    name: 'Gelaendeart falsch eingetragen',
+    datei: 'src/data/maps.ts',
+    regel: /art: 'kalt'/,
+    ersatz: "art: 'locker'",
+    tor: 'gelaendetor',
+  },
+  {
+    // Und die Farbe: sie ist der Grund, warum auf dem Pflaster anderes
+    // aufstiebt als im Lehm daneben.
+    name: 'Fleckfarbe passt nicht zum Bild',
+    datei: 'src/data/maps.ts',
+    regel: /farbe: '#[0-9a-f]{6}' \}/,
+    ersatz: "farbe: '#00ff00' }",
+    tor: 'gelaendetor',
+  },
+  {
+    // Und die Gegenrichtung: die Arten stehen zwar in den Daten, wirken sich
+    // im Spiel aber nicht aus. Bis v135 war genau das der Zustand.
+    name: 'Jeder Fleck reagiert wieder gleich',
+    datei: 'src/game/state.ts',
+    regel: /      const art = gr\.art;/,
+    ersatz: "      const art = 'locker' as typeof gr.art;",
+    tor: 'smoke',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

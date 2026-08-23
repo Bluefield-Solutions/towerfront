@@ -40,6 +40,29 @@ export interface MapPalette {
   sonne: string;
 }
 
+/** Ein Fleck unwegsamen Gelaendes.
+ *
+ *  `art` und `farbe` sind GEMESSEN, nicht geschrieben: `npm run gelaende`
+ *  liest sie aus dem Untergrundbild und `npm run gelaendetor` prueft sie bei
+ *  jedem Lauf dagegen. Von Hand einsortiert waeren sie zweimal falsch -
+ *  einmal, weil es niemand nachpruefen koennte, und einmal, weil die vierte
+ *  Karte wieder von Hand einzusortieren waere.
+ *
+ *  Die drei Arten sind nicht Fels, Dickicht und Wasser. Der Kontaktbogen
+ *  (`bilder/gelaende.png`) zeigt, warum: diese Kreise sind Bausperren ueber
+ *  Wegen, Mauern, Lavarissen und Schneefeldern, keine Gelaendestuecke. Was
+ *  das Bild wirklich hergibt, ist, wie sich der Untergrund ANFUEHLT:
+ *
+ *   `hart`    heller als seine Karte - Pflaster, Mauer, blanker Stein.
+ *   `kalt`    blauer als seine kalte Karte - Eis, Schmelzwasser.
+ *   `locker`  alles Uebrige - Asche, Lehm, Laub. */
+export interface RoughSpot {
+  x: number; y: number; r: number;
+  art: 'hart' | 'kalt' | 'locker';
+  /** Die mittlere Farbe des Flecks im Kartenbild. */
+  farbe: string;
+}
+
 export interface GameMap {
   id: string;
   name: string;
@@ -57,7 +80,7 @@ export interface GameMap {
    *  Dickicht sperren Flaechen, und jeder Turm braucht seinen Platz. Das ist
    *  die eigentliche Entscheidung: nicht *ob* hier ein Platz ist, sondern
    *  wieviel Flaeche man wofuer hergibt. */
-  rough: { x: number; y: number; r: number }[];
+  rough: RoughSpot[];
   /** Wo die Einfuehrung hinzeigt. */
   hint: Vec;
   /** Die Mitte der gemauerten Rundplattform im Untergrundbild.
@@ -168,9 +191,14 @@ export const MAP_SPIRALHAIN: GameMap = {
     ],
   ],
   rough: [
-    { x: 1186, y: 821, r: 165 }, { x: 764, y: 125, r: 142 }, { x: 1565, y: 179, r: 121 },
-    { x: 247, y: 862, r: 82 }, { x: 1750, y: 356, r: 39 }, { x: 829, y: 896, r: 29 },
-    { x: 1069, y: 1004, r: 27 }, { x: 1433, y: 953, r: 25 },
+    { x: 1186, y: 821, r: 165, art: 'locker', farbe: '#5b320e' },
+    { x: 764, y: 125, r: 142, art: 'locker', farbe: '#643c15' },
+    { x: 1565, y: 179, r: 121, art: 'locker', farbe: '#472304' },
+    { x: 247, y: 862, r: 82, art: 'locker', farbe: '#492405' },
+    { x: 1750, y: 356, r: 39, art: 'locker', farbe: '#532704' },
+    { x: 829, y: 896, r: 29, art: 'hart', farbe: '#8a683d' },
+    { x: 1069, y: 1004, r: 27, art: 'locker', farbe: '#3a2003' },
+    { x: 1433, y: 953, r: 25, art: 'locker', farbe: '#2e1c07' },
   ],
   pfadImBild: true,
   hint: { x: 200, y: 200 },
@@ -237,11 +265,17 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
     ],
   ],
   rough: [
-    { x: 1681, y: 874, r: 128 }, { x: 957, y: 135, r: 106 }, { x: 1737, y: 293, r: 104 },
-    { x: 1172, y: 993, r: 83 }, { x: 1705, y: 30, r: 74 }, { x: 926, y: 950, r: 56 },
-    { x: 141, y: 362, r: 54 }, { x: 652, y: 324, r: 53 }, { x: 209, y: 621, r: 52 },
-    { x: 1112, y: 812, r: 50 },
-    { x: 285, y: 368, r: 36 },
+    { x: 1681, y: 874, r: 128, art: 'locker', farbe: '#362519' },
+    { x: 957, y: 135, r: 106, art: 'locker', farbe: '#473526' },
+    { x: 1737, y: 293, r: 104, art: 'locker', farbe: '#32251a' },
+    { x: 1172, y: 993, r: 83, art: 'locker', farbe: '#392618' },
+    { x: 1705, y: 30, r: 74, art: 'locker', farbe: '#292018' },
+    { x: 926, y: 950, r: 56, art: 'hart', farbe: '#7c5939' },
+    { x: 141, y: 362, r: 54, art: 'locker', farbe: '#35281d' },
+    { x: 652, y: 324, r: 53, art: 'locker', farbe: '#423021' },
+    { x: 209, y: 621, r: 52, art: 'hart', farbe: '#775638' },
+    { x: 1112, y: 812, r: 50, art: 'locker', farbe: '#4a3625' },
+    { x: 285, y: 368, r: 36, art: 'hart', farbe: '#65482d' },
   ],
   pfadImBild: true,
   hint: { x: 1120, y: 180 },
@@ -320,10 +354,17 @@ export const MAP_FROSTSPALTE: GameMap = {
     ],
   ],
   rough: [
-    { x: 1582, y: 981, r: 134 }, { x: 1647, y: 195, r: 133 }, { x: 828, y: 808, r: 112 },
-    { x: 494, y: 243, r: 83 }, { x: 924, y: 254, r: 52 }, { x: 1845, y: 822, r: 40 },
-    { x: 1012, y: 950, r: 37 }, { x: 1770, y: 472, r: 34 }, { x: 194, y: 915, r: 33 },
-    { x: 312, y: 979, r: 32 }, { x: 1792, y: 387, r: 31 },
+    { x: 1582, y: 981, r: 134, art: 'kalt', farbe: '#283d52' },
+    { x: 1647, y: 195, r: 133, art: 'kalt', farbe: '#1b354d' },
+    { x: 828, y: 808, r: 112, art: 'locker', farbe: '#454444' },
+    { x: 494, y: 243, r: 83, art: 'kalt', farbe: '#243f50' },
+    { x: 924, y: 254, r: 52, art: 'hart', farbe: '#5e5b59' },
+    { x: 1845, y: 822, r: 40, art: 'locker', farbe: '#3b4455' },
+    { x: 1012, y: 950, r: 37, art: 'locker', farbe: '#585655' },
+    { x: 1770, y: 472, r: 34, art: 'locker', farbe: '#2d323a' },
+    { x: 194, y: 915, r: 33, art: 'kalt', farbe: '#0e283f' },
+    { x: 312, y: 979, r: 32, art: 'kalt', farbe: '#063e62' },
+    { x: 1792, y: 387, r: 31, art: 'locker', farbe: '#4b525b' },
   ],
   pfadImBild: true,
   hint: { x: 200, y: 200 },

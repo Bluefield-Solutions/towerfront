@@ -437,6 +437,23 @@ takes.push(['stufen', () => shot('stufen', 844, 390, (s, r) => {
   return 4;
 })]);
 
+takes.push(['flecke', () => shot('flecke', 844, 390, (s) => {
+  // Die Kleinigkeiten in der Karte, alle drei Arten auf einmal (v136).
+  //
+  // Die Frostspalte ist die einzige Karte, die alle drei traegt: Eis, blanken
+  // Stein und lockeren Grund. Angetippt werden fuenf Flecke gleichzeitig -
+  // im Spiel ginge das nicht, aber hier geht es darum, die drei Bewegungen
+  // nebeneinander zu SEHEN. Kein Tor sagt, ob ein Spritzer wie ein Spritzer
+  // aussieht.
+  s.reset(1, 'normal', 'frostspalte');
+  for (const g of s.map.rough) {
+    if (['312:979', '194:915', '924:254', '1012:950', '828:808'].includes(`${g.x}:${g.y}`)) {
+      s.beruehren(g.x, g.y);
+    }
+  }
+  return 12;
+})]);
+
 takes.push(['einbettung', () => shot('einbettung', 844, 390, (s, r) => {
   // Ein einzelner Turm auf freiem Boden, weit weg von Weg und Felsen.
   //

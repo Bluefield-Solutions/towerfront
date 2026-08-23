@@ -1201,7 +1201,7 @@ XL > 10 Runden.
 | TF-032 | Targeting | ERLEDIGT v146 | Modus „hinten" fehlt | Durchbrecher nicht abfangbar | Fünfter Modus | P2 | XS | nach Standort aufgeteilt 88 gegen 84 Punkte |
 | TF-033 | VFX | MISSING | Keine Rückmeldung über Wirksamkeit | Man sieht nicht, ob ein Turm taugt | Abpraller bei Panzerung, gedämpfter Einschlag | P2 | S | TF-015 |
 | TF-034 | Onboarding | MISSING | Konter werden nie erklärt | Der erste Gleiter überrascht | Ein Satz beim ersten Auftreten jeder Gegnerart | P2 | S | TF-014 |
-| TF-035 | Code | VERIFIED | Toter `topdown`-Zweig, totes `range`-Feld, leere Turmleinwand | Wartungsballast | Entfernen | P3 | XS | — |
+| TF-035 | Code | ERLEDIGT v148 | Toter `topdown`-Zweig, totes `range`-Feld, leere Turmleinwand | Wartungsballast | Entfernen | P3 | XS | mehr als gemeldet: auch `drawRim`, `palette.rim` und 14 unerreichbare Zeilen |
 | TF-036 | Map | MISSING | Kein Kreuzungstyp, keine getrennten Ziele | Karten unterscheiden sich zu wenig | Vierte Karte mit anderer Topologie | P3 | M | TF-003 |
 | TF-037 | Economy | DESIGN | Verkauf zu großzügig, kein Verklickschutz | Fehler kosten nichts | Rückgabe nach Wellenzahl staffeln, Bestätigung | P3 | XS | — |
 | TF-038 | UI | MISSING | Kein Wellenfortschritt sichtbar | Man weiß nicht, wie weit die Welle ist | Feiner Balken am Wellenknopf | P3 | XS | — |
@@ -1623,7 +1623,7 @@ möglich ist.
 | 4 | TF-019 | Mündungspunkt je Turmart | Combat | Schuss aus der Mitte | Schüsse kommen aus dem Rohr | P2 | S | **erledigt v145** |
 | 5 | TF-032 | Zielmodus „hinten" | Targeting | Durchbrecher | Fünfte echte Wahl | P2 | XS | **erledigt v146** |
 | 6 | TF-030 | Titanbreite gegen Straßenbreite | Path | Ragt über den Rand | Kein Überstand mehr | P2 | XS | **widerlegt v147** — es gab keinen Überstand |
-| 7 | TF-035 | Toten Code entfernen | Code | Ballast | Weniger Fläche für Fehler | P3 | XS | — |
+| 7 | TF-035 | Toten Code entfernen | Code | Ballast | Weniger Fläche für Fehler | P3 | XS | **erledigt v148** |
 | 8 | TF-014 | Wegvorschau beim Kartenstart | Path Visibility | Woher kommt es? | Erste 10 Sekunden verständlich | P1 | S | — |
 | 9 | TF-023 | Wellenvorschau vollständig | Wave | Nur erste Gruppe | Vorbereitung möglich | P2 | S | — |
 | 10 | TF-034 | Ein Satz je neuer Gegnerart | Onboarding | Konter unerklärt | Der Gleiter überrascht nicht mehr | P2 | S | 8, 9 |

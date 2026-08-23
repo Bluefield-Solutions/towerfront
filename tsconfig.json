@@ -12,6 +12,7 @@
     "noUnusedParameters": true,
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
+    "allowUnreachableCode": false,
     "isolatedModules": true,
     "skipLibCheck": true,
     "noEmit": true,

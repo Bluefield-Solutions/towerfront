@@ -1,9 +1,9 @@
 import { C, LICHT, WORLD_H, WORLD_W } from '../data/config';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import {
-  TOWERS, TURM_BREITE, accentFor, statsFor,
+  TOWERS, accentFor, statsFor,
   type BranchIndex, type TowerDef, type TowerId, type TowerLevel,
-  DRAW_SCALE, TOWER_ORDER } from '../data/towers';
+  TOWER_ORDER } from '../data/towers';
 import { turmMasse, muendung, WAFFE_HOCH, WAFFE_BREIT } from '../data/turmgestalt';
 import { ABILITIES } from '../data/abilities';
 import { makeRng } from '../core/math';
@@ -15,7 +15,7 @@ import { snap } from '../data/maps';
 import { drawMenu } from './menurender';
 import type { Menu } from '../game/menu';
 import { backgroundVersion, getBackground } from './backgrounds';
-import { artBreite, getTowerArt, towerArtScale, towerArtVersion } from './towerart';
+import { getTowerArt, towerArtVersion } from './towerart';
 import { getObjectArtEingebettet, getObjectArtStufeEingebettet } from './objectart';
 import { enemyArtWidth, enemySichtRadius, getEnemyArt, getEnemyFrost } from './enemyart';
 import {
@@ -1367,7 +1367,7 @@ export class Renderer {
     const def = TOWERS[t.def];
     const art = getTowerArt(t.def, t.branch, t.level, s.map.id);
     if (!art) return;
-    const masse = this.artMasse(t.def, t.branch, t.level, art);
+    const masse = this.artMasse();
     const w = masse.w, h = masse.h;
     // Der Schlagschatten - der eigene Umriss, nicht mehr eine Ellipse.
     //
@@ -1469,7 +1469,7 @@ export class Renderer {
     // drehen wird gespiegelt, sobald das Ziel links steht.
     const art = getTowerArt(t.def, t.branch, t.level, s.map.id);
     if (art) {
-      const masse = this.artMasse(t.def, t.branch, t.level, art);
+      const masse = this.artMasse();
       const w = masse.w, h = masse.h;
 
       // Liegt die Waffe als eigenes Bild vor, wird sie einzeln gedreht.
@@ -1653,51 +1653,21 @@ export class Renderer {
    *  Bauvorschau - und nur die erste kannte den Breitenausgleich. Die
    *  Vorschau war dadurch rund 40 Prozent kleiner als das, was danach dort
    *  stand. Man entschied ueber eine Groesse, die man nicht sah. */
-  private artMasse(
-    id: TowerId, branch: BranchIndex, level: number, art: HTMLCanvasElement,
-  ): { w: number; h: number; oben: number } {
-    // Alle Turmbilder werden gleich gross gezeichnet - ohne Ausgleich.
+  private artMasse(): { w: number; h: number; oben: number } {
+    // Nur noch ein Durchreicher auf `src/data/turmgestalt.ts` - dieselbe
+    // Stelle, aus der die Simulation die Muendung nimmt (Regel 15).
     //
-    // Zweimal habe ich versucht, die Groesse aus dem Bild zu errechnen: erst
-    // aus der Gesamtbreite der Figur, dann aus der Breite ihres Fusses.
-    // Beide Male waren die Tuerme rechnerisch gleich und im Bild
-    // verschieden - nur jedes Mal andersherum. Ein Ausgleich, der die
-    // Bildinhalte gegeneinander normiert, kaempft gegen die Gestaltung an.
+    // Bis v147 stand hier eine zweite, VOLLSTAENDIGE Rechnung: sie kam nach
+    // dem `return` und war damit seit v145 unerreichbar. Vier Parameter
+    // hielt die Signatur nur noch deshalb, weil der tote Zweig sie las - und
+    // `noUnusedParameters` sah sie als benutzt an. Der Uebersetzer prueft
+    // seit dieser Runde `allowUnreachableCode: false` und faengt genau das.
     //
-    // Die Bilder kommen aus einer Serie und sind alle mit demselben
-    // Fuellgrad gepackt. Also fuellen sie ihre Kachel schon gleich, und die
-    // richtige Antwort ist: gar nichts ausgleichen. Was der Bildagent als
-    // gross gezeichnet hat, ist gross.
-    void artBreite;
-    void level;
-    // Gerechnet wird in `src/data/turmgestalt.ts` - dieselbe Stelle, aus der
-    // die Simulation die Muendung nimmt. Zwei Rechnungen fuer denselben
-    // Kasten waeren eine zu viel (Regel 15).
-    // Hoehe getrennt von der Breite - und der Fuss bleibt, wo er war.
-    //
-    // Der Turm waechst nach OBEN aus seiner Standflaeche heraus, nicht um
-    // seine Mitte. Waechst er um die Mitte, sinkt er zugleich in den Boden
-    // ein: die Unterkante rutscht nach unten, der Kontaktschatten sitzt
-    // ploetzlich im Bauch statt am Fuss, und der Turm steht einen halben
-    // Meter tief im Gelaende.
-    //
-    // Unterkante war und bleibt y + 0,28 * Breite. Daraus folgt die
-    // Oberkante, nicht umgekehrt.
+    // Was die alte Rechnung wollte, steht in `turmgestalt.ts`: die Bilder
+    // kommen aus einer Serie und sind alle mit demselben Fuellgrad gepackt,
+    // also fuellen sie ihre Kachel schon gleich, und die richtige Antwort
+    // ist, gar nichts auszugleichen.
     return turmMasse();
-
-    // Der Massstab kommt IMMER von Stufe 1, nie von der gezeigten Stufe.
-    //
-    // Gemessen waechst die Figurenbreite mit dem Ausbau - beim Frostturm von
-    // 50 auf 80 Prozent der Kachel, weil Eiskronen seitlich herauswachsen.
-    // Rechnete man je Stufe aus, schrumpfte der Turmkoerper genau dann, wenn
-    // der Turm staerker wird: auf Stufe 6 um ueber ein Drittel.
-    //
-    // Mit Stufe 1 als Bezug bleibt der Koerper gleich gross, und was
-    // dazukommt, ragt darueber hinaus. Genau so soll ein Ausbau aussehen.
-    const grund = getTowerArt(id, branch, 1) ?? art;
-    const anteil = artBreite(grund, `${id}:${branch}:1`);
-    const w = (TURM_BREITE * DRAW_SCALE * towerArtScale(level)) / Math.max(0.3, anteil);
-    return { w, h: w, oben: -w * 0.72 };
   }
 
   private paintTower(
@@ -1705,7 +1675,7 @@ export class Renderer {
   ): void {
     const art = getTowerArt(def.id, null, level, mapId);
     if (art) {
-      const m = this.artMasse(def.id, null, level, art);
+      const m = this.artMasse();
       this.ctx.drawImage(art, x - m.w / 2, y + m.oben, m.w, m.h);
       return;
     }
@@ -1789,14 +1759,15 @@ export class Renderer {
       // Fahrzeug in Dreiviertelansicht kippt beim Drehen. Aufsichten drehen
       // sich mit der Laufrichtung; ihr Bild blickt im Ausgangszustand nach
       // oben, deshalb der Viertelkreis Zuschlag.
-      const dirX = def.flying ? s.goal.x - e.x : Math.cos(e.heading);
-      const facingRight = dirX >= 0;
       const w = enemyArtWidth(e.def);
       const h = w * (art.height / art.width);
       ctx.save();
       ctx.translate(e.x, e.y - alt + wob * 0.3);
-      if (def.topdown) ctx.rotate(e.heading + Math.PI / 2);
-      else if (facingRight) ctx.scale(-1, 1);
+      // Alle Gegner sind Aufsichten und drehen sich in ihre Laufrichtung.
+      // Bis v147 stand hier ein zweiter Zweig fuer Seitenansichten
+      // (spiegeln statt drehen) - `topdown` steht aber bei allen acht Arten
+      // auf `true`, er lief nie.
+      ctx.rotate(e.heading + Math.PI / 2);
       // Stauchen und Strecken: was getroffen wird, wird breiter und
       // flacher. Die Flaeche bleibt gleich, deshalb liest das Auge es als
       // Wucht und nicht als Groessenaenderung.
@@ -1804,9 +1775,8 @@ export class Renderer {
         const q = e.squash * 0.22;
         ctx.scale(1 + q, 1 - q);
       }
-      // Aufsichten sitzen mittig im Bild, Seitenansichten stehen auf ihrer
-      // Unterkante - das muss beim Zeichnen zusammenpassen.
-      const oben = def.topdown ? -h / 2 : -h * 0.72;
+      // Aufsichten sitzen mittig im Bild.
+      const oben = -h / 2;
       ctx.drawImage(art, -w / 2, oben, w, h);
       // Gebremst? Dann traegt die FIGUR die Kaelte, nicht ein Ring um sie.
       //

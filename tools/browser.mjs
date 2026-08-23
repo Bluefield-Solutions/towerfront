@@ -804,11 +804,27 @@ if (streuung < 6) {
   });
   const s2 = await ctx2.newPage();
   await s2.goto(`file://${DATEI}#messung`);
-  await s2.waitForTimeout(2500);
-  const tafel = await s2.evaluate(() => {
+  // Auf den Wert warten, nicht auf die Uhr.
+  //
+  // Bis v148 stand hier eine feste Wartezeit von 2,5 Sekunden. Die Tafel
+  // zaehlt aber live mit, und auf dem Titelbildschirm faellt nicht in jedem
+  // Fenster ein langes Bild - der Lauf meldete deshalb gelegentlich "keine
+  // laengste Bildluecke ueber null" und war beim naechsten Mal ohne jede
+  // Aenderung gruen. Ein Tor, das jede zwanzigste Runde grundlos rot wird,
+  // wird abgeschaltet, und dann faengt es gar nichts mehr.
+  //
+  // Gewartet wird jetzt auf die ZAHL, hoechstens sechs Sekunden. Bleibt sie
+  // danach bei null, ist das ein Befund und kein Zufall.
+  const lies = () => s2.evaluate(() => {
     const t = document.getElementById('messtafel');
     return t ? (t.textContent || '').replace(/\s+/g, ' ') : null;
   });
+  let tafel = null;
+  for (let i = 0; i < 24; i++) {
+    await s2.waitForTimeout(250);
+    tafel = await lies();
+    if (tafel && /Längste Bildlücke\s*[1-9]\d* ms/.test(tafel)) break;
+  }
   if (!tafel) {
     fail('Mit "#messung" erscheint keine Messtafel - das Messgeraet fuer D27 fehlt.');
   } else {

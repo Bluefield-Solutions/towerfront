@@ -36,12 +36,56 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 // und keine Einladung, die Grenze zu senken.
 // Lesbarkeit entsteht an der *Kante*, nicht in der Fläche: mitteldunkel auf
 // mittelhell hat in beide Richtungen wenig Kontrast. Deshalb zwei Grenzen -
-// eine strenge für den Saum, eine milde für den Körper.
-const MIN_RIM_CONTRAST = 3.0;  // Saum gegen den Boden - das trägt die Lesbarkeit
+// eine für die Kante, eine für den Körper.
+//
+// Die Kantengrenze stand bis v147 auf 3,0 - und war für etwas anderes
+// geeicht. Gemessen wurde damals nicht die Kante der Figur, sondern die
+// Farbe `palette.rim` aus den Kartendaten: für alle zwanzig Figuren
+// dieselbe Zahl (8,43), gegen eine Grenze von 3,0, die sie um das Doppelte
+// überschritt. Sie konnte nur anschlagen, wenn jemand die Palette ändert -
+// und selbst dann hätte sie nichts über das Spiel gesagt, denn gezeichnet
+// wurde dieser Saum nirgends (`drawRim` hatte zwei Aufrufstellen, beide
+// unerreichbar).
+//
+// Jetzt wird der äußerste Ring der Figur selbst gemessen, und der liegt
+// naturgemäß viel tiefer: heute 1,02 bis 2,02. Eine übernommene 3,0 hätte
+// alle zwanzig Figuren rot gemeldet - eine Grenze, die alles verwirft, sagt
+// so wenig wie eine, die nichts verwirft.
+//
+// **Die Grenze ist deshalb bewusst kein Qualitätsmaßstab, sondern ein
+// Zusammenbruchsschutz.** 1,0 heißt: die Kante hat exakt die Helligkeit des
+// Bodens, sie ist unsichtbar. Wo das Soll liegt, sagt erst eine Referenz -
+// und dafür braucht es `art/roh/` (Befund B1). Bis dahin steht ab 1,5 ein
+// Hinweis, damit die schwachen Figuren in jedem Lauf sichtbar bleiben,
+// statt in einer grünen Meldung zu verschwinden.
+const MIN_RIM_CONTRAST = 1.0;   // Kante = Boden, sie ist komplett weg
+const RIM_HINWEIS = 1.5;        // darunter: sichtbar schwach, aber kein Abbruch
+/** Wieviele der zwanzig Figuren heute unter dem Hinweiswert liegen.
+ *
+ *  Das ist die eigentliche Sperre, und sie ist eine RATSCHE, kein Soll: sie
+ *  sagt nicht "so gut muss es sein", sondern "so schlecht war es, und
+ *  schlechter wird es nicht". Gemessen am 23.08.2026 sind es neun - allen
+ *  voran der Koloss mit 1,02 gegen die Frostspalte, dessen Kante dort
+ *  praktisch die Helligkeit des Bodens hat.
+ *
+ *  Zu beheben ist das am BILD, nicht am Code (Befund B1), oder durch das
+ *  Randlicht aus TF-012. Bis dahin steht die Zahl in jedem Lauf da, statt in
+ *  einer gruenen Meldung zu verschwinden - und wer neue Bilder einbaut, die
+ *  schlechter sind, wird rot. */
+const MAX_SCHWACHE_KANTEN = 9;
 const MIN_BODY_CONTRAST = 1.15; // Körper gegen den Boden - nur noch Rückhalt
 const MIN_TOWER_PX = 26;       // Bildschirmpunkte Breite der Turmsilhouette
 const MIN_ENEMY_PX = 13;       // dasselbe für Gegner
 const MIN_COLOUR_DIST = 12;    // Abstand zweier Gegnerfarben (CIE76)
+
+/** Figuren, deren Kante zwar noch da, aber schwach ist. Sie stehen am Ende
+ *  des Laufs, damit sie nicht in zwanzig Zeilen untergehen. */
+const schwach = [];
+/** Alle gemessenen Kantenwerte - fuer die Probe auf die Probe (siehe unten). */
+const kanten = [];
+/** Wieviele Figuren ueberhaupt gemessen wurden - ohne diese Zahl waere der
+ *  Anteil oben eine Behauptung ueber eine unbekannte Grundmenge. */
+let gezaehlt = 0;
 
 // Schlechtester Fall: iPhone quer, Spielfeld füllt den Bildschirm.
 const SCREEN_W = 844, SCREEN_H = 390;
@@ -125,6 +169,43 @@ async function measureSprite(buffer, tint, tintAmount) {
   };
 }
 
+/** Die Kante einer Figur: mittlere Farbe ihres aeussersten Rings.
+ *
+ *  Das ist die Zahl, die frueher hier fehlte. Bis v147 wurde als "Saum" die
+ *  Farbe `palette.rim` gegen den Untergrund gerechnet - ein Wert aus den
+ *  Kartendaten, der mit der Figur nichts zu tun hatte. Er stand deshalb
+ *  ZWANZIGMAL identisch in der Ausgabe (8,43), und die Pruefung konnte nur
+ *  anschlagen, wenn jemand die Palette aendert. Gezeichnet wurde dieser Saum
+ *  ohnehin nirgends: `drawRim` hatte zwei Aufrufstellen, und beide waren
+ *  unerreichbar.
+ *
+ *  Gemessen wird jetzt, was wirklich am Rand steht: deckende Bildpunkte, die
+ *  einen durchsichtigen Nachbarn haben. Genau die liegen im Spiel neben dem
+ *  Boden, und ihr Kontrast dagegen entscheidet, ob eine Silhouette eine Kante
+ *  hat.
+ *
+ *  Nur DECKENDE Randpunkte (Alpha ueber 200): die halbdurchsichtigen
+ *  daneben werden im Spiel mit dem Boden verrechnet und haetten die Zahl
+ *  gegen den Boden gezogen - also gegen sich selbst. */
+async function measureEdge(buffer) {
+  const { data, info } = await sharp(buffer).ensureAlpha().raw()
+    .toBuffer({ resolveWithObject: true });
+  const W = info.width, H = info.height;
+  const deckend = (x, y) => (x < 0 || y < 0 || x >= W || y >= H)
+    ? false : data[(y * W + x) * 4 + 3] > 200;
+  let r = 0, g = 0, b = 0, n = 0;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (!deckend(x, y)) continue;
+      if (deckend(x - 1, y) && deckend(x + 1, y) && deckend(x, y - 1) && deckend(x, y + 1)) continue;
+      const i = (y * W + x) * 4;
+      r += data[i]; g += data[i + 1]; b += data[i + 2]; n++;
+    }
+  }
+  if (!n) throw new Error('keine Randpunkte');
+  return [r / n, g / n, b / n];
+}
+
 /** Mittlere Farbe eines Untergrundbildes. */
 async function measureBackground(buffer) {
   const { data, info } = await sharp(buffer).resize(240, 132, { fit: 'fill' })
@@ -172,13 +253,11 @@ for (const b of bgs) console.log(`  ${b.name.padEnd(15)} ${(b.lum * 100).toFixed
 
 /** Schlechtester Kontrast über alle Untergründe - jeweils gegen den Saum, den
  *  die Karte vorgibt, und gegen den Körper. */
-function worstContrast(objLum) {
+function worstContrast(objLum, kanteLum) {
   let worstBody = Infinity, worstRim = Infinity, where = '';
   for (const b of bgs) {
-    const map = MAPS.find((m) => m.id === b.id);
-    const rimLum = luminance(...hexRgb(map.palette.rim));
     const cb = contrast(objLum, b.lum);
-    const cr = contrast(rimLum, b.lum);
+    const cr = contrast(kanteLum, b.lum);
     if (cb < worstBody) { worstBody = cb; where = b.name; }
     if (cr < worstRim) worstRim = cr;
   }
@@ -207,7 +286,8 @@ for (const id of TOWER_ORDER) {
     const accent = hexRgb(accentFor(def, branch));
     const m = await measureSprite(buf, accent, 0.38);
     const lum = luminance(...m.rgb);
-    const { worstBody, worstRim, where } = worstContrast(lum);
+    const kante = luminance(...await measureEdge(buf));
+    const { worstBody, worstRim, where } = worstContrast(lum, kante);
     // Der Turm wird mit 104 Weltpunkten Kantenlänge gezeichnet, die Silhouette
     // nimmt davon ihren Anteil ein.
     // Dieselbe Rechnung wie im Renderer.
@@ -223,15 +303,18 @@ for (const id of TOWER_ORDER) {
     const bad = worstRim < MIN_RIM_CONTRAST || worstBody < MIN_BODY_CONTRAST
       || px < MIN_TOWER_PX;
     console.log(
-      `  ${key.padEnd(16)} Saum ${worstRim.toFixed(2)}  Koerper ${worstBody.toFixed(2)} ` +
+      `  ${key.padEnd(16)} Kante ${worstRim.toFixed(2)}  Koerper ${worstBody.toFixed(2)} ` +
       `gegen ${where.padEnd(14)} Breite ${px.toFixed(0).padStart(3)} px${bad ? '   ZU SCHWACH' : ''}`,
     );
     if (worstRim < MIN_RIM_CONTRAST) {
       problems.push(
-        `Turm ${key}: Saumkontrast ${worstRim.toFixed(2)} gegen ${where} - ` +
+        `Turm ${key}: Kantenkontrast ${worstRim.toFixed(2)} gegen ${where} - ` +
         `mindestens ${MIN_RIM_CONTRAST} nötig, sonst hat die Silhouette keine Kante.`,
       );
     }
+    gezaehlt++;
+    kanten.push(worstRim);
+    if (worstRim < RIM_HINWEIS) schwach.push(`${key} ${worstRim.toFixed(2)}`);
     if (worstBody < MIN_BODY_CONTRAST) {
       problems.push(`Turm ${key}: Koerperkontrast ${worstBody.toFixed(2)} gegen ${where} - zu flach.`);
     }
@@ -251,19 +334,23 @@ for (const [id, def] of Object.entries(ENEMIES)) {
   const body = hexRgb(def.body);
   const m = await measureSprite(buf, body, 0.38);
   const lum = luminance(...m.rgb);
-  const { worstBody, worstRim, where } = worstContrast(lum);
+  const kante = luminance(...await measureEdge(buf));
+  const { worstBody, worstRim, where } = worstContrast(lum, kante);
   const worldW = enemyArtWidth(id) * (m.spanX / m.frame);
   const px = worldW * COVER;
   enemyColours.push({ id, name: def.name, lab: toLab(...m.rgb) });
   const bad = worstRim < MIN_RIM_CONTRAST || worstBody < MIN_BODY_CONTRAST
     || px < MIN_ENEMY_PX;
   console.log(
-    `  ${def.name.padEnd(14)} Saum ${worstRim.toFixed(2)}  Koerper ${worstBody.toFixed(2)} ` +
+    `  ${def.name.padEnd(14)} Kante ${worstRim.toFixed(2)}  Koerper ${worstBody.toFixed(2)} ` +
     `gegen ${where.padEnd(14)} Breite ${px.toFixed(0).padStart(3)} px${bad ? '   ZU SCHWACH' : ''}`,
   );
   if (worstRim < MIN_RIM_CONTRAST) {
-    problems.push(`Gegner ${def.name}: Saumkontrast ${worstRim.toFixed(2)} gegen ${where} - zu wenig Kante.`);
+    problems.push(`Gegner ${def.name}: Kantenkontrast ${worstRim.toFixed(2)} gegen ${where} - zu wenig Kante.`);
   }
+  gezaehlt++;
+  kanten.push(worstRim);
+  if (worstRim < RIM_HINWEIS) schwach.push(`${def.name} ${worstRim.toFixed(2)}`);
   if (worstBody < MIN_BODY_CONTRAST) {
     problems.push(`Gegner ${def.name}: Koerperkontrast ${worstBody.toFixed(2)} gegen ${where} - zu flach.`);
   }
@@ -289,6 +376,40 @@ if (minPair.d < MIN_COLOUR_DIST) {
     `${minPair.a} und ${minPair.b} liegen farblich nur ${minPair.d.toFixed(1)} auseinander - ` +
     'im Feld nicht zu unterscheiden.',
   );
+}
+
+// Misst die Kantenmessung ueberhaupt etwas? (v147)
+//
+// Das ist die Pruefung, die vier Fassungen lang gefehlt hat. Bis v147 stand
+// als "Saum" die Kartenfarbe `palette.rim` - fuer alle zwanzig Figuren
+// dieselbe Zahl, 8,43, gegen eine Grenze von 3,0. Zwanzig gruene Zeilen
+// ueber eine Farbe, die kein Bildpunkt je trug.
+//
+// Eine Messung, die fuer jede Figur dasselbe liefert, misst nicht die Figur.
+// Das ist unabhaengig davon, WAS sie liefert - deshalb steht diese Pruefung
+// neben der Ratsche und nicht in ihr: die Ratsche faengt schlechtere Bilder,
+// diese hier faengt eine kaputte Messung.
+{
+  const spanne = Math.max(...kanten) - Math.min(...kanten);
+  console.log(`\nKantenmessung: ${kanten.length} Werte, Spanne ${spanne.toFixed(2)} `
+    + `(${Math.min(...kanten).toFixed(2)} bis ${Math.max(...kanten).toFixed(2)})`);
+  if (spanne < 0.2) {
+    problems.push(`Die Kantenmessung liefert fuer alle ${kanten.length} Figuren fast `
+      + `denselben Wert (Spanne ${spanne.toFixed(2)}) - sie misst nicht die Figur. `
+      + 'Genau so verhielt sich die Fassung mit `palette.rim`.');
+  }
+}
+
+if (schwach.length) {
+  console.log(`\nSchwache Kanten (unter ${RIM_HINWEIS}): ${schwach.length} von ${gezaehlt}`);
+  console.log(`  ${schwach.join(', ')}`);
+  console.log('  Befund B1 - am Bild zu beheben, nicht am Code. Die Ratsche steht bei '
+    + `${MAX_SCHWACHE_KANTEN}.`);
+}
+if (schwach.length > MAX_SCHWACHE_KANTEN) {
+  problems.push(`${schwach.length} von ${gezaehlt} Figuren haben eine Kante unter `
+    + `${RIM_HINWEIS} - heute waren es ${MAX_SCHWACHE_KANTEN}. Neue Bilder duerfen die `
+    + 'Lesbarkeit nicht weiter druecken.');
 }
 
 if (problems.length) {

@@ -2,8 +2,6 @@ import { ENEMY_ART } from './assets/enemies';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import { hexA } from './glow';
 import { mapById } from '../data/maps';
-import { drawRim } from './towerart';
-import { ENEMIES as ALLE } from '../data/enemies';
 
 /** Gerenderte Gegnerbilder.
  *
@@ -37,8 +35,15 @@ function load(id: EnemyId): HTMLImageElement | null {
 export function getEnemyArt(
   id: EnemyId, flash: boolean, mapId = 'spiralhain',
 ): HTMLCanvasElement | null {
-  const rim = mapById(mapId).palette.rim;
-  const cacheKey = `${id}|${flash ? 'f' : 'n'}|${rim}`;
+  // Der Schluessel traegt die KARTE, nicht die Saumfarbe.
+  //
+  // Bis v147 stand hier `rim` - die Farbe war der einzige Unterschied
+  // zwischen den Karten im Schluessel, und sie war zufaellig je Karte
+  // verschieden. Verschwindet sie (wie in dieser Runde), waeren alle drei
+  // Karten derselbe Eintrag gewesen und Gegner haetten das Klima der zuerst
+  // gebackenen Karte getragen. Die Kartenkennung sagt dasselbe und meint es
+  // auch so.
+  const cacheKey = `${id}|${flash ? 'f' : 'n'}|${mapId}`;
   const hit = baked.get(cacheKey);
   if (hit) return hit;
 
@@ -50,11 +55,6 @@ export function getEnemyArt(
   const cv = document.createElement('canvas');
   cv.width = size; cv.height = size;
   const g = cv.getContext('2d')!;
-  // Aufsichten sind neu geliefert, hell genug und tragen ihre Form selbst -
-  // ein Saum wuerde sie weiss umranden. Nur die verbliebenen Seitenansichten
-  // aus dem Altbestand brauchen ihn noch.
-  if (!flash && !ALLE[id].topdown) drawRim(g, img, size, rim, 2.0);
-
   const body = document.createElement('canvas');
   body.width = size; body.height = size;
   const bg = body.getContext('2d')!;
@@ -72,18 +72,13 @@ export function getEnemyArt(
     //
     // Beim Span bleibt der Schleier hoeher: er kommt aus demselben Bild wie
     // der Spalter, und ohne Farbe waere er nur ein kleinerer Spalter.
-    const neu = !!def.topdown;
-    const staerke = neu ? (id === 'splitling' ? 0.30 : 0.15) : 0.38;
+    // Die Unterscheidung "neu/alt" ist in v147 gefallen: `topdown` stand bei
+    // allen acht Arten auf `true`, der Alt-Zweig (0,38 Schleier plus
+    // Lichtverlauf) lief nie. Nachgewiesen ueber die sha1-Summe aller
+    // gebackenen Figuren - vor und nach dem Ausbau bitgleich.
+    const staerke = id === 'splitling' ? 0.30 : 0.15;
     bg.fillStyle = hexA(def.body, staerke);
     bg.fillRect(0, 0, size, size);
-    if (!neu) {
-      const lift = bg.createLinearGradient(0, 0, size * 0.7, size);
-      lift.addColorStop(0, 'rgba(255,255,255,0.24)');
-      lift.addColorStop(0.5, 'rgba(255,255,255,0.04)');
-      lift.addColorStop(1, 'rgba(0,0,0,0.24)');
-      bg.fillStyle = lift;
-      bg.fillRect(0, 0, size, size);
-    }
 
     // Sonnenanstrich, wie bei den Tuermen.
     //

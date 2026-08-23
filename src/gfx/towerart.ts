@@ -1,7 +1,6 @@
 import { TOWER_ART } from './assets/towers';
 import { accentFor, TOWERS, type BranchIndex, type TowerId } from '../data/towers';
 import { hexA } from './glow';
-import { mapById } from '../data/maps';
 import { einbetten, einbettungSchluessel } from './einbettung';
 
 /** Gerenderte Turmbilder.
@@ -18,47 +17,24 @@ import { einbetten, einbettungSchluessel } from './einbettung';
  *
  *  Zweitens bekommen sie eine helle Kante. Auf dem dunklen Untergrundbild
  *  verschwaende ein dunkler Turm sonst schlicht. */
-/** Saum um eine Silhouette: das Bild achtfach versetzt in einer Farbe,
- *  darunter gelegt.
- *
- *  Der Saum stammt aus v33 und war die richtige Antwort auf ein anderes
- *  Problem: dunkle, gerenderte Figuren auf einem dunklen Waldfoto - elf von
- *  zwoelf lagen im selben Helligkeitsband wie der Boden und waren nur an
- *  ihrem Saum zu erkennen.
- *
- *  Seit die Bilder und die Karten neu sind, gilt das nicht mehr. Die Figuren
- *  sind heller als der Boden und tragen ihre Form selbst. Der helle Saum ist
- *  dadurch von einer Notmassnahme zu einem Fehler geworden - im Spiel sah man
- *  weisse Umrandungen um jeden Turm und jeden Gegner.
- *
- *  Er bleibt im Code, weil er fuer die verbliebenen Altbilder noch gebraucht
- *  wird; welche Figur ihn bekommt, entscheidet `brauchtSaum`. */
-export function drawRim(
-  g: CanvasRenderingContext2D, img: HTMLImageElement | HTMLCanvasElement,
-  size: number, colour: string, width = 2.5,
-): void {
-  const mask = document.createElement('canvas');
-  mask.width = size; mask.height = size;
-  const mg = mask.getContext('2d')!;
-  for (let i = 0; i < 8; i++) {
-    const a = (Math.PI * 2 * i) / 8;
-    mg.drawImage(img, Math.cos(a) * width, Math.sin(a) * width, size, size);
-  }
-  mg.globalCompositeOperation = 'source-atop';
-  mg.fillStyle = colour;
-  mg.fillRect(0, 0, size, size);
-  g.globalAlpha = 0.92;
-  g.drawImage(mask, 0, 0);
-  g.globalAlpha = 1;
-}
-
-/** Welche Bilder brauchen noch einen Saum?
- *
- *  Die neu gelieferten tragen ihre Form selbst und sind heller als der Boden.
- *  Ein Saum wuerde sie mit einer weissen Linie umranden. Die Liste schrumpft
- *  mit jeder Lieferung; steht sie leer, kann `drawRim` ganz weg. */
-const OHNE_SAUM = new Set<string>(['arrow', 'frost', 'mortar', 'prism']);
-export const brauchtSaum = (id: string): boolean => !OHNE_SAUM.has(id);
+// Der Saum ist weg (v147), und der Grund gehoert aufgeschrieben.
+//
+// `drawRim` stammte aus v33 und war die richtige Antwort auf ein anderes
+// Problem: dunkle, gerenderte Figuren auf einem dunklen Waldfoto - elf von
+// zwoelf lagen im selben Helligkeitsband wie der Boden und waren nur an
+// ihrem Saum zu erkennen. Mit den neuen Bildern wurde daraus ein Fehler: man
+// sah weisse Umrandungen um jeden Turm und jeden Gegner.
+//
+// Abgeschaltet wurde er deshalb ueber zwei Listen - `OHNE_SAUM` fuer Tuerme,
+// `topdown` fuer Gegner. Beide waren VOLLSTAENDIG: alle vier Turmarten
+// standen in OHNE_SAUM, alle acht Gegner tragen `topdown: true`. Damit war
+// die Funktion seit Fassungen unerreichbar, und mit ihr `palette.rim`, das
+// nur sie las.
+//
+// Bemerkt hat das niemand, weil das Lesbarkeitstor die Saumfarbe weiter
+// gegen den Boden rechnete: zwanzigmal dieselbe Zahl (8,43) gegen eine
+// Grenze von 3,0. Eine gruene Meldung ueber eine Farbe, die kein Bildpunkt
+// je trug. Seit v147 misst es den aeussersten Ring der Figur selbst.
 
 /** Wie stark ein Bild eingefaerbt wird.
  *
@@ -71,8 +47,11 @@ export const brauchtSaum = (id: string): boolean => !OHNE_SAUM.has(id);
  *  eigenes Licht. Der starke Farbschleier verwaescht sie, und der Verlauf
  *  legt ein zweites Licht ueber das schon vorhandene. Geblieben ist ein
  *  Hauch Farbe, damit man den Ausbauzweig noch ablesen kann. */
-const einfaerbung = (id: string): { farbe: number; verlauf: boolean } =>
-  (OHNE_SAUM.has(id) ? { farbe: 0.13, verlauf: false } : { farbe: 0.38, verlauf: true });
+// Bis v147 stand hier eine Fallunterscheidung: neue Bilder bekamen 0,13
+// Farbe ohne Verlauf, alte 0,38 mit. Die Liste der "neuen" enthielt aber
+// alle vier Turmarten - der zweite Fall lief nie. Er ist weg, und was
+// bleibt, ist die Zahl, die tatsaechlich gilt.
+const FARBSCHLEIER = 0.13;
 
 const tinted = new Map<string, HTMLCanvasElement>();
 
@@ -165,11 +144,10 @@ export function getTowerArt(
 ): HTMLCanvasElement | null {
   const k = key(id, branch, level);
   const accent = accentFor(TOWERS[id], branch);
-  const rim = mapById(mapId).palette.rim;
   // Der Schluessel traegt die Einbettung mit: solange das Untergrundbild
   // nicht geladen ist, gibt es kein Farbklima, und ein Bild ohne Klima
   // duerfte nicht dauerhaft haengenbleiben.
-  const cacheKey = `${k}|${accent}|${rim}|${einbettungSchluessel(mapId)}`;
+  const cacheKey = `${k}|${accent}|${einbettungSchluessel(mapId)}`;
   const hit = tinted.get(cacheKey);
   if (hit) return hit;
 
@@ -180,11 +158,6 @@ export function getTowerArt(
   const cv = document.createElement('canvas');
   cv.width = size; cv.height = size;
   const g = cv.getContext('2d')!;
-
-  // Erst der Saum, dann der eingefaerbte Koerper darueber - so bleibt die
-  // Kante sauber und wird nicht mit eingefaerbt.
-  // Nur noch fuer Altbilder, siehe Kommentar an drawRim.
-  if (brauchtSaum(id)) drawRim(g, img, size, rim, 2.0);
 
   const body = document.createElement('canvas');
   body.width = size; body.height = size;
@@ -199,19 +172,9 @@ export function getTowerArt(
   // Aufgetragen wird von oben links, wo die Sonne steht, und nach unten hin
   // abnehmend; unten uebernimmt stattdessen die Verschattung, weil dort das
   // Licht vom Boden geschluckt wird.
-  const stil = einfaerbung(id);
   bg.globalCompositeOperation = 'source-atop';
-  bg.fillStyle = hexA(accent, stil.farbe);
+  bg.fillStyle = hexA(accent, FARBSCHLEIER);
   bg.fillRect(0, 0, size, size);
-  if (stil.verlauf) {
-    const lift = bg.createLinearGradient(0, 0, size * 0.7, size);
-    lift.addColorStop(0, 'rgba(255,255,255,0.34)');
-    lift.addColorStop(0.45, 'rgba(255,255,255,0.10)');
-    lift.addColorStop(1, 'rgba(0,0,0,0.22)');
-    bg.fillStyle = lift;
-    bg.fillRect(0, 0, size, size);
-  }
-
   // --- Sonne, Verschattung, Rueckwurf und Farbklima der Karte.
   //
   // Der Block stand bis v125 hier ausgeschrieben - und NUR hier. Der

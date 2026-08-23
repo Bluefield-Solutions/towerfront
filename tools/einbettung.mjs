@@ -38,7 +38,8 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
-import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { createHash } from 'node:crypto';
+import { createCanvas, loadImage, Image as NativeImage } from '@napi-rs/canvas';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const TOR = process.argv.includes('--tor');
@@ -211,6 +212,75 @@ console.log(`Farbabstand hoechstens ${FARBE_MAX}, Helligkeitsabstand mindestens 
 console.log(`Klimastaerke ${KLIMA_STAERKE} (gelesen aus src/gfx/einbettung.ts).\n`);
 
 const befunde = [];
+
+// --- Bekommt jede Karte auch WIRKLICH ihr eigenes Bild? (v147)
+//
+// Alles darunter misst eine NACHGEBAUTE Einbettung: `einbettenMit` in dieser
+// Datei ist eine zweite Fassung der Regel aus `src/gfx/einbettung.ts`. Damit
+// prueft das Tor die Rechnung, aber nicht den Weg, den das Spiel geht - und
+// genau dort sass eine Luecke.
+//
+// Der Zwischenspeicher der Gegnerbilder trug bis v147 die SAUMFARBE als
+// einzige Kartenkennung im Schluessel. Die war je Karte zufaellig
+// verschieden, wirkte also wie eine Kennung - und als der Saum in dieser
+// Runde als toter Code ausgebaut wurde, waere daraus ein Fach fuer alle drei
+// Karten geworden: jeder Gegner haette ueberall das Klima der zuerst
+// gebackenen Karte getragen. Dreiundzwanzig Tore haetten gruen gemeldet.
+//
+// Deshalb hier eine Pruefung, die den ECHTEN Weg nimmt: dasselbe Gegnerbild
+// ueber `getEnemyArt` von drei Karten holen. Drei Karten, drei verschiedene
+// Bilder - sonst greift der Zwischenspeicher zu weit.
+{
+  globalThis.document ??= {
+    createElement: (t) => { if (t !== 'canvas') throw new Error(t); return createCanvas(1, 1); },
+  };
+  globalThis.window ??= { devicePixelRatio: 2, innerWidth: 844, innerHeight: 390 };
+  // Die native Bildklasse durchreichen, nicht nachbauen: eine eigene Klasse
+  // ist fuer `drawImage` kein Bild, und der erste Anlauf brach genau daran ab.
+  let offen = 0;
+  globalThis.Image ??= class extends NativeImage {
+    set src(v) {
+      offen++;
+      const fertig = () => { offen--; };
+      const a = this.onload, b = this.onerror;
+      this.onload = () => { fertig(); a?.(); };
+      this.onerror = () => { fertig(); b?.(); };
+      super.src = v;
+    }
+    get src() { return super.src; }
+  };
+  const { getEnemyArt } = await import('../src/gfx/enemyart.ts');
+  const { ENEMIES } = await import('../src/data/enemies.ts');
+  const ids = Object.keys(ENEMIES);
+  for (const id of ids) for (const k of KARTEN) getEnemyArt(id, false, k.id);
+  for (let i = 0; i < 80 && offen > 0; i++) await new Promise((r) => setTimeout(r, 40));
+  await new Promise((r) => setTimeout(r, 600));
+  let geprueft = 0, gleich = 0;
+  for (const id of ids) {
+    const summen = new Set();
+    let da = 0;
+    for (const k of KARTEN) {
+      const cv = getEnemyArt(id, false, k.id);
+      if (!cv) continue;
+      da++;
+      summen.add(createHash('sha1').update(cv.toBuffer('image/png')).digest('hex'));
+    }
+    if (da < KARTEN.length) continue;
+    geprueft++;
+    if (summen.size < KARTEN.length) gleich++;
+  }
+  console.log(`Kartenbindung: ${geprueft} Gegnerbilder ueber ${KARTEN.length} Karten geholt, `
+    + `${gleich} davon mehrfach identisch.`);
+  if (!geprueft) {
+    befunde.push('Kartenbindung: kein einziges Gegnerbild kam an - dann prueft dieser '
+      + 'Abschnitt nichts.');
+  } else if (gleich) {
+    befunde.push(`Kartenbindung: ${gleich} von ${geprueft} Gegnern sehen auf mindestens `
+      + 'zwei Karten gleich aus. Der Zwischenspeicher greift zu weit - die Figuren tragen '
+      + 'das Klima der zuerst gebackenen Karte.');
+  }
+}
+
 for (const [name, datei, id, staerke] of FIGUREN) {
   const roh = quelle(datei, id);
   if (!roh) { befunde.push(`${name}: Bild nicht gefunden.`); continue; }

@@ -74,13 +74,6 @@ const PROBEN = [
     tor: 'guards',
   },
   {
-    name: 'Saum dunkel statt hell',
-    datei: 'src/data/maps.ts',
-    suche: "rim: '#DCEEFF'",
-    ersatz: "rim: '#16233A'",
-    tor: 'lesbarkeit',
-  },
-  {
     // Diese Probe griff bis v104 am Rohwert an - und lief seit der
     // zusammenziehenden Anhebung ins Leere: der Zug zur Zielbreite holte den
     // eingebauten Fehler wieder heraus, bevor das Tor ihn sehen konnte
@@ -1009,6 +1002,43 @@ const PROBEN = [
     regel: /\| 7 \| Geschosse \| `npm run geschossetor` \|[^\n]*\n/,
     ersatz: '',
     tor: 'doku',
+  },
+  {
+    // TF-035: unerreichbarer Code muss den Uebersetzer stoeren. Genau so
+    // stand vierzehn Zeilen tote Rechnung hinter einem `return`, und
+    // `noUnusedParameters` sah die Parameter als benutzt an, weil der tote
+    // Zweig sie las.
+    name: 'Unerreichbarer Code faellt nicht auf',
+    datei: 'src/gfx/renderer.ts',
+    regel: /    return turmMasse\(\);\n  \}/,
+    ersatz: '    return turmMasse();\n    console.log(1);\n  }',
+    tor: 'tsc',
+  },
+  {
+    // Der Zwischenspeicher der Gegnerbilder muss die KARTE tragen. Bis v147
+    // trug er die Saumfarbe - die war je Karte zufaellig verschieden und
+    // wirkte deshalb wie eine Kartenkennung.
+    name: 'Gegnerbilder aller Karten im selben Fach',
+    datei: 'src/gfx/enemyart.ts',
+    regel: /  const cacheKey = `\$\{id\}\|\$\{flash \? 'f' : 'n'\}\|\$\{mapId\}`;/,
+    ersatz: "  const cacheKey = `${id}|${flash ? 'f' : 'n'}`;",
+    tor: 'einbettungstor',
+  },
+  {
+    // Nachfolgerin von "Saum dunkel statt hell" (bis v147). Jene setzte die
+    // Kartenfarbe `palette.rim` auf einen dunklen Wert und sah das
+    // Lesbarkeitstor anschlagen - bewiesen hat das nur, dass die Rechnung
+    // rechnet. Gezeichnet wurde diese Farbe nirgends, und mit dem Ausbau des
+    // toten Saums in v148 gab es sie nicht mehr.
+    //
+    // Die Kantenmessung muss die KANTE messen. Wird sie durch einen festen
+    // Wert ersetzt, faellt der Kontrast gegen den Boden zusammen - genau
+    // das, was die alte Fassung mit `palette.rim` tat, nur andersherum.
+    name: 'Kantenmessung liefert einen festen Wert',
+    datei: 'tools/readability.mjs',
+    regel: /  if \(!n\) throw new Error\('keine Randpunkte'\);\n  return \[r \/ n, g \/ n, b \/ n\];/,
+    ersatz: "  if (!n) throw new Error('keine Randpunkte');\n  return [128, 128, 128];",
+    tor: 'lesbarkeit',
   },
   {
     // TF-030: die Figuren wachsen ueber die Strasse hinaus.

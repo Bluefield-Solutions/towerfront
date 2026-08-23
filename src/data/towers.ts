@@ -10,16 +10,18 @@ export type AttackKind =
   | 'splash'  // ballistisches Geschoss mit Flaechenschaden
   | 'chain';  // Sofortstrahl, springt weiter
 
+/** Eine Ausbaustufe, wie sie in den Daten steht.
+ *
+ *  Hier stand bis v147 ein `range?: number` mit dem Kommentar "nur noch
+ *  Ergebnis, nie Eingabe" - ein Feld, das in den Daten an NULL Stellen
+ *  gesetzt und von `statsFor` immer ueberschrieben wurde. Ein Schacht, in
+ *  den nie jemand etwas legt, ist keine Schnittstelle, sondern eine
+ *  Einladung zum Missverstaendnis. Die Reichweite kommt aus `rangeFor`;
+ *  wer sie aendern will, aendert REICHWEITE_GRUND, REICHWEITE_STUFE oder
+ *  REICHWEITE_ZWEIG. `TowerStats` traegt sie als Pflichtfeld. */
 export interface TowerLevel {
   cost: number;
   damage: number;
-  /** Nur noch Ergebnis, nie Eingabe.
-   *
-   *  Die Reichweite kommt aus `rangeFor` und wird von `statsFor` eingesetzt.
-   *  Ein hier eingetragener Wert wird ueberschrieben - deshalb steht in den
-   *  Daten auch keiner mehr. Wer die Reichweite aendern will, aendert
-   *  REICHWEITE_GRUND, REICHWEITE_STUFE oder REICHWEITE_ZWEIG. */
-  range?: number;
   cooldown: number;
   slow?: number;      // 0..1
   slowTime?: number;  // Sekunden

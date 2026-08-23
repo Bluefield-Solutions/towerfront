@@ -745,10 +745,7 @@ export class Renderer {
     ctx.beginPath(); ctx.arc(x, y, def.footprint / 2, 0, Math.PI * 2); ctx.stroke();
     ctx.setLineDash([]);
 
-    ctx.fillStyle = hexA(tone, 0.1);
-    ctx.beginPath(); ctx.arc(x, y, st.range, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = hexA(tone, 0.6); ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(x, y, st.range, 0, Math.PI * 2); ctx.stroke();
+    this.reichweite(x, y, st.range, tone);
     ctx.restore();
   }
 
@@ -761,6 +758,58 @@ export class Renderer {
    *
    *  Sehr blass gezeichnet, und mit Absicht: zwoelf Ringe in voller Deckung
    *  waeren eine weisse Flaeche. Was zaehlt, ist wo sich NICHTS ueberlagert. */
+  /** Die Reichweite als Bodenmarkierung, nicht als technischer Umriss.
+   *
+   *  Bis v129 war sie ein 3 Punkte starker heller Kreis mit flacher Fuellung.
+   *  Auf einem fotografierten Untergrund liest sich das als Overlay, das
+   *  jemand ueber das Bild gelegt hat - es liegt VOR der Welt statt IN ihr.
+   *  In der Nahaufnahme kreuzten sich drei solcher Ringe quer ueber Weg,
+   *  Gelaende und Tuerme.
+   *
+   *  Was eine Flaeche auf den Boden legt, sind drei Dinge:
+   *
+   *   - Ein VERLAUF nach aussen statt einer gleichmaessigen Fuellung. Licht
+   *     auf dem Boden ist in der Mitte dichter.
+   *   - Eine WEICHE Kante: der Ring bekommt seine Staerke aus einem schmalen
+   *     Verlauf, nicht aus einer Linie mit fester Breite.
+   *  NICHT gestaucht, obwohl alles andere im Bild flach liegt - Schatten,
+   *  Kontaktzonen, die Zielplattform. Der erste Entwurf staucht sie auf 0,62,
+   *  und das war falsch: die Reichweite ist im MODELL ein Kreis, der Schaden
+   *  richtet sich nach dem euklidischen Abstand. Eine Ellipse wuerde dem
+   *  Spieler erzaehlen, hinten sei weniger abgedeckt als seitlich - und das
+   *  stimmt nicht.
+   *
+   *  **Stauchen ist fuer einen Schatten richtig und fuer eine Auskunft
+   *  falsch.** Der Schatten ist eine Erfindung des Bildes, die Reichweite ist
+   *  eine Aussage ueber die Regeln.
+   *
+   *  Eine Stelle fuer alle drei Aufrufer (Auswahl, Vorschau, alle Ringe):
+   *  vorher stand dieselbe Zeichnung dreimal da und lief bereits auseinander
+   *  - 0,10 gegen 0,11 Fuellung, 0,60 gegen 0,70 Linie (Regel 15). */
+  private reichweite(x: number, y: number, r: number, tone: string, stark = 1): void {
+    const ctx = this.ctx;
+    ctx.save();
+    // Die Fuellung bleibt schwach: sie deckt eine grosse Flaeche, und was
+    // eine grosse Flaeche deckt, waescht das Bild aus. Der erste Entwurf ging
+    // bis 0,17 am Rand - der halbe Bildschirm wurde blass.
+    const fuellung = ctx.createRadialGradient(x, y, r * 0.30, x, y, r);
+    fuellung.addColorStop(0, hexA(tone, 0.015 * stark));
+    fuellung.addColorStop(0.72, hexA(tone, 0.05 * stark));
+    fuellung.addColorStop(1, hexA(tone, 0.09 * stark));
+    ctx.fillStyle = fuellung;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+
+    // Die Kante: ein schmaler Verlauf statt einer Linie. Er endet weich nach
+    // aussen, wie ein Lichtsaum auf dem Boden.
+    const kante = ctx.createRadialGradient(x, y, r * 0.93, x, y, r * 1.02);
+    kante.addColorStop(0, hexA(tone, 0));
+    kante.addColorStop(0.6, hexA(tone, 0.55 * stark));
+    kante.addColorStop(1, hexA(tone, 0));
+    ctx.fillStyle = kante;
+    ctx.beginPath(); ctx.arc(x, y, r * 1.02, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
   private drawAlleReichweiten(s: GameState): void {
     if (!s.zeigeReichweiten) return;
     const ctx = this.ctx;
@@ -772,10 +821,7 @@ export class Renderer {
       // Deckung angehoben nach dem ersten Blick: bei 0,07 Fuellung und 0,42
       // Linie war auf dem Untergrund kaum etwas zu sehen, und eine Anzeige,
       // die man suchen muss, beantwortet keine Frage.
-      ctx.fillStyle = hexA(tone, 0.11);
-      ctx.beginPath(); ctx.arc(t.x, t.y, st.range, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = hexA(tone, 0.7); ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(t.x, t.y, st.range, 0, Math.PI * 2); ctx.stroke();
+      this.reichweite(t.x, t.y, st.range, tone);
     }
     ctx.restore();
   }
@@ -917,10 +963,7 @@ export class Renderer {
     ctx.beginPath(); ctx.arc(x, y, def.footprint / 2, 0, Math.PI * 2); ctx.stroke();
     ctx.setLineDash([]);
 
-    ctx.fillStyle = hexA(tone, 0.12);
-    ctx.beginPath(); ctx.arc(x, y, lvl.range, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = hexA(tone, 0.7); ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(x, y, lvl.range, 0, Math.PI * 2); ctx.stroke();
+    this.reichweite(x, y, lvl.range, tone, 1.15);
 
     if (ok) {
       ctx.save();

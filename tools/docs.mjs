@@ -151,12 +151,18 @@ for (const [name, text] of alle) {
   const mp = alle.find(([n]) => n === 'Towerfront-MASTERPLAN.md');
   if (mp) {
     const text = mp[1];
+    // "erledigt" und "widerlegt" zaehlen gleich: beides heisst, dass an dem
+    // Ticket nichts mehr zu tun ist. Der erste Entwurf kannte nur
+    // "erledigt" - und liess damit genau die Sorte Eintrag durchrutschen,
+    // die diese Pruefung ueberhaupt erst noetig gemacht hat.
+    const erl = /(?:ERLEDIGT|WIDERLEGT) (v\d+)/;
     const lueckeErledigt = new Map();
-    for (const m of text.matchAll(/^\| (TF-\d+) \| [^|]+\| ERLEDIGT (v\d+) \|/gm)) {
+    for (const m of text.matchAll(/^\| (TF-\d+) \| [^|]+\| \*{0,2}(?:ERLEDIGT|WIDERLEGT) (v\d+)\*{0,2} \|/gm)) {
       lueckeErledigt.set(m[1], m[2]);
     }
+    void erl;
     const next30 = new Map();
-    for (const m of text.matchAll(/^\| \d+ \| (TF-\d+) \|[^\n]*\*\*erledigt (v\d+)\*\*/gm)) {
+    for (const m of text.matchAll(/^\| \d+ \| (TF-\d+) \|[^\n]*\*\*(?:erledigt|widerlegt) (v\d+)\*\*/gm)) {
       next30.set(m[1], m[2]);
     }
     // Nur Tickets, die ueberhaupt in beiden Listen vorkommen.

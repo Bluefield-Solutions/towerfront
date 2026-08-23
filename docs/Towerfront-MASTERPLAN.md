@@ -1196,7 +1196,7 @@ XL > 10 Runden.
 | TF-027 | Telemetry | MISSING | Keine Ereignisse, keine Kennzahlen | Balance beruht auf Simulation, nicht auf Spielern | Ereignissystem + lokale Aufzeichnung | P2 | M | TF-020 |
 | TF-028 | Accessibility | MISSING | Gegner nur über Farbe unterscheidbar | Für Farbfehlsichtige unspielbar | Form- und Zeichenunterschiede | P2 | M | TF-024 |
 | TF-029 | UI | DESIGN | Prüfsteg verdeckt ein Drittel des Feldes | Sicht auf den Kristall verdeckt | Steg schmaler, Werte zweispaltig | P2 | S | — |
-| TF-030 | Path | VERIFIED | Leerentitan (102) breiter als engste Straße (80) | Er ragt über den Rand | Straße verbreitern oder Titan verschmälern | P2 | XS | — |
+| TF-030 | Path | **WIDERLEGT v147** | ~~Leerentitan (102) breiter als engste Straße (80)~~ | Gemessen war die **Kachel**, nicht die Figur | Gezeichnet ist er **60** breit und passt mit 10 Punkten Luft je Seite | P2 | XS | Tor `gedraengetor` misst jetzt die Figur |
 | TF-031 | Wave | DESIGN | Keine Erholungs- und Wirtschaftswelle | Kein Atem in der Dramaturgie | Wellenrollen einführen | P2 | S | — |
 | TF-032 | Targeting | ERLEDIGT v146 | Modus „hinten" fehlt | Durchbrecher nicht abfangbar | Fünfter Modus | P2 | XS | nach Standort aufgeteilt 88 gegen 84 Punkte |
 | TF-033 | VFX | MISSING | Keine Rückmeldung über Wirksamkeit | Man sieht nicht, ob ein Turm taugt | Abpraller bei Panzerung, gedämpfter Einschlag | P2 | S | TF-015 |
@@ -1446,7 +1446,7 @@ kursiv.
 |---|---|---|---|
 | **0 — Audit & Messbarkeit** | Debug-Overlay im Spiel (Weg, Reichweite, Ziel), Ereignissystem, lokale Kennzahlen | TF-027, TF-040 | offen |
 | **1 — Kritische Stabilisierung** | *Spielstand, Trefferstopp, Inspektor, Kartennamen, Platzbedarf* | *v137–v139* | **erledigt** |
-| **2 — Pathfinding & Movement** | Wegvorschau, Titanbreite, Bahnbelegung | TF-014, TF-030, E4 | offen |
+| **2 — Pathfinding & Movement** | Wegvorschau, Titanbreite, Bahnbelegung | TF-014, TF-030, E4 | TF-030 widerlegt (v147); offen: TF-014, E4 |
 | **3 — Tower Placement** | Bauplätze dauerhaft, Ring ehrlich, Kosten an der Vorschau | TF-001, F2, F3 | offen |
 | **4 — Targeting & Combat** | Geschoss-Ersatzziel, Mündungspunkt, Modus „hinten" | TF-007, TF-019, TF-032 | **abgeschlossen** (v144, v145, v146) |
 | **5 — Core Tower Design** | Zweige mit Regeln, Rollen schärfen | TF-006, TF-021 | offen |
@@ -1622,7 +1622,7 @@ möglich ist.
 | 3 | TF-007 | Geschosse suchen ein Ersatzziel | Combat | Schaden verschwindet | Sichtbar sauberes Gefecht | P1 | S | **erledigt v144** |
 | 4 | TF-019 | Mündungspunkt je Turmart | Combat | Schuss aus der Mitte | Schüsse kommen aus dem Rohr | P2 | S | **erledigt v145** |
 | 5 | TF-032 | Zielmodus „hinten" | Targeting | Durchbrecher | Fünfte echte Wahl | P2 | XS | **erledigt v146** |
-| 6 | TF-030 | Titanbreite gegen Straßenbreite | Path | Ragt über den Rand | Kein Überstand mehr | P2 | XS | — |
+| 6 | TF-030 | Titanbreite gegen Straßenbreite | Path | Ragt über den Rand | Kein Überstand mehr | P2 | XS | **widerlegt v147** — es gab keinen Überstand |
 | 7 | TF-035 | Toten Code entfernen | Code | Ballast | Weniger Fläche für Fehler | P3 | XS | — |
 | 8 | TF-014 | Wegvorschau beim Kartenstart | Path Visibility | Woher kommt es? | Erste 10 Sekunden verständlich | P1 | S | — |
 | 9 | TF-023 | Wellenvorschau vollständig | Wave | Nur erste Gruppe | Vorbereitung möglich | P2 | S | — |

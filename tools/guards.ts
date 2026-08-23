@@ -284,30 +284,34 @@ for (const map of MAPS) {
 
   // Passen die Gegner ueberhaupt auf den Weg?
   //
-  // Das war lange nicht geprueft, und man sah es erst im Bild: der
-  // Leerentitan war dreimal so breit wie die engste Stelle, ein Schleicher
-  // anderthalbmal. Deshalb verschmolzen sie zu einer Masse, in der man weder
-  // einzelne Gegner noch ihre Lebensbalken auseinanderhalten konnte - und
-  // jeder Querversatz war wirkungslos, weil kein Platz da war.
+  // Diese Frage steht seit v147 in `npm run gedraenge` und nicht mehr hier,
+  // und der Grund ist eine falsche Zahl, die von hier aus vier Runden lang
+  // weitergereicht wurde.
+  //
+  // Hier wurde die KACHEL gemessen: `enemyArtWidth` teilt jedem Gegner eine
+  // quadratische Flaeche zu, in der sein Bild sitzt. Eine Kachel ist aber
+  // kein Koerper. Der Leerentitan bekommt 102 Weltpunkte und fuellt davon
+  // 59 % - gezeichnet ist er 60 breit und passt mit zehn Punkten Luft je
+  // Seite auf die schmalste Strasse (80). Von hier aus las sich das als
+  // "127 % der engsten Wegstelle", und daraus wurde im Audit der Befund
+  // TF-030: "Er ragt ueber den Rand". Den Befund gab es nie.
+  //
+  // Dieselbe Rechnung meldete auch, zwei kleine Gegner passten nicht
+  // nebeneinander (68 + 68 auf 80). Gemessen an den Figuren sind es 33 + 34
+  // - sie passen.
+  //
+  // Ein Waechter ohne Bilddekoder kann diese Frage nicht beantworten, und
+  // eine Naeherung, die daneben liegt, ist schlechter als keine: sie sieht
+  // aus wie ein Befund. Was HIER bleibt, ist die Kachelfrage selbst -
+  // Kacheln, die einander ueberdecken, sind ein Zeichenproblem und keines
+  // des Weges.
   {
     const engste = Math.min(...paths.map((p) => p.widthRange().min)) * 2;
-    for (const [id, def] of Object.entries(ENEMIES)) {
-      const breit = enemyArtWidth(id as EnemyId);
-      const anteil = breit / engste;
-      if (anteil > 1.35) {
-        fail(
-          `${map.id}: ${def.name} ist ${Math.round(anteil * 100)} % der engsten Wegstelle ` +
-          `(${Math.round(breit)} zu ${Math.round(engste)}) - er passt nicht auf die Strasse.`,
-        );
-      } else if (anteil > 1.0) {
-        warn(`${map.id}: ${def.name} fuellt die engste Stelle zu ${Math.round(anteil * 100)} %.`);
-      }
-    }
-    // Und zwei kleine Gegner sollten nebeneinander Platz haben - sonst gibt es
-    // keine Kolonne, sondern eine Reihe.
-    const kleinste = Math.min(...Object.keys(ENEMIES).map((id) => enemyArtWidth(id as EnemyId)));
-    if (kleinste * 1.7 > engste) {
-      warn(`${map.id}: zwei kleine Gegner passen nicht nebeneinander (${Math.round(kleinste)} bei Weg ${Math.round(engste)}).`);
+    const groesste = Math.max(...Object.keys(ENEMIES).map((id) => enemyArtWidth(id as EnemyId)));
+    if (groesste > engste * 2) {
+      fail(`${map.id}: die groesste Gegnerkachel ist ${Math.round(groesste)} bei einer `
+        + `engsten Strasse von ${Math.round(engste)} - mehr als das Doppelte. Dann ueberdecken `
+        + 'sich Nachbarn, ganz gleich wie schmal die Figur darin ist.');
     }
   }
 

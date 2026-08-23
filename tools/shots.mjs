@@ -320,6 +320,57 @@ takes.push(['infanterie-nah', () => shot('infanterie-nah', 844, 390, (s, r) => {
   return 0;
 })]);
 
+// --- Passt der Leerentitan auf die Strasse? (TF-030)
+//
+// Gemessen ist er 102 Bildpunkte breit, die engste Stelle 80. Ob das
+// aussieht wie ein Riese oder wie ein Fehler, sagt keine Zahl (Regel 8).
+takes.push(['titan-enge', () => shot('titan-enge', 844, 390, (s, r) => {
+  // Ascheschlucht, nicht Spiralhain: dort ist der begehbare Weg mit 80
+  // Weltpunkten am schmalsten. Auf dem Spiralhain sind es 84.
+  s.reset(1, 'normal', 'ascheschlucht');
+  s.waveIndex = s.waves.length - 1;
+  s.startWave();
+  const bahn = s.lanes[0];
+  let ziel = null;
+  // Ohne Tuerme laeuft der Kristall leer, bevor der Titan ueberhaupt
+  // erscheint - dann zeigt die Aufnahme eine leere Strasse (der Fehler der
+  // ersten Fassung). Der Kristall wird deshalb in jedem Bild aufgefuellt,
+  // nicht hochgesetzt: bei 99999 Leben rechnet der Renderer einen
+  // Leuchtkreis von 71000 Punkten und Skia bricht ab.
+  for (let i = 0; i < 60 * 200 && !ziel; i++) {
+    s.lives = s.maxLives;
+    s.update(DT);
+    ziel = s.enemies.find((e) => e.def === 'titan') ?? null;
+  }
+  if (ziel) {
+    // An die engste Stelle der Bahn setzen - nicht warten, bis er zufaellig
+    // dort steht. Gesucht wird sie am Weg selbst, nicht abgeschrieben.
+    // Die engste Stelle des BEGEHBAREN Wegs, nicht die engste ueberhaupt.
+    //
+    // Bei s = 0 ist jede Bahn 80 Punkte breit - das ist das Tor, aus dem die
+    // Gegner treten. Die erste Fassung dieser Aufnahme setzte den Titanen
+    // genau dorthin, wo ihn das Tor verdeckte, und zeigte eine leere
+    // Strasse. Gesucht wird deshalb im mittleren Drittel der Bahn - dort
+    // liegt die Engstelle, die ein Spieler wirklich sieht.
+    let engste = 0, engstesMass = Infinity;
+    for (let sw = bahn.length * 0.15; sw < bahn.length * 0.85; sw += 8) {
+      const h = bahn.at(sw).half;
+      if (h < engstesMass) { engstesMass = h; engste = sw; }
+    }
+    ziel.travelled = engste;
+    ziel.lane = 0;
+    ziel.side = 0;
+    s.update(DT);
+  }
+  if (ziel) {
+    r.resize();
+    r.zoomAt(3.4, 422, 195);
+    const p = r.worldToScreen(ziel.x, ziel.y);
+    r.panBy(422 - p.x, 195 - p.y);
+  }
+  return 0;
+})]);
+
 takes.push(['infanterie', () => shot('infanterie', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 6);

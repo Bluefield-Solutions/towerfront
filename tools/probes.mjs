@@ -973,6 +973,16 @@ const PROBEN = [
     // Ein Ticket steht im Masterplan an drei Stellen. Nach TF-007 waren
     // zwei nachgetragen und eine nicht - beim naechsten Nachschlagen stand
     // es wieder offen da.
+    // Und dasselbe fuer ein WIDERLEGTES Ticket. Der erste Entwurf des
+    // Waechters kannte nur "erledigt" - und liess genau den Eintrag durch,
+    // der ihn ausgeloest hatte.
+    name: 'Widerlegtes Ticket nur an einer Stelle abgehakt',
+    datei: 'docs/Towerfront-MASTERPLAN.md',
+    regel: /\| 6 \| TF-030 \|([^\n]*)\*\*widerlegt v147\*\*[^\n|]*\|/,
+    ersatz: '| 6 | TF-030 |$1— |',
+    tor: 'doku',
+  },
+  {
     name: 'Erledigtes Ticket nur an einer Stelle abgehakt',
     datei: 'docs/Towerfront-MASTERPLAN.md',
     regel: /\| 3 \| TF-007 \|([^\n]*)\*\*erledigt v144\*\* \|/,
@@ -985,8 +995,12 @@ const PROBEN = [
     // vollstaendig aussieht.
     name: 'Zwei Tore in der Tabelle vertauscht',
     datei: 'docs/Towerfront-KONZEPT-und-PIPELINE.md',
-    regel: /\| 9 \| Messung Simulation \| `npm run bench` \|([^\n]*)\n\| 10 \| Messung Zeichnen \| `npm run bench-draw` \|([^\n]*)\n/,
-    ersatz: '| 9 | Messung Zeichnen | `npm run bench-draw` |$2\n| 10 | Messung Simulation | `npm run bench` |$1\n',
+    // OHNE Zeilennummern: die erste Fassung nannte "| 9 |" und "| 10 |" und
+    // fiel aus, sobald ein Tor davor eingefuegt wurde - "Muster fehlt", also
+    // Fall 3 aus dem Kopf dieser Datei. Eine Probe, die auf die Zahl zeigt,
+    // die sie pruefen soll, veraltet zwangslaeufig mit ihr.
+    regel: /\| (\d+) \| Messung Simulation \| `npm run bench` \|([^\n]*)\n\| (\d+) \| Messung Zeichnen \| `npm run bench-draw` \|([^\n]*)\n/,
+    ersatz: '| $1 | Messung Zeichnen | `npm run bench-draw` |$4\n| $3 | Messung Simulation | `npm run bench` |$2\n',
     tor: 'doku',
   },
   {
@@ -995,6 +1009,22 @@ const PROBEN = [
     regel: /\| 7 \| Geschosse \| `npm run geschossetor` \|[^\n]*\n/,
     ersatz: '',
     tor: 'doku',
+  },
+  {
+    // TF-030: die Figuren wachsen ueber die Strasse hinaus.
+    name: 'Gegner passen nicht mehr auf die Strasse',
+    datei: 'src/gfx/enemyart.ts',
+    regel: /  const roh = Math\.max\(ENEMIES\[id\]\.radius \* 3\.0, 50\);/,
+    ersatz: '  const roh = Math.max(ENEMIES[id].radius * 6.0, 50);',
+    tor: 'gedraengetor',
+  },
+  {
+    // Und die Gegenrichtung: die Strasse schrumpft unter die Figuren.
+    name: 'Strasse schrumpft unter die Gegner',
+    datei: 'src/data/maps.ts',
+    regel: /w: (\d+) \}/g,
+    ersatz: 'w: 18 }',
+    tor: 'gedraengetor',
   },
   {
     // TF-032: "hinten" tut dasselbe wie "vorn" - eine Wahl ohne Folgen.

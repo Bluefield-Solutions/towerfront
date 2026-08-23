@@ -62,6 +62,7 @@ npm run kritik      Wertung nach Testerkategorien, Ziel über 90
                     tippen, dann ablesen. Die Zahlen, die hier nicht
                     entstehen können.
 npm run rohbilder   welche Rohbilder fehlen und woran das hängt
+npm run turmprobe   EINEN Entwurf messen und neben den heutigen Turm legen
 npm run appsymbol   Startbildschirm-Symbol und die zehn Startbilder backen
 npm run kartenwechsel  was ein Kartenaufbau an Bildpunkten kostet
                     (mit `-- --browser` zusätzlich im Browser mit Telefondrossel)

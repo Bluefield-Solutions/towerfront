@@ -40,7 +40,8 @@
     "entrauschprobe": "node tools/entrauschprobe.mjs",
     "einbettungstor": "node tools/einbettung.mjs --tor",
     "zielplatte": "tsx tools/zielplatte.mjs",
-    "zielplattentor": "tsx tools/zielplatte.mjs --tor"
+    "zielplattentor": "tsx tools/zielplatte.mjs --tor",
+    "turmprobe": "node tools/turmprobe.mjs"
   },
   "keywords": [],
   "author": "",

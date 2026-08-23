@@ -16,7 +16,7 @@ import type { Menu } from '../game/menu';
 import { backgroundVersion, getBackground } from './backgrounds';
 import { artBreite, getTowerArt, towerArtScale, towerArtVersion } from './towerart';
 import { getObjectArtEingebettet, getObjectArtStufeEingebettet } from './objectart';
-import { enemyArtWidth, enemySichtRadius, getEnemyArt } from './enemyart';
+import { enemyArtWidth, enemySichtRadius, getEnemyArt, getEnemyFrost } from './enemyart';
 import {
   drawSprite, getEnemySprite, getSchattenriss, getShadow, getTowerBase, getTowerWeapon,
   roundRect, ENEMY_FRAMES,
@@ -1781,6 +1781,23 @@ export class Renderer {
       // Unterkante - das muss beim Zeichnen zusammenpassen.
       const oben = def.topdown ? -h / 2 : -h * 0.72;
       ctx.drawImage(art, -w / 2, oben, w, h);
+      // Gebremst? Dann traegt die FIGUR die Kaelte, nicht ein Ring um sie.
+      //
+      // Bis v140 lag um jeden gebremsten Gegner ein cyanfarbener Kreis. Ein
+      // Frostturm bremst eine ganze Traube - zwoelf Ringe uebereinander sind
+      // ein Muster und keine Auskunft, und sie verdecken genau das, was man
+      // sehen will. Der Ton sitzt jetzt auf dem Koerper: er sagt dasselbe,
+      // verdeckt nichts und zaehlt richtig.
+      if (e.slowLeft > 0) {
+        const kalt = getEnemyFrost(e.def, s.map.id);
+        if (kalt) {
+          // Die Deckung folgt der Restdauer: wer gleich wieder frei ist,
+          // taut sichtbar auf.
+          ctx.globalAlpha = Math.min(1, e.slowLeft * 1.6) * 0.85;
+          ctx.drawImage(kalt, -w / 2, oben, w, h);
+          ctx.globalAlpha = 1;
+        }
+      }
       if (e.hitFlash > 0.01) {
         const hot = getEnemyArt(e.def, true, s.map.id);
         if (hot) {
@@ -1884,11 +1901,6 @@ export class Renderer {
       }
     }
 
-    if (e.slowLeft > 0) {
-      ctx.strokeStyle = hexA(C.crystal, 0.7);
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(e.x, e.y - alt, sicht + 4, 0, Math.PI * 2); ctx.stroke();
-    }
   }
 
   /** Das Leuchten der Bosse, gebuendelt: ein Halo unter allem, was steht. */

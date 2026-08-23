@@ -919,6 +919,15 @@ const PROBEN = [
     tor: 'bildtor',
   },
   {
+    // Ohne den kalten Ton sieht man einem gebremsten Gegner nichts mehr an -
+    // die Bremse waere wieder eine Zahl im Modell statt einer Auskunft.
+    name: 'Gebremste Gegner sehen aus wie freie',
+    datei: 'src/gfx/renderer.ts',
+    regel: /          ctx\.globalAlpha = Math\.min\(1, e\.slowLeft \* 1\.6\) \* 0\.85;/,
+    ersatz: '          ctx.globalAlpha = 0;',
+    tor: 'bildtor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

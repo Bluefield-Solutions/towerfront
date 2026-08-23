@@ -800,6 +800,56 @@ pruefungen.push(async () => {
   }
 });
 
+// --- Sieht man einem gebremsten Gegner an, dass er gebremst ist? (v141)
+//
+// Bis v140 lag um jeden Gebremsten ein cyanfarbener Ring. Bei einem
+// Frostturm ueber einer Traube waren das zwoelf Ringe uebereinander - ein
+// Muster statt einer Auskunft, und es verdeckte genau die Gegner, um die es
+// ging. Jetzt traegt die Figur selbst die Kaelte.
+//
+// Gemessen wird der Unterschied zwischen demselben Gegner mit und ohne
+// Bremse. Bleibt er unter der Schwelle, sagt das Bild nichts - dann ist die
+// Bremse eine Zahl im Modell und keine Auskunft auf dem Schirm.
+pruefungen.push(async () => {
+  const canvas = createCanvas(844 * 2, 390 * 2);
+  Object.defineProperty(canvas, 'clientWidth', { get: () => 844 });
+  Object.defineProperty(canvas, 'clientHeight', { get: () => 390 });
+  const s = new GameState();
+  const r = new Renderer(canvas);
+  r.menu = null;
+  s.reset(4, 'normal', 'spiralhain');
+  s.quality = 'niedrig';
+  r.resize();
+  r.draw(s);
+  for (const k of Object.keys(OBJECT_ART)) getObjectArt(k);
+  getBackground(s.map.id);
+  for (const id of Object.keys(ENEMIES)) getEnemyArt(id, false, s.map.id);
+  await settle();
+  r.kartenaufbauAbschliessen(s);
+  const g = canvas.getContext('2d');
+  const nimm = () => {
+    r.draw(s);
+    return Uint8ClampedArray.from(g.getImageData(0, 0, canvas.width, canvas.height).data);
+  };
+  const e = s.spawnZumPruefen('brute', 0, 0);
+  if (!e) throw new Error('Bremsanzeige: kein Gegner setzbar.');
+  e.travelled = s.lanes[0].length * 0.45;
+  s.update(1 / 60);
+  const frei = nimm();
+  e.slowLeft = 3;
+  e.slowFactor = 0.5;
+  const gebremst = nimm();
+  let anders = 0;
+  for (let i = 0; i < frei.length; i += 4) {
+    if (Math.abs(frei[i] - gebremst[i]) > 8 || Math.abs(frei[i + 2] - gebremst[i + 2]) > 8) anders++;
+  }
+  console.log(`  Bremsanzeige: ${anders} Bildpunkte aendern sich, wenn ein Gegner bremst`);
+  if (anders < 300) {
+    throw new Error(`ein gebremster Gegner sieht zu ${anders} Bildpunkten anders aus als ein `
+      + 'freier - man sieht der Figur die Bremse nicht an.');
+  }
+});
+
 // --- Die anderen Karten
 for (const m of MAPS.slice(1)) {
   takes.push([m.id, () => shot(m.id, 844, 390, (s) => {

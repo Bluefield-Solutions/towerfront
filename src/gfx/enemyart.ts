@@ -176,4 +176,42 @@ export const enemyArtWidth = (id: EnemyId): number => {
  *  groesser - dort sassen die Ringe schon immer zu eng. */
 export const enemySichtRadius = (id: EnemyId): number => enemyArtWidth(id) / 3.0;
 
+/** Dasselbe Bild, kalt uebertoent - fuer gebremste Gegner.
+ *
+ *  Statt eines RINGS um jeden Gebremsten. Der Ring war die naheliegende
+ *  Loesung und im Gefecht die falsche: ein Frostturm bremst eine ganze
+ *  Traube, und dann liegen zwoelf cyanfarbene Kreise uebereinander. Man sieht
+ *  ein Muster und keine Gegner mehr - gemeldet als "das Nutzerbild frisst das
+ *  Spielbild".
+ *
+ *  Der Ton sitzt auf der Figur selbst: er sagt dasselbe, verdeckt nichts und
+ *  zaehlt richtig. Zwoelf gebremste Gegner sind zwoelf blaue Gegner, nicht
+ *  zwoelf Ringe uebereinander.
+ *
+ *  Gebacken statt zur Laufzeit getoent: dasselbe Verfahren wie beim
+ *  Trefferblitz, und aus demselben Grund - ein `source-atop` je Gegner und
+ *  Bild kostet mehr als ein Bild im Vorrat. */
+const frostCache = new Map<string, HTMLCanvasElement>();
+
+export function getEnemyFrost(id: EnemyId, mapId = 'spiralhain'): HTMLCanvasElement | null {
+  const key = `${id}|${mapId}`;
+  const hit = frostCache.get(key);
+  if (hit) return hit;
+  const grund = getEnemyArt(id, false, mapId);
+  if (!grund) return null;
+  const cv = document.createElement('canvas');
+  cv.width = grund.width; cv.height = grund.height;
+  const g = cv.getContext('2d');
+  if (!g) return null;
+  g.drawImage(grund, 0, 0);
+  g.globalCompositeOperation = 'source-atop';
+  // Kein reines Weiss und kein volles Cyan: der Gegner soll erkennbar
+  // bleiben. Was sich aendert, ist die Temperatur, nicht die Art.
+  g.fillStyle = 'rgba(150, 214, 255, 0.62)';
+  g.fillRect(0, 0, cv.width, cv.height);
+  g.globalCompositeOperation = 'source-over';
+  frostCache.set(key, cv);
+  return cv;
+}
+
 export const hasEnemyArt = (id: EnemyId): boolean => id in ENEMY_ART;

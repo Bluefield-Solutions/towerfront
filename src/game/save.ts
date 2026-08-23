@@ -81,14 +81,28 @@ export interface SaveGame {
    *  120 ms an seinem alten Ziel geblieben waere. Genug, um den Verlauf zu
    *  veraendern. */
   /** [Turmart, x, y, Stufe, Erledigt, Schaden, Nachladerest, Zielsuchrest,
-   *  Zweig, Zielindex, Zielwahl]
+   *  Zweig, Zielindex, Zielwahl, Zielwinkel]
    *
    *  Die Zielwahl ist ANGEHAENGT, nicht eingeschoben. Ein Stand aus v106 hat
    *  zehn Felder und laedt weiter - er bekommt den Standard. Deshalb bleibt
    *  auch die Formatnummer, wo sie war: niemandem wird die laufende Partie
-   *  verworfen, nur weil ein Turm jetzt mehr weiss. */
+   *  verworfen, nur weil ein Turm jetzt mehr weiss.
+   *
+   *  Der Zielwinkel kam in v145 dazu. Er ist reine Darstellung - an ihm
+   *  haengt, wohin die Waffe blickt und damit, wo die Muendung sitzt. Ohne
+   *  ihn stuenden nach dem Fortsetzen alle Tuerme auf demselben Winkel und
+   *  schwenkten erst beim naechsten Ziel wieder auseinander. Das sieht man,
+   *  also gehoert es in den Stand.
+   *
+   *  Der Zwischenschritt dorthin ist es wert, aufgeschrieben zu werden: der
+   *  erste Entwurf liess Geschosse WIRKLICH an der Muendung entstehen. Damit
+   *  wurde der Winkel Teil der Simulation, die Determinismus-Pruefung schlug
+   *  an - und die Balance fiel um ein Fuenftel, weil ein Versatz von hundert
+   *  Bildpunkten als hundert Weltpunkte Flugstrecke mitgerechnet wurde. In
+   *  einer Dreiviertelansicht ist er aber HOEHE. Deshalb sinkt heute nur der
+   *  Zeichenversatz ab, und die Flugbahn ist dieselbe wie in v144. */
   towers: [TowerId, number, number, number, number, number, number, number, BranchIndex, number,
-    number?][];
+    number?, number?][];
   /** [Gegnerart, x, y, hp, hpMax, Segment, Strecke, Bremsfaktor, Bremsrest, Wackeln] */
   /** [Gegnerart, x, y, hp, hpMax, Segment, Strecke, Bremsfaktor, Bremsrest,
    *  Wackeln, Bahn] */

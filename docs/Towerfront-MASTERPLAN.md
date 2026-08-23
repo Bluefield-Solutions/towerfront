@@ -1185,7 +1185,7 @@ XL > 10 Runden.
 | TF-016 | QA | ERLEDIGT v143 | Verkauf/Ausbau während eines Schusses ungeprüft | Möglicher Verweis auf einen entfernten Turm | Zwei Rauchtestschritte | P1 | XS | kein Fehler; zwei stehende Prüfungen, dazu die `dead`-Sperre |
 | TF-017 | Art | DESIGN | Drei Kamerawinkel im selben Bild | Haupteindruck „zusammengewürfelt" | Einheitlicher Winkel, gemessen | P1 | L | TF-011, Rohbilder |
 | TF-018 | Balancing | VERIFIED | Balance seit v139 nicht nachgeeicht | Normal zu leicht (41 statt 30) | Alle drei Grade zusammen eichen | P2 | S | — |
-| TF-019 | Combat | VERIFIED | Geschosse starten in der Turmmitte | Schüsse kommen nicht aus dem Rohr | Mündungspunkt je Turmart | P2 | S | — |
+| TF-019 | Combat | ERLEDIGT v145 | Geschosse starten in der Turmmitte | Schüsse kommen nicht aus dem Rohr | Mündungspunkt je Turmart | P2 | S | 46–50 Bildschirmpunkte Versatz, Tor `muendungstor` |
 | TF-020 | Architecture | DESIGN | `GameState` mischt Simulation und Effekte | Determinismus hängt an Disziplin | Trennung `Sim` / `Fx` | P2 | L | — |
 | TF-021 | Architecture | DESIGN | Angriffsarten als `if`-Kette | Neue Turmarten passen nicht hinein | Turmverhalten als Datenobjekt | P2 | M | TF-020 |
 | TF-022 | UI | DESIGN | Turmknöpfe ohne Turmbild | Keine Wiedererkennung | Gebackenes Turmbild im Knopf | P2 | S | — |
@@ -1620,7 +1620,7 @@ möglich ist.
 | 1 | TF-001 | Bauplätze dauerhaft sichtbar | Placement | Nur unter dem Finger | Der letzte P0 der Bedienung fällt | P0 | S | — |
 | 2 | TF-016 | Verkauf und Ausbau während eines Schusses prüfen | QA | Ungeprüfter Verweis | Zwei Lücken im Katalog zu | P1 | XS | **erledigt v143** |
 | 3 | TF-007 | Geschosse suchen ein Ersatzziel | Combat | Schaden verschwindet | Sichtbar sauberes Gefecht | P1 | S | — |
-| 4 | TF-019 | Mündungspunkt je Turmart | Combat | Schuss aus der Mitte | Schüsse kommen aus dem Rohr | P2 | S | — |
+| 4 | TF-019 | Mündungspunkt je Turmart | Combat | Schuss aus der Mitte | Schüsse kommen aus dem Rohr | P2 | S | **erledigt v145** |
 | 5 | TF-032 | Zielmodus „hinten" | Targeting | Durchbrecher | Fünfte echte Wahl | P2 | XS | — |
 | 6 | TF-030 | Titanbreite gegen Straßenbreite | Path | Ragt über den Rand | Kein Überstand mehr | P2 | XS | — |
 | 7 | TF-035 | Toten Code entfernen | Code | Ballast | Weniger Fläche für Fehler | P3 | XS | — |

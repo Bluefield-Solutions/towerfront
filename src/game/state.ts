@@ -1,4 +1,5 @@
 import { WORLD_W, WORLD_H, C } from '../data/config';
+import { muendung } from '../data/turmgestalt';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import {
   TOWERS, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor,
@@ -55,6 +56,11 @@ export const ZIER_AUFHELLUNG = 0.45;
 export const ERSATZ_UMKREIS = 240;
 /** Kosinus des halben Oeffnungswinkels des Suchkegels. 0,766 sind 40 Grad. */
 export const ERSATZ_KEGEL = 0.766;
+
+/** Wie lange der Muendungsversatz braucht, um auf die Bodenebene zu sinken.
+ *  Eine Zehntelsekunde: bei Geschosstempo 840 sind das rund achtzig
+ *  Weltpunkte Flug, also etwa die Hoehe, aus der es kommt. */
+export const VERSATZ_ZEIT = 0.1;
 
 export class GameState {
   /** Die Karte kann zwischen zwei Partien wechseln, deshalb ist hier nichts
@@ -340,7 +346,7 @@ export class GameState {
   }), 900);
   private projectilePool = new Pool<Projectile>(() => ({
     kind: 'homing', x: 0, y: 0, sx: 0, sy: 0, tx: 0, ty: 0, target: null, owner: null,
-    dirX: 1, dirY: 0, luft: false,
+    dirX: 1, dirY: 0, luft: false, ox: 0, oy: 0, oT: 0,
     speed: 0, damage: 0, slow: 0, slowTime: 0, splash: 0, pierce: 0, color: '#fff',
     t: 0, dur: 1, life: 0, dead: true,
   }), 200);
@@ -1161,6 +1167,16 @@ export class GameState {
       t.target = target;
       if (!target) continue;
 
+      // Vorgehalten wird ueber die Strecke auf der KARTE - von der
+      // Standmitte, nicht von der Muendung.
+      //
+      // Das ist keine Nachlaessigkeit, sondern der Punkt: die Karte ist in
+      // Dreiviertelansicht gemalt. Die Muendung liegt hundertvierzehn
+      // Bildpunkte ueber dem Fuss, aber sie steht auf demselben Fleck - das
+      // ist HOEHE, keine Entfernung. Rechnet man sie als Entfernung mit,
+      // fliegt jede Granate ein Sechstel zu lang und schlaegt hinter der
+      // Traube ein: `npm run sim` fiel damit von 34 auf 16 von 60 Punkten
+      // auf der Ascheschlucht, bevor es auffiel.
       const aim = def.attack === 'splash'
         ? this.predict(target, dist(t.x, t.y, target.x, target.y) / def.projectileSpeed)
         : { x: target.x, y: target.y };
@@ -1194,10 +1210,24 @@ export class GameState {
     aim: Vec, st: { damage: number; slow?: number; slowTime?: number; splash?: number; pierce?: number },
     color: string, speed: number,
   ): Projectile {
+    // Der Schuss verlaesst das ROHR, nicht die Standmitte.
+    //
+    // Bis v144 stand hier `t.x, t.y` - beim Bogenturm rund hundert
+    // Weltpunkte unter der Armbrust, beim Moerser hundertvierzehn unter der
+    // Rohroeffnung. Auf dem Zielgeraet sind das gut siebzig
+    // Bildschirmpunkte: das Geschoss erschien im Sockel und flog durch den
+    // eigenen Turm hindurch (TF-019).
+    //
+    // Wo das Rohr endet, steht in `src/data/turmgestalt.ts` - derselben
+    // Stelle, aus der die Zeichenschicht ihre Masse nimmt.
+    const m = muendung(t.def, t.angle);
     const d = dist(t.x, t.y, aim.x, aim.y);
     const p = this.projectilePool.obtain();
     p.kind = kind;
     p.x = t.x; p.y = t.y; p.sx = t.x; p.sy = t.y; p.tx = aim.x; p.ty = aim.y;
+    // Gesehen kommt der Schuss aus dem Rohr, gerechnet vom Fuss - siehe
+    // `ox` in types.ts.
+    p.ox = m.x; p.oy = m.y; p.oT = 1;
     p.target = target; p.owner = t; p.speed = speed; p.damage = st.damage;
     p.slow = st.slow ?? 0; p.slowTime = st.slowTime ?? 0; p.splash = st.splash ?? 0;
     p.pierce = st.pierce ?? 0;
@@ -1238,7 +1268,9 @@ export class GameState {
     seen.clear();
     const pts = this.chainPts;
     pts.length = 0;
-    pts.push({ x: t.x, y: t.y });
+    // Auch der Blitz geht vom Kristall aus, nicht vom Sockel.
+    const m = muendung(t.def, t.angle);
+    pts.push({ x: t.x + m.x, y: t.y + m.y });
     let cur: Enemy | null = first;
     let dmg = damage;
     const jumpRange = range * 0.62;
@@ -1358,6 +1390,8 @@ export class GameState {
       // gestorben ist. Heute setzt niemand `dead` von aussen; wer es das
       // naechste Mal tut, faellt in dieselbe Falle.
       if (p.dead) { any = true; continue; }
+      // Der Muendungsversatz sinkt auf die Bodenebene ab.
+      if (p.oT > 0) p.oT = Math.max(0, p.oT - dt / VERSATZ_ZEIT);
       p.life -= dt;
       if (p.life <= 0) {
         if (p.kind === 'homing') this.stats.schuesseOhneWirkung++;
@@ -1734,7 +1768,10 @@ export class GameState {
         // Formatnummer bleibt deshalb, wo sie war, und niemandem wird die
         // laufende Partie verworfen.
         ZIELWAHL_ORDNUNG.indexOf(t.zielwahl),
-      ]) as unknown as SaveGame['towers'],
+        // Seit v144 Teil der Simulation, nicht mehr nur des Bildes: an ihm
+        // haengt die Muendung.
+        t.angle,
+      ]) as SaveGame['towers'],
       enemies: this.enemies.map((e) => [
         e.def, e.x, e.y, e.hp, e.hpMax, e.travelled, e.slowFactor, e.slowLeft, e.wobble,
         e.lane, e.auraIn, e.side, e.shield, e.traeger,
@@ -1798,12 +1835,12 @@ export class GameState {
 
     const targetIdx: number[] = [];
     for (const [def, tx, ty, level, kills, damageDone, cooldownLeft, retargetIn, branch, tIdx,
-      zIdx] of save.towers) {
+      zIdx, winkel] of save.towers) {
       targetIdx.push(tIdx ?? -1);
       const t: Tower = {
         id: this.nextId++, def, x: tx, y: ty,
         level, branch: (branch ?? null) as BranchIndex,
-        cooldownLeft: cooldownLeft ?? 0, angle: -Math.PI / 2, recoil: 0, flash: 0,
+        cooldownLeft: cooldownLeft ?? 0, angle: winkel ?? -Math.PI / 2, recoil: 0, flash: 0,
         pulse: 0, spring: 0,
         zielwahl: ZIELWAHL_ORDNUNG[zIdx ?? 0] ?? 'vorn',
         target: null, retargetIn: retargetIn ?? 0, kills, damageDone,

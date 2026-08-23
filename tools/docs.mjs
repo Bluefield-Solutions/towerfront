@@ -104,11 +104,33 @@ for (const [name, text] of alle) {
       fail('Towerfront-KONZEPT-und-PIPELINE.md: die Tortabelle fehlt.');
     } else {
       const block = tabelle[1].slice(i, tabelle[1].indexOf('\n\n', i));
-      for (const t of pkg.scripts.gate.split('&&')) {
-        const cmd = (t.match(/npm run ([a-z-]+)/) ?? [])[1];
-        if (!cmd) continue;
-        if (!block.includes(`\`npm run ${cmd}\``)) {
+      // Reihenfolge UND Nummerierung, nicht nur Vorhandensein.
+      //
+      // Beim Einfuegen des achten Tores in v145 rutschten zwei Zeilen in die
+      // falsche Reihenfolge (9 und 10 vertauscht), und die reine
+      // Vorhandensein-Pruefung sah nichts. Eine Tabelle, deren Nummern nicht
+      // stimmen, ist schlimmer als keine: man vergleicht sie mit der Kette
+      // und glaubt, sie stimme.
+      const kette = pkg.scripts.gate.split('&&')
+        .map((t) => (t.match(/npm run ([a-z-]+)/) ?? [])[1])
+        .filter((c) => c && c !== 'bericht');
+      const zeilen = [...block.matchAll(/^\| (\d+) \| [^|]+\| `npm run ([a-z-]+)` \|/gm)]
+        .map((m) => ({ nr: Number(m[1]), cmd: m[2] }));
+      for (const cmd of kette) {
+        if (!zeilen.some((z) => z.cmd === cmd)) {
           fail(`Towerfront-KONZEPT-und-PIPELINE.md: die Tortabelle fuehrt "npm run ${cmd}" nicht.`);
+        }
+      }
+      for (let n = 0; n < Math.min(kette.length, zeilen.length); n++) {
+        if (zeilen[n].nr !== n + 1) {
+          fail(`Towerfront-KONZEPT-und-PIPELINE.md: Zeile ${n + 1} der Tortabelle `
+            + `traegt die Nummer ${zeilen[n].nr}.`);
+          break;
+        }
+        if (zeilen[n].cmd !== kette[n]) {
+          fail(`Towerfront-KONZEPT-und-PIPELINE.md: an Stelle ${n + 1} steht `
+            + `"${zeilen[n].cmd}", die Kette hat dort "${kette[n]}".`);
+          break;
         }
       }
     }

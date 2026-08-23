@@ -970,11 +970,67 @@ const PROBEN = [
   {
     // Die Tortabelle im Pipeline-Dokument darf nicht hinter der Kette
     // zurueckbleiben - sechs Tore lang tat sie das unbemerkt.
+    // Und die Reihenfolge: zwei vertauschte Zeilen sind schwerer zu sehen
+    // als eine fehlende - und richten mehr an, weil die Tabelle dann
+    // vollstaendig aussieht.
+    name: 'Zwei Tore in der Tabelle vertauscht',
+    datei: 'docs/Towerfront-KONZEPT-und-PIPELINE.md',
+    regel: /\| 9 \| Messung Simulation \| `npm run bench` \|([^\n]*)\n\| 10 \| Messung Zeichnen \| `npm run bench-draw` \|([^\n]*)\n/,
+    ersatz: '| 9 | Messung Zeichnen | `npm run bench-draw` |$2\n| 10 | Messung Simulation | `npm run bench` |$1\n',
+    tor: 'doku',
+  },
+  {
     name: 'Ein Tor fehlt in der Tortabelle',
     datei: 'docs/Towerfront-KONZEPT-und-PIPELINE.md',
     regel: /\| 7 \| Geschosse \| `npm run geschossetor` \|[^\n]*\n/,
     ersatz: '',
     tor: 'doku',
+  },
+  {
+    // TF-019: die Muendung wieder in die Turmmitte legen.
+    name: 'Schuesse kommen wieder aus dem Sockel',
+    datei: 'src/data/turmgestalt.ts',
+    // Am Ergebnis angesetzt, nicht am Verzeichnis: der erste Anlauf schob
+    // ein leeres Objekt VOR die Eintraege - die standen danach immer noch da,
+    // und die Probe bewies nichts (Regel 3).
+    regel: /  const m = MUENDUNG\[id\];\n  if \(!m\) return \{ x: 0, y: 0 \};/,
+    ersatz: '  const m = MUENDUNG[id];\n  if (m || !m) return { x: 0, y: 0 };',
+    tor: 'muendungstor',
+  },
+  {
+    // Ein Punkt, der neben der Figur liegt - das Rohr endet im Nichts.
+    name: 'Muendung schwebt neben dem Turm',
+    datei: 'src/data/turmgestalt.ts',
+    regel: /  mortar: \{ x: 0\.404, y: 0\.032, dreht: false \},/,
+    ersatz: '  mortar: { x: 0.93, y: 0.032, dreht: false },',
+    tor: 'muendungstor',
+  },
+  {
+    // Und einer, der im Sockel sitzt statt oben am Rohr.
+    name: 'Muendung sitzt im Sockel',
+    datei: 'src/data/turmgestalt.ts',
+    regel: /  prism: \{ x: 0\.589, y: 0\.035, dreht: false \},/,
+    ersatz: '  prism: { x: 0.5, y: 0.62, dreht: false },',
+    tor: 'muendungstor',
+  },
+  {
+    // Der Frostturm hat kein Rohr - ein Eintrag waere eine Behauptung ueber
+    // ein Bild, das keine Waffe zeigt.
+    name: 'Frostturm bekommt ein Rohr angedichtet',
+    datei: 'src/data/turmgestalt.ts',
+    regel: /  \/\/ Der Frostturm hat kein Rohr/,
+    ersatz: '  frost: { x: 0.5, y: 0.05, dreht: false },\n  // Der Frostturm hat kein Rohr',
+    tor: 'muendungstor',
+  },
+  {
+    // Die teuerste Lehre dieser Runde: der Versatz ist Hoehe im Bild. Wer
+    // ihn in die Flugbahn zurueckholt, macht das Spiel messbar schwerer,
+    // ohne dass eine Balancezahl es erklaeren wuerde.
+    name: 'Muendungsversatz rutscht in die Flugbahn',
+    datei: 'src/game/state.ts',
+    regel: /    p\.x = t\.x; p\.y = t\.y; p\.sx = t\.x; p\.sy = t\.y; p\.tx = aim\.x; p\.ty = aim\.y;/,
+    ersatz: '    p.x = t.x + m.x; p.y = t.y + m.y; p.sx = p.x; p.sy = p.y; p.tx = aim.x; p.ty = aim.y;',
+    tor: 'muendungstor',
   },
   {
     // TF-007: das Ersatzziel wieder ausgebaut - dann verpufft wieder jeder

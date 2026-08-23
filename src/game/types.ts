@@ -112,6 +112,17 @@ export interface Projectile {
    *  Achse des Kegels, in dem ein Ersatzziel gesucht wird, wenn das
    *  eigentliche Ziel im Flug stirbt. */
   dirX: number; dirY: number;
+  /** Anfangsversatz zur Muendung und wie stark er noch wirkt (1 bis 0).
+   *
+   *  Er gehoert zur ZEICHNUNG, nicht zur Flugbahn. Die Karte ist in
+   *  Dreiviertelansicht gemalt: die Muendung liegt hundert Bildpunkte ueber
+   *  dem Turmfuss, steht aber auf demselben Fleck. Als Strecke mitgerechnet
+   *  waere jeder Schuss laenger unterwegs, und der Moerser schluege hinter
+   *  der Traube ein - gemessen ein Fuenftel weniger Punkte in `npm run sim`.
+   *  Also fliegt das Geschoss auf der Karte wie eh und je, und was man
+   *  SIEHT, kommt aus dem Rohr und sinkt binnen einer Zehntelsekunde auf die
+   *  Bodenebene. Genau das tut ein Geschoss in dieser Ansicht auch. */
+  ox: number; oy: number; oT: number;
   /** Ob der Schuetze Luftziele trifft. Steht am Geschoss und nicht am Turm,
    *  weil der Turm verkauft sein kann, waehrend sein Schuss noch fliegt. */
   luft: boolean;

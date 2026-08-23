@@ -643,6 +643,23 @@ takes.push(['bauplaetze', () => shot('bauplaetze', 844, 390, (s) => {
   return 0;
 })]);
 
+// --- Kommt der Schuss aus dem Rohr? (TF-019)
+//
+// Eine Aufnahme mitten in der Salve, nah genug, dass man die Muendung sieht.
+// Die Zahlen dazu stehen in `npm run muendung`; dieses Bild ist der Blick,
+// den kein Tor ersetzt (Regel 8).
+takes.push(['muendung', () => shot('muendung', 844, 390, (s) => {
+  s.reset(5, 'normal', 'spiralhain');
+  stock(s, 6);
+  s.waveIndex = 6;
+  s.startWave();
+  // Genau das Bild, in dem ein Schuss frisch das Rohr verlaesst - der
+  // Muendungsversatz haelt nur eine Zehntelsekunde, also sechs Bilder.
+  // Abgezaehlt, nicht geraten: bei 127 steht ein Geschoss mit mehr als der
+  // halben Versatzstaerke im Feld.
+  return 127;
+})]);
+
 takes.push(['welle15', () => shot('welle15', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 12);

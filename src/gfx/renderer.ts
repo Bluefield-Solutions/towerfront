@@ -3,11 +3,12 @@ import { ENEMIES, type EnemyId } from '../data/enemies';
 import {
   TOWERS, TURM_BREITE, accentFor, statsFor,
   type BranchIndex, type TowerDef, type TowerId, type TowerLevel,
-  DRAW_SCALE, TURM_HOEHE, TOWER_ORDER } from '../data/towers';
+  DRAW_SCALE, TOWER_ORDER } from '../data/towers';
+import { turmMasse, muendung, WAFFE_HOCH, WAFFE_BREIT } from '../data/turmgestalt';
 import { ABILITIES } from '../data/abilities';
 import { makeRng } from '../core/math';
 import { GameState } from '../game/state';
-import type { Enemy, Husk, Tower } from '../game/types';
+import type { Enemy, Husk, Projectile, Tower } from '../game/types';
 import { beginGlowBatch, endGlowBatch, hexA, stampGlow, stampGlowFast } from './glow';
 import { terrainAuftrag, type TerrainAuftrag } from './terrain';
 import { snap } from '../data/maps';
@@ -1327,17 +1328,23 @@ export class Renderer {
       for (const t of s.towers) {
         const def = TOWERS[t.def];
         const tone = accentFor(def, t.branch);
-        if (def.attack === 'aura' || def.attack === 'chain') {
+        // Ruheleuchten: beim Prisma sitzt es im Kristall, beim Frostturm im
+        // Turm selbst - er hat keine Muendung, er pulst im Umkreis.
+        const m0 = muendung(t.def, t.angle);
+        if (def.attack === 'chain') {
+          stampGlowFast(ctx, tone, t.x + m0.x, t.y + m0.y, 36, 0.5);
+        } else if (def.attack === 'aura') {
           stampGlowFast(ctx, tone, t.x, t.y - 8, 36, 0.5);
         }
-        // Muendungsblitz: erhellt kurz die Stellung und den Boden davor.
+        // Muendungsblitz - an der Muendung.
+        //
+        // Er lag bis v144 sechsundzwanzig Weltpunkte vor dem Turmfuss, also
+        // auf dem BODEN vor der Stellung. Dieselbe Verwechslung wie beim
+        // Geschoss: die Zeichenschicht kannte den Kasten des Turms, aber
+        // niemand fragte, wo sein Rohr endet (TF-019).
         if (t.flash > 0.02) {
-          const st = s.towerStats(t);
-          const reach = def.attack === 'aura' ? 0 : 26;
-          stampGlowFast(ctx, tone,
-            t.x + Math.cos(t.angle) * reach, t.y + Math.sin(t.angle) * reach,
+          stampGlowFast(ctx, tone, t.x + m0.x, t.y + m0.y,
             44 + t.flash * 16, t.flash * 0.75);
-          void st;
         }
       }
       endGlowBatch(ctx);
@@ -1510,8 +1517,8 @@ export class Renderer {
         // schob den Kristall aus dem Bild. Die Einzelobjekte sind mit
         // Fuellgrad 0,94 gepackt (siehe art/objekte.json), also fuellt die
         // Figur die Kachel fast ganz.
-        const FUELLUNG = 0.94;
-        const bw = (TURM_BREITE * DRAW_SCALE) / FUELLUNG;
+        const g2 = turmMasse();
+        const bw = g2.w;
         const rec2 = t.recoil * 4;
         ctx.save();
         ctx.translate(t.x, t.y + atem);
@@ -1522,22 +1529,22 @@ export class Renderer {
         // laeuft deshalb hier durch statt durch artMasse. Ohne diese Zeile
         // haetten drei Tuerme die neue Hoehe und einer die alte - genau der
         // Fall, gegen den die Gegenprobe "Tuerme verschieden gross" steht.
-        const sh0 = bw * (sockel.height / sockel.width);
-        const sh = sh0 * TURM_HOEHE;
-        // Fuss bleibt liegen: die Unterkante war 0,28 * Sockelhoehe unter
-        // der Mitte und bleibt es. Gewachsen wird nach oben.
-        const oben = 0.28 * sh0 - sh;
+        // Die Sockelbilder sind quadratisch gepackt (256 x 256), also ist der
+        // Kasten derselbe wie bei jedem anderen Turm - und kommt aus
+        // derselben Stelle.
+        const sh = g2.h;
+        const oben = g2.oben;
         ctx.drawImage(sockel, -bw / 2, oben, bw, sh);
         // Die Waffe sitzt auf der Plattform, nicht auf dem Boden.
         // Auf die Plattform, nicht in den Schaft. Ihr Platz wird von der
         // Oberkante aus gemessen, nicht von der Mitte - die Plattform ist
         // ein Punkt IM Bild und wandert mit ihm nach oben.
-        ctx.translate(0, oben + sh * 0.12);
+        ctx.translate(0, oben + sh * WAFFE_HOCH);
         // Das Bild blickt nach oben, der Winkel zaehlt von rechts.
         ctx.rotate(t.angle + Math.PI / 2);
         // Rueckstoss laeuft entgegen der Schussrichtung.
         ctx.translate(0, rec2);
-        const ww = bw * 0.56;
+        const ww = bw * WAFFE_BREIT;
         const wh = ww * (waffe.height / waffe.width);
         ctx.drawImage(waffe, -ww / 2, -wh / 2, ww, wh);
         ctx.restore();
@@ -1662,8 +1669,10 @@ export class Renderer {
     // richtige Antwort ist: gar nichts ausgleichen. Was der Bildagent als
     // gross gezeichnet hat, ist gross.
     void artBreite;
-    const FUELLUNG = 0.94;
-    const w0 = (TURM_BREITE * DRAW_SCALE * towerArtScale(level)) / FUELLUNG;
+    void level;
+    // Gerechnet wird in `src/data/turmgestalt.ts` - dieselbe Stelle, aus der
+    // die Simulation die Muendung nimmt. Zwei Rechnungen fuer denselben
+    // Kasten waeren eine zu viel (Regel 15).
     // Hoehe getrennt von der Breite - und der Fuss bleibt, wo er war.
     //
     // Der Turm waechst nach OBEN aus seiner Standflaeche heraus, nicht um
@@ -1674,8 +1683,7 @@ export class Renderer {
     //
     // Unterkante war und bleibt y + 0,28 * Breite. Daraus folgt die
     // Oberkante, nicht umgekehrt.
-    const h0 = w0 * TURM_HOEHE;
-    return { w: w0, h: h0, oben: 0.28 * w0 - h0 };
+    return turmMasse();
 
     // Der Massstab kommt IMMER von Stufe 1, nie von der gezeigten Stufe.
     //
@@ -1997,12 +2005,22 @@ export class Renderer {
     const list = s.projectiles;
     if (!list.length) return;
 
+    // Wo ein Geschoss ZU SEHEN ist - nicht, wo es auf der Karte steht.
+    //
+    // Zwei Versaetze kommen zusammen: der Wurfbogen des ballistischen
+    // Geschosses (der war schon da) und der Muendungsversatz, mit dem es
+    // sichtbar aus dem Rohr kommt und binnen einer Zehntelsekunde auf die
+    // Bodenebene sinkt (TF-019). Beide sind Hoehe im Bild, keine Strecke auf
+    // der Karte - der Bodenschatten bleibt deshalb bei `p.x, p.y`.
+    const sx = (p: Projectile): number => p.x + p.ox * p.oT;
+    const sy = (p: Projectile): number => p.y + p.oy * p.oT
+      - (p.kind === 'ballistic' ? Math.sin(p.t * Math.PI) * 46 : 0);
+
     if (hi) {
       beginGlowBatch(ctx);
       for (let i = 0; i < list.length; i++) {
         const p = list[i];
-        const py = p.kind === 'ballistic' ? p.y - Math.sin(p.t * Math.PI) * 46 : p.y;
-        stampGlowFast(ctx, p.color, p.x, py, p.splash ? 24 : 16, 0.6);
+        stampGlowFast(ctx, p.color, sx(p), sy(p), p.splash ? 24 : 16, 0.6);
       }
       endGlowBatch(ctx);
     }
@@ -2040,17 +2058,17 @@ export class Renderer {
           ctx.beginPath();
           offen = true;
         }
-        const py = p.kind === 'ballistic' ? p.y - Math.sin(p.t * Math.PI) * 46 : p.y;
+        const gx = sx(p), py = sy(p);
         if (art.laenge > 0) {
           // Laenglich, und zwar in Flugrichtung. Ein Pfeil, der quer steht,
           // ist kein Pfeil.
           const zx = p.target && !p.target.dead ? p.target.x : p.tx;
           const zy = p.target && !p.target.dead ? p.target.y : p.ty;
-          let dx = zx - p.x, dy = zy - py;
+          let dx = zx - gx, dy = zy - py;
           const len = Math.hypot(dx, dy);
           if (len < 0.001) { dx = 1; dy = 0; } else { dx /= len; dy /= len; }
-          const hx = p.x + dx * art.laenge * 0.35, hy = py + dy * art.laenge * 0.35;
-          const rx = p.x - dx * art.laenge, ry = py - dy * art.laenge;
+          const hx = gx + dx * art.laenge * 0.35, hy = py + dy * art.laenge * 0.35;
+          const rx = gx - dx * art.laenge, ry = py - dy * art.laenge;
           if (art.doppelt) {
             // Quer zur Flugrichtung versetzt - zwei Bolzen nebeneinander.
             const qx = -dy * art.doppelt, qy = dx * art.doppelt;
@@ -2060,8 +2078,8 @@ export class Renderer {
             ctx.moveTo(rx, ry); ctx.lineTo(hx, hy);
           }
         } else {
-          ctx.moveTo(p.x + art.radius, py);
-          ctx.arc(p.x, py, art.radius, 0, Math.PI * 2);
+          ctx.moveTo(gx + art.radius, py);
+          ctx.arc(gx, py, art.radius, 0, Math.PI * 2);
         }
       }
       if (!offen) continue;

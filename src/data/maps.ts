@@ -343,7 +343,15 @@ const laneCache = new Map<string, LanePath[]>();
 export function lanePaths(map: GameMap): LanePath[] {
   let hit = laneCache.get(map.id);
   if (!hit) {
-    hit = map.lanes.map((l) => new LanePath(l));
+    // Der letzte Kontrollpunkt jeder Bahn liegt auf der Zielplattform.
+    //
+    // Nicht in den Rohdaten geaendert, sondern hier: die Rohdaten beschreiben
+    // den Verlauf, und wo alle Bahnen enden, ist EINE Angabe - sie stuende
+    // sonst so oft da, wie es Bahnen gibt, und liefe beim naechsten Mal
+    // auseinander (Regel 15).
+    hit = map.lanes.map((l) => new LanePath(
+      map.ziel ? [...l.slice(0, -1), { ...l[l.length - 1], ...map.ziel }] : l,
+    ));
     laneCache.set(map.id, hit);
   }
   return hit;
@@ -351,6 +359,7 @@ export function lanePaths(map: GameMap): LanePath[] {
 
 /** Der Herzkristall - das Ende aller Bahnen. */
 export function goalOf(map: GameMap): Vec {
+  if (map.ziel) return { x: map.ziel.x, y: map.ziel.y };
   const last = map.lanes[0][map.lanes[0].length - 1];
   return { x: last.x, y: last.y };
 }

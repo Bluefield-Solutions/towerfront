@@ -726,6 +726,25 @@ const PROBEN = [
     tor: 'einbettungstor',
   },
   {
+    // Ohne Zielplattform steht die Festung wieder am Rand statt in der Mitte.
+    // Das Tor findet die Platte im Untergrundbild und vergleicht - eine
+    // eingetragene Zahl ohne Nachpruefung veraltet in diesem Verzeichnis
+    // zuverlaessig.
+    name: 'Zielplattform nicht eingetragen',
+    datei: 'src/data/maps.ts',
+    regel: /  ziel: \{ x: 1734, y: 506 \},/,
+    ersatz: '  // ziel entfernt',
+    tor: 'zielplattentor',
+  },
+  {
+    // Und eine falsche Zahl muss genauso auffallen wie eine fehlende.
+    name: 'Zielplattform steht falsch eingetragen',
+    datei: 'src/data/maps.ts',
+    regel: /  ziel: \{ x: 1734, y: 506 \},/,
+    ersatz: '  ziel: { x: 1500, y: 380 },',
+    tor: 'zielplattentor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

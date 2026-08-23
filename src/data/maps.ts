@@ -60,6 +60,33 @@ export interface GameMap {
   rough: { x: number; y: number; r: number }[];
   /** Wo die Einfuehrung hinzeigt. */
   hint: Vec;
+  /** Die Mitte der gemauerten Rundplattform im Untergrundbild.
+   *
+   *  Jede Karte bringt eine mit: Steinkranz, konzentrische Pflasterung, der
+   *  Weg laeuft darauf zu. Das ist der Ort, den der Kuenstler fuer das Ziel
+   *  gebaut hat - und bis v126 hat das Spiel ihn ignoriert. `goalOf` nahm den
+   *  letzten Bahnpunkt, und der liegt am RAND der Platte: 102 Weltpunkte
+   *  daneben auf dem Spiralhain, 164 auf der Ascheschlucht, 99 auf der
+   *  Frostspalte. Ein Turm ist 96 Weltpunkte breit.
+   *
+   *  Die Kristallfestung stand deshalb oben links auf dem Rand statt in der
+   *  Mitte, und der Weg endete im Nichts daneben.
+   *
+   *  **Sie gilt nur fuer das BILD, nicht fuer das Modell.** Der erste Anlauf
+   *  hat den Zielpunkt selbst verschoben - die Bahnen wurden dadurch laenger,
+   *  und die Simulation meldete es sofort: die Frostturm-Zweige liefen von
+   *  31 gegen 36 auf 42 gegen 28 auseinander, und die Verluste fielen von
+   *  drei Wellen auf zwei. Ein Bildfehler darf keine Balancerunde ausloesen.
+   *
+   *  Die Festung ist 300 Weltpunkte breit, der Versatz hoechstens 164 - das
+   *  Bahnende liegt also INNERHALB ihrer Silhouette. Die Gegner verschwinden
+   *  in der Festung, und die Festung steht auf ihrer Platte. Beides stimmt.
+   *
+   *  Damit die Zahl nicht veraltet, misst `npm run zielplatte` sie im
+   *  Untergrundbild NACH und schlaegt an, wenn beide auseinanderlaufen - eine
+   *  aufgeschriebene Zahl ohne Nachpruefung ist in diesem Verzeichnis schon
+   *  vier Runden lang falsch weitergelaufen. */
+  ziel?: Vec;
   /** Bringt das Kartenbild den Weg schon mit?
    *
    *  Dann zeichnet die Engine ihn nicht mehr. Das war der Sinn der Uebung:
@@ -145,6 +172,7 @@ export const MAP_SPIRALHAIN: GameMap = {
   ],
   pfadImBild: true,
   hint: { x: 200, y: 200 },
+  ziel: { x: 1734, y: 506 },   // gemessen mit `npm run zielplatte`
   waves: PLAN_SPIRALHAIN,
   balance: { hpMul: 0.85, goldMul: 1.15 },
 };
@@ -215,6 +243,7 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
   ],
   pfadImBild: true,
   hint: { x: 1120, y: 180 },
+  ziel: { x: 1747, y: 480 },   // gemessen mit `npm run zielplatte`
   // Das Tor sitzt auf der mittleren Bahn (C24).
   //
   // Acht Sekunden zu, acht auf - symmetrisch, damit der Takt ablesbar ist,
@@ -296,6 +325,7 @@ export const MAP_FROSTSPALTE: GameMap = {
   ],
   pfadImBild: true,
   hint: { x: 200, y: 200 },
+  ziel: { x: 1734, y: 518 },   // gemessen mit `npm run zielplatte`
   waves: PLAN_FROSTSPALTE,
   balance: { hpMul: 1.1, goldMul: 1.02 },
 };

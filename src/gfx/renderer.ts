@@ -802,47 +802,6 @@ export class Renderer {
    *
    *  Gezeigt wird der Platzbedarf des kleinsten Turms - er ist der, der ueber
    *  "geht hier ueberhaupt etwas" entscheidet. */
-/** Der Unterbau des Zielturms: eine gemauerte Plattform aus dem Wegmaterial
- *  der Karte.
- *
- *  Warum aus dem WEGMATERIAL und nicht aus einer eigenen Farbe: der Weg
- *  fuehrt zur Festung hin und endet dort. Endet er auf einem Podest aus
- *  demselben Stein, liest das Auge einen Ort - endet er auf einer fremden
- *  Farbe, liest es zwei uebereinandergelegte Bilder.
- *
- *  Drei Ringe, nicht einer: eine Stufe braucht eine Kante, sonst ist sie ein
- *  Fleck. Aussen die breite Grundflaeche, darauf ein schmalerer Absatz, ganz
- *  oben die Standflaeche, auf der die Festung sitzt.
- */
-  private podest(
-    ctx: CanvasRenderingContext2D, x: number, y: number, r: number,
-    palette: { path: string; pathEdge: string; sonne: string },
-  ): void {
-  const stufe = (rx: number, ry: number, dy: number, fuellung: string, kante: string): void => {
-    ctx.beginPath();
-    ctx.ellipse(x, y + dy, rx, ry, 0, 0, Math.PI * 2);
-    ctx.fillStyle = fuellung;
-    ctx.fill();
-    ctx.strokeStyle = kante;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  };
-  ctx.save();
-  // Von unten nach oben, damit jede Stufe die darunter ueberdeckt.
-  stufe(r, r * 0.38, r * 0.10, hexA(palette.pathEdge, 0.92), hexA(C.ink, 0.35));
-  stufe(r * 0.84, r * 0.32, r * 0.02, hexA(palette.path, 0.95), hexA(palette.pathEdge, 0.9));
-  stufe(r * 0.66, r * 0.25, -r * 0.05, hexA(palette.path, 1), hexA(palette.pathEdge, 0.8));
-  // Die Sonne faellt von oben links auf die oberste Stufe.
-  const licht = ctx.createLinearGradient(x - r * 0.66, y - r * 0.3, x + r * 0.4, y + r * 0.2);
-  licht.addColorStop(0, hexA(palette.sonne, 0.30));
-  licht.addColorStop(1, hexA(palette.sonne, 0));
-  ctx.fillStyle = licht;
-  ctx.beginPath();
-  ctx.ellipse(x, y - r * 0.05, r * 0.66, r * 0.25, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
-
   private drawBauplatz(s: GameState): void {
     if (!s.buildAt || s.vorschau || s.buildChoice) return;
     const ctx = this.ctx;
@@ -952,7 +911,20 @@ export class Renderer {
 
   private drawCrystal(s: GameState, hi: boolean): void {
     const ctx = this.ctx;
-    const { x, y } = s.goal;
+    // Gezeichnet wird auf der PLATTE, getroffen wird am Bahnende.
+    //
+    // Jede Karte bringt im Untergrundbild eine gemauerte Rundplattform mit -
+    // der Ort, den der Kuenstler fuer das Ziel gebaut hat. Die Bahnen enden
+    // an ihrem RAND: 102 Weltpunkte daneben auf dem Spiralhain, 164 auf der
+    // Laubschlucht, 99 auf der Frostspalte. Die Festung stand deshalb oben
+    // links auf dem Rand statt in der Mitte.
+    //
+    // Verschoben wird das BILD, nicht das Modell. Der erste Anlauf zog den
+    // Zielpunkt selbst auf die Platte; die Bahnen wurden laenger, und die
+    // Simulation meldete eine gekippte Balance. Ein Bildfehler darf keine
+    // Balancerunde ausloesen - und der Versatz ist kleiner als die halbe
+    // Festung, das Bahnende liegt also in ihrer Silhouette.
+    const { x, y } = s.map.ziel ?? s.goal;
     const t = s.crystalPulse;
 
     // --- Warnung: es kommt jemand durch.
@@ -1015,17 +987,14 @@ export class Renderer {
       const b = 300 * pulse;
       const h = b * (burg.height / burg.width);
       ctx.save();
-      // Ein Unterbau, auf dem die Festung STEHT.
+      // KEIN eigenes Podest mehr.
       //
-      // Vorher waren es zwei Ellipsen aus Tinte - ein Schlagschatten und ein
-      // Kontaktschatten - und sonst nichts. Ein Schatten sagt "hier faellt
-      // Licht weg", er sagt nicht "hier ist Grund". Die groesste Figur der
-      // Karte schwebte deshalb ueber einem Fleck.
-      //
-      // Der Unterbau ist aus dem Wegmaterial der Karte gemauert: dieselbe
-      // Farbe wie der Pfad, der zu ihm hinfuehrt. Damit gehoert er sichtbar
-      // zur Karte und nicht zur Festung.
-      this.podest(ctx, x, y, b * 0.46, s.map.palette);
+      // In v126 stand hier eines, und es war damals richtig: die Festung
+      // stand NEBEN der Platte des Kuenstlers und brauchte einen Boden.
+      // Seit sie auf der Platte steht, legt ein gezeichnetes Podest eine
+      // zweite Scheibe ueber die erste - und zwar eine mit anderer
+      // Perspektive, weil eine Ellipse mit festem Verhaeltnis flacher liegt
+      // als die gemalte Platte. Zwei Boeden sind schlimmer als keiner.
       // Schatten in Lichtrichtung, wie bei allem anderen.
       ctx.globalAlpha = 0.34;
       ctx.fillStyle = C.ink;

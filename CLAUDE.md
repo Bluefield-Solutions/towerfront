@@ -63,6 +63,7 @@ npm run kritik      Wertung nach Testerkategorien, Ziel über 90
                     entstehen können.
 npm run rohbilder   welche Rohbilder fehlen und woran das hängt
 npm run turmprobe   EINEN Entwurf messen und neben den heutigen Turm legen
+npm run turmzeichnen  einen Turm konstruieren statt kaufen (Entwurf, nicht im Spiel)
 npm run appsymbol   Startbildschirm-Symbol und die zehn Startbilder backen
 npm run kartenwechsel  was ein Kartenaufbau an Bildpunkten kostet
                     (mit `-- --browser` zusätzlich im Browser mit Telefondrossel)
@@ -184,7 +185,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v132. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v133. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 29 von 30,

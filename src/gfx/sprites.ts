@@ -499,7 +499,7 @@ export function spriteBytes(): number {
  *  anzufassen — und kosten beim Backen ein Dreifaches von fast nichts. */
 export function getSchattenriss(
   bild: HTMLCanvasElement | HTMLImageElement, schluessel: string,
-  breite: number, hoehe: number,
+  breite: number, hoehe: number, hebel = 1.25,
 ): HTMLCanvasElement {
   // Die Schattenfläche ist breiter als die Figur, weil die Scherung sie
   // seitlich hinauszieht.
@@ -509,15 +509,21 @@ export function getSchattenriss(
   // weiteren Versatz an den Standpunkt setzen. Der erste Anlauf verschob
   // zusaetzlich beim Zeichnen UND beim Setzen - der Schatten lag doppelt
   // daneben und war kaum zu sehen.
+  //
+  // `hebel` ist die Schattenlaenge, und sie gehoert zur HOEHE des Dings.
+  // Ein Turm ragt auf und wirft weit; ein kriechendes Wesen liegt flach und
+  // wirft kurz. Mit demselben Hebel fuer beide zog der Schatten eines
+  // Schleichers als langer dunkler Streifen hinter ihm her - er sah aus wie
+  // eine Spur, nicht wie ein Schatten.
   const B = Math.ceil(breite * 2.4), H = Math.ceil(hoehe * 1.4);
-  return bake(`riss:${schluessel}:${Math.round(breite)}x${Math.round(hoehe)}`, B, H, (g) => {
+  return bake(`riss:${schluessel}:${Math.round(breite)}x${Math.round(hoehe)}:${hebel}`, B, H, (g) => {
     for (const [wachs, deckung] of [[1.0, 0.30], [1.07, 0.18], [1.15, 0.12]]) {
       g.save();
       // Stauchen: von oben gesehen liegt ein Schatten flach.
       g.scale(wachs, 0.42 * wachs);
       // Scheren: je hoeher ein Punkt der Figur, desto weiter wandert er in
       // Lichtrichtung. Genau das erzaehlt die Hoehe.
-      g.transform(1, 0, -LICHT.x * 1.25, 1, 0, 0);
+      g.transform(1, 0, -LICHT.x * hebel, 1, 0, 0);
       const w = breite, h = hoehe;
       g.globalAlpha = deckung;
       // Erst das Bild, dann mit Tinte fuellen: `source-in` behaelt nur, was

@@ -173,6 +173,10 @@ const einbetten = (buf, karte, staerke) =>
 
 const FIGUREN = [
   ['Zielturm', 'src/gfx/assets/objects.ts', 'crystal', 0.72],
+  // Seit v132 laeuft auch das Tor der Leere durch die Einbettung - es war
+  // die letzte Gruppe, die ihr eigenes Licht behielt. Volle Staerke: es ist
+  // klein, ein halber Anstrich waere dort kaum zu sehen.
+  ['Tor der Leere', 'src/gfx/assets/objects.ts', 'gate', 1],
 ];
 
 // --- Eichen: den Raum ansehen, statt an einer Zahl zu drehen (Regel 9).

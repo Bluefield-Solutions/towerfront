@@ -15,7 +15,7 @@ import { drawMenu } from './menurender';
 import type { Menu } from '../game/menu';
 import { backgroundVersion, getBackground } from './backgrounds';
 import { artBreite, getTowerArt, towerArtScale, towerArtVersion } from './towerart';
-import { getObjectArt, getObjectArtEingebettet, getObjectArtStufe } from './objectart';
+import { getObjectArtEingebettet, getObjectArtStufe } from './objectart';
 import { enemyArtWidth, enemySichtRadius, getEnemyArt } from './enemyart';
 import {
   drawSprite, getEnemySprite, getSchattenriss, getShadow, getTowerBase, getTowerWeapon,
@@ -551,7 +551,11 @@ export class Renderer {
       // etwas heraus" - genau das stimmt dann nicht.
       if (hi && !zu) stampGlow(ctx, C.voidling, x, y, 72, 0.5 + Math.sin(t * 2) * 0.1);
 
-      const art = getObjectArt('gate');
+      // EINGEBETTET, wie alles andere seit v126. Die Tore waren die letzte
+      // Gruppe, die ihr eigenes Licht und ihre eigene Farbwelt behielt - drei
+      // gleiche Sprites aus einem vierten Bildersatz, roh auf die Karte
+      // gestempelt. Genau der Zustand, in dem der Zielturm bis v126 war.
+      const art = getObjectArtEingebettet('gate', s.map.id);
       if (art) {
         // Das Tor steht aufrecht und wird NICHT zur Bahn gedreht - es ist ein
         // Bauwerk, kein Fahrzeug. Ein gedrehtes Steintor liegt schief in der
@@ -1625,9 +1629,24 @@ export class Renderer {
         // die Sonne kommt, der Kontaktschatten setzt den Gegner auf den Boden.
         // Bei einem laufenden Wesen ist die Kontaktzone kleiner und dichter -
         // es beruehrt den Boden nur mit den Fuessen.
+        // Der Schlagschatten traegt seit v132 den EIGENEN Umriss, wie bei den
+        // Tuermen seit v128. Der Koloss warf bis dahin denselben Fleck wie der
+        // Spaeher; jetzt sieht man am Boden, was da laeuft.
+        //
+        // Der Rueckfall auf die Ellipse bleibt fuer den Fall, dass noch kein
+        // Bild geladen ist - dann gibt es keinen Umriss, den man legen
+        // koennte.
         const weit = sicht * 0.85;
-        drawSprite(ctx, getShadow(sicht),
-          e.x + LICHT.x * weit * 0.7, e.y + LICHT.y * weit);
+        const bild = getEnemyArt(e.def, false, s.map.id);
+        if (bild) {
+          const b = enemyArtWidth(e.def);
+          // Hebel 0,45 statt 1,25: ein Gegner liegt flach auf dem Boden.
+          drawSprite(ctx, getSchattenriss(bild, `gegner:${e.def}`, b, b, 0.45),
+            e.x + LICHT.x * weit * 0.22, e.y + LICHT.y * weit * 0.22);
+        } else {
+          drawSprite(ctx, getShadow(sicht),
+            e.x + LICHT.x * weit * 0.7, e.y + LICHT.y * weit);
+        }
         ctx.save();
         ctx.globalAlpha = 0.42;
         ctx.fillStyle = C.ink;

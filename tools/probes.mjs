@@ -755,6 +755,15 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    // Ohne Farbklima bringt auch das Tor der Leere wieder seine eigene
+    // Farbwelt mit - es war bis v132 die letzte Gruppe, die das tat.
+    name: 'Das Tor der Leere bleibt uneingebettet',
+    datei: 'src/gfx/einbettung.ts',
+    regel: /export const KLIMA_STAERKE = 0\.40;/,
+    ersatz: 'export const KLIMA_STAERKE = 0;',
+    tor: 'einbettungstor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

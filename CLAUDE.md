@@ -184,7 +184,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v131. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v132. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 29 von 30,

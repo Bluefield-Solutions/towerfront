@@ -168,6 +168,17 @@ export class UI {
     // Beim Rollen mitfuehren: unten angekommen verschwindet der Schleier
     // wieder. Ein Hinweis, der auch am Ende noch steht, waere gelogen.
     this.iStats.addEventListener('scroll', () => this.rollhinweis(), { passive: true });
+    // Und wenn sich die HOEHE aendert, ohne dass jemand rollt oder neu
+    // fuellt: Telefon gedreht, Fenster gezogen, Schriftgroesse gestellt.
+    // Bis v144 hing der Hinweis nur am Fuellen und am Rollen - danach stand
+    // er falsch, bis der Nutzer zufaellig eines von beidem tat. Gefunden
+    // hat das nicht das Auge, sondern eine Gegenprobe, die nichts bewies:
+    // im Spiel rollt seit v138 nichts mehr, also lief die Rollpruefung im
+    // Browsertor ueber eine leere Liste. Erst als sie den Zustand selbst
+    // herstellte, kam der Fehler heraus.
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(() => this.rollhinweis()).observe(this.iStats);
+    }
 
     // Die Leiste laesst sich wegklappen. Wer den Ausschnitt studieren will,
     // bekommt den ganzen Bildschirm - der Startknopf bleibt trotzdem stehen.

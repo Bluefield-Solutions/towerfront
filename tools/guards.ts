@@ -17,6 +17,7 @@ import { projektilform } from '../src/gfx/renderer';
 import type { Tower } from '../src/game/types';
 import {
   TOWERS, TOWER_ORDER, MAX_LEVEL, DRAW_SCALE, TURM_BREITE, TURM_HOEHE, rangeFor, statsFor,
+  type TowerId,
 } from '../src/data/towers';
 import { ENEMIES, type EnemyId } from '../src/data/enemies';
 import { fehltVorKauf } from '../src/game/turmwerte';
@@ -418,6 +419,38 @@ for (const map of MAPS) {
     if (anteil > 1.25 || anteil < 0.8) {
       fail(`${TOWERS[id].name}: Platzbedarf ${TOWERS[id].footprint} gegen Zeichenbreite `
         + `${TURM_BREITE} (${anteil.toFixed(2)}). Erlaubt ist 0,80 bis 1,25.`);
+    }
+  }
+  // Ein unterschiedlicher Platzbedarf muss auch etwas AENDERN.
+  //
+  // Bis hierhin steht nur, dass die Zahlen verschieden sind - das ist eine
+  // Aussage ueber die Datei, nicht ueber das Spiel. Die Gegenprobe
+  // "Platzbedarf wieder fuer alle gleich" lief deshalb ins Leere: sie baute
+  // den Fehler ein, und kein Tor sah ihn (Regel 5, gefunden in v144).
+  //
+  // Gemessen wird die Folge: der groesste Turm muss spuerbar weniger
+  // Stellungen finden als der kleinste. Abgetastet wird das ganze Feld in
+  // Schritten von 16 Weltpunkten, auf jeder Karte, auf leerem Feld.
+  {
+    const gross = [...TOWER_ORDER].sort((a, b) => TOWERS[b].footprint - TOWERS[a].footprint)[0];
+    const klein = [...TOWER_ORDER].sort((a, b) => TOWERS[a].footprint - TOWERS[b].footprint)[0];
+    for (const m of MAPS) {
+      const s = new GameState();
+      s.reset(1, 'normal', m.id);
+      const zaehle = (id: TowerId): number => {
+        let n = 0;
+        for (let x = 40; x < WORLD_W; x += 16) {
+          for (let y = 40; y < WORLD_H; y += 16) if (s.warumNicht(id, x, y) === null) n++;
+        }
+        return n;
+      };
+      const a = zaehle(klein), b = zaehle(gross);
+      const weniger = a ? 1 - b / a : 0;
+      if (weniger < 0.08) {
+        fail(`${m.name}: ${TOWERS[gross].name} findet nur ${Math.round(weniger * 100)} % `
+          + `weniger Stellungen als ${TOWERS[klein].name} (${b} gegen ${a}). `
+          + 'Mindestens 8 % - sonst ist der Platzbedarf eine Zahl ohne Wirkung.');
+      }
     }
   }
   // Und ein Turm muss auf dem Handy ueberhaupt zu erkennen sein.

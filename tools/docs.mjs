@@ -59,6 +59,8 @@ const zahlwort = {
   3: 'drei', 4: 'vier', 5: 'fünf', 6: 'sechs', 7: 'sieben', 8: 'acht', 9: 'neun',
   10: 'zehn', 11: 'elf', 12: 'zwölf', 13: 'dreizehn', 14: 'vierzehn', 15: 'fünfzehn',
   16: 'sechzehn', 17: 'siebzehn', 18: 'achtzehn', 19: 'neunzehn', 20: 'zwanzig',
+  21: 'einundzwanzig', 22: 'zweiundzwanzig', 23: 'dreiundzwanzig',
+  24: 'vierundzwanzig', 25: 'fünfundzwanzig',
 };
 for (const [name, text] of alle) {
   // Nur der gültige Teil. Im Fundregister steht absichtlich, wieviele Tore es
@@ -82,6 +84,33 @@ for (const [name, text] of alle) {
     const meintKette = /gate|Torkette|Kette|npm run/i.test(satz);
     if (treffer && meintKette && n !== torSchritte) {
       fail(`${name}: schreibt "${treffer[2]}", die Kette hat ${torSchritte} abbrechende Schritte.`);
+    }
+  }
+}
+
+// --- 2b. Die Tortabelle muss die ganze Kette fuehren.
+//
+// Die Zahlpruefung oben zaehlt nur Woerter. Als in v113 der Kartenwechsel
+// dazukam und danach vier weitere Tore, blieb die Tabelle im
+// Pipeline-Dokument bei fuenfzehn Zeilen stehen - sechs Tore fehlten, und
+// nichts wurde rot, weil kein Satz eine falsche Zahl nannte. Das ist Regel
+// 15: was zweimal dasteht, veraltet einmal. Wenn es schon zweimal dasteht,
+// muss wenigstens die Abweichung anschlagen.
+{
+  const tabelle = alle.find(([n]) => n === 'Towerfront-KONZEPT-und-PIPELINE.md');
+  if (tabelle) {
+    const i = tabelle[1].indexOf('| # | Tor | Befehl | Bricht ab bei |');
+    if (i < 0) {
+      fail('Towerfront-KONZEPT-und-PIPELINE.md: die Tortabelle fehlt.');
+    } else {
+      const block = tabelle[1].slice(i, tabelle[1].indexOf('\n\n', i));
+      for (const t of pkg.scripts.gate.split('&&')) {
+        const cmd = (t.match(/npm run ([a-z-]+)/) ?? [])[1];
+        if (!cmd) continue;
+        if (!block.includes(`\`npm run ${cmd}\``)) {
+          fail(`Towerfront-KONZEPT-und-PIPELINE.md: die Tortabelle fuehrt "npm run ${cmd}" nicht.`);
+        }
+      }
     }
   }
 }

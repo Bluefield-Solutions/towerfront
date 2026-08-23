@@ -45,7 +45,7 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 ## Befehle
 
 ```
-npm run gate        zwanzig Prüfungen, ~90 s. Muss vor jedem Commit grün sein.
+npm run gate        einundzwanzig Prüfungen, ~90 s. Muss vor jedem Commit grün sein.
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
 npm run bilder      alle 13 Aufnahmen (echte PNG ohne Browser)
 npm run bildtor     der Querschnitt, den die Torkette prüft
@@ -53,6 +53,9 @@ npm run pack-art    Bildvorrat aus art/roh/ neu einbacken
 npm run eichen      einen Wert durchprobieren, alle Kennzahlen nebeneinander
 npm run einbettung  misst, wie sehr eine Figur zur Karte gehört (--eichen: Raum)
 npm run zielplatte  findet die Zielplattform im Kartenbild und prüft die Zahl
+npm run geschosse   misst, wieviel Schaden in der Luft verpufft: Anteil der
+                    zielsuchenden Schuesse ohne Wirkung, groesste
+                    Richtungsaenderung, Luftfilter. `--tor` prueft die Grenzen.
 npm run gelaende    liest aus dem Kartenbild, woraus jeder unwegsame Fleck
                     besteht (Farbe, hart/kalt/locker) und legt einen
                     Kontaktbogen daneben. `--tor` prüft die Eintragung.
@@ -72,7 +75,8 @@ npm run kartenwechsel  was ein Kartenaufbau an Bildpunkten kostet
                     (mit `-- --browser` zusätzlich im Browser mit Telefondrossel)
 ```
 
-Die Torkette: `tsc` → `guards` → `doku` → `art` → `determinism` → `sim` → `bench` →
+Die Torkette: `tsc` → `guards` → `doku` → `art` → `determinism` → `sim` →
+`geschosse` → `bench` →
 `bench-draw` → `kartenwechsel` → `grafiktor` → `einbettung` → `zielplatte` → `gelaende` → `lesbarkeit` → `beruehrung` → `bildtor` → `smoke` →
 `build` → `autarkie` → `browser` → `bericht`.
 
@@ -188,7 +192,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v143. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v144. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

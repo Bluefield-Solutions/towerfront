@@ -26,7 +26,16 @@ export interface DifficultyDef {
    *  9). Der erste Anlauf drehte beide Regler in dieselbe Richtung und machte
    *  das Spiel zu schwer: die Torkette war gruen, der Spiralhain fiel aber
    *  von drei auf zwei Sterne, und Erbarmungslos war fuer zwei Stile nicht
-   *  mehr zu gewinnen. **Ein gruenes Tor ist nicht das Ziel.** */
+   *  mehr zu gewinnen. **Ein gruenes Tor ist nicht das Ziel.**
+   *
+   *  In v144 von 17,5 auf 19,5, und wieder aus demselben Grund: die Tuerme
+   *  wurden staerker, ohne dass eine Turmzahl sich geaendert haette. Ein
+   *  zielsuchendes Geschoss, dessen Ziel im Flug starb, verpuffte bis v143 -
+   *  gemessen jeder achte Schuss (12,0 %). Seit dem Ersatzziel sind es 1,8 %,
+   *  also kommen rund elf Prozent mehr Schaden an. Die Verluste fielen darauf
+   *  von vier Wellen auf eine, T15 stand wieder offen. Durchprobiert wurden
+   *  17,5 / 18,5 / 19,5 / 20,5: erst 19,5 verteilt wieder auf drei Wellen,
+   *  20,5 kostet den dritten Stern auf der Frostspalte. */
   hpEnd: number;
   /** Exponent der Kurve: klein am Anfang, steil am Ende. */
   hpCurve: number;
@@ -42,21 +51,21 @@ export const DIFFICULTIES: Record<DifficultyId, DifficultyDef> = {
     id: 'ruhig', name: 'Ruhig',
     blurb: 'Mehr Kristall, mehr Gold, sanftere Kurve. Zum Kennenlernen.',
     startGold: 300, startLives: 80,
-    hpEnd: 9.6, hpCurve: 2.4, densityRamp: 0.11,
+    hpEnd: 10.7, hpCurve: 2.4, densityRamp: 0.11,
     bountyMul: 1.3, bonusMul: 1.3,
   },
   normal: {
     id: 'normal', name: 'Normal',
     blurb: 'Der gedachte Weg. Die letzten Wellen kosten Kristall.',
     startGold: 220, startLives: 60,
-    hpEnd: 17.5, hpCurve: 2.6, densityRamp: 0.16,
+    hpEnd: 19.5, hpCurve: 2.6, densityRamp: 0.16,
     bountyMul: 1, bonusMul: 1,
   },
   erbarmungslos: {
     id: 'erbarmungslos', name: 'Erbarmungslos',
     blurb: 'Weniger Kristall, weniger Gold, steile Kurve. Jede Stellung zählt.',
     startGold: 212, startLives: 52,
-    hpEnd: 20.7, hpCurve: 2.7, densityRamp: 0.20,
+    hpEnd: 23.0, hpCurve: 2.7, densityRamp: 0.20,
     bountyMul: 1.0, bonusMul: 1.0,
   },
 };

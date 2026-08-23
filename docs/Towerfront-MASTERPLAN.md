@@ -1182,7 +1182,7 @@ XL > 10 Runden.
 | TF-013 | Tower | MISSING | Rollen fehlen (Unterstützung, Mindestreichweite, Anti-Luft) | Zu wenig Aufstellungsentscheidung | Zwei bis vier neue Türme | P1 | L | TF-021, TF-011 |
 | TF-014 | Path | MISSING | Keine Wegvorschau | Der Spieler sieht nicht, woher es kommt | Wege beim Kartenstart animiert zeigen, Knopf zum Wiederholen | P1 | S | — |
 | TF-015 | Combat | MISSING | Nur zwei Statuswirkungen | Keine Schadensvielfalt, keine Resistenzen | Effektsystem als Liste am Gegner | P1 | M | — |
-| TF-016 | QA | NOT VERIFIED | Verkauf/Ausbau während eines Schusses ungeprüft | Möglicher Verweis auf einen entfernten Turm | Zwei Rauchtestschritte | P1 | XS | — |
+| TF-016 | QA | ERLEDIGT v143 | Verkauf/Ausbau während eines Schusses ungeprüft | Möglicher Verweis auf einen entfernten Turm | Zwei Rauchtestschritte | P1 | XS | kein Fehler; zwei stehende Prüfungen, dazu die `dead`-Sperre |
 | TF-017 | Art | DESIGN | Drei Kamerawinkel im selben Bild | Haupteindruck „zusammengewürfelt" | Einheitlicher Winkel, gemessen | P1 | L | TF-011, Rohbilder |
 | TF-018 | Balancing | VERIFIED | Balance seit v139 nicht nachgeeicht | Normal zu leicht (41 statt 30) | Alle drei Grade zusammen eichen | P2 | S | — |
 | TF-019 | Combat | VERIFIED | Geschosse starten in der Turmmitte | Schüsse kommen nicht aus dem Rohr | Mündungspunkt je Turmart | P2 | S | — |
@@ -1266,6 +1266,13 @@ stehen in der Gap Analysis.
 ---
 
 ### TF-007 — Geschosse verlieren ihr Ziel nicht mehr ins Nichts
+
+**Erledigt in v144.** Gemessen 12,0 % verpuffte Schüsse vorher, 1,6 % nachher
+(`npm run geschosse`). Kegel 40° halber Öffnungswinkel, Umkreis 240
+Weltpunkte. Das Tor misst zusätzlich die größte Richtungsänderung eines
+Schusses (40° gegen eine Grenze von 90°) — ohne diese zweite Zahl würde ein
+weit geöffneter Kegel die erste sogar verbessern und dabei die Waffe
+ersetzen. Die Schwierigkeitskurve musste nach: `hpEnd` 17,5 → 19,5.
 
 * **Bereich:** Combat · **Typ:** VERIFIED ISSUE
 * **Ist:** `if (!tgt) { p.dead = true; }` — Geschoss wird ersatzlos gelöscht.
@@ -1611,7 +1618,7 @@ möglich ist.
 | # | Ticket | Maßnahme | Bereich | Problem | Erwarteter Effekt | Prio | Aufwand | Abhängig |
 |---|---|---|---|---|---|---|---|---|
 | 1 | TF-001 | Bauplätze dauerhaft sichtbar | Placement | Nur unter dem Finger | Der letzte P0 der Bedienung fällt | P0 | S | — |
-| 2 | TF-016 | Verkauf und Ausbau während eines Schusses prüfen | QA | Ungeprüfter Verweis | Zwei Lücken im Katalog zu | P1 | XS | — |
+| 2 | TF-016 | Verkauf und Ausbau während eines Schusses prüfen | QA | Ungeprüfter Verweis | Zwei Lücken im Katalog zu | P1 | XS | **erledigt v143** |
 | 3 | TF-007 | Geschosse suchen ein Ersatzziel | Combat | Schaden verschwindet | Sichtbar sauberes Gefecht | P1 | S | — |
 | 4 | TF-019 | Mündungspunkt je Turmart | Combat | Schuss aus der Mitte | Schüsse kommen aus dem Rohr | P2 | S | — |
 | 5 | TF-032 | Zielmodus „hinten" | Targeting | Durchbrecher | Fünfte echte Wahl | P2 | XS | — |

@@ -40,9 +40,23 @@ export interface SaveGame {
   meteors: [number, number, number, number, number, number][];
   /** Geschosse im Flug. Zielt ein Geschoss auf einen Gegner, steht dort dessen
    *  Index in der Gegnerliste; bei ballistischen Geschossen -1. */
+  /** [Art, x, y, sx, sy, tx, ty, Zielindex, Schuetzenindex, Tempo, Schaden,
+   *  Bremse, Bremsdauer, Splitterradius, Panzerbruch, t, Dauer, Restzeit,
+   *  Farbe, Richtung x, Richtung y, trifft Luft]
+   *
+   *  Richtung und Luftfaehigkeit sind ANGEHAENGT (v144): ein aelterer Stand
+   *  hat neunzehn Felder und laedt weiter, die Richtung wird dann aus Start
+   *  und Zielpunkt gerechnet.
+   *
+   *  Diese Liste stand bis v143 mit siebzehn Feldern hier, waehrend neunzehn
+   *  geschrieben wurden - der Unterschied verschwand in einem
+   *  `as unknown as`. Genau das ist Regel 15: was zweimal dasteht, veraltet
+   *  einmal. Die Umschreibung ist jetzt weg, damit der Uebersetzer die
+   *  zweite Stelle prueft. */
   shots: [
     'homing' | 'ballistic', number, number, number, number, number, number,
-    number, number, number, number, number, number, number, number, number, string,
+    number, number, number, number, number, number, number, number, number,
+    number, number, string, number?, number?, number?,
   ][];
   /** [Zeit, Gegnerart, Lebenspunktfaktor, Bahn, Schild, Traeger]
    *

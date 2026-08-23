@@ -507,17 +507,84 @@ if (start) {
       }
       return raus;
     });
-    for (const r of rollend) {
-      if (r.rest > 1 && r.mehr !== '1') {
-        fail(
-          `"${r.name}" rollt noch ${r.rest} Punkte weiter, zeigt es aber nicht an ` +
-          '(data-mehr fehlt). Technisch richtig, sichtbar wie ein Fehler.',
-        );
+    const urteile = (liste) => {
+      for (const r of liste) {
+        if (r.rest > 1 && r.mehr !== '1') {
+          fail(
+            `"${r.name}" rollt noch ${r.rest} Punkte weiter, zeigt es aber nicht an ` +
+            '(data-mehr fehlt). Technisch richtig, sichtbar wie ein Fehler.',
+          );
+        }
+        if (r.rest <= 1 && r.mehr === '1') {
+          fail(`"${r.name}" ist unten angekommen, behauptet aber weiter, es ginge weiter.`);
+        }
       }
-      if (r.rest <= 1 && r.mehr === '1') {
-        fail(`"${r.name}" ist unten angekommen, behauptet aber weiter, es ginge weiter.`);
+    };
+    urteile(rollend);
+
+    // Und jetzt der Teil, ohne den die Pruefung oben nichts wert ist.
+    //
+    // Seit die Werteliste in v138 vier von vier Zeilen zeigt, ROLLT im
+    // ganzen Spiel nichts mehr. Die Schleife darueber lief also ueber eine
+    // leere Liste und meldete gruen - zwei stehende Gegenproben ("Rollhinweis
+    // abgeschaltet", "Rollhinweis steht auch am Ende noch") bewiesen ein Jahr
+    // lang nichts, und niemand sah es, weil eine leere Schleife wie eine
+    // bestandene aussieht. Genau Regel 13: wer eine Wirkung misst, schaltet
+    // sie zuerst ein.
+    //
+    // Also wird der Zustand hergestellt: die Werteliste bekommt eine Hoehe,
+    // bei der sie ueberlaeuft. Danach MUSS etwas rollen, und der Hinweis muss
+    // sich in beide Richtungen richtig verhalten - oben angezeigt, unten
+    // wieder weg. Geprueft wird die Ableitung, nicht die heutige Zeilenzahl.
+    const messe = () => seite.evaluate(() => {
+      const raus = [];
+      for (const e of document.querySelectorAll('*')) {
+        const st = getComputedStyle(e);
+        if (!/auto|scroll/.test(st.overflowY)) continue;
+        if (e.scrollHeight - e.clientHeight < 2) continue;
+        const r = e.getBoundingClientRect();
+        if (r.width < 1 || r.height < 1) continue;
+        raus.push({
+          name: e.id || e.className || e.tagName,
+          mehr: e.dataset ? e.dataset.mehr : undefined,
+          rest: Math.round(e.scrollHeight - e.clientHeight - e.scrollTop),
+        });
       }
+      return raus;
+    });
+    await seite.evaluate(() => {
+      const l = document.getElementById('i-stats');
+      // `min-height: 96px` in der Stilvorlage schlaegt eine blosse Hoehen-
+      // grenze - beides setzen, sonst passiert nichts und die Pruefung
+      // meldet wieder, dass sie nichts gefunden hat.
+      if (l) {
+        l.style.minHeight = '24px';
+        l.style.maxHeight = '24px';
+        l.style.flex = '0 0 24px';
+        l.scrollTop = 0;
+      }
+    });
+    await seite.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    const eng = await messe();
+    if (!eng.length) {
+      fail('Die Rollprüfung fand nichts, was rollt - sie beweist damit nichts.');
+    } else {
+      urteile(eng);
+      console.log(`Rollhinweis: ${eng.length} rollende Liste(n) im Blick, oben `
+        + `${eng.filter((r) => r.mehr === '1').length} mit Hinweis.`);
+      // Und die Gegenrichtung am selben Behaelter: ans Ende rollen, dann darf
+      // kein Hinweis mehr stehen.
+      await seite.evaluate(() => {
+        const l = document.getElementById('i-stats');
+        if (l) l.scrollTop = l.scrollHeight;
+      });
+      await seite.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+      urteile(await messe());
     }
+    await seite.evaluate(() => {
+      const l = document.getElementById('i-stats');
+      if (l) { l.style.minHeight = ''; l.style.maxHeight = ''; l.style.flex = ''; }
+    });
 
     // --- 10. Die Messtafel darf im Spiel NICHT auftauchen (D27).
     //

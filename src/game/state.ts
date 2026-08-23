@@ -40,6 +40,7 @@ function emptyStats(): RunStats {
   return {
     goldEarned: 0, goldSpent: 0, damage: 0, damageBy: {},
     kills: 0, leaksByWave: [], abilityUses: {}, duration: 0, towersBuilt: 0,
+    schuesse: 0, schuesseOhneWirkung: 0,
   };
 }
 
@@ -47,6 +48,13 @@ function emptyStats(): RunStats {
  *  fliegt. Steht hier und nicht in `beruehren`, damit der Rauchtest sie
  *  nicht abschreiben muss - eine abgeschriebene Zahl veraltet (Regel 15). */
 export const ZIER_AUFHELLUNG = 0.45;
+
+/** Suchraum fuer ein Ersatzziel (TF-007), in Weltpunkten. Etwa eine halbe
+ *  Turmreichweite - weit genug, damit der Nachbar im Pulk erreicht wird,
+ *  zu kurz, um quer ueber die Karte zu greifen. */
+export const ERSATZ_UMKREIS = 240;
+/** Kosinus des halben Oeffnungswinkels des Suchkegels. 0,766 sind 40 Grad. */
+export const ERSATZ_KEGEL = 0.766;
 
 export class GameState {
   /** Die Karte kann zwischen zwei Partien wechseln, deshalb ist hier nichts
@@ -320,6 +328,7 @@ export class GameState {
   private qTarget: Enemy[] = [];
   private qArea: Enemy[] = [];
   private qChain: Enemy[] = [];
+  private qErsatz: Enemy[] = [];
   private chainSeen = new Set<number>();
   private chainPts: Vec[] = [];
 
@@ -331,6 +340,7 @@ export class GameState {
   }), 900);
   private projectilePool = new Pool<Projectile>(() => ({
     kind: 'homing', x: 0, y: 0, sx: 0, sy: 0, tx: 0, ty: 0, target: null, owner: null,
+    dirX: 1, dirY: 0, luft: false,
     speed: 0, damage: 0, slow: 0, slowTime: 0, splash: 0, pierce: 0, color: '#fff',
     t: 0, dur: 1, life: 0, dead: true,
   }), 200);
@@ -1193,6 +1203,10 @@ export class GameState {
     p.pierce = st.pierce ?? 0;
     p.color = color; p.t = 0; p.dur = Math.max(0.12, d / speed);
     p.life = 3; p.dead = false;
+    p.dirX = d > 0 ? (aim.x - t.x) / d : 1;
+    p.dirY = d > 0 ? (aim.y - t.y) / d : 0;
+    p.luft = TOWERS[t.def].hitsAir;
+    if (kind === 'homing') this.stats.schuesse++;
     return p;
   }
 
@@ -1303,6 +1317,35 @@ export class GameState {
     return best;
   }
 
+  /** Ein Ersatzziel fuer ein verwaistes Geschoss.
+   *
+   *  Gesucht wird in einem Kegel um die Flugrichtung: naechster Gegner
+   *  gewinnt, nicht vorderster. Ein Geschoss hat keinen Ueberblick, es hat
+   *  eine Richtung.
+   *
+   *  Der Kegel ist bewusst eng (halber Oeffnungswinkel 40 Grad): weiter
+   *  gefasst wuerde ein Schuss um die Ecke biegen, und die Frage, wohin ein
+   *  Turm feuert, waere keine Frage mehr. Die Reichweite des Turms gilt hier
+   *  NICHT - das Geschoss ist unterwegs, nicht der Turm. */
+  private ersatzziel(p: Projectile): Enemy | null {
+    const cand = this.grid.query(p.x, p.y, ERSATZ_UMKREIS, this.qErsatz);
+    let best: Enemy | null = null;
+    let bestD2 = ERSATZ_UMKREIS * ERSATZ_UMKREIS;
+    for (let i = 0; i < cand.length; i++) {
+      const e = cand[i];
+      if (e.dead) continue;
+      if (!p.luft && ENEMIES[e.def].flying) continue;
+      const dx = e.x - p.x, dy = e.y - p.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 > bestD2) continue;
+      const d = Math.sqrt(d2);
+      // Innerhalb des Kegels? Skalarprodukt der Einheitsvektoren.
+      if (d > 1 && (dx / d) * p.dirX + (dy / d) * p.dirY < ERSATZ_KEGEL) continue;
+      best = e; bestD2 = d2;
+    }
+    return best;
+  }
+
   private updateProjectiles(dt: number): void {
     let any = false;
     for (const p of this.projectiles) {
@@ -1316,7 +1359,10 @@ export class GameState {
       // naechste Mal tut, faellt in dieselbe Falle.
       if (p.dead) { any = true; continue; }
       p.life -= dt;
-      if (p.life <= 0) { p.dead = true; any = true; continue; }
+      if (p.life <= 0) {
+        if (p.kind === 'homing') this.stats.schuesseOhneWirkung++;
+        p.dead = true; any = true; continue;
+      }
 
       if (p.kind === 'ballistic') {
         p.t += dt / p.dur;
@@ -1331,17 +1377,41 @@ export class GameState {
         continue;
       }
 
-      const tgt = p.target && !p.target.dead ? p.target : null;
-      if (!tgt) { p.dead = true; any = true; continue; }
+      const step = p.speed * dt;
+      let tgt = p.target && !p.target.dead ? p.target : null;
+
+      // Das Ziel ist im Flug gestorben - bei sechs Schnellfeuertuermen auf
+      // eine dichte Welle war das jeder achte Schuss. Der Schuss ist aber
+      // laengst bezahlt: die Abklingzeit laeuft, seit er die Muendung
+      // verlassen hat. Also sucht er sich ein Ersatzziel VOR sich, statt zu
+      // verpuffen. Nur vor sich - ein Geschoss, das kehrt macht, waere ein
+      // Zauber und keine Waffe.
+      if (!tgt) tgt = this.ersatzziel(p);
+
+      if (!tgt) {
+        // Kein Ziel im Kegel: geradeaus weiter und am Rand verloeschen.
+        // Es sucht in jedem Bild neu - wer in seine Bahn laeuft, wird
+        // getroffen.
+        p.target = null;
+        p.x += p.dirX * step;
+        p.y += p.dirY * step;
+        if (p.x < -40 || p.x > WORLD_W + 40 || p.y < -40 || p.y > WORLD_H + 40) {
+          this.stats.schuesseOhneWirkung++;
+          p.dead = true; any = true;
+        }
+        continue;
+      }
+
+      p.target = tgt;
       const dx = tgt.x - p.x, dy = tgt.y - p.y;
       const d = Math.hypot(dx, dy) || 1;
-      const step = p.speed * dt;
       if (d <= step + ENEMIES[tgt.def].radius * 0.6) {
         this.damage(tgt, p.damage, p.owner, p.color, p.slow, p.slowTime, p.pierce);
         p.dead = true; any = true;
       } else {
-        p.x += (dx / d) * step;
-        p.y += (dy / d) * step;
+        p.dirX = dx / d; p.dirY = dy / d;
+        p.x += p.dirX * step;
+        p.y += p.dirY * step;
       }
     }
     if (any) {
@@ -1649,7 +1719,8 @@ export class GameState {
         p.target ? this.enemies.indexOf(p.target) : -1,
         p.owner ? this.towers.indexOf(p.owner) : -1,
         p.speed, p.damage, p.slow, p.slowTime, p.splash, p.pierce, p.t, p.dur, p.life, p.color,
-      ]) as unknown as SaveGame['shots'],
+        p.dirX, p.dirY, p.luft ? 1 : 0,
+      ]) as SaveGame['shots'],
       // Schild und Traeger gehoeren dazu. Bis v136 fehlten sie: ein wartender
       // Gegner wurde mit vier von sechs Angaben gesichert, und wer die App
       // schloss und weiterspielte, bekam eine LEICHTERE Welle als der, der
@@ -1755,12 +1826,8 @@ export class GameState {
     }
     for (const sh of save.shots ?? []) {
       const [kind, x, y, sx, sy, tx, ty, tIdx, oIdx,
-        speed, damage, slow, slowTime, splash, pierce, t, dur, life, color] =
-        sh as unknown as [
-          'homing' | 'ballistic', number, number, number, number, number, number,
-          number, number, number, number, number, number, number, number,
-          number, number, number, string,
-        ];
+        speed, damage, slow, slowTime, splash, pierce, t, dur, life, color,
+        dirX, dirY, luft] = sh;
       const p = this.projectilePool.obtain();
       p.kind = kind; p.x = x; p.y = y; p.sx = sx; p.sy = sy; p.tx = tx; p.ty = ty;
       p.target = tIdx >= 0 && tIdx < this.enemies.length ? this.enemies[tIdx] : null;
@@ -1768,6 +1835,15 @@ export class GameState {
       p.speed = speed; p.damage = damage; p.slow = slow; p.slowTime = slowTime;
       p.splash = splash; p.pierce = pierce; p.t = t; p.dur = dur; p.life = life;
       p.color = color; p.dead = false;
+      // Aeltere Staende kennen die Richtung nicht - dann aus Start und
+      // Zielpunkt rechnen, das ist die Richtung beim Abschuss.
+      if (dirX === undefined || dirY === undefined) {
+        const dd = Math.hypot(tx - sx, ty - sy) || 1;
+        p.dirX = (tx - sx) / dd; p.dirY = (ty - sy) / dd;
+      } else {
+        p.dirX = dirX; p.dirY = dirY;
+      }
+      p.luft = luft === undefined ? !!p.owner && TOWERS[p.owner.def].hitsAir : luft === 1;
       this.projectiles.push(p);
     }
 

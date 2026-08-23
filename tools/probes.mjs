@@ -149,7 +149,12 @@ const PROBEN = [
     // überlebt jede weitere Torrunde.
     name: 'Doku zählt die Tore falsch',
     datei: 'CLAUDE.md',
-    regel: /(drei|vier|fünf|sechs|sieben|acht|neun|zehn|elf|zwölf|dreizehn|vierzehn|fünfzehn|sechzehn|siebzehn|achtzehn|neunzehn|zwanzig) Prüfungen/,
+    // Die Auswahl muss die GANZE Wortliste des Waechters treffen. Bis v144
+    // endete sie bei "zwanzig" - als die Kette auf einundzwanzig wuchs, traf
+    // die Regel nur noch das Ende des Wortes und schrieb "einunddrei
+    // Prüfungen". Der Waechter sucht mit Wortgrenze und sah nichts: der
+    // Eingriff kam an und blieb doch unsichtbar.
+    regel: /(einund|zweiund|dreiund|vierund|fünfund)?(drei|vier|fünf|sechs|sieben|acht|neun|zehn|elf|zwölf|dreizehn|vierzehn|fünfzehn|sechzehn|siebzehn|achtzehn|neunzehn|zwanzig) Prüfungen/,
     // "drei" ist nie richtig, solange die Kette mehr als drei Schritte hat -
     // und sie hat seit v11 nie weniger gehabt.
     ersatz: 'drei Prüfungen',
@@ -211,7 +216,11 @@ const PROBEN = [
     datei: 'src/data/towers.ts',
     regel: /(id: 'mortar',[\s\S]{0,400}?)footprint: 116/,
     ersatz: '$1footprint: FOOTPRINT',
-    tor: 'smoke',
+    // Stand bis v144 auf "smoke" und bewies nichts: der Rauchtest spielt
+    // eine Partie, und die geht auch mit gleichen Platzbedarfen durch. Jetzt
+    // misst der Datenwaechter die FOLGE - wieviele Stellungen der groesste
+    // Turm gegenueber dem kleinsten verliert.
+    tor: 'guards',
   },
   {
     // Ein Zahlwort im Kartentext, das der Karte widerspricht - genau der
@@ -523,6 +532,16 @@ const PROBEN = [
   },
   {
     // D24: was rollt, muss es anzeigen.
+    // Der Hinweis muss auch nachziehen, wenn sich die HOEHE aendert -
+    // gedrehtes Telefon, gezogenes Fenster. Ohne den Beobachter steht er
+    // falsch, bis jemand rollt oder die Liste neu gefuellt wird.
+    name: 'Rollhinweis merkt nichts von einer neuen Hoehe',
+    datei: 'src/ui/ui.ts',
+    regel: /      new ResizeObserver\(\(\) => this\.rollhinweis\(\)\)\.observe\(this\.iStats\);/,
+    ersatz: '      void 0;',
+    tor: 'browsertor',
+  },
+  {
     name: 'Rollhinweis der Werteliste abgeschaltet',
     datei: 'src/ui/ui.ts',
     regel: /    this\.iStats\.dataset\.mehr = rest > 1 \? '1' : '0';/,
@@ -613,8 +632,11 @@ const PROBEN = [
     // D18: ein ruhendes Feld darf kein Standbild sein.
     name: 'Tuerme atmen nicht mehr',
     datei: 'src/gfx/renderer.ts',
-    regel: /        const atem = Math\.sin\(s\.time \* 1\.9 \+ \(t\.x \+ t\.y \* 1\.7\) \* 0\.03\) \* 2;/,
-    ersatz: '        const atem = 0;',
+    // Ohne Einrueckung in der Regel: die Zeile ist beim Umbau der
+    // Zeichenschichten (v140) von acht auf sechs Leerzeichen gerutscht, und
+    // die Probe traf sie seitdem nicht mehr.
+    regel: /const atem = Math\.sin\(s\.time \* 1\.9 \+ \(t\.x \+ t\.y \* 1\.7\) \* 0\.03\) \* 2;/,
+    ersatz: 'const atem = 0;',
     tor: 'bildtor',
   },
   {
@@ -944,6 +966,51 @@ const PROBEN = [
     regel: /      this\.buildWeit = raster\(88, 0\.92\);/,
     ersatz: '      this.buildWeit = raster(40, 1.4);',
     tor: 'bildtor',
+  },
+  {
+    // Die Tortabelle im Pipeline-Dokument darf nicht hinter der Kette
+    // zurueckbleiben - sechs Tore lang tat sie das unbemerkt.
+    name: 'Ein Tor fehlt in der Tortabelle',
+    datei: 'docs/Towerfront-KONZEPT-und-PIPELINE.md',
+    regel: /\| 7 \| Geschosse \| `npm run geschossetor` \|[^\n]*\n/,
+    ersatz: '',
+    tor: 'doku',
+  },
+  {
+    // TF-007: das Ersatzziel wieder ausgebaut - dann verpufft wieder jeder
+    // achte Schuss, und das Tor muss das sehen.
+    name: 'Verwaiste Geschosse verpuffen wieder',
+    datei: 'src/game/state.ts',
+    regel: /      if \(!tgt\) tgt = this\.ersatzziel\(p\);/,
+    ersatz: '      // Ersatzziel abgeschaltet.',
+    tor: 'geschossetor',
+  },
+  {
+    // Und der Suchraum selbst: auf Null gesetzt findet die Suche nie etwas.
+    name: 'Suchraum fuer das Ersatzziel auf Null',
+    datei: 'src/game/state.ts',
+    regel: /export const ERSATZ_UMKREIS = 240;/,
+    ersatz: 'export const ERSATZ_UMKREIS = 0;',
+    tor: 'geschossetor',
+  },
+  {
+    // Der Luftfilter im Ersatzziel. Ohne ihn nimmt ein bodengebundener
+    // Schuetze einen Gleiter als Ersatz - eine Waffe, die er nicht hat.
+    name: 'Ersatzziel nimmt auch Flieger',
+    datei: 'src/game/state.ts',
+    regel: /      if \(!p\.luft && ENEMIES\[e\.def\]\.flying\) continue;/,
+    ersatz: '      // Luftfilter entfernt.',
+    tor: 'geschossetor',
+  },
+  {
+    // Der Kegel: weit geoeffnet nimmt ein Schuss auch ein Ziel HINTER sich an
+    // und macht kehrt. Der Verpuffungsanteil wuerde dabei sogar besser - nur
+    // die Richtungsmessung faellt darauf nicht herein.
+    name: 'Der Suchkegel oeffnet sich nach hinten',
+    datei: 'src/game/state.ts',
+    regel: /export const ERSATZ_KEGEL = 0\.766;/,
+    ersatz: 'export const ERSATZ_KEGEL = -1;',
+    tor: 'geschossetor',
   },
   {
     // TF-016: ein bezahlter Schuss verfaellt, weil der Turm verkauft wurde.

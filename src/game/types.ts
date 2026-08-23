@@ -108,6 +108,13 @@ export interface Projectile {
   sx: number; sy: number;  // Startpunkt (fuer die Wurfbahn)
   tx: number; ty: number;  // Zielpunkt bei ballistisch
   target: Enemy | null;    // Ziel bei zielsuchend
+  /** Flugrichtung, normiert. Nur bei zielsuchend gefuehrt - sie ist die
+   *  Achse des Kegels, in dem ein Ersatzziel gesucht wird, wenn das
+   *  eigentliche Ziel im Flug stirbt. */
+  dirX: number; dirY: number;
+  /** Ob der Schuetze Luftziele trifft. Steht am Geschoss und nicht am Turm,
+   *  weil der Turm verkauft sein kann, waehrend sein Schuss noch fliegt. */
+  luft: boolean;
   owner: Tower | null;
   speed: number;
   damage: number;
@@ -198,6 +205,12 @@ export interface RunStats {
   abilityUses: Record<string, number>;
   duration: number;
   towersBuilt: number;
+  /** Abgefeuerte zielsuchende Geschosse und davon die, die ohne jede
+   *  Wirkung verschwunden sind (Ziel im Flug gestorben, kein Ersatz).
+   *  Ballistische zaehlen nicht mit: die fliegen auf einen Punkt und
+   *  detonieren dort immer. */
+  schuesse: number;
+  schuesseOhneWirkung: number;
 }
 
 export type Phase = 'title' | 'playing' | 'won' | 'lost';

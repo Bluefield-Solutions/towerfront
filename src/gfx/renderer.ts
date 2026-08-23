@@ -62,6 +62,25 @@ export function projektilform(p: { owner: Tower | null; splash: number }): Proje
   return p.owner.branch === 1 ? 'bolzen' : 'pfeil';
 }
 
+/** Wie stark der Lichtteich um den Kristall aufgetragen wird.
+ *
+ *  Ausgeeicht am gerenderten Bild, nicht am Bildvorrat: gemessen wird die
+ *  Buntheit des BODENS in einem Ring um die Zielplattform, mit und ohne
+ *  Teich, und dagegen die Buntheit der Festung. Eine Zahl, die man nur
+ *  ansieht, ist bei Deckungen von 6 bis 20 Prozent nicht zu beurteilen.
+ *
+ *  Gemessen wurde am Ende durch VERGLEICH ZWEIER BILDER, mit und ohne - das
+ *  ist die einzige Messung ohne Annahmen. Zwei Anlaeufe mit von Hand
+ *  gesetzten Messfenstern waren wertlos: das eine lag auf der Bedienleiste,
+ *  das andere auf einer halben Festung. Erst der Bildvergleich zeigte, was
+ *  zaehlt - die Aenderung ist ein radialer Fleck genau ueber der
+ *  Zielplattform und ueber dem ganzen linken Zweidrittel exakt null.
+ *
+ *  Die STAERKE selbst ist nach Augenschein gesetzt, nicht gemessen. Das ist
+ *  hier ehrlicher als eine Zahl, die nur sich selbst bestaetigt: wieviel
+ *  Licht gut aussieht, sagt kein Tor. */
+export const LICHTTEICH = 1.35;
+
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
   private terrain: HTMLCanvasElement | null = null;
@@ -402,6 +421,7 @@ export class Renderer {
     ctx.drawImage(getMoodLayer(s.map.palette), 0, 0);
     if (hi) drawAurora(ctx, s.crystalPulse);
 
+    this.lichtteich(s);
     this.drawPortal(s, hi);
     this.drawBuildOverlay(s);
     this.drawCrystal(s, hi);
@@ -802,6 +822,50 @@ export class Renderer {
    *
    *  Gezeigt wird der Platzbedarf des kleinsten Turms - er ist der, der ueber
    *  "geht hier ueberhaupt etwas" entscheidet. */
+  /** Der Lichtteich um den Kristall.
+   *
+   *  Der andere Weg zur Einbettung, und der bessere. Bis v127 wurde die
+   *  Kristallfestung farblich zur Karte gezogen - das schliesst die Haelfte
+   *  des Abstands und stoesst dann an eine Wand: bei voller Angleichung waere
+   *  sie auf dem Spiralhain braun, und ihr Blau IST ihre Identitaet.
+   *
+   *  Also andersherum. Der Kristall leuchtet, und was leuchtet, faerbt seine
+   *  Umgebung. Der Boden um die Zielplattform nimmt seine Farbe an - nach
+   *  aussen auslaufend. Damit ist der Farbuebergang ein VERLAUF IN DER WELT
+   *  statt einer Kante an der Silhouette, und genau daran erkennt das Auge,
+   *  ob etwas dazugehoert.
+   *
+   *  Erzaehlerisch ist es ausserdem richtig herum: nicht die Festung passt
+   *  sich der Asche an, die Asche liegt im Licht der Festung.
+   *
+   *  Gezeichnet nach dem Untergrund und VOR allem, was darauf steht - der
+   *  Teich liegt auf dem Boden, nicht ueber den Tuermen. Und ohne
+   *  Mischmodus: `lighter` ist auf Safari die Falle aus Regel 11. Ein
+   *  gewoehnlicher Verlauf mit kleiner Deckung tut dasselbe und ist sicher. */
+  private lichtteich(s: GameState): void {
+    const z = s.map.ziel;
+    if (!z || LICHTTEICH <= 0) return;
+    const ctx = this.ctx;
+    // Der Teich atmet mit dem Kristall - dieselbe Schwingung, damit er zu
+    // ihm gehoert und nicht daneben pulsiert.
+    const puls = 0.9 + Math.sin(s.time * 1.4) * 0.1;
+    ctx.save();
+    // Weit und sehr schwach: das ist das Klima.
+    const weit = ctx.createRadialGradient(z.x, z.y, 60, z.x, z.y, 520 * puls);
+    weit.addColorStop(0, hexA(C.crystal, 0.13 * LICHTTEICH));
+    weit.addColorStop(0.45, hexA(C.crystal, 0.06 * LICHTTEICH));
+    weit.addColorStop(1, hexA(C.crystal, 0));
+    ctx.fillStyle = weit;
+    ctx.fillRect(z.x - 560, z.y - 560, 1120, 1120);
+    // Eng und heller: das ist das Licht.
+    const eng = ctx.createRadialGradient(z.x, z.y, 10, z.x, z.y, 210 * puls);
+    eng.addColorStop(0, hexA(C.crystal, 0.20 * LICHTTEICH));
+    eng.addColorStop(1, hexA(C.crystal, 0));
+    ctx.fillStyle = eng;
+    ctx.fillRect(z.x - 230, z.y - 230, 460, 460);
+    ctx.restore();
+  }
+
   private drawBauplatz(s: GameState): void {
     if (!s.buildAt || s.vorschau || s.buildChoice) return;
     const ctx = this.ctx;

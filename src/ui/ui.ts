@@ -770,6 +770,15 @@ export class UI {
     const schluessel = `${sel.id}|${sel.zielwahl}`;
     if (schluessel === this.zielKey) return;
     this.zielKey = schluessel;
+    // Eine Spalte je Modus, aus der Liste selbst. Umgebrochen waere die
+    // Reihe zwei Zeilen hoch, und der Verkaufen-Knopf faende keinen Platz
+    // mehr - der Fall, der in v137 schon einmal eintrat.
+    // `minmax(0, 1fr)` und nicht `1fr`: letzteres weicht dem laengsten Wort
+    // aus - gemessen 37, 42, 34, 63, 50 Punkte statt fuenfmal 45. Der
+    // schmalste Knopf entscheidet, ob ein Daumen trifft, also muessen sie
+    // gleich breit sein.
+    this.iZiel.style.gridTemplateColumns =
+      `repeat(${ZIELWAHL_ORDNUNG.length}, minmax(0, 1fr))`;
     this.iZiel.innerHTML = ZIELWAHL_ORDNUNG.map((z) =>
       `<button class="ziel" data-ziel="${z}" aria-pressed="${z === sel.zielwahl}">`
       + `${ZIELWAHL_NAMEN[z]}</button>`).join('');

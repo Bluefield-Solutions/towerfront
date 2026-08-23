@@ -970,6 +970,16 @@ const PROBEN = [
   {
     // Die Tortabelle im Pipeline-Dokument darf nicht hinter der Kette
     // zurueckbleiben - sechs Tore lang tat sie das unbemerkt.
+    // Ein Ticket steht im Masterplan an drei Stellen. Nach TF-007 waren
+    // zwei nachgetragen und eine nicht - beim naechsten Nachschlagen stand
+    // es wieder offen da.
+    name: 'Erledigtes Ticket nur an einer Stelle abgehakt',
+    datei: 'docs/Towerfront-MASTERPLAN.md',
+    regel: /\| 3 \| TF-007 \|([^\n]*)\*\*erledigt v144\*\* \|/,
+    ersatz: '| 3 | TF-007 |$1— |',
+    tor: 'doku',
+  },
+  {
     // Und die Reihenfolge: zwei vertauschte Zeilen sind schwerer zu sehen
     // als eine fehlende - und richten mehr an, weil die Tabelle dann
     // vollstaendig aussieht.
@@ -985,6 +995,47 @@ const PROBEN = [
     regel: /\| 7 \| Geschosse \| `npm run geschossetor` \|[^\n]*\n/,
     ersatz: '',
     tor: 'doku',
+  },
+  {
+    // TF-032: "hinten" tut dasselbe wie "vorn" - eine Wahl ohne Folgen.
+    name: 'Zielmodus hinten wirkt wie vorn',
+    datei: 'src/game/state.ts',
+    regel: /        : wahl === 'hinten' \? -e\.travelled/,
+    ersatz: "        : wahl === 'hinten' ? e.travelled",
+    tor: 'smoke',
+  },
+  {
+    // Und derselbe Eingriff gegen das Balance-Tor: dort wird nicht geprueft,
+    // ob der Modus ANDERS waehlt, sondern ob er etwas NUETZT.
+    name: 'Zielmodus hinten nuetzt nichts',
+    datei: 'src/game/state.ts',
+    regel: /        : wahl === 'hinten' \? -e\.travelled/,
+    ersatz: "        : wahl === 'hinten' ? e.travelled",
+    tor: 'sim',
+  },
+  {
+    // Die Knopfreihe: feste vier Spalten bei fuenf Modi.
+    name: 'Zielreihe bricht auf zwei Zeilen um',
+    datei: 'src/ui/ui.ts',
+    regel: /      `repeat\(\$\{ZIELWAHL_ORDNUNG\.length\}, minmax\(0, 1fr\)\)`;/,
+    ersatz: "      'repeat(4, minmax(0, 1fr))';",
+    tor: 'browsertor',
+  },
+  {
+    // Ungleiche Spalten: der schmalste Knopf faellt unter das Fingermass.
+    name: 'Zielknoepfe verschieden breit',
+    datei: 'src/ui/ui.ts',
+    regel: /      `repeat\(\$\{ZIELWAHL_ORDNUNG\.length\}, minmax\(0, 1fr\)\)`;/,
+    ersatz: '      `repeat(${ZIELWAHL_ORDNUNG.length}, 1fr)`;',
+    tor: 'browsertor',
+  },
+  {
+    // Eine Beschriftung, die nicht hineinpasst.
+    name: 'Zielknopf schneidet sein Wort ab',
+    datei: 'src/game/types.ts',
+    regel: /  schwach: 'Wund',/,
+    ersatz: "  schwach: 'Schwaechster',",
+    tor: 'browsertor',
   },
   {
     // TF-019: die Muendung wieder in die Turmmitte legen.

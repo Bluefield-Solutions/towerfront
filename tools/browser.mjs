@@ -477,6 +477,90 @@ if (start) {
       );
     }
 
+    // --- 5d. Sind die Zielknoepfe noch zu treffen? (v146)
+    //
+    // Sie stehen in EINER Reihe, eine Spalte je Modus. Jeder weitere Modus
+    // macht jeden Knopf schmaler - und die Reihe steht in einem Steg, dessen
+    // Breite feststeht. Das laesst sich nicht abschaetzen, es muss gemessen
+    // werden: `npm run beruehrung` liest die Mindesthoehe aus der
+    // Stilvorlage, ueber die BREITE sagt sie nichts, weil die erst im Raster
+    // entsteht.
+    //
+    // Bis v145 fiel diese Reihe durch jedes Raster: die Knopfmessung oben
+    // kennt die Klassen der Kopfzeile und der Turmleiste, nicht die des
+    // Pruefstegs.
+    const zielKnoepfe = await seite.evaluate(() => [...document.querySelectorAll('.ziel')]
+      .map((b) => {
+        const r = b.getBoundingClientRect();
+        return {
+          text: (b.textContent ?? '').trim(),
+          w: Math.round(r.width), h: Math.round(r.height),
+          // Passt die Beschriftung ueberhaupt hinein? Ein Knopf, dessen Wort
+          // abgeschnitten ist, ist gross genug zum Treffen und trotzdem
+          // unbrauchbar.
+          ueber: b.scrollWidth - b.clientWidth,
+        };
+      }));
+    if (!zielKnoepfe.length) {
+      fail('Im offenen Prüfsteg steht keine Ziellogik - dann prüft die Messung nichts.');
+    } else {
+      console.log(`Zielknöpfe: ${zielKnoepfe.map((k) => `${k.text} ${k.w}x${k.h}`).join(', ')}`);
+      // 44 Punkte ist der Richtwert von Apple und Google fuer die Hoehe. In
+      // der Breite ist eine Reihe gleich breiter Knoepfe traditionell
+      // schmaler zulaessig - aber unter 32 Punkten trifft ein Daumen den
+      // Nachbarn.
+      for (const k of zielKnoepfe) {
+        if (k.h < 44) fail(`Zielknopf "${k.text}" ist nur ${k.h} Punkte hoch (44 nötig).`);
+        if (k.w < 40) {
+          fail(`Zielknopf "${k.text}" ist nur ${k.w} Punkte breit. Bei ${zielKnoepfe.length} `
+            + 'Modi in einer Reihe trifft der Daumen den Nachbarn.');
+        }
+        if (k.ueber > 1) {
+          fail(`Zielknopf "${k.text}" schneidet seine Beschriftung um ${k.ueber} Punkte ab.`);
+        }
+      }
+      // Gleich breit, nicht nur breit genug.
+      //
+      // Das ist die eigentliche Aussage, und die Mindestbreite oben ist nur
+      // ihr Nebeneffekt. `1fr` verteilt den UEBERSCHUSS gleichmaessig und
+      // gibt jedem Knopf vorher so viel, wie sein Wort braucht - "Wund"
+      // bekommt damit mehr als "Voll", ohne dass es einen Grund gaebe.
+      // Solange die Woerter kurz sind, faellt dabei niemand unter das
+      // Fingermass, und eine reine Mindestbreite meldete nichts: die
+      // Gegenprobe "Zielknoepfe verschieden breit" schlug erst an, als
+      // zufaellig ein langes Wort dabei war. Eine Pruefung, die von der
+      // Wortlaenge abhaengt, prueft nicht das Raster.
+      const schmal = Math.min(...zielKnoepfe.map((k) => k.w));
+      const breit = Math.max(...zielKnoepfe.map((k) => k.w));
+      if (breit - schmal > 2) {
+        fail(`Die Zielknöpfe sind verschieden breit (${schmal} bis ${breit} Punkte). `
+          + 'Gleich grosse Schaltflaechen einer Reihe muessen gleich gross sein - '
+          + 'sonst entscheidet die Wortlaenge, wie leicht ein Modus zu treffen ist.');
+      }
+
+      // Und die Reihe darf nicht umbrechen - zwei Zeilen schieben den
+      // Verkaufen-Knopf aus dem Steg (der Fall aus v137).
+      const zeilen = new Set(zielKnoepfe.map(() => 0));
+      const oben = await seite.evaluate(() => [...document.querySelectorAll('.ziel')]
+        .map((b) => Math.round(b.getBoundingClientRect().top)));
+      void zeilen;
+      if (new Set(oben).size > 1) {
+        fail(`Die Ziellogik bricht auf ${new Set(oben).size} Zeilen um - `
+          + 'das kostet Hoehe, die der Steg nicht hat.');
+      }
+    }
+
+    // Und ein Bild davon. Die Zahlen oben sagen, dass die Knoepfe gross
+    // genug sind und ihr Wort tragen - ob die Reihe GUT aussieht, sagt kein
+    // Tor (Regel 8). Aufgenommen wird nur der Steg, nicht der ganze Schirm.
+    {
+      const steg = await seite.$('#inspector') ?? await seite.$('.insp') ?? null;
+      if (steg) {
+        mkdirSync(join(ROOT, 'bilder'), { recursive: true });
+        writeFileSync(join(ROOT, 'bilder/ziellogik.png'), await steg.screenshot());
+      }
+    }
+
     // --- 8. Rollt etwas, ohne es anzuzeigen?
     //
     // Die Prüfung oben fragt nach Knöpfen, die abgeschnitten werden. D24 war

@@ -137,6 +137,51 @@ for (const [name, text] of alle) {
   }
 }
 
+// --- 2c. Ein erledigtes Ticket muss ueberall erledigt sein.
+//
+// Ein TF-Ticket steht im Masterplan an drei Stellen: in der Gap-Analyse, im
+// eigenen Abschnitt und in der Liste "Next 30". Nach TF-007 waren zwei davon
+// nachgetragen und eine nicht - beim naechsten Nachschlagen stand das Ticket
+// wieder offen da, und ich haette es ein zweites Mal umgesetzt. Genau Regel
+// 15, nur mit drei Stellen statt zwei.
+//
+// Geprueft wird gegenseitig: was in der Gap-Analyse "ERLEDIGT vNNN" traegt,
+// muss in "Next 30" fett als erledigt stehen - und umgekehrt.
+{
+  const mp = alle.find(([n]) => n === 'Towerfront-MASTERPLAN.md');
+  if (mp) {
+    const text = mp[1];
+    const lueckeErledigt = new Map();
+    for (const m of text.matchAll(/^\| (TF-\d+) \| [^|]+\| ERLEDIGT (v\d+) \|/gm)) {
+      lueckeErledigt.set(m[1], m[2]);
+    }
+    const next30 = new Map();
+    for (const m of text.matchAll(/^\| \d+ \| (TF-\d+) \|[^\n]*\*\*erledigt (v\d+)\*\*/gm)) {
+      next30.set(m[1], m[2]);
+    }
+    // Nur Tickets, die ueberhaupt in beiden Listen vorkommen.
+    const inNext30 = new Set(
+      [...text.matchAll(/^\| \d+ \| (TF-\d+) \|/gm)].map((m) => m[1]),
+    );
+    for (const [id, v] of lueckeErledigt) {
+      if (!inNext30.has(id)) continue;
+      if (!next30.has(id)) {
+        fail(`Towerfront-MASTERPLAN.md: ${id} ist in der Gap-Analyse als ${v} erledigt `
+          + 'markiert, in "Next 30" aber nicht.');
+      } else if (next30.get(id) !== v) {
+        fail(`Towerfront-MASTERPLAN.md: ${id} steht in der Gap-Analyse als ${v}, `
+          + `in "Next 30" als ${next30.get(id)}.`);
+      }
+    }
+    for (const [id, v] of next30) {
+      if (!lueckeErledigt.has(id)) {
+        fail(`Towerfront-MASTERPLAN.md: ${id} ist in "Next 30" als ${v} erledigt `
+          + 'markiert, in der Gap-Analyse aber nicht.');
+      }
+    }
+  }
+}
+
 // --- 3. Begriffe, die das Spiel nicht mehr kennt.
 //
 // Nur außerhalb des Fundregisters: dort beschreiben sie absichtlich den Stand

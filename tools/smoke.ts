@@ -1174,20 +1174,22 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   const { ZIELWAHL_ORDNUNG } = await import('../src/game/types');
   const { candidateSpots } = await import('./spots');
   const staende: Record<string, number> = {};
+  const strecken: Record<string, number> = {};
   for (const wahl of ZIELWAHL_ORDNUNG) {
     state.reset(12345, 'normal', 'spiralhain');
     state.gold = 99999;
     for (const sp of candidateSpots(state).slice(0, 6)) state.build(sp.x, sp.y, 'arrow');
     for (const t of state.towers) t.zielwahl = wahl;
     state.startWave();
-    let summe = 0, n = 0;
+    let summe = 0, weg = 0, n = 0;
     for (let i = 0; i < 60 * 60 && state.phase === 'playing'; i++) {
       state.update(1 / 60);
       for (const t of state.towers) {
-        if (t.target) { summe += t.target.hp / t.target.hpMax; n++; }
+        if (t.target) { summe += t.target.hp / t.target.hpMax; weg += t.target.travelled; n++; }
       }
     }
     staende[wahl] = n ? summe / n : 0;
+    strecken[wahl] = n ? weg / n : 0;
     if (!n) problems.push(`Ziellogik "${wahl}": kein Turm hat je ein Ziel gefasst.`);
   }
   if (staende.schwach >= staende.stark) {
@@ -1195,6 +1197,16 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
       `Ziellogik wirkt nicht: "schwach" visiert Gegner mit ${(staende.schwach * 100).toFixed(0)} % ` +
       `Lebensstand an, "stark" mit ${(staende.stark * 100).toFixed(0)} % - ` +
       'schwach muesste darunter liegen.',
+    );
+  }
+  // Und dasselbe fuer das zweite Paar (TF-032). Gemessen wird die
+  // zurueckgelegte STRECKE des anvisierten Gegners: mit "hinten" muss sie
+  // unter der mit "vorn" liegen. Wieder eine Ordnung statt einer Grenze -
+  // die Zahl selbst wandert mit jeder Balance-Runde, die Ordnung nicht.
+  if (strecken.hinten >= strecken.vorn) {
+    problems.push(
+      `Ziellogik "hinten" wirkt nicht: sie visiert Gegner nach ${strecken.hinten.toFixed(0)} ` +
+      `Weltpunkten an, "vorn" nach ${strecken.vorn.toFixed(0)} - hinten muesste darunter liegen.`,
     );
   }
   // Und die Einstellung muss den Spielstand ueberleben.

@@ -61,7 +61,7 @@ export interface Enemy {
  *  Gemessen wird bei `stark` und `schwach` der AKTUELLE Lebensstand, nicht
  *  der volle: der Spieler sieht den Balken ueber dem Gegner, und was er
  *  sieht, muss das sein, wonach der Turm geht. */
-export type Zielwahl = 'vorn' | 'stark' | 'nah' | 'schwach';
+export type Zielwahl = 'vorn' | 'hinten' | 'stark' | 'nah' | 'schwach';
 
 /** Kurzformen, und zwar aus Platzgruenden mit Mass.
  *
@@ -69,15 +69,33 @@ export type Zielwahl = 'vorn' | 'stark' | 'nah' | 'schwach';
  *  Pruefsteg. Gemessen war der Steginhalt danach 284 Punkte hoch bei 238
  *  sichtbaren, und der Ueberlauf stand auf `hidden` - der Verkaufen-Knopf
  *  wurde abgeschnitten. Eine neue Einstellung darf keine alte Handlung
- *  verdraengen. */
+ *  verdraengen.
+ *
+ *  In v146 wurden "Stark" und "Schwach" zu **"Voll"** und **"Wund"**, und
+ *  zwar aus zwei Gruenden zugleich. Der eine ist Platz: mit dem fuenften
+ *  Modus teilen sich fuenf Knoepfe eine Reihe von 226 Punkten, also 43 je
+ *  Knopf. "Schwach" braucht bei 12 px 54 Punkte und bei 10 px immer noch 45
+ *  - es passt bei KEINER vernuenftigen Schriftgroesse hinein, und ein
+ *  abgeschnittenes Wort ist kein Knopf.
+ *
+ *  Der andere Grund ist Genauigkeit, und der ist der wichtigere: gemessen
+ *  wird der AKTUELLE Lebensstand, nicht die Gegnerart. "Stark" liest sich
+ *  wie "der gefaehrliche Gegnertyp" - gemeint war immer "der mit den
+ *  meisten Lebenspunkten gerade jetzt". "Voll" und "Wund" sagen genau das.
+ *  Die inneren Namen bleiben `stark`/`schwach`: Spielstaende sichern den
+ *  Index, nicht das Wort. */
 export const ZIELWAHL_NAMEN: Record<Zielwahl, string> = {
   vorn: 'Vorn',
-  stark: 'Stark',
+  hinten: 'Hinten',
+  stark: 'Voll',
   nah: 'Nah',
-  schwach: 'Schwach',
+  schwach: 'Wund',
 };
 
-export const ZIELWAHL_ORDNUNG: Zielwahl[] = ['vorn', 'stark', 'nah', 'schwach'];
+// ANGEHAENGT, nicht eingeschoben: der Spielstand sichert die Zielwahl als
+// INDEX in diese Liste. Wer 'hinten' zwischen 'vorn' und 'stark' schiebt,
+// stellt jedem laufenden Spielstand die Tuerme um, ohne dass etwas rot wird.
+export const ZIELWAHL_ORDNUNG: Zielwahl[] = ['vorn', 'stark', 'nah', 'schwach', 'hinten'];
 
 export interface Tower {
   id: number;

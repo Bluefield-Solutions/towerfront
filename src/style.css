@@ -127,11 +127,20 @@ html, body {
  * Richtwert. Ein Mindestmass, das der Erste beste Platzmangel aushebelt, ist
  * kein Mindestmass. */
 .insp-ziel {
+  /* Die Spaltenzahl setzt `ui.ts` aus ZIELWAHL_ORDNUNG.length - hier stand
+     sie bis v146 als feste Vier, also dieselbe Zahl an zwei Stellen. Beim
+     fuenften Modus waere die Reihe umgebrochen und haette den
+     Verkaufen-Knopf aus dem Steg geschoben, ohne dass etwas rot wird
+     (Regel 15). Der Wert hier ist nur der Rueckfall. */
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
   margin: 8px 0; flex: 0 0 auto;
 }
 .insp-ziel .ziel {
-  min-height: 44px; padding: 6px 4px; border-radius: 10px;
+  /* Waagerecht 2 statt 4 Punkte Luft: bei fuenf Modi in einer Reihe bleiben
+     je Knopf 43 Punkte, und die vier gesparten Punkte sind der Unterschied
+     zwischen "Hinten" und "Hinte…". Senkrecht bleibt es bei 6 - dort geht
+     es um die Trefferflaeche, nicht um Buchstaben. */
+  min-height: 44px; padding: 6px 2px; border-radius: 10px;
   font-family: var(--ui); font-size: 12px; line-height: 1.15;
   color: var(--text); background: rgba(9, 14, 30, 0.5);
   border: 1px solid var(--edge); cursor: pointer;

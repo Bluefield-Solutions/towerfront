@@ -4,13 +4,14 @@
  *  oder Gegnerwerten wird sofort daran gemessen.
  *  Aufruf: npx tsx tools/sim.ts */
 import { GameState } from '../src/game/state';
+import { ZIELWAHL_ORDNUNG, type Zielwahl, type Tower } from '../src/game/types';
 
 import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../src/data/difficulty';
 
 const START_LIVES = DIFFICULTIES.normal.startLives;
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, type TowerId } from '../src/data/towers';
 
-import { MAPS } from '../src/data/maps';
+import { MAPS, lanePaths } from '../src/data/maps';
 import { ALL_PERKS, NO_PERKS, starsFor } from '../src/data/perks';
 import { ABILITIES } from '../src/data/abilities';
 import { candidateSpots } from './spots';
@@ -125,6 +126,18 @@ interface Result {
 
 type BranchPick = (id: TowerId) => 0 | 1;
 
+/** Dem zuletzt gebauten Turm seine Ziellogik geben.
+ *
+ *  Am zuletzt gebauten und nicht am ganzen Feld: der Bot baut waehrend der
+ *  Partie nach, und ein Durchlauf ueber alle Tuerme nach jedem Bau waere
+ *  nicht nur teurer, er wuerde auch eine spaetere Handaenderung ueberschreiben.
+ */
+function stelleZiel(s: GameState, f?: (t: Tower, i: number, s: GameState) => Zielwahl): void {
+  if (!f) return;
+  const i = s.towers.length - 1;
+  if (i >= 0) s.towers[i].zielwahl = f(s.towers[i], i, s);
+}
+
 function play(
   strategy: TowerId[], pick: BranchPick = () => 0,
   bot: Bot = MEISTER, difficulty: DifficultyId = 'normal',
@@ -133,6 +146,9 @@ function play(
     endless?: boolean; perks?: typeof NO_PERKS; seed?: number;
     /** Kleine Abwandlung des Bauverhaltens - siehe VARIANTS. */
     variant?: number;
+    /** Ziellogik je Turm, nach Baureihenfolge. Ohne Angabe bleibt es beim
+     *  Standard des Spiels. */
+    ziel?: (t: Tower, i: number, s: GameState) => Zielwahl;
   } = {},
 ): Result {
   const s = new GameState(mapId);
@@ -162,7 +178,7 @@ function play(
 
       if (wantBuild) {
         const sp = spots[spotIdx];
-        if (s.build(sp.x, sp.y, id)) { si++; }
+        if (s.build(sp.x, sp.y, id)) { stelleZiel(s, opts.ziel); si++; }
         spotIdx++;
       } else {
         // In die Tiefe: immer in den Turm, der bisher am meisten geleistet hat.
@@ -177,7 +193,7 @@ function play(
         else if (s.towers.length < bot.maxTowers && spotIdx < spots.length &&
           s.gold >= TOWERS[id].base.cost + reserve) {
           const sp = spots[spotIdx];
-          if (s.build(sp.x, sp.y, id)) si++;
+          if (s.build(sp.x, sp.y, id)) { stelleZiel(s, opts.ziel); si++; }
           spotIdx++;
         }
       }
@@ -493,6 +509,65 @@ for (const id of DIFFICULTY_ORDER) {
 // Turmtyp in den einen oder den anderen Zweig geht, alle anderen bleiben auf
 // Zweig A. So faellt auf, welcher Zweig genau nicht traegt.
 const mixedPlan = mixedPlanBase;
+// Ziellogik: fuenf Modi, und der fuenfte muss etwas KOENNEN (TF-032).
+//
+// Ein Modus, der nirgends besser ist als der Standard, ist eine Wahl ohne
+// Folgen - genau das, was der Waechter bei toten Ausbauzweigen verhindert.
+// Der Rauchtest prueft, dass "hinten" ANDERE Gegner anvisiert; hier wird
+// geprueft, dass es dabei etwas nuetzt.
+//
+// Und zwar NICHT als reine Einstellung. Alle Tuerme auf "hinten" laesst die
+// Vordersten durch und ist ueberall schlechter (gemessen 73 gegen 84). Der
+// Sinn ist die Arbeitsteilung nach STANDORT: wer weit vom Kristall steht,
+// sieht jeden Gegner zuerst - er soll den Zulauf halten und hat die laengste
+// Zeit am selben Ziel. Wer nah am Kristall steht, muss den Vordersten nehmen,
+// sonst ist er zu spaet.
+//
+// Gemessen: 88 mit dieser Aufteilung, 84 mit dem besten reinen Modus - und
+// 68, wenn man sie umdreht. Die zwanzig Punkte zwischen "fern" und "nah"
+// sind der Beleg, dass hier eine Entscheidung liegt und kein Rauschen.
+{
+  console.log('\nZiellogik (gemischtes Feld, alle Tuerme umgestellt):');
+  const messe = (f?: (t: Tower, i: number, s: GameState) => Zielwahl): number =>
+    overVariants((variant) => play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id,
+      { variant, ziel: f })).mean;
+  const rein: Record<string, number> = {};
+  for (const z of ZIELWAHL_ORDNUNG) rein[z] = messe(() => z);
+  // Der Abstand, ab dem ein Turm als "weit vom Kristall" gilt. Anteilig an
+  // der laengsten Bahn, nicht absolut (Regel 2): eine feste Zahl waere bei
+  // der naechsten Karte still bedeutungslos.
+  // 0,35 der Bahnlaenge - anteilig und nicht absolut (Regel 2). Der Wert ist
+  // nicht getroffen, sondern aus dem Verlauf gewaehlt: durchprobiert wurden
+  // 0,25 / 0,30 / 0,35 / 0,42 / 0,50 / 0,60 / 0,70 und gemessen 86,9 / 88,3 /
+  // 88,3 / 85,0 / 88,3 / 82,5 / 81,9. Von 0,25 bis 0,50 liegt ein Plateau
+  // ueber dem besten reinen Modus; der Einbruch bei 0,42 ist ein einzelner
+  // Bauplatz, der dort die Seite wechselt. 0,35 liegt in der Mitte des
+  // Plateaus und nicht auf seiner Kante.
+  const weit = lanePaths(MAPS[0])[0].length * 0.35;
+  const fernHinten = messe((t, _i, st) =>
+    (Math.hypot(st.goal.x - t.x, st.goal.y - t.y) > weit ? 'hinten' : 'vorn'));
+  const nahHinten = messe((t, _i, st) =>
+    (Math.hypot(st.goal.x - t.x, st.goal.y - t.y) <= weit ? 'hinten' : 'vorn'));
+  const bestesReines = Math.max(...ZIELWAHL_ORDNUNG.map((z) => rein[z]));
+  console.log('  rein: ' + ZIELWAHL_ORDNUNG.map((z) => `${z} ${rein[z].toFixed(0)}`).join('  '));
+  console.log(`  nach Standort (Grenze ${weit.toFixed(0)} Weltpunkte zum Kristall): `
+    + `fern=hinten ${fernHinten.toFixed(0)}   nah=hinten ${nahHinten.toFixed(0)}`);
+  if (fernHinten <= bestesReines) {
+    errors.push(`Ziellogik "hinten" ist wirkungslos: nach Standort aufgeteilt `
+      + `${fernHinten.toFixed(1)} Punkte, bester reiner Modus ${bestesReines.toFixed(1)}. `
+      + 'Der fuenfte Modus muss eine Aufstellung ermoeglichen, die es ohne ihn nicht gibt.');
+  }
+  // Fuenf Punkte Abstand, nicht null: die Kennzahl streut ueber die
+  // Abwandlungen um rund drei. Eine Grenze innerhalb der Streuung waere ein
+  // Muenzwurf, kein Beweis - und ein Tor, das jede zweite Runde grundlos rot
+  // wird, wird abgeschaltet.
+  if (fernHinten <= nahHinten + 5) {
+    errors.push('Ziellogik "hinten": die Aufteilung nach Standort ist beliebig - '
+      + `fern ${fernHinten.toFixed(1)} gegen nah ${nahHinten.toFixed(1)}. `
+      + 'Dann traegt nicht der Modus, sondern der Zufall.');
+  }
+}
+
 console.log('\nZweige einzeln (gemischtes Feld, ein Turmtyp umgestellt):');
 const branchRuns = new Map<string, Result>();
 for (const id of TOWER_ORDER) {

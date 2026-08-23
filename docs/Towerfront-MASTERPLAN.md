@@ -1173,7 +1173,7 @@ XL > 10 Runden.
 | TF-004 | Gameplay | DESIGN | Kernkreis stellt zu selten eine Frage | Kein Spielspaß ohne Meta | Ergebnis aus TF-002/005/006/010 | P0 | — | Sammelticket |
 | TF-005 | Wave | VERIFIED | Kein Wellenruf während einer Welle | Kein Risiko-gegen-Gold, halbe Zeit Zusehen | Rufen erlauben, Bonus nach Restgefahr | P1 | S | — |
 | TF-006 | Tower | DESIGN | Zweige ändern Zahlen, keine Regeln | Die zentrale Entscheidung ist folgenlos | Je Zweig eine Regeländerung | P1 | M | TF-021 |
-| TF-007 | Combat | VERIFIED | Geschoss verschwindet, wenn das Ziel stirbt | Verlorener Schaden, sichtbares Verschwinden | Nach Waffentyp: neues Ziel oder Einschlag | P1 | S | — |
+| TF-007 | Combat | ERLEDIGT v144 | Geschoss verschwindet, wenn das Ziel stirbt | Verlorener Schaden, sichtbares Verschwinden | Nach Waffentyp: neues Ziel oder Einschlag | P1 | S | 12,0 % → 1,6 %, Tor `geschossetor` |
 | TF-008 | Boss | MISSING | Kein Boss im Genresinn | Keine Dramaturgie | Phasen, Schwachstelle, eine Fähigkeit | P1 | M | TF-020 |
 | TF-009 | Progression | MISSING | Keine Freischaltung, keine Ziele | Kein Grund für eine zweite Partie | Kartenschloss, drei Sternziele je Karte | P1 | M | — |
 | TF-010 | Economy | VERIFIED | 79 % des Einkommens sind Wellenbonus | Gutes Spielen zahlt sich kaum aus | Verhältnis auf etwa 50/50 drehen | P1 | S | TF-005 |
@@ -1198,7 +1198,7 @@ XL > 10 Runden.
 | TF-029 | UI | DESIGN | Prüfsteg verdeckt ein Drittel des Feldes | Sicht auf den Kristall verdeckt | Steg schmaler, Werte zweispaltig | P2 | S | — |
 | TF-030 | Path | VERIFIED | Leerentitan (102) breiter als engste Straße (80) | Er ragt über den Rand | Straße verbreitern oder Titan verschmälern | P2 | XS | — |
 | TF-031 | Wave | DESIGN | Keine Erholungs- und Wirtschaftswelle | Kein Atem in der Dramaturgie | Wellenrollen einführen | P2 | S | — |
-| TF-032 | Targeting | MISSING | Modus „hinten" fehlt | Durchbrecher nicht abfangbar | Fünfter Modus | P2 | XS | — |
+| TF-032 | Targeting | ERLEDIGT v146 | Modus „hinten" fehlt | Durchbrecher nicht abfangbar | Fünfter Modus | P2 | XS | nach Standort aufgeteilt 88 gegen 84 Punkte |
 | TF-033 | VFX | MISSING | Keine Rückmeldung über Wirksamkeit | Man sieht nicht, ob ein Turm taugt | Abpraller bei Panzerung, gedämpfter Einschlag | P2 | S | TF-015 |
 | TF-034 | Onboarding | MISSING | Konter werden nie erklärt | Der erste Gleiter überrascht | Ein Satz beim ersten Auftreten jeder Gegnerart | P2 | S | TF-014 |
 | TF-035 | Code | VERIFIED | Toter `topdown`-Zweig, totes `range`-Feld, leere Turmleinwand | Wartungsballast | Entfernen | P3 | XS | — |
@@ -1448,7 +1448,7 @@ kursiv.
 | **1 — Kritische Stabilisierung** | *Spielstand, Trefferstopp, Inspektor, Kartennamen, Platzbedarf* | *v137–v139* | **erledigt** |
 | **2 — Pathfinding & Movement** | Wegvorschau, Titanbreite, Bahnbelegung | TF-014, TF-030, E4 | offen |
 | **3 — Tower Placement** | Bauplätze dauerhaft, Ring ehrlich, Kosten an der Vorschau | TF-001, F2, F3 | offen |
-| **4 — Targeting & Combat** | Geschoss-Ersatzziel, Mündungspunkt, Modus „hinten" | TF-007, TF-019, TF-032 | offen |
+| **4 — Targeting & Combat** | Geschoss-Ersatzziel, Mündungspunkt, Modus „hinten" | TF-007, TF-019, TF-032 | **abgeschlossen** (v144, v145, v146) |
 | **5 — Core Tower Design** | Zweige mit Regeln, Rollen schärfen | TF-006, TF-021 | offen |
 | **6 — Core Enemy Design** | Drei Archetypen, Fraktionsfarben, Bewegungsarten | TF-002, TF-024, J6 | offen |
 | **7 — Counter & Synergy** | Effektsystem, Verstärkung, Wirksamkeitsrückmeldung | TF-015, TF-033, K2 | offen |
@@ -1469,7 +1469,7 @@ kursiv.
 | **22 — Audio** | Grundklang, Anspannung, fehlende Rückmeldungen | TF-026, U4 | offen |
 | **23 — Performance** | Messung auf echter Hardware, Langzeitsitzung | TF-040, V3 | braucht Nutzer |
 | **24 — Accessibility** | Form statt Farbe, Schriftgröße, weniger Effekte | TF-028 | offen |
-| **25 — QA & Regression** | Verkauf/Ausbau im Schuss, Bauplatz unter Bedienung | TF-016, X1 | offen |
+| **25 — QA & Regression** | Verkauf/Ausbau im Schuss, Bauplatz unter Bedienung | TF-016, X1 | TF-016 (v143); offen: X1 |
 | **26 — Vertical Slice Gate** | **Hier bewusst anhalten.** | — | **Sperre** |
 | **27 — Content** | weitere Karten, Türme, Gegner, Bosse | TF-013, TF-036 | nach Batch 26 |
 | **28 — Meta Game** | Fertigkeitsbaum, Sammlung, Erfolge | — | nach Batch 27 |
@@ -1619,9 +1619,9 @@ möglich ist.
 |---|---|---|---|---|---|---|---|---|
 | 1 | TF-001 | Bauplätze dauerhaft sichtbar | Placement | Nur unter dem Finger | Der letzte P0 der Bedienung fällt | P0 | S | — |
 | 2 | TF-016 | Verkauf und Ausbau während eines Schusses prüfen | QA | Ungeprüfter Verweis | Zwei Lücken im Katalog zu | P1 | XS | **erledigt v143** |
-| 3 | TF-007 | Geschosse suchen ein Ersatzziel | Combat | Schaden verschwindet | Sichtbar sauberes Gefecht | P1 | S | — |
+| 3 | TF-007 | Geschosse suchen ein Ersatzziel | Combat | Schaden verschwindet | Sichtbar sauberes Gefecht | P1 | S | **erledigt v144** |
 | 4 | TF-019 | Mündungspunkt je Turmart | Combat | Schuss aus der Mitte | Schüsse kommen aus dem Rohr | P2 | S | **erledigt v145** |
-| 5 | TF-032 | Zielmodus „hinten" | Targeting | Durchbrecher | Fünfte echte Wahl | P2 | XS | — |
+| 5 | TF-032 | Zielmodus „hinten" | Targeting | Durchbrecher | Fünfte echte Wahl | P2 | XS | **erledigt v146** |
 | 6 | TF-030 | Titanbreite gegen Straßenbreite | Path | Ragt über den Rand | Kein Überstand mehr | P2 | XS | — |
 | 7 | TF-035 | Toten Code entfernen | Code | Ballast | Weniger Fläche für Fehler | P3 | XS | — |
 | 8 | TF-014 | Wegvorschau beim Kartenstart | Path Visibility | Woher kommt es? | Erste 10 Sekunden verständlich | P1 | S | — |

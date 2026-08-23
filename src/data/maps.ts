@@ -208,13 +208,23 @@ export const MAP_SPIRALHAIN: GameMap = {
 };
 
 
-/** Karte 2 "Laubschlucht": Zwei Zuwege, die sich auf halbem Weg vereinen.
+/** Karte 2 "Ascheschlucht": Drei Zuwege, die sich auf halbem Weg vereinen.
  *  Vor der Gabelung muss man sich entscheiden, hinter ihr zahlt jede Stellung
  *  doppelt - das ist die eigentliche Frage dieser Karte. */
 export const MAP_ASCHESCHLUCHT: GameMap = {
   id: 'ascheschlucht',
-  name: 'Laubschlucht',
-  blurb: 'Zwei Zuwege, die sich früh vereinen. Danach zählt jede Stellung doppelt.',
+  // Der Name folgt dem BILD, nicht umgekehrt.
+  //
+  // Bis v138 hiess diese Karte im Quelltext `ascheschlucht`, auf dem
+  // Bildschirm "Laubschlucht" und zeigte ein Aschefeld mit gluehenden
+  // Lavarissen. Drei Wahrheiten ueber denselben Ort - und der sichtbarste
+  // Einzelposten der Beschwerde "das wirkt zusammengewuerfelt". Die Kennung
+  // bleibt, sie steht in gespeicherten Fortschritten.
+  name: 'Ascheschlucht',
+  // Kein Zahlwort im Text: die Zuwege werden gezaehlt, nicht geschrieben.
+  // Der Blurb sagte "Zwei Zuwege", die Karte hat drei, und die abgeleitete
+  // Zeile darunter sagte es richtig. Ein Waechter haelt das jetzt fest.
+  blurb: 'Der Boden glüht noch. Die Zuwege münden früh ineinander — danach zählt jede Stellung doppelt.',
   palette: LAUB,
   lanes: [
     [

@@ -1,7 +1,7 @@
 import { C, LICHT, WORLD_H, WORLD_W } from '../data/config';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import {
-  TOWERS, accentFor, statsFor,
+  TOWERS, TURM_BREITE, accentFor, statsFor,
   type BranchIndex, type TowerDef, type TowerId, type TowerLevel,
   DRAW_SCALE, TURM_HOEHE, TOWER_ORDER } from '../data/towers';
 import { ABILITIES } from '../data/abilities';
@@ -1385,7 +1385,7 @@ export class Renderer {
           // Fuellgrad 0,94 gepackt (siehe art/objekte.json), also fuellt die
           // Figur die Kachel fast ganz.
           const FUELLUNG = 0.94;
-          const bw = (TOWERS[def.id].footprint * DRAW_SCALE) / FUELLUNG;
+          const bw = (TURM_BREITE * DRAW_SCALE) / FUELLUNG;
           const rec2 = t.recoil * 4;
           ctx.save();
           ctx.translate(t.x, t.y + atem);
@@ -1559,7 +1559,7 @@ export class Renderer {
     // gross gezeichnet hat, ist gross.
     void artBreite;
     const FUELLUNG = 0.94;
-    const w0 = (TOWERS[id].footprint * DRAW_SCALE * towerArtScale(level)) / FUELLUNG;
+    const w0 = (TURM_BREITE * DRAW_SCALE * towerArtScale(level)) / FUELLUNG;
     // Hoehe getrennt von der Breite - und der Fuss bleibt, wo er war.
     //
     // Der Turm waechst nach OBEN aus seiner Standflaeche heraus, nicht um
@@ -1584,7 +1584,7 @@ export class Renderer {
     // dazukommt, ragt darueber hinaus. Genau so soll ein Ausbau aussehen.
     const grund = getTowerArt(id, branch, 1) ?? art;
     const anteil = artBreite(grund, `${id}:${branch}:1`);
-    const w = (TOWERS[id].footprint * DRAW_SCALE * towerArtScale(level)) / Math.max(0.3, anteil);
+    const w = (TURM_BREITE * DRAW_SCALE * towerArtScale(level)) / Math.max(0.3, anteil);
     return { w, h: w, oben: -w * 0.72 };
   }
 

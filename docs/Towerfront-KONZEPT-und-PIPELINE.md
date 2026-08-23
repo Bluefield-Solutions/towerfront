@@ -1,6 +1,6 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v138 · 23.08.2026
+Stand: v139 · 23.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Towerfront.html`
 
 > **Aufbau dieses Dokuments.** Die Abschnitte 1 bis 3.4 beschreiben den

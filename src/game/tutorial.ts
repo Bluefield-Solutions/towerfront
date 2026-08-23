@@ -71,7 +71,7 @@ export const TUTORIAL: TutorialStep[] = [
  *  Warum ueberhaupt eine zweite: die grosse Einfuehrung erklaert das SPIEL -
  *  Turm waehlen, bauen, ausbauen, Faehigkeit. Sie laeuft einmal und ist dann
  *  vorbei. Was sie nicht erklaeren kann, ist die KARTE, denn die kennt sie
- *  noch nicht. Wer nach dem Spiralhain zum ersten Mal die Laubschlucht
+ *  noch nicht. Wer nach dem Spiralhain zum ersten Mal die Ascheschlucht
  *  betritt, steht vor drei Zuwegen statt einem und muss selbst darauf kommen,
  *  dass das etwas anderes verlangt.
  *

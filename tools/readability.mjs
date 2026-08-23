@@ -139,7 +139,7 @@ async function measureBackground(buffer) {
 
 // Die Spieldaten liegen in TypeScript. Aufgerufen wird dieses Werkzeug daher
 // ueber tsx, das die Module direkt laden kann.
-const { TOWERS, TOWER_ORDER, accentFor, DRAW_SCALE } = await import('../src/data/towers');
+const { TOWERS, TOWER_ORDER, accentFor, DRAW_SCALE, TURM_BREITE } = await import('../src/data/towers');
 const { ENEMIES } = await import('../src/data/enemies');
 const { MAPS } = await import('../src/data/maps');
 // Die Groessenregeln kommen aus der Engine, nicht aus einer Kopie hier.
@@ -218,7 +218,7 @@ for (const id of TOWER_ORDER) {
     // Vorher stand hier eine eigene Formel mit der Kachelbreite, und seit dem
     // Ausgleich stimmte sie nicht mehr. Schon wieder eine Messung, die die
     // Regel nachbaut statt sie zu benutzen.
-    const worldW = TOWERS[id].footprint * DRAW_SCALE * levelScale;
+    const worldW = TURM_BREITE * DRAW_SCALE * levelScale;
     const px = worldW * COVER;
     const bad = worstRim < MIN_RIM_CONTRAST || worstBody < MIN_BODY_CONTRAST
       || px < MIN_TOWER_PX;

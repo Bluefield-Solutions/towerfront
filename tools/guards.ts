@@ -15,7 +15,9 @@ import { MAPS, goalOf, lanePaths } from '../src/data/maps';
 import { GameState } from '../src/game/state';
 import { projektilform } from '../src/gfx/renderer';
 import type { Tower } from '../src/game/types';
-import { TOWERS, TOWER_ORDER, MAX_LEVEL, DRAW_SCALE, TURM_HOEHE, rangeFor, statsFor } from '../src/data/towers';
+import {
+  TOWERS, TOWER_ORDER, MAX_LEVEL, DRAW_SCALE, TURM_BREITE, TURM_HOEHE, rangeFor, statsFor,
+} from '../src/data/towers';
 import { ENEMIES, type EnemyId } from '../src/data/enemies';
 import { fehltVorKauf } from '../src/game/turmwerte';
 import { enemyArtWidth } from '../src/gfx/enemyart';
@@ -393,25 +395,37 @@ for (const map of MAPS) {
     fail(`Turmhoehe ${TURM_HOEHE} - unter 1 waere der Turm breiter als hoch.`);
   }
   // Zwei Tuerme dicht nebeneinander duerfen sich hoechstens leicht ueberdecken.
-  for (const a of TOWER_ORDER) {
-    for (const b of TOWER_ORDER) {
-      const abstand = (TOWERS[a].footprint + TOWERS[b].footprint) / 2 + 4;
-      const breite = (TOWERS[a].footprint + TOWERS[b].footprint) / 2 * DRAW_SCALE;
-      const ueber = (breite - abstand) / breite;
-      if (ueber > 0.22) {
-        fail(
-          `${TOWERS[a].name} neben ${TOWERS[b].name}: ${Math.round(ueber * 100)} % ` +
-          'Ueberdeckung - hoechstens 22 % sind vorgesehen.',
-        );
-      }
+  //
+  // Gerechnet wird mit dem ENGSTEN Paar: die beiden kleinsten Platzbedarfe
+  // stehen am dichtesten beieinander, und wenn dort nichts uebereinander
+  // liegt, liegt nirgends etwas uebereinander.
+  {
+    const engste = [...TOWER_ORDER].map((id) => TOWERS[id].footprint).sort((a, b) => a - b);
+    const abstand = (engste[0] + engste[1]) / 2 + 4;
+    const breite = TURM_BREITE * DRAW_SCALE;
+    const ueber = (breite - abstand) / breite;
+    if (ueber > 0.22) {
+      fail(`Die beiden engsten Tuerme ueberdecken sich zu ${Math.round(ueber * 100)} % - `
+        + 'hoechstens 22 % sind vorgesehen.');
+    }
+  }
+  // Der Platzbedarf darf sich von der Zeichengroesse nicht weit entfernen.
+  //
+  // Nach oben waere er eine unsichtbare Sperre: der Turm bedeckt 96 Punkte
+  // und verbietet auf 140. Nach unten stuenden zwei Bilder ineinander.
+  for (const id of TOWER_ORDER) {
+    const anteil = TOWERS[id].footprint / TURM_BREITE;
+    if (anteil > 1.25 || anteil < 0.8) {
+      fail(`${TOWERS[id].name}: Platzbedarf ${TOWERS[id].footprint} gegen Zeichenbreite `
+        + `${TURM_BREITE} (${anteil.toFixed(2)}). Erlaubt ist 0,80 bis 1,25.`);
     }
   }
   // Und ein Turm muss auf dem Handy ueberhaupt zu erkennen sein.
   const kleinst = Math.max(568 / WORLD_W, 320 / WORLD_H);
-  for (const id of TOWER_ORDER) {
-    const px = TOWERS[id].footprint * DRAW_SCALE * kleinst;
+  {
+    const px = TURM_BREITE * DRAW_SCALE * kleinst;
     if (px < 22) {
-      fail(`${TOWERS[id].name}: nur ${px.toFixed(0)} Bildschirmpunkte gross auf dem kleinsten Geraet.`);
+      fail(`Tuerme sind nur ${px.toFixed(0)} Bildschirmpunkte gross auf dem kleinsten Geraet.`);
     }
   }
 }
@@ -888,6 +902,35 @@ for (const map of MAPS) {
       fail(`${map.id} und ${other.id} verlangen fast dasselbe (Abstand ${diff.toFixed(2)}, `
         + 'noetig sind 0,25) - dann sind es zwei Namen fuer dieselbe Karte, und die '
         + 'zweite stellt keine eigene Frage.');
+    }
+  }
+}
+
+// --- Kein Zahlwort im Kartentext, das der Karte widerspricht.
+//
+// Der Blurb der zweiten Karte sagte "Zwei Zuwege", die Karte hat drei, und
+// die ABGELEITETE Zeile direkt darunter sagte es richtig. Beides stand
+// gleichzeitig auf dem Einweisungsbildschirm.
+//
+// Die Lehre ist nicht "besser aufpassen", sondern: gezaehlt wird gezaehlt,
+// geschrieben wird beschrieben. Ein Kartentext darf sagen, wie sich die Karte
+// anfuehlt - die Anzahl der Zuwege steht daneben und kommt aus den Daten.
+{
+  const ZAHLWORT: Record<string, number> = {
+    ein: 1, eine: 1, einen: 1, zwei: 2, drei: 3, vier: 4, fuenf: 5, 'fünf': 5,
+  };
+  const SACHE = /(zuwege?|bahnen?|wege?)/i;
+  for (const map of MAPS) {
+    for (const treffer of map.blurb.matchAll(
+      /\b(ein|eine|einen|zwei|drei|vier|fuenf|fünf)\s+([A-Za-zÄÖÜäöüß]+)/gi,
+    )) {
+      const zahl = ZAHLWORT[treffer[1].toLowerCase()];
+      if (!zahl || !SACHE.test(treffer[2])) continue;
+      if (zahl !== map.lanes.length) {
+        fail(`${map.id}: der Text sagt "${treffer[0]}", die Karte hat `
+          + `${map.lanes.length} Bahnen. Zahlen gehoeren nicht in den Kartentext - `
+          + 'die Einweisung zaehlt sie selbst.');
+      }
     }
   }
 }

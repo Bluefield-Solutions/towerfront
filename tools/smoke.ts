@@ -579,14 +579,91 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 //
 // Gemeldet aus dem Spiel: der Moerser war 1,5-mal so breit wie der Bogenturm
 // und in der Flaeche mehr als doppelt so gross - nebeneinander sah das nach
-// zwei Massstaeben aus, nicht nach zwei Rollen. Die Zeichengroesse haengt am
-// Platzbedarf, also muss der einheitlich sein.
+// zwei Massstaeben aus, nicht nach zwei Rollen.
+//
+// Bis v138 wurde daraus "alle Platzbedarfe gleich". Das war die richtige
+// Antwort auf die falsche Frage: schuld war nicht der eigene Platzbedarf,
+// sondern dass EINE Zahl zwei Bedeutungen trug. Seit v139 sind es zwei, und
+// geprueft werden beide Enden:
+//
+//   * Die ZEICHENGROESSE ist einheitlich - sonst stehen wieder zwei
+//     Massstaebe im Bild.
+//   * Der PLATZBEDARF ist es NICHT - sonst behauptet das Konzept eine
+//     Entscheidung ("wieviel Flaeche gibt man wofuer her"), die es nicht
+//     gibt. Genau das stand vier Jahre lang falsch in der Doku.
 {
-  const werte = TOWER_ORDER.map((id) => TOWERS[id].footprint);
-  if (new Set(werte).size !== 1) {
+  const { TURM_BREITE } = await import('../src/data/towers');
+  // Die Zeichenbreite ist EINE Zahl fuer alle - die Pruefung dafuer steht im
+  // Datenwaechter (Platzbedarf im Band um TURM_BREITE). Hier geht es um das
+  // andere Ende.
+  void TURM_BREITE;
+  const boden = TOWER_ORDER.map((id) => TOWERS[id].footprint);
+  if (new Set(boden).size < 2) {
     problems.push(
-      `Turmgroesse: Platzbedarfe ${werte.join('/')} - alle Sorten sollen gleich gross sein.`,
+      `Platzbedarf: alle Sorten beanspruchen ${boden[0]} Punkte - dann ist "wieviel `
+      + 'Flaeche gibt man wofuer her" keine Entscheidung, sondern eine Behauptung.',
     );
+  }
+  // Und er muss sich AUSWIRKEN: der schwere Turm muss WEITER vom Nachbarn
+  // weg stehen als der leichte. Gemessen, nicht gerechnet - gefragt wird das
+  // Spiel selbst, in Schritten von vier Punkten nach aussen.
+  //
+  // Die Probe sucht sich eine Richtung, in der nur der NACHBAR im Weg steht.
+  // Kaeme Weg oder Gelaende dazwischen, maesse sie etwas anderes (Regel 13).
+  {
+    const probe = new GameState();
+    probe.reset();
+    probe.gold = 100000;
+    const gross = TOWER_ORDER.reduce((a, b) => (TOWERS[a].footprint >= TOWERS[b].footprint ? a : b));
+    const klein = TOWER_ORDER.reduce((a, b) => (TOWERS[a].footprint <= TOWERS[b].footprint ? a : b));
+    if (TOWERS[gross].footprint === TOWERS[klein].footprint) {
+      problems.push('Platzbedarf: alle Sorten sind gleich - die Probe misst nichts.');
+    } else {
+      // Nicht der BESTE Platz, sondern einer mit Luft ringsum: der beste liegt
+      // dicht am Weg, und dann steht in jeder Richtung der Weg im Weg statt
+      // des Nachbarn. Gesucht wird der erste, an dem sich ueberhaupt messen
+      // laesst.
+      const plaetze = candidateSpots(probe, klein);
+      const frei = plaetze.find((p2) => {
+        const luft = TOWERS[gross].footprint + 40;
+        return [[1, 0], [-1, 0], [0, 1], [0, -1]].every(
+          ([dx, dy]) => probe.warumNicht(gross, p2.x + dx * luft, p2.y + dy * luft) === null,
+        );
+      }) ?? plaetze[0];
+      if (!frei || !probe.build(frei.x, frei.y, klein)) {
+        problems.push('Platzbedarf: der Nachbarturm liess sich nicht setzen.');
+      } else {
+        /** Der erste Abstand, in dem dieser Turm neben dem Nachbarn Platz hat -
+         *  oder null, wenn etwas anderes als der Nachbar im Weg ist. */
+        const abstand = (id: typeof TOWER_ORDER[number], dx: number, dy: number): number | null => {
+          for (let d = 8; d < 400; d += 4) {
+            const grund = probe.warumNicht(id, frei.x + dx * d, frei.y + dy * d);
+            if (grund === null) return d;
+            if (grund !== 'Turm') return null;
+          }
+          return null;
+        };
+        let gemessen = false;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as [number, number][]) {
+          const a = abstand(klein, dx, dy);
+          const b = abstand(gross, dx, dy);
+          if (a === null || b === null) continue;
+          gemessen = true;
+          if (b <= a) {
+            problems.push(
+              `Platzbedarf: der ${TOWERS[gross].name} (${TOWERS[gross].footprint}) darf `
+              + `genauso dicht neben den Nachbarn wie der ${TOWERS[klein].name} `
+              + `(${TOWERS[klein].footprint}): ${b} gegen ${a} Punkte.`,
+            );
+          }
+          break;
+        }
+        if (!gemessen) {
+          problems.push('Platzbedarf: in keiner Richtung stand nur der Nachbar im Weg - '
+            + 'die Probe konnte nichts messen.');
+        }
+      }
+    }
   }
 }
 

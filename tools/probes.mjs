@@ -193,12 +193,34 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
-    name: 'Tuerme verschieden gross',
+    // Bis v138 hiess diese Probe "Tuerme verschieden gross" und gab dem
+    // Moerser einen eigenen Platzbedarf - damals war das der Fehler, weil
+    // EINE Zahl Platzbedarf UND Zeichengroesse war. Seit v139 sind es zwei,
+    // und der Fehler liegt anders herum: ein Platzbedarf weit ueber der
+    // Zeichenbreite ist eine unsichtbare Sperre.
+    name: 'Platzbedarf weit ueber der Zeichenbreite',
     datei: 'src/data/towers.ts',
-    // Einem Turm einen eigenen Platzbedarf geben.
-    regel: /(id: 'mortar',[\s\S]{0,400}?)footprint: FOOTPRINT/,
-    ersatz: '$1footprint: 140',
+    regel: /(id: 'mortar',[\s\S]{0,400}?)footprint: 116/,
+    ersatz: '$1footprint: 160',
+    tor: 'guards',
+  },
+  {
+    // Und die Gegenrichtung: alle Sorten wieder gleich. Dann behauptet das
+    // Konzept eine Entscheidung, die es nicht gibt.
+    name: 'Platzbedarf wieder fuer alle gleich',
+    datei: 'src/data/towers.ts',
+    regel: /(id: 'mortar',[\s\S]{0,400}?)footprint: 116/,
+    ersatz: '$1footprint: FOOTPRINT',
     tor: 'smoke',
+  },
+  {
+    // Ein Zahlwort im Kartentext, das der Karte widerspricht - genau der
+    // Zustand bis v138 ("Zwei Zuwege" bei drei Bahnen).
+    name: 'Kartentext widerspricht der Karte',
+    datei: 'src/data/maps.ts',
+    regel: /blurb: 'Der Boden glüht noch\./,
+    ersatz: "blurb: 'Zwei Zuwege münden früh ineinander.",
+    tor: 'guards',
   },
   {
     name: 'Ausbau bringt keine Reichweite',

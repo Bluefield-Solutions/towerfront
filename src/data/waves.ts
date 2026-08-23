@@ -124,7 +124,7 @@ export const PLAN_SPIRALHAIN: Wave[] = [
     { enemy: 'runner', count: 6, gap: 0.3, delay: 16 } ] },
 ];
 
-/** Laubschlucht: zwei frueh vereinte Zuwege und der laengste Weg im Spiel -
+/** Ascheschlucht: frueh vereinte Zuwege und der laengste Weg im Spiel -
  *  die Gegner stehen lange unter Feuer. Deshalb kommen sie in Masse und mit
  *  Panzerung, und die Spalter machen aus jedem Flaechentreffer zwei Gegner. */
 export const PLAN_ASCHESCHLUCHT: Wave[] = [

@@ -44,15 +44,16 @@ export interface TowerBranch {
 }
 
 export interface TowerDef {
-  /** Platzbedarf in Weltpixeln.
+  /** Platzbedarf in Weltpixeln: was der Turm am BODEN beansprucht.
    *
-   *  Er ist zugleich die Zeichengroesse: ein Turm wird `footprint * DRAW_SCALE`
-   *  breit gemalt. Bis v51 waren beide Zahlen unabhaengig - gezeichnet wurde
-   *  jeder Turm 81 Pixel breit, stehen durfte ein Bogenturm aber schon 48
-   *  Pixel neben dem naechsten. Ergebnis: 46 % Ueberlappung, die Tuerme sahen
-   *  aus wie ein Haufen statt wie Gebaeude.
+   *  Er entscheidet, wie dicht zwei Tuerme stehen duerfen - und damit, wie
+   *  teuer eine schwere Stellung in Flaeche ist. Er ist NICHT die
+   *  Zeichengroesse; die ist fuer alle Sorten gleich (TURM_BREITE), damit
+   *  nicht wieder zwei Massstaebe im selben Bild stehen.
    *
-   *  Jetzt haengt das eine am anderen, und ein Waechter haelt es fest. */
+   *  Der Waechter haelt beide Enden fest: die Zeichengroesse einheitlich und
+   *  den Platzbedarf in einem Band um sie herum. Ein Turm, der viel mehr
+   *  Boden beansprucht, als er bedeckt, waere eine unsichtbare Sperre. */
   footprint: number;
   id: TowerId;
   name: string;
@@ -75,20 +76,37 @@ export const MAX_LEVEL = 6;
  *  Ueber 1,0 ragt er ueber seinen Platz hinaus - das ist gewollt, sonst wirkt
  *  er wie hineingequetscht. Ueber etwa 1,3 fangen Nachbarn an, sich zu
  *  ueberdecken. */
-/** Platzbedarf: fuer alle Tuerme gleich.
+/** Wie breit ein Turm GEZEICHNET wird - fuer alle Sorten gleich.
  *
- *  Bis v84 hatte jeder Turm seinen eigenen Wert - 78 fuer den Bogenturm, 116
- *  fuer den Moerser. Gedacht war das als Rollenmerkmal: der Moerser ist die
- *  schwere Stellung, also braucht er mehr Platz.
+ *  Das ist die Lehre aus v84, und sie gilt weiter: damals hatte jeder Turm
+ *  seinen eigenen Wert, und weil die Zeichengroesse daran hing, war der
+ *  Moerser 1,5-mal so breit wie der Bogenturm und in der Flaeche mehr als
+ *  doppelt so gross. Nebeneinander sah das nicht nach verschiedenen Rollen
+ *  aus, sondern nach verschiedenen MASSSTAEBEN - als waeren die Bilder aus
+ *  zwei Spielen. Genau der Eindruck, den dieses Verzeichnis seither
+ *  bekaempft.
  *
- *  Im Bild kam etwas anderes an. Weil die Zeichengroesse am Platzbedarf
- *  haengt, war der Moerser 1,5-mal so breit wie der Bogenturm und in der
- *  Flaeche mehr als doppelt so gross. Nebeneinander sah das nicht nach
- *  verschiedenen Rollen aus, sondern nach verschiedenen Massstaeben - als
- *  waeren die Bilder aus zwei Spielen.
+ *  Der Fehler war aber nicht der eigene Platzbedarf, sondern die KOPPLUNG:
+ *  eine Zahl trug zwei Bedeutungen. Seit v139 sind es zwei Zahlen. Diese
+ *  hier ist die Zeichengroesse und bleibt einheitlich. */
+export const TURM_BREITE = 96;
+
+/** Der KLEINSTE Platzbedarf, und zugleich der Standard: was ein Turm am
+ *  BODEN beansprucht - der Abstand, den er zum naechsten haelt, und die
+ *  Flaeche, die er anderen wegnimmt.
  *
- *  Jetzt ist der Platzbedarf einheitlich. Die Tuerme unterscheiden sich in
- *  Form, Farbe und Hoehe des Bildes, nicht in der Grundflaeche. */
+ *  Nach unten ist hier Schluss, und das ist gemessen: bei einem Platzbedarf
+ *  von 84 stehen zwei Bogentuerme 88 Punkte auseinander und sind 127 breit
+ *  gezeichnet - 26 % Ueberdeckung, und der Waechter schlaegt an. Die
+ *  Zeichenbreite ist der Boden, unter den der Platzbedarf nicht darf. Frei
+ *  ist nur die Richtung nach OBEN: die schwere Stellung kostet mehr Flaeche,
+ *  die leichte kostet die wenigste.
+ *
+ *  Nicht mehr die Zeichengroesse (siehe TURM_BREITE). Damit ist wieder
+ *  moeglich, was das Konzept seit jeher behauptet und was seit v84 nicht
+ *  stimmte: dass die schwere Stellung mehr Boden kostet als die leichte.
+ *  Sichtbar wird der Unterschied dort, wo er hingehoert - am Boden, im
+ *  Kontaktschatten und im Bauring -, nicht an der Hoehe der Figur. */
 export const FOOTPRINT = 96;
 
 export const DRAW_SCALE = 1.32;
@@ -142,7 +160,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     ],
   },
   frost: {
-    id: 'frost', footprint: FOOTPRINT, name: 'Frostturm', role: 'Umkreis-Bremse',
+    id: 'frost', footprint: 100, name: 'Frostturm', role: 'Umkreis-Bremse',
     blurb: 'Kein Geschoss. Pulst im Umkreis und bremst alles gleichzeitig.',
     color: '#BFE9F2', accent: '#7FE7E0',
     attack: 'aura', hitsAir: true, projectileSpeed: 0,
@@ -173,7 +191,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     ],
   },
   mortar: {
-    id: 'mortar', footprint: FOOTPRINT, name: 'Mörser', role: 'Fläche, nur Boden',
+    id: 'mortar', footprint: 116, name: 'Mörser', role: 'Fläche, nur Boden',
     blurb: 'Langsam und teuer, trifft eine ganze Traube. Erreicht keine Flieger.',
     color: '#C3B39A', accent: '#F08A3C',
     attack: 'splash', hitsAir: false, projectileSpeed: 384,
@@ -204,7 +222,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
     ],
   },
   prism: {
-    id: 'prism', footprint: FOOTPRINT, name: 'Prisma', role: 'Kettenblitz',
+    id: 'prism', footprint: 106, name: 'Prisma', role: 'Kettenblitz',
     blurb: 'Sofortstrahl, springt auf Nachbarn über.',
     color: '#E4D3FF', accent: '#B07CFF',
     attack: 'chain', hitsAir: true, projectileSpeed: 0,

@@ -72,15 +72,17 @@ export interface GameMap {
    *  Die Kristallfestung stand deshalb oben links auf dem Rand statt in der
    *  Mitte, und der Weg endete im Nichts daneben.
    *
-   *  **Sie gilt nur fuer das BILD, nicht fuer das Modell.** Der erste Anlauf
-   *  hat den Zielpunkt selbst verschoben - die Bahnen wurden dadurch laenger,
-   *  und die Simulation meldete es sofort: die Frostturm-Zweige liefen von
-   *  31 gegen 36 auf 42 gegen 28 auseinander, und die Verluste fielen von
-   *  drei Wellen auf zwei. Ein Bildfehler darf keine Balancerunde ausloesen.
+   *  Sie gilt fuer BILD UND MODELL: `lanePaths` zieht den letzten
+   *  Kontrollpunkt jeder Bahn hierher, `goalOf` gibt diesen Punkt zurueck.
+   *  Die Gegner laufen also bis in die Mitte der Festung.
    *
-   *  Die Festung ist 300 Weltpunkte breit, der Versatz hoechstens 164 - das
-   *  Bahnende liegt also INNERHALB ihrer Silhouette. Die Gegner verschwinden
-   *  in der Festung, und die Festung steht auf ihrer Platte. Beides stimmt.
+   *  In v130 galt sie zunaechst nur fuer das Bild, und das war eine bewusste
+   *  Zwischenstufe: die Bahnen werden dadurch 3 bis 8 % laenger und aendern
+   *  am Ende ihre FORM - die Tuerme bekommen mehr Schuss. Die Simulation
+   *  meldete es sofort, die Frostturm-Zweige liefen von 31:36 auf 42:28
+   *  auseinander und die Verluste fielen von drei Wellen auf zwei (T15). Ein
+   *  Bildfehler durfte keine Balancerunde ausloesen, also wurde erst das Bild
+   *  gerichtet und die Balance in v131 eigens nachgezogen.
    *
    *  Damit die Zahl nicht veraltet, misst `npm run zielplatte` sie im
    *  Untergrundbild NACH und schlaegt an, wenn beide auseinanderlaufen - eine

@@ -745,6 +745,16 @@ const PROBEN = [
     tor: 'zielplattentor',
   },
   {
+    // Ohne den Umzug des letzten Kontrollpunkts enden die Bahnen wieder am
+    // Rand der Platte - der Waechter prueft die GERECHNETE Bahn gegen den
+    // Zielpunkt und muss das sehen.
+    name: 'Die Bahnen enden wieder neben der Platte',
+    datei: 'src/data/maps.ts',
+    suche: 'map.ziel ? [...l.slice(0, -1), { ...l[l.length - 1], ...map.ziel }] : l,',
+    ersatz: '      l,',
+    tor: 'guards',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

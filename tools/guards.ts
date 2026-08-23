@@ -48,7 +48,14 @@ for (const map of MAPS) {
     const outside = start.x < 0 || start.y < 0 || start.x > WORLD_W || start.y > WORLD_H;
     if (!outside) fail(`${map.id}, Bahn ${i + 1}: beginnt innerhalb des Feldes.`);
 
-    const end = lane[lane.length - 1];
+    // Gemessen an der GERECHNETEN Bahn, nicht an den Rohpunkten.
+    //
+    // Seit v131 wandert der letzte Kontrollpunkt in `lanePaths` auf die
+    // Zielplattform der Karte - die Rohdaten beschreiben den Verlauf, wo
+    // alles endet, steht einmal in `map.ziel`. Ein Waechter, der die
+    // Rohpunkte prueft, prueft damit etwas, das das Spiel gar nicht benutzt;
+    // er meldete sechs Fehler, waehrend jede Bahn sauber am Kristall endete.
+    const end = path.at(path.length);
     if (Math.hypot(end.x - goal.x, end.y - goal.y) > 1) {
       fail(`${map.id}, Bahn ${i + 1}: endet nicht am Herzkristall.`);
     }

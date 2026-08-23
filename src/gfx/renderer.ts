@@ -1026,11 +1026,10 @@ export class Renderer {
     // Laubschlucht, 99 auf der Frostspalte. Die Festung stand deshalb oben
     // links auf dem Rand statt in der Mitte.
     //
-    // Verschoben wird das BILD, nicht das Modell. Der erste Anlauf zog den
-    // Zielpunkt selbst auf die Platte; die Bahnen wurden laenger, und die
-    // Simulation meldete eine gekippte Balance. Ein Bildfehler darf keine
-    // Balancerunde ausloesen - und der Versatz ist kleiner als die halbe
-    // Festung, das Bahnende liegt also in ihrer Silhouette.
+    // Seit v131 ist `goalOf` selbst dieser Punkt - Bild und Modell stimmen
+    // wieder ueberein, und die Gegner laufen bis in die Mitte der Festung.
+    // Der Rueckfall auf `s.goal` bleibt fuer eine Karte ohne eingetragene
+    // Platte stehen.
     const { x, y } = s.map.ziel ?? s.goal;
     const t = s.crystalPulse;
 

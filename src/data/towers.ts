@@ -152,11 +152,11 @@ export const TOWERS: Record<TowerId, TowerDef> = {
         id: 'eternal', name: 'Ewiges Eis', color: '#7FE7E0',
         blurb: 'Weiter Umkreis, harte Bremse, kaum Schaden. Reine Kontrolle.',
         levels: [
-          { cost: 90, damage: 11, cooldown: 0.7, slow: 0.37, slowTime: 1.98 },
-          { cost: 145, damage: 22, cooldown: 0.58, slow: 0.54, slowTime: 3.06 },
-          { cost: 235, damage: 35, cooldown: 0.53, slow: 0.61, slowTime: 3.65 },
-          { cost: 385, damage: 56, cooldown: 0.49, slow: 0.62, slowTime: 4.34 },
-          { cost: 620, damage: 89, cooldown: 0.45, slow: 0.62, slowTime: 5.17 },
+          { cost: 90, damage: 11, cooldown: 0.7, slow: 0.315, slowTime: 1.98 },
+          { cost: 145, damage: 22, cooldown: 0.58, slow: 0.459, slowTime: 3.06 },
+          { cost: 235, damage: 35, cooldown: 0.53, slow: 0.518, slowTime: 3.65 },
+          { cost: 385, damage: 56, cooldown: 0.49, slow: 0.527, slowTime: 4.34 },
+          { cost: 620, damage: 89, cooldown: 0.45, slow: 0.527, slowTime: 5.17 },
         ],
       },
       {

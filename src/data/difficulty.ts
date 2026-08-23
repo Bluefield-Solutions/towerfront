@@ -14,6 +14,19 @@ export interface DifficultyDef {
   startGold: number;
   startLives: number;
   /** Lebenspunktfaktor auf der letzten Welle. */
+  /** Wohin die Lebenskurve am Ende laeuft.
+   *
+   *  In v131 von 16 auf 17,5 angehoben, und der Grund steht nicht in dieser
+   *  Datei: der Zielpunkt ist auf die Zielplattform der Karte gewandert. Die
+   *  Bahnen wurden 3 bis 8 % laenger und aendern am Ende ihre Form - die
+   *  Tuerme bekommen mehr Schuss, das Spiel wurde leichter, und die Verluste
+   *  fielen von drei Wellen auf zwei (T15).
+   *
+   *  Ausgeeicht ueber ein Feld aus Kurve MAL Frostbremse, neun Werte (Regel
+   *  9). Der erste Anlauf drehte beide Regler in dieselbe Richtung und machte
+   *  das Spiel zu schwer: die Torkette war gruen, der Spiralhain fiel aber
+   *  von drei auf zwei Sterne, und Erbarmungslos war fuer zwei Stile nicht
+   *  mehr zu gewinnen. **Ein gruenes Tor ist nicht das Ziel.** */
   hpEnd: number;
   /** Exponent der Kurve: klein am Anfang, steil am Ende. */
   hpCurve: number;
@@ -29,21 +42,21 @@ export const DIFFICULTIES: Record<DifficultyId, DifficultyDef> = {
     id: 'ruhig', name: 'Ruhig',
     blurb: 'Mehr Kristall, mehr Gold, sanftere Kurve. Zum Kennenlernen.',
     startGold: 300, startLives: 80,
-    hpEnd: 8.8, hpCurve: 2.4, densityRamp: 0.11,
+    hpEnd: 9.6, hpCurve: 2.4, densityRamp: 0.11,
     bountyMul: 1.3, bonusMul: 1.3,
   },
   normal: {
     id: 'normal', name: 'Normal',
     blurb: 'Der gedachte Weg. Die letzten Wellen kosten Kristall.',
     startGold: 220, startLives: 60,
-    hpEnd: 16, hpCurve: 2.6, densityRamp: 0.16,
+    hpEnd: 17.5, hpCurve: 2.6, densityRamp: 0.16,
     bountyMul: 1, bonusMul: 1,
   },
   erbarmungslos: {
     id: 'erbarmungslos', name: 'Erbarmungslos',
     blurb: 'Weniger Kristall, weniger Gold, steile Kurve. Jede Stellung zählt.',
     startGold: 212, startLives: 52,
-    hpEnd: 18.9, hpCurve: 2.7, densityRamp: 0.20,
+    hpEnd: 20.7, hpCurve: 2.7, densityRamp: 0.20,
     bountyMul: 1.0, bonusMul: 1.0,
   },
 };

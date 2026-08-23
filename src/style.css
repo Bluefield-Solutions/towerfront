@@ -191,8 +191,8 @@ html, body {
    zweite Zweigknopf unter den unteren Rand und war nicht antippbar. */
 .inspector {
   position: absolute; z-index: 3; top: calc(56px + var(--sat)); right: calc(12px + var(--sar));
+  bottom: calc(58px + var(--sab));
   width: 208px; padding: 12px;
-  max-height: calc(100% - 150px - var(--sat) - var(--sab));
   /* Nur die Werteliste rollt, nicht der ganze Steg - sonst wandern die
      Knoepfe beim Rollen mit aus dem Bild. */
   display: flex; flex-direction: column;
@@ -200,16 +200,31 @@ html, body {
   background: var(--panel); border: 1px solid var(--edge);
   border-radius: 14px; backdrop-filter: blur(10px);
 }
-.insp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.insp-name { font-size: 14px; font-weight: 700; }
+.insp-head {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 8px; flex: 0 0 auto;
+}
+.insp-name { font-size: 14px; font-weight: 700; flex: 1 1 auto; min-width: 0; }
+/* Verkaufen sitzt in der Kopfzeile und bleibt trotzdem daumengross. */
+.insp-head .sell {
+  flex: 0 0 auto; min-height: 44px; padding: 0 10px; border-radius: 10px;
+  font-family: var(--ui); font-size: 12px; font-weight: 700; white-space: nowrap;
+}
 .x {
   background: none; border: none; color: var(--muted);
   font-size: 15px; cursor: pointer; padding: 2px 4px;
   min-height: 44px;
 }
 .insp-stats {
-  margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px;
+  margin: 0 0 8px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px;
   overflow-y: auto; min-height: 0; flex: 1 1 auto;
+  /* Der Boden, unter den die Werteliste nicht darf.
+     Bis v137 stand hier nur `flex: 1 1 auto` - und weil Kopfzeile, Ausbau,
+     Ziellogik und Verkaufen zusammen mehr verlangten, als der Steg hoch ist,
+     blieben GEMESSENE VIER Bildpunkte uebrig. Ein Mindestmass ist die
+     einzige Angabe, die das verhindert: lieber rollt die Liste, als dass sie
+     verschwindet. */
+  min-height: 96px;
 }
 /* Rollhinweis (D24).
    Technisch rollte die Werteliste schon immer, sichtbar war es nicht: auf dem
@@ -229,14 +244,12 @@ html, body {
   margin: 0; font-size: 13px; font-weight: 700; text-align: right;
   font-variant-numeric: tabular-nums;
 }
-.insp-actions { display: flex; gap: 6px; }
-.insp-actions button {
-  flex: 1; padding: 10px 6px; border-radius: 10px; cursor: pointer;
-  font-family: var(--ui); font-size: 12px; font-weight: 700; border: 1px solid var(--edge);
-}
 .up { background: var(--gold); color: #1A1305; border-color: transparent; }
 .up:disabled { background: rgba(137, 148, 176, 0.25); color: var(--muted); }
-.sell { background: transparent; color: var(--danger);
+.sell {
+  background: transparent; color: var(--danger); cursor: pointer;
+  border: 1px solid var(--edge); border-radius: 10px;
+  font-family: var(--ui); font-size: 12px; font-weight: 700;
   min-height: 44px;
 }
 
@@ -642,7 +655,10 @@ html, body {
 @media (max-height: 480px) {
   /* Auf flachen Geräten liegen die Ausbauzweige nebeneinander statt
      untereinander - sonst passen sie nicht auf den Bildschirm. */
-  .inspector { width: 250px; padding: 9px; top: calc(48px + var(--sat)); }
+  .inspector {
+    width: 250px; padding: 9px;
+    top: calc(48px + var(--sat)); bottom: calc(54px + var(--sab));
+  }
   .insp-ups { flex-direction: row; gap: 5px; }
   .branch { flex: 1 1 0; min-width: 0; padding: 6px 7px; }
   .br-b { display: none; }

@@ -872,6 +872,22 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // Der Pruefsteg wird wieder von oben gedeckelt statt von unten begrenzt -
+    // genau der Zustand bis v137. Dann verlangt sein Inhalt mehr Hoehe, als
+    // er hat, und etwas verschwindet: entweder die Knoepfe (dann schlaegt die
+    // Abschneide-Pruefung an) oder die Werte (dann die Werte-Pruefung).
+    //
+    // Von Hand nachgestellt: mit BEIDEN Aenderungen zusammen - Deckel zurueck
+    // und Mindesthoehe der Liste weg - meldet das Tor "von 4 Zeilen sind 2 zu
+    // sehen (Liste 48 Punkte hoch)". Eine Probe darf nur EINE Datei anfassen,
+    // deshalb steht hier die Aenderung, die fuer sich allein anschlaegt.
+    name: 'Pruefsteg wieder von oben gedeckelt',
+    datei: 'src/style.css',
+    regel: /  bottom: calc\(58px \+ var\(--sab\)\);/,
+    ersatz: '  max-height: calc(100% - 150px - var(--sat) - var(--sab));',
+    tor: 'browsertor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

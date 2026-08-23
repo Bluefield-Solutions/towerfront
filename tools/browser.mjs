@@ -433,6 +433,50 @@ if (start) {
       );
     }
 
+    // --- 5c. Sind die WERTE des Turms ueberhaupt zu sehen? (v138)
+    //
+    // Der Befund, der dieses Tor gebraucht haette: der Pruefsteg darf 284
+    // Punkte hoch sein, und Kopfzeile, Ausbau, Ziellogik und Verkaufen
+    // verlangten zusammen mehr. Uebrig blieben fuer die Werteliste
+    // GEMESSENE VIER Bildpunkte - Schaden, Reichweite und Takt waren auf dem
+    // Zielgeraet unsichtbar, und zwanzig Tore meldeten gruen.
+    //
+    // Geprueft wird nicht die Stilvorlage, sondern das Ergebnis: wieviele
+    // Zeilen liegen VOLLSTAENDIG im sichtbaren Bereich ihres Behaelters?
+    // Eine Liste, die rollt, ist in Ordnung - eine, die nichts zeigt, nicht.
+    const werte = await seite.evaluate(() => {
+      const liste = document.getElementById('i-stats');
+      if (!liste || liste.hidden) return { fehlt: true };
+      const box = liste.getBoundingClientRect();
+      const zeilen = [...liste.querySelectorAll('dt')];
+      const drin = zeilen.filter((z) => {
+        const r = z.getBoundingClientRect();
+        return r.bottom <= box.bottom + 1 && r.top >= box.top - 1;
+      });
+      return {
+        hoehe: Math.round(box.height),
+        zeilen: zeilen.length,
+        sichtbar: drin.length,
+        namen: drin.map((z) => (z.textContent ?? '').trim()),
+      };
+    });
+    const MINDEST_ZEILEN = 3;
+    if (werte.fehlt) {
+      fail('Im offenen Prüfsteg fehlt die Werteliste des Turms.');
+    } else if (werte.zeilen === 0) {
+      fail('Die Werteliste des Turms ist leer - dann prüft die Messung nichts.');
+    } else if (werte.sichtbar < Math.min(MINDEST_ZEILEN, werte.zeilen)) {
+      fail(
+        `Turmwerte: von ${werte.zeilen} Zeilen sind ${werte.sichtbar} zu sehen ` +
+        `(Liste ${werte.hoehe} Punkte hoch). Ohne Werte lässt sich nicht planen.`,
+      );
+    } else {
+      console.log(
+        `Turmwerte: ${werte.sichtbar} von ${werte.zeilen} Zeilen sichtbar ` +
+        `auf ${werte.hoehe} Punkten — ${werte.namen.join(', ')}.`,
+      );
+    }
+
     // --- 8. Rollt etwas, ohne es anzuzeigen?
     //
     // Die Prüfung oben fragt nach Knöpfen, die abgeschnitten werden. D24 war

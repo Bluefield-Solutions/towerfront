@@ -56,7 +56,6 @@ export class UI {
   private iName = $('i-name');
   private iStats = $('i-stats');
   private iHint = $('i-hint');
-  private iActions = document.querySelector('.insp-actions') as HTMLElement;
   private iUps = $('i-ups');
   private iZiel = $('i-ziel');
   /** Woraus die Knoepfe zuletzt gebaut wurden. Ohne diesen Schluessel baut
@@ -728,11 +727,11 @@ export class UI {
       this.rollhinweis();
       this.iHint.hidden = false;
       this.iHint.textContent = def.blurb;
-      this.iActions.hidden = true;
+      this.iSell.hidden = true;
       return;
     }
     this.iHint.hidden = true;
-    this.iActions.hidden = false;
+    this.iSell.hidden = !sel;
 
     if (sel) {
       const def = TOWERS[sel.def];

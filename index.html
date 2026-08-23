@@ -108,27 +108,27 @@
   </div>
 
   <aside class="inspector" id="inspector" hidden>
+    <!-- Verkaufen steht in der Kopfzeile, nicht in einer eigenen.
+         Auf dem Zielgerät ist der Steg 284 Punkte hoch; jede eigene Zeile
+         kostet 44 davon. Bis v137 blieben von den WERTEN vier Punkte übrig -
+         gemessen, nicht geschätzt. Die Werte sind der Grund, warum man den
+         Steg öffnet; ein Abschiedsknopf darf sich eine Zeile teilen.
+         (Echte Umlaute: HTML-Kommentare landen im Bündel, und das
+         Autarkie-Tor liest den ausgelieferten Text.) -->
     <div class="insp-head">
       <span class="insp-name" id="i-name">Turm</span>
-      <button class="x" id="i-close" aria-label="Schliessen">✕</button>
+      <button class="sell" id="i-sell" hidden>Verkaufen</button>
+      <button class="x" id="i-close" aria-label="Schliessen">&#10005;</button>
     </div>
-    <!-- Ausbauen steht vor den Werten.
-         Umgekehrt lag der Ausbauknopf auf einem Querformat-Bildschirm unter
-         dem Rand, und man musste erst scrollen, um den Turm zu verbessern.
-         Das ist die Handlung, derentwegen man den Steg oeffnet - Werte sind
-         Nachschlagestoff und duerfen darunter liegen. -->
+    <!-- Ausbauen steht vor den Werten: das ist die Handlung, derentwegen
+         man den Steg öffnet. Seit v138 sind die Werte trotzdem sichtbar -
+         sie bekommen den Rest der Höhe, nicht den Rest von nichts. -->
     <div class="insp-ups" id="i-ups"></div>
     <p class="insp-hint" id="i-hint" hidden></p>
-    <!-- Ziellogik. Steht über dem Verkaufen, weil es eine Einstellung ist
-         und kein Abschied: was man oft anfasst, gehört nach oben.
-         (Umlaute ausgeschrieben: HTML-Kommentare landen anders als
-         TypeScript-Kommentare im Bündel, und der Autarkie-Check liest den
-         ausgelieferten Text. Er hat das hier gefangen.) -->
-    <div class="insp-ziel" id="i-ziel"></div>
-    <div class="insp-actions">
-      <button class="sell" id="i-sell">Verkaufen</button>
-    </div>
+    <!-- Ziellogik zuletzt: eine Einstellung, die man einmal setzt, steht
+         unter den Werten, die man bei jedem Ausbau liest. -->
     <dl class="insp-stats" id="i-stats"></dl>
+    <div class="insp-ziel" id="i-ziel"></div>
   </aside>
 
   <section class="screen" id="screen" hidden>

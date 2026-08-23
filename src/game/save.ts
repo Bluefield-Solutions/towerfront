@@ -44,11 +44,18 @@ export interface SaveGame {
     'homing' | 'ballistic', number, number, number, number, number, number,
     number, number, number, number, number, number, number, number, number, string,
   ][];
-  /** [Zeit, Gegnerart, Lebenspunktfaktor] */
-  pending: [number, EnemyId, number, number][];
+  /** [Zeit, Gegnerart, Lebenspunktfaktor, Bahn, Schild, Traeger]
+   *
+   *  Schild und Traeger sind ANGEHAENGT: ein Stand aus v136 hat vier Felder
+   *  und laedt weiter, er bekommt Null. Deshalb bleibt auch die Formatnummer,
+   *  wo sie war. */
+  pending: [number, EnemyId, number, number, number?, number?][];
   /** Rest der Trefferpause - sie haelt die Simulation an und gehoert deshalb
-   *  in den Stand, obwohl sie sich wie ein Effekt anfuehlt. */
-  hitstop: number;
+   *  in den Stand, obwohl sie sich wie ein Effekt anfuehlt.
+   *
+   *  Hiess bis v136 `hitstop` und war eines von ZWEI Feldern fuer dieselbe
+   *  Sache. Ein alter Stand wird weiter gelesen. */
+  hitStop: number;
   /** Die mitgeschriebenen Zahlen. Ohne sie faengt die Auswertung nach dem
    *  Fortsetzen bei null an - der Lauf waere derselbe, der Bericht nicht. */
   stats: RunStats;

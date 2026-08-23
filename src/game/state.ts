@@ -304,7 +304,6 @@ export class GameState {
   /** Wieviel Trefferstopp in dieser Sekunde schon verbraucht wurde. */
   private stopBudget = 0;
   time = 0;
-  hitstop = 0;
   idleTime = 0;      // Sekunden seit Ende der letzten Welle
   leakedTotal = 0;
 
@@ -813,7 +812,6 @@ export class GameState {
       this.debris(m.x, m.y, '#6B5B44', this.quality === 'hoch' ? 14 : 4, 320);
       this.shake = Math.min(1, this.shake + 0.8);
       this.stop(0.5);
-      this.hitstop = Math.max(this.hitstop, 0.07);
       this.flashT = 1;
       Sfx.play('boom');
     }
@@ -842,7 +840,7 @@ export class GameState {
    *  einem dichten Gefecht mehr still, als es laeuft. Politur darf spuerbar
    *  sein, aber nie im Weg stehen. */
   private stop(weight: number): void {
-    const want = 0.02 + weight * 0.05;
+    const want = 0.02 + weight * 0.08;
     const left = Math.max(0, 0.09 - this.stopBudget);
     const use = Math.min(want, left);
     this.stopBudget += use;
@@ -855,11 +853,6 @@ export class GameState {
       this.time += dtReal;
       this.crystalPulse += dtReal;
       this.decayFx(dtReal);
-      return;
-    }
-    if (this.hitstop > 0) {
-      this.hitstop -= dtReal;
-      this.decayFx(dtReal * 0.25);
       return;
     }
 
@@ -1441,8 +1434,6 @@ export class GameState {
       if (def.split) this.splitEnemy(e, def.split);
       if (def.radius >= 22) this.debris(e.x, e.y, def.trim, def.boss ? 10 : 4, 180);
       if (def.boss || def.radius >= 24) {
-        // Kurzes Stocken macht den Tod schwerer Gegner spuerbar.
-        this.hitstop = def.boss ? 0.16 : 0.05;
         this.shake = Math.min(1, this.shake + (def.boss ? 0.9 : 0.22));
         // Schwere Gegner bekommen einen Trefferstopp, kleine nicht - sonst
         // ruckelt jede Welle statt nur die Ereignisse, die zaehlen.
@@ -1613,7 +1604,7 @@ export class GameState {
     this.paused = false;
     this.idleTime = 0;
     this.leakedTotal = 0;
-    this.hitstop = 0;
+    this.hitStop = 0;
     this.shake = 0;
     this.stats = emptyStats();
     this.phase = 'playing';
@@ -1639,7 +1630,7 @@ export class GameState {
       leaked: this.leakedTotal,
       time: this.time,
       speed: this.speed,
-      hitstop: this.hitstop,
+      hitStop: this.hitStop,
       stats: this.stats,
       abilityCd: ABILITY_ORDER.map((id) => [id, this.abilityCd[id]] as [AbilityId, number]),
       meteors: this.meteors.map((m) => [m.x, m.y, m.t, m.dur, m.radius, m.damage]) as
@@ -1650,7 +1641,11 @@ export class GameState {
         p.owner ? this.towers.indexOf(p.owner) : -1,
         p.speed, p.damage, p.slow, p.slowTime, p.splash, p.pierce, p.t, p.dur, p.life, p.color,
       ]) as unknown as SaveGame['shots'],
-      pending: this.pending.map((p) => [p.time, p.enemy, p.hpMul, p.lane]),
+      // Schild und Traeger gehoeren dazu. Bis v136 fehlten sie: ein wartender
+      // Gegner wurde mit vier von sechs Angaben gesichert, und wer die App
+      // schloss und weiterspielte, bekam eine LEICHTERE Welle als der, der
+      // durchspielte. Gemessen waren es 10 Schildpunkte gegen 0.
+      pending: this.pending.map((p) => [p.time, p.enemy, p.hpMul, p.lane, p.shield, p.traeger]),
       towers: this.towers.map((t) => [
         t.def, t.x, t.y, t.level, t.kills, t.damageDone, t.cooldownLeft, t.retargetIn, t.branch,
         t.target ? this.enemies.indexOf(t.target) : -1,
@@ -1704,12 +1699,16 @@ export class GameState {
     this.waveTime = save.waveTime;
     this.idleTime = save.idleTime;
     this.leakedTotal = save.leaked;
-    this.hitstop = save.hitstop ?? 0;
+    // Der Draht hiess bis v136 `hitstop` und meinte ein ZWEITES, ungedeckeltes
+    // Feld neben `hitStop`. Beide hielten die Simulation an, nur eines war
+    // gedeckelt, nur das andere wurde gesichert. Jetzt gibt es eines - ein
+    // alter Stand wird weiter gelesen.
+    this.hitStop = save.hitStop ?? (save as { hitstop?: number }).hitstop ?? 0;
     if (save.stats) this.stats = { ...emptyStats(), ...save.stats };
     this.time = save.time;
     this.speed = save.speed === 2 || save.speed === 3 ? save.speed : 1;
-    this.pending = save.pending.map(([time, enemy, hpMul, lane]) =>
-      ({ time, enemy, hpMul, lane: lane ?? 0 }));
+    this.pending = save.pending.map(([time, enemy, hpMul, lane, shield, traeger]) =>
+      ({ time, enemy, hpMul, lane: lane ?? 0, shield: shield ?? 0, traeger: traeger ?? 0 }));
     for (const [id, cd] of save.abilityCd ?? []) {
       if (id in this.abilityCd) this.abilityCd[id] = Math.max(0, cd);
     }

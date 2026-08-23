@@ -1,10 +1,14 @@
 # Towerfront — Vollaudit v136
 
-Stand: v136 · 23.08.2026 · gemessen an der ausgelieferten Datei, im Browser
+Messung: v136 · 23.08.2026 · gemessen an der ausgelieferten Datei, im Browser
 gespielt (iPhone quer, 844 × 390), am Quelltext gelesen, mit eigenen Proben
 belegt.
 
 Vier Rollen, ein Ziel: eine Liste, an der man sich entlanghangeln kann.
+
+**Dies ist ein Messbericht, kein lebendes Dokument.** Er beschreibt absichtlich
+den Stand von v136; ihn mitzuziehen waere Faelschung. Was daraus abgearbeitet
+ist, steht im Rueckstandsverzeichnis.
 
 * **Teil A — Architektur** (IT-Architekt am Quelltext)
 * **Teil B — Spielerlebnis** (Enduser, der zum ersten Mal spielt)

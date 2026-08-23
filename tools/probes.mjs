@@ -845,6 +845,33 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // Der Fehler aus dem Audit: ein wartender Gegner wird mit vier von sechs
+    // Angaben gesichert, und der geladene Stand ist leichter als der laufende.
+    name: 'Schild faellt aus dem Spielstand',
+    datei: 'src/game/state.ts',
+    regel: /p\.lane, p\.shield, p\.traeger\]\)/,
+    ersatz: 'p.lane])',
+    tor: 'smoke',
+  },
+  {
+    // Und die Gegenrichtung: der Stand traegt die Felder, das Laden liest sie
+    // nicht. Sieht im Stand richtig aus und kommt im Spiel nicht an.
+    name: 'Spielstand liest den Schild nicht',
+    datei: 'src/game/state.ts',
+    regel: /lane: lane \?\? 0, shield: shield \?\? 0/,
+    ersatz: 'lane: lane ?? 0, shield: 0',
+    tor: 'smoke',
+  },
+  {
+    // Der Trefferstopp ohne Deckel - das war bis v136 der wahre Zustand,
+    // weil ein zweites, ungedeckeltes Feld danebenlief.
+    name: 'Trefferstopp ohne Deckel',
+    datei: 'src/game/state.ts',
+    regel: /const left = Math\.max\(0, 0\.09 - this\.stopBudget\);/,
+    ersatz: 'const left = 10;',
+    tor: 'smoke',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

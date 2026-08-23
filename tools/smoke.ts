@@ -1635,6 +1635,96 @@ step('Beruehrbare Kleinigkeiten', () => {
   }
 });
 
+// --- Bleibt der Trefferstopp im Rahmen? (v137)
+//
+// Bis v136 gab es ZWEI Felder fuer dieselbe Sache: `hitStop` mit Budget und
+// `hitstop` ohne. Beide hielten die Simulation an, also war das Budget in
+// Wahrheit keines - ein Bossabschuss fror das Bild 160 ms ein, obwohl der
+// Deckel bei 90 ms je Sekunde liegt.
+//
+// Geprueft wird die Wirkung, nicht das Feld: wieviele Bilder steht die Welt
+// still, wenn in EINEM Augenblick sechs schwere Gegner fallen? Und die
+// Gegenrichtung dazu - sie muss ueberhaupt stillstehen, sonst misst die
+// Probe eine Sache, die gar nicht stattfindet (Regel 13).
+step('Trefferstopp bleibt im Rahmen', () => {
+  const probe = new GameState();
+  probe.reset(5);
+  const opfer = [];
+  for (let i = 0; i < 6; i++) {
+    const e = probe.spawnZumPruefen('titan', 0, 0);
+    if (e) opfer.push(e);
+  }
+  if (opfer.length < 6) throw new Error('Die Probe bekommt keine sechs Gegner aufs Feld.');
+  for (const e of opfer) probe.trefferZumPruefen(e, 99999);
+
+  // Gemessen an einem ZEUGEN, nicht an der Uhr: `time` laeuft auch waehrend
+  // des Stopps weiter, stehen bleibt die WELT. Also ein Gegner, der sonst
+  // jede Sekunde ein Stueck weiter waere.
+  const zeuge = probe.spawnZumPruefen('crawler', 0, 0);
+  if (!zeuge) throw new Error('Kein Zeuge auf dem Feld.');
+  let still = 0;
+  for (let i = 0; i < 60; i++) {
+    const vorher = zeuge.travelled;
+    probe.update(DT);
+    if (zeuge.travelled === vorher) still++;
+  }
+  if (still === 0) {
+    throw new Error('Sechs Bossabschuesse halten die Welt gar nicht an - '
+      + 'dann prueft die Grenze nichts.');
+  }
+  // 90 ms je Sekunde sind bei 60 Bildern hoechstens 6 Bilder Stillstand.
+  if (still > 6) {
+    throw new Error(`Sechs Bossabschuesse halten die Welt ${still} Bilder an `
+      + `(${(still / 60 * 1000).toFixed(0)} ms). Erlaubt sind 90 ms je Sekunde.`);
+  }
+});
+
+// --- Ueberlebt eine Welle das Sichern? (v137)
+//
+// Bis v136 sicherte `snapshot` von jedem WARTENDEN Gegner vier von sechs
+// Angaben: Schild und Schildtraeger fielen weg. Wer die App schloss und
+// weiterspielte, bekam eine leichtere Welle als der, der durchspielte -
+// gemessen 10 Schildpunkte gegen 0.
+//
+// Geprueft wird nicht, ob die Felder im Stand STEHEN, sondern ob nach dem
+// Laden dasselbe auf dem Feld ankommt. Ein Feld im Stand, das beim Laden
+// niemand liest, sieht genauso aus wie eines, das fehlt.
+step('Welle ueberlebt das Sichern', () => {
+  const schildWelle = (g: InstanceType<typeof GameState>) => {
+    for (let i = 0; i < g.totalWaves; i++) {
+      if (g.waveAt(i).groups.some((x) => (x.shield ?? 0) > 0 || (x.traeger ?? 0) > 0)) return i;
+    }
+    return -1;
+  };
+  const a = new GameState();
+  a.reset(99, 'normal', 'spiralhain');
+  const welle = schildWelle(a);
+  if (welle < 0) throw new Error('Keine Welle mit Schild - die Probe misst nichts.');
+  a.waveIndex = welle;
+  a.startWave();
+
+  const stand = a.snapshot();
+  const b = new GameState();
+  if (!b.restore(stand)) throw new Error('Der Stand laesst sich nicht laden.');
+
+  // Beide gleich weit laufen lassen und zaehlen, was ankommt.
+  for (let i = 0; i < 60 * 8; i++) { a.update(DT); b.update(DT); }
+  const schild = (g: InstanceType<typeof GameState>) =>
+    g.enemies.reduce((n, e) => n + e.shield, 0);
+  const traeger = (g: InstanceType<typeof GameState>) =>
+    g.enemies.reduce((n, e) => n + e.traeger, 0);
+
+  if (schild(a) === 0 && traeger(a) === 0) {
+    throw new Error('Im laufenden Stand kommt selbst nichts an - die Probe misst nichts.');
+  }
+  if (schild(b) !== schild(a)) {
+    throw new Error(`Nach dem Laden ${schild(b)} Schildpunkte statt ${schild(a)}.`);
+  }
+  if (traeger(b) !== traeger(a)) {
+    throw new Error(`Nach dem Laden ${traeger(b)} Traegerpunkte statt ${traeger(a)}.`);
+  }
+});
+
 // --- Reagieren VERSCHIEDENE Flecke auch verschieden (v136)?
 //
 // Bis v135 stob ueberall dasselbe auf. Seit v136 haengt die Reaktion an der

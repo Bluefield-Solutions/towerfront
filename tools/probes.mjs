@@ -928,6 +928,24 @@ const PROBEN = [
     tor: 'bildtor',
   },
   {
+    // TF-001: ohne das weite Raster sieht man auf dem Telefon nicht, wo man
+    // bauen darf - der Zustand bis v141.
+    name: 'Bauplaetze nur unter dem Finger',
+    datei: 'src/gfx/renderer.ts',
+    regel: /      ctx\.globalAlpha = affordable \? 0\.55 : 0\.34;/,
+    ersatz: '      ctx.globalAlpha = 0;',
+    tor: 'bildtor',
+  },
+  {
+    // Und die Gegenrichtung, die Lehre aus v122: ein volles Raster ueber der
+    // ganzen Karte ist eine Tapete, keine Auskunft.
+    name: 'Bauauskunft wird zur Tapete',
+    datei: 'src/gfx/renderer.ts',
+    regel: /      this\.buildWeit = raster\(88, 0\.92\);/,
+    ersatz: '      this.buildWeit = raster(40, 1.4);',
+    tor: 'bildtor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

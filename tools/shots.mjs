@@ -633,6 +633,16 @@ takes.push(['c24-tor', () => shot('c24-tor', 844, 390, (s) => {
   return 0;
 })]);
 
+takes.push(['bauplaetze', () => shot('bauplaetze', 844, 390, (s) => {
+  // Was der Spieler sieht, wenn er eine Turmart antippt und NICHT den Finger
+  // aufs Feld legt - der Zustand auf dem Telefon.
+  s.reset(3, 'normal', 'spiralhain');
+  s.buildChoice = 'arrow';
+  s.hoverPoint = null;
+  s.pendingPoint = null;
+  return 0;
+})]);
+
 takes.push(['welle15', () => shot('welle15', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 12);
@@ -847,6 +857,64 @@ pruefungen.push(async () => {
   if (anders < 300) {
     throw new Error(`ein gebremster Gegner sieht zu ${anders} Bildpunkten anders aus als ein `
       + 'freier - man sieht der Figur die Bremse nicht an.');
+  }
+});
+
+// --- Sieht man ohne liegenden Finger, wo man bauen darf? (TF-001)
+//
+// In v122 hing ein volles Punktraster ueber der ganzen Karte - auf der
+// Frostspalte 311 Punkte, also eine Tapete. Die Antwort war, es nur noch
+// unter dem Finger zu zeigen. Das war die halbe Loesung: `hoverPoint` gibt es
+// nur fuer Maus und Stift, auf dem Telefon sah man ohne liegenden Finger
+// GAR NICHTS.
+//
+// Gemessen wird genau dieser Zustand: eine Turmart ist gewaehlt, kein Finger
+// liegt, kein Zeiger schwebt. Der Unterschied zum Bild ohne Turmwahl ist die
+// Auskunft, die der Spieler bekommt.
+pruefungen.push(async () => {
+  const canvas = createCanvas(844 * 2, 390 * 2);
+  Object.defineProperty(canvas, 'clientWidth', { get: () => 844 });
+  Object.defineProperty(canvas, 'clientHeight', { get: () => 390 });
+  const s = new GameState();
+  const r = new Renderer(canvas);
+  r.menu = null;
+  s.reset(3, 'normal', 'spiralhain');
+  s.quality = 'niedrig';
+  r.resize();
+  r.draw(s);
+  for (const k of Object.keys(OBJECT_ART)) getObjectArt(k);
+  getBackground(s.map.id);
+  for (const id of TOWER_ORDER) getTowerArt(id, null, 1, s.map.id);
+  await settle();
+  r.kartenaufbauAbschliessen(s);
+  const g = canvas.getContext('2d');
+  const nimm = () => {
+    r.draw(s);
+    return Uint8ClampedArray.from(g.getImageData(0, 0, canvas.width, canvas.height).data);
+  };
+
+  s.buildChoice = null;
+  s.hoverPoint = null;
+  s.pendingPoint = null;
+  const ohne = nimm();
+  s.buildChoice = 'arrow';
+  const mit = nimm();
+  let anders = 0;
+  for (let i = 0; i < ohne.length; i += 4) {
+    if (Math.abs(ohne[i + 1] - mit[i + 1]) > 5 || Math.abs(ohne[i + 2] - mit[i + 2]) > 5) anders++;
+  }
+  console.log(`  Bauplaetze ohne Finger: ${anders} Bildpunkte Auskunft`);
+  if (anders < 2000) {
+    throw new Error(
+      `nach der Turmwahl aendern sich nur ${anders} Bildpunkte - ohne liegenden `
+      + 'Finger sieht der Spieler nicht, wo er bauen darf.',
+    );
+  }
+  // Und die Gegenrichtung: es darf keine Tapete werden. Bei einem vollen
+  // Raster ueber der halben Karte waeren es ueber 60 000.
+  if (anders > 45000) {
+    throw new Error(`die Bauauskunft bedeckt ${anders} Bildpunkte - das ist eine `
+      + 'Tapete ueber der Landschaft, nicht eine Auskunft.');
   }
 });
 

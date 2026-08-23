@@ -606,6 +606,8 @@ export class Renderer {
    */
   private buildMask: HTMLCanvasElement | null = null;
   private buildMaskKey = '';
+  /** Das weite Raster: dieselbe Auskunft, viermal duenner gesaet. */
+  private buildWeit: HTMLCanvasElement | null = null;
   private buildFenster: HTMLCanvasElement | null = null;
 
   private drawBuildOverlay(s: GameState): void {
@@ -634,54 +636,71 @@ export class Renderer {
       //   * **Das Raster war mechanisch.** Gleiche Größe überall wie
       //     Millimeterpapier. Jetzt schwankt der Punkt leicht mit seinem Ort,
       //     sodass das Muster lebt statt gedruckt zu wirken.
-      const STEP = 48;
-      const cv = document.createElement('canvas');
-      cv.width = WORLD_W;
-      cv.height = WORLD_H;
-      const g = cv.getContext('2d')!;
       const ton = affordable ? C.crystal : C.danger;
-      for (let wy = STEP / 2; wy < WORLD_H; wy += STEP) {
-        for (let wx = STEP / 2; wx < WORLD_W; wx += STEP) {
-          if (!s.canPlace(s.buildChoice, wx, wy)) continue;
-          // Eine ruhige Schwankung aus dem Ort selbst - kein Zufall, damit
-          // das Bild bei gleichem Spielstand gleich aussieht.
-          const wellen = Math.sin(wx * 0.021) * Math.cos(wy * 0.019);
-          const r = 4.6 + wellen * 1.1;
 
-          // Kontaktschatten: der Punkt liegt auf dem Boden.
-          g.fillStyle = hexA(C.ink, 0.30);
-          g.beginPath();
-          g.ellipse(wx, wy + r * 0.5, r * 1.15, r * 0.6, 0, 0, Math.PI * 2);
-          g.fill();
+      /** Ein Punktraster ueber die ganze Karte, in der gewuenschten Dichte. */
+      const raster = (STEP: number, gross: number): HTMLCanvasElement => {
+        const cv = document.createElement('canvas');
+        cv.width = WORLD_W;
+        cv.height = WORLD_H;
+        const g = cv.getContext('2d')!;
+        for (let wy = STEP / 2; wy < WORLD_H; wy += STEP) {
+          for (let wx = STEP / 2; wx < WORLD_W; wx += STEP) {
+            if (!s.canPlace(s.buildChoice!, wx, wy)) continue;
+            // Eine ruhige Schwankung aus dem Ort selbst - kein Zufall, damit
+            // das Bild bei gleichem Spielstand gleich aussieht.
+            const wellen = Math.sin(wx * 0.021) * Math.cos(wy * 0.019);
+            const r = (4.6 + wellen * 1.1) * gross;
 
-          // Weicher Punkt statt harter Scheibe.
-          const scheibe = g.createRadialGradient(wx, wy, 0, wx, wy, r);
-          scheibe.addColorStop(0, hexA(ton, 0.95));
-          scheibe.addColorStop(0.6, hexA(ton, 0.7));
-          scheibe.addColorStop(1, hexA(ton, 0));
-          g.fillStyle = scheibe;
-          g.beginPath();
-          g.arc(wx, wy, r, 0, Math.PI * 2);
-          g.fill();
+            // Kontaktschatten: der Punkt liegt auf dem Boden.
+            g.fillStyle = hexA(C.ink, 0.30);
+            g.beginPath();
+            g.ellipse(wx, wy + r * 0.5, r * 1.15, r * 0.6, 0, 0, Math.PI * 2);
+            g.fill();
+
+            // Weicher Punkt statt harter Scheibe.
+            const scheibe = g.createRadialGradient(wx, wy, 0, wx, wy, r);
+            scheibe.addColorStop(0, hexA(ton, 0.95));
+            scheibe.addColorStop(0.6, hexA(ton, 0.7));
+            scheibe.addColorStop(1, hexA(ton, 0));
+            g.fillStyle = scheibe;
+            g.beginPath();
+            g.arc(wx, wy, r, 0, Math.PI * 2);
+            g.fill();
+          }
         }
-      }
+        return cv;
+      };
 
-      this.buildMask = cv;
+      this.buildMask = raster(48, 1);
+      // Das weite Raster: viermal duenner und kleiner. Es sagt "hier herum
+      // geht es", nicht "genau hier".
+      this.buildWeit = raster(88, 0.92);
       this.buildMaskKey = key;
     }
 
-    // Nur dort zeigen, wo die Entscheidung faellt.
+    // Zwei Dichten, und beide haben ihren Grund.
     //
-    // Zweimal gemeldet als "passt nicht ins Level", und zweimal habe ich an
-    // der Farbe gedreht. Gemessen sind es auf der Frostkarte **311 Punkte
-    // gleichzeitig** - das ist eine Tapete ueber der ganzen Landschaft, egal
-    // wie sie eingefaerbt ist. Das Bild war nicht falsch gefaerbt, es war zu
-    // viel davon da.
+    // In v122 hing hier ein volles Raster ueber der ganzen Karte - auf der
+    // Frostspalte **311 Punkte gleichzeitig**, also eine Tapete. Die Antwort
+    // war damals, es nur noch unter dem Finger zu zeigen. Das war die halbe
+    // Loesung und hat eine neue Luecke aufgerissen: `hoverPoint` gibt es nur
+    // fuer Maus und Stift. **Auf dem Telefon sah man ohne liegenden Finger
+    // gar nichts** - man tippte eine Turmart an und stand vor einer leeren
+    // Karte.
     //
-    // Gebraucht wird die Auskunft nur an einer Stelle: dort, wo der Finger
-    // gerade ist. Dort sind es rund fuenfzehn Punkte, und die Karte bleibt
-    // sonst frei. Wer weiter weg bauen will, zieht den Finger dorthin - und
-    // die Auskunft wandert mit.
+    // Jetzt sagt das WEITE Raster dauerhaft "hier herum geht es" - viermal
+    // duenner gesaet, kleiner, blasser, rund achtzig Punkte statt
+    // dreihundert. Und wo der Finger liegt, kommt das dichte Raster darueber
+    // und sagt "genau hier". Grobe Auskunft immer, feine auf Nachfrage.
+    const grund = this.buildWeit;
+    if (grund) {
+      ctx.save();
+      ctx.globalAlpha = affordable ? 0.55 : 0.34;
+      ctx.drawImage(grund, 0, 0);
+      ctx.restore();
+    }
+
     const at = s.pendingPoint ?? s.hoverPoint;
     if (!at) return;
 

@@ -1712,6 +1712,68 @@ step('Beruehrbare Kleinigkeiten', () => {
   }
 });
 
+// --- Was passiert mit einem Geschoss, dessen Turm verschwindet? (TF-016)
+//
+// Zwei Faelle aus dem QA-Katalog, die das Audit als NOT VERIFIED gefuehrt
+// hat: ein Turm wird verkauft oder ausgebaut, waehrend sein Geschoss noch
+// fliegt. Beide sind nachgestellt worden und beide verhalten sich richtig -
+// deshalb stehen sie hier: was einmal geprueft ist und nirgends festgehalten
+// wird, ist beim naechsten Umbau wieder ungeprueft.
+//
+// Was richtig heisst:
+//   Verkauf  Das Geschoss trifft trotzdem. Der Schaden zaehlt fuer die
+//            Partie; die Gutschrift am Turm ist verloren, weil es den Turm
+//            nicht mehr gibt. Kein Absturz.
+//   Ausbau   Das Geschoss traegt den Schaden, mit dem es abgefeuert wurde,
+//            nicht den der neuen Stufe. Ein Schuss, der schon unterwegs ist,
+//            wird nicht nachtraeglich staerker.
+{
+  const { candidateSpots: spots2 } = await import('./spots');
+  /** Ein Feld mit genau einem Turm und mindestens einem Geschoss in der Luft. */
+  const imFlug = () => {
+    const p = new GameState();
+    p.reset(31, 'normal', 'spiralhain');
+    p.gold = 999999;
+    const sp = spots2(p)[0];
+    if (!sp || !p.build(sp.x, sp.y, 'arrow')) return null;
+    p.waveIndex = 4;
+    p.startWave();
+    for (let i = 0; i < 60 * 60 && !p.projectiles.length; i++) p.update(DT);
+    return p.projectiles.length ? p : null;
+  };
+
+  step('Turm verkauft, waehrend sein Schuss fliegt', () => {
+    const p = imFlug();
+    if (!p) throw new Error('Es kam kein Geschoss in die Luft - die Probe misst nichts.');
+    const vorher = p.stats.damage;
+    p.sell(p.towers[0]);
+    for (let i = 0; i < 120; i++) p.update(DT);
+    if (p.towers.length !== 0) throw new Error('Der Turm steht nach dem Verkauf noch da.');
+    if (p.stats.damage <= vorher) {
+      throw new Error('Das Geschoss des verkauften Turms hat keinen Schaden mehr gemacht - '
+        + 'ein bezahlter Schuss darf nicht verfallen, weil der Turm weg ist.');
+    }
+  });
+
+  step('Turm ausgebaut, waehrend sein Schuss fliegt', () => {
+    const p = imFlug();
+    if (!p) throw new Error('Es kam kein Geschoss in die Luft - die Probe misst nichts.');
+    const unterwegs = p.projectiles[0].damage;
+    const t = p.towers[0];
+    if (!p.upgrade(t, 0)) throw new Error('Der Ausbau schlug fehl - die Probe misst nichts.');
+    const neu = p.towerStats(t).damage;
+    if (neu <= unterwegs) {
+      throw new Error(`Der Ausbau bringt keinen groesseren Schaden (${unterwegs} -> ${neu}) - `
+        + 'dann kann die Probe den Unterschied nicht sehen.');
+    }
+    if (p.projectiles[0].damage !== unterwegs) {
+      throw new Error(`Ein Geschoss in der Luft traegt nach dem Ausbau ${p.projectiles[0].damage} `
+        + `statt ${unterwegs} Schaden - ein Schuss wird nachtraeglich staerker.`);
+    }
+    for (let i = 0; i < 120; i++) p.update(DT);
+  });
+}
+
 // --- Bleibt der Trefferstopp im Rahmen? (v137)
 //
 // Bis v136 gab es ZWEI Felder fuer dieselbe Sache: `hitStop` mit Budget und

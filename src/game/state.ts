@@ -1306,6 +1306,15 @@ export class GameState {
   private updateProjectiles(dt: number): void {
     let any = false;
     for (const p of this.projectiles) {
+      // Ein von aussen abgeschriebenes Geschoss fliegt sonst weiter.
+      //
+      // Gefunden durch eine Gegenprobe, die NICHT anschlug (Regel 3): sie
+      // setzte beim Verkauf `dead` auf alle Geschosse des Turms - und der
+      // Schaden kam trotzdem an, weil diese Schleife `dead` gar nicht liest.
+      // Aufgeraeumt wird erst danach, und nur wenn IN der Schleife etwas
+      // gestorben ist. Heute setzt niemand `dead` von aussen; wer es das
+      // naechste Mal tut, faellt in dieselbe Falle.
+      if (p.dead) { any = true; continue; }
       p.life -= dt;
       if (p.life <= 0) { p.dead = true; any = true; continue; }
 

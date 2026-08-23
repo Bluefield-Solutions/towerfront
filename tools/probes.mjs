@@ -946,6 +946,23 @@ const PROBEN = [
     tor: 'bildtor',
   },
   {
+    // TF-016: ein bezahlter Schuss verfaellt, weil der Turm verkauft wurde.
+    name: 'Verkauf loescht den Schuss in der Luft',
+    datei: 'src/game/state.ts',
+    regel: /    t\.target = null;\n    compact\(this\.towers, \(o\) => o === t\);/,
+    ersatz: '    t.target = null;\n    for (const p2 of this.projectiles) if (p2.owner === t) p2.dead = true;\n    compact(this.towers, (o) => o === t);',
+    tor: 'smoke',
+  },
+  {
+    // Und die Gegenrichtung: ein Schuss, der schon unterwegs ist, wird durch
+    // einen Ausbau nachtraeglich staerker.
+    name: 'Ausbau wirkt rueckwirkend auf fliegende Schuesse',
+    datei: 'src/game/state.ts',
+    regel: /    t\.branch = chosen;\n    t\.level\+\+;/,
+    ersatz: '    t.branch = chosen;\n    t.level++;\n    for (const p2 of this.projectiles) if (p2.owner === t) p2.damage = this.towerStats(t).damage;',
+    tor: 'smoke',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

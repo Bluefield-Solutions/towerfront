@@ -727,6 +727,79 @@ pruefungen.push(async () => {
   }
 });
 
+// --- Verdeckt ein Turm einen Gegner, der HINTER ihm steht? (Stapel 3.1)
+//
+// Bis v139 nicht, und das war der groesste einzelne Posten fuer den
+// Raumeindruck: gezeichnet wurde nach Kategorie - erst alle Tuerme, dann alle
+// Gegner -, also lag jeder Gegner vor jedem Turm. Nichts verdeckte je etwas,
+// und ein Feld aus plastischen Einzelbildern sah flach aus.
+//
+// Gemessen wird nicht "gibt es eine Sortierung", sondern die Wirkung: wie
+// viele Bildpunkte des Gegners sind zu sehen, wenn er hinter dem Turm steht,
+// und wie viele, wenn er davor steht? Ohne Sortierung sind beide Zahlen
+// gleich - deshalb steht die Gegenrichtung in derselben Pruefung (Regel 13).
+pruefungen.push(async () => {
+  const sichtbar = async (dy) => {
+    const canvas = createCanvas(844 * 2, 390 * 2);
+    Object.defineProperty(canvas, 'clientWidth', { get: () => 844 });
+    Object.defineProperty(canvas, 'clientHeight', { get: () => 390 });
+    const s = new GameState();
+    const r = new Renderer(canvas);
+    r.menu = null;
+    s.reset(3, 'normal', 'spiralhain');
+    // Niedrige Qualitaet: kein Leuchten, kein Nebelflimmern. Gemessen werden
+    // soll die Flaeche des Gegners, nicht die Stimmung um ihn herum.
+    s.quality = 'niedrig';
+    s.gold = 99999;
+    const platz = candidateSpots(s)[0];
+    if (!s.build(platz.x, platz.y, 'arrow')) throw new Error('Verdeckung: kein Turm setzbar.');
+    const t = s.towers[0];
+    r.resize();
+    r.draw(s);
+    for (const k of Object.keys(OBJECT_ART)) getObjectArt(k);
+    getBackground(s.map.id);
+    for (const id of TOWER_ORDER) getTowerArt(id, null, 1, s.map.id);
+    for (const id of Object.keys(ENEMIES)) getEnemyArt(id, false, s.map.id);
+    await settle();
+    r.kartenaufbauAbschliessen(s);
+    const fehlt = r.fehlendeBilder(s);
+    if (fehlt.length) throw new Error(`Verdeckung ohne Bilder: ${fehlt.slice(0, 3).join(', ')}`);
+
+    const g = canvas.getContext('2d');
+    const nimm = () => {
+      r.draw(s);
+      return Uint8ClampedArray.from(g.getImageData(0, 0, canvas.width, canvas.height).data);
+    };
+    const ohne = nimm();
+    const e = s.spawnZumPruefen('brute', 0, 0);
+    if (!e) throw new Error('Verdeckung: kein Gegner setzbar.');
+    e.x = t.x;
+    e.y = t.y + dy;
+    const mit = nimm();
+    let anders = 0;
+    for (let i = 0; i < ohne.length; i += 4) {
+      if (Math.abs(ohne[i] - mit[i]) > 6 || Math.abs(ohne[i + 1] - mit[i + 1]) > 6) anders++;
+    }
+    return anders;
+  };
+
+  const hinten = await sichtbar(-30);
+  const vorn = await sichtbar(30);
+  const verdeckt = vorn > 0 ? (1 - hinten / vorn) * 100 : 0;
+  console.log(`  Verdeckung: Gegner vor dem Turm ${vorn} Bildpunkte, dahinter ${hinten} `
+    + `- ${verdeckt.toFixed(0)} % verdeckt`);
+  if (vorn < 500) {
+    throw new Error(`der Gegner ist vor dem Turm nur ${vorn} Bildpunkte gross - `
+      + 'dann misst die Verdeckungspruefung nichts.');
+  }
+  if (verdeckt < 15) {
+    throw new Error(
+      `ein Gegner hinter einem Turm wird nur zu ${verdeckt.toFixed(0)} % verdeckt `
+      + '- die Szene hat keine Tiefe, alles liegt in einer Ebene.',
+    );
+  }
+});
+
 // --- Die anderen Karten
 for (const m of MAPS.slice(1)) {
   takes.push([m.id, () => shot(m.id, 844, 390, (s) => {

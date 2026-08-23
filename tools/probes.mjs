@@ -910,6 +910,15 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
+    // Der groesste einzelne Posten fuer den Raumeindruck: ohne Sortierung
+    // liegt jeder Gegner vor jedem Turm - der Zustand bis v139.
+    name: 'Szene ohne Tiefensortierung',
+    datei: 'src/gfx/renderer.ts',
+    regel: /    stand\.sort\(\(a, b\) => a\.y - b\.y\);/,
+    ersatz: '    void 0;',
+    tor: 'bildtor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

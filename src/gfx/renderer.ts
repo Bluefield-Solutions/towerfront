@@ -7,7 +7,7 @@ import {
 import { ABILITIES } from '../data/abilities';
 import { makeRng } from '../core/math';
 import { GameState } from '../game/state';
-import type { Tower } from '../game/types';
+import type { Enemy, Husk, Tower } from '../game/types';
 import { beginGlowBatch, endGlowBatch, hexA, stampGlow, stampGlowFast } from './glow';
 import { terrainAuftrag, type TerrainAuftrag } from './terrain';
 import { snap } from '../data/maps';
@@ -424,11 +424,9 @@ export class Renderer {
     this.lichtteich(s);
     this.drawPortal(s, hi);
     this.drawBuildOverlay(s);
-    this.drawCrystal(s, hi);
     this.drawRings(s);
-    this.drawTowers(s, hi);
-    this.drawHusks(s);
-    this.drawEnemies(s, hi);
+    this.zeichneStand(s, hi);
+    this.drawHealthBars(s);
     this.drawProjectiles(s, hi);
     this.drawBolts(s);
     this.drawParticles(s);
@@ -1186,10 +1184,10 @@ export class Renderer {
   }
 
   /** Die Huellen gefallener Gegner: kippen, schrumpfen, verblassen. */
-  private drawHusks(s: GameState): void {
-    if (!s.husks.length) return;
+  /** Eine gefallene Huelle. Steht wie alles andere in der Szenenliste. */
+  private huelleMalen(s: GameState, h: Husk): void {
     const ctx = this.ctx;
-    for (const h of s.husks) {
+    {
       const k = 1 - h.t;
       ctx.save();
       ctx.globalAlpha = k * 0.85;
@@ -1221,13 +1219,74 @@ export class Renderer {
     ctx.globalAlpha = 1;
   }
 
-  private drawTowers(s: GameState, hi: boolean): void {
+  /** Alles, was auf dem Boden STEHT - in der Reihenfolge, in der man es
+   *  sieht: von hinten nach vorn.
+   *
+   *  Bis v139 wurde nach KATEGORIE gezeichnet: erst alle Tuerme, dann alle
+   *  Huellen, dann alle Gegner. Damit lag jeder Gegner vor jedem Turm, auch
+   *  wenn er zwei Turmhoehen weiter hinten lief. Nichts verdeckte je etwas,
+   *  und genau das ist der Grund, warum ein Feld aus plastischen Einzelbildern
+   *  flach aussah. Es ist der groesste einzelne Hebel fuer den Raumeindruck -
+   *  und er kostet keine neuen Bilder, nur eine andere Reihenfolge.
+   *
+   *  Drei Schichten, und die Trennung hat je einen Grund:
+   *
+   *   1. **Der Boden.** Schatten gehoeren zur Erde und liegen unter allem,
+   *      was auf ihr steht. Zusammen mit den Koerpern sortiert liefe der
+   *      Schatten eines nahen Gegners ueber den Fuss eines entfernten.
+   *   2. **Das Stehende**, nach der Standlinie sortiert. Die Standlinie ist
+   *      `y` - der Punkt, an dem die Figur den Boden beruehrt -, nicht ihre
+   *      Mitte und nicht ihre Oberkante.
+   *   3. **Die Luft.** Ein Flieger steht auf nichts; er gehoert ueber alles,
+   *      was steht, sonst verschwindet er hinter einem Turm, unter dem er
+   *      hindurchfliegt. */
+  private zeichneStand(s: GameState, hi: boolean): void {
+    // --- 1. Boden.
+    //
+    // Die Kristallburg bringt ihren Schatten selbst mit, statt ihn hier
+    // abzugeben: er haengt an Masszahlen, die tief in ihrer Zeichnung
+    // stehen, und ihn herauszuloesen hiesse, sie ein zweites Mal
+    // auszurechnen (Regel 15). Der Preis ist gering - die Burg steht am
+    // Rand, und was hinter ihr steht, steht in ihrem Grundriss.
+    this.turmAuskunftBoden(s);
+    for (const t of s.towers) this.turmBoden(s, t);
+    for (const e of s.enemies) this.gegnerBoden(s, e);
+    this.bossLeuchten(s);
+
+    // --- 2. Das Stehende, nach der Standlinie.
+    //
+    // Die Liste wird je Bild neu gebaut. Bei 29 Tuermen und 60 Gegnern sind
+    // das rund 90 Eintraege - gemessen unter einem Zehntel dessen, was ein
+    // einziges gezeichnetes Bild kostet.
+    const stand: { y: number; mal: () => void }[] = [];
+    stand.push({ y: s.goal.y, mal: () => this.drawCrystal(s, hi) });
+    for (const t of s.towers) stand.push({ y: t.y, mal: () => this.turmMalen(s, t, hi) });
+    for (const h of s.husks) stand.push({ y: h.y, mal: () => this.huelleMalen(s, h) });
+    for (const e of s.enemies) {
+      if (ENEMIES[e.def].flying) continue;
+      stand.push({ y: e.y, mal: () => this.gegnerMalen(s, e, hi) });
+    }
+    stand.sort((a, b) => a.y - b.y);
+    for (const o of stand) o.mal();
+
+    // --- 3. Luft.
+    for (const e of s.enemies) if (ENEMIES[e.def].flying) this.gegnerMalen(s, e, hi);
+
+    this.turmLeuchten(s, hi);
+  }
+
+  /** Was VOR den Figuren auf dem Boden liegt: die Reichweite des gewaehlten
+   *  Turms und die Ersatzbilder, falls noch keine echten da sind.
+   *
+   *  Die Reichweite gehoert unter die Figuren, nicht darueber. Als Scheibe
+   *  ueber dem Feld faerbt sie jeden Gegner ein, der darin steht - und der
+   *  Ring soll sagen, wie weit der Turm reicht, nicht, wie die Welt aussieht. */
+  private turmAuskunftBoden(s: GameState): void {
     const ctx = this.ctx;
     if (this.towerLayerVersion !== s.towersVersion ||
       this.towerArtVersionAt !== towerArtVersion()) this.bakeTowerLayer(s);
     if (this.towerLayer) ctx.drawImage(this.towerLayer, 0, 0);
 
-    // Reichweite und Umkreispuls sind Ausnahmen und betreffen wenige Tuerme.
     const sel = s.selectedTower;
     if (sel) {
       const def = TOWERS[sel.def];
@@ -1238,245 +1297,12 @@ export class Renderer {
       ctx.strokeStyle = hexA(tone, 0.75); ctx.lineWidth = 3;
       ctx.beginPath(); ctx.arc(sel.x, sel.y, st.range, 0, Math.PI * 2); ctx.stroke();
     }
+  }
 
-    for (const t of s.towers) {
-      const def = TOWERS[t.def];
-      if (def.attack === 'aura' && t.pulse > 0) {
-        ctx.strokeStyle = hexA(accentFor(def, t.branch), t.pulse * 0.5);
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(t.x, t.y, s.towerStats(t).range * (1 - t.pulse * 0.15), 0, Math.PI * 2);
-        ctx.stroke();
-      }
-      // Bei gerenderten Tuermen entfaellt die drehbare Waffe: ein Objekt in
-      // Dreiviertelansicht kippt, wenn man es in der Flaeche dreht. Statt zu
-      // drehen wird gespiegelt, sobald das Ziel links steht.
-      const art = getTowerArt(t.def, t.branch, t.level, s.map.id);
-      if (art) {
-        const masse = this.artMasse(t.def, t.branch, t.level, art);
-        const w = masse.w, h = masse.h;
-
-        // Der Schlagschatten - der eigene Umriss, nicht mehr eine Ellipse.
-        //
-        // Bis v59 warfen gerenderte Tuerme gar keinen. Bis v127 warfen sie
-        // alle DENSELBEN: eine Ellipse, gleich fuer den Moerser mit seinem
-        // Rohr wie fuer den Bogenturm. Ein Schatten sagte damit nur "hier
-        // steht etwas" - er sagte nicht, was.
-        //
-        // Zwei Schatten, nicht einer. Der Schlagschatten faellt in
-        // Lichtrichtung und sagt, woher die Sonne kommt. Er allein reicht
-        // nicht: gemessen waren die Tuerme an ihrem Fuss 21 Prozent HELLER
-        // als der Boden daneben - sie lagen auf der Landschaft statt darin.
-        // Was fehlt, ist der Kontaktschatten darunter, die enge dunkle Zone,
-        // wo kein Licht hinkommt. Erst beide zusammen setzen einen
-        // Gegenstand auf den Boden.
-        const fuss = TOWERS[def.id].footprint / 2;
-        ctx.save();
-        {
-          const riss = getSchattenriss(
-            art, `turm:${t.def}:${t.branch}:${t.level}`, w, h,
-          );
-          // Am Fuss ansetzen. Die Laenge des Schattens erzaehlt die Hoehe:
-          // wuchs der Turm nach oben, ohne dass der Schatten mitwaechst,
-          // liest das Auge keinen hoeheren Turm, sondern einen naeher
-          // stehenden - bei fester Sonne ist die Schattenlaenge die einzige
-          // Hoehenangabe, die ein Bild von oben ueberhaupt machen kann.
-          drawSprite(ctx, riss, t.x, t.y);
-        }
-
-        // Weich auslaufend statt als Flecken.
-        //
-        // Zwei uebereinandergelegte Ellipsen mit fester Deckung sahen selbst
-        // wie ein Aufkleber aus - ein dunkler Ring mit sichtbarer Kante unter
-        // dem Turm. Ein echter Kontaktschatten ist innen dicht und verliert
-        // sich nach aussen. Ausserdem war er breiter als der Turm; jetzt
-        // endet er knapp innerhalb der Standflaeche.
-        ctx.globalAlpha = 1;
-        const kontakt = ctx.createRadialGradient(
-          t.x, t.y + fuss * 0.08, fuss * 0.12,
-          t.x, t.y + fuss * 0.08, fuss * 0.92,
-        );
-        kontakt.addColorStop(0, hexA(C.ink, 0.52));
-        kontakt.addColorStop(0.55, hexA(C.ink, 0.26));
-        kontakt.addColorStop(1, hexA(C.ink, 0));
-        ctx.save();
-        ctx.translate(t.x, t.y + fuss * 0.08);
-        ctx.scale(1, 0.38);
-        ctx.translate(-t.x, -(t.y + fuss * 0.08));
-        ctx.fillStyle = kontakt;
-        ctx.beginPath();
-        ctx.arc(t.x, t.y + fuss * 0.08, fuss * 0.92, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-        ctx.restore();
-
-        // Ein Farbring am Fuss zeigt den Ausbauzweig.
-        //
-        // Solange die Zweige auf dieselben Bilder zurueckfallen, sieht ein
-        // Scharfschuetze aus wie eine Salve - man kann seinem eigenen Feld
-        // nicht ansehen, wie es gebaut ist. Der Ring ist die kleinste
-        // ehrliche Antwort darauf: er behauptet nicht, ein anderes Bauwerk zu
-        // sein, sondern markiert die Entscheidung.
-        if (t.branch !== null) {
-          // Groesser als der Turmfuss, sonst liegt der Ring dahinter.
-          const ring = TOWERS[def.id].footprint * 0.86;
-          ctx.save();
-          ctx.translate(t.x, t.y + TOWERS[def.id].footprint * 0.1);
-          ctx.scale(1, 0.4);
-          ctx.strokeStyle = hexA(accentFor(TOWERS[def.id], t.branch), 0.85);
-          ctx.lineWidth = 5;
-          ctx.beginPath();
-          ctx.arc(0, 0, ring, 0, Math.PI * 2);
-          ctx.stroke();
-          // Ein zweiter, feinerer Ring fuer den zweiten Zweig - so sind sie
-          // auch ohne Farbsehen zu unterscheiden.
-          if (t.branch === 1) {
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(0, 0, ring * 0.72, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-          ctx.restore();
-        }
-
-        // Liegt die Waffe als eigenes Bild vor, wird sie einzeln gedreht.
-        //
-        // Das ist der saubere Weg: der Sockel steht still, die Waffe zielt.
-        // Er braucht zwei Bilder je Turm - einen Sockel OHNE Waffe und die
-        // Waffe allein, mit dem Drehpunkt in der Bildmitte. Fehlt eines von
-        // beiden, bleibt es beim gedaempften Schwenk darunter; ein Sockel mit
-        // eingebauter Waffe plus zweiter Waffe darueber waere doppelt.
-        // --- Ruhebewegung (D18): der Turm atmet.
-        //
-        // Ein ruhendes Feld war bis v116 ein Standbild - zwischen zwei Wellen
-        // bewegte sich nichts ausser dem Nebel. Kingdom Rush und Bloons lassen
-        // ihre Tuerme leicht atmen; das kostet nichts und macht aus einem
-        // Diagramm einen Ort.
-        //
-        // HIER berechnet, nicht weiter unten: es gibt ZWEI Zeichenwege. Tuerme
-        // mit eigenem Sockel- und Waffenbild (der Bogenturm) laufen durch den
-        // Zweig gleich darunter und enden dort mit `continue`. Mein erster
-        // Versuch stand hinter diesem `continue` - bei Amplitude 60, also
-        // einem halben Turm Versatz, bewegte sich nichts. Zwei Aufnahmen
-        // nebeneinander haben es gezeigt, keine Kennzahl.
-        //
-        // Drei Entscheidungen:
-        //  - KLEIN, aber nicht unsichtbar. 2 Weltpunkte sind bei kleinstem
-        //    Massstab rund 1,6 Bildschirmpunkte. Der erste Wert (0,75) waere
-        //    ein halber Punkt gewesen - Regel 12: beurteilt wird in
-        //    Anzeigegroesse, und ein halber Punkt ist keine Bewegung.
-        //  - VERSETZT. Die Phase kommt aus der Standposition, sonst atmet das
-        //    ganze Feld im Gleichtakt. Aus der Position und nicht aus einem
-        //    Zufall, damit sie ueber Sichern und Laden dieselbe bleibt.
-        //  - OHNE SCHATTEN. Der Schatten liegt schon und bleibt liegen. Bewegt
-        //    er sich mit, schwebt der Turm; bleibt er, hebt sich der Turm.
-        const atem = Math.sin(s.time * 1.9 + (t.x + t.y * 1.7) * 0.03) * 2;
-
-        // Eingebettet wie der Turm daneben - siehe getObjectArtStufeEingebettet.
-        const waffe = getObjectArtStufeEingebettet(`waffe_${t.def}`, t.level, s.map.id);
-        const sockel = getObjectArtStufeEingebettet(`sockel_${t.def}`, t.level, s.map.id);
-        if (waffe && sockel) {
-          // Die Groesse kommt aus dem SOCKELBILD, nicht aus dem Ganzbild.
-          //
-          // `w` oben stammt aus artMasse und rechnet den Breitenanteil des
-          // Ganzbilds heraus - das fuellt seine Kachel nur zur Haelfte. Auf
-          // den Sockel angewandt war er dadurch fast doppelt so gross und
-          // schob den Kristall aus dem Bild. Die Einzelobjekte sind mit
-          // Fuellgrad 0,94 gepackt (siehe art/objekte.json), also fuellt die
-          // Figur die Kachel fast ganz.
-          const FUELLUNG = 0.94;
-          const bw = (TURM_BREITE * DRAW_SCALE) / FUELLUNG;
-          const rec2 = t.recoil * 4;
-          ctx.save();
-          ctx.translate(t.x, t.y + atem);
-          // Auch dieser Weg bekommt die Hoehe - sonst waere der Bogenturm der
-          // einzige, der nicht mitwaechst.
-          //
-          // Er ist der einzige Turm mit eigenem Sockel- und Waffenbild und
-          // laeuft deshalb hier durch statt durch artMasse. Ohne diese Zeile
-          // haetten drei Tuerme die neue Hoehe und einer die alte - genau der
-          // Fall, gegen den die Gegenprobe "Tuerme verschieden gross" steht.
-          const sh0 = bw * (sockel.height / sockel.width);
-          const sh = sh0 * TURM_HOEHE;
-          // Fuss bleibt liegen: die Unterkante war 0,28 * Sockelhoehe unter
-          // der Mitte und bleibt es. Gewachsen wird nach oben.
-          const oben = 0.28 * sh0 - sh;
-          ctx.drawImage(sockel, -bw / 2, oben, bw, sh);
-          // Die Waffe sitzt auf der Plattform, nicht auf dem Boden.
-          // Auf die Plattform, nicht in den Schaft. Ihr Platz wird von der
-          // Oberkante aus gemessen, nicht von der Mitte - die Plattform ist
-          // ein Punkt IM Bild und wandert mit ihm nach oben.
-          ctx.translate(0, oben + sh * 0.12);
-          // Das Bild blickt nach oben, der Winkel zaehlt von rechts.
-          ctx.rotate(t.angle + Math.PI / 2);
-          // Rueckstoss laeuft entgegen der Schussrichtung.
-          ctx.translate(0, rec2);
-          const ww = bw * 0.56;
-          const wh = ww * (waffe.height / waffe.width);
-          ctx.drawImage(waffe, -ww / 2, -wh / 2, ww, wh);
-          ctx.restore();
-          continue;
-        }
-
-        // Der Turm dreht sich zum Ziel - aber nur der obere Teil.
-        //
-        // Ein Turm ist ein Bauwerk: dreht man das ganze Bild, kippt der Sockel
-        // mit und die Burg legt sich schief in die Landschaft. Gedreht wird
-        // deshalb um einen Punkt hoch oben im Bild, und nur um einen Teil des
-        // Zielwinkels. Das liest sich als "die Kanone schwenkt", ohne dass das
-        // Gebaeude umfaellt.
-        //
-        // Bis der Bildsatz eine eigene Waffenebene bekommt, ist das die
-        // ehrlichste Naeherung: es behauptet nicht, ein Drehkranz zu sein.
-        const facingLeft = Math.cos(t.angle) < 0;
-        const rec = t.recoil * 3;
-        ctx.save();
-        ctx.translate(t.x, t.y - rec * 0.4);
-        if (facingLeft) ctx.scale(-1, 1);
-        // Der Winkel zum Ziel, gespiegelt mitgerechnet, auf die Waagerechte
-        // bezogen und gedaempft.
-        const roh = facingLeft ? Math.PI - t.angle : t.angle;
-        const schwenk = Math.max(-0.15, Math.min(0.15, roh * 0.2));
-        ctx.translate(0, -h * 0.22);
-        ctx.rotate(schwenk);
-        ctx.translate(0, h * 0.22);
-        // Der frisch gebaute Turm federt einmal ein und schwingt aus.
-        if (t.spring > 0.01) {
-          const q = Math.sin(t.spring * Math.PI * 2.2) * t.spring * 0.16;
-          ctx.scale(1 - q, 1 + q);
-        }
-        // Die Oberkante kommt aus artMasse, nicht aus einer zweiten Rechnung.
-        //
-        // Hier stand `-h * 0.72`. Solange Bild und Grundriss gleich hoch
-        // waren, war das dasselbe Ergebnis - seit die Hoehe eigenstaendig
-        // ist, waere es der Punkt, an dem der Turm vom Boden abhebt: die
-        // Oberkante waechst mit der Hoehe mit, die Unterkante nicht.
-        // Zwei Stellen, die dieselbe Zahl ausrechnen, driften auseinander.
-        // --- Ruhebewegung (D18): der Turm atmet.
-        //
-        // Ein ruhendes Feld war bis v116 ein Standbild - zwischen zwei Wellen
-        // bewegte sich nichts ausser dem Nebel. Kingdom Rush und Bloons lassen
-        // ihre Tuerme leicht atmen; das kostet nichts und macht aus einem
-        // Diagramm einen Ort.
-        //
-        // Drei Entscheidungen, jede mit Grund:
-        //  - KLEIN. Eineinhalb Weltpunkte, bei kleinstem Massstab gut ein
-        //    Bildschirmpunkt. Mehr laese sich als Rueckstoss, also als
-        //    Handlung - und eine Ruhebewegung, die nach Handlung aussieht,
-        //    luegt.
-        //  - VERSETZT. Die Phase kommt aus der Standposition, sonst atmet das
-        //    ganze Feld im Gleichtakt und wirkt wie ein Fehler. Aus der
-        //    Position und nicht aus einem Zufall, damit sie ueber Sichern und
-        //    Laden dieselbe bleibt.
-        //  - OHNE SCHATTEN. Der Schatten liegt schon und bleibt liegen. Bewegt
-        //    er sich mit, schwebt der Turm; bleibt er, hebt sich der Turm.
-        ctx.drawImage(art, -w / 2, masse.oben + atem, w, h);
-        ctx.restore();
-      } else {
-        this.paintWeapon(t.def, t.branch, t.level, t.x, t.y, t.angle, t.recoil, t.pulse, s.crystalPulse);
-      }
-    }
-
+  /** Das Leuchten der Tuerme: Umkreispuls, Muendungsblitz. Licht liegt ueber
+   *  allem, was steht - es faellt schliesslich darauf. */
+  private turmLeuchten(s: GameState, hi: boolean): void {
+    const ctx = this.ctx;
     if (hi) {
       beginGlowBatch(ctx);
       for (const t of s.towers) {
@@ -1496,6 +1322,265 @@ export class Renderer {
         }
       }
       endGlowBatch(ctx);
+    }
+  }
+
+  /** EIN Turm, mit allem, was zu ihm gehoert: Schatten, Fuss, Bild, Waffe.
+   *
+   *  Seit v140 wird er nicht mehr in einer Schleife ueber alle Tuerme
+   *  gezeichnet, sondern aus der SZENENLISTE heraus - zusammen mit Gegnern,
+   *  Huellen und der Kristallburg, sortiert nach dem Ort, an dem er steht.
+   *  Erst dadurch kann ein Gegner hinter einem Turm verschwinden. */
+  /** Der Bodenteil EINES Turms: Schlagschatten, Kontaktschatten, Zweigring.
+   *
+   *  Getrennt vom Koerper und VOR der Szenenliste gezeichnet - Schatten
+   *  gehoeren zur Erde. Laege der Schatten beim Koerper, fiele der eines
+   *  nahen Turms ueber den Fuss eines entfernten. */
+  private turmBoden(s: GameState, t: Tower): void {
+    const ctx = this.ctx;
+    const def = TOWERS[t.def];
+    const art = getTowerArt(t.def, t.branch, t.level, s.map.id);
+    if (!art) return;
+    const masse = this.artMasse(t.def, t.branch, t.level, art);
+    const w = masse.w, h = masse.h;
+    // Der Schlagschatten - der eigene Umriss, nicht mehr eine Ellipse.
+    //
+    // Bis v59 warfen gerenderte Tuerme gar keinen. Bis v127 warfen sie
+    // alle DENSELBEN: eine Ellipse, gleich fuer den Moerser mit seinem
+    // Rohr wie fuer den Bogenturm. Ein Schatten sagte damit nur "hier
+    // steht etwas" - er sagte nicht, was.
+    //
+    // Zwei Schatten, nicht einer. Der Schlagschatten faellt in
+    // Lichtrichtung und sagt, woher die Sonne kommt. Er allein reicht
+    // nicht: gemessen waren die Tuerme an ihrem Fuss 21 Prozent HELLER
+    // als der Boden daneben - sie lagen auf der Landschaft statt darin.
+    // Was fehlt, ist der Kontaktschatten darunter, die enge dunkle Zone,
+    // wo kein Licht hinkommt. Erst beide zusammen setzen einen
+    // Gegenstand auf den Boden.
+    const fuss = TOWERS[def.id].footprint / 2;
+    ctx.save();
+    {
+      const riss = getSchattenriss(
+        art, `turm:${t.def}:${t.branch}:${t.level}`, w, h,
+      );
+      // Am Fuss ansetzen. Die Laenge des Schattens erzaehlt die Hoehe:
+      // wuchs der Turm nach oben, ohne dass der Schatten mitwaechst,
+      // liest das Auge keinen hoeheren Turm, sondern einen naeher
+      // stehenden - bei fester Sonne ist die Schattenlaenge die einzige
+      // Hoehenangabe, die ein Bild von oben ueberhaupt machen kann.
+      drawSprite(ctx, riss, t.x, t.y);
+    }
+
+    // Weich auslaufend statt als Flecken.
+    //
+    // Zwei uebereinandergelegte Ellipsen mit fester Deckung sahen selbst
+    // wie ein Aufkleber aus - ein dunkler Ring mit sichtbarer Kante unter
+    // dem Turm. Ein echter Kontaktschatten ist innen dicht und verliert
+    // sich nach aussen. Ausserdem war er breiter als der Turm; jetzt
+    // endet er knapp innerhalb der Standflaeche.
+    ctx.globalAlpha = 1;
+    const kontakt = ctx.createRadialGradient(
+      t.x, t.y + fuss * 0.08, fuss * 0.12,
+      t.x, t.y + fuss * 0.08, fuss * 0.92,
+    );
+    kontakt.addColorStop(0, hexA(C.ink, 0.52));
+    kontakt.addColorStop(0.55, hexA(C.ink, 0.26));
+    kontakt.addColorStop(1, hexA(C.ink, 0));
+    ctx.save();
+    ctx.translate(t.x, t.y + fuss * 0.08);
+    ctx.scale(1, 0.38);
+    ctx.translate(-t.x, -(t.y + fuss * 0.08));
+    ctx.fillStyle = kontakt;
+    ctx.beginPath();
+    ctx.arc(t.x, t.y + fuss * 0.08, fuss * 0.92, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    ctx.restore();
+
+    // Ein Farbring am Fuss zeigt den Ausbauzweig.
+    //
+    // Solange die Zweige auf dieselben Bilder zurueckfallen, sieht ein
+    // Scharfschuetze aus wie eine Salve - man kann seinem eigenen Feld
+    // nicht ansehen, wie es gebaut ist. Der Ring ist die kleinste
+    // ehrliche Antwort darauf: er behauptet nicht, ein anderes Bauwerk zu
+    // sein, sondern markiert die Entscheidung.
+    if (t.branch !== null) {
+      // Groesser als der Turmfuss, sonst liegt der Ring dahinter.
+      const ring = TOWERS[def.id].footprint * 0.86;
+      ctx.save();
+      ctx.translate(t.x, t.y + TOWERS[def.id].footprint * 0.1);
+      ctx.scale(1, 0.4);
+      ctx.strokeStyle = hexA(accentFor(TOWERS[def.id], t.branch), 0.85);
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(0, 0, ring, 0, Math.PI * 2);
+      ctx.stroke();
+      // Ein zweiter, feinerer Ring fuer den zweiten Zweig - so sind sie
+      // auch ohne Farbsehen zu unterscheiden.
+      if (t.branch === 1) {
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, ring * 0.72, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  private turmMalen(s: GameState, t: Tower, hi: boolean): void {
+    const ctx = this.ctx;
+    void hi;
+    const def = TOWERS[t.def];
+    if (def.attack === 'aura' && t.pulse > 0) {
+      ctx.strokeStyle = hexA(accentFor(def, t.branch), t.pulse * 0.5);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, s.towerStats(t).range * (1 - t.pulse * 0.15), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    // Bei gerenderten Tuermen entfaellt die drehbare Waffe: ein Objekt in
+    // Dreiviertelansicht kippt, wenn man es in der Flaeche dreht. Statt zu
+    // drehen wird gespiegelt, sobald das Ziel links steht.
+    const art = getTowerArt(t.def, t.branch, t.level, s.map.id);
+    if (art) {
+      const masse = this.artMasse(t.def, t.branch, t.level, art);
+      const w = masse.w, h = masse.h;
+
+      // Liegt die Waffe als eigenes Bild vor, wird sie einzeln gedreht.
+      //
+      // Das ist der saubere Weg: der Sockel steht still, die Waffe zielt.
+      // Er braucht zwei Bilder je Turm - einen Sockel OHNE Waffe und die
+      // Waffe allein, mit dem Drehpunkt in der Bildmitte. Fehlt eines von
+      // beiden, bleibt es beim gedaempften Schwenk darunter; ein Sockel mit
+      // eingebauter Waffe plus zweiter Waffe darueber waere doppelt.
+      // --- Ruhebewegung (D18): der Turm atmet.
+      //
+      // Ein ruhendes Feld war bis v116 ein Standbild - zwischen zwei Wellen
+      // bewegte sich nichts ausser dem Nebel. Kingdom Rush und Bloons lassen
+      // ihre Tuerme leicht atmen; das kostet nichts und macht aus einem
+      // Diagramm einen Ort.
+      //
+      // HIER berechnet, nicht weiter unten: es gibt ZWEI Zeichenwege. Tuerme
+      // mit eigenem Sockel- und Waffenbild (der Bogenturm) laufen durch den
+      // Zweig gleich darunter und enden dort mit `continue`. Mein erster
+      // Versuch stand hinter diesem `continue` - bei Amplitude 60, also
+      // einem halben Turm Versatz, bewegte sich nichts. Zwei Aufnahmen
+      // nebeneinander haben es gezeigt, keine Kennzahl.
+      //
+      // Drei Entscheidungen:
+      //  - KLEIN, aber nicht unsichtbar. 2 Weltpunkte sind bei kleinstem
+      //    Massstab rund 1,6 Bildschirmpunkte. Der erste Wert (0,75) waere
+      //    ein halber Punkt gewesen - Regel 12: beurteilt wird in
+      //    Anzeigegroesse, und ein halber Punkt ist keine Bewegung.
+      //  - VERSETZT. Die Phase kommt aus der Standposition, sonst atmet das
+      //    ganze Feld im Gleichtakt. Aus der Position und nicht aus einem
+      //    Zufall, damit sie ueber Sichern und Laden dieselbe bleibt.
+      //  - OHNE SCHATTEN. Der Schatten liegt schon und bleibt liegen. Bewegt
+      //    er sich mit, schwebt der Turm; bleibt er, hebt sich der Turm.
+      const atem = Math.sin(s.time * 1.9 + (t.x + t.y * 1.7) * 0.03) * 2;
+
+      // Eingebettet wie der Turm daneben - siehe getObjectArtStufeEingebettet.
+      const waffe = getObjectArtStufeEingebettet(`waffe_${t.def}`, t.level, s.map.id);
+      const sockel = getObjectArtStufeEingebettet(`sockel_${t.def}`, t.level, s.map.id);
+      if (waffe && sockel) {
+        // Die Groesse kommt aus dem SOCKELBILD, nicht aus dem Ganzbild.
+        //
+        // `w` oben stammt aus artMasse und rechnet den Breitenanteil des
+        // Ganzbilds heraus - das fuellt seine Kachel nur zur Haelfte. Auf
+        // den Sockel angewandt war er dadurch fast doppelt so gross und
+        // schob den Kristall aus dem Bild. Die Einzelobjekte sind mit
+        // Fuellgrad 0,94 gepackt (siehe art/objekte.json), also fuellt die
+        // Figur die Kachel fast ganz.
+        const FUELLUNG = 0.94;
+        const bw = (TURM_BREITE * DRAW_SCALE) / FUELLUNG;
+        const rec2 = t.recoil * 4;
+        ctx.save();
+        ctx.translate(t.x, t.y + atem);
+        // Auch dieser Weg bekommt die Hoehe - sonst waere der Bogenturm der
+        // einzige, der nicht mitwaechst.
+        //
+        // Er ist der einzige Turm mit eigenem Sockel- und Waffenbild und
+        // laeuft deshalb hier durch statt durch artMasse. Ohne diese Zeile
+        // haetten drei Tuerme die neue Hoehe und einer die alte - genau der
+        // Fall, gegen den die Gegenprobe "Tuerme verschieden gross" steht.
+        const sh0 = bw * (sockel.height / sockel.width);
+        const sh = sh0 * TURM_HOEHE;
+        // Fuss bleibt liegen: die Unterkante war 0,28 * Sockelhoehe unter
+        // der Mitte und bleibt es. Gewachsen wird nach oben.
+        const oben = 0.28 * sh0 - sh;
+        ctx.drawImage(sockel, -bw / 2, oben, bw, sh);
+        // Die Waffe sitzt auf der Plattform, nicht auf dem Boden.
+        // Auf die Plattform, nicht in den Schaft. Ihr Platz wird von der
+        // Oberkante aus gemessen, nicht von der Mitte - die Plattform ist
+        // ein Punkt IM Bild und wandert mit ihm nach oben.
+        ctx.translate(0, oben + sh * 0.12);
+        // Das Bild blickt nach oben, der Winkel zaehlt von rechts.
+        ctx.rotate(t.angle + Math.PI / 2);
+        // Rueckstoss laeuft entgegen der Schussrichtung.
+        ctx.translate(0, rec2);
+        const ww = bw * 0.56;
+        const wh = ww * (waffe.height / waffe.width);
+        ctx.drawImage(waffe, -ww / 2, -wh / 2, ww, wh);
+        ctx.restore();
+        return;
+      }
+
+      // Der Turm dreht sich zum Ziel - aber nur der obere Teil.
+      //
+      // Ein Turm ist ein Bauwerk: dreht man das ganze Bild, kippt der Sockel
+      // mit und die Burg legt sich schief in die Landschaft. Gedreht wird
+      // deshalb um einen Punkt hoch oben im Bild, und nur um einen Teil des
+      // Zielwinkels. Das liest sich als "die Kanone schwenkt", ohne dass das
+      // Gebaeude umfaellt.
+      //
+      // Bis der Bildsatz eine eigene Waffenebene bekommt, ist das die
+      // ehrlichste Naeherung: es behauptet nicht, ein Drehkranz zu sein.
+      const facingLeft = Math.cos(t.angle) < 0;
+      const rec = t.recoil * 3;
+      ctx.save();
+      ctx.translate(t.x, t.y - rec * 0.4);
+      if (facingLeft) ctx.scale(-1, 1);
+      // Der Winkel zum Ziel, gespiegelt mitgerechnet, auf die Waagerechte
+      // bezogen und gedaempft.
+      const roh = facingLeft ? Math.PI - t.angle : t.angle;
+      const schwenk = Math.max(-0.15, Math.min(0.15, roh * 0.2));
+      ctx.translate(0, -h * 0.22);
+      ctx.rotate(schwenk);
+      ctx.translate(0, h * 0.22);
+      // Der frisch gebaute Turm federt einmal ein und schwingt aus.
+      if (t.spring > 0.01) {
+        const q = Math.sin(t.spring * Math.PI * 2.2) * t.spring * 0.16;
+        ctx.scale(1 - q, 1 + q);
+      }
+      // Die Oberkante kommt aus artMasse, nicht aus einer zweiten Rechnung.
+      //
+      // Hier stand `-h * 0.72`. Solange Bild und Grundriss gleich hoch
+      // waren, war das dasselbe Ergebnis - seit die Hoehe eigenstaendig
+      // ist, waere es der Punkt, an dem der Turm vom Boden abhebt: die
+      // Oberkante waechst mit der Hoehe mit, die Unterkante nicht.
+      // Zwei Stellen, die dieselbe Zahl ausrechnen, driften auseinander.
+      // --- Ruhebewegung (D18): der Turm atmet.
+      //
+      // Ein ruhendes Feld war bis v116 ein Standbild - zwischen zwei Wellen
+      // bewegte sich nichts ausser dem Nebel. Kingdom Rush und Bloons lassen
+      // ihre Tuerme leicht atmen; das kostet nichts und macht aus einem
+      // Diagramm einen Ort.
+      //
+      // Drei Entscheidungen, jede mit Grund:
+      //  - KLEIN. Eineinhalb Weltpunkte, bei kleinstem Massstab gut ein
+      //    Bildschirmpunkt. Mehr laese sich als Rueckstoss, also als
+      //    Handlung - und eine Ruhebewegung, die nach Handlung aussieht,
+      //    luegt.
+      //  - VERSETZT. Die Phase kommt aus der Standposition, sonst atmet das
+      //    ganze Feld im Gleichtakt und wirkt wie ein Fehler. Aus der
+      //    Position und nicht aus einem Zufall, damit sie ueber Sichern und
+      //    Laden dieselbe bleibt.
+      //  - OHNE SCHATTEN. Der Schatten liegt schon und bleibt liegen. Bewegt
+      //    er sich mit, schwebt der Turm; bleibt er, hebt sich der Turm.
+      ctx.drawImage(art, -w / 2, masse.oben + atem, w, h);
+      ctx.restore();
+    } else {
+      this.paintWeapon(t.def, t.branch, t.level, t.x, t.y, t.angle, t.recoil, t.pulse, s.crystalPulse);
     }
   }
 
@@ -1607,222 +1692,221 @@ export class Renderer {
     return flying ? 30 + Math.sin(t * 6 + e.wobble) * 3 : 0;
   }
 
-  private drawEnemies(s: GameState, hi: boolean): void {
+  /** Der Bodenteil EINES Gegners: Schlagschatten und Kontaktschatten.
+   *
+   *  Getrennt vom Koerper, weil Schatten zur Erde gehoeren: sie liegen unter
+   *  ALLEM, was auf ihr steht. Wuerden sie mit dem Koerper zusammen sortiert,
+   *  liefe der Schatten eines nahen Gegners ueber den Fuss eines entfernten. */
+  private gegnerBoden(s: GameState, e: Enemy): void {
     const ctx = this.ctx;
-    const list = s.enemies;
-
-    // Schatten zuerst, alle mit demselben gebackenen Bild.
-    for (let i = 0; i < list.length; i++) {
-      const e = list[i];
-      const def = ENEMIES[e.def];
-      const sicht = enemySichtRadius(e.def);
-      // Der Schatten faellt in Lichtrichtung, nicht senkrecht nach unten -
-      // dieselbe Richtung wie im Kartenbild.
-      if (def.flying) {
-        // Ein Flieger steht hoch ueber dem Boden, sein Schatten liegt weiter weg.
-        const alt = this.altitude(e, s.time, true);
-        ctx.globalAlpha = 0.4;
-        drawSprite(ctx, getShadow(sicht),
-          e.x + LICHT.x * alt * 0.9, e.y + LICHT.y * alt * 0.5, 0.8);
-        ctx.globalAlpha = 1;
+    const def = ENEMIES[e.def];
+    const sicht = enemySichtRadius(e.def);
+    // Der Schatten faellt in Lichtrichtung, nicht senkrecht nach unten -
+    // dieselbe Richtung wie im Kartenbild.
+    if (def.flying) {
+      // Ein Flieger steht hoch ueber dem Boden, sein Schatten liegt weiter weg.
+      const alt = this.altitude(e, s.time, true);
+      ctx.globalAlpha = 0.4;
+      drawSprite(ctx, getShadow(sicht),
+        e.x + LICHT.x * alt * 0.9, e.y + LICHT.y * alt * 0.5, 0.8);
+      ctx.globalAlpha = 1;
+    } else {
+      // Zwei Schatten, wie bei den Tuermen: der Schlagschatten sagt, woher
+      // die Sonne kommt, der Kontaktschatten setzt den Gegner auf den Boden.
+      // Bei einem laufenden Wesen ist die Kontaktzone kleiner und dichter -
+      // es beruehrt den Boden nur mit den Fuessen.
+      // Der Schlagschatten traegt seit v132 den EIGENEN Umriss, wie bei den
+      // Tuermen seit v128. Der Koloss warf bis dahin denselben Fleck wie der
+      // Spaeher; jetzt sieht man am Boden, was da laeuft.
+      //
+      // Der Rueckfall auf die Ellipse bleibt fuer den Fall, dass noch kein
+      // Bild geladen ist - dann gibt es keinen Umriss, den man legen
+      // koennte.
+      const weit = sicht * 0.85;
+      const bild = getEnemyArt(e.def, false, s.map.id);
+      if (bild) {
+        const b = enemyArtWidth(e.def);
+        // Hebel 0,45 statt 1,25: ein Gegner liegt flach auf dem Boden.
+        drawSprite(ctx, getSchattenriss(bild, `gegner:${e.def}`, b, b, 0.45),
+          e.x + LICHT.x * weit * 0.22, e.y + LICHT.y * weit * 0.22);
       } else {
-        // Zwei Schatten, wie bei den Tuermen: der Schlagschatten sagt, woher
-        // die Sonne kommt, der Kontaktschatten setzt den Gegner auf den Boden.
-        // Bei einem laufenden Wesen ist die Kontaktzone kleiner und dichter -
-        // es beruehrt den Boden nur mit den Fuessen.
-        // Der Schlagschatten traegt seit v132 den EIGENEN Umriss, wie bei den
-        // Tuermen seit v128. Der Koloss warf bis dahin denselben Fleck wie der
-        // Spaeher; jetzt sieht man am Boden, was da laeuft.
-        //
-        // Der Rueckfall auf die Ellipse bleibt fuer den Fall, dass noch kein
-        // Bild geladen ist - dann gibt es keinen Umriss, den man legen
-        // koennte.
-        const weit = sicht * 0.85;
-        const bild = getEnemyArt(e.def, false, s.map.id);
-        if (bild) {
-          const b = enemyArtWidth(e.def);
-          // Hebel 0,45 statt 1,25: ein Gegner liegt flach auf dem Boden.
-          drawSprite(ctx, getSchattenriss(bild, `gegner:${e.def}`, b, b, 0.45),
-            e.x + LICHT.x * weit * 0.22, e.y + LICHT.y * weit * 0.22);
-        } else {
-          drawSprite(ctx, getShadow(sicht),
-            e.x + LICHT.x * weit * 0.7, e.y + LICHT.y * weit);
+        drawSprite(ctx, getShadow(sicht),
+          e.x + LICHT.x * weit * 0.7, e.y + LICHT.y * weit);
+      }
+      ctx.save();
+      ctx.globalAlpha = 0.42;
+      ctx.fillStyle = C.ink;
+      ctx.beginPath();
+      ctx.ellipse(e.x, e.y + sicht * 0.16, sicht * 0.72, sicht * 0.28,
+        0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  /** Der Koerper EINES Gegners. Wird aus der Szenenliste gerufen, nach dem
+   *  Ort sortiert - siehe zeichneStand. */
+  private gegnerMalen(s: GameState, e: Enemy, hi: boolean): void {
+    const ctx = this.ctx;
+    void hi;
+    const def = ENEMIES[e.def];
+    const sicht = enemySichtRadius(e.def);
+    const wob = Math.sin(s.time * 9 + e.wobble) * 2;
+    const alt = this.altitude(e, s.time, !!def.flying);
+    const art = getEnemyArt(e.def, false, s.map.id);
+
+    if (art) {
+      // Zwei Arten von Bildern, zwei Arten sie zu setzen.
+      //
+      // Seitenansichten schauen nach links und werden nur gespiegelt - ein
+      // Fahrzeug in Dreiviertelansicht kippt beim Drehen. Aufsichten drehen
+      // sich mit der Laufrichtung; ihr Bild blickt im Ausgangszustand nach
+      // oben, deshalb der Viertelkreis Zuschlag.
+      const dirX = def.flying ? s.goal.x - e.x : Math.cos(e.heading);
+      const facingRight = dirX >= 0;
+      const w = enemyArtWidth(e.def);
+      const h = w * (art.height / art.width);
+      ctx.save();
+      ctx.translate(e.x, e.y - alt + wob * 0.3);
+      if (def.topdown) ctx.rotate(e.heading + Math.PI / 2);
+      else if (facingRight) ctx.scale(-1, 1);
+      // Stauchen und Strecken: was getroffen wird, wird breiter und
+      // flacher. Die Flaeche bleibt gleich, deshalb liest das Auge es als
+      // Wucht und nicht als Groessenaenderung.
+      if (e.squash > 0.01) {
+        const q = e.squash * 0.22;
+        ctx.scale(1 + q, 1 - q);
+      }
+      // Aufsichten sitzen mittig im Bild, Seitenansichten stehen auf ihrer
+      // Unterkante - das muss beim Zeichnen zusammenpassen.
+      const oben = def.topdown ? -h / 2 : -h * 0.72;
+      ctx.drawImage(art, -w / 2, oben, w, h);
+      if (e.hitFlash > 0.01) {
+        const hot = getEnemyArt(e.def, true, s.map.id);
+        if (hot) {
+          ctx.globalAlpha = e.hitFlash * 0.8;
+          ctx.drawImage(hot, -w / 2, oben, w, h);
+          ctx.globalAlpha = 1;
         }
+      }
+      ctx.restore();
+      // Der Schildtraeger: ein eigener Ring plus Faeden zu denen, die er
+      // versorgt.
+      //
+      // Der Ring allein reichte nicht. Zwei Gegner mit blauem Schildring
+      // und einer davon mit violettem Traegerring - das sieht nach zwei
+      // Sorten Schild aus, nicht nach Ursache und Wirkung. Erst die Faeden
+      // sagen, WOHER der Schild kommt, und damit, wen man zuerst nehmen
+      // muss. Das ist der ganze Sinn von G5: die Reihenfolge muss man
+      // SEHEN, nicht erschliessen.
+      if (e.traeger > 0) {
         ctx.save();
-        ctx.globalAlpha = 0.42;
-        ctx.fillStyle = C.ink;
-        ctx.beginPath();
-        ctx.ellipse(e.x, e.y + sicht * 0.16, sicht * 0.72, sicht * 0.28,
-          0, 0, Math.PI * 2);
-        ctx.fill();
+        const puls = 0.55 + 0.35 * Math.sin(s.time * 3 + e.wobble);
+        // Deckung angehoben nach dem ersten Blick, wie bei den
+        // Reichweitenringen in v108: bei 0,35 waren die Faeden im Gewimmel
+        // nicht auszumachen, und damit war nicht zu sehen, WER die Quelle
+        // ist. Genau das muessen sie zeigen.
+        ctx.strokeStyle = hexA('#C9A0FF', 0.55 + 0.25 * puls);
+        ctx.lineWidth = 3;
+        for (const o of s.enemies) {
+          if (o === e || o.dead || o.shield <= 0) continue;
+          const dx = o.x - e.x, dy = o.y - e.y;
+          if (dx * dx + dy * dy > 190 * 190) continue;
+          ctx.beginPath();
+          ctx.moveTo(e.x, e.y - alt);
+          ctx.lineTo(o.x, o.y);
+          ctx.stroke();
+        }
+        ctx.translate(e.x, e.y - alt);
+        ctx.strokeStyle = hexA('#C9A0FF', 0.7 + 0.3 * puls);
+        ctx.lineWidth = 4;
+        ctx.setLineDash([7, 5]);
+        ctx.beginPath(); ctx.arc(0, 0, sicht * 1.75, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
         ctx.restore();
       }
-    }
 
-    if (hi) {
-      let boss = false;
-      for (let i = 0; i < list.length; i++) if (ENEMIES[list[i].def].boss) { boss = true; break; }
-      if (boss) {
-        beginGlowBatch(ctx);
-        for (let i = 0; i < list.length; i++) {
-          const e = list[i];
-          const def = ENEMIES[e.def];
-          const sicht = enemySichtRadius(e.def);
-          if (def.boss) stampGlowFast(ctx, def.trim, e.x, e.y, sicht * 2.4, 0.6);
-        }
-        endGlowBatch(ctx);
-      }
-    }
-
-    for (let i = 0; i < list.length; i++) {
-      const e = list[i];
-      const def = ENEMIES[e.def];
-      const sicht = enemySichtRadius(e.def);
-      const wob = Math.sin(s.time * 9 + e.wobble) * 2;
-      const alt = this.altitude(e, s.time, !!def.flying);
-      const art = getEnemyArt(e.def, false, s.map.id);
-
-      if (art) {
-        // Zwei Arten von Bildern, zwei Arten sie zu setzen.
-        //
-        // Seitenansichten schauen nach links und werden nur gespiegelt - ein
-        // Fahrzeug in Dreiviertelansicht kippt beim Drehen. Aufsichten drehen
-        // sich mit der Laufrichtung; ihr Bild blickt im Ausgangszustand nach
-        // oben, deshalb der Viertelkreis Zuschlag.
-        const dirX = def.flying ? s.goal.x - e.x : Math.cos(e.heading);
-        const facingRight = dirX >= 0;
-        const w = enemyArtWidth(e.def);
-        const h = w * (art.height / art.width);
+      // Der Schild: ein Ring, dessen Staerke die Restzahl zeigt.
+      //
+      // Kein Zahlentext. Wieviele Treffer noch kommen muessen, liest man an
+      // der Dicke ab - und wer es genau wissen will, sieht beim naechsten
+      // Treffer, dass es duenner wird. Ein Text an einem 25 Punkte grossen
+      // Gegner waere ohnehin nicht zu lesen.
+      if (e.shield > 0) {
+        const rs = sicht * 1.35;
         ctx.save();
-        ctx.translate(e.x, e.y - alt + wob * 0.3);
-        if (def.topdown) ctx.rotate(e.heading + Math.PI / 2);
-        else if (facingRight) ctx.scale(-1, 1);
-        // Stauchen und Strecken: was getroffen wird, wird breiter und
-        // flacher. Die Flaeche bleibt gleich, deshalb liest das Auge es als
-        // Wucht und nicht als Groessenaenderung.
-        if (e.squash > 0.01) {
-          const q = e.squash * 0.22;
-          ctx.scale(1 + q, 1 - q);
+        ctx.translate(e.x, e.y - alt);
+        ctx.strokeStyle = hexA('#9FD4FF', 0.45 + 0.12 * Math.sin(s.time * 4 + e.wobble));
+        ctx.lineWidth = 2 + Math.min(4, e.shield) * 1.4;
+        ctx.beginPath(); ctx.arc(0, 0, rs, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      }
+
+      if (def.boss) {
+        ctx.save();
+        ctx.translate(e.x, e.y - alt);
+        ctx.rotate(s.time * 0.8);
+        ctx.strokeStyle = hexA(def.trim, 0.7); ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(0, 0, sicht * 1.35, 0, Math.PI * 1.3); ctx.stroke();
+        ctx.restore();
+      }
+    } else {
+      const rotating = e.def === 'runner' || !!def.flying;
+      const cycle = def.flying ? s.time * 7 + e.wobble : e.travelled / 26 + e.wobble;
+      const frame = Math.floor(cycle) % ENEMY_FRAMES;
+      if (rotating || def.boss) {
+        ctx.save();
+        ctx.translate(e.x, e.y - alt);
+        if (def.flying) {
+          ctx.rotate(Math.atan2(s.goal.y - e.y, s.goal.x - e.x));
+        } else if (rotating) {
+          ctx.rotate(e.heading);
         }
-        // Aufsichten sitzen mittig im Bild, Seitenansichten stehen auf ihrer
-        // Unterkante - das muss beim Zeichnen zusammenpassen.
-        const oben = def.topdown ? -h / 2 : -h * 0.72;
-        ctx.drawImage(art, -w / 2, oben, w, h);
+        drawSprite(ctx, getEnemySprite(e.def, false, frame), 0, 0);
         if (e.hitFlash > 0.01) {
-          const hot = getEnemyArt(e.def, true, s.map.id);
-          if (hot) {
-            ctx.globalAlpha = e.hitFlash * 0.8;
-            ctx.drawImage(hot, -w / 2, oben, w, h);
-            ctx.globalAlpha = 1;
-          }
+          ctx.globalAlpha = e.hitFlash * 0.7;
+          drawSprite(ctx, getEnemySprite(e.def, true, frame), 0, 0);
+          ctx.globalAlpha = 1;
         }
-        ctx.restore();
-        // Der Schildtraeger: ein eigener Ring plus Faeden zu denen, die er
-        // versorgt.
-        //
-        // Der Ring allein reichte nicht. Zwei Gegner mit blauem Schildring
-        // und einer davon mit violettem Traegerring - das sieht nach zwei
-        // Sorten Schild aus, nicht nach Ursache und Wirkung. Erst die Faeden
-        // sagen, WOHER der Schild kommt, und damit, wen man zuerst nehmen
-        // muss. Das ist der ganze Sinn von G5: die Reihenfolge muss man
-        // SEHEN, nicht erschliessen.
-        if (e.traeger > 0) {
-          ctx.save();
-          const puls = 0.55 + 0.35 * Math.sin(s.time * 3 + e.wobble);
-          // Deckung angehoben nach dem ersten Blick, wie bei den
-          // Reichweitenringen in v108: bei 0,35 waren die Faeden im Gewimmel
-          // nicht auszumachen, und damit war nicht zu sehen, WER die Quelle
-          // ist. Genau das muessen sie zeigen.
-          ctx.strokeStyle = hexA('#C9A0FF', 0.55 + 0.25 * puls);
-          ctx.lineWidth = 3;
-          for (const o of s.enemies) {
-            if (o === e || o.dead || o.shield <= 0) continue;
-            const dx = o.x - e.x, dy = o.y - e.y;
-            if (dx * dx + dy * dy > 190 * 190) continue;
-            ctx.beginPath();
-            ctx.moveTo(e.x, e.y - alt);
-            ctx.lineTo(o.x, o.y);
-            ctx.stroke();
-          }
-          ctx.translate(e.x, e.y - alt);
-          ctx.strokeStyle = hexA('#C9A0FF', 0.7 + 0.3 * puls);
-          ctx.lineWidth = 4;
-          ctx.setLineDash([7, 5]);
-          ctx.beginPath(); ctx.arc(0, 0, sicht * 1.75, 0, Math.PI * 2); ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.restore();
-        }
-
-        // Der Schild: ein Ring, dessen Staerke die Restzahl zeigt.
-        //
-        // Kein Zahlentext. Wieviele Treffer noch kommen muessen, liest man an
-        // der Dicke ab - und wer es genau wissen will, sieht beim naechsten
-        // Treffer, dass es duenner wird. Ein Text an einem 25 Punkte grossen
-        // Gegner waere ohnehin nicht zu lesen.
-        if (e.shield > 0) {
-          const rs = sicht * 1.35;
-          ctx.save();
-          ctx.translate(e.x, e.y - alt);
-          ctx.strokeStyle = hexA('#9FD4FF', 0.45 + 0.12 * Math.sin(s.time * 4 + e.wobble));
-          ctx.lineWidth = 2 + Math.min(4, e.shield) * 1.4;
-          ctx.beginPath(); ctx.arc(0, 0, rs, 0, Math.PI * 2); ctx.stroke();
-          ctx.restore();
-        }
-
         if (def.boss) {
-          ctx.save();
-          ctx.translate(e.x, e.y - alt);
           ctx.rotate(s.time * 0.8);
           ctx.strokeStyle = hexA(def.trim, 0.7); ctx.lineWidth = 3;
           ctx.beginPath(); ctx.arc(0, 0, sicht * 1.35, 0, Math.PI * 1.3); ctx.stroke();
-          ctx.restore();
         }
+        ctx.restore();
       } else {
-        const rotating = e.def === 'runner' || !!def.flying;
-        const cycle = def.flying ? s.time * 7 + e.wobble : e.travelled / 26 + e.wobble;
-        const frame = Math.floor(cycle) % ENEMY_FRAMES;
-        if (rotating || def.boss) {
-          ctx.save();
-          ctx.translate(e.x, e.y - alt);
-          if (def.flying) {
-            ctx.rotate(Math.atan2(s.goal.y - e.y, s.goal.x - e.x));
-          } else if (rotating) {
-            ctx.rotate(e.heading);
-          }
-          drawSprite(ctx, getEnemySprite(e.def, false, frame), 0, 0);
-          if (e.hitFlash > 0.01) {
-            ctx.globalAlpha = e.hitFlash * 0.7;
-            drawSprite(ctx, getEnemySprite(e.def, true, frame), 0, 0);
-            ctx.globalAlpha = 1;
-          }
-          if (def.boss) {
-            ctx.rotate(s.time * 0.8);
-            ctx.strokeStyle = hexA(def.trim, 0.7); ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.arc(0, 0, sicht * 1.35, 0, Math.PI * 1.3); ctx.stroke();
-          }
-          ctx.restore();
-        } else {
-          drawSprite(ctx, getEnemySprite(e.def, false, frame), e.x, e.y + wob * 0.4);
-          if (e.hitFlash > 0.01) {
-            ctx.globalAlpha = e.hitFlash * 0.7;
-            drawSprite(ctx, getEnemySprite(e.def, true, frame), e.x, e.y + wob * 0.4);
-            ctx.globalAlpha = 1;
-          }
+        drawSprite(ctx, getEnemySprite(e.def, false, frame), e.x, e.y + wob * 0.4);
+        if (e.hitFlash > 0.01) {
+          ctx.globalAlpha = e.hitFlash * 0.7;
+          drawSprite(ctx, getEnemySprite(e.def, true, frame), e.x, e.y + wob * 0.4);
+          ctx.globalAlpha = 1;
         }
-      }
-
-      if (e.slowLeft > 0) {
-        ctx.strokeStyle = hexA(C.crystal, 0.7);
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(e.x, e.y - alt, sicht + 4, 0, Math.PI * 2); ctx.stroke();
       }
     }
 
-    this.drawHealthBars(s);
+    if (e.slowLeft > 0) {
+      ctx.strokeStyle = hexA(C.crystal, 0.7);
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(e.x, e.y - alt, sicht + 4, 0, Math.PI * 2); ctx.stroke();
+    }
   }
 
-  /** Lebensbalken gesammelt: erst alle Hintergruende, dann die Fuellungen nach
-   *  Farbe gruppiert. Spart pro Balken zwei Farbwechsel. */
+  /** Das Leuchten der Bosse, gebuendelt: ein Halo unter allem, was steht. */
+  private bossLeuchten(s: GameState): void {
+    const ctx = this.ctx;
+    const list = s.enemies;
+    let boss = false;
+    for (let i = 0; i < list.length; i++) if (ENEMIES[list[i].def].boss) { boss = true; break; }
+    if (!boss) return;
+    beginGlowBatch(ctx);
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      const def = ENEMIES[e.def];
+      if (def.boss) stampGlowFast(ctx, def.trim, e.x, e.y, enemySichtRadius(e.def) * 2.4, 0.6);
+    }
+    endGlowBatch(ctx);
+  }
+
   private drawHealthBars(s: GameState): void {
     const ctx = this.ctx;
     const list = s.enemies;

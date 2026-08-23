@@ -18,8 +18,8 @@ import { artBreite, getTowerArt, towerArtScale, towerArtVersion } from './towera
 import { getObjectArt, getObjectArtEingebettet, getObjectArtStufe } from './objectart';
 import { enemyArtWidth, enemySichtRadius, getEnemyArt } from './enemyart';
 import {
-  drawSprite, getEnemySprite, getShadow, getTowerBase, getTowerWeapon, roundRect,
-  ENEMY_FRAMES,
+  drawSprite, getEnemySprite, getSchattenriss, getShadow, getTowerBase, getTowerWeapon,
+  roundRect, ENEMY_FRAMES,
 } from './sprites';
 import { drawAurora, drawGroundFog, getMoodLayer } from './atmosphere';
 
@@ -1146,41 +1146,33 @@ export class Renderer {
         const masse = this.artMasse(t.def, t.branch, t.level, art);
         const w = masse.w, h = masse.h;
 
-        // Ein Schlagschatten in Lichtrichtung.
+        // Der Schlagschatten - der eigene Umriss, nicht mehr eine Ellipse.
         //
-        // Bis v59 warfen gerenderte Tuerme gar keinen - sie standen auf dem
-        // Boden, ohne ihn zu beruehren. Auf dem Kartenbild wirft jeder Fels
-        // und jeder Stumpf seinen Schatten nach unten rechts; ein Turm ohne
-        // Schatten schwebt dann sichtbar darueber. Der Schatten ist das, was
-        // ein Objekt in eine Szene setzt.
+        // Bis v59 warfen gerenderte Tuerme gar keinen. Bis v127 warfen sie
+        // alle DENSELBEN: eine Ellipse, gleich fuer den Moerser mit seinem
+        // Rohr wie fuer den Bogenturm. Ein Schatten sagte damit nur "hier
+        // steht etwas" - er sagte nicht, was.
+        //
+        // Zwei Schatten, nicht einer. Der Schlagschatten faellt in
+        // Lichtrichtung und sagt, woher die Sonne kommt. Er allein reicht
+        // nicht: gemessen waren die Tuerme an ihrem Fuss 21 Prozent HELLER
+        // als der Boden daneben - sie lagen auf der Landschaft statt darin.
+        // Was fehlt, ist der Kontaktschatten darunter, die enge dunkle Zone,
+        // wo kein Licht hinkommt. Erst beide zusammen setzen einen
+        // Gegenstand auf den Boden.
         const fuss = TOWERS[def.id].footprint / 2;
         ctx.save();
-        // Zwei Schatten, nicht einer.
-        //
-        // Der Schlagschatten faellt in Lichtrichtung und sagt, woher die Sonne
-        // kommt. Er allein reicht nicht: gemessen waren die Tuerme an ihrem
-        // Fuss 21 Prozent HELLER als der Boden daneben - sie lagen auf der
-        // Landschaft statt darin.
-        //
-        // Was fehlte, ist der Kontaktschatten: die enge, dunkle Zone direkt
-        // unter dem Ding, wo kein Licht hinkommt. Sie ist klein und dunkel,
-        // waehrend der Schlagschatten gross und weich ist. Erst beide zusammen
-        // setzen einen Gegenstand auf den Boden.
-        ctx.globalAlpha = 0.30;
-        ctx.fillStyle = C.ink;
-        ctx.beginPath();
-        // Die Laenge des Schlagschattens ist das, was die Hoehe erzaehlt.
-        //
-        // Wuchs der Turm nach oben, ohne dass der Schatten mitwaechst, liest
-        // das Auge keinen hoeheren Turm, sondern einen naeher stehenden -
-        // Schattenlaenge ist bei fester Sonne die einzige Angabe zur Hoehe,
-        // die ein Bild von oben ueberhaupt machen kann.
-        ctx.ellipse(
-          t.x + LICHT.x * fuss * 0.85 * TURM_HOEHE,
-          t.y + LICHT.y * fuss * 0.42 * TURM_HOEHE,
-          fuss * 1.05, fuss * 0.44, 0.32, 0, Math.PI * 2,
-        );
-        ctx.fill();
+        {
+          const riss = getSchattenriss(
+            art, `turm:${t.def}:${t.branch}:${t.level}`, w, h,
+          );
+          // Am Fuss ansetzen. Die Laenge des Schattens erzaehlt die Hoehe:
+          // wuchs der Turm nach oben, ohne dass der Schatten mitwaechst,
+          // liest das Auge keinen hoeheren Turm, sondern einen naeher
+          // stehenden - bei fester Sonne ist die Schattenlaenge die einzige
+          // Hoehenangabe, die ein Bild von oben ueberhaupt machen kann.
+          drawSprite(ctx, riss, t.x, t.y);
+        }
 
         // Weich auslaufend statt als Flecken.
         //

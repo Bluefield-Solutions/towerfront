@@ -1,4 +1,4 @@
-import { C } from '../data/config';
+import { C, LICHT } from '../data/config';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import { TOWERS, accentFor, type BranchIndex, type TowerDef, type TowerId } from '../data/towers';
 import { hexA } from './glow';
@@ -476,4 +476,63 @@ export function spriteBytes(): number {
   let total = 0;
   for (const cv of cache.values()) total += cv.width * cv.height * 4;
   return total;
+}
+
+/** Der Schattenriss einer Figur — ihr eigener Umriss, in Lichtrichtung
+ *  gelegt.
+ *
+ *  Bis v127 warf jede Figur dieselbe Ellipse. Der Mörser mit seinem Rohr warf
+ *  denselben Fleck wie der Bogenturm, der Titan denselben wie der Späher. Ein
+ *  Schatten sagt dann nur "hier steht etwas" — er sagt nicht, WAS.
+ *
+ *  Gebacken wird einmal je Bild und Größe. Drei Dinge passieren dabei:
+ *
+ *   - Der Umriss wird zu reinem Schwarz eingefärbt (`source-in` auf eine
+ *     gefüllte Fläche): aus dem Bild bleibt nur die Silhouette.
+ *   - Er wird gestaucht und in Lichtrichtung geschert. Die Stauchung erzählt
+ *     die Aufsicht, die Scherung die Sonnenrichtung.
+ *   - Er wird dreimal leicht versetzt übereinandergelegt statt weichgezeichnet.
+ *
+ *  **Warum nicht weichzeichnen:** Regel 11. `filter: blur` ist auf Safari die
+ *  Falle, die dieses Projekt schon einmal ein schwarzes Bild gekostet hat.
+ *  Drei Kopien mit halber Deckung geben eine weiche Kante, ohne den Filter
+ *  anzufassen — und kosten beim Backen ein Dreifaches von fast nichts. */
+export function getSchattenriss(
+  bild: HTMLCanvasElement | HTMLImageElement, schluessel: string,
+  breite: number, hoehe: number,
+): HTMLCanvasElement {
+  // Die Schattenfläche ist breiter als die Figur, weil die Scherung sie
+  // seitlich hinauszieht.
+  //
+  // `bake` setzt den Ursprung in die MITTE der Flaeche. Gezeichnet wird so,
+  // dass der FUSS der Figur genau dort liegt: dann laesst sich der Riss ohne
+  // weiteren Versatz an den Standpunkt setzen. Der erste Anlauf verschob
+  // zusaetzlich beim Zeichnen UND beim Setzen - der Schatten lag doppelt
+  // daneben und war kaum zu sehen.
+  const B = Math.ceil(breite * 2.4), H = Math.ceil(hoehe * 1.4);
+  return bake(`riss:${schluessel}:${Math.round(breite)}x${Math.round(hoehe)}`, B, H, (g) => {
+    for (const [wachs, deckung] of [[1.0, 0.30], [1.07, 0.18], [1.15, 0.12]]) {
+      g.save();
+      // Stauchen: von oben gesehen liegt ein Schatten flach.
+      g.scale(wachs, 0.42 * wachs);
+      // Scheren: je hoeher ein Punkt der Figur, desto weiter wandert er in
+      // Lichtrichtung. Genau das erzaehlt die Hoehe.
+      g.transform(1, 0, -LICHT.x * 1.25, 1, 0, 0);
+      const w = breite, h = hoehe;
+      g.globalAlpha = deckung;
+      // Erst das Bild, dann mit Tinte fuellen: `source-in` behaelt nur, was
+      // im Bild deckend ist - die Silhouette.
+      const hilfe = document.createElement('canvas');
+      hilfe.width = Math.ceil(w); hilfe.height = Math.ceil(h);
+      const hg = hilfe.getContext('2d');
+      if (hg) {
+        hg.drawImage(bild, 0, 0, hilfe.width, hilfe.height);
+        hg.globalCompositeOperation = 'source-in';
+        hg.fillStyle = C.ink;
+        hg.fillRect(0, 0, hilfe.width, hilfe.height);
+        g.drawImage(hilfe, -w / 2, -h);
+      }
+      g.restore();
+    }
+  });
 }

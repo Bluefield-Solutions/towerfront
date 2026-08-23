@@ -63,6 +63,25 @@ function buildsWhilePaused(): boolean {
   return t.build(t.map.hint.x, t.map.hint.y, 'arrow');
 }
 
+/** Reagiert die Karte an einer Kleinigkeit - und nur dort?
+ *
+ *  `map.rough` sind die Kreise, in denen nicht gebaut werden darf: Fels,
+ *  Dickicht, Wasser. Sie werden nicht gezeichnet, weil sie im Kartenfoto
+ *  schon stehen - sie sind die unsichtbare Entsprechung dessen, was man dort
+ *  sieht. Genau sie reagieren seit v134 auf Beruehrung. */
+function beruehrbareKleinigkeiten(): boolean {
+  const s = new GameState();
+  s.reset();
+  const gr = s.map.rough[0];
+  if (!gr) return false;
+  s.particles.length = 0;
+  if (!s.beruehren(gr.x, gr.y) || !s.particles.length) return false;
+  // Und daneben nicht: sonst staubt jeder Tipp im Feld.
+  const fern = s.map.rough.reduce((m, g) => Math.max(m, g.x + g.r), 0) + 400;
+  s.particles.length = 0;
+  return s.beruehren(fern, 40) === false && s.particles.length === 0;
+}
+
 const CRITERIA: Criterion[] = [
   // --- Fokus und Klarheit (Defender's Quest)
   {
@@ -292,8 +311,14 @@ const CRITERIA: Criterion[] = [
   {
     id: 'P8', area: 'Politur', from: 'Kingdom Rush (antippbare Kleinigkeiten in der Karte)',
     text: 'Kleinigkeiten in der Karte, die auf Beruehrung reagieren.',
-    measured: false, weight: 1,
-    check: () => false,
+    // GEMESSEN, seit v134 - vorher stand hier `measured: false` und
+    // `check: () => false`, also eine Fehlanzeige von Hand.
+    //
+    // Geprueft wird nicht "gibt es die Funktion", sondern "reagiert die Karte
+    // an einer Kleinigkeit UND nicht daneben". Ein Kriterium, das nur die
+    // Anwesenheit einer Methode feststellt, waere wieder eine Behauptung.
+    measured: true, weight: 1,
+    check: beruehrbareKleinigkeiten,
     gap: 'Deko-Elemente, die bei Beruehrung reagieren - Voegel, Fackeln, Steine.',
   },
   {

@@ -764,6 +764,25 @@ const PROBEN = [
     tor: 'einbettungstor',
   },
   {
+    // Der eigentliche Punkt an D14: die Zierde darf den SPIELWUERFEL nicht
+    // bewegen. Zieht sie aus `rng`, laeuft dieselbe Partie je nach Anzahl der
+    // Buschtipper verschieden - und niemand kaeme darauf, dort zu suchen.
+    name: 'Die Zierde greift in den Spielwuerfel',
+    datei: 'src/game/state.ts',
+    regel: /        const a = this\.zierRng\.next\(\) \* Math\.PI \* 2;/,
+    ersatz: '        const a = this.rng.next() * Math.PI * 2;',
+    tor: 'smoke',
+  },
+  {
+    // Und die Gegenrichtung: eine Zierde, die ueberall reagiert, ist keine
+    // Kleinigkeit in der Karte, sondern Staub auf jedem Tipp.
+    name: 'Die Zierde reagiert ueberall',
+    suche: 'if (Math.hypot(gr.x - x, gr.y - y) > gr.r * 1.1) continue;',
+    datei: 'src/game/state.ts',
+    ersatz: 'if (false) continue;',
+    tor: 'smoke',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

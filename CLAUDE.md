@@ -185,11 +185,11 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v133. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v134. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
-Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 29 von 30,
-gewichtet 99 %.
+Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
+gewichtet 100 %.
 
 Die Zahl hinter „Stand" muss zu `VERSION` in `src/data/config.ts` passen —
 `npm run doku` vergleicht beide und schlägt ab sechs Versionen Rückstand an.
@@ -204,9 +204,11 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   nicht mitgewachsen ist: ihr Bild füllt seine Kachel nur zu 0,22 statt 0,35
   Bildschirmpunkten je Weltpunkt, sie bleibt deshalb bei 17 px. Das ist am
   Bild zu beheben, nicht am Maßstab — und dafür braucht es `art/roh/`.
-- Kein ●● im Genre-Abgleich mehr offen. Von 30 Kriterien sind 29 erfüllt;
-  das letzte (P8, antippbare Kleinigkeiten in der Karte) ist von Hand
-  beurteilt und steht als D14.
+- **Der Genre-Abgleich ist vollständig**: 30 von 30, gewichtet 100 %. Das
+  letzte offene Kriterium P8 ist in v134 nicht nur umgesetzt, sondern von
+  „behauptet" auf **gemessen** gewandert — geprüft wird, ob die Karte an einer
+  Kleinigkeit reagiert UND daneben nicht. Von Hand beurteilt sind noch sechs
+  Kriterien mit 15 von 73 Gewichtspunkten.
 - D26 ist **geschlossen, aber nicht durch eine Änderung**: der vermutete
   Hebel gab es nicht. Ein Ablaufmitschnitt zeigt **kein einziges
   Bild-Dekodieren** unter den teuren Posten; 16,8 von 22,9 s liegen auf

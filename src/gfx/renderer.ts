@@ -15,7 +15,7 @@ import { drawMenu } from './menurender';
 import type { Menu } from '../game/menu';
 import { backgroundVersion, getBackground } from './backgrounds';
 import { artBreite, getTowerArt, towerArtScale, towerArtVersion } from './towerart';
-import { getObjectArtEingebettet, getObjectArtStufe } from './objectart';
+import { getObjectArtEingebettet, getObjectArtStufeEingebettet } from './objectart';
 import { enemyArtWidth, enemySichtRadius, getEnemyArt } from './enemyart';
 import {
   drawSprite, getEnemySprite, getSchattenriss, getShadow, getTowerBase, getTowerWeapon,
@@ -1372,8 +1372,9 @@ export class Renderer {
         //    er sich mit, schwebt der Turm; bleibt er, hebt sich der Turm.
         const atem = Math.sin(s.time * 1.9 + (t.x + t.y * 1.7) * 0.03) * 2;
 
-        const waffe = getObjectArtStufe(`waffe_${t.def}`, t.level);
-        const sockel = getObjectArtStufe(`sockel_${t.def}`, t.level);
+        // Eingebettet wie der Turm daneben - siehe getObjectArtStufeEingebettet.
+        const waffe = getObjectArtStufeEingebettet(`waffe_${t.def}`, t.level, s.map.id);
+        const sockel = getObjectArtStufeEingebettet(`sockel_${t.def}`, t.level, s.map.id);
         if (waffe && sockel) {
           // Die Groesse kommt aus dem SOCKELBILD, nicht aus dem Ganzbild.
           //

@@ -30,6 +30,23 @@ export function getObjectArtStufe(basis: string, level: number): HTMLImageElemen
   return getObjectArt(basis);
 }
 
+/** Dasselbe, aber in die Karte eingebettet.
+ *
+ *  Sockel und Waffen waren nach v132 die letzten Bilder ohne Kartenkenntnis -
+ *  und zwar an einer besonders auffaelligen Stelle: sie stehen NEBEN einem
+ *  Turm, der laengst eingebettet ist. Ein Sockel mit eigenem Licht unter
+ *  einem Turm mit dem Licht der Karte faellt mehr auf als ein einzelnes Bild
+ *  irgendwo im Feld. */
+export function getObjectArtStufeEingebettet(
+  basis: string, level: number, mapId: string,
+): HTMLCanvasElement | HTMLImageElement | null {
+  for (let l = Math.max(1, Math.round(level)); l >= 1; l--) {
+    const id = `${basis}_${l}` as keyof typeof OBJECT_ART;
+    if (OBJECT_ART[id]) return getObjectArtEingebettet(id, mapId);
+  }
+  return getObjectArtEingebettet(basis as keyof typeof OBJECT_ART, mapId);
+}
+
 /** Dasselbe Bild, aber in die Karte eingebettet.
  *
  *  Bis v125 gab es das nicht: `getObjectArt` lieferte das rohe Bild, und der

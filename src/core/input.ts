@@ -239,6 +239,15 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
     if (s.phase !== 'playing') return;
     const c = at ?? toWorld(ev);
 
+    // Kleinigkeiten in der Karte reagieren - und VERBRAUCHEN den Tipp nicht.
+    //
+    // Wer einen Busch antippt, wollte vielleicht daneben bauen; seit v125
+    // rastet ein Tipp auf die naechste erlaubte Stelle ein. Beides geschieht.
+    // Eine Zierde, die einen Bauversuch schluckt, ist keine Zierde, sondern
+    // ein Hindernis - und genau das war der Grund, warum es sie bis v134
+    // nicht gab.
+    s.beruehren(c.x, c.y);
+
     // Eine angewaehlte Faehigkeit hat Vorrang: der Tipp zielt, er baut nicht.
     if (s.aiming) {
       const rect = canvas.getBoundingClientRect();

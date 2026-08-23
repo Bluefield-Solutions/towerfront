@@ -1520,6 +1520,46 @@ step('Einrasten', () => {
   }
 });
 
+// --- Kleinigkeiten in der Karte (D14).
+//
+// Zwei Fragen, und die zweite ist die wichtigere.
+step('Beruehrbare Kleinigkeiten', () => {
+  const probe = new GameState();
+  probe.reset();
+  const gr = probe.map.rough[0];
+  if (!gr) throw new Error('Die erste Karte hat kein unwegsames Gelaende - die Probe misst nichts.');
+
+  // 1. Reagiert sie ueberhaupt? Und reagiert sie NUR dort?
+  probe.particles.length = 0;
+  if (probe.beruehren(gr.x, gr.y) !== true) {
+    throw new Error('Ein Tipp mitten ins Dickicht loest nichts aus.');
+  }
+  if (!probe.particles.length) {
+    throw new Error('Die Beruehrung meldet Erfolg, erzeugt aber kein einziges Teilchen.');
+  }
+  // Weit weg von allem Unwegsamen: dort darf nichts passieren, sonst wuerde
+  // jeder Tipp im Feld stauben.
+  const fern = { x: probe.map.rough.reduce((m, g) => Math.max(m, g.x + g.r), 0) + 400, y: 40 };
+  probe.particles.length = 0;
+  if (probe.beruehren(fern.x, fern.y) !== false || probe.particles.length) {
+    throw new Error('Auch auf freiem Feld staubt es - dann reagiert nicht die Kleinigkeit, '
+      + 'sondern alles.');
+  }
+
+  // 2. Bewegt sie den SPIELWUERFEL? Sie darf nicht (Regel 4).
+  //
+  // Das ist der eigentliche Punkt dieser Probe. Die vorhandenen Teilchenwerfer
+  // ziehen aus `rng`; haette die Zierde das auch getan, liefe dieselbe Partie
+  // je nach Anzahl der Buschtipper verschieden - und niemand kaeme darauf,
+  // dort zu suchen.
+  const vorher = probe.rng.state;
+  for (let i = 0; i < 20; i++) probe.beruehren(gr.x, gr.y);
+  if (probe.rng.state !== vorher) {
+    throw new Error('Das Antippen einer Kleinigkeit bewegt den Spielwuerfel - '
+      + 'damit haengt der Wellenverlauf daran, wie oft jemand ins Dickicht tippt.');
+  }
+});
+
 if (problems.length) {
   console.error('RAUCHTEST: nicht bestanden');
   for (const p of problems) console.error('  - ' + p);

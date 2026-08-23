@@ -177,6 +177,11 @@ const FIGUREN = [
   // die letzte Gruppe, die ihr eigenes Licht behielt. Volle Staerke: es ist
   // klein, ein halber Anstrich waere dort kaum zu sehen.
   ['Tor der Leere', 'src/gfx/assets/objects.ts', 'gate', 1],
+  // Und seit v134 die letzten beiden: Sockel und Waffe des Bogenturms. Sie
+  // stehen NEBEN einem laengst eingebetteten Turm - ein eigenes Licht faellt
+  // dort mehr auf als irgendwo sonst im Feld.
+  ['Sockel Bogenturm', 'src/gfx/assets/objects.ts', 'sockel_arrow', 1],
+  ['Waffe Bogenturm', 'src/gfx/assets/objects.ts', 'waffe_arrow', 1],
 ];
 
 // --- Eichen: den Raum ansehen, statt an einer Zahl zu drehen (Regel 9).

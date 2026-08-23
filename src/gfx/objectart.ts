@@ -1,4 +1,5 @@
 import { OBJECT_ART } from './assets/objects';
+import { einbetten, einbettungSchluessel } from './einbettung';
 
 /** Einzelobjekte: das Tor der Leere, spaeter auch der Herzkristall.
  *
@@ -27,6 +28,50 @@ export function getObjectArtStufe(basis: string, level: number): HTMLImageElemen
     if (treffer) return treffer;
   }
   return getObjectArt(basis);
+}
+
+/** Dasselbe Bild, aber in die Karte eingebettet.
+ *
+ *  Bis v125 gab es das nicht: `getObjectArt` lieferte das rohe Bild, und der
+ *  Renderer stempelte es auf die Karte. Tuerme und Gegner liefen laengst durch
+ *  die Einbettung - Sonne der Karte, Bodenverschattung, Rueckwurf -, der
+ *  Zielturm, die Tore und die Sockel nicht.
+ *
+ *  Das war der mechanische Grund, warum ausgerechnet die Kristallfestung wie
+ *  aufgeklebt aussah: sie ist die groesste Figur im Bild und die einzige, die
+ *  ihr eigenes Licht und ihre eigene Farbwelt behielt. Gemessen lag sie auf
+ *  dem Spiralhain 0,41 vom Boden entfernt, auf der Frostspalte 0,18 - sie ist
+ *  fuer eine der drei Karten gebaut.
+ *
+ *  `staerke` ist fuer die Festung kleiner: sie wird dreimal so gross
+ *  gezeichnet wie ein Turm, und derselbe Anstrich waere auf dieser Flaeche
+ *  eine Waschung statt einer Beleuchtung. */
+const eingebettet = new Map<string, HTMLCanvasElement>();
+
+export function getObjectArtEingebettet(
+  id: keyof typeof OBJECT_ART, mapId: string, staerke = 1,
+): HTMLCanvasElement | HTMLImageElement | null {
+  const img = getObjectArt(id);
+  if (!img) return null;
+  if (typeof document === 'undefined') return img;
+
+  const k = `${String(id)}|${einbettungSchluessel(mapId)}|${staerke}`;
+  const fertig = eingebettet.get(k);
+  if (fertig) return fertig;
+
+  const b = img.width, h = img.height;
+  if (!b || !h) return img;
+  const cv = document.createElement('canvas');
+  cv.width = b; cv.height = h;
+  const g = cv.getContext('2d');
+  if (!g) return img;
+  g.drawImage(img, 0, 0);
+  // Die Einbettung rechnet in einem Quadrat; das Bild ist hoeher als breit.
+  // Uebergeben wird die HOEHE, weil alle senkrechten Verlaeufe daran haengen
+  // - Sonne von oben, Verschattung am Fuss.
+  einbetten(g, Math.max(b, h), mapId, staerke);
+  eingebettet.set(k, cv);
+  return cv;
 }
 
 export function getObjectArt(id: keyof typeof OBJECT_ART): HTMLImageElement | null {

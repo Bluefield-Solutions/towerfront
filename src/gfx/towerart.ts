@@ -2,6 +2,7 @@ import { TOWER_ART } from './assets/towers';
 import { accentFor, TOWERS, type BranchIndex, type TowerId } from '../data/towers';
 import { hexA } from './glow';
 import { mapById } from '../data/maps';
+import { einbetten, einbettungSchluessel } from './einbettung';
 
 /** Gerenderte Turmbilder.
  *
@@ -165,7 +166,10 @@ export function getTowerArt(
   const k = key(id, branch, level);
   const accent = accentFor(TOWERS[id], branch);
   const rim = mapById(mapId).palette.rim;
-  const cacheKey = `${k}|${accent}|${rim}`;
+  // Der Schluessel traegt die Einbettung mit: solange das Untergrundbild
+  // nicht geladen ist, gibt es kein Farbklima, und ein Bild ohne Klima
+  // duerfte nicht dauerhaft haengenbleiben.
+  const cacheKey = `${k}|${accent}|${rim}|${einbettungSchluessel(mapId)}`;
   const hit = tinted.get(cacheKey);
   if (hit) return hit;
 
@@ -195,7 +199,6 @@ export function getTowerArt(
   // Aufgetragen wird von oben links, wo die Sonne steht, und nach unten hin
   // abnehmend; unten uebernimmt stattdessen die Verschattung, weil dort das
   // Licht vom Boden geschluckt wird.
-  const sonne = mapById(mapId).palette.sonne;
   const stil = einfaerbung(id);
   bg.globalCompositeOperation = 'source-atop';
   bg.fillStyle = hexA(accent, stil.farbe);
@@ -208,39 +211,15 @@ export function getTowerArt(
     bg.fillStyle = lift;
     bg.fillRect(0, 0, size, size);
   }
-  {
-    const licht = bg.createLinearGradient(0, 0, size * 0.55, size);
-    licht.addColorStop(0, hexA(sonne, 0.30));
-    licht.addColorStop(0.45, hexA(sonne, 0.14));
-    licht.addColorStop(1, hexA(sonne, 0.02));
-    bg.fillStyle = licht;
-    bg.fillRect(0, 0, size, size);
 
-    // Bodennaehe verschatten: dort faellt weniger Licht ein.
-    const dunkel = bg.createLinearGradient(0, size * 0.55, 0, size);
-    dunkel.addColorStop(0, 'rgba(24,20,14,0)');
-    dunkel.addColorStop(1, 'rgba(24,20,14,0.34)');
-    bg.fillStyle = dunkel;
-    bg.fillRect(0, 0, size, size);
-
-    // Bodenlicht: der helle Sand wirft Sonne zurueck.
-    //
-    // Ich hatte zunaechst vermutet, die Figuren wirkten wegen harter Kanten
-    // aufgeklebt. Gemessen stimmt das nicht: kein einziger harter Kantenpunkt,
-    // dafuer 2.684 weiche Uebergaenge - die Silhouette ist laengst weich.
-    //
-    // Was fehlt, ist das Licht, das der Boden zurueckwirft. In einer echten
-    // Szene ist die Unterseite eines Gegenstands nicht nur dunkler, sondern
-    // auch waermer, weil der beschienene Sand darunter Sonne hinaufwirft. Der
-    // Saum sitzt deshalb ZWISCHEN Verschattung und Standflaeche: ganz unten
-    // dunkel, knapp darueber ein warmer Schimmer.
-    const rueckwurf = bg.createLinearGradient(0, size * 0.72, 0, size * 0.94);
-    rueckwurf.addColorStop(0, hexA(sonne, 0));
-    rueckwurf.addColorStop(0.55, hexA(sonne, 0.20));
-    rueckwurf.addColorStop(1, hexA(sonne, 0));
-    bg.fillStyle = rueckwurf;
-    bg.fillRect(0, 0, size, size);
-  }
+  // --- Sonne, Verschattung, Rueckwurf und Farbklima der Karte.
+  //
+  // Der Block stand bis v125 hier ausgeschrieben - und NUR hier. Der
+  // Zielturm, die Tore und die Sockel liefen daran vorbei, weil sie ueber
+  // `getObjectArt` kommen. Jetzt steht er in `einbettung.ts`, und beide Wege
+  // gehen hindurch: was zweimal dasteht, veraltet einmal (Regel 15) - was nur
+  // einmal dasteht, gilt eben auch nur einmal.
+  einbetten(bg, size, mapId);
 
   bg.globalCompositeOperation = 'source-over';
   g.drawImage(body, 0, 0);

@@ -45,12 +45,13 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 ## Befehle
 
 ```
-npm run gate        siebzehn Prüfungen, ~90 s. Muss vor jedem Commit grün sein.
+npm run gate        achtzehn Prüfungen, ~90 s. Muss vor jedem Commit grün sein.
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
 npm run bilder      alle 13 Aufnahmen (echte PNG ohne Browser)
 npm run bildtor     der Querschnitt, den die Torkette prüft
 npm run pack-art    Bildvorrat aus art/roh/ neu einbacken
 npm run eichen      einen Wert durchprobieren, alle Kennzahlen nebeneinander
+npm run einbettung  misst, wie sehr eine Figur zur Karte gehört (--eichen: Raum)
 npm run doku        prüft die Dokumente gegen die Wirklichkeit
 npm run beruehrung  prüft, ob alles mit dem Daumen zu treffen ist
 npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen
@@ -66,7 +67,7 @@ npm run kartenwechsel  was ein Kartenaufbau an Bildpunkten kostet
 ```
 
 Die Torkette: `tsc` → `guards` → `doku` → `art` → `determinism` → `sim` → `bench` →
-`bench-draw` → `kartenwechsel` → `grafiktor` → `lesbarkeit` → `beruehrung` → `bildtor` → `smoke` →
+`bench-draw` → `kartenwechsel` → `grafiktor` → `einbettung` → `lesbarkeit` → `beruehrung` → `bildtor` → `smoke` →
 `build` → `autarkie` → `browser` → `bericht`.
 
 `npm run browser` lädt die **gebaute** Datei in Chromium (iPhone quer) und ist
@@ -181,7 +182,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v125. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
+Stand: v126. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Laubschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 29 von 30,

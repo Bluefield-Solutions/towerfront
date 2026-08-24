@@ -41,6 +41,13 @@ export interface Progress {
    *  Betreten weg sein. Wer eine Karte dreimal verliert, will nicht dreimal
    *  denselben Satz lesen. */
   seenMaps?: string[];
+  /** Gegnerarten, deren Konter-Satz schon einmal dastand.
+   *
+   *  Dauerhaft und nicht je Partie: wer den Gleiter kennt, will nicht bei
+   *  jedem neuen Anlauf wieder lesen, dass der Moerser ihn nicht erreicht.
+   *  Aus demselben Grund gilt es ueber Karten hinweg - der Gegner ist
+   *  derselbe, gleich auf welcher Karte man ihm zuerst begegnet. */
+  seenEnemies?: string[];
 }
 
 interface Store { settings: Settings; best: BestMap; progress: Progress; }
@@ -159,4 +166,25 @@ export function ersterBesuch(mapId: string): boolean {
   liste.push(mapId);
   write(store);
   return true;
+}
+
+/** Ist diese Gegnerart dem Spieler zum ersten Mal angesagt worden? (TF-034)
+ *
+ *  Wie `ersterBesuch` vermerkt es gleich beim Fragen - und aus demselben
+ *  Grund: wer es hinterher setzen muesste, vergisst es genau einmal, und
+ *  dann steht der Satz zweimal da. */
+export function ersterGegner(id: string): boolean {
+  const liste = store.progress.seenEnemies ?? (store.progress.seenEnemies = []);
+  if (liste.includes(id)) return false;
+  liste.push(id);
+  write(store);
+  return true;
+}
+
+/** Alle Gegner wieder unbekannt machen - fuer die Tore und fuer den
+ *  Schalter "Einfuehrung neu". Ohne diesen Weg liesse sich der Satz nach dem
+ *  ersten Lauf nie wieder pruefen. */
+export function gegnerVergessen(): void {
+  store.progress.seenEnemies = [];
+  write(store);
 }

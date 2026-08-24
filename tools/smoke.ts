@@ -83,7 +83,9 @@ const { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, statsFor } = await import('../s
 
 const { TUTORIAL } = await import('../src/game/tutorial');
 const { auswertung } = await import('../src/game/auswertung');
-const { getBest, getStars } = await import('../src/core/storage');
+const { getBest, getStars, gegnerVergessen, saveSettings } = await import('../src/core/storage');
+const { konterSatz } = await import('../src/data/konter');
+type EnemyId = Parameters<typeof konterSatz>[0];
 const { candidateSpots } = await import('./spots');
 const { WORLD_W, WORLD_H } = await import('../src/data/config');
 
@@ -259,6 +261,64 @@ step('Auswertung', () => {
 // durch. Erreicht wurde damit Welle 0 - und genau das muss im Bestwert
 // stehen. Ein anderer Grad als oben, damit die Ablage einen eigenen
 // Schluessel hat und der Bestwert bei null anfaengt.
+// Der Konter-Satz erscheint - einmal, rechtzeitig und dann nie wieder (TF-034).
+//
+// Geprueft wird an der BLASE im DOM, nicht an `konterSatz`. Ob die Ableitung
+// rechnet, prueft `npm run konter`; hier geht es darum, ob der Spieler den
+// Satz auch zu sehen bekommt. Genau diese Trennung fehlte dem alten Zustand:
+// die Konter standen in den Wellensaetzen, und niemand hat je gemessen, ob
+// sie vollstaendig waren.
+step('Konter-Satz erscheint einmal und rechtzeitig', () => {
+  const blase = win.document.getElementById('coach')!;
+  const text = win.document.getElementById('coach-text')!;
+  const vorher = state.snapshot();
+  gegnerVergessen();
+  // Ohne die grosse Einfuehrung: die hat in Welle 1 bis 3 Vorrang und wuerde
+  // hier nur verdecken, was gemessen werden soll.
+  saveSettings({ tutorial: false });
+  state.reset(99, 'normal', 'spiralhain');
+  ui.sync();
+
+  const plan = state.waves;
+  const gezeigt = new Map<string, number>();
+  for (let i = 0; i < plan.length; i++) {
+    state.waveIndex = i;
+    state.waveActive = false;
+    ui.sync();
+    if (!blase.hidden && text.dataset.step?.startsWith('konter:')) {
+      const id = text.dataset.step.slice('konter:'.length);
+      gezeigt.set(id, (gezeigt.get(id) ?? 0) + 1);
+      if (text.textContent !== konterSatz(id as EnemyId)) {
+        problems.push(`Konter W${i + 1}: in der Blase steht etwas anderes als der `
+          + 'abgeleitete Satz.');
+      }
+      // Und er verschwindet, sobald die Welle laeuft: danach ist er kein Rat
+      // mehr, sondern ein Vorwurf.
+      state.waveActive = true;
+      ui.sync();
+      if (!blase.hidden) {
+        problems.push(`Konter W${i + 1}: die Blase steht noch, obwohl die Welle laeuft.`);
+      }
+      state.waveActive = false;
+    }
+  }
+  // Jede Art hoechstens einmal.
+  for (const [id, n] of gezeigt) {
+    if (n > 1) problems.push(`Konter: "${id}" wurde ${n}-mal angesagt, einmal ist genug.`);
+  }
+  // Und ueberhaupt einmal (Regel 5): kaeme nie einer, waere der ganze
+  // Schritt eine gruene Zeile ohne Gegenstand.
+  if (!gezeigt.size) {
+    problems.push('Konter: in 15 Wellen wurde kein einziger Satz angesagt - dann prueft '
+      + 'dieser Schritt nichts.');
+  }
+  console.log(`  Konter-Saetze: ${gezeigt.size} Gegnerart(en) in 15 Wellen angesagt `
+    + `(${[...gezeigt.keys()].join(', ')}).`);
+  state.restore(vorher);
+  saveSettings({ tutorial: true });
+  ui.sync();
+});
+
 // Die Wellenvorschau zeigt ALLE Gegnerarten der naechsten Welle (TF-023).
 //
 // Der Audit-Befund lautete "Vorschau nennt nur die erste Gruppe". Das war

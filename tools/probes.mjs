@@ -142,15 +142,20 @@ const PROBEN = [
     // überlebt jede weitere Torrunde.
     name: 'Doku zählt die Tore falsch',
     datei: 'CLAUDE.md',
-    // Die Auswahl muss die GANZE Wortliste des Waechters treffen. Bis v144
-    // endete sie bei "zwanzig" - als die Kette auf einundzwanzig wuchs, traf
-    // die Regel nur noch das Ende des Wortes und schrieb "einunddrei
-    // Prüfungen". Der Waechter sucht mit Wortgrenze und sah nichts: der
-    // Eingriff kam an und blieb doch unsichtbar.
-    regel: /(einund|zweiund|dreiund|vierund|fünfund)?(drei|vier|fünf|sechs|sieben|acht|neun|zehn|elf|zwölf|dreizehn|vierzehn|fünfzehn|sechzehn|siebzehn|achtzehn|neunzehn|zwanzig) Prüfungen/,
+    // KEINE Wortliste mehr. Sie ist zweimal veraltet: bis v144 endete sie bei
+    // "zwanzig" und traf "einundzwanzig" nur zur Haelfte ("einunddrei
+    // Prüfungen" - der Waechter sucht mit Wortgrenze und sah nichts), bis
+    // v152 endete sie bei "fünfund" und traf "sechsundzwanzig" gar nicht
+    // mehr. Zweimal dieselbe Ursache: eine Probe, die aufzaehlt, was sie
+    // pruefen soll, veraltet mit ihrem Gegenstand.
+    //
+    // Jetzt wird nicht mehr aufgezaehlt, sondern die STELLE genommen: was
+    // in dieser Zeile vor "Prüfungen" steht, ist die Zahl - gleich wie sie
+    // heisst. Das ueberlebt jede weitere Torrunde.
+    regel: /(npm run gate\s+)\S+( Prüfungen)/,
     // "drei" ist nie richtig, solange die Kette mehr als drei Schritte hat -
     // und sie hat seit v11 nie weniger gehabt.
-    ersatz: 'drei Prüfungen',
+    ersatz: '$1drei$2',
     tor: 'doku',
   },
   {
@@ -999,7 +1004,12 @@ const PROBEN = [
   {
     name: 'Ein Tor fehlt in der Tortabelle',
     datei: 'docs/Towerfront-KONZEPT-und-PIPELINE.md',
-    regel: /\| 7 \| Geschosse \| `npm run geschossetor` \|[^\n]*\n/,
+    // Nach dem BEFEHL gesucht, nicht nach der Zeilennummer: die Tabelle wird
+    // bei jedem neuen Tor durchnumeriert, und diese Probe stand auf "7".
+    // Als das Konter-Tor davor einsortiert wurde, zeigte sie ins Leere -
+    // dieselbe Ursache wie bei der Probe "Zwei Tore in der Tabelle
+    // vertauscht", die genau deshalb schon einmal umgestellt wurde.
+    regel: /\| \d+ \| Geschosse \| `npm run geschossetor` \|[^\n]*\n/,
     ersatz: '',
     tor: 'doku',
   },
@@ -1306,6 +1316,71 @@ const PROBEN = [
     ersatz: "const browser = await (await import('playwright')).chromium.launch("
       + `{ executablePath: '/${'opt'}/pw-browsers/chromium' });`,
     tor: 'guards',
+  },
+  {
+    // TF-034: der Konter-Satz kommt gar nicht mehr an. Der Rauchtest misst
+    // die Blase im DOM - ohne diese Zeile bleibt sie leer.
+    name: 'Konter-Satz erscheint nicht',
+    datei: 'src/ui/ui.ts',
+    regel: /    const frisch = this\.neuerKonter\(\);\n    if \(frisch\) \{[^\n]*\n/,
+    ersatz: '    const frisch = null;\n',
+    tor: 'smoke',
+  },
+  {
+    // Und die Gegenrichtung: er bleibt stehen, wenn die Welle laeuft. Dann
+    // ist er kein Rat mehr, sondern ein Vorwurf - und er verdeckt das Feld.
+    name: 'Konter-Satz bleibt im Kampf stehen',
+    datei: 'src/ui/ui.ts',
+    regel: /        done: \(g2\) => g2\.waveActive \|\| !g2\.canStartWave,/,
+    ersatz: '        done: () => false,',
+    tor: 'smoke',
+  },
+  {
+    // Regel 13 am Tor selbst: wenn JEDE Gegnerart etwas bekommt, hebt der
+    // Satz nichts mehr hervor. Eine zu weiche Grenze sieht aus wie
+    // Vollstaendigkeit.
+    name: 'Jede Gegnerart bekommt einen Konter',
+    datei: 'src/data/konter.ts',
+    regel: /  if \(d\.speed >= mitte \* 1\.5\) \{/,
+    ersatz: '  if (d.speed >= 0) {',
+    tor: 'kontertor',
+  },
+  {
+    // Regel 15 am Tor: eine abgeleitete Tatsache kehrt in einen
+    // handgeschriebenen Wellensatz zurueck. Genau der Zustand vor v152.
+    name: 'Wellensatz erzaehlt den Konter noch einmal',
+    datei: 'src/data/waves.ts',
+    regel: /note: 'Erster Koloss'/,
+    ersatz: "note: 'Erster Koloss — Panzerung 3'",
+    tor: 'kontertor',
+  },
+  {
+    // Die Einweisungsblase waechst - aber nicht am Text, sondern an der
+    // Stilvorlage.
+    //
+    // Die erste Fassung dieser Probe schrieb einen sehr langen Satz und
+    // bewies NICHTS: `kontertor` deckelt bei 190 Zeichen, und so weit reicht
+    // die Hoehengrenze gar nicht. Nachgemessen kostet ein 451-Zeichen-Satz
+    // 71 Punkte, zusammen mit der Vorschau 120 von 130 - knapp darunter, und
+    // ein Zustand, den ein anderes Tor ohnehin verbietet. Eine Probe auf
+    // einen unerreichbaren Zustand ist keine.
+    //
+    // Erreichbar ist der Schriftgrad: er steht in derselben Datei wie alles
+    // andere und aendert die Hoehe sofort. Das ist die Bruchstelle, die
+    // dieses Tor wirklich bewacht.
+    //
+    // Und die zweite Fassung bewies wieder nichts, aus einem lehrreichen
+    // Grund: `.coach-text` steht ZWEIMAL in der Stilvorlage - mit 12,5 px
+    // allgemein und mit 11,5 px im Kompaktblock unter
+    // `@media (max-height: 480px)`. Auf dem Zielgeraet gilt der zweite, und
+    // die Probe hatte den ersten angefasst. Regel 15, hier einmal als
+    // Falle fuer die Probe statt fuer den Code: gegriffen werden muss die
+    // Regel, die auf dem gemessenen Geraet WIRKT.
+    name: 'Einweisungsblase waechst ueber das Feld',
+    datei: 'src/style.css',
+    regel: /  \.coach-text \{ font-size: 11\.5px; \}/,
+    ersatz: '  .coach-text { font-size: 23px; }',
+    tor: 'streifentor',
   },
   {
     name: 'Ein Schwierigkeitsgrad wie der andere',

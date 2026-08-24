@@ -1,4 +1,9 @@
-/** Wie hoch wird die Wellenvorschau - in JEDER Welle? (TF-023)
+/** Wie hoch werden die Baender ueber dem Spielfeld? (TF-023, TF-034)
+ *
+ *  Zwei Baender legen sich ueber das Feld: die Wellenvorschau unten und die
+ *  Einweisungsblase oben. Beide wachsen mit ihrem Text, beide sind auf dem
+ *  Telefon teuer - nach Kopfzeile und Leiste bleiben rund 230 von 390
+ *  Punkten fuer das Brett.
  *
  *  **Warum es dieses Werkzeug gibt.** Das Browsertor misst den Streifen an
  *  der Welle, die es sieht: der ersten. Die ist die harmloseste - eine
@@ -26,6 +31,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
 import { browserStarten } from './chromium.mjs';
+import { konterSatz, mitKonter } from '../src/data/konter';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const TOR = process.argv.includes('--tor');
@@ -123,6 +129,35 @@ await seite.setContent(`<style>${css}</style>`
   + '<style>html, body { height: auto !important; overflow: visible !important; }</style>'
   + `<body style="background:#20242e;margin:0;padding:0">${bloecke}</body>`);
 await seite.waitForTimeout(300);
+// --- Und dasselbe fuer die Einweisungsblase (TF-034).
+//
+// Sie ist ein zweites Band mit demselben Risiko, und der laengste Satz ist
+// derjenige, der es sprengt. Gemessen wird deshalb der laengste, den die
+// Ableitung ueberhaupt hergibt - nicht ein beliebiger.
+//
+// Gemessen wird nicht der laengste Satz von heute, sondern der laengste, den
+// `kontertor` ueberhaupt durchlaesst: 190 Zeichen. Sonst haengt die Zahl an
+// einer Formulierung statt an einer Grenze - und der Lauf saehe gut aus,
+// solange gerade niemand ausfuehrlich geschrieben hat.
+const MAX_ZEICHEN = 190;
+const echte = mitKonter().map((id) => konterSatz(id)!).sort((a, b) => b.length - a.length);
+const saetze = [echte[0].padEnd(MAX_ZEICHEN, ' und so weiter'), ...echte];
+//
+// Die Blasen bleiben stehen, statt gemessen und weggeraeumt zu werden: das
+// Bild ist der zweite Teil der Pruefung (Regel 8). Eine Zahl sagt, dass sie
+// passt - ob der Satz auch LESBAR ist, sagt nur der Blick.
+const blase = await seite.evaluate(([css2, ...alle]) => {
+  const halter = document.createElement('div');
+  halter.style.cssText = 'position:relative;width:844px';
+  halter.innerHTML = `<style>${css2}</style>`
+    + alle.map((satz) => '<div class="coach" style="position:static;margin-top:6px">'
+      + `<p class="coach-text">${satz}</p>`
+      + '<button class="coach-skip">Überspringen</button></div>').join('');
+  document.body.appendChild(halter);
+  return Math.round(
+    (halter.querySelector('.coach') as HTMLElement).getBoundingClientRect().height);
+}, [css, ...saetze] as string[]);
+
 const hoehen = await seite.evaluate(() => [...document.querySelectorAll('.next')]
   .map((e) => ({
     nr: Number((e as HTMLElement).dataset.nr),
@@ -148,6 +183,32 @@ for (const h of hoehen) {
     fehler++;
   }
 }
+const hoechste0 = hoehen.reduce((a, b) => (b.h > a.h ? b : a)).h;
+// Nicht jedes Band fuer sich, sondern BEIDE ZUSAMMEN - denn zwischen zwei
+// Wellen stehen sie gleichzeitig da. Eine Grenze je Band waere die Falle aus
+// Regel 2 in klein: zweimal knapp bestanden ist einmal deutlich zuviel.
+//
+// Ein Drittel des Schirms, und die Zahl ist keine Wahl: nach Kopfzeile und
+// Leiste bleiben auf dem Telefon rund 230 der 390 Punkte fuer das Brett
+// (so steht es im Kompaktblock von `src/style.css`). Nehmen die Baender ein
+// Drittel des ganzen Schirms, bleibt vom Brett gerade noch die Haelfte -
+// darunter laesst sich nicht mehr entscheiden, wohin ein Turm soll.
+const ZUSAMMEN = 1 / 3;
+const summeGrenze = SCHIRM_H * ZUSAMMEN;
+const summe = hoechste0 + blase;
+console.log(`\n  Einweisungsblase: ${blase} Punkte bei ${saetze[0].length} Zeichen `
+  + `(so lang, wie kontertor es zulaesst; der laengste echte Satz hat `
+  + `${echte[0].length}).`);
+console.log(`  Beide Baender zusammen: ${hoechste0} + ${blase} = ${summe} Punkte `
+  + `(${((summe / SCHIRM_H) * 100).toFixed(0)} % der Bildhoehe, Grenze `
+  + `${summeGrenze.toFixed(0)}).`);
+if (summe > summeGrenze) {
+  console.error(`  FEHLER: Wellenvorschau und Einweisungsblase nehmen zusammen ${summe} `
+    + `Punkte, erlaubt sind ${summeGrenze.toFixed(0)} (${(ZUSAMMEN * 100).toFixed(0)} % von `
+    + `${SCHIRM_H}). Vom Brett bliebe zu wenig uebrig, um zu entscheiden.`);
+  fehler++;
+}
+
 const hoechste = hoehen.reduce((a, b) => (b.h > a.h ? b : a));
 console.log(`\n  Hoechste: Welle ${hoechste.nr} mit ${hoechste.h} Punkten `
   + `(Grenze ${grenze.toFixed(0)}). Bild: bilder/wellenvorschau.png`);
@@ -155,5 +216,5 @@ console.log(`  Messstelle: ${BREITE} x ${SCHIRM_H} in Chromium (iPhone quer), `
   + 'src/style.css unveraendert - also mit `max-width: 58vw` und dem Kompaktblock '
   + 'unter `@media (max-height: 480px)`. Markup aus Ui.sync().');
 
-if (fehler) { console.error(`\nWELLENVORSCHAU: ${fehler} Welle(n) zu hoch.`); if (TOR) process.exit(1); }
-else console.log('\nWELLENVORSCHAU: jede Welle bleibt im Rahmen.');
+if (fehler) { console.error(`\nBAENDER: ${fehler} Band/Baender zu hoch.`); if (TOR) process.exit(1); }
+else console.log('\nBAENDER: Wellenvorschau und Einweisungsblase bleiben im Rahmen.');

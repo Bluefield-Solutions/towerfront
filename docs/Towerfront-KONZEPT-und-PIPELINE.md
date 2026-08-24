@@ -1,6 +1,6 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v151 · 23.08.2026
+Stand: v152 · 24.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Towerfront.html`
 
 > **Aufbau dieses Dokuments.** Die Abschnitte 1 bis 3.4 beschreiben den
@@ -192,7 +192,7 @@ Innerhalb von Schritt 1 gilt weiterhin:
 3. **`git diff` prüfen.** Nur die beabsichtigten Zeilen.
 4. **Erst einchecken, dann gegenproben.** Gegenproben arbeiten mit
    `git checkout` und löschen sonst die frische Arbeit. Dreimal passiert.
-5. **`npm run gate`** — fünfundzwanzig Prüfungen, rund 90 Sekunden. Alles grün, sonst
+5. **`npm run gate`** — sechsundzwanzig Prüfungen, rund 90 Sekunden. Alles grün, sonst
    wird nicht ausgeliefert.
 6. **Ausliefern**, committen, `git tag vN`.
 
@@ -208,25 +208,26 @@ Ein Befehl fährt alles: `npm run gate`
 | 4 | Bildvorrat | `npm run art` | Rohbildern, die nicht ins Bündel gebacken wurden |
 | 5 | Determinismus | `npm run determinism` | abweichendem Verlauf bei gleicher Aussaat oder nach Sichern/Laden |
 | 6 | Balance | `npm run sim` | kaputter Schwierigkeitskurve, dominierender Turmsorte, totem Ausbaupfad, unerreichbaren Sternen |
-| 7 | Geschosse | `npm run geschossetor` | mehr als 5 % zielsuchender Schüsse, die ohne Wirkung verpuffen; einem Schuss, der um mehr als 90° dreht (er macht kehrt); einem Luftfilter, der nicht greift |
-| 8 | Mündung | `npm run muendungstor` | einem Mündungspunkt, der neben der Figur liegt oder im Sockel sitzt; einem Turm ohne Rohr, dem eines angedichtet wird; und vor allem: einer Mündung, die den **Spielverlauf** ändert statt nur das Bild |
-| 9 | Gedränge | `npm run gedraengetor` | einer Gegnerfigur, die breiter ist als die engste Wegstelle — gemessen am gepackten Bild, nicht an der Kachel |
-| 10 | Bahntreue | `npm run bahntreuetor` | einer Bahn, die weniger auf der gemalten Straße liegt als heute — Ratsche, gemessen am Kartenbild |
-| 11 | Messung Simulation | `npm run bench` | mehr als 4 ms Simulationszeit je Bild |
-| 12 | Messung Zeichnen | `npm run bench-draw` | mehr als 3.000 Zeichenbefehlen **oder** 24 MB gebackenen Bildern |
-| 13 | Kartenwechsel | `npm run kartenwechsel` | zu vielen Bildpunkten je Kartenaufbau — gezählt statt in Millisekunden gemessen, weil die Zeit um Faktor zwei streute |
-| 14 | Grafiktor | `npm run grafiktor` | einem Untergrund, dessen Helligkeit oder Spanne aus dem Band der Referenz fällt — je Karte, nicht gemittelt |
-| 15 | Einbettung | `npm run einbettungstor` | Figuren, die nicht zur Karte gehören: Klimaton, Bodenkontakt, Saum |
-| 16 | Zielplattform | `npm run zielplattentor` | einem Kristall, der nicht auf einer erkennbaren Plattform steht |
-| 17 | Geländearten | `npm run gelaendetor` | einem unwegsamen Fleck, dessen eingetragene Art oder Farbe nicht zum Kartenbild passt |
-| 18 | Lesbarkeit | `npm run lesbarkeit` | zu schwachem Saumkontrast, zu kleiner Silhouette, zu ähnlichen Gegnerfarben |
-| 19 | Berührungsflächen | `npm run beruehrung` | Bedienelementen unter 44 Bildschirmpunkten — auf der Leinwand gerechnet, im HTML aus der Stilvorlage gelesen |
-| 20 | Wellenvorschau | `npm run streifentor` | einer Wellenvorschau, die mehr als 22 % der Bildhöhe einnimmt — für **jede** Welle gemessen, mit echtem Markup aus `Ui.sync()` und echter Stilvorlage in Chromium; das Browsertor sieht nur die erste, harmloseste Welle |
-| 21 | Bildabnahme | `npm run bildtor` | einfarbiger Fläche, falscher Helligkeit, nicht dekodierten Bildern |
-| 22 | Rauchtest | `npm run smoke` | Fehlern beim Zeichnen, in der Oberfläche, bei der Eingabe; unerreichbaren Menüwegen; zu kleinen Trefferflächen |
-| 23 | Build | `npm run build` | Bündelfehler |
-| 24 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id, Ersatzschreibung statt Umlaut |
-| 25 | Browser | `npm run browser` | Konsolenfehlern; Spielbedienung, die im Menü sichtbar ist; Bedienung, die über der Landkarte liegt; einem Spiel, in das man nicht hineinkommt; Knöpfen, die gerechnet unter 44 Punkten liegen oder verdeckt sind — als einziges Tor mit gerechneter Kaskade, im echten Chromium auf 844 × 390 |
+| 7 | Konter-Sätze | `npm run kontertor` | einer Gegnerart, an der etwas zu kontern ist und die es nicht sagt; einem Satz über 190 Zeichen; einem Wellensatz, der eine abgeleitete Tatsache ein zweites Mal erzählt — und ebenso, wenn **alle** Arten einen Satz bekommen, denn dann hebt er nichts mehr hervor |
+| 8 | Geschosse | `npm run geschossetor` | mehr als 5 % zielsuchender Schüsse, die ohne Wirkung verpuffen; einem Schuss, der um mehr als 90° dreht (er macht kehrt); einem Luftfilter, der nicht greift |
+| 9 | Mündung | `npm run muendungstor` | einem Mündungspunkt, der neben der Figur liegt oder im Sockel sitzt; einem Turm ohne Rohr, dem eines angedichtet wird; und vor allem: einer Mündung, die den **Spielverlauf** ändert statt nur das Bild |
+| 10 | Gedränge | `npm run gedraengetor` | einer Gegnerfigur, die breiter ist als die engste Wegstelle — gemessen am gepackten Bild, nicht an der Kachel |
+| 11 | Bahntreue | `npm run bahntreuetor` | einer Bahn, die weniger auf der gemalten Straße liegt als heute — Ratsche, gemessen am Kartenbild |
+| 12 | Messung Simulation | `npm run bench` | mehr als 4 ms Simulationszeit je Bild |
+| 13 | Messung Zeichnen | `npm run bench-draw` | mehr als 3.000 Zeichenbefehlen **oder** 24 MB gebackenen Bildern |
+| 14 | Kartenwechsel | `npm run kartenwechsel` | zu vielen Bildpunkten je Kartenaufbau — gezählt statt in Millisekunden gemessen, weil die Zeit um Faktor zwei streute |
+| 15 | Grafiktor | `npm run grafiktor` | einem Untergrund, dessen Helligkeit oder Spanne aus dem Band der Referenz fällt — je Karte, nicht gemittelt |
+| 16 | Einbettung | `npm run einbettungstor` | Figuren, die nicht zur Karte gehören: Klimaton, Bodenkontakt, Saum |
+| 17 | Zielplattform | `npm run zielplattentor` | einem Kristall, der nicht auf einer erkennbaren Plattform steht |
+| 18 | Geländearten | `npm run gelaendetor` | einem unwegsamen Fleck, dessen eingetragene Art oder Farbe nicht zum Kartenbild passt |
+| 19 | Lesbarkeit | `npm run lesbarkeit` | zu schwachem Saumkontrast, zu kleiner Silhouette, zu ähnlichen Gegnerfarben |
+| 20 | Berührungsflächen | `npm run beruehrung` | Bedienelementen unter 44 Bildschirmpunkten — auf der Leinwand gerechnet, im HTML aus der Stilvorlage gelesen |
+| 21 | Bänder über dem Feld | `npm run streifentor` | einer Wellenvorschau über 22 % der Bildhöhe — für **jede** Welle gemessen — oder einer Einweisungsblase über einem Drittel, gemessen am längsten Konter-Satz, den die Ableitung hergibt. Echtes Markup aus `Ui.sync()`, echte Stilvorlage in Chromium; das Browsertor sieht nur die erste, harmloseste Welle |
+| 22 | Bildabnahme | `npm run bildtor` | einfarbiger Fläche, falscher Helligkeit, nicht dekodierten Bildern |
+| 23 | Rauchtest | `npm run smoke` | Fehlern beim Zeichnen, in der Oberfläche, bei der Eingabe; unerreichbaren Menüwegen; zu kleinen Trefferflächen |
+| 24 | Build | `npm run build` | Bündelfehler |
+| 25 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id, Ersatzschreibung statt Umlaut |
+| 26 | Browser | `npm run browser` | Konsolenfehlern; Spielbedienung, die im Menü sichtbar ist; Bedienung, die über der Landkarte liegt; einem Spiel, in das man nicht hineinkommt; Knöpfen, die gerechnet unter 44 Punkten liegen oder verdeckt sind — als einziges Tor mit gerechneter Kaskade, im echten Chromium auf 844 × 390 |
 | — | Genre-Abgleich | `npm run bericht` | nichts — er meldet, er bricht nicht ab |
 
 Daneben zwei Werkzeuge, die nicht Teil der Kette sind:

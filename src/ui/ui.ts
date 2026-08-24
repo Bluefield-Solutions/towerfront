@@ -9,7 +9,8 @@ import {
 } from '../data/towers';
 import { Sfx } from '../core/audio';
 import {
-  buyPerk, ersterBesuch, freeStars, getBest, getSettings, getStars, saveSettings, setPerkCost,
+  buyPerk, ersterBesuch, ersterGegner, freeStars, getBest, getSettings, getStars, saveSettings,
+  setPerkCost,
   totalStars,
 } from '../core/storage';
 import { PERKS, PERK_ORDER, type PerkId } from '../data/perks';
@@ -20,6 +21,7 @@ import { MAPS, mapById } from '../data/maps';
 import { spriteCount } from '../gfx/sprites';
 import { clearGame, loadGame } from '../game/save';
 import { TUTORIAL, kartenEinfuehrung, type TutorialStep } from '../game/tutorial';
+import { konterSatz } from '../data/konter';
 import type { GameState } from '../game/state';
 import { werteAmTurm, werteVorKauf, type Wertzeile } from '../game/turmwerte';
 
@@ -125,6 +127,14 @@ export class UI {
    *  dieselbe - sie unterscheiden sich nur im Inhalt, nicht im Verhalten.
    *  Zwei Wege, die dasselbe tun, driften auseinander. */
   private tutKette: TutorialStep[] = TUTORIAL;
+  /** Der Konter-Satz zur naechsten Welle, solange er noch dasteht (TF-034).
+   *
+   *  Er laeuft NICHT durch `tutKette`, obwohl er dieselbe Blase benutzt: die
+   *  Kette ist eine feste Reihenfolge mit einem Zeiger, dieser Satz ist eine
+   *  Antwort auf das, was gerade angesagt wird. In die Kette gepresst waere
+   *  er entweder zu frueh (beim Betreten der Karte) oder zu spaet (wenn die
+   *  Kette gerade dran ist). */
+  private konterStep: TutorialStep | null = null;
   private tutTarget: HTMLElement | null = null;
   private lastSig = '';
   private lastBonus = -1;
@@ -581,8 +591,21 @@ export class UI {
   /** Die Einfuehrung ruecht weiter, sobald der Handgriff gemacht wurde.
    *  Sie blockiert nichts und wartet auf nichts ausser auf den Spieler. */
   private updateTutorial(): void {
-    if (this.tutStep < 0) return;
     if (this.s.phase !== 'playing') { this.hideCoach(); return; }
+
+    // Der Konter-Satz geht vor. Nicht aus Wichtigkeit, sondern aus
+    // Verfallsdatum: er gilt fuer die Welle, die JETZT angesagt ist, und ist
+    // nach dem Start wertlos. Ein Schritt der Einfuehrung gilt weiter.
+    // Auf jeder Karte trifft das den Spaeher in Welle 3 - da laeuft die
+    // Einfuehrung noch.
+    if (this.konterStep) {
+      if (this.konterStep.done(this.s)) this.konterStep = null;
+      else { this.showCoach(this.konterStep); return; }
+    }
+    const frisch = this.neuerKonter();
+    if (frisch) { this.konterStep = frisch; this.showCoach(frisch); return; }
+
+    if (this.tutStep < 0) { this.hideCoach(); return; }
 
     while (this.tutStep < this.tutKette.length && this.tutKette[this.tutStep].done(this.s)) {
       this.tutStep++;
@@ -592,6 +615,35 @@ export class UI {
     const step = this.tutKette[this.tutStep];
     if (step.wait?.(this.s)) { this.hideCoach(); return; }
     this.showCoach(step);
+  }
+
+  /** Steht in der angesagten Welle eine Gegnerart, die der Spieler noch nie
+   *  angesagt bekommen hat - und gibt es zu ihr etwas zu sagen? (TF-034)
+   *
+   *  Gefragt wird nur, solange sich noch bauen laesst. Nach dem Start waere
+   *  der Rat eine Beileidsbekundung.
+   *
+   *  `ersterGegner` vermerkt gleich beim Fragen, deshalb wird es erst hier
+   *  gerufen und nicht schon beim Zusammensuchen: eine Art, die wir nur
+   *  betrachtet und nicht gezeigt haben, gilt sonst als erklaert. */
+  private neuerKonter(): TutorialStep | null {
+    const s = this.s;
+    if (!s.canStartWave) return null;
+    const w = s.nextWave;
+    if (!w) return null;
+    for (const g of w.groups) {
+      const satz = konterSatz(g.enemy as EnemyId);
+      if (!satz) continue;
+      if (!ersterGegner(g.enemy)) continue;
+      return {
+        id: `konter:${g.enemy}`,
+        text: satz,
+        // Auf die Vorschau gezeigt: dort steht das Bild, um das es geht.
+        target: 'next',
+        done: (g2) => g2.waveActive || !g2.canStartWave,
+      };
+    }
+    return null;
   }
 
   private showCoach(step: TutorialStep): void {

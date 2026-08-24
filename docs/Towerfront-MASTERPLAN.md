@@ -1200,7 +1200,7 @@ XL > 10 Runden.
 | TF-031 | Wave | DESIGN | Keine Erholungs- und Wirtschaftswelle | Kein Atem in der Dramaturgie | Wellenrollen einführen | P2 | S | — |
 | TF-032 | Targeting | ERLEDIGT v146 | Modus „hinten" fehlt | Durchbrecher nicht abfangbar | Fünfter Modus | P2 | XS | nach Standort aufgeteilt 88 gegen 84 Punkte |
 | TF-033 | VFX | MISSING | Keine Rückmeldung über Wirksamkeit | Man sieht nicht, ob ein Turm taugt | Abpraller bei Panzerung, gedämpfter Einschlag | P2 | S | TF-015 |
-| TF-034 | Onboarding | MISSING | Konter werden nie erklärt | Der erste Gleiter überrascht | Ein Satz beim ersten Auftreten jeder Gegnerart | P2 | S | TF-014 |
+| TF-034 | Onboarding | ERLEDIGT v152 | Konter werden nie erklärt | Der erste Gleiter überrascht | Ein Satz beim ersten Auftreten jeder Gegnerart | P2 | S | gemessen vorher: 12 von 20 Erstauftritten trugen einen Satz, **drei** nannten einen Konter. Jetzt aus Gegner- und Turmdaten abgeleitet, 15 von 20; die übrigen fünf sind Schleicher und Infanterie, an denen nichts zu kontern ist. Tor `kontertor` |
 | TF-042 | Map | ERLEDIGT v150 | Die Bahnen laufen nicht auf der gemalten Straße | Gegner gehen neben dem Weg | Stützpunkte an die gemalten Straßen ziehen | **P1** | M | 98,0/79,0/89,5/67,3/69,1/75,7 → 100/94,3/100/82,4/80,1/84,3 %; die 520 aus v149 waren ein Messfehler |
 | TF-035 | Code | ERLEDIGT v148 | Toter `topdown`-Zweig, totes `range`-Feld, leere Turmleinwand | Wartungsballast | Entfernen | P3 | XS | mehr als gemeldet: auch `drawRim`, `palette.rim` und 14 unerreichbare Zeilen |
 | TF-036 | Map | MISSING | Kein Kreuzungstyp, keine getrennten Ziele | Karten unterscheiden sich zu wenig | Vierte Karte mit anderer Topologie | P3 | M | TF-003 |
@@ -1627,7 +1627,7 @@ möglich ist.
 | 7 | TF-035 | Toten Code entfernen | Code | Ballast | Weniger Fläche für Fehler | P3 | XS | **erledigt v148** |
 | 8 | TF-014 | Wegvorschau beim Kartenstart | Path Visibility | Woher kommt es? | Erste 10 Sekunden verständlich | P1 | S | **erledigt v149** |
 | 9 | TF-023 | Wellenvorschau vollständig | Wave | Nur erste Gruppe | Vorbereitung möglich | P2 | S | **erledigt v151** — der Befund selbst widerlegt: alle Gruppen standen längst da; gefehlt haben Schild, Träger und ein Gefahrzeichen |
-| 10 | TF-034 | Ein Satz je neuer Gegnerart | Onboarding | Konter unerklärt | Der Gleiter überrascht nicht mehr | P2 | S | 8, 9 |
+| 10 | TF-034 | Ein Satz je neuer Gegnerart | Onboarding | Konter unerklärt | Der Gleiter überrascht nicht mehr | P2 | S | **erledigt v152** — abgeleitet aus Gegner- und Turmdaten, nicht je Gegner geschrieben |
 | 11 | TF-011 | **Art Bible** schreiben | Art | Keine Verbindlichkeit | Alle Bildarbeit bekommt einen Maßstab | P1 | M | — |
 | 12 | TF-012 | Randlicht an jeder Figur | Technical Art | Silhouetten laufen in den Boden | Sichtbar mehr Plastik | P1 | S | 11 |
 | 13 | TF-024 | Fraktionsfarben statt Regenbogen | Enemy Art | Keine Familie lesbar | Gegner werden gruppierbar | P2 | S | 11 |

@@ -45,7 +45,7 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 ## Befehle
 
 ```
-npm run gate        vierundzwanzig Prüfungen, ~90 s. Muss vor jedem Commit grün sein.
+npm run gate        fünfundzwanzig Prüfungen, ~90 s. Muss vor jedem Commit grün sein.
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
 npm run bilder      alle 13 Aufnahmen (echte PNG ohne Browser)
 npm run bildtor     der Querschnitt, den die Torkette prüft
@@ -57,6 +57,9 @@ npm run bahnfit     zieht die Bahnen auf die gemalte Strasse (schreibt
                     maps.ts). `--umleiten` aendert Routen, nicht nur Lagen.
 npm run bahntreue   prueft am Kartenbild, ob jede Bahn auf der GEMALTEN
                     Strasse laeuft - Ratsche, kein Soll.
+npm run streifen    misst die Hoehe der Wellenvorschau in JEDER Welle - echtes
+                    Markup aus der Oberflaeche, echte Stilvorlage in Chromium.
+                    Das Browsertor sieht nur die erste, harmloseste Welle.
 npm run gedraenge   misst die WIRKLICHE Breite jeder Gegnerfigur im
                     Bildvorrat gegen die engste Wegstelle - nicht ihre Kachel.
 npm run muendung    prueft am Bildvorrat, wo das Rohr jedes Turms endet -
@@ -85,7 +88,7 @@ npm run kartenwechsel  was ein Kartenaufbau an Bildpunkten kostet
 
 Die Torkette: `tsc` → `guards` → `doku` → `art` → `determinism` → `sim` →
 `geschosse` → `muendung` → `gedraenge` → `bahntreue` → `bench` →
-`bench-draw` → `kartenwechsel` → `grafiktor` → `einbettung` → `zielplatte` → `gelaende` → `lesbarkeit` → `beruehrung` → `bildtor` → `smoke` →
+`bench-draw` → `kartenwechsel` → `grafiktor` → `einbettung` → `zielplatte` → `gelaende` → `lesbarkeit` → `beruehrung` → `streifen` → `bildtor` → `smoke` →
 `build` → `autarkie` → `browser` → `bericht`.
 
 `npm run browser` lädt die **gebaute** Datei in Chromium (iPhone quer) und ist
@@ -200,7 +203,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v150. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v151. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

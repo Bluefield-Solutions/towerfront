@@ -259,6 +259,101 @@ step('Auswertung', () => {
 // durch. Erreicht wurde damit Welle 0 - und genau das muss im Bestwert
 // stehen. Ein anderer Grad als oben, damit die Ablage einen eigenen
 // Schluessel hat und der Bestwert bei null anfaengt.
+// Die Wellenvorschau zeigt ALLE Gegnerarten der naechsten Welle (TF-023).
+//
+// Der Audit-Befund lautete "Vorschau nennt nur die erste Gruppe". Das war
+// falsch: `renderNext` laeuft ueber alle Gruppen und fasst nach Art
+// zusammen. Damit das nicht ein zweites Mal behauptet wird, steht es hier
+// als Messung - fuer JEDE Welle, nicht fuer die erste.
+//
+// Geprueft wird am DOM, nicht am Aufruf: was in der Seite steht, ist die
+// Vorschau; was die Funktion tut, ist eine Vermutung darueber.
+step('Wellenvorschau zeigt alle Arten', () => {
+  const liste = win.document.getElementById('n-list')!;
+  const streifen = win.document.getElementById('next')!;
+  // Sichern und wiederherstellen: der erste Anlauf setzte den Zustand
+  // zurueck, und ein SPAETERER Schritt fiel darauf herein ("Auswertung: kein
+  // Schaden mitgeschrieben"). Die Schritte teilen sich einen Zustand - wer
+  // ihn anfasst, gibt ihn zurueck.
+  const vorher = state.snapshot();
+  state.reset(4711, 'normal', 'spiralhain');
+  for (let i = 0; i < state.waves.length; i++) {
+    state.waveIndex = i;
+    state.waveActive = false;
+    ui.sync();
+    const arten = new Set(state.waves[i].groups.map((g) => g.enemy));
+    const gezeigt = [...liste.querySelectorAll('i')]
+      .filter((e) => !e.classList.contains('next-note')
+        && !e.classList.contains('next-sprung')).length;
+    if (gezeigt !== arten.size) {
+      problems.push(`Wellenvorschau W${i + 1}: ${arten.size} Gegnerart(en) in der Welle, `
+        + `${gezeigt} in der Vorschau.`);
+      break;
+    }
+  }
+  // Schild und Traeger standen bis v151 NUR im handgeschriebenen Satz - wer
+  // eine Welle ohne Satz baute, bekam keinen Hinweis. Seit v151 leitet die
+  // Vorschau beide aus den Gruppendaten ab. Geprueft wird an den Daten, nicht
+  // an einer Wellennummer: sonst prueft der Schritt eine Welle, die es in
+  // zwei Fassungen nicht mehr gibt.
+  //
+  // Und geprueft wird in BEIDE Richtungen (Regel 13): ein Zeichen, das immer
+  // dasteht, bezeugt nichts. Ohne die Gegenrichtung wuerde ein fest
+  // eingebautes `Schild` durchgehen.
+  let mitSchild = 0, mitTraeger = 0;
+  for (let i = 0; i < state.waves.length; i++) {
+    state.waveIndex = i;
+    state.waveActive = false;
+    ui.sync();
+    const soll = { Schild: new Set<string>(), 'Träger': new Set<string>() };
+    for (const g of state.waves[i].groups) {
+      if (g.shield) soll.Schild.add(g.enemy);
+      if (g.traeger) soll['Träger'].add(g.enemy);
+    }
+    mitSchild += soll.Schild.size ? 1 : 0;
+    mitTraeger += soll['Träger'].size ? 1 : 0;
+    for (const zeichen of ['Schild', 'Träger'] as const) {
+      const gezeigt = [...liste.querySelectorAll('i')]
+        .filter((e) => [...e.querySelectorAll('span.tag')]
+          .some((t) => t.textContent === zeichen)).length;
+      if (gezeigt !== soll[zeichen].size) {
+        problems.push(`Wellenvorschau W${i + 1}: ${soll[zeichen].size} Gegnerart(en) `
+          + `mit "${zeichen}" in den Daten, ${gezeigt} in der Vorschau.`);
+        break;
+      }
+    }
+  }
+  // Das Sprungzeichen: es darf weder an jeder Welle stehen noch an keiner.
+  // Beides waere kein Zeichen mehr, sondern Tapete - und beides kaeme aus
+  // einer einzigen falschen Zahl in `SPRUNG`. Geprueft wird am DOM-Merkmal,
+  // das die Stilvorlage liest, nicht am Rueckgabewert von `istSprung`:
+  // letzteres waere dieselbe Rechnung zweimal.
+  let sprungzahl = 0;
+  for (let i = 0; i < state.waves.length; i++) {
+    state.waveIndex = i;
+    state.waveActive = false;
+    ui.sync();
+    if (streifen.dataset.sprung === '1') sprungzahl++;
+  }
+  // Die erste Welle kann keinen Sprung haben - es gibt keine davor. Die
+  // Obergrenze zaehlt deshalb die BERECHTIGTEN Wellen, sonst waere sie nie
+  // erreichbar und die halbe Pruefung schliefe (Regel 5). Abgelesen sind es
+  // acht von 45 ueber alle drei Karten, also etwa jede fuenfte; "mehr als
+  // die Haelfte" ist reichlich Luft und trotzdem kein Freibrief.
+  const moeglich = state.waves.length - 1;
+  if (sprungzahl === 0 || sprungzahl > moeglich / 2) {
+    problems.push(`Wellenvorschau: das Sprungzeichen steht an ${sprungzahl} von `
+      + `${moeglich} moeglichen Wellen - an keiner oder an fast allen ist es kein `
+      + 'Zeichen, sondern Tapete.');
+  }
+  if (!mitSchild || !mitTraeger) {
+    problems.push(`Wellenvorschau: der Schritt prueft "Schild" an ${mitSchild} und `
+      + `"Träger" an ${mitTraeger} Wellen - bei null prueft er nichts (Regel 5).`);
+  }
+  state.restore(vorher);
+  ui.sync();
+});
+
 // Die Wegvorschau laeuft beim Betreten einer Karte von selbst - und nur dann
 // (TF-014). Ein geladener Spielstand bekommt sie nicht: wer fortsetzt, kennt
 // die Karte.

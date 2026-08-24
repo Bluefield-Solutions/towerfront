@@ -1,4 +1,4 @@
-import type { EnemyId } from './enemies';
+import { ENEMIES, type EnemyId } from './enemies';
 
 export interface WaveGroup {
   enemy: EnemyId;
@@ -48,6 +48,43 @@ export interface Wave {
  *  unterschieden sich in der Form des Weges, nicht in dem, was darauf kam.
  *  Jetzt bringt jede Karte mit, wogegen man dort baut. */
 /** Gold-Sofortbonus fuer frueh gestartete Wellen. Faellt linear auf 0. */
+/** Der Druck einer Welle: wieviel Leben sie insgesamt aufs Feld bringt.
+ *
+ *  Zerfallende Gegner zaehlen mit dem, was aus ihnen wird - ein Spalter
+ *  bringt mehr Arbeit als seine eigenen Lebenspunkte.
+ *
+ *  Diese Formel stand bis v151 NUR in `tools/guards.ts`, wo sie die
+ *  Wellenkurve prueft. Seit die Wellenvorschau einen Sprung anzeigt,
+ *  brauchen zwei Stellen dieselbe Zahl - und zwei Fassungen davon waeren
+ *  eine zu viel (Regel 15). Sie steht deshalb hier, bei den Daten, die sie
+ *  beschreibt. */
+export function wellenDruck(w: Wave): number {
+  let druck = 0;
+  for (const g of w.groups) {
+    const e = ENEMIES[g.enemy];
+    if (!e) continue;
+    const zerfall = e.split ? e.split.count * e.split.hpFactor : 0;
+    druck += g.count * e.hp * (1 + zerfall) * (g.hpMul ?? 1);
+  }
+  return druck;
+}
+
+/** Ab welchem Vielfachen des Vorwellendrucks ein Sprung angezeigt wird.
+ *
+ *  Nicht gewaehlt, sondern abgelesen: ueber alle 45 Wellen der drei Karten
+ *  liegen die Verhaeltnisse zwischen 0,52 und 1,68 dicht beieinander, dann
+ *  kommt eine Luecke und darueber 1,68 / 1,77 / 1,86 / 2,00 / 2,08 / 2,16 /
+ *  2,25 / 3,14. Die Grenze liegt in der Luecke, nicht in der Mitte einer
+ *  Wolke. Es trifft acht von 45 Wellen - etwa jede fuenfte. */
+export const SPRUNG = 1.7;
+
+/** Springt der Druck von der vorigen zu dieser Welle deutlich? */
+export function istSprung(plan: Wave[], i: number): boolean {
+  if (i <= 0 || i >= plan.length) return false;
+  const vorher = wellenDruck(plan[i - 1]);
+  return vorher > 0 && wellenDruck(plan[i]) / vorher >= SPRUNG;
+}
+
 export const EARLY_BONUS_MAX = 30;
 export const EARLY_BONUS_WINDOW = 22; // Sekunden
 

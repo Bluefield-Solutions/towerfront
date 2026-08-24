@@ -1189,7 +1189,7 @@ XL > 10 Runden.
 | TF-020 | Architecture | DESIGN | `GameState` mischt Simulation und Effekte | Determinismus hängt an Disziplin | Trennung `Sim` / `Fx` | P2 | L | — |
 | TF-021 | Architecture | DESIGN | Angriffsarten als `if`-Kette | Neue Turmarten passen nicht hinein | Turmverhalten als Datenobjekt | P2 | M | TF-020 |
 | TF-022 | UI | DESIGN | Turmknöpfe ohne Turmbild | Keine Wiedererkennung | Gebackenes Turmbild im Knopf | P2 | S | — |
-| TF-023 | Wave | VERIFIED | Vorschau nennt nur die erste Gruppe | Der Spieler kann sich nicht vorbereiten | Alle Gruppen + Gefahrzeichen | P2 | S | — |
+| TF-023 | Wave | ERLEDIGT v151 | Vorschau nennt nur die erste Gruppe | Der Spieler kann sich nicht vorbereiten | Alle Gruppen + Gefahrzeichen | P2 | S | **Befund widerlegt** — die Vorschau fasste immer schon alle Gruppen zusammen, jetzt für jede der 15 Wellen im Rauchtest gemessen. Die echte Lücke waren Schild und Träger (nur im handgeschriebenen Satz) und ein fehlendes Gefahrzeichen; beide jetzt aus den Wellendaten abgeleitet. Neues Tor `streifentor` |
 | TF-024 | Enemy | DESIGN | Acht unabhängige Bunttöne | Keine Fraktion lesbar | Farbfamilie je Fraktion | P2 | S | TF-011 |
 | TF-025 | Map | MISSING | Kein Höhenvorteil, keine Sichtlinie | Bauplätze sind austauschbar | Erhöhte Plätze mit Reichweitenbonus | P2 | M | TF-003 |
 | TF-026 | Audio | MISSING | Keine Musik, kein Ambiente | Die Welt klingt nicht | Synthetischer Grundklang, Wellenanspannung | P2 | M | — |
@@ -1626,7 +1626,7 @@ möglich ist.
 | 6 | TF-030 | Titanbreite gegen Straßenbreite | Path | Ragt über den Rand | Kein Überstand mehr | P2 | XS | **widerlegt v147** — es gab keinen Überstand |
 | 7 | TF-035 | Toten Code entfernen | Code | Ballast | Weniger Fläche für Fehler | P3 | XS | **erledigt v148** |
 | 8 | TF-014 | Wegvorschau beim Kartenstart | Path Visibility | Woher kommt es? | Erste 10 Sekunden verständlich | P1 | S | **erledigt v149** |
-| 9 | TF-023 | Wellenvorschau vollständig | Wave | Nur erste Gruppe | Vorbereitung möglich | P2 | S | — |
+| 9 | TF-023 | Wellenvorschau vollständig | Wave | Nur erste Gruppe | Vorbereitung möglich | P2 | S | **erledigt v151** — der Befund selbst widerlegt: alle Gruppen standen längst da; gefehlt haben Schild, Träger und ein Gefahrzeichen |
 | 10 | TF-034 | Ein Satz je neuer Gegnerart | Onboarding | Konter unerklärt | Der Gleiter überrascht nicht mehr | P2 | S | 8, 9 |
 | 11 | TF-011 | **Art Bible** schreiben | Art | Keine Verbindlichkeit | Alle Bildarbeit bekommt einen Maßstab | P1 | M | — |
 | 12 | TF-012 | Randlicht an jeder Figur | Technical Art | Silhouetten laufen in den Boden | Sichtbar mehr Plastik | P1 | S | 11 |

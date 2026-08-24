@@ -1,4 +1,5 @@
 import { SPEEDS, VERSION } from '../data/config';
+import { istSprung } from '../data/waves';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import { getEnemyArt } from '../gfx/enemyart';
 import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
@@ -47,6 +48,7 @@ export class UI {
   private pickKey = '';
   private bWave = $<HTMLButtonElement>('b-wave');
   private bWeg = $<HTMLButtonElement>('b-weg');
+  private vVersion = $('v-version');
   private bWaveT = $('b-wave-t');
   private bWaveB = $('b-wave-b');
   private next = $('next');
@@ -277,6 +279,9 @@ export class UI {
     // Den Weg noch einmal zeigen (TF-014). Kein Spielzug: er aendert nichts
     // ausser dem Bild, und er darf deshalb auch waehrend einer Welle laufen.
     this.bWeg.addEventListener('click', () => { Sfx.unlock(); this.s.wegvorschau(); });
+    // Einmal setzen, nie wieder anfassen - die Version aendert sich nicht
+    // waehrend einer Partie.
+    this.vVersion.textContent = VERSION;
     $('i-close').addEventListener('click', () => {
       this.s.selectedTower = null;
       this.s.buildChoice = null;
@@ -423,6 +428,11 @@ export class UI {
     // Die Lehre ist nicht "eine Zeile vergessen", sondern: eine Ableitung
     // schuetzt nur das, was sie auch aufzaehlt.
     this.bWave.hidden = !anzeigen;
+    // Der Versionsstempel gehoert zur Spielansicht: im Menue steht er schon
+    // auf dem Titelbildschirm, ein zweites Mal daneben waere doppelt. Er
+    // haengt an DERSELBEN Ableitung wie alles andere (Regel 6) - anders als
+    // der Wegknopf hat er keinen ausgeblendeten Elternteil, der ihn traegt.
+    this.vVersion.hidden = !anzeigen;
     // Der Wegknopf braucht hier NICHTS: er sitzt in der Kopfzeile, und die
     // wird als ganze ausgeblendet - wie Ton, Tempo und Pause auch. Eine
     // eigene Zeile dafuer stand hier eine Fassung lang und war eine zweite
@@ -943,8 +953,28 @@ export class UI {
     if (!w) { this.next.hidden = true; return; }
     this.next.hidden = false;
     const counts = new Map<string, number>();
-    for (const g of w.groups) counts.set(g.enemy, (counts.get(g.enemy) ?? 0) + g.count);
+    // Schild und Traeger haengen an der GRUPPE, nicht an der Gegnerart -
+    // dieselbe Art kann in einer Welle mit und ohne Schild kommen. Also
+    // mitgesammelt, sonst waere die Zusammenfassung nach Art eine Luege.
+    const schild = new Set<string>();
+    const traeger = new Set<string>();
+    for (const g of w.groups) {
+      counts.set(g.enemy, (counts.get(g.enemy) ?? 0) + g.count);
+      if (g.shield) schild.add(g.enemy);
+      if (g.traeger) traeger.add(g.enemy);
+    }
     const parts: string[] = [];
+    // Ein Sprung im Druck haengt an der BESCHRIFTUNG, nicht als eigener
+    // Eintrag in der Reihe.
+    //
+    // Als Eintrag hat er den Streifen auf Welle 8 von 52 auf 108 Bildpunkte
+    // getrieben - 28 % der Bildhoehe auf dem Telefon, ueber der Grenze von
+    // 22 %: er schob den langen Erklaersatz in den Umbruch. An der
+    // Beschriftung kostet er gar keine Breite.
+    //
+    // Abgeleitet aus den Wellendaten, nicht je Welle hingeschrieben: ein
+    // Satz veraltet, eine Rechnung nicht.
+    this.next.dataset.sprung = istSprung(s.waves, s.waveIndex) ? '1' : '0';
     for (const [id, n] of counts) {
       const d = ENEMIES[id as keyof typeof ENEMIES];
       // Flieger und Zerfaller bekommen einen Zusatz - man soll vor dem Start
@@ -953,8 +983,15 @@ export class UI {
       // Bild, nicht den Namen. Kingdom Rush, Bloons und Plants vs. Zombies
       // machen es alle drei so - das Bild traegt die Erkennung, die Zahl die
       // Menge. Wer den Namen braucht, haelt drauf (title).
-      const mark = d.flying ? ' <span class="tag">Luft</span>'
-        : d.split ? ' <span class="tag">zerfällt</span>' : '';
+      // Mehrere Zeichen sind moeglich: ein Gleiter mit Schild ist beides.
+      // Die erste Fassung nahm nur EINS (`? :`), und der Schildtraeger aus
+      // Welle 12 hatte gar keins - er stand nur im handgeschriebenen Satz.
+      const marken: string[] = [];
+      if (d.flying) marken.push('Luft');
+      if (d.split) marken.push('zerfällt');
+      if (schild.has(id)) marken.push('Schild');
+      if (traeger.has(id)) marken.push('Träger');
+      const mark = marken.map((t) => ` <span class="tag">${t}</span>`).join('');
       const bild = this.gegnerSymbol(id as EnemyId, s.map.id);
       // Solange der Bildvorrat nicht geladen ist, bleibt der Farbtupfer von
       // frueher stehen. Eine Vorschau, die auf Bilder wartet, waere leer -

@@ -153,6 +153,22 @@ html, body {
 .insp-ziel .ziel:active { transform: scale(0.97); }
 
 .dock-toggle:active { transform: scale(0.94); }
+
+/* Versionsstempel im laufenden Spiel.
+   Unten mittig zwischen Turmleiste (links) und Wellenknopf (rechts) - der
+   einzige Streifen, der auf 844 x 390 frei bleibt. `pointer-events: none`,
+   damit er keinen Tipp abfaengt: genau daran ist in v9 die Bedienung auf
+   dem Handy gescheitert, als eine versteckte Ebene jeden Tipp schluckte. */
+.version {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: calc(3px + var(--sab));
+  z-index: 2; pointer-events: none;
+  font-family: var(--ui); font-size: 10px; letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.42);
+  /* Ein Schatten, weil er ueber DREI Karten steht: heller Sand, dunkle
+     Asche, blauer Schnee. Ohne ihn verschwindet er auf der hellsten. */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+}
 .dock[data-folded="1"] .dock-toggle { background: rgba(9, 14, 30, 0.72); }
 .dock-row { display: flex; align-items: stretch; gap: 6px; flex-wrap: wrap; max-width: 62vw; }
 
@@ -338,8 +354,16 @@ html, body {
   flex: none; font-size: 9px; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--muted);
 }
+/* Umbrechen, nicht quetschen (TF-023).
+   `nowrap` klang nach "bleibt eine Zeile" und war das Gegenteil: die
+   Eintraege brechen nicht um, aber der ERKLAERSATZ wird auf die Restbreite
+   zusammengedrueckt und laeuft dort als schmale Saeule nach unten. In
+   Welle 15 - fuenf Gegnerarten, zwei Zeichen - blieben ihm 90 Punkte, und
+   der Streifen wurde 94 Bildpunkte hoch: 24 % der Bildhoehe auf dem
+   Telefon. `wrap` schiebt den Satz stattdessen in eine zweite Zeile mit
+   voller Breite; gemessen wird beides von `npm run streifen`. */
 .next-list {
-  display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; overflow: hidden;
+  display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; overflow: hidden;
   font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums;
 }
 .next-list i { font-style: normal; display: inline-flex; align-items: center; gap: 5px; }
@@ -352,6 +376,14 @@ html, body {
   vertical-align: middle; image-rendering: auto;
 }
 .next-note { color: var(--gold); font-weight: 600; font-size: 11.5px; }
+/* Der Sprung im Wellendruck (TF-023). In der Warnfarbe, nicht in Gold:
+   Gold traegt hier den erklaerenden Satz, und zwei goldene Dinge
+   nebeneinander sind eine Zeile, kein Zeichen. */
+.next[data-sprung="1"] .next-lab::after {
+  content: ' ▲';
+  color: var(--danger);
+  font-weight: 700;
+}
 
 .go { display: flex; flex-direction: column; align-items: center; gap: 1px; line-height: 1.15; }
 .go-bonus { font-size: 10px; font-weight: 700; opacity: 0.72; letter-spacing: 0.04em; }

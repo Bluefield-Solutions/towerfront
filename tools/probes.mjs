@@ -1004,6 +1004,23 @@ const PROBEN = [
     tor: 'doku',
   },
   {
+    // Der Versionsstempel im laufenden Spiel: leer ist so gut wie nicht da.
+    name: 'Versionsstempel bleibt leer',
+    datei: 'src/ui/ui.ts',
+    regel: /    this\.vVersion\.textContent = VERSION;/,
+    ersatz: "    this.vVersion.textContent = '';",
+    tor: 'browsertor',
+  },
+  {
+    // Und er darf keinen Tipp abfangen - der Fehler aus v9, der das Spiel
+    // auf dem Handy unbedienbar machte.
+    name: 'Versionsstempel faengt Tipps ab',
+    datei: 'src/style.css',
+    regel: /  z-index: 2; pointer-events: none;/,
+    ersatz: '  z-index: 2; pointer-events: auto;',
+    tor: 'browsertor',
+  },
+  {
     // TF-042: eine Bahn wieder von der Strasse ziehen. Die Ratsche muss das
     // sehen - sonst haelt sie nichts fest.
     name: 'Eine Bahn rutscht von der Strasse',
@@ -1235,6 +1252,45 @@ const PROBEN = [
     regel: /    t\.branch = chosen;\n    t\.level\+\+;/,
     ersatz: '    t.branch = chosen;\n    t.level++;\n    for (const p2 of this.projectiles) if (p2.owner === t) p2.damage = this.towerStats(t).damage;',
     tor: 'smoke',
+  },
+  {
+    // TF-023: das Schildzeichen fehlt wieder. Bis v151 stand der Schild nur
+    // im handgeschriebenen Satz - wer eine Welle ohne Satz baute, bekam
+    // keinen Hinweis, und niemand haette es gemerkt.
+    name: 'Schildzeichen fehlt in der Vorschau',
+    datei: 'src/ui/ui.ts',
+    regel: /      if \(schild\.has\(id\)\) marken\.push\('Schild'\);\n/,
+    ersatz: '',
+    tor: 'smoke',
+  },
+  {
+    // Und dasselbe fuer den Traeger. Zwei Proben, nicht eine: die beiden
+    // Zeilen koennen einzeln verschwinden, und eine Probe, die nur die
+    // erste zieht, bezeugt die zweite nicht.
+    name: 'Traegerzeichen fehlt in der Vorschau',
+    datei: 'src/ui/ui.ts',
+    regel: /      if \(traeger\.has\(id\)\) marken\.push\('Träger'\);\n/,
+    ersatz: '',
+    tor: 'smoke',
+  },
+  {
+    // Das Sprungzeichen an JEDER Welle - aus einer einzigen zu kleinen Zahl.
+    // Ein Zeichen, das immer dasteht, warnt vor nichts (Regel 13).
+    name: 'Sprungzeichen an jeder Welle',
+    datei: 'src/data/waves.ts',
+    regel: /export const SPRUNG = [0-9.]+;/,
+    ersatz: 'export const SPRUNG = 0.01;',
+    tor: 'smoke',
+  },
+  {
+    // Der Streifen quetscht den Erklaersatz wieder zur Saeule. Genau der
+    // Zustand vor v151: Welle 15 wurde 94 statt 49 Bildpunkte hoch, und
+    // das Browsertor sah es nicht, weil es nur Welle 1 kennt.
+    name: 'Wellenvorschau quetscht den Satz',
+    datei: 'src/style.css',
+    regel: /  display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; overflow: hidden;/,
+    ersatz: '  display: flex; align-items: center; gap: 8px 10px; flex-wrap: nowrap; overflow: hidden;',
+    tor: 'streifentor',
   },
   {
     name: 'Ein Schwierigkeitsgrad wie der andere',

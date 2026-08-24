@@ -57,7 +57,10 @@ const BREIT = 844, HOCH = 390;
 const MINDEST = 44;
 
 /** Alles, was zur Spielbedienung gehört und im Menü nichts zu suchen hat. */
-const BEDIENUNG = ['#hud', '#dock', '#b-wave', '#inspector', '#pick', '#perf'];
+// Der Versionsstempel ist keine Bedienung - aber er gehoert zur
+// Spielansicht, und auf dem Titelbildschirm steht die Version ohnehin schon.
+// Ein zweites Mal daneben waere doppelt.
+const BEDIENUNG = ['#hud', '#dock', '#b-wave', '#inspector', '#pick', '#perf', '#v-version'];
 
 // --- Die eingepasste Abbildung des Menues.
 //
@@ -512,6 +515,38 @@ if (start) {
       );
     }
 
+    // --- 5e. Steht die Version im laufenden Spiel? (v151)
+    //
+    // Sie stand bisher nur auf dem Titelbildschirm - wer eine Partie
+    // fortsetzt, sah sie nie. Geprueft wird nicht, DASS ein Element da ist,
+    // sondern dass eine Versionsnummer darin steht: ein leeres Feld sieht im
+    // Bauplan genauso aus wie ein gefuelltes.
+    const stempel = await seite.evaluate(() => {
+      const e = document.getElementById('v-version');
+      if (!e) return null;
+      const r = e.getBoundingClientRect();
+      const cs = getComputedStyle(e);
+      return {
+        text: (e.textContent ?? '').trim(),
+        sichtbar: r.width > 1 && r.height > 1 && cs.display !== 'none'
+          && Number(cs.opacity) > 0.05,
+        groesse: Math.round(parseFloat(cs.fontSize)),
+        klick: cs.pointerEvents,
+      };
+    });
+    if (!stempel) {
+      fail('Im laufenden Spiel fehlt der Versionsstempel.');
+    } else if (!/^v\d+$/.test(stempel.text)) {
+      fail(`Der Versionsstempel zeigt "${stempel.text}" - erwartet wird vNNN.`);
+    } else if (!stempel.sichtbar) {
+      fail(`Der Versionsstempel "${stempel.text}" steht da, ist aber nicht zu sehen.`);
+    } else if (stempel.klick !== 'none') {
+      fail('Der Versionsstempel faengt Tipps ab (pointer-events). Genau daran ist '
+        + 'in v9 die Bedienung auf dem Handy gescheitert.');
+    } else {
+      console.log(`Versionsstempel: ${stempel.text}, ${stempel.groesse} px, nicht anfassbar.`);
+    }
+
     // --- 5d. Sind die Zielknoepfe noch zu treffen? (v146)
     //
     // Sie stehen in EINER Reihe, eine Spalte je Modus. Jeder weitere Modus
@@ -741,7 +776,8 @@ if (start) {
     const vorschau = await seite.evaluate(() => {
       const l = document.getElementById('n-list');
       if (!l || document.getElementById('next')?.hidden) return null;
-      const eintraege = [...l.querySelectorAll('i')].filter((e) => !e.classList.contains('next-note'));
+      const eintraege = [...l.querySelectorAll('i')].filter((e) => !e.classList.contains('next-note')
+        && !e.classList.contains('next-sprung'));
       return {
         eintraege: eintraege.length,
         bilder: l.querySelectorAll('img.next-bild').length,

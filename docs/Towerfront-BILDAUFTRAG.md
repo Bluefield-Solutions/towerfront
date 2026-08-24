@@ -56,9 +56,15 @@ BANDS with only three or four suggested links, never as a fully modelled
 chain of individual track links. At 40 pixels the links are invisible and
 cost nothing but noise. Same for tyre tread: suggest it, do not model it.
 
-NO BLACK: the darkest value in the image must still be clearly a dark GREY
-(around 18 percent brightness), never near-black. Tracks, tyres and shadow
-gaps are where this goes wrong.
+NO OUTLINES — THIS IS THE MOST IMPORTANT RULE IN THIS BRIEF.
+Do NOT draw a dark contour line around the object, around its parts, or
+around individual armour plates. No ink line, no keyline, no comic or
+cel-shaded border, no "sticker" edge. Shapes are separated by VALUE and by
+light, the way a painting does it — never by a drawn line.
+
+NO BLACK: the darkest value anywhere in the image must still read as a dark
+GREY (around 18 percent brightness), never near-black. Tracks, tyres, shadow
+gaps and — above all — contour lines are where this goes wrong.
 
 LIGHT: a single sun from the UPPER LEFT, roughly 130 degrees (light comes
 from the top-left, shadows fall to the lower right). Soft key light, gentle
@@ -92,7 +98,8 @@ canvas.
 | „transparent, no shadow" | Schatten, Sonnenanstrich, Bodenverschattung und Farbklima trägt das Spiel je Karte auf | `npm run einbettungstor` |
 | „reads at 40 pixels" | Die kleinste Figur wird mit 17 Bildschirmpunkten gezeichnet | `npm run lesbarkeit` |
 | „tracks as two dark bands" | Ausmodellierte Kettenglieder sind bei 40 px unsichtbar und treiben nur die Dichte | `npm run probebild` |
-| „no black, dark grey" | Die Probelieferung lag bei **6,7 – 10,9 %** reinem Schwarz, der heutige Bestand bei 0,0 % | `npm run probebild` |
+| „no outlines" | Die zweite Probelieferung war cel-shaded mit harter Kontur um jedes Teil und lag bei **14,3 – 25,2 %** reinem Schwarz. Bei 17 bis 40 Bildschirmpunkten wird eine 3-px-Kontur zum halben Gegner | `npm run probebild` |
+| „no black, dark grey" | Erste Lieferung **6,7 – 10,9 %**, zweite **14,3 – 25,2 %**, heutiger Bestand 0,0 % | `npm run probebild` |
 | „5 percent margin" | Alle acht Kandidaten der Probelieferung berührten den Kachelrand | `npm run probebild` |
 
 ---
@@ -694,6 +701,28 @@ die wichtigste Nachricht. Was fehlt, ist Vielfalt in der Form.
 **Was daraus folgt** — und was in dieser Fassung des Auftrags neu steht:
 Abschnitt 3.2b (fünf Grundformen), die Kettenregel und die Schwarzgrenze im
 Stil-Block, der Rand, und je Gegner eine Zeile `GRUNDFORM`.
+
+### Zweite Probelieferung (24.08.2026, neun Figuren)
+
+**Das Formproblem ist gelöst, das Stilproblem neu entstanden.**
+
+| | Lieferung 1 | Lieferung 2 | heute | Vorgabe |
+|---|---|---|---|---|
+| Silhouetten-Ähnlichkeit | 0,83 ✘ | **0,60 ✔** | 0,49 | unter 0,65 |
+| Reines Schwarz | 6,7 – 10,9 % ✘ | **14,3 – 25,2 % ✘** | 0,0 % | unter 2 % |
+| Feindetail | 4,9 – 6,8 | **6,8 – 9,5 ✘** | 1,4 – 4,0 | so wenig wie möglich |
+| Lichtwinkel | 8 – 34° | **3 – 33°** | 5 – 114° | unter 20° |
+
+Die Formen stimmen jetzt: Quadrokopter, Fußsoldaten und Kettenfahrzeuge sind
+drei klar verschiedene Grundformen, und im Mittel liegen sie unter der
+Grenze. Nur die drei Kettenfahrzeuge ähneln sich untereinander (0,85 – 0,89)
+— davon wird ohnehin nur eines gebraucht.
+
+**Aber der Stil ist abgedriftet:** von malerisch (Lieferung 1) zu
+cel-shaded mit einer harten schwarzen Kontur um jedes einzelne Teil. Das
+allein erklärt die 14 bis 25 % Schwarz und den Anstieg beim Feindetail.
+**Es ist genau diese eine Sache zu ändern** — der Rest von Lieferung 2 ist
+richtig.
 
 **Die drei Kandidaten, die bleiben können.** Ihre Machart ist genau richtig;
 sie brauchen nur ihre eigene Grundform:

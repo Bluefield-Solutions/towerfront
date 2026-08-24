@@ -1201,7 +1201,7 @@ XL > 10 Runden.
 | TF-032 | Targeting | ERLEDIGT v146 | Modus „hinten" fehlt | Durchbrecher nicht abfangbar | Fünfter Modus | P2 | XS | nach Standort aufgeteilt 88 gegen 84 Punkte |
 | TF-033 | VFX | MISSING | Keine Rückmeldung über Wirksamkeit | Man sieht nicht, ob ein Turm taugt | Abpraller bei Panzerung, gedämpfter Einschlag | P2 | S | TF-015 |
 | TF-034 | Onboarding | MISSING | Konter werden nie erklärt | Der erste Gleiter überrascht | Ein Satz beim ersten Auftreten jeder Gegnerart | P2 | S | TF-014 |
-| TF-042 | Map | **VERIFIED v149** | Die Bahnen laufen nicht auf der gemalten Straße | Gegner gehen neben dem Weg — auf der Frostspalte bis zu 520 Weltpunkte am Stück quer über den Schnee | Stützpunkte an die gemalten Straßen anpassen; Spiralhain (96,9 %) ist die Vorlage | **P1** | M | gefunden durch die Wegvorschau aus TF-014; Tor `bahntreuetor` hält den Stand fest |
+| TF-042 | Map | ERLEDIGT v150 | Die Bahnen laufen nicht auf der gemalten Straße | Gegner gehen neben dem Weg | Stützpunkte an die gemalten Straßen ziehen | **P1** | M | 98,0/79,0/89,5/67,3/69,1/75,7 → 100/94,3/100/82,4/80,1/84,3 %; die 520 aus v149 waren ein Messfehler |
 | TF-035 | Code | ERLEDIGT v148 | Toter `topdown`-Zweig, totes `range`-Feld, leere Turmleinwand | Wartungsballast | Entfernen | P3 | XS | mehr als gemeldet: auch `drawRim`, `palette.rim` und 14 unerreichbare Zeilen |
 | TF-036 | Map | MISSING | Kein Kreuzungstyp, keine getrennten Ziele | Karten unterscheiden sich zu wenig | Vierte Karte mit anderer Topologie | P3 | M | TF-003 |
 | TF-037 | Economy | DESIGN | Verkauf zu großzügig, kein Verklickschutz | Fehler kosten nichts | Rückgabe nach Wellenzahl staffeln, Bestätigung | P3 | XS | — |

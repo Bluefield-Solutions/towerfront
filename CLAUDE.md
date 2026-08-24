@@ -53,6 +53,8 @@ npm run pack-art    Bildvorrat aus art/roh/ neu einbacken
 npm run eichen      einen Wert durchprobieren, alle Kennzahlen nebeneinander
 npm run einbettung  misst, wie sehr eine Figur zur Karte gehört (--eichen: Raum)
 npm run zielplatte  findet die Zielplattform im Kartenbild und prüft die Zahl
+npm run bahnfit     zieht die Bahnen auf die gemalte Strasse (schreibt
+                    maps.ts). `--umleiten` aendert Routen, nicht nur Lagen.
 npm run bahntreue   prueft am Kartenbild, ob jede Bahn auf der GEMALTEN
                     Strasse laeuft - Ratsche, kein Soll.
 npm run gedraenge   misst die WIRKLICHE Breite jeder Gegnerfigur im
@@ -198,7 +200,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v149. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v150. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

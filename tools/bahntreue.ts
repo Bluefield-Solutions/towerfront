@@ -33,12 +33,13 @@ const offen: string[] = [];
 /** Der heutige Stand je Bahn - eine RATSCHE, kein Soll.
  *
  *  Sie sagt nicht "so gut muss es sein", sondern "so war es, und schlechter
- *  wird es nicht". Gemessen am 23.08.2026. Nur der Spiralhain (96,9 %) ist
- *  wirklich gut; die anderen fuenf Bahnen sind der Befund selbst. */
+ *  wird es nicht". Gemessen am 24.08.2026, nach `npm run bahnfit`.
+ *
+ *  Vorher (v149, gleiche Messung): 98,0 / 79,0 / 89,5 / 67,3 / 69,1 / 75,7. */
 const RATSCHE: Record<string, number[]> = {
-  spiralhain: [0.969],
-  ascheschlucht: [0.733, 0.777, 0.587],
-  frostspalte: [0.624, 0.605],
+  spiralhain: [1.0],
+  ascheschlucht: [0.943, 1.0, 0.824],
+  frostspalte: [0.801, 0.843],
 };
 /** Wieviel Streuung erlaubt ist, bevor "schlechter" gemeldet wird. Die
  *  Messung ist auf 640 Punkte Breite gerastert; ein Punkt Unterschied am
@@ -77,15 +78,30 @@ for (const m of MAPS) {
   };
   // Wieviel Prozent der Bahnpunkte liegen auf der gemalten Strasse?
   bahnen.forEach((b, i) => {
-    let drauf = 0, n = 0, laengsteLuecke = 0, luecke = 0;
+    // Gezaehlt wird erst AB DEM ERSTEN KONTAKT mit der Strasse.
+    //
+    // Der Bahnanfang liegt bewusst vor der Bildkante, und die gemalte
+    // Strasse beginnt erst ein Stueck weiter drinnen - dazwischen liegt die
+    // Zuwegung, auf der es nichts zu treffen gibt. Die erste Fassung dieser
+    // Messung zaehlte sie mit und meldete deshalb auf der Frostspalte "520
+    // Weltpunkte am Stueck daneben". Nachgesehen lagen die grossen
+    // Abweichungen alle am Kartenrand: von (-44,1076) bis (520,1060), also
+    // auf genau dieser Zuwegung.
+    //
+    // Das war kein Befund des Spiels, sondern einer der Messung. Was zaehlt,
+    // ist die Strecke, auf der es eine Strasse zu treffen GIBT.
+    let drauf = 0, n = 0, laengsteLuecke = 0, luecke = 0, begonnen = false;
     for (let sw = 0; sw < b.length; sw += 4) {
       const p = b.at(sw);
       const x = Math.round(p.x * N / WELT_B), y = Math.round(p.y * N / WELT_B);
       if (x < 0 || y < 0 || x >= N || y >= H) continue;
+      const drauf1 = istWeg(x, y);
+      if (!begonnen) { if (!drauf1) continue; begonnen = true; }
       n++;
-      if (istWeg(x, y)) { drauf++; if (luecke > laengsteLuecke) laengsteLuecke = luecke; luecke = 0; }
+      if (drauf1) { drauf++; if (luecke > laengsteLuecke) laengsteLuecke = luecke; luecke = 0; }
       else luecke += 4;
     }
+    if (!n) { console.log(`  ${m.name} Bahn ${i}: beruehrt die Strasse nie.`); return; }
     if (luecke > laengsteLuecke) laengsteLuecke = luecke;
     const anteil = drauf / n;
     const soll = RATSCHE[m.id]?.[i];
@@ -107,10 +123,11 @@ for (const m of MAPS) {
 
 if (offen.length) {
   console.log(`\nBahnen, die nicht auf ihrer Strasse laufen: ${offen.join(', ')}`);
-  console.log('  Die Gegner laufen dort neben dem gemalten Weg - auf der Frostspalte');
-  console.log('  bis zu 520 Weltpunkte am Stueck quer ueber den Schnee. Das ist ein');
-  console.log('  eigener Befund (TF-042) und mit neuen Stuetzpunkten zu beheben, nicht');
-  console.log('  mit neuen Bildern. Die Ratsche haelt den Zustand fest, bis das geschieht.');
+  console.log('  Auf der Frostspalte laufen beide Bahnen stellenweise noch neben dem');
+  console.log('  gemalten Weg, laengstens 164 Weltpunkte am Stueck. Was dort bleibt, ist');
+  console.log('  keine Ungenauigkeit mehr, sondern eine Frage an den Kartenentwurf:');
+  console.log('  welche der gemalten Strassen die Bahn nehmen soll (`bahnfit --umleiten`');
+  console.log('  zeigt die Alternative, macht die Bahn aber ein Viertel laenger).');
 }
 
 console.log('\n  Messstelle: gepacktes Kartenbild auf 640 Punkte Breite, Bahnpunkte alle 4 '

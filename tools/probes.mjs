@@ -1004,6 +1004,15 @@ const PROBEN = [
     tor: 'doku',
   },
   {
+    // TF-042: eine Bahn wieder von der Strasse ziehen. Die Ratsche muss das
+    // sehen - sonst haelt sie nichts fest.
+    name: 'Eine Bahn rutscht von der Strasse',
+    datei: 'src/data/maps.ts',
+    regel: /(export const MAP_SPIRALHAIN[\s\S]{0,4000}?lanes: \[\n    \[\n)/,
+    ersatz: '$1      { x: 900, y: 200 }, { x: 1100, y: 240 },\n',
+    tor: 'bahntreuetor',
+  },
+  {
     // TF-014: die Wegvorschau abgeschaltet - man saehe nicht, woher es kommt.
     name: 'Wegvorschau abgeschaltet',
     datei: 'src/gfx/renderer.ts',

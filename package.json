@@ -43,6 +43,7 @@
     "zielplattentor": "tsx tools/zielplatte.mjs --tor",
     "gelaende": "tsx tools/gelaende.mjs",
     "gelaendetor": "tsx tools/gelaende.mjs --tor",
+    "bahnfit": "tsx tools/bahnfit.ts",
     "bahntreue": "tsx tools/bahntreue.ts",
     "bahntreuetor": "tsx tools/bahntreue.ts --tor",
     "gedraenge": "tsx tools/gedraenge.ts",

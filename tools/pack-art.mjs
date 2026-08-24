@@ -350,10 +350,22 @@ async function processOne(srcPath, spec, group) {
 }
 
 /** Ein ganzes Bündel verarbeiten und als TypeScript-Modul schreiben. */
-async function packGroup(name) {
-  const specPath = join(ART, `${name}.json`);
+async function packGroup(name, umgebung = {}) {
+  // `umgebung` ist NUR fuer den Selbsttest da. Der normale Aufruf laesst sie
+  // weg und arbeitet auf den echten Verzeichnissen - das Werkzeug prueft sich
+  // also mit demselben Weg, den es sonst geht, und nicht mit einer zweiten
+  // Fassung daneben. Vier Mal hat in diesem Projekt schon ein Werkzeug die
+  // Regel nachgebaut statt sie zu benutzen, und vier Mal war genau dort die
+  // Luecke.
+  const artDir = umgebung.art ?? ART;
+  const outDir = umgebung.out ?? OUT;
+  // Der Selbsttest schreibt immer - er prueft ja gerade das Ergebnis. Ohne
+  // das erbte er den --check-Modus des aeusseren Aufrufs und meldete
+  // "passt nicht mehr zu den Rohbildern", statt zu packen.
+  const nurPruefen = umgebung.schreiben ? false : checkOnly;
+  const specPath = join(artDir, `${name}.json`);
   const spec = JSON.parse(readFileSync(specPath, 'utf8'));
-  const srcDir = join(ART, spec.source);
+  const srcDir = join(artDir, spec.source);
   const rows = [];
   let total = 0;
   const problems = [];
@@ -361,9 +373,22 @@ async function packGroup(name) {
 
   /** Steht der Schluessel schon gepackt im Quelltext? */
   const fertigVorhanden = (spec, key) => {
-    const ziel = join(ROOT, 'src/gfx/assets', spec.output ?? '');
+    const ziel = join(outDir, spec.output ?? '');
     if (!spec.output || !existsSync(ziel)) return false;
     return readFileSync(ziel, 'utf8').includes(`'${key}':`);
+  };
+
+  /** Die schon gepackte Fassung eines Eintrags, falls es sie gibt.
+   *
+   *  Sie wird gebraucht, wenn nur EINIGE Rohbilder nachgeliefert werden: die
+   *  uebrigen Eintraege muessen unveraendert im Buendel bleiben. Ohne das
+   *  waere jede Teillieferung ein Datenverlust. */
+  const fertigeFassung = (spec, key) => {
+    const ziel = join(outDir, spec.output ?? '');
+    if (!spec.output || !existsSync(ziel)) return null;
+    const m = new RegExp(`'${key}': 'data:image/webp;base64,([^']+)'`)
+      .exec(readFileSync(ziel, 'utf8'));
+    return m ? Buffer.from(m[1], 'base64') : null;
   };
 
   // Ein Buendel wird nie geleert.
@@ -378,7 +403,7 @@ async function packGroup(name) {
   }
 
   const stamp = fingerprint(spec, srcDir);
-  const target = join(OUT, spec.output);
+  const target = join(outDir, spec.output);
   const existing = existsSync(target) ? readFileSync(target, 'utf8') : '';
   const stampLine = `${STAMP}${stamp}`;
   if (existing.includes(stampLine) && !force) {
@@ -402,7 +427,24 @@ async function packGroup(name) {
       //
       // Ohne diese Ausnahme scheiterte die Torkette auf jedem frischen Klon,
       // obwohl alles vorhanden war, was das Spiel braucht.
-      if (fertigVorhanden(spec, key)) { uebersprungen.push(key); continue; }
+      //
+      // **Und die gepackte Fassung wird MITGENOMMEN, nicht nur uebersprungen.**
+      //
+      // Bis v157 stand hier nur `continue`. Wer ein einzelnes Bild
+      // nachlieferte, bekam ein Buendel, das NUR dieses eine enthielt - beim
+      // Durchstich mit drei neuen Gegnern fielen die uebrigen fuenf still
+      // heraus, und `npm run art` meldete gruen dazu.
+      //
+      // Es ist dieselbe Klasse Fehler, die weiter oben schon einmal 1,2 MB
+      // gekostet hat ("Ein Buendel wird nie geleert"). Repariert wurde damals
+      // der Fall, der eingetreten war - ALLE Quellen fehlen -, nicht die
+      // Klasse: EINIGE fehlen.
+      const alt = fertigeFassung(spec, key);
+      if (alt) {
+        uebersprungen.push(key);
+        rows.push({ key, buffer: alt, uebernommen: true });
+        continue;
+      }
       problems.push(`${key}: Datei ${file} fehlt, und es gibt keine gepackte Fassung.`);
       continue;
     }
@@ -426,6 +468,19 @@ async function packGroup(name) {
     }
   }
 
+  // Vollzaehligkeit ansagen. Eine Teillieferung ist erlaubt - aber sie soll
+  // dastehen, nicht stillschweigend geschehen.
+  const soll = Object.keys(spec.items).length;
+  const neu = rows.filter((r) => !r.uebernommen).length;
+  if (neu < soll) {
+    console.log(`  ${neu} von ${soll} Eintraegen neu gepackt, `
+      + `${rows.length - neu} aus der bestehenden Fassung uebernommen.`);
+  }
+  if (rows.length < soll) {
+    problems.push(`Gruppe "${name}": nur ${rows.length} von ${soll} Eintraegen im Buendel - `
+      + `${soll - rows.length} haben weder ein Rohbild noch eine gepackte Fassung.`);
+  }
+
   const budget = (spec.budgetKb ?? 400) * 1024;
   console.log(
     `  Summe ${(total / 1024).toFixed(0)} KB von ${(budget / 1024).toFixed(0)} KB erlaubt` +
@@ -444,7 +499,7 @@ async function packGroup(name) {
   lines.push(stampLine, '');
   const text = lines.join('\n');
 
-  if (checkOnly) {
+  if (nurPruefen) {
     // Frischepruefung: das eingebettete Modul muss zu den Rohbildern passen.
     // Sonst liegt im Spiel eine Fassung, die niemand mehr nachvollziehen kann -
     // etwa weil jemand von Hand nachgebessert hat.
@@ -460,16 +515,91 @@ async function packGroup(name) {
       }
     }
   } else if (!problems.length) {
-    mkdirSync(OUT, { recursive: true });
+    mkdirSync(outDir, { recursive: true });
     writeFileSync(target, text);
-    console.log(`  geschrieben: src/gfx/assets/${spec.output}`);
+    console.log(`  geschrieben: ${outDir === OUT ? 'src/gfx/assets' : outDir}/${spec.output}`);
   }
   return problems;
+}
+
+/** Selbsttest: eine Teillieferung darf das Buendel nicht leeren.
+ *
+ *  **Warum es diesen Test ueberhaupt gibt.** `art/roh/` liegt seit dem Umzug
+ *  nicht mehr in Git. Auf einem frischen Klon, im Ablaufplan und in jeder
+ *  Gegenprobe gibt es also KEIN einziges Rohbild - und ohne Rohbild laeuft
+ *  der Packweg gar nicht erst an. Der schwerste Fehler, den dieses Werkzeug
+ *  machen kann, waere damit von keinem Tor zu erreichen: er hat schon einmal
+ *  1,2 MB gepackte Bilder geloescht, und in v157 haette er beim Durchstich
+ *  fuenf von acht Gegnern still verschwinden lassen, waehrend `npm run art`
+ *  gruen meldete.
+ *
+ *  Deshalb baut sich der Test seine eigene kleine Welt: zwei Eintraege im
+ *  Buendel, aber nur EIN Rohbild. Danach muessen beide noch da sein.
+ *
+ *  Gefahren wird der ECHTE `packGroup`, nur auf anderen Verzeichnissen -
+ *  keine nachgebaute Fassung (Regel: vier Mal hat ein Werkzeug in diesem
+ *  Projekt die Regel nachgebaut statt sie zu benutzen). */
+async function selbsttest() {
+  const { mkdtempSync, rmSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const wurzel = mkdtempSync(join(tmpdir(), 'packart-'));
+  const art = join(wurzel, 'art'), out = join(wurzel, 'out');
+  const roh = join(art, 'roh');
+  mkdirSync(roh, { recursive: true });
+  mkdirSync(out, { recursive: true });
+
+  // Ein winziges Rohbild - ein Fleck, der den Rand nicht beruehrt.
+  const bild = await sharp({
+    create: { width: 64, height: 64, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+  }).composite([{
+    input: await sharp({
+      create: { width: 24, height: 24, channels: 4, background: { r: 90, g: 120, b: 70, alpha: 1 } },
+    }).png().toBuffer(),
+    left: 20, top: 20,
+  }]).png().toBuffer();
+  writeFileSync(join(roh, 'eins.png'), bild);
+
+  writeFileSync(join(art, 'probe.json'), JSON.stringify({
+    source: 'roh', output: 'probe.ts', exportName: 'PROBE_ART', budgetKb: 100,
+    defaults: { size: 64, fill: 0.5, quality: 70 },
+    items: { eins: { file: 'eins.png' }, zwei: { file: 'zwei.png' } },
+  }));
+  // Das Buendel enthaelt beide - "zwei" hat kein Rohbild und muss ueberleben.
+  const altB64 = bild.toString('base64');
+  writeFileSync(join(out, 'probe.ts'),
+    `export const PROBE_ART: Record<string, string> = {\n`
+    + `  'eins': 'data:image/webp;base64,${altB64}',\n`
+    + `  'zwei': 'data:image/webp;base64,${altB64}',\n};\n`);
+
+  const laut = console.log;
+  console.log = () => { /* der Selbsttest meldet sich mit einer Zeile, nicht mit einer Gruppe */ };
+  let probleme;
+  try { probleme = await packGroup('probe', { art, out, schreiben: true }); }
+  finally { console.log = laut; }
+  const danach = readFileSync(join(out, 'probe.ts'), 'utf8');
+  const drin = [...danach.matchAll(/'(\w+)': 'data:image/g)].map((m) => m[1]);
+  rmSync(wurzel, { recursive: true, force: true });
+
+  const fehler = [];
+  if (probleme.length) fehler.push(`packGroup meldete: ${probleme.join('; ')}`);
+  if (!drin.includes('eins')) fehler.push('der neu gepackte Eintrag fehlt im Buendel.');
+  if (!drin.includes('zwei')) {
+    fehler.push('der Eintrag OHNE Rohbild ist aus dem Buendel gefallen - eine '
+      + 'Teillieferung loescht damit alles, was nicht mitgeliefert wurde.');
+  }
+  if (fehler.length) {
+    console.error('\nSELBSTTEST: Teillieferung leert das Buendel');
+    for (const f of fehler) console.error(`  - ${f}`);
+    process.exit(1);
+  }
+  console.log(`  Selbsttest: Teillieferung haelt beide Eintraege (${drin.join(', ')}).`);
 }
 
 const groups = only.length
   ? only
   : readdirSync(ART).filter((f) => f.endsWith('.json')).map((f) => f.replace('.json', ''));
+
+await selbsttest();
 
 let allProblems = [];
 for (const g of groups) {

@@ -1456,6 +1456,24 @@ const PROBEN = [
     tor: 'einbettungstor',
   },
   {
+    // Eine Teillieferung loescht alles, was nicht mitgeliefert wurde.
+    //
+    // Der Fehler hat in diesem Werkzeug schon einmal 1,2 MB gepackte Bilder
+    // gekostet - damals fehlten ALLE Quellen. Repariert wurde der Fall, nicht
+    // die Klasse: fehlen EINIGE, fiel der Rest bis v157 still heraus. Beim
+    // Durchstich mit drei neuen Gegnern blieben drei von acht uebrig, und
+    // `npm run art` meldete gruen dazu.
+    //
+    // Erreichbar ist der Fehler nur ueber den Selbsttest: `art/roh/` liegt
+    // nicht in Git, also gibt es in der Gegenprobe kein einziges Rohbild -
+    // und ohne Rohbild laeuft der Packweg gar nicht erst an.
+    name: 'Teillieferung leert den Bildvorrat',
+    datei: 'tools/pack-art.mjs',
+    regel: /^        rows\.push\(\{ key, buffer: alt, uebernommen: true \}\);$/m,
+    ersatz: '        void alt;',
+    tor: 'art',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

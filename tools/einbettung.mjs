@@ -102,6 +102,58 @@ for (const m of readFileSync(join(ROOT, 'src/gfx/assets/backgrounds.ts'), 'utf8'
   KARTEN.push({ id: m[1], ...k, roh: Buffer.from(m[2], 'base64') });
 }
 
+// --- Saumkontrast am gebackenen Bild (TF-012)
+//
+// Dieselbe Rechnung wie im Lesbarkeitstor, damit die beiden Zahlen
+// vergleichbar bleiben: WCAG-Kontrastverhaeltnis zwischen dem aeussersten
+// deckenden Ring der Figur und der mittleren Helligkeit des Untergrunds.
+const leuchte = (r, g, b) => {
+  const f = (c) => { const v = c / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+};
+const kontrast = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+
+/** Der aeusserste deckende Ring einer Figur. */
+async function kantenLeuchte(buffer) {
+  const { data, info } = await sharp(buffer).ensureAlpha().raw()
+    .toBuffer({ resolveWithObject: true });
+  const W = info.width, H = info.height;
+  const deckend = (x, y) => (x < 0 || y < 0 || x >= W || y >= H)
+    ? false : data[(y * W + x) * 4 + 3] > 200;
+  let r = 0, g = 0, b = 0, n = 0;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (!deckend(x, y)) continue;
+    if (deckend(x - 1, y) && deckend(x + 1, y) && deckend(x, y - 1) && deckend(x, y + 1)) continue;
+    const i = (y * W + x) * 4;
+    r += data[i]; g += data[i + 1]; b += data[i + 2]; n++;
+  }
+  return n ? leuchte(r / n, g / n, b / n) : null;
+}
+const bodenCache = new Map();
+async function bodenLeuchte(k) {
+  if (bodenCache.has(k.id)) return bodenCache.get(k.id);
+  const { data, info } = await sharp(k.roh).resize(240, 132, { fit: 'fill' })
+    .removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  let r = 0, g = 0, b = 0;
+  const n = info.width * info.height;
+  for (let i = 0; i < n; i++) { r += data[i * 3]; g += data[i * 3 + 1]; b += data[i * 3 + 2]; }
+  const l = leuchte(r / n, g / n, b / n);
+  bodenCache.set(k.id, l);
+  return l;
+}
+/** Unterhalb dieses Kontrasts laeuft eine Silhouette in den Boden.
+ *  Dieselbe Schwelle wie im Lesbarkeitstor - eine zweite Zahl fuer dieselbe
+ *  Frage waere eine zweite Wahrheit. */
+const SAUM_HINWEIS = 1.5;
+/** Ratschen auf dem heutigen Stand, kein Soll.
+ *
+ *  Gemessen mit und ohne Randlicht (Regel 13): ohne liegt der schwaechste
+ *  Saum bei **1,26** (Koloss auf der Frostspalte) und vier von 24 Messungen
+ *  unter 1,5. Mit sind es **1,80** und keine einzige. Die Ratsche steht
+ *  deshalb dicht unter dem neuen Stand - schlechter wird es nicht mehr. */
+const SAUM_MIN = 1.75;
+const SAUM_RATSCHE = 0;
+
 /** Die Einbettung nachrechnen - dieselbe Formel wie src/gfx/einbettung.ts.
  *
  *  Sie steht hier ein zweites Mal, und das ist die Schwaeche dieses
@@ -271,6 +323,53 @@ const befunde = [];
   }
   console.log(`Kartenbindung: ${geprueft} Gegnerbilder ueber ${KARTEN.length} Karten geholt, `
     + `${gleich} davon mehrfach identisch.`);
+
+  // --- Der Saumkontrast am GEBACKENEN Bild (TF-012).
+  //
+  // **Warum hier und nicht im Lesbarkeitstor.** Das misst die GEPACKTEN
+  // Quellbilder - und das Spiel zeichnet sie nie. Zwischen Quelle und Schirm
+  // liegen Farbklima, Sonnenanstrich, Bodenverschattung, Rueckwurf und seit
+  // v156 das Randlicht. Eine Zahl ueber die Quelle beschreibt ein Bild, das
+  // niemand sieht (Regel 12), und sie kann eine Aenderung an der Einbettung
+  // gar nicht sehen - dieselbe Falle wie in v148, als die Messlatte die
+  // Kartenfarbe statt der Figur rechnete.
+  //
+  // Und gemessen wird ueber `getEnemyArt`, nicht ueber die nachgebaute
+  // Einbettung weiter unten in dieser Datei: was das Spiel zeichnet, ist die
+  // Frage - nicht, was die Rechnung ergaebe.
+  const kanten = [];
+  for (const id of ids) {
+    for (const k of KARTEN) {
+      const cv = getEnemyArt(id, false, k.id);
+      if (!cv) continue;
+      const l = await kantenLeuchte(cv.toBuffer('image/png'));
+      if (l === null) continue;
+      kanten.push({ id, karte: k.id, wert: kontrast(l, await bodenLeuchte(k)) });
+    }
+  }
+  if (kanten.length < ids.length) {
+    befunde.push(`Saumkontrast: nur ${kanten.length} Messungen fuer ${ids.length} Gegnerarten `
+      + `auf ${KARTEN.length} Karten - eine leere Messung besteht immer (Regel 5).`);
+  } else {
+    kanten.sort((a, b) => a.wert - b.wert);
+    const schwach = kanten.filter((m) => m.wert < SAUM_HINWEIS);
+    console.log(`\nSaumkontrast am gebackenen Bild (${kanten.length} Messungen, `
+      + `Hinweis unter ${SAUM_HINWEIS}):`);
+    for (const m of kanten.slice(0, 5)) {
+      console.log(`  ${m.id.padEnd(12)} ${m.karte.padEnd(14)} ${m.wert.toFixed(2)}`);
+    }
+    console.log(`  schwaechster ${kanten[0].wert.toFixed(2)}, `
+      + `${schwach.length} unter ${SAUM_HINWEIS} (Ratsche ${SAUM_RATSCHE})`);
+    if (kanten[0].wert < SAUM_MIN) {
+      befunde.push(`Saumkontrast: "${kanten[0].id}" auf ${kanten[0].karte} liegt bei `
+        + `${kanten[0].wert.toFixed(2)}, die Ratsche steht bei ${SAUM_MIN}. Eine Silhouette, `
+        + 'die in den Boden laeuft, ist keine.');
+    }
+    if (schwach.length > SAUM_RATSCHE) {
+      befunde.push(`Saumkontrast: ${schwach.length} von ${kanten.length} Messungen liegen `
+        + `unter ${SAUM_HINWEIS}, die Ratsche steht bei ${SAUM_RATSCHE}.`);
+    }
+  }
   if (!geprueft) {
     befunde.push('Kartenbindung: kein einziges Gegnerbild kam an - dann prueft dieser '
       + 'Abschnitt nichts.');

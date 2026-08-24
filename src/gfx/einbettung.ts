@@ -37,6 +37,7 @@
  */
 import { getBackground } from './backgrounds';
 import { mapById } from '../data/maps';
+import { LICHT } from '../data/config';
 import { hexA } from './glow';
 
 /** Wie stark das Farbklima aufgetragen wird.
@@ -112,6 +113,70 @@ export function kartenKlima(mapId: string): string | null {
  *  ohne Farbklima festhaelt. */
 export function einbettungSchluessel(mapId: string): string {
   return `${mapId}|${kartenKlima(mapId) ?? '-'}`;
+}
+
+/** Wie breit das Randlicht ist, als Anteil der Figurenkante (TF-012).
+ *
+ *  Anteilig und nicht in Bildpunkten (Regel 2): die Figuren werden mit 256
+ *  und 320 Punkten gebacken und mit 17 bis 108 gezeichnet. Eine feste Breite
+ *  waere auf dem Titanen halb so breit wie auf dem Spaeher. */
+export const RANDLICHT_BREITE = 0.016;
+/** Wie hell es aufgetragen wird. Durchprobiert, siehe `npm run einbettung`. */
+export const RANDLICHT_STAERKE = 0.75;
+
+/** Eine helle Kante auf der Sonnenseite - gebacken, nicht gezeichnet (TF-012).
+ *
+ *  **Wogegen es hilft.** Das Lesbarkeitstor misst den aeussersten Ring jeder
+ *  Figur gegen den Boden. Neun von zwanzig liegen unter 1,5, der Koloss auf
+ *  der Frostspalte bei **1,02** - seine Kante hat praktisch die Helligkeit
+ *  des Schnees, auf dem er steht. Eine Silhouette, die in den Boden laeuft,
+ *  ist keine.
+ *
+ *  **Wie es gemacht ist.** Die Silhouette wird um wenige Punkte VON der Sonne
+ *  weg verschoben und von sich selbst abgezogen; uebrig bleibt eine Sichel
+ *  auf der Sonnenseite, und die wird im Sonnenton der Karte eingefaerbt.
+ *  Kein Weichzeichner, kein `lighter` - Regel 11 verbietet beides auf iOS,
+ *  und gebacken wird ohnehin nur einmal.
+ *
+ *  **Warum es hier steht und nicht bei den Figuren.** `LICHT` gibt die
+ *  Schattenrichtung vor; die Sonne steht ihr gegenueber. Wer die Kante
+ *  woanders hinlegt, widerspricht dem Schatten, den dieselbe Konstante
+ *  wirft.
+ *
+ *  Zwei Aufrufstellen, eine Rechnung: `einbetten` fuer Tuerme und Objekte,
+ *  `bakeEnemy` fuer die Gegner. Die Gegner laufen NICHT durch `einbetten` -
+ *  sie tragen seit v59 eine eigene Fassung der Beleuchtung. Das ist eine
+ *  Altlast (Regel 15) und als D28 notiert; das Randlicht macht sie nicht
+ *  groesser, weil es nur einmal dasteht. */
+export function randlicht(
+  g: CanvasRenderingContext2D, size: number, mapId: string, staerke = 1,
+): void {
+  if (typeof document === 'undefined') return;
+  const quelle = g.canvas;
+  const breite = Math.max(1, size * RANDLICHT_BREITE);
+  // `LICHT` zeigt dorthin, wo der Schatten faellt. Die Silhouette wandert
+  // also dorthin, und was auf der Gegenseite ueberhaengt, ist die Sonnenseite.
+  const dx = LICHT.x * breite, dy = LICHT.y * breite;
+
+  const rand = document.createElement('canvas');
+  rand.width = quelle.width;
+  rand.height = quelle.height;
+  const rg = rand.getContext('2d');
+  if (!rg) return;
+  rg.drawImage(quelle, 0, 0);
+  rg.globalCompositeOperation = 'destination-out';
+  rg.drawImage(quelle, dx, dy);
+  rg.globalCompositeOperation = 'source-in';
+  rg.fillStyle = mapById(mapId).palette.sonne;
+  rg.fillRect(0, 0, rand.width, rand.height);
+
+  const vorherOp = g.globalCompositeOperation;
+  const vorherA = g.globalAlpha;
+  g.globalCompositeOperation = 'source-atop';
+  g.globalAlpha = RANDLICHT_STAERKE * staerke;
+  g.drawImage(rand, 0, 0);
+  g.globalAlpha = vorherA;
+  g.globalCompositeOperation = vorherOp;
 }
 
 /** Eine gezeichnete Figur in die Karte einbetten.
@@ -192,6 +257,10 @@ export function einbetten(
   rueckwurf.addColorStop(1, hexA(sonne, 0));
   g.fillStyle = rueckwurf;
   g.fillRect(0, 0, size, size);
+
+  // --- Zuletzt das Randlicht: es ist das Hellste im Bild und gehoert deshalb
+  // ueber Schleier, Schatten und Rueckwurf.
+  randlicht(g, size, mapId, staerke);
 
   g.globalCompositeOperation = vorher;
 }

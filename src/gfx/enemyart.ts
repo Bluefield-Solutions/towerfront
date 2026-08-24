@@ -2,6 +2,7 @@ import { ENEMY_ART } from './assets/enemies';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import { hexA } from './glow';
 import { mapById } from '../data/maps';
+import { randlicht } from './einbettung';
 
 /** Gerenderte Gegnerbilder.
  *
@@ -109,6 +110,12 @@ export function getEnemyArt(
     rueckwurf.addColorStop(1, hexA(sonne, 0));
     bg.fillStyle = rueckwurf;
     bg.fillRect(0, 0, size, size);
+
+    // Randlicht (TF-012) - dieselbe Rechnung wie bei Tuermen und Objekten,
+    // aus `einbettung.ts` geholt statt hier nachgebaut. Schwaecher, aus
+    // demselben Grund wie der Sonnenanstrich darueber: die Gegner sind
+    // kleiner, und ihre Farbe ist zugleich ihr Erkennungsmerkmal.
+    randlicht(bg, size, mapId, 0.8);
   }
   bg.globalCompositeOperation = 'source-over';
   g.drawImage(body, 0, 0);

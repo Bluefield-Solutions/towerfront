@@ -1443,6 +1443,19 @@ const PROBEN = [
     tor: 'muster',
   },
   {
+    // TF-012: das Randlicht abgeschaltet. Regel 13 in ihrer reinsten Form -
+    // wer eine Wirkung misst, schaltet sie zuerst ab. Ohne diese Probe
+    // koennte das Randlicht ein Fuellwort sein, das die Zahl nicht bewegt.
+    //
+    // Gemessen: ohne faellt der schwaechste Saum von 1,80 auf 1,26 und vier
+    // von 24 Messungen rutschen unter 1,5.
+    name: 'Randlicht abgeschaltet',
+    datei: 'src/gfx/einbettung.ts',
+    regel: /^export const RANDLICHT_STAERKE = 0\.75;$/m,
+    ersatz: 'export const RANDLICHT_STAERKE = 0;',
+    tor: 'einbettungstor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

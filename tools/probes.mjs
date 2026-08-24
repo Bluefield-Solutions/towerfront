@@ -1383,6 +1383,28 @@ const PROBEN = [
     tor: 'streifentor',
   },
   {
+    // TF-011: die Sonne wandert. `LICHT` ist die Richtung, mit der der
+    // Renderer jeden Schatten zeichnet - dreht man sie, sind alle Figuren
+    // ploetzlich von der falschen Seite beleuchtet, ohne dass sich ein
+    // einziges Bild geaendert haette. Genau das soll die Messung sehen.
+    name: 'Die Sonne steht woanders',
+    datei: 'src/data/config.ts',
+    regel: /export const LICHT = \{ x: 0\.62, y: 0\.78 \};/,
+    ersatz: 'export const LICHT = { x: -0.62, y: -0.78 };',
+    tor: 'grafiktor',
+  },
+  {
+    // Und die Pruefung selbst: eine leere Liste besteht jede Pruefung.
+    // Faengt die Auswahl keine Figur mehr ein, meldet das Tor gruen ueber
+    // gar nichts - der haeufigste Weg, auf dem eine Messung aufhoert zu
+    // messen, ohne dass etwas rot wird (Regel 5).
+    name: 'Lichtmessung faengt keine Figur ein',
+    datei: 'tools/artaudit.mjs',
+    regel: /\.\.\.\[\.\.\.tw\]\.filter\(\(\[k\]\) => \/_1_1\$\/\.test\(k\)\), \.\.\.en\]/,
+    ersatz: '...[...tw].filter(([k]) => /_9_9$/.test(k))]',
+    tor: 'grafiktor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

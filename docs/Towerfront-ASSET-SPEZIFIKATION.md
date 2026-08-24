@@ -19,6 +19,11 @@
 
 ---
 
+
+> **Verbindlich ist `Towerfront-ARTBIBLE.md`.** Dieses Dokument hier ist die
+> *Bestellform*: Prompts, Größen, Reihenfolge. Wo eine Zahl in beiden steht,
+> gilt die der Art Bible — und dort steht auch, womit sie geprüft wird.
+
 ## 0. So arbeiten wir zusammen
 
 1. Du (oder ein spezialisierter Bild-Agent) erzeugst die Bilder anhand der fertigen

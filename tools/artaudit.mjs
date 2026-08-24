@@ -332,8 +332,74 @@ for (const [id, buf] of en) {
 }
 
 // --------------------------------------------------------- Lichtrichtung
+//
+// Die Festlegung "eine Sonne" aus der Art Bible (TF-011) ist keine
+// Geschmacksfrage und braucht kein Vorbild: `LICHT` in `src/data/config.ts`
+// ist die Richtung, mit der der Renderer JEDEN Schatten zeichnet. Eine
+// Figur, die von woandersher beleuchtet ist, widerspricht ihrem eigenen
+// Schatten - im selben Bild, in derselben Sekunde.
+//
+// Gemessen wird der Helligkeitsverlauf INNERHALB der Silhouette. Die
+// Fassung fuer Untergruende taugt dafuer nicht: sie laeuft ueber das ganze
+// Rechteck und wuerde bei einer freigestellten Figur vor allem deren Rand
+// gegen das Nichts messen.
+const { LICHT } = await import('../src/data/config.ts');
+const SONNE = (Math.atan2(-LICHT.y, -LICHT.x) * 180) / Math.PI;
+/** Abstand zweier Winkel auf dem Kreis. Ohne das waeren -164° und +165°
+ *  scheinbar 329° auseinander statt 31° - und der schlimmste Ausreisser
+ *  saehe aus wie der harmloseste. */
+const winkelAbstand = (a, b) => {
+  const d = Math.abs(a - b) % 360;
+  return d > 180 ? 360 - d : d;
+};
+
+async function figurenlicht(buffer) {
+  const { data, info } = await sharp(buffer).resize(300, null).ensureAlpha().raw()
+    .toBuffer({ resolveWithObject: true });
+  const W = info.width, H = info.height;
+  const l = (i) => (0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]) / 255;
+  const a = (i) => data[i + 3] / 255;
+  let gx = 0, gy = 0, n = 0;
+  for (let y = 3; y < H - 3; y++) {
+    for (let x = 3; x < W - 3; x++) {
+      const i = (y * W + x) * 4;
+      // Alle fuenf beteiligten Punkte muessen zur Figur gehoeren, sonst
+      // misst der Verlauf die Kante und nicht die Modellierung.
+      if (a(i) < 0.95) continue;
+      if (a(((y) * W + x + 2) * 4) < 0.95 || a(((y) * W + x - 2) * 4) < 0.95) continue;
+      if (a(((y + 2) * W + x) * 4) < 0.95 || a(((y - 2) * W + x) * 4) < 0.95) continue;
+      const dx = l(((y) * W + x + 2) * 4) - l(((y) * W + x - 2) * 4);
+      const dy = l(((y + 2) * W + x) * 4) - l(((y - 2) * W + x) * 4);
+      if (Math.hypot(dx, dy) < 0.12) continue;
+      gx += dx; gy += dy; n++;
+    }
+  }
+  if (!n) return null;
+  return {
+    winkel: (Math.atan2(gy / n, gx / n) * 180) / Math.PI,
+    staerke: Math.hypot(gx / n, gy / n),
+  };
+}
+
 console.log('\nLichtrichtung (Winkel zur Sonne, -135 = oben links)');
-for (const b of bgWerte) console.log(`  ${b.id.padEnd(16)} ${b.licht.toFixed(0).padStart(5)}°`);
+console.log(`  Sonne laut src/data/config.ts: ${SONNE.toFixed(0)}°\n`);
+for (const b of bgWerte) {
+  console.log(`  Untergrund ${b.id.padEnd(16)} ${b.licht.toFixed(0).padStart(5)}°`
+    + `  ${winkelAbstand(b.licht, SONNE).toFixed(0).padStart(3)}° daneben`);
+}
+console.log('');
+const lichtWerte = [];
+// Je Turmsorte die Grundstufe, dazu alle Gegner. Die Ausbaustufen sind
+// Abwandlungen desselben Bildes - sie wuerden dieselbe Aussage acht Mal
+// zaehlen und den Schnitt zugunsten der Tuerme verschieben.
+for (const [id, buf] of [...[...tw].filter(([k]) => /_1_1$/.test(k)), ...en]) {
+  const m = await figurenlicht(buf);
+  if (!m) continue;
+  const ab = winkelAbstand(m.winkel, SONNE);
+  lichtWerte.push({ id, ...m, ab });
+  console.log(`  Figur ${id.padEnd(21)} ${m.winkel.toFixed(0).padStart(5)}°`
+    + `  ${ab.toFixed(0).padStart(3)}° daneben   Modellierung ${m.staerke.toFixed(4)}`);
+}
 
 // --------------------------------------------------------------- Bewertung
 const mittel = (arr, f) => arr.reduce((a, b) => a + f(b), 0) / arr.length;
@@ -567,7 +633,59 @@ if (!befunde.length) console.log('  Keine. Alle Prinzipien erfüllt.\n');
 // dahin lagen zwei von drei Karten DARUNTER, ohne dass es jemandem auffiel:
 // `npm run grafik` war kein Tor, und Ausgaben ohne Tor liest man beim
 // dritten Mal nicht mehr.
+/** Wie weit eine Figur hoechstens von der Sonne abweichen darf (TF-011).
+ *
+ *  Eine RATSCHE, kein Soll. Das Soll steht fest und ist nicht meins: die
+ *  Sonne sitzt bei -128°, weil `LICHT` in `src/data/config.ts` dort steht.
+ *  Nur ist es heute nicht zu halten - fuenf von acht Gegnern liegen ueber
+ *  17° daneben, und das ist am BILD zu beheben, nicht am Code (TF-041).
+ *
+ *  Also wird festgehalten, was heute gilt, und schlechter wird es nicht.
+ *  Wer ein Bild neu bestellt, traegt hier den besseren Wert ein - dann
+ *  schnappt die Klinke eine Stufe weiter.
+ *
+ *  Die Tuerme zeigen, dass es geht: 2° bis 19°. Sie sind aus einer Hand.  */
+const LICHT_RATSCHE = 67;
+/** Wie stark eine Figur ueberhaupt modelliert sein muss.
+ *
+ *  Ohne diese Zahl waere die Winkelmessung ein Gluecksspiel: eine flach
+ *  ausgeleuchtete Figur hat gar keine Lichtrichtung, und der gemessene
+ *  Winkel ist dann Rauschen. Die Infanterie liegt bei 0,0025 - eine
+ *  Groessenordnung unter allen anderen (0,007 bis 0,059). Auch das ist eine
+ *  Ratsche auf dem heutigen Schlusslicht. */
+const MODELLIERUNG_RATSCHE = 0.0024;
+
 if (process.argv.includes('--tor')) {
+  // Regel 5, bevor irgendetwas geprueft wird: eine leere Liste besteht jede
+  // Pruefung. Faengt die Auswahl oben keine Figur mehr ein - ein
+  // umbenannter Bildvorrat, ein zu enges Muster -, dann meldet dieses Tor
+  // ohne diese Zeile stillschweigend gruen ueber gar nichts.
+  if (lichtWerte.length < 8) {
+    console.error(`\nGRAFIKTOR: nur ${lichtWerte.length} Figur(en) gemessen, erwartet werden `
+      + 'mindestens 8 (vier Turmsorten und acht Gegner). Eine Lichtpruefung ueber eine '
+      + 'leere Liste besteht immer.');
+    process.exit(1);
+  }
+  const schlimmste = [...lichtWerte].sort((a, b) => b.ab - a.ab)[0];
+  if (schlimmste.ab > LICHT_RATSCHE) {
+    console.error(`\nGRAFIKTOR: "${schlimmste.id}" ist ${schlimmste.ab.toFixed(1)}° von der `
+      + `Sonne beleuchtet (erlaubt ${LICHT_RATSCHE}°, Sonne ${SONNE.toFixed(0)}° aus `
+      + 'src/data/config.ts). Eine Figur, die von woandersher beleuchtet ist, '
+      + 'widerspricht ihrem eigenen Schatten.');
+    process.exit(1);
+  }
+  const flachste = [...lichtWerte].sort((a, b) => a.staerke - b.staerke)[0];
+  if (flachste.staerke < MODELLIERUNG_RATSCHE) {
+    console.error(`\nGRAFIKTOR: "${flachste.id}" ist mit ${flachste.staerke.toFixed(5)} flacher `
+      + `beleuchtet als das bisherige Schlusslicht (${MODELLIERUNG_RATSCHE}). Ohne `
+      + 'Modellierung hat eine Figur keine Lichtrichtung, und die Winkelmessung '
+      + 'daneben misst nur noch Rauschen.');
+    process.exit(1);
+  }
+  console.log(`GRAFIKTOR: Licht - schlimmste Abweichung ${schlimmste.id} mit `
+    + `${schlimmste.ab.toFixed(1)}° (Ratsche ${LICHT_RATSCHE}°), flachste Modellierung `
+    + `${flachste.id} mit ${flachste.staerke.toFixed(5)} (Ratsche ${MODELLIERUNG_RATSCHE}).`);
+
   const band = REFERENZ.grund.dichte;
   // JE KARTE, nicht im Mittel.
   //

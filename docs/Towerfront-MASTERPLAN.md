@@ -1177,7 +1177,7 @@ XL > 10 Runden.
 | TF-008 | Boss | MISSING | Kein Boss im Genresinn | Keine Dramaturgie | Phasen, Schwachstelle, eine Fähigkeit | P1 | M | TF-020 |
 | TF-009 | Progression | MISSING | Keine Freischaltung, keine Ziele | Kein Grund für eine zweite Partie | Kartenschloss, drei Sternziele je Karte | P1 | M | — |
 | TF-010 | Economy | VERIFIED | 79 % des Einkommens sind Wellenbonus | Gutes Spielen zahlt sich kaum aus | Verhältnis auf etwa 50/50 drehen | P1 | S | TF-005 |
-| TF-011 | Art | MISSING | Keine Art Bible | Jede Figur ist eine Einzelentscheidung | Verbindliches Dokument + Prüfwerkzeug | P1 | M | — |
+| TF-011 | Art | ERLEDIGT v153 | Keine Art Bible | Jede Figur ist eine Einzelentscheidung | Verbindliches Dokument + Prüfwerkzeug | P1 | M | `docs/Towerfront-ARTBIBLE.md`. Jede Festlegung trägt Herkunft **und** Messstelle; fünf tragen ausdrücklich „von Hand beurteilt". Neue Messung: Lichtwinkel je Figur gegen `LICHT` — Türme 2–19°, Gegner 1–66° |
 | TF-012 | Technical Art | RECOMMENDATION | Kein Randlicht an Figuren | Silhouetten laufen in den Boden | `drawRim` für alle Figuren, Stärke messen | P1 | S | TF-011 |
 | TF-013 | Tower | MISSING | Rollen fehlen (Unterstützung, Mindestreichweite, Anti-Luft) | Zu wenig Aufstellungsentscheidung | Zwei bis vier neue Türme | P1 | L | TF-021, TF-011 |
 | TF-014 | Path | ERLEDIGT v149 | Keine Wegvorschau | Der Spieler sieht nicht, woher es kommt | Wege beim Kartenstart animiert zeigen, Knopf zum Wiederholen | P1 | S | gemessen: 5 von 6 Toren liegen ausserhalb des Bildausschnitts |
@@ -1628,7 +1628,7 @@ möglich ist.
 | 8 | TF-014 | Wegvorschau beim Kartenstart | Path Visibility | Woher kommt es? | Erste 10 Sekunden verständlich | P1 | S | **erledigt v149** |
 | 9 | TF-023 | Wellenvorschau vollständig | Wave | Nur erste Gruppe | Vorbereitung möglich | P2 | S | **erledigt v151** — der Befund selbst widerlegt: alle Gruppen standen längst da; gefehlt haben Schild, Träger und ein Gefahrzeichen |
 | 10 | TF-034 | Ein Satz je neuer Gegnerart | Onboarding | Konter unerklärt | Der Gleiter überrascht nicht mehr | P2 | S | **erledigt v152** — abgeleitet aus Gegner- und Turmdaten, nicht je Gegner geschrieben |
-| 11 | TF-011 | **Art Bible** schreiben | Art | Keine Verbindlichkeit | Alle Bildarbeit bekommt einen Maßstab | P1 | M | — |
+| 11 | TF-011 | **Art Bible** schreiben | Art | Keine Verbindlichkeit | Alle Bildarbeit bekommt einen Maßstab | P1 | M | **erledigt v153** — verbindliches Dokument, Messstelle je Festlegung, Bestellliste für `art/roh/` |
 | 12 | TF-012 | Randlicht an jeder Figur | Technical Art | Silhouetten laufen in den Boden | Sichtbar mehr Plastik | P1 | S | 11 |
 | 13 | TF-024 | Fraktionsfarben statt Regenbogen | Enemy Art | Keine Familie lesbar | Gegner werden gruppierbar | P2 | S | 11 |
 | 14 | TF-015 | **Effektsystem** (Liste statt Felder) | Combat | Zwei Wirkungen | Grundlage für alles Weitere | P1 | M | — |

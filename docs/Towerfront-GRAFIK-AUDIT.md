@@ -4,6 +4,11 @@
 
 ---
 
+
+> **Verbindlich ist `Towerfront-ARTBIBLE.md`.** Dieses Dokument hier ist der
+> *Befundbericht* von v104 und bleibt als Beleg stehen — die Bänder in
+> Abschnitt 5.4 sind ihre Herkunft, nicht ihre gültige Fassung.
+
 ## 0. Wie ich vorgegangen bin
 
 Nicht nach Geschmack. Ich habe zuerst recherchiert, **woran** sich die Grafik

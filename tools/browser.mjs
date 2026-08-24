@@ -219,6 +219,41 @@ const sichtbarkeit = (auswahl) => seite.evaluate((sel) => {
 // Die Regel steht seit v50 in CLAUDE.md und ist seither zweimal gebrochen
 // worden. Sie war bisher nur im Rauchtest geprüft - und der sieht in jsdom
 // zwar `hidden`, aber nicht, was trotzdem im Bild steht.
+// Zuerst die UMKEHRUNG, und zwar ohne Liste.
+//
+// `BEDIENUNG` unten zaehlt auf, was nicht ins Menue gehoert - und genau das
+// ist die Bauart, vor der Regel 6 warnt: eine Aufzaehlung schuetzt nur, was
+// sie kennt. In v149 kam der Wegknopf dazu, stand nicht in der Liste, und
+// die Gegenprobe "Wegknopf bleibt im Menue stehen" bewies nichts.
+//
+// Diese Pruefung dreht die Frage um: im Menue darf UEBERHAUPT KEIN
+// bedienbares HTML-Element sichtbar sein. Das Menue wird auf die Leinwand
+// gezeichnet; alles andere im Bild ist Spielbedienung, ganz gleich wie es
+// heisst. Damit ist der naechste Knopf schon geschuetzt, bevor es ihn gibt.
+{
+  const alleKnoepfe = await seite.evaluate(() => {
+    const raus = [];
+    for (const e of document.querySelectorAll('button, [role="button"], input, select')) {
+      const r = e.getBoundingClientRect();
+      const cs = getComputedStyle(e);
+      if (r.width < 2 || r.height < 2) continue;
+      if (cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity) <= 0.05) continue;
+      if (r.right <= 0 || r.bottom <= 0 || r.left >= innerWidth || r.top >= innerHeight) continue;
+      raus.push({ id: e.id || e.className || e.tagName, text: (e.textContent ?? '').trim().slice(0, 30) });
+    }
+    return raus;
+  });
+  if (alleKnoepfe.length) {
+    for (const k of alleKnoepfe) {
+      fail(`Im Menü ist "${k.id}"${k.text ? ` ("${k.text}")` : ''} bedienbar sichtbar - `
+        + 'das Menü wird auf die Leinwand gezeichnet, jedes HTML-Element darin ist '
+        + 'Spielbedienung (Regel 6).');
+    }
+  } else {
+    console.log('Im Menü ist kein bedienbares HTML-Element sichtbar.');
+  }
+}
+
 const imMenue = await sichtbarkeit(BEDIENUNG);
 for (const t of imMenue) {
   fail(

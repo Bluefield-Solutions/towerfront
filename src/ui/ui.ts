@@ -46,6 +46,7 @@ export class UI {
   private pickRow = $<HTMLElement>('pick-row');
   private pickKey = '';
   private bWave = $<HTMLButtonElement>('b-wave');
+  private bWeg = $<HTMLButtonElement>('b-weg');
   private bWaveT = $('b-wave-t');
   private bWaveB = $('b-wave-b');
   private next = $('next');
@@ -273,6 +274,9 @@ export class UI {
       this.onQuit?.();
     });
     this.bWave.addEventListener('click', () => { Sfx.unlock(); this.s.startWave(); });
+    // Den Weg noch einmal zeigen (TF-014). Kein Spielzug: er aendert nichts
+    // ausser dem Bild, und er darf deshalb auch waehrend einer Welle laufen.
+    this.bWeg.addEventListener('click', () => { Sfx.unlock(); this.s.wegvorschau(); });
     $('i-close').addEventListener('click', () => {
       this.s.selectedTower = null;
       this.s.buildChoice = null;
@@ -419,6 +423,12 @@ export class UI {
     // Die Lehre ist nicht "eine Zeile vergessen", sondern: eine Ableitung
     // schuetzt nur das, was sie auch aufzaehlt.
     this.bWave.hidden = !anzeigen;
+    // Der Wegknopf braucht hier NICHTS: er sitzt in der Kopfzeile, und die
+    // wird als ganze ausgeblendet - wie Ton, Tempo und Pause auch. Eine
+    // eigene Zeile dafuer stand hier eine Fassung lang und war eine zweite
+    // Stelle, die dasselbe sagt (Regel 15). Aufgefallen ist sie, weil ihre
+    // Gegenprobe nichts bewies: `hidden = false` an einem Kind eines
+    // ausgeblendeten Elternteils aendert nichts.
     if (!anzeigen) {
       this.insp.hidden = true;
       this.s.selectedTower = null;

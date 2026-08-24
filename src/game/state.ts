@@ -62,6 +62,12 @@ export const ERSATZ_KEGEL = 0.766;
  *  Weltpunkte Flug, also etwa die Hoehe, aus der es kommt. */
 export const VERSATZ_ZEIT = 0.1;
 
+/** Wie lange die Wegvorschau laeuft (TF-014), in Sekunden.
+ *
+ *  Zwei Sekunden fuer den Lauf plus ein halbe zum Ausklingen. Kuerzer las
+ *  sich als Zucken, laenger haelt den Spieler auf, bevor er etwas tun darf. */
+export const WEGVORSCHAU_DAUER = 2.5;
+
 export class GameState {
   /** Die Karte kann zwischen zwei Partien wechseln, deshalb ist hier nichts
    *  mehr fest verdrahtet. */
@@ -303,6 +309,16 @@ export class GameState {
   stats: RunStats = emptyStats();
 
   crystalPulse = 0;
+  /** Wann die Wegvorschau begonnen hat, gemessen an `time` (TF-014).
+   *
+   *  REINE DARSTELLUNG. Sie steht hier und nicht im Renderer, weil sie einen
+   *  Startzeitpunkt braucht, den auch die Bedienung setzen kann - der
+   *  Wiederholknopf ist eine Handlung des Spielers, keine Frage der
+   *  Zeichenschicht. Gelesen wird sie nur dort.
+   *
+   *  Ein grosser negativer Wert heisst "laeuft nicht". Genau den bekommt ein
+   *  geladener Spielstand: wer eine Partie fortsetzt, kennt die Karte. */
+  wegvorschauAb = -99;
   crystalHit = 0;
   shake = 0;
   /** Trefferstopp in Sekunden.
@@ -1722,6 +1738,17 @@ export class GameState {
     this.shake = 0;
     this.stats = emptyStats();
     this.phase = 'playing';
+    // Frisch betretene Karte: der Weg zeigt sich einmal von selbst.
+    this.wegvorschauAb = this.time;
+  }
+
+  /** Die Wegvorschau noch einmal abspielen (Wiederholknopf). */
+  wegvorschau(): void { this.wegvorschauAb = this.time; }
+
+  /** Laeuft die Vorschau gerade, und wie weit ist sie? 0 bis 1, sonst null. */
+  wegvorschauStand(): number | null {
+    const d = this.time - this.wegvorschauAb;
+    return d >= 0 && d <= WEGVORSCHAU_DAUER ? d / WEGVORSCHAU_DAUER : null;
   }
 
   // ------------------------------------------------------------- Spielstand
@@ -1824,6 +1851,11 @@ export class GameState {
     this.hitStop = save.hitStop ?? (save as { hitstop?: number }).hitstop ?? 0;
     if (save.stats) this.stats = { ...emptyStats(), ...save.stats };
     this.time = save.time;
+    // Wer eine Partie fortsetzt, kennt die Karte - die Vorschau bleibt aus.
+    // `reset` weiter oben hat sie gerade eingeschaltet; hier wird sie wieder
+    // abgeschaltet, und zwar NACH `this.time`, sonst haengt der Vergleich an
+    // einer Zeit, die es noch nicht gibt.
+    this.wegvorschauAb = -99;
     this.speed = save.speed === 2 || save.speed === 3 ? save.speed : 1;
     this.pending = save.pending.map(([time, enemy, hpMul, lane, shield, traeger]) =>
       ({ time, enemy, hpMul, lane: lane ?? 0, shield: shield ?? 0, traeger: traeger ?? 0 }));

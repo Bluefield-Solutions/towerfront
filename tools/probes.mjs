@@ -1004,6 +1004,37 @@ const PROBEN = [
     tor: 'doku',
   },
   {
+    // TF-014: die Wegvorschau abgeschaltet - man saehe nicht, woher es kommt.
+    name: 'Wegvorschau abgeschaltet',
+    datei: 'src/gfx/renderer.ts',
+    regel: /    const t = s\.wegvorschauStand\(\);\n    if \(t === null\) return;/,
+    ersatz: '    const t = s.wegvorschauStand();\n    if (t === null || t >= 0) return;',
+    tor: 'bildtor',
+  },
+  {
+    // Und sie muss beim Betreten einer Karte VON SELBST laufen. Ohne diese
+    // Zeile gaebe es sie nur auf Knopfdruck - und der Knopf sagt nicht, was
+    // er zeigt, bevor man ihn einmal gedrueckt hat.
+    name: 'Wegvorschau laeuft nicht beim Betreten',
+    datei: 'src/game/state.ts',
+    regel: /    this\.wegvorschauAb = this\.time;\n  \}/,
+    ersatz: '    this.wegvorschauAb = -99;\n  }',
+    tor: 'smoke',
+  },
+  {
+    // Regel 6 am echten Mechanismus: der Knopf ist im Menue unsichtbar, weil
+    // er in der KOPFZEILE sitzt und die als ganze verschwindet. Wer ihn
+    // herausnimmt, hat eine Spielbedienung ueber der Landkarte.
+    //
+    // Die erste Fassung dieser Probe setzte `bWeg.hidden = false` und bewies
+    // nichts: ein Kind eines ausgeblendeten Elternteils bleibt unsichtbar.
+    name: 'Wegknopf steht ausserhalb der Kopfzeile',
+    datei: 'index.html',
+    regel: /  <\/header>/,
+    ersatz: '  </header>\n  <button class="chip" id="b-weg2" aria-label="Weg">Weg</button>',
+    tor: 'browsertor',
+  },
+  {
     // TF-035: unerreichbarer Code muss den Uebersetzer stoeren. Genau so
     // stand vierzehn Zeilen tote Rechnung hinter einem `return`, und
     // `noUnusedParameters` sah die Parameter als benutzt an, weil der tote

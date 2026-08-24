@@ -259,6 +259,37 @@ step('Auswertung', () => {
 // durch. Erreicht wurde damit Welle 0 - und genau das muss im Bestwert
 // stehen. Ein anderer Grad als oben, damit die Ablage einen eigenen
 // Schluessel hat und der Bestwert bei null anfaengt.
+// Die Wegvorschau laeuft beim Betreten einer Karte von selbst - und nur dann
+// (TF-014). Ein geladener Spielstand bekommt sie nicht: wer fortsetzt, kennt
+// die Karte.
+step('Wegvorschau beim Betreten', () => {
+  const p = new GameState();
+  p.reset(7, 'normal', 'ascheschlucht');
+  if (p.wegvorschauStand() === null) {
+    problems.push('Beim Betreten einer Karte laeuft keine Wegvorschau - dann sieht '
+      + 'der Spieler nicht, woher die Gegner kommen.');
+  }
+  // Und sie hoert wieder auf.
+  p.update(3);
+  if (p.wegvorschauStand() !== null) {
+    problems.push('Die Wegvorschau laeuft nach drei Sekunden noch - sie soll zeigen, '
+      + 'nicht dauerhaft ueber der Karte liegen.');
+  }
+  // Der Knopf spielt sie erneut ab.
+  p.wegvorschau();
+  if (p.wegvorschauStand() === null) {
+    problems.push('Der Wiederholknopf startet die Wegvorschau nicht.');
+  }
+  // Ein fortgesetzter Stand bekommt sie nicht.
+  const stand = p.snapshot();
+  const q = new GameState();
+  q.restore(stand);
+  if (q.wegvorschauStand() !== null) {
+    problems.push('Nach dem Fortsetzen laeuft die Wegvorschau - wer fortsetzt, kennt '
+      + 'die Karte schon.');
+  }
+});
+
 step('Bestwert nach Niederlage', () => {
   const probe = new GameState();
   probe.reset(777, 'erbarmungslos', state.map.id);

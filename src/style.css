@@ -163,6 +163,26 @@ html, body {
   min-height: 46px;
 }
 
+/* Der Wiederholknopf fuer die Wegvorschau (TF-014) ist ein `chip` wie Ton,
+   Tempo und Pause - er braucht keine eigene Regel.
+
+   Drei Anlaeufe hat der Platz gekostet, und keiner davon war Geschmack:
+
+   1. NEBEN dem Wellenknopf, wie das Ticket sagte. Faellt aus, weil dessen
+      BREITE am Text haengt ("Welle starten" gegen "Naechste Welle") - ein
+      Nachbar mit fester Abstandsrechnung waere beim Textwechsel verrutscht.
+      Dieselbe Falle wie die feste Spaltenzahl der Zielreihe in v146.
+   2. LINKS unten. Dort sitzt der Dock-Schalter. Gefunden hat das nicht das
+      Auge, sondern das Browsertor: "Knopf dock-toggle wird in seiner Mitte
+      von etwas anderem verdeckt."
+   3. UEBER dem Wellenknopf. Das Tor meldete gruen - und die Aufnahme zeigte
+      den Knopf hinter dem Pruefsteg. Der deckt die rechte Seite ab, sobald
+      ein Turm gewaehlt ist, und zu diesem Zeitpunkt war er im Tor noch zu.
+      Regel 8: kein Tor ersetzt den Blick.
+
+   In die Kopfzeile gehoert er ohnehin: er aendert nichts am Spiel, nur an
+   der Ansicht - genau wie Ton und Pause. */
+
 .build { display: flex; gap: 8px; pointer-events: auto; }
 
 .tower-btn {

@@ -423,6 +423,7 @@ export class Renderer {
     if (hi) drawAurora(ctx, s.crystalPulse);
 
     this.lichtteich(s);
+    this.wegvorschau(s, hi);
     this.drawPortal(s, hi);
     this.drawBuildOverlay(s);
     this.drawRings(s);
@@ -1260,6 +1261,67 @@ export class Renderer {
    *   3. **Die Luft.** Ein Flieger steht auf nichts; er gehoert ueber alles,
    *      was steht, sonst verschwindet er hinter einem Turm, unter dem er
    *      hindurchfliegt. */
+  /** Die Wegvorschau: ein Lichtlauf je Bahn, vom Tor zum Kristall (TF-014).
+   *
+   *  **Warum es sie braucht, gemessen.** Der Weg ist ins Kartenbild gemalt
+   *  und gut zu sehen - aber nicht, WOHER etwas kommt. Die Tore liegen
+   *  ausserhalb des Bildausschnitts: auf dem iPhone quer das des Spiralhains
+   *  (der ersten Karte) und eines der beiden auf der Frostspalte, auf dem
+   *  Schreibtischfenster vier von sechs. Der Kristall ist immer zu sehen, das
+   *  ZIEL also klar; die Herkunft nicht.
+   *
+   *  Der Lauf beantwortet das auch dann, wenn das Tor selbst nicht im Bild
+   *  ist: das Licht kommt von dort hereingelaufen, und die Richtung liest man
+   *  an der Bewegung ab, nicht am Tor.
+   *
+   *  Gezeichnet wird auf dem BODEN, unter allem Stehenden - es ist eine
+   *  Markierung auf dem Weg, kein Gegenstand darauf. Und in EINEM Pfad je
+   *  Bahn statt eines Kreises je Punkt: die Zahl der Zeichenbefehle haengt
+   *  sonst an der Zahl der Schweifpunkte, und `bench-draw` zaehlt Befehle. */
+  private wegvorschau(s: GameState, hi: boolean): void {
+    const t = s.wegvorschauStand();
+    if (t === null) return;
+    const ctx = this.ctx;
+    // Die ersten vier Fuenftel laufen, das letzte klingt aus. Ohne das
+    // Ausklingen verschwindet der Kopf schlagartig am Kristall, und das
+    // liest sich als Fehler statt als Ende.
+    const lauf = Math.min(1, t / 0.8);
+    const blende = t > 0.8 ? 1 - (t - 0.8) / 0.2 : Math.min(1, t / 0.08);
+    // Weich beschleunigen und wieder abbremsen - ein Licht, das mit voller
+    // Fahrt startet, wirkt wie ein Sprung.
+    const weg = lauf * lauf * (3 - 2 * lauf);
+
+    for (const lane of s.lanes) {
+      const kopf = weg * lane.length;
+      // Schweif: zwoelf Punkte hinter dem Kopf, ueber ein Achtel der Bahn.
+      const SCHWEIF = 12;
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = hexA(C.voidling, 0.5 * blende);
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      let offen = false;
+      for (let i = SCHWEIF; i >= 0; i--) {
+        const sw = kopf - (i / SCHWEIF) * lane.length * 0.12;
+        if (sw < 0) continue;
+        const p = lane.at(sw);
+        if (!offen) { ctx.moveTo(p.x, p.y); offen = true; } else ctx.lineTo(p.x, p.y);
+      }
+      if (offen) ctx.stroke();
+      ctx.restore();
+      // Der Kopf selbst, hell und klein - er sagt, wo "jetzt" ist.
+      if (kopf > 0 && kopf <= lane.length) {
+        const p = lane.at(kopf);
+        if (hi) stampGlow(ctx, C.voidling, p.x, p.y, 54, 0.75 * blende);
+        ctx.fillStyle = hexA('#FFFFFF', 0.9 * blende);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
   private zeichneStand(s: GameState, hi: boolean): void {
     // --- 1. Boden.
     //

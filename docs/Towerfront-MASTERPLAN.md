@@ -1180,7 +1180,7 @@ XL > 10 Runden.
 | TF-011 | Art | MISSING | Keine Art Bible | Jede Figur ist eine Einzelentscheidung | Verbindliches Dokument + Prüfwerkzeug | P1 | M | — |
 | TF-012 | Technical Art | RECOMMENDATION | Kein Randlicht an Figuren | Silhouetten laufen in den Boden | `drawRim` für alle Figuren, Stärke messen | P1 | S | TF-011 |
 | TF-013 | Tower | MISSING | Rollen fehlen (Unterstützung, Mindestreichweite, Anti-Luft) | Zu wenig Aufstellungsentscheidung | Zwei bis vier neue Türme | P1 | L | TF-021, TF-011 |
-| TF-014 | Path | MISSING | Keine Wegvorschau | Der Spieler sieht nicht, woher es kommt | Wege beim Kartenstart animiert zeigen, Knopf zum Wiederholen | P1 | S | — |
+| TF-014 | Path | ERLEDIGT v149 | Keine Wegvorschau | Der Spieler sieht nicht, woher es kommt | Wege beim Kartenstart animiert zeigen, Knopf zum Wiederholen | P1 | S | gemessen: 5 von 6 Toren liegen ausserhalb des Bildausschnitts |
 | TF-015 | Combat | MISSING | Nur zwei Statuswirkungen | Keine Schadensvielfalt, keine Resistenzen | Effektsystem als Liste am Gegner | P1 | M | — |
 | TF-016 | QA | ERLEDIGT v143 | Verkauf/Ausbau während eines Schusses ungeprüft | Möglicher Verweis auf einen entfernten Turm | Zwei Rauchtestschritte | P1 | XS | kein Fehler; zwei stehende Prüfungen, dazu die `dead`-Sperre |
 | TF-017 | Art | DESIGN | Drei Kamerawinkel im selben Bild | Haupteindruck „zusammengewürfelt" | Einheitlicher Winkel, gemessen | P1 | L | TF-011, Rohbilder |
@@ -1201,6 +1201,7 @@ XL > 10 Runden.
 | TF-032 | Targeting | ERLEDIGT v146 | Modus „hinten" fehlt | Durchbrecher nicht abfangbar | Fünfter Modus | P2 | XS | nach Standort aufgeteilt 88 gegen 84 Punkte |
 | TF-033 | VFX | MISSING | Keine Rückmeldung über Wirksamkeit | Man sieht nicht, ob ein Turm taugt | Abpraller bei Panzerung, gedämpfter Einschlag | P2 | S | TF-015 |
 | TF-034 | Onboarding | MISSING | Konter werden nie erklärt | Der erste Gleiter überrascht | Ein Satz beim ersten Auftreten jeder Gegnerart | P2 | S | TF-014 |
+| TF-042 | Map | **VERIFIED v149** | Die Bahnen laufen nicht auf der gemalten Straße | Gegner gehen neben dem Weg — auf der Frostspalte bis zu 520 Weltpunkte am Stück quer über den Schnee | Stützpunkte an die gemalten Straßen anpassen; Spiralhain (96,9 %) ist die Vorlage | **P1** | M | gefunden durch die Wegvorschau aus TF-014; Tor `bahntreuetor` hält den Stand fest |
 | TF-035 | Code | ERLEDIGT v148 | Toter `topdown`-Zweig, totes `range`-Feld, leere Turmleinwand | Wartungsballast | Entfernen | P3 | XS | mehr als gemeldet: auch `drawRim`, `palette.rim` und 14 unerreichbare Zeilen |
 | TF-036 | Map | MISSING | Kein Kreuzungstyp, keine getrennten Ziele | Karten unterscheiden sich zu wenig | Vierte Karte mit anderer Topologie | P3 | M | TF-003 |
 | TF-037 | Economy | DESIGN | Verkauf zu großzügig, kein Verklickschutz | Fehler kosten nichts | Rückgabe nach Wellenzahl staffeln, Bestätigung | P3 | XS | — |
@@ -1446,7 +1447,7 @@ kursiv.
 |---|---|---|---|
 | **0 — Audit & Messbarkeit** | Debug-Overlay im Spiel (Weg, Reichweite, Ziel), Ereignissystem, lokale Kennzahlen | TF-027, TF-040 | offen |
 | **1 — Kritische Stabilisierung** | *Spielstand, Trefferstopp, Inspektor, Kartennamen, Platzbedarf* | *v137–v139* | **erledigt** |
-| **2 — Pathfinding & Movement** | Wegvorschau, Titanbreite, Bahnbelegung | TF-014, TF-030, E4 | TF-030 widerlegt (v147); offen: TF-014, E4 |
+| **2 — Pathfinding & Movement** | Wegvorschau, Titanbreite, Bahnbelegung, **Bahnen auf die Straße** | TF-014, TF-030, E4, **TF-042** | TF-014 (v149), TF-030 widerlegt (v147); offen: E4, **TF-042** |
 | **3 — Tower Placement** | Bauplätze dauerhaft, Ring ehrlich, Kosten an der Vorschau | TF-001, F2, F3 | offen |
 | **4 — Targeting & Combat** | Geschoss-Ersatzziel, Mündungspunkt, Modus „hinten" | TF-007, TF-019, TF-032 | **abgeschlossen** (v144, v145, v146) |
 | **5 — Core Tower Design** | Zweige mit Regeln, Rollen schärfen | TF-006, TF-021 | offen |
@@ -1624,7 +1625,7 @@ möglich ist.
 | 5 | TF-032 | Zielmodus „hinten" | Targeting | Durchbrecher | Fünfte echte Wahl | P2 | XS | **erledigt v146** |
 | 6 | TF-030 | Titanbreite gegen Straßenbreite | Path | Ragt über den Rand | Kein Überstand mehr | P2 | XS | **widerlegt v147** — es gab keinen Überstand |
 | 7 | TF-035 | Toten Code entfernen | Code | Ballast | Weniger Fläche für Fehler | P3 | XS | **erledigt v148** |
-| 8 | TF-014 | Wegvorschau beim Kartenstart | Path Visibility | Woher kommt es? | Erste 10 Sekunden verständlich | P1 | S | — |
+| 8 | TF-014 | Wegvorschau beim Kartenstart | Path Visibility | Woher kommt es? | Erste 10 Sekunden verständlich | P1 | S | **erledigt v149** |
 | 9 | TF-023 | Wellenvorschau vollständig | Wave | Nur erste Gruppe | Vorbereitung möglich | P2 | S | — |
 | 10 | TF-034 | Ein Satz je neuer Gegnerart | Onboarding | Konter unerklärt | Der Gleiter überrascht nicht mehr | P2 | S | 8, 9 |
 | 11 | TF-011 | **Art Bible** schreiben | Art | Keine Verbindlichkeit | Alle Bildarbeit bekommt einen Maßstab | P1 | M | — |

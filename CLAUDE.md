@@ -45,7 +45,7 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 ## Befehle
 
 ```
-npm run gate        dreiundzwanzig Prüfungen, ~90 s. Muss vor jedem Commit grün sein.
+npm run gate        vierundzwanzig Prüfungen, ~90 s. Muss vor jedem Commit grün sein.
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
 npm run bilder      alle 13 Aufnahmen (echte PNG ohne Browser)
 npm run bildtor     der Querschnitt, den die Torkette prüft
@@ -53,6 +53,8 @@ npm run pack-art    Bildvorrat aus art/roh/ neu einbacken
 npm run eichen      einen Wert durchprobieren, alle Kennzahlen nebeneinander
 npm run einbettung  misst, wie sehr eine Figur zur Karte gehört (--eichen: Raum)
 npm run zielplatte  findet die Zielplattform im Kartenbild und prüft die Zahl
+npm run bahntreue   prueft am Kartenbild, ob jede Bahn auf der GEMALTEN
+                    Strasse laeuft - Ratsche, kein Soll.
 npm run gedraenge   misst die WIRKLICHE Breite jeder Gegnerfigur im
                     Bildvorrat gegen die engste Wegstelle - nicht ihre Kachel.
 npm run muendung    prueft am Bildvorrat, wo das Rohr jedes Turms endet -
@@ -80,7 +82,7 @@ npm run kartenwechsel  was ein Kartenaufbau an Bildpunkten kostet
 ```
 
 Die Torkette: `tsc` → `guards` → `doku` → `art` → `determinism` → `sim` →
-`geschosse` → `muendung` → `gedraenge` → `bench` →
+`geschosse` → `muendung` → `gedraenge` → `bahntreue` → `bench` →
 `bench-draw` → `kartenwechsel` → `grafiktor` → `einbettung` → `zielplatte` → `gelaende` → `lesbarkeit` → `beruehrung` → `bildtor` → `smoke` →
 `build` → `autarkie` → `browser` → `bericht`.
 
@@ -196,7 +198,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v148. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v149. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

@@ -711,6 +711,19 @@ takes.push(['muendung', () => shot('muendung', 844, 390, (s) => {
   return 127;
 })]);
 
+// --- Sieht man, WOHER es kommt? (TF-014)
+//
+// Gemessen liegen die Tore ausserhalb des Bildausschnitts: auf dem iPhone
+// quer das des Spiralhains, auf dem Schreibtisch vier von sechs. Der Lauf
+// beantwortet die Frage trotzdem - er kommt von dort herein.
+//
+// Das Bild faellt bei 40 % der Vorschau: da ist der Kopf mitten auf der Bahn
+// und der Schweif voll ausgezogen.
+takes.push(['wegvorschau', () => shot('wegvorschau', 844, 390, (s) => {
+  s.reset(1, 'normal', 'ascheschlucht');
+  return Math.round(60 * 2.5 * 0.4);
+})]);
+
 takes.push(['welle15', () => shot('welle15', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 12);
@@ -983,6 +996,58 @@ pruefungen.push(async () => {
   if (anders > 45000) {
     throw new Error(`die Bauauskunft bedeckt ${anders} Bildpunkte - das ist eine `
       + 'Tapete ueber der Landschaft, nicht eine Auskunft.');
+  }
+});
+
+// --- Sieht man die Wegvorschau? (TF-014)
+//
+// Dieselbe Bauart wie darueber: dasselbe Bild einmal MIT laufender Vorschau
+// und einmal ohne. Ohne den Vergleich wuerde die Pruefung den Bodennebel
+// messen und die Vorschau bezeugen, ohne sie je gesehen zu haben (Regel 13).
+//
+// Gemessen wird auf der Ascheschlucht, weil sie drei Bahnen hat - eine
+// Pruefung auf einer einbahnigen Karte saehe nicht, ob die Vorschau ALLE
+// Bahnen zeigt.
+pruefungen.push(async () => {
+  const canvas = createCanvas(844 * 2, 390 * 2);
+  Object.defineProperty(canvas, 'clientWidth', { get: () => 844 });
+  Object.defineProperty(canvas, 'clientHeight', { get: () => 390 });
+  const s = new GameState();
+  const r = new Renderer(canvas);
+  r.menu = null;
+  s.reset(3, 'normal', 'ascheschlucht');
+  s.quality = 'niedrig';
+  r.resize();
+  r.draw(s);
+  for (const k of Object.keys(OBJECT_ART)) getObjectArt(k);
+  getBackground(s.map.id);
+  await settle();
+  r.kartenaufbauAbschliessen(s);
+  const g = canvas.getContext('2d');
+  const nimm = () => {
+    r.draw(s);
+    return Uint8ClampedArray.from(g.getImageData(0, 0, canvas.width, canvas.height).data);
+  };
+  // Die Vorschau haengt an `time` gegen `wegvorschauAb`. Beide werden von
+  // Hand gesetzt, damit das Bild reproduzierbar bei 40 % steht - nicht
+  // "ungefaehr da, wo die Schleife gerade war".
+  s.time = 1000;
+  s.wegvorschauAb = -99;
+  const ohne = nimm();
+  s.wegvorschauAb = 1000 - 2.5 * 0.4;
+  const mit = nimm();
+  let anders2 = 0;
+  for (let i = 0; i < ohne.length; i += 4) {
+    if (Math.abs(ohne[i] - mit[i]) > 5 || Math.abs(ohne[i + 2] - mit[i + 2]) > 5) anders2++;
+  }
+  console.log(`  Wegvorschau: ${anders2} Bildpunkte zeigen den Weg`);
+  if (anders2 < 1500) {
+    throw new Error(`die Wegvorschau aendert nur ${anders2} Bildpunkte - man saehe nicht, `
+      + 'woher die Gegner kommen.');
+  }
+  if (anders2 > 60000) {
+    throw new Error(`die Wegvorschau bedeckt ${anders2} Bildpunkte - sie deckt die Karte zu, `
+      + 'statt sie zu zeigen.');
   }
 });
 

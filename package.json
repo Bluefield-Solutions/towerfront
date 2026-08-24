@@ -17,6 +17,7 @@
     "bench-draw": "tsx tools/bench-draw.ts",
     "determinism": "tsx tools/determinism.ts",
     "pack-art": "node tools/pack-art.mjs",
+    "probebild": "tsx tools/probebild.ts",
     "rohbilder": "node tools/rohbilder.mjs",
     "appsymbol": "node tools/appsymbol.mjs",
     "bericht": "tsx tools/benchmark.ts",

@@ -51,6 +51,15 @@ lines, hatches, weld seams and vents are allowed; surface grime, rivet
 fields, scratched micro-texture and noise are NOT. The silhouette must read
 at 40 pixels tall.
 
+TRACKS AND TYRES: draw a tracked vehicle's tracks as TWO CONTINUOUS DARK
+BANDS with only three or four suggested links, never as a fully modelled
+chain of individual track links. At 40 pixels the links are invisible and
+cost nothing but noise. Same for tyre tread: suggest it, do not model it.
+
+NO BLACK: the darkest value in the image must still be clearly a dark GREY
+(around 18 percent brightness), never near-black. Tracks, tyres and shadow
+gaps are where this goes wrong.
+
 LIGHT: a single sun from the UPPER LEFT, roughly 130 degrees (light comes
 from the top-left, shadows fall to the lower right). Soft key light, gentle
 ambient fill, no rim light, no lens flare, no glow, no bloom.
@@ -65,6 +74,10 @@ the range, neither a dark nor a bright silhouette.
 
 BACKGROUND: fully transparent. No ground, no shadow, no platform, no frame,
 no vignette, no text, no logo, no watermark.
+
+MARGIN: leave at least 5 percent empty transparent margin on all four sides.
+Nothing — not a barrel tip, not an antenna — may touch the edge of the
+canvas.
 ```
 
 **Warum jede Zeile dort steht — jede ist gemessen:**
@@ -78,6 +91,9 @@ no vignette, no text, no logo, no watermark.
 | „mid-tones" | Figuren-Helligkeit muss im Band **0,33–0,40** liegen, Sättigung **0,35–0,45** | `npm run grafik` |
 | „transparent, no shadow" | Schatten, Sonnenanstrich, Bodenverschattung und Farbklima trägt das Spiel je Karte auf | `npm run einbettungstor` |
 | „reads at 40 pixels" | Die kleinste Figur wird mit 17 Bildschirmpunkten gezeichnet | `npm run lesbarkeit` |
+| „tracks as two dark bands" | Ausmodellierte Kettenglieder sind bei 40 px unsichtbar und treiben nur die Dichte | `npm run probebild` |
+| „no black, dark grey" | Die Probelieferung lag bei **6,7 – 10,9 %** reinem Schwarz, der heutige Bestand bei 0,0 % | `npm run probebild` |
+| „5 percent margin" | Alle acht Kandidaten der Probelieferung berührten den Kachelrand | `npm run probebild` |
 
 ---
 
@@ -118,6 +134,36 @@ ragt über den Weg.
 Ausdehnung im Bild** (die Tabelle in Abschnitt 5 nennt sie). In
 Laufrichtung — also senkrecht im Bild — darf die Figur bis **240 px** lang
 sein. Ein Panzer ist länger als breit; das ist erwünscht und kostet nichts.
+
+### 3.2b **Fünf Grundformen — die wichtigste Regel des ganzen Auftrags**
+
+> **Gemessen an der Probelieferung vom 24.08.2026:** acht handwerklich gute
+> Aufsichten — und **sieben davon Kettenfahrzeuge**. Die
+> Silhouetten-Ähnlichkeit lag bei **0,83** im Mittel, das schlimmste Paar bei
+> **0,93**; der heutige Bestand liegt bei 0,49. **25 von 28 Paaren** waren zu
+> ähnlich. Bei 17 bis 40 Bildschirmpunkten wäre daraus eine Armee von Klonen
+> geworden, unterscheidbar nur an der Farbe — und Farbe darf nie das einzige
+> Merkmal sein. Kein einzelnes Bild wäre schuld gewesen.
+
+Die acht Gegner verteilen sich deshalb auf **fünf klar verschiedene
+Grundformen**. Sie müssen schon als schwarze Silhouette auseinanderzuhalten
+sein:
+
+| Grundform | Was sie ausmacht | Wer |
+|---|---|---|
+| **Kettenfahrzeug** | zwei durchgehende dunkle Bänder außen, kastiger Rumpf | Koloss |
+| **Radfahrzeug** | vier bis sechs einzeln sichtbare Räder, offener/schmaler Rumpf | Späher, Spalter |
+| **Läufer** | Beine, die sichtbar vom Rumpf abstehen — kein Band, keine Räder | Leerentitan |
+| **Fluggerät** | breite Spannweite, Rotoren oder Flügel, **keine** Bodenberührung | Gleiter |
+| **Fußtrupp** | mehrere kleine getrennte Silhouetten statt einer großen | Infanterie |
+| **Kleingerät** | eine einzelne kleine kompakte Form ohne Geschützrohr | Schleicher |
+
+**Messbares Ziel:** keine zwei Gegner über **0,65** Silhouetten-Ähnlichkeit.
+`npm run probebild -- <ordner>` rechnet es aus, bevor gepackt wird.
+
+**Und ein einfacher Grundsatz, der fast alles davon erledigt:** höchstens
+**zwei** der acht Gegner dürfen ein Geschützrohr nach vorn tragen. Das Rohr
+ist das Merkmal, das alle Panzer gleich aussehen lässt.
 
 ### 3.3 Türme: stehende Dreiviertelansicht — und 16 % vertikal gestreckt
 
@@ -213,6 +259,8 @@ gepackt für alle zusammen.
 ```
 [STYLE-BLOCK EINFÜGEN]
 
+GRUNDFORM: Kleingerät — eine einzelne kleine kompakte Form, KEIN Geschützrohr.
+
 SUBJECT: A small unmanned tracked scout drone, seen STRICTLY FROM DIRECTLY
 ABOVE (orthographic top-down), facing UP toward the top edge of the image.
 Compact rectangular hull on two short rubber tracks, a low sensor mast with a
@@ -236,6 +284,9 @@ transparent canvas, centred, nothing cropped.
 ```
 [STYLE-BLOCK EINFÜGEN]
 
+GRUNDFORM: Fußtrupp — drei getrennte kleine Silhouetten statt einer großen.
+Das ist die einzige Figur im Spiel, die aus mehreren Körpern besteht.
+
 SUBJECT: A squad of THREE modern infantry soldiers moving in a tight wedge,
 seen STRICTLY FROM DIRECTLY ABOVE (orthographic top-down), all facing UP
 toward the top edge of the image. Helmets, shoulder pads and backpacks are
@@ -255,6 +306,9 @@ transparent canvas, centred, nothing cropped.
 ```
 [STYLE-BLOCK EINFÜGEN]
 
+GRUNDFORM: Radfahrzeug — vier einzeln sichtbare Räder, offener Rahmen, KEIN
+Geschützrohr. Muss sich schon als schwarze Silhouette vom Panzer unterscheiden.
+
 SUBJECT: A fast lightweight four-wheeled assault buggy, seen STRICTLY FROM
 DIRECTLY ABOVE (orthographic top-down), facing UP toward the top edge of the
 image. Open skeletal frame, roll cage, four large knobbly tyres splayed
@@ -270,6 +324,9 @@ transparent canvas, centred, nothing cropped.
 
 ```
 [STYLE-BLOCK EINFÜGEN]
+
+GRUNDFORM: Kettenfahrzeug — der EINE klassische Panzer im Spiel. Er darf
+aussehen wie ein Panzer, weil kein zweiter so aussieht.
 
 SUBJECT: A modern main battle tank, seen STRICTLY FROM DIRECTLY ABOVE
 (orthographic top-down), gun barrel pointing UP toward the top edge of the
@@ -288,6 +345,9 @@ centred, nothing cropped.
 
 ```
 [STYLE-BLOCK EINFÜGEN]
+
+GRUNDFORM: Fluggerät — breite Spannweite, keine Ketten, keine Räder, keine
+Bodenberührung. Muss auf den ersten Blick fliegend wirken.
 
 SUBJECT: An armed VTOL gunship drone, seen STRICTLY FROM DIRECTLY ABOVE
 (orthographic top-down), nose pointing UP toward the top edge of the image.
@@ -309,6 +369,9 @@ transparent canvas, centred, nothing cropped.
 ```
 [STYLE-BLOCK EINFÜGEN]
 
+GRUNDFORM: Radfahrzeug — sechs einzeln sichtbare Räder, KEIN Geschützrohr.
+Die Dachluke ist das Erkennungsmerkmal, nicht eine Waffe.
+
 SUBJECT: An armoured carrier vehicle that deploys drones, seen STRICTLY FROM
 DIRECTLY ABOVE (orthographic top-down), facing UP toward the top edge of the
 image. Six-wheeled boxy hull with sloped side armour, a large segmented
@@ -327,6 +390,9 @@ transparent canvas, centred, nothing cropped.
 
 ```
 [STYLE-BLOCK EINFÜGEN]
+
+GRUNDFORM: Läufer — vier Beine, die sichtbar vom Rumpf abstehen. KEINE Ketten,
+keine Räder. Die Beine sind der Grund, warum man ihn sofort erkennt.
 
 SUBJECT: A super-heavy four-legged siege walker, seen STRICTLY FROM DIRECTLY
 ABOVE (orthographic top-down), facing UP toward the top edge of the image.
@@ -609,12 +675,51 @@ vignette, no border.
 
 ---
 
+## 9b. Was die Probelieferung ergeben hat (24.08.2026)
+
+Acht Kandidaten wurden geliefert und gemessen. **Der Stil trägt** — das ist
+die wichtigste Nachricht. Was fehlt, ist Vielfalt in der Form.
+
+| | Probelieferung | heutiger Bestand | Vorgabe |
+|---|---|---|---|
+| Format, Alpha | 1024² mit Alpha ✔ | — | quadratisch, Alpha |
+| Aufsicht, Rohr nach oben | ✔ | ✔ | Pflicht |
+| Proportion (quer/längs) | 0,59 ✔ | — | lang, nicht breit |
+| **Lichtwinkel** | **8 – 34°** ✔ deutlich besser | 5 – 114° | unter 20° |
+| **Silhouetten-Ähnlichkeit** | **0,83** ✘ | 0,49 | unter 0,65 |
+| **Reines Schwarz** | **6,7 – 10,9 %** ✘ | 0,0 – 0,1 % | unter 2 % |
+| **Feindetail** (gleiche Messstelle) | **4,9 – 6,8** ✘ | 1,4 – 4,0 | so wenig wie möglich |
+| **Rand** | alle acht berühren die Kante ✘ | — | 5 % Luft ringsum |
+
+**Was daraus folgt** — und was in dieser Fassung des Auftrags neu steht:
+Abschnitt 3.2b (fünf Grundformen), die Kettenregel und die Schwarzgrenze im
+Stil-Block, der Rand, und je Gegner eine Zeile `GRUNDFORM`.
+
+**Die drei Kandidaten, die bleiben können.** Ihre Machart ist genau richtig;
+sie brauchen nur ihre eigene Grundform:
+
+| Kandidat | wird zu | was zu ändern ist |
+|---|---|---|
+| `Gegner_01_Oliv_Orange` | **Koloss** (Kettenfahrzeug) | Ketten als zwei Bänder, Schwarz auf Dunkelgrau, 5 % Rand |
+| `Gegner_04_Stahlgrau_Rot` | **Spalter** (Radfahrzeug) | Ketten → sechs Räder, Geschützrohr → **Dachluke** |
+| `Gegner_08_Rot` | **Leerentitan** (Läufer) | Ketten → vier abstehende Beine, deutlich länger als breit |
+
+Die übrigen fünf werden neu gezeichnet: Schleicher (Kleingerät), Infanterie
+(Fußtrupp), Späher (Radfahrzeug, `Gegner_05` ist die richtige Richtung),
+Gleiter (Fluggerät).
+
+---
+
 ## 10. Wenn die Bilder da sind
 
 Nicht Aufgabe des Bild-Agenten, aber hier vollständig, damit die Übergabe
 ohne Rückfrage klappt:
 
 ```
+0. npm run probebild -- <ordner>   ERST prüfen, dann packen.
+   Misst Format, Alpha, Rand, reines Schwarz, Feindetail, Lichtwinkel und
+   die Silhouetten-Ähnlichkeit UNTEREINANDER. Ein Bild nachzubessern ist
+   billig, achtunddreissig nachzubessern nicht.
 1. Dateien nach art/roh/{gegner,tuerme,objekte,untergrund}/ legen
 2. art/*.json auf die Vorgabewerte zurücksetzen
    (Helligkeit, Saettigung, Entrauschen, schwarzHeben sind an den ALTEN
@@ -635,5 +740,6 @@ ohne Rückfrage klappt:
 | Lichtwinkel, schlimmste Figur | **66°** neben der Sonne | unter 20° |
 | Modellierungsstärke, flachste Figur | **0,0025** | über 0,010 |
 | Füllgrad Infanterie | **0,43** | 0,78 |
+| Silhouetten-Ähnlichkeit, Mittel | 0,49 | unter 0,65 halten |
 | Figuren-Helligkeit | 0,35 | im Band 0,33–0,40 halten |
 | Figuren-Sättigung | 0,42 | im Band 0,35–0,45 halten |

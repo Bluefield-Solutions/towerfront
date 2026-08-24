@@ -112,6 +112,10 @@ npm run kritik      Wertung nach Testerkategorien, Ziel über 90
                     längste Bildlücke. Läuft weiter — erst in eine Karte
                     tippen, dann ablesen. Die Zahlen, die hier nicht
                     entstehen können.
+npm run probebild   Kandidatenbilder pruefen, BEVOR sie gepackt werden:
+                    Format, Alpha, Rand, reines Schwarz, Feindetail,
+                    Lichtwinkel - und die Silhouetten-Aehnlichkeit
+                    UNTEREINANDER. Aufruf mit -- <ordner>.
 npm run rohbilder   welche Rohbilder fehlen und woran das hängt
 npm run turmprobe   EINEN Entwurf messen und neben den heutigen Turm legen
 npm run turmzeichnen  einen Turm konstruieren statt kaufen (Entwurf, nicht im Spiel)

@@ -24,7 +24,7 @@
  *          npm run proben -- lesbar    nur passende
  */
 import { execSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -1422,6 +1422,27 @@ const PROBEN = [
     tor: 'zielplattentor',
   },
   {
+    // Die Stufung aus v155: der volle Probenlauf darf hoechstens drei
+    // Fassungen zurueckliegen. Ohne diese Probe waere die Zahl eine
+    // Absichtserklaerung - und die Bilanz von v31 sagt genau darueber, dass
+    // eine nur aufgeschriebene Regel gebrochen wird.
+    //
+    // **Am Zeilenanfang verankert, und das ist kein Schoenheitsfehler.**
+    // Ohne `^...$m` traf das Muster ZUERST diese Zeile hier - die Regel der
+    // Probe steht im Quelltext vor der Konstanten, und `replace` nimmt den
+    // ersten Treffer. Die Probe hat sich damit selbst umgeschrieben statt
+    // den Code, das Tor blieb gruen, und sie meldete "schlaegt nicht an".
+    //
+    // Aufgefallen ist es durch den Musterlauf, der genau das als Hinweis
+    // ausgibt ("2 Treffer - greift den ersten"). Der Hinweis hat sich damit
+    // am Tag seiner Einfuehrung bezahlt gemacht.
+    name: 'Voller Probenlauf liegt zu lange zurueck',
+    datei: 'tools/probes.mjs',
+    regel: /^const STAND_ABSTAND = 3;$/m,
+    ersatz: 'const STAND_ABSTAND = -1;',
+    tor: 'muster',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,
@@ -1469,6 +1490,23 @@ const liste = filter.length
 // Der Musterlauf ersetzt den vollen Lauf NICHT. Er sagt nur: jede Probe hat
 // noch einen Gegenstand. Ob das Tor ihn auch meldet, sagt allein der volle
 // Lauf - deshalb steht er weiter vor jeder Auslieferung.
+/** Wo der letzte VOLLE Probenlauf stattgefunden hat.
+ *
+ *  Eingecheckt, nicht im Abdruck-Lager: der Abstand zum vollen Lauf ist eine
+ *  Eigenschaft des Projekts, nicht dieses Rechners. */
+const STAND_DATEI = join(ROOT, 'tools/proben-stand.txt');
+const fassung = () => (readFileSync(join(ROOT, 'src/data/config.ts'), 'utf8')
+  .match(/VERSION = 'v(\d+)'/)?.[1] ?? '0');
+/** Wieviele Fassungen der volle Lauf zurueckliegen darf.
+ *
+ *  Drei - so hat der Nutzer den Ablauf entschieden, nachdem das Tor-Audit
+ *  gezeigt hat, dass der volle Lauf 33 Minuten echte Arbeit ist und bei einer
+ *  Runde mit zwei geaenderten Toren 140 von 142 Proben nichts zu pruefen
+ *  haben. Nicht laenger, weil die Ratschen sonst verrotten: eine Probe hoert
+ *  leise auf zu beweisen, und je mehr Fassungen dazwischenliegen, desto
+ *  schwerer ist es, den Tag zu finden, an dem es passiert ist. */
+const STAND_ABSTAND = 3;
+
 if (process.argv.includes('--muster')) {
   console.log(`Musterlauf: ${liste.length} Regel(n), kein Tor wird gefahren.\n`);
   const stumm = [], mehrdeutig = [];
@@ -1500,8 +1538,25 @@ if (process.argv.includes('--muster')) {
     for (const z of stumm) console.error(`  - ${z}`);
     process.exit(1);
   }
+  // Und der Abstand zum letzten vollen Lauf. Ohne diese Zeile waere die
+  // Stufung eine Absichtserklaerung in einem Dokument - und die Bilanz von
+  // v31 sagt genau darueber: eine Regel, die nur aufgeschrieben ist, wird
+  // gebrochen. Deshalb steht sie hier, wo sie weh tut.
+  const jetzt = Number(fassung());
+  const damals = existsSync(STAND_DATEI)
+    ? Number(readFileSync(STAND_DATEI, 'utf8').trim().replace(/^v/, '')) : 0;
+  const abstand = jetzt - damals;
+  if (abstand > STAND_ABSTAND) {
+    console.error(`\nMUSTERLAUF: der letzte volle Probenlauf war v${damals}, jetzt ist v${jetzt} `
+      + `- ${abstand} Fassungen dazwischen, erlaubt sind ${STAND_ABSTAND}.`);
+    console.error('  `npm run proben` faehrt ihn (rund 33 Minuten). Der Musterlauf prueft nur,');
+    console.error('  ob jede Probe noch einen Gegenstand hat - nicht, ob ihr Tor ihn meldet.');
+    process.exit(1);
+  }
   console.log(`MUSTERLAUF: alle ${liste.length} Proben greifen noch, `
-    + `${mehrdeutig.length} davon auf den ersten von mehreren Treffern.`);
+    + `${mehrdeutig.length} davon auf den ersten von mehreren Treffern. `
+    + `Voller Lauf zuletzt bei v${damals}, ${abstand} Fassung(en) her (erlaubt `
+    + `${STAND_ABSTAND}).`);
   process.exit(0);
 }
 
@@ -1589,3 +1644,11 @@ if (fehler.length) {
   process.exit(1);
 }
 console.log(`\nPROBEN: alle ${liste.length} Tore schlagen an.`);
+
+// Den Stand nur bei einem VOLLEN Lauf festhalten. Ein gefilterter Lauf hat
+// die uebrigen Proben nicht angefasst - ihn mitzuzaehlen hiesse, sich den
+// Abstand schoenzurechnen, und genau dafuer ist die Zahl nicht da.
+if (!filter.length) {
+  writeFileSync(STAND_DATEI, `v${fassung()}\n`);
+  console.log(`  Stand festgehalten: v${fassung()} (tools/proben-stand.txt).`);
+}

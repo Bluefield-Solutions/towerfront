@@ -40,6 +40,30 @@ Jede angenommene Runde: `git commit` + `git tag vN`. Push auf `main` löst die
 Auslieferung aus, aber **nur bei grüner Torkette**
 (`.github/workflows/deploy.yml`).
 
+### Was wann läuft (seit v155)
+
+| Wann | Was | Dauer |
+|---|---|---|
+| **jede Runde** | `npm run gate` — enthält den Musterlauf | **rund 2,5 min** |
+| jede Runde | die Gegenproben der Tore, die ich angefasst habe | unter 1 min |
+| **jede dritte Fassung** | `npm run proben` — alle 143, voll | rund 33 min |
+| jeder Push auf `master` | die volle Kette auf dem Runner | 3–4 min, ohne mich |
+
+**Die Drei ist erzwungen, nicht aufgeschrieben.** `npm run muster` liest
+`tools/proben-stand.txt` und bricht ab, wenn der letzte volle Lauf mehr als
+drei Fassungen zurückliegt — und der Musterlauf steht in der Kette. Eine
+Regel, die nur in einem Dokument steht, wird gebrochen; das hat dieses
+Projekt sechsmal gekostet.
+
+**Warum nicht öfter und nicht seltener.** Das Tor-Audit
+(`docs/Towerfront-TOR-BILANZ.md`) hat gemessen: der volle Lauf ist **33
+Minuten echte Arbeit** — er wird durch kein Gedächtnis kürzer, weil jede
+Probe einen Eingang ändert. Bei einer Runde mit zwei geänderten Toren haben
+aber **140 von 142 Proben nichts zu prüfen, was sich geändert hätte**.
+Seltener als jede dritte Fassung ginge trotzdem nicht: eine Probe hört
+*leise* auf zu beweisen, und je mehr Fassungen dazwischenliegen, desto
+schwerer ist der Tag zu finden, an dem es passiert ist.
+
 ---
 
 ## Befehle
@@ -64,7 +88,8 @@ npm run konter      prueft, ob jede Gegnerart, an der etwas zu kontern ist,
 npm run muster      prueft in 0,4 s, ob jede der 143 Gegenproben noch einen
                     Gegenstand hat - ohne ein Tor zu fahren. Ersetzt den
                     vollen Probenlauf nicht, faengt aber seine haeufigste
-                    Verfallsart.
+                    Verfallsart - und schlaegt an, wenn der volle Lauf mehr
+                    als drei Fassungen zurueckliegt.
 npm run streifen    misst beide Baender ueber dem Feld: die Wellenvorschau in
                     JEDER Welle und die Einweisungsblase beim laengsten Satz.
                     Echtes Markup, echte Stilvorlage - das Browsertor sieht
@@ -212,7 +237,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v154. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v155. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

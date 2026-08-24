@@ -235,8 +235,12 @@ fahren nimmt ihm nichts.
 * **`bildtor` (13–39 s) und `browser` (33 s)** haben kein Gedächtnis. Beide
   hängen am ganzen Renderer, ein Abdruck würde fast nie greifen. Der Hebel
   wäre dort ein anderer: die 22 Browserproben teilen sich keinen Build.
-* **Die Stufung aus Abschnitt 5 C** ist noch Vorschlag, nicht Praxis: welcher
-  Lauf wann fällig ist, entscheidet der Nutzer.
+* ~~Die Stufung ist noch Vorschlag~~ — **entschieden und in v155 erzwungen.**
+  Der Nutzer hat die Grenze auf drei Minuten je Runde und den vollen
+  Probenlauf auf **jede dritte Fassung** gesetzt. `npm run muster` liest
+  `tools/proben-stand.txt` und bricht ab, wenn der letzte volle Lauf weiter
+  zurückliegt — und der Musterlauf steht in der Kette. Die Tabelle steht in
+  `CLAUDE.md` unter „Was wann läuft".
 
 ---
 

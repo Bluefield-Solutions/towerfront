@@ -32,6 +32,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { abdruck } from './abdruck.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const WELT_B = 1920, WELT_H = 1080;
@@ -40,6 +41,27 @@ const WELT_B = 1920, WELT_H = 1080;
  *  von rund 200 Weltpunkten, grob genug, dass die Suche in einer Sekunde
  *  durchlaeuft. */
 const N = 300;
+
+/** Das Gedaechtnis dieses Tors (siehe `tools/abdruck.mjs`).
+ *
+ *  Die Plattform steckt im KARTENBILD, die eingetragene Zahl kommt aus
+ *  `maps.ts`. Aendert sich keines von beiden - und nicht dieses Werkzeug -,
+ *  kann sich das Urteil nicht aendern. Gemessen 76 s je Lauf fuer eine
+ *  Antwort, die seit v126 dieselbe ist (`docs/Towerfront-TOR-BILANZ.md`).
+ *
+ *  Die Modulliste wird NICHT aufgezaehlt, sondern aus dem Importgraphen
+ *  abgeleitet. Eine Handliste war beim ersten Entwurf sofort unvollstaendig,
+ *  und eine zu enge Liste ueberspringt stillschweigend. */
+const gedaechtnis = abdruck('zielplatte', {
+  werkzeug: 'tools/zielplatte.mjs',
+  dateien: ['src/gfx/assets/backgrounds.ts'],
+});
+if (gedaechtnis.unveraendert) {
+  console.log(`ZIELPLATTE: unveraendert (Abdruck ${gedaechtnis.kurz} ueber `
+    + `${gedaechtnis.umfang} Dateien) - nichts zu rechnen.`);
+  console.log('  Mit --frisch trotzdem rechnen.');
+  process.exit(0);
+}
 
 const karten = [];
 for (const m of readFileSync(join(ROOT, 'src/gfx/assets/backgrounds.ts'), 'utf8')
@@ -160,4 +182,7 @@ if (befunde.length) {
   if (TOR) process.exit(1);
 } else {
   console.log('\nZIELPLATTE: jede Karte steht auf ihrer Platte.');
+  // Erst jetzt merken: ein rotes Tor hinterlaesst keinen Abdruck und rechnet
+  // beim naechsten Mal wieder.
+  gedaechtnis.merken();
 }

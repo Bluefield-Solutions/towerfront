@@ -113,7 +113,7 @@ fand einen Gleiter, der 66° von der eigenen Sonne beleuchtet ist (v153).
 
 ## 5. Was sich ändern sollte
 
-### A · Abdruck für die drei teuren Tore
+### A · Abdruck für die teuren Tore *(umgesetzt in v154)*
 
 `zielplattentor` durchsucht bei jedem Lauf drei Kartenbilder mit einem Raster
 nach der Zielplattform. Das Ergebnis ändert sich, wenn die Kartenbilder oder
@@ -129,7 +129,7 @@ hier.
 > dass das Tor wieder rechnet. Ein Abdruck, der die falschen Dateien liest,
 > überspringt stillschweigend — und das sähe aus wie ein bestandenes Tor.
 
-### B · Gegenproben nach Bedarf statt immer
+### B · Gegenproben nach Bedarf statt immer *(Stufe 1 umgesetzt in v154)*
 
 Regel 5 verlangt, dass jede Prüfung eine stehende Gegenprobe hat **und dass
 sie ausgeführt wird**. Sie verlangt nicht, dass alle 142 bei jeder Änderung
@@ -177,16 +177,66 @@ Daraus folgt die Arbeitsteilung:
 
 ---
 
-## 6. Was das an Tempo bringt
+## 6. Was es gebracht hat — umgesetzt in v154
 
-| | heute | nach A und B |
-|---|---|---|
-| Kette vor einem Commit | 264 s | ~40 s |
-| Prüfung vor der Auslieferung | 264 s + 34 min | ~2 min |
-| **je Runde** | **rund 40 min** | **rund 3 min** |
+**Und zuerst, was an diesen Zahlen nicht stimmt.** Die Container-Last misst
+mit. `bildtor` lieferte bei drei aufeinanderfolgenden Läufen **13, 18 und
+30 s**, und im allerersten Durchgang 69 s — ohne dass jemand es angefasst
+hätte. Eine Kettensumme trägt damit rund ±30 s Rauschen. Deshalb steht unten
+getrennt, was **zurechenbar** ist und was nur die Summe sagt (Regel 12).
 
-Bei drei Runden am Tag sind das zwei gesparte Stunden — Zeit, die in Punkte
-der Liste geht statt in Warten.
+**Zurechenbar**, weil unmittelbar hintereinander unter gleichen Bedingungen
+gemessen:
+
+| Tor | vorher | nachher | Bedingung |
+|---|---|---|---|
+| `zielplattentor` | 73,7 s | **0,7 s** | greift fast immer — die Hülle ist 8 Dateien groß |
+| `grafiktor` | 12,9 s | **0,8 s** | greift selten — 28 Dateien, hängt über `state.ts` an fast dem halben Quelltext |
+| voller Probenlauf | 34 min | **0,4 s** | nur für den Musterlauf, siehe unten |
+
+**Die Summe**, mit Vorbehalt: **264 s vorher, 129 und 148 s in zwei Läufen
+danach.** Von der Differenz sind rund 85 s zurechenbar, der Rest ist Rauschen.
+
+**Der Musterlauf ersetzt den vollen Lauf nicht.** Er sagt: jede der 143
+Proben hat noch einen Gegenstand. Ob das Tor ihn auch meldet, sagt allein der
+volle Lauf. Aber er fängt die *häufigste* Verfallsart — und beim ersten
+Einsatz fand er sofort etwas: **sechs Proben greifen den ersten von mehreren
+Treffern**, eine davon den ersten von 321 Wegbreiten. Das ist Absicht und
+kein Fehler, steht aber jetzt als Hinweis da, statt unbemerkt zu bleiben.
+Genau diese Bauart hat in v149 die falsche Methode erwischt.
+
+**Was der Abdruck NICHT tun darf**, und warum eine Gegenprobe dazugehört: ein
+Abdruck, der die falschen Dateien liest, überspringt stillschweigend — und
+das ist von einem bestandenen Tor nicht zu unterscheiden. Die Eingänge werden
+deshalb **nicht aufgezählt, sondern aus dem Importgraphen abgeleitet**. Die
+Handliste des ersten Entwurfs war sofort unvollständig: `artaudit` importiert
+auch `src/game/state.ts`, das darin fehlte. Aufzählungen veralten — an einem
+einzigen Tag ist das zweimal passiert.
+
+Der Speicher liegt unter `.abdruck/` und steht in `.gitignore`. Auf dem
+Auslieferungsrunner ist er immer leer; die Kette rechnet dort jedes Mal
+vollständig. Genau so soll es sein.
+
+### Der Gegenbeweis, der dazugehört
+
+Der volle Probenlauf ist **nicht** kürzer geworden: **33 min nach dem Umbau
+gegen 34 min davor.** Das war vorhergesagt und ist die Probe auf die Rechnung
+— jede Gegenprobe ändert einen Eingang, also verwirft der Abdruck korrekt und
+das Tor rechnet voll.
+
+Damit ist zweierlei belegt: der Abdruck macht die Proben **nicht** blind, und
+die 33 Minuten sind **echte Arbeit**, kein Container-Rauschen. Genau deshalb
+ist Hebel B kein Sparen an der Prüfung, sondern an ihrer Wiederholung: den
+Lauf zu verkürzen ginge nur, indem man ihm etwas wegnimmt — ihn seltener zu
+fahren nimmt ihm nichts.
+
+### Was noch offen ist
+
+* **`bildtor` (13–39 s) und `browser` (33 s)** haben kein Gedächtnis. Beide
+  hängen am ganzen Renderer, ein Abdruck würde fast nie greifen. Der Hebel
+  wäre dort ein anderer: die 22 Browserproben teilen sich keinen Build.
+* **Die Stufung aus Abschnitt 5 C** ist noch Vorschlag, nicht Praxis: welcher
+  Lauf wann fällig ist, entscheidet der Nutzer.
 
 ---
 

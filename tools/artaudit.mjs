@@ -40,8 +40,28 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { createCanvas, Image as NativeImage } from '@napi-rs/canvas';
+import { abdruck } from './abdruck.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+/** Das Gedaechtnis dieses Tors (siehe `tools/abdruck.mjs`).
+ *
+ *  Gemessen 13,1 s je Lauf: es dekodiert den ganzen Bildvorrat, backt drei
+ *  Untergruende und rechnet Lichtwinkel. Die Huelle ist gross - dieses
+ *  Werkzeug haengt ueber `state.ts` an fast dem halben Quelltext -, also
+ *  greift der Abdruck nur, wenn wirklich nichts am Spiel geaendert wurde.
+ *  Das ist die richtige Antwort und nicht die bequeme: lieber selten
+ *  ueberspringen als einmal zu Unrecht. */
+const gedaechtnis = abdruck('grafik', {
+  werkzeug: 'tools/artaudit.mjs',
+  dateien: ['src/gfx/assets'],
+});
+if (gedaechtnis.unveraendert && process.argv.includes('--tor')) {
+  console.log(`GRAFIKTOR: unveraendert (Abdruck ${gedaechtnis.kurz} ueber `
+    + `${gedaechtnis.umfang} Dateien) - nichts zu rechnen.`);
+  console.log('  Mit --frisch trotzdem rechnen; `npm run grafik` rechnet immer.');
+  process.exit(0);
+}
 
 // --- Eine Zeichenflaeche, damit das Terrain hier gebacken werden kann.
 //
@@ -709,4 +729,6 @@ if (process.argv.includes('--tor')) {
   }
   console.log(`GRAFIKTOR: alle ${bgWerte.length} Untergruende im Band ${band[0]} bis ${band[1]} `
     + `(${bgWerte.map((f) => f.dichte.toFixed(2)).join(', ')}).`);
+  // Erst nach bestandener Pruefung merken.
+  gedaechtnis.merken();
 }

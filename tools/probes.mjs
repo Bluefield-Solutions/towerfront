@@ -1405,6 +1405,23 @@ const PROBEN = [
     tor: 'grafiktor',
   },
   {
+    // Der Abdruck der teuren Tore (v154). Er darf NIE dazu fuehren, dass ein
+    // echter Fehler durchrutscht: `maps.ts` gehoert zur Huelle von
+    // `zielplatte`, also muss das Tor nach dieser Aenderung wieder rechnen
+    // UND rot werden. Ohne die Probe waere ein zu enger Abdruck nicht von
+    // einem bestandenen Tor zu unterscheiden.
+    //
+    // Zweimal hintereinander gefahren waere noch schaerfer, aber die
+    // Probenumgebung faehrt jedes Tor genau einmal - und einmal genuegt:
+    // der vorige gruene Lauf hat den Abdruck hinterlassen, dieser hier
+    // muss ihn verwerfen.
+    name: 'Abdruck verschlaeft eine geaenderte Karte',
+    datei: 'src/data/maps.ts',
+    regel: /  ziel: \{ x: 1734, y: 506 \},/,
+    ersatz: '  ziel: { x: 1200, y: 506 },',
+    tor: 'zielplattentor',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,
@@ -1414,7 +1431,13 @@ const PROBEN = [
 ];
 
 // ------------------------------------------------------------------- Schutz
-const dreckig = execSync('git status --porcelain', { cwd: ROOT, encoding: 'utf8' }).trim();
+//
+// Der Musterlauf ist ausgenommen: er LIEST nur und fasst den Baum nie an.
+// Genau das ist sein Zweck - er soll waehrend der Arbeit laufen koennen,
+// nicht erst danach. Wer ihn hinter den Sauberkeits-Waechter sperrt, macht
+// aus einer Zwei-Sekunden-Pruefung wieder eine, die man verschiebt.
+const dreckig = process.argv.includes('--muster')
+  ? '' : execSync('git status --porcelain', { cwd: ROOT, encoding: 'utf8' }).trim();
 if (dreckig) {
   console.error('PROBEN: der Baum ist nicht sauber.\n');
   console.error(dreckig.split('\n').slice(0, 10).map((l) => `  ${l}`).join('\n'));
@@ -1428,6 +1451,59 @@ const filter = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const liste = filter.length
   ? PROBEN.filter((p) => filter.some((f) => `${p.name} ${p.tor}`.toLowerCase().includes(f.toLowerCase())))
   : PROBEN;
+
+// -------------------------------------------------------------- Musterlauf
+//
+// `npm run muster` prueft NUR, ob jede Regel noch greift - ohne ein einziges
+// Tor zu fahren. Zwei Sekunden statt vierunddreissig Minuten.
+//
+// **Warum das die haeufigste Verfallsart ist.** Eine Probe hoert nicht
+// dadurch auf zu beweisen, dass das Tor stumpf wird, sondern dadurch, dass
+// ihr Eingriff nicht mehr ankommt - und ein nicht angekommener Eingriff
+// sieht aus wie ein bestandenes Tor. Genau das ist an einem einzigen Tag
+// zweimal passiert (v152): eine Probe zeigte auf eine umnumerierte
+// Tabellenzeile, eine andere auf eine Liste deutscher Zahlwoerter, die bei
+// "fuenfundzwanzig" endete. Beide meldeten "schlaegt nicht an", und beide
+// waren Fehler in der Probe.
+//
+// Der Musterlauf ersetzt den vollen Lauf NICHT. Er sagt nur: jede Probe hat
+// noch einen Gegenstand. Ob das Tor ihn auch meldet, sagt allein der volle
+// Lauf - deshalb steht er weiter vor jeder Auslieferung.
+if (process.argv.includes('--muster')) {
+  console.log(`Musterlauf: ${liste.length} Regel(n), kein Tor wird gefahren.\n`);
+  const stumm = [], mehrdeutig = [];
+  for (const p of liste) {
+    const vorher = readFileSync(join(ROOT, p.datei), 'utf8');
+    const treffer = p.regel
+      ? (vorher.match(new RegExp(p.regel.source, p.regel.flags.includes('g')
+        ? p.regel.flags : `${p.regel.flags}g`)) ?? []).length
+      : vorher.split(p.suche).length - 1;
+    // NULL Treffer ist der Fehler: der Eingriff kommt nicht mehr an, und ein
+    // nicht angekommener Eingriff sieht aus wie ein bestandenes Tor.
+    //
+    // MEHRERE Treffer sind nur ein Hinweis. `replace` ohne `g` nimmt den
+    // ersten, und bei sechs Proben ist das Absicht - "Strasse schrumpft
+    // unter die Gegner" trifft 321 Wegbreiten und will genau eine davon.
+    // Zum Fehler zu machen waere falsch; verschweigen aber auch: in v149
+    // traf eine Probe den erstbesten `update(dt` und aenderte damit die
+    // falsche Methode. Wer eine dieser Zeilen liest, soll wissen, dass ihr
+    // Eingriff von der Reihenfolge im Quelltext abhaengt.
+    if (treffer === 0) stumm.push(`${p.name}: Muster FEHLT in ${p.datei}`);
+    else if (treffer > 1) mehrdeutig.push(`${p.name}: ${treffer} Treffer in ${p.datei} `
+      + '- greift den ersten');
+  }
+  for (const z of mehrdeutig) console.log(`  Hinweis: ${z}`);
+  if (mehrdeutig.length) console.log('');
+  if (stumm.length) {
+    console.error(`MUSTERLAUF: ${stumm.length} von ${liste.length} Proben haben keinen `
+      + 'Gegenstand mehr - ihr Eingriff kommt nicht an.');
+    for (const z of stumm) console.error(`  - ${z}`);
+    process.exit(1);
+  }
+  console.log(`MUSTERLAUF: alle ${liste.length} Proben greifen noch, `
+    + `${mehrdeutig.length} davon auf den ersten von mehreren Treffern.`);
+  process.exit(0);
+}
 
 /** Den Quelltext zuruecknehmen - UND das gebaute Ergebnis mit.
  *

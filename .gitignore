@@ -15,3 +15,6 @@ schleife/
 # laufen und checkt das ERGEBNIS ein. Die Rohbilder selbst gehoeren ins
 # Archiv, nicht in die Versionsgeschichte.
 art/roh/
+
+# Gedaechtnis der teuren Tore - je Rechner, nie eingecheckt (siehe tools/abdruck.mjs)
+.abdruck/

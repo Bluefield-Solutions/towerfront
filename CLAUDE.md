@@ -45,7 +45,9 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 ## Befehle
 
 ```
-npm run gate        sechsundzwanzig Prüfungen, ~90 s. Muss vor jedem Commit grün sein.
+npm run gate        siebenundzwanzig Prüfungen. Muss vor jedem Commit grün sein.
+                    Gemessen 264 s vor v154, danach rund 190 - die teuren Tore
+                    haben ein Gedaechtnis bekommen (docs/Towerfront-TOR-BILANZ.md).
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
 npm run bilder      alle 13 Aufnahmen (echte PNG ohne Browser)
 npm run bildtor     der Querschnitt, den die Torkette prüft
@@ -59,6 +61,10 @@ npm run bahntreue   prueft am Kartenbild, ob jede Bahn auf der GEMALTEN
                     Strasse laeuft - Ratsche, kein Soll.
 npm run konter      prueft, ob jede Gegnerart, an der etwas zu kontern ist,
                     es auch sagt - und ob es nicht ALLE tun.
+npm run muster      prueft in 0,4 s, ob jede der 143 Gegenproben noch einen
+                    Gegenstand hat - ohne ein Tor zu fahren. Ersetzt den
+                    vollen Probenlauf nicht, faengt aber seine haeufigste
+                    Verfallsart.
 npm run streifen    misst beide Baender ueber dem Feld: die Wellenvorschau in
                     JEDER Welle und die Einweisungsblase beim laengsten Satz.
                     Echtes Markup, echte Stilvorlage - das Browsertor sieht
@@ -89,7 +95,7 @@ npm run kartenwechsel  was ein Kartenaufbau an Bildpunkten kostet
                     (mit `-- --browser` zusätzlich im Browser mit Telefondrossel)
 ```
 
-Die Torkette: `tsc` → `guards` → `doku` → `art` → `determinism` → `sim` →
+Die Torkette: `tsc` → `guards` → `doku` → `muster` → `art` → `determinism` → `sim` →
 `konter` → `geschosse` → `muendung` → `gedraenge` → `bahntreue` → `bench` →
 `bench-draw` → `kartenwechsel` → `grafiktor` → `einbettung` → `zielplatte` → `gelaende` → `lesbarkeit` → `beruehrung` → `streifen` → `bildtor` → `smoke` →
 `build` → `autarkie` → `browser` → `bericht`.
@@ -206,7 +212,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v153. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v154. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

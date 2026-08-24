@@ -23,8 +23,8 @@ export async function messenImBrowser(ROOT) {
     console.error('\n  (--browser uebersprungen: dist/index.html fehlt. Erst `npm run build`.)');
     return;
   }
-  const { chromium } = await import('playwright');
-  const browser = await starten(chromium);
+  const { browserStarten } = await import('./chromium.mjs');
+  const browser = await browserStarten();
 
   // --- Erst sagen, WORAUF gemessen wird. Sonst wandert die Zahl als
   // "so ist es auf dem Telefon" weiter, und das waere gelogen.
@@ -102,24 +102,4 @@ export async function messenImBrowser(ROOT) {
     console.log(`  Schlimmste Aufgabe: ${min} bis ${max} ms ueber ${schlimmste.length} Laeufe.`);
     console.log('  Die Spanne ist der Grund, warum daraus kein Budget wird.');
   }
-}
-
-/** Denselben Weg wie das Browsertor: erst der Normalweg, dann das
- *  vorinstallierte Chromium. Ein stilles Ueberspringen gaebe es nicht. */
-async function starten(chromium) {
-  const versuche = [
-    [null, 'Playwright-eigene Fassung'],
-    [process.env.CHROMIUM_PFAD, 'CHROMIUM_PFAD'],
-    ['/opt/pw-browsers/chromium', 'vorinstalliert'],
-  ];
-  const gescheitert = [];
-  for (const [pfad, name] of versuche) {
-    if (pfad === undefined) continue;
-    try {
-      return await chromium.launch(pfad ? { executablePath: pfad } : {});
-    } catch (e) {
-      gescheitert.push(`  ${name}: ${e.message.split('\n')[0]}`);
-    }
-  }
-  throw new Error('Kein Chromium startbar:\n' + gescheitert.join('\n'));
 }

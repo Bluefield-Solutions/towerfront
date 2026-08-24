@@ -1293,6 +1293,21 @@ const PROBEN = [
     tor: 'streifentor',
   },
   {
+    // v151 lief hier gruen durch alle 25 Tore und brach im Ablaufplan ab:
+    // ein festgeschriebener Chromium-Pfad, den es nur in dieser Umgebung
+    // gibt. Der Waechter faengt die zweite Kopie ab - diese Probe faengt
+    // den Waechter ab.
+    name: 'Ein Werkzeug schreibt den Chromium-Pfad fest',
+    datei: 'tools/streifen.ts',
+    regel: /const browser = await browserStarten\(\);/,
+    // Der Pfad wird ZUSAMMENGESETZT, nicht hingeschrieben: sonst traegt die
+    // Probe selbst, wonach der Waechter sucht, und meldet sie als Fehler.
+    // Eingebaut wird trotzdem der volle Pfad - der Eingriff ist derselbe.
+    ersatz: "const browser = await (await import('playwright')).chromium.launch("
+      + `{ executablePath: '/${'opt'}/pw-browsers/chromium' });`,
+    tor: 'guards',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,

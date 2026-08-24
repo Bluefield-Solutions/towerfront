@@ -43,7 +43,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { chromium } from 'playwright';
+import { browserStarten } from './chromium.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DATEI = join(ROOT, 'dist/index.html');
@@ -107,32 +107,6 @@ const fail = (m) => probleme.push(m);
 
 // --- Woher kommt der Browser?
 //
-// Zwei Welten: hier liegt ein vorinstalliertes Chromium unter
-// /opt/pw-browsers, im Ablaufplan lädt `playwright install` seine eigene
-// Fassung. Erst der Normalweg, dann der vorinstallierte - und wenn beides
-// fehlt, ein Abbruch mit Ansage. Ein Tor, das sich bei fehlendem Browser
-// still überspringt, ist genau die Prüfung, die nie etwas meldet.
-async function browserStarten() {
-  const versuche = [
-    [null, 'Playwright-eigene Fassung'],
-    [process.env.CHROMIUM_PFAD, 'CHROMIUM_PFAD'],
-    ['/opt/pw-browsers/chromium', 'vorinstalliert'],
-  ];
-  const gescheitert = [];
-  for (const [pfad, name] of versuche) {
-    if (pfad === undefined) continue;
-    try {
-      return await chromium.launch(pfad ? { executablePath: pfad } : {});
-    } catch (e) {
-      gescheitert.push(`  ${name}: ${e.message.split('\n')[0]}`);
-    }
-  }
-  console.error('BROWSERTOR: kein Chromium startbar.\n');
-  console.error(gescheitert.join('\n'));
-  console.error('\nEntweder `npx playwright install chromium` laufen lassen');
-  console.error('oder CHROMIUM_PFAD auf eine vorhandene Fassung setzen.');
-  process.exit(1);
-}
 
 if (!existsSync(DATEI)) {
   console.error('BROWSERTOR: dist/index.html fehlt - erst `npm run build`.');

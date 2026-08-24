@@ -1,7 +1,7 @@
 /** Datenwaechter. Laeuft vor jedem Build und prueft die Inhaltsdateien auf
  *  Widersprueche, die im Spiel erst spaet oder gar nicht auffallen wuerden.
  *  Aufruf: npx tsx tools/guards.ts */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WORLD_W, WORLD_H } from '../src/data/config';
@@ -1032,6 +1032,33 @@ for (const id of TOWER_ORDER) {
   if (gesehen < 25) {
     fail(`Der Genre-Waechter hat nur ${gesehen} Kriterien gefunden - das Muster passt `
       + 'nicht mehr auf tools/benchmark.ts, und die Pruefung lief ins Leere.');
+  }
+}
+
+// ------------------------------------------ Werkzeuge: ein Weg zum Browser
+//
+// v151 lief hier gruen durch alle 25 Tore und brach im Ablaufplan ab: das
+// neue Tor `streifen` schrieb den Pfad des vorinstallierten Chromium fest,
+// und dieses Verzeichnis gibt es nur in dieser Umgebung. `tools/browser.mjs` hatte den
+// Fall laengst geloest - nur eben ein zweites Mal (Regel 15).
+//
+// Die Wahl des Browsers steht jetzt allein in `tools/chromium.mjs`. Wer sie
+// ein zweites Mal hinschreibt, faellt hier auf. Geprueft wird der feste
+// Pfad, nicht der Aufruf: `chromium.launch` ohne Pfad ist der Normalweg und
+// laeuft ueberall.
+{
+  const werkzeuge = readdirSync(join(ROOT, 'tools'))
+    .filter((f) => /\.(ts|mjs)$/.test(f) && f !== 'chromium.mjs' && f !== 'chromium.d.mts');
+  // Zusammengesetzt, nicht hingeschrieben: sonst faellt der Waechter ueber
+  // sich selbst - seine eigene Zeile enthielte, wonach er sucht.
+  const nadel = `/${'opt'}/pw-browsers`;
+  for (const f of werkzeuge) {
+    const quelle = readFileSync(join(ROOT, 'tools', f), 'utf8');
+    if (quelle.includes(nadel)) {
+      errors.push(`tools/${f}: schreibt den Chromium-Pfad "${nadel}" fest. Diese Umgebung hat das `
+        + 'Verzeichnis, der Ablaufplan nicht - dort bricht das Tor ab, waehrend es hier '
+        + 'gruen meldet. `browserStarten()` aus tools/chromium.mjs benutzen.');
+    }
   }
 }
 

@@ -25,7 +25,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
-import { chromium } from 'playwright';
+import { browserStarten } from './chromium.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const TOR = process.argv.includes('--tor');
@@ -110,7 +110,7 @@ const bloecke = wellen.map((w) =>
 // breiter und die Schrift groesser aus als auf dem Zielgeraet - dieselbe
 // Zahl, andere Wirklichkeit. Die Wellen unterhalb des Fensterrands lassen
 // sich trotzdem messen: `getBoundingClientRect` braucht keine Sicht.
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await browserStarten();
 const seite = await (await browser.newContext({
   viewport: { width: BREITE, height: SCHIRM_H }, deviceScaleFactor: 2,
 })).newPage();

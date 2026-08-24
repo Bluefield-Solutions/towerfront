@@ -1,5 +1,6 @@
 import { C, LICHT, WORLD_H, WORLD_W } from '../data/config';
 import { ENEMIES, type EnemyId } from '../data/enemies';
+import { wirkungRest } from '../data/wirkungen';
 import {
   TOWERS, accentFor, statsFor,
   type BranchIndex, type TowerDef, type TowerId, type TowerLevel,
@@ -1847,12 +1848,13 @@ export class Renderer {
       // ein Muster und keine Auskunft, und sie verdecken genau das, was man
       // sehen will. Der Ton sitzt jetzt auf dem Koerper: er sagt dasselbe,
       // verdeckt nichts und zaehlt richtig.
-      if (e.slowLeft > 0) {
+      const bremse = wirkungRest(e.wirkungen, 'bremse');
+      if (bremse > 0) {
         const kalt = getEnemyFrost(e.def, s.map.id);
         if (kalt) {
           // Die Deckung folgt der Restdauer: wer gleich wieder frei ist,
           // taut sichtbar auf.
-          ctx.globalAlpha = Math.min(1, e.slowLeft * 1.6) * 0.85;
+          ctx.globalAlpha = Math.min(1, bremse * 1.6) * 0.85;
           ctx.drawImage(kalt, -w / 2, oben, w, h);
           ctx.globalAlpha = 1;
         }

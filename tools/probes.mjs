@@ -128,8 +128,11 @@ const PROBEN = [
   {
     name: 'Doku nennt einen Befehl, den es nicht gibt',
     datei: 'CLAUDE.md',
-    suche: 'npm run gate',
-    ersatz: 'npm run gaat',
+    // Auf die Zeile im Befehlsblock verankert, nicht auf den blossen Text:
+    // `npm run gate` steht seit v155 auch in der Ablauftabelle, und ein
+    // Suchtext wirkt nur bei genau einem Treffer.
+    regel: /^npm run gate( +)/m,
+    ersatz: 'npm run gaat$1',
     tor: 'doku',
   },
   {
@@ -439,8 +442,11 @@ const PROBEN = [
     // Die andere Haelfte von R4: es darf NICHT toeten.
     name: 'Bollwerk macht nebenbei Schaden',
     datei: 'src/game/state.ts',
-    regel: /e\.slowLeft = Math\.max\(e\.slowLeft, def\.slowTime \?\? 3\);/,
-    ersatz: 'e.slowLeft = Math.max(e.slowLeft, def.slowTime ?? 3); e.hp -= 1;',
+    // Auf die neue Stelle nachgezogen: TF-015 hat `slowLeft` durch die
+    // Wirkungsliste ersetzt, und der Musterlauf hat es gemeldet, bevor die
+    // Probe stillschweigend nichts mehr bewies.
+    regel: /(        e\.wirkungen = wirkungAnlegen\(e\.wirkungen, 'bremse', \(def\.slow \?\? 1\) \* w,\n          def\.slowTime \?\? 3\);)/,
+    ersatz: '$1 e.hp -= 1;',
     tor: 'smoke',
   },
   {
@@ -943,7 +949,9 @@ const PROBEN = [
     // die Bremse waere wieder eine Zahl im Modell statt einer Auskunft.
     name: 'Gebremste Gegner sehen aus wie freie',
     datei: 'src/gfx/renderer.ts',
-    regel: /          ctx\.globalAlpha = Math\.min\(1, e\.slowLeft \* 1\.6\) \* 0\.85;/,
+    // Ebenfalls nachgezogen (TF-015): der Frostueberzug liest seine
+    // Restdauer jetzt aus der Wirkungsliste statt aus `slowLeft`.
+    regel: /          ctx\.globalAlpha = Math\.min\(1, bremse \* 1\.6\) \* 0\.85;/,
     ersatz: '          ctx.globalAlpha = 0;',
     tor: 'bildtor',
   },
@@ -1474,6 +1482,33 @@ const PROBEN = [
     tor: 'art',
   },
   {
+    // TF-015: die Wirkungen verschmelzen wieder zu einem Eintrag je Art -
+    // genau die Semantik der beiden alten Felder. Dann traegt eine starke
+    // kurze Bremse die Dauer einer schwachen langen, und der Rauchtest muss
+    // das sehen.
+    name: 'Wirkungen verschmelzen zu einer',
+    datei: 'src/data/wirkungen.ts',
+    regel: /    if \(Math\.abs\(w\.staerke - staerke\) < 1e-9\) \{/,
+    ersatz: '    if (true) {',
+    tor: 'smoke',
+  },
+  {
+    // Und die Gegenrichtung: die Liste waechst mit jedem Bild. Eine Aura
+    // legt in JEDEM Bild an - ohne das Wiedererkennen waeren das nach zehn
+    // Sekunden sechshundert Eintraege je Gegner.
+    //
+    // Der Eingriff nimmt das Wiedererkennen der ART weg, nicht das
+    // Auffrischen: das Wachstum ist DOPPELT abgesichert (Auffrischen bei
+    // gleicher Staerke und Ueberdeckung bei schwaecherer), und ein Eingriff
+    // an nur einer der beiden Stellen erreicht es gar nicht. Die erste
+    // Fassung dieser Probe zielte auf das Auffrischen und blieb gruen.
+    name: 'Wirkungsliste waechst mit jedem Bild',
+    datei: 'src/data/wirkungen.ts',
+    regel: /    if \(w\.art !== art\) continue;/,
+    ersatz: '    continue;',
+    tor: 'smoke',
+  },
+  {
     name: 'Ein Schwierigkeitsgrad wie der andere',
     datei: 'src/data/difficulty.ts',
     regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,
@@ -1557,8 +1592,23 @@ if (process.argv.includes('--muster')) {
     // traf eine Probe den erstbesten `update(dt` und aenderte damit die
     // falsche Methode. Wer eine dieser Zeilen liest, soll wissen, dass ihr
     // Eingriff von der Reihenfolge im Quelltext abhaengt.
+    //
+    // **Ausser bei einem SUCHTEXT - da ist "mehrere" derselbe Fehler wie
+    // "keiner".** Die Probenumgebung verweigert dort den Dienst, wenn es
+    // nicht genau einen Treffer gibt (siehe unten: `.length - 1 === 1`),
+    // aendert also gar nichts und die Probe beweist nichts.
+    //
+    // Aufgefallen ist das erst im vollen Lauf von v158: "Doku nennt einen
+    // Befehl, den es nicht gibt" sucht `npm run gate` in CLAUDE.md, und die
+    // neue Ablauftabelle aus v155 nennt den Befehl ein zweites Mal. Der
+    // Musterlauf hatte das als Hinweis durchgehen lassen - er behandelte
+    // Regel und Suchtext gleich, obwohl sie sich genau hier unterscheiden.
+    // Dreiunddreissig Minuten spaeter fand es der volle Lauf.
     if (treffer === 0) stumm.push(`${p.name}: Muster FEHLT in ${p.datei}`);
-    else if (treffer > 1) mehrdeutig.push(`${p.name}: ${treffer} Treffer in ${p.datei} `
+    else if (treffer > 1 && !p.regel) {
+      stumm.push(`${p.name}: ${treffer} Treffer fuer den Suchtext "${p.suche}" in `
+        + `${p.datei} - bei einem Suchtext wirkt der Eingriff nur bei GENAU einem.`);
+    } else if (treffer > 1) mehrdeutig.push(`${p.name}: ${treffer} Treffer in ${p.datei} `
       + '- greift den ersten');
   }
   for (const z of mehrdeutig) console.log(`  Hinweis: ${z}`);
@@ -1609,6 +1659,39 @@ const zuruecknehmen = (tor) => {
 };
 
 console.log(`Gegenproben: ${liste.length} von ${PROBEN.length}\n`);
+
+// --- Zuerst: sind die betroffenen Tore ueberhaupt GRUEN?
+//
+// Eine Gegenprobe sagt "schlaegt an", wenn das Tor mit dem eingebauten
+// Fehler rot ist. Sie sagt NICHTS darueber, ob es vorher gruen war - und
+// ein Tor, das schon vorher rot ist, schlaegt bei jedem Eingriff an. Damit
+// bewiese die Probe genau nichts (Regel 13: wer eine Wirkung misst,
+// schaltet sie zuerst ab).
+//
+// Aufgefallen in v158: TF-015 hatte den Frostueberzug abgeschnitten, das
+// Bildtor meldete 0 statt 3409 Bildpunkte - und die Probe "Gebremste Gegner
+// sehen aus wie freie" meldete trotzdem brav "schlaegt an".
+//
+// Gefahren wird jedes betroffene Tor genau EINMAL. Beim vollen Lauf ist das
+// die ganze Kette und kostet rund zwei von dreiunddreissig Minuten; bei
+// einem gefilterten Lauf nur die paar Tore, um die es geht.
+{
+  const tore = [...new Set(liste.map((p) => p.tor))].sort();
+  const rot = [];
+  for (const t of tore) {
+    if (BAUT.has(t)) execSync('npm run build', { cwd: ROOT, stdio: 'pipe' });
+    try { execSync(`npm run ${t}`, { cwd: ROOT, stdio: 'pipe' }); }
+    catch { rot.push(t); }
+  }
+  if (rot.length) {
+    console.error(`PROBEN: ${rot.length} Tor(e) sind schon OHNE eingebauten Fehler rot: `
+      + `${rot.join(', ')}.`);
+    console.error('  Eine Gegenprobe an einem roten Tor beweist nichts - sie schlaegt an,');
+    console.error('  gleich was man einbaut. Erst die Kette gruen bekommen.');
+    process.exit(1);
+  }
+  console.log(`  ${tore.length} betroffene(s) Tor(e) vorher gruen: ${tore.join(', ')}\n`);
+}
 
 const fehler = [];
 for (const p of liste) {

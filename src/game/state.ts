@@ -1,5 +1,6 @@
 import { WORLD_W, WORLD_H, C } from '../data/config';
 import { muendung } from '../data/turmgestalt';
+import { tempoFaktor, wirkungAnlegen, wirkungenTicken, type Wirkung, type WirkungsArt } from '../data/wirkungen';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import {
   TOWERS, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor,
@@ -783,8 +784,8 @@ export class GameState {
         if (e.dead) continue;
         if (dist2(x, y, e.x, e.y) > r2) continue;
         const w = 1 - ENEMIES[e.def].slowResist;
-        e.slowFactor = Math.min(e.slowFactor, 1 - (def.slow ?? 1) * w);
-        e.slowLeft = Math.max(e.slowLeft, def.slowTime ?? 3);
+        e.wirkungen = wirkungAnlegen(e.wirkungen, 'bremse', (def.slow ?? 1) * w,
+          def.slowTime ?? 3);
         this.ring(e.x, e.y, ENEMIES[e.def].radius * 2.2, def.color, 0.3, 2);
         gefasst++;
       }
@@ -811,8 +812,7 @@ export class GameState {
     for (const e of this.enemies) {
       if (e.dead) continue;
       const r = 1 - ENEMIES[e.def].slowResist;
-      e.slowFactor = Math.min(e.slowFactor, 1 - eff * r);
-      e.slowLeft = Math.max(e.slowLeft, def.slowTime ?? 3);
+      e.wirkungen = wirkungAnlegen(e.wirkungen, 'bremse', eff * r, def.slowTime ?? 3);
       this.ring(e.x, e.y, ENEMIES[e.def].radius * 2.4, def.color, 0.35, 2);
     }
     this.ring(this.goal.x, this.goal.y, WORLD_W, def.color, 0.7, 6);
@@ -990,7 +990,7 @@ export class GameState {
       id: this.nextId++, def: id, x: p0.x, y: p0.y + off,
       hp, hpMax: hp, speed: def.speed, lane: ln, heading: 0,
       side: (this.rng.next() * 2 - 1) * 0.85, travelled: 0,
-      slowFactor: 1, slowLeft: 0, auraIn: 0, shield, traeger,
+      wirkungen: null, auraIn: 0, shield, traeger,
       hitFlash: 0, squash: 0, hpShown: hp, wobble: this.rng.next() * 9,
       dead: false, leaked: false,
     });
@@ -1014,7 +1014,9 @@ export class GameState {
         // Spaene stieben zur Seite auseinander.
         side: Math.max(-1, Math.min(1, parent.side + (this.rng.next() - 0.5) * 0.9)),
         travelled: Math.max(0, parent.travelled - 6),
-        slowFactor: parent.slowFactor, slowLeft: parent.slowLeft,
+        // Der Span erbt, was am Spalter hing - eine KOPIE, sonst teilten
+        // sich Erzeuger und Bruchstueck dieselbe Liste.
+        wirkungen: parent.wirkungen ? parent.wirkungen.map((w) => ({ ...w })) : null,
         hitFlash: 0, squash: 0, hpShown: hp, wobble: this.rng.next() * 9,
         dead: false, leaked: false,
       });
@@ -1058,9 +1060,12 @@ export class GameState {
     this.updateTraeger(dt);
     let leaked = false;
     for (const e of this.enemies) {
-      if (e.slowLeft > 0) {
-        e.slowLeft -= dt;
-        if (e.slowLeft <= 0) e.slowFactor = 1;
+      // Die Uhr aller anliegenden Wirkungen (TF-015). Abgelaufene fallen an
+      // Ort und Stelle heraus; die Liste wird nicht neu erzeugt, weil dieser
+      // Zweig in JEDEM Bild ueber JEDEN Gegner laeuft.
+      if (e.wirkungen) {
+        wirkungenTicken(e.wirkungen, dt);
+        if (!e.wirkungen.length) e.wirkungen = null;
       }
       if (e.hitFlash > 0) e.hitFlash = Math.max(0, e.hitFlash - dt * 5);
       if (e.squash > 0) e.squash = Math.max(0, e.squash - dt * 6);
@@ -1076,7 +1081,7 @@ export class GameState {
         // Luftlinie zum Herzkristall - kein Pfad, keine Kurven.
         const dx = this.goal.x - e.x, dy = this.goal.y - e.y;
         const d = Math.hypot(dx, dy) || 1;
-        const step = e.speed * e.slowFactor * dt;
+        const step = e.speed * tempoFaktor(e.wirkungen) * dt;
         // Fortschritt auf denselben Massstab wie am Boden bringen, damit
         // "vorderstes Ziel" fuer beide dasselbe bedeutet.
         e.travelled = this.pathTotal * (1 - d / (this.airTotal || d));
@@ -1096,7 +1101,7 @@ export class GameState {
       // laeuft ein Gegner in einer engen Kurve genauso schnell wie auf der
       // Geraden, und er dreht sich weich mit.
       const path = this.lanes[e.lane] ?? this.lanes[0];
-      e.travelled += e.speed * e.slowFactor * dt;
+      e.travelled += e.speed * tempoFaktor(e.wirkungen) * dt;
       if (e.travelled >= path.length) {
         e.x = this.goal.x; e.y = this.goal.y;
         this.leak(e, edef);
@@ -1264,13 +1269,13 @@ export class GameState {
   private predict(e: Enemy, flight: number): Vec {
     if (ENEMIES[e.def].flying) {
       const d = dist(e.x, e.y, this.goal.x, this.goal.y);
-      const move = Math.min(d, e.speed * e.slowFactor * flight);
+      const move = Math.min(d, e.speed * tempoFaktor(e.wirkungen) * flight);
       return d > 0
         ? { x: e.x + ((this.goal.x - e.x) / d) * move, y: e.y + ((this.goal.y - e.y) / d) * move }
         : { x: e.x, y: e.y };
     }
     const path = this.lanes[e.lane] ?? this.lanes[0];
-    const s2 = Math.min(path.length, e.travelled + e.speed * e.slowFactor * flight);
+    const s2 = Math.min(path.length, e.travelled + e.speed * tempoFaktor(e.wirkungen) * flight);
     const p = path.at(s2);
     return { x: p.x, y: p.y };
   }
@@ -1538,9 +1543,8 @@ export class GameState {
     const src = owner ? owner.def : 'meteor';
     this.stats.damageBy[src] = (this.stats.damageBy[src] ?? 0) + dmg;
     if (slow > 0) {
-      const eff = slow * (1 - def.slowResist);
-      e.slowFactor = Math.min(e.slowFactor, 1 - eff);
-      e.slowLeft = Math.max(e.slowLeft, slowTime);
+      e.wirkungen = wirkungAnlegen(e.wirkungen, 'bremse',
+        slow * (1 - def.slowResist), slowTime);
     }
     this.spark(e.x, e.y, color, this.quality === 'hoch' ? 3 : 1, 140);
     Sfx.play('hit');
@@ -1801,8 +1805,11 @@ export class GameState {
         t.angle,
       ]) as SaveGame['towers'],
       enemies: this.enemies.map((e) => [
-        e.def, e.x, e.y, e.hp, e.hpMax, e.travelled, e.slowFactor, e.slowLeft, e.wobble,
-        e.lane, e.auraIn, e.side, e.shield, e.traeger,
+        e.def, e.x, e.y, e.hp, e.hpMax, e.travelled,
+        // Die anliegenden Wirkungen, flach: Art, Staerke, Rest (TF-015).
+        // Vorher standen hier zwei Zahlen fuer die einzigen zwei Felder.
+        e.wirkungen ? e.wirkungen.flatMap((w) => [w.art, w.staerke, w.rest]) : [],
+        e.wobble, e.lane, e.auraIn, e.side, e.shield, e.traeger,
       ]),
     };
   }
@@ -1882,12 +1889,37 @@ export class GameState {
       }
     this.towersVersion++;
 
-    for (const [def, x, y, hp, hpMax, travelled, slowFactor, slowLeft, wobble, lane, auraIn, side,
-      shield, traeger] of save.enemies) {
+    // Ein Stand von VOR v158 hat an Stelle 6 den alten Bremsfaktor als ZAHL
+    // und die Bremsrestzeit dahinter - alle Felder danach sind also um eins
+    // verschoben. Die Zeile wird deshalb ZUERST auf die neue Form gebracht;
+    // eine Umrechnung nur an Stelle 6 haette Wackeln, Bahn, Seite und
+    // Schildreste um ein Feld verrutschen lassen.
+    //
+    // Wer mitten in einer Partie speichert und das Spiel aktualisiert
+    // bekommt, soll weiterspielen koennen. Angehaengte Felder waren immer
+    // vertraeglich; ein GEAENDERTES ist es nicht, und das ist der Preis.
+    const zeilen = save.enemies.map((r) => {
+      if (typeof r[6] !== 'number') return r;
+      const [d, x0, y0, h, hm, tr, faktor, rest, ...schwanz] = r as unknown as
+        [EnemyId, number, number, number, number, number, number, number, ...number[]];
+      const w: (string | number)[] = faktor < 1 && rest > 0 ? ['bremse', 1 - faktor, rest] : [];
+      return [d, x0, y0, h, hm, tr, w, ...schwanz] as SaveGame['enemies'][number];
+    });
+
+    for (const [def, x, y, hp, hpMax, travelled, roh, wobble, lane, auraIn, side,
+      shield, traeger] of zeilen) {
+      const wirkungen: Wirkung[] = [];
+      const liste = roh as (string | number)[];
+      for (let i = 0; i + 2 < (liste?.length ?? 0); i += 3) {
+        wirkungen.push({
+          art: liste[i] as WirkungsArt, staerke: Number(liste[i + 1]), rest: Number(liste[i + 2]),
+        });
+      }
       this.enemies.push({
         id: this.nextId++, def, x, y, hp, hpMax,
         speed: ENEMIES[def].speed, lane: lane ?? 0, heading: 0, travelled,
-        slowFactor, slowLeft, auraIn: auraIn ?? 0, shield: shield ?? 0, traeger: traeger ?? 0,
+        wirkungen: wirkungen.length ? wirkungen : null,
+        auraIn: auraIn ?? 0, shield: shield ?? 0, traeger: traeger ?? 0,
         hitFlash: 0, squash: 0, hpShown: hp,
         side: side ?? 0,
         wobble,

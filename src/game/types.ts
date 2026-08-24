@@ -1,5 +1,6 @@
 import type { EnemyId } from '../data/enemies';
 import type { BranchIndex, TowerId } from '../data/towers';
+import type { Wirkung } from '../data/wirkungen';
 
 export interface Enemy {
   id: number;
@@ -36,8 +37,17 @@ export interface Enemy {
    *  springen - eine springende Leiste liest niemand. */
   hpShown: number;
   travelled: number; // Zurueckgelegte Strecke - Basis fuer "vorderstes Ziel"
-  slowFactor: number;
-  slowLeft: number;
+  /** Was gerade an ihm haengt (TF-015).
+   *
+   *  `null`, solange nichts anliegt - und das ist der Normalfall. Bei
+   *  zweihundert Gegnern im Feld ist ein leeres Feld billiger als
+   *  zweihundert leere Listen.
+   *
+   *  Vorher standen hier `slowFactor` und `slowLeft`: zwei Felder fuer die
+   *  einzigen zwei Wirkungen, die es gab. Sie liefen unabhaengig - Staerke
+   *  nahm das Minimum, Dauer das Maximum -, und eine starke kurze Bremse
+   *  plus eine schwache lange ergab die STARKE fuer die LANGE Dauer. */
+  wirkungen: Wirkung[] | null;
   hitFlash: number;
   wobble: number;
   dead: boolean;

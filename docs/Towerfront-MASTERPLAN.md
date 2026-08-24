@@ -1181,7 +1181,7 @@ XL > 10 Runden.
 | TF-012 | Technical Art | ERLEDIGT v156 | Kein Randlicht an Figuren | Silhouetten laufen in den Boden | Randlicht aus `LICHT`, gebacken | P1 | S | gemessen am GEBACKENEN Bild über den echten Weg: schwächster Saum **1,26 → 1,80**, unter 1,5 **4 von 24 → 0**. Ohne/mit gegengemessen (Regel 13) |
 | TF-013 | Tower | MISSING | Rollen fehlen (Unterstützung, Mindestreichweite, Anti-Luft) | Zu wenig Aufstellungsentscheidung | Zwei bis vier neue Türme | P1 | L | TF-021, TF-011 |
 | TF-014 | Path | ERLEDIGT v149 | Keine Wegvorschau | Der Spieler sieht nicht, woher es kommt | Wege beim Kartenstart animiert zeigen, Knopf zum Wiederholen | P1 | S | gemessen: 5 von 6 Toren liegen ausserhalb des Bildausschnitts |
-| TF-015 | Combat | MISSING | Nur zwei Statuswirkungen | Keine Schadensvielfalt, keine Resistenzen | Effektsystem als Liste am Gegner | P1 | M | — |
+| TF-015 | Combat | ERLEDIGT v158 | Nur zwei Statuswirkungen | Keine Schadensvielfalt, keine Resistenzen | Effektsystem als Liste am Gegner | P1 | M | Umbau **bitgleich** nachgewiesen; die Semantikkorrektur (jede Stärke ihre eigene Uhr) kostet gemessen rund ein Fünftel Balance-Reserve, alle Tore halten. Nacheichen gehört zu TF-018 |
 | TF-016 | QA | ERLEDIGT v143 | Verkauf/Ausbau während eines Schusses ungeprüft | Möglicher Verweis auf einen entfernten Turm | Zwei Rauchtestschritte | P1 | XS | kein Fehler; zwei stehende Prüfungen, dazu die `dead`-Sperre |
 | TF-017 | Art | DESIGN | Drei Kamerawinkel im selben Bild | Haupteindruck „zusammengewürfelt" | Einheitlicher Winkel, gemessen | P1 | L | TF-011, Rohbilder |
 | TF-018 | Balancing | VERIFIED | Balance seit v139 nicht nachgeeicht | Normal zu leicht (41 statt 30) | Alle drei Grade zusammen eichen | P2 | S | — |
@@ -1631,7 +1631,7 @@ möglich ist.
 | 11 | TF-011 | **Art Bible** schreiben | Art | Keine Verbindlichkeit | Alle Bildarbeit bekommt einen Maßstab | P1 | M | **erledigt v153** — verbindliches Dokument, Messstelle je Festlegung, Bestellliste für `art/roh/` |
 | 12 | TF-012 | Randlicht an jeder Figur | Technical Art | Silhouetten laufen in den Boden | Sichtbar mehr Plastik | P1 | S | **erledigt v156** — schwächster Saum 1,26 → 1,80, gemessen am gebackenen Bild |
 | 13 | TF-024 | Fraktionsfarben statt Regenbogen | Enemy Art | Keine Familie lesbar | Gegner werden gruppierbar | P2 | S | 11 |
-| 14 | TF-015 | **Effektsystem** (Liste statt Felder) | Combat | Zwei Wirkungen | Grundlage für alles Weitere | P1 | M | — |
+| 14 | TF-015 | **Effektsystem** (Liste statt Felder) | Combat | Zwei Wirkungen | Grundlage für alles Weitere | P1 | M | — | **erledigt v158** — Liste am Gegner, Umbau bitgleich, Semantikfehler behoben |
 | 15 | TF-033 | Wirksamkeit sichtbar (Abpraller, Dämpfung) | VFX | Man sieht nicht, ob es wirkt | Der Spieler lernt Konter von selbst | P2 | S | 14 |
 | 16 | TF-005 | Welle rufen während einer Welle | Wave/Economy | Kein Risiko-gegen-Gold | Der Rhythmus entsteht | P1 | S | — |
 | 17 | TF-010 | Abschussgold hoch, Wellenbonus runter | Economy | 79 % Zeitlohn | Spielen zahlt sich aus | P1 | S | 16 |

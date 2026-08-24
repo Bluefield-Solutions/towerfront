@@ -70,6 +70,7 @@ const { GameState } = await import('../src/game/state.ts');
 const { Renderer } = await import('../src/gfx/renderer.ts');
 const { MAPS } = await import('../src/data/maps.ts');
 const { TOWERS, TOWER_ORDER } = await import('../src/data/towers.ts');
+const { wirkungAnlegen } = await import('../src/data/wirkungen.ts');
 const { candidateSpots } = await import('./spots.ts');
 const { Menu } = await import('../src/game/menu.ts');
 // Wichtig: nicht die has*-Funktionen. Die sagen nur, ob ein Bild im Verzeichnis
@@ -927,8 +928,19 @@ pruefungen.push(async () => {
   e.travelled = s.lanes[0].length * 0.45;
   s.update(1 / 60);
   const frei = nimm();
-  e.slowLeft = 3;
-  e.slowFactor = 0.5;
+  // Ueber die ECHTE Regel bremsen, nicht ueber die Felder.
+  //
+  // Bis v158 standen hier `e.slowLeft = 3; e.slowFactor = 0.5;`. Als TF-015
+  // die beiden Felder durch die Wirkungsliste ersetzte, setzte dieses
+  // Werkzeug zwei Felder, die es nicht mehr gibt - der Gegner war nie
+  // gebremst, und der Frostueberzug fiel von 3409 auf NULL Bildpunkte. Die
+  // Bildabnahme hat es gefangen; die Gegenprobe daneben konnte es nicht,
+  // denn sie prueft nur, dass ein Eingriff das Tor rot macht - und rot war
+  // es schon.
+  //
+  // Der fuenfte Fall in diesem Verzeichnis, in dem ein Werkzeug die Regel
+  // nachbaut statt sie zu benutzen.
+  e.wirkungen = wirkungAnlegen(e.wirkungen, 'bremse', 0.5, 3);
   const gebremst = nimm();
   let anders = 0;
   for (let i = 0; i < frei.length; i += 4) {

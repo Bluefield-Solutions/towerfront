@@ -85,6 +85,7 @@ const { TUTORIAL } = await import('../src/game/tutorial');
 const { auswertung } = await import('../src/game/auswertung');
 const { getBest, getStars, gegnerVergessen, saveSettings } = await import('../src/core/storage');
 const { konterSatz } = await import('../src/data/konter');
+const { wirkungAnlegen, wirkungenTicken, tempoFaktor } = await import('../src/data/wirkungen');
 type EnemyId = Parameters<typeof konterSatz>[0];
 const { candidateSpots } = await import('./spots');
 const { WORLD_W, WORLD_H } = await import('../src/data/config');
@@ -261,6 +262,47 @@ step('Auswertung', () => {
 // durch. Erreicht wurde damit Welle 0 - und genau das muss im Bestwert
 // stehen. Ein anderer Grad als oben, damit die Ablage einen eigenen
 // Schluessel hat und der Bestwert bei null anfaengt.
+// Zwei Bremsen, zwei Uhren (TF-015).
+//
+// Das ist der Fall, den die beiden alten Felder nicht konnten: `slowFactor`
+// nahm das Minimum, `slowLeft` das Maximum, und beide liefen unabhaengig.
+// Eine starke kurze Bremse und eine schwache lange ergaben deshalb die
+// STARKE fuer die LANGE Dauer - eine Wirkung, die keine der beiden Quellen
+// hatte.
+//
+// Geprueft wird an `wirkungAnlegen` und `wirkungenTicken` selbst, denn das
+// SIND die Stellen, die das Spiel ruft - keine nachgebaute Fassung daneben.
+step('Zwei Bremsen halten zwei Uhren', () => {
+  let l = wirkungAnlegen(null, 'bremse', 0.6, 1);
+  l = wirkungAnlegen(l, 'bremse', 0.2, 5);
+  if (Math.abs(tempoFaktor(l) - 0.4) > 1e-9) {
+    problems.push(`Wirkungen: solange beide anliegen, muss die STAERKERE zaehlen `
+      + `(0,40 erwartet, ${tempoFaktor(l).toFixed(2)}).`);
+  }
+  // Die starke laeuft ab, die schwache nicht.
+  wirkungenTicken(l, 1.5);
+  const nach = tempoFaktor(l);
+  if (Math.abs(nach - 0.8) > 1e-9) {
+    problems.push(`Wirkungen: nach dem Ablauf der starken Bremse muss die schwache `
+      + `uebrig bleiben (0,80 erwartet, ${nach.toFixed(2)}). `
+      + (nach === 1
+        ? 'Sie ist ganz verschwunden - die Eintraege sind verschmolzen.'
+        : 'Die starke wirkt weiter, obwohl ihre Zeit um ist.'));
+  }
+  // Und zuletzt ist nichts mehr da.
+  wirkungenTicken(l, 4);
+  if ((l?.length ?? 0) || tempoFaktor(l) !== 1) {
+    problems.push('Wirkungen: nach Ablauf aller Uhren bremst noch etwas.');
+  }
+  // Regel 5: dieselbe Quelle, die weitertickt, darf die Liste nicht aufblaehen.
+  let m = wirkungAnlegen(null, 'bremse', 0.3, 2);
+  for (let i = 0; i < 200; i++) m = wirkungAnlegen(m, 'bremse', 0.3, 2);
+  if ((m?.length ?? 0) !== 1) {
+    problems.push(`Wirkungen: dieselbe Bremse 201-mal angelegt ergibt ${m?.length} Eintraege `
+      + '- eine Aura tickt in jedem Bild, das waeren nach zehn Sekunden 600.');
+  }
+});
+
 // Der Konter-Satz erscheint - einmal, rechtzeitig und dann nie wieder (TF-034).
 //
 // Geprueft wird an der BLASE im DOM, nicht an `konterSatz`. Ob die Ableitung

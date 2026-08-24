@@ -103,14 +103,25 @@ export interface SaveGame {
    *  Zeichenversatz ab, und die Flugbahn ist dieselbe wie in v144. */
   towers: [TowerId, number, number, number, number, number, number, number, BranchIndex, number,
     number?, number?][];
-  /** [Gegnerart, x, y, hp, hpMax, Segment, Strecke, Bremsfaktor, Bremsrest, Wackeln] */
-  /** [Gegnerart, x, y, hp, hpMax, Segment, Strecke, Bremsfaktor, Bremsrest,
-   *  Wackeln, Bahn] */
-  /** ... zuletzt die Schildreste. Angehaengt wie die Zielwahl bei den
-   *  Tuermen: ein Stand ohne das Feld laedt weiter und bekommt Null. */
+  /** Ein Gegner:
+   *
+   *  `[Art, x, y, hp, hpMax, Strecke, Wirkungen, Wackeln, Bahn, Auratakt,
+   *    Seite, Schildreste?, Traegertakt?]`
+   *
+   *  **Ein Kommentar, nicht drei.** Hier standen bis v158 drei uebereinander,
+   *  jeder beim Wachsen des Tupels dazugeschrieben und keiner entfernt - der
+   *  erste beschrieb noch zehn Felder, das Tupel hatte vierzehn (Regel 15).
+   *
+   *  `Wirkungen` ist seit v158 eine FLACHE Liste `[Art, Staerke, Rest, ...]`
+   *  und stand vorher als zwei Zahlen da (Bremsfaktor, Bremsrest). Ein alter
+   *  Stand hat an dieser Stelle deshalb eine ZAHL statt einer Liste; das
+   *  Laden erkennt das und rechnet um. Angehaengte Felder waren immer
+   *  vertraeglich - ein geaendertes Feld ist es nicht, und genau deshalb
+   *  steht die Umrechnung da, statt den Stand wegzuwerfen. */
   enemies: [
-    EnemyId, number, number, number, number, number, number, number, number, number, number,
-    number, number?, number?,
+    EnemyId, number, number, number, number, number,
+    (string | number)[] | number,
+    number, number, number, number, number?, number?,
   ][];
 }
 

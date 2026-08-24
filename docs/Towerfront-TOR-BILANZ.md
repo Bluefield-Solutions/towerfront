@@ -1,186 +1,210 @@
 # Towerfront — Bilanz über alle Tore
 
-> **Messbericht.** Diese Bilanz entstand bei v31 und beschreibt den Stand von
-> damals — zehn Tore. Die Ergebnisse gelten unverändert, die Zahlen sind
-> historisch. Heutige Kette: siehe `Towerfront-KONZEPT-und-PIPELINE.md`.
+*Messung: v153 · 24.08.2026 · vorherige Messung v31, siehe Abschnitt 7*
 
-*Messung: v35 · 08.08.2026 · Messung entstand bei v31, Ergebnisse gelten unverändert*
+Die Frage dieser Runde ist dieselbe wie damals, nur mit 26 Toren statt zehn:
+**Welches Tor verhindert Fehler, und welches erzeugt nur Arbeit?** Und die
+Frage dahinter, die der Nutzer gestellt hat: *ist der Ablauf noch zielführend
+oder bremst er?*
 
-Die Frage dieser Runde: **Welches Tor hat tatsächlich Fehler verhindert, und
-welches erzeugt nur Arbeit?** Nicht geschätzt, sondern gemessen — Laufzeit
-gestoppt und in jedes Tor ein passender Fehler eingebaut, um zu sehen, ob es
-anschlägt.
+Nicht geschätzt — mit der Uhr gemessen, Tor für Tor, auf diesem Rechner.
+
+> **Messstelle (Regel 12):** Entwicklungscontainer, Node 22, Chromium unter
+> SwiftShader, kalte Läufe nacheinander. Die GitHub-Runner sind schneller:
+> dort läuft dieselbe Kette einschließlich `npm ci` und Chromium-Installation
+> in **163 s** im Mittel über zehn Läufe. Die Verhältnisse zwischen den Toren
+> übertragen sich, die absoluten Zahlen nicht.
 
 ---
 
-## 1. Kosten
+## 1. Die Antwort in drei Sätzen
+
+**Die Torkette ist nicht das Problem.** 26 Tore in 264 s, und sechzehn davon
+kosten zusammen keine 20 s.
+
+**Zwei Tore fressen 55 % davon** — und beide rechnen bei jedem Lauf etwas neu
+aus, das sich nur ändert, wenn neue Bilder kommen.
+
+**Das Problem ist der Gegenproben-Lauf.** Er dauert **34 Minuten**, also das
+Achtfache der Kette, und ich habe ihn bei jeder Version gefahren. Bei v153
+habe ich zwei Tore angefasst; 140 der 142 Proben hatten nichts zu prüfen, was
+sich geändert hätte.
+
+---
+
+## 2. Kosten der Torkette
 
 | Tor | Laufzeit | Anteil |
 |---|---|---|
-| art (Bildwerkzeug) | 62,3 s | 58 % |
-| sim (Balance) | 15,6 s | 15 % |
-| tsc | 11,7 s | 11 % |
-| smoke (Rauchtest) | 5,8 s | 5 % |
-| bench-draw | 3,7 s | 3 % |
-| build | 3,1 s | 3 % |
-| determinism | 1,6 s | 1 % |
-| bench | 1,1 s | 1 % |
-| guards | 0,9 s | 1 % |
-| benchmark | 0,5 s | < 1 % |
-| autarkie | 0,2 s | < 1 % |
-| **gesamt** | **≈ 107 s** | |
+| zielplattentor | 76,2 s | 29 % |
+| bildtor | 69,4 s | 26 % |
+| browser | 33,1 s | 13 % |
+| sim | 21,8 s | 8 % |
+| grafiktor | 13,1 s | 5 % |
+| smoke | 13,0 s | 5 % |
+| kartenwechsel | 5,5 s | 2 % |
+| tsc | 4,0 s | 2 % |
+| streifentor | 3,8 s | 1 % |
+| guards | 3,5 s | 1 % |
+| einbettungstor | 2,8 s | 1 % |
+| bench-draw | 2,6 s | 1 % |
+| build · doku · lesbarkeit · determinism | je 1,6–1,7 s | je 1 % |
+| die übrigen zehn | je unter 1,3 s | zusammen < 4 % |
+| **gesamt** | **264,1 s** | |
 
-**Ein Tor kostet mehr als die Hälfte der Gesamtzeit.** Das Bildwerkzeug
-dekodiert und komprimiert bei jedem Lauf 22 Bilder neu, nur um festzustellen,
-dass sich nichts geändert hat.
+**Erster Befund, und er steht in `CLAUDE.md`:** dort steht „~90 s". Gemessen
+sind es **264 s** — das Dreifache. Die Zahl ist mit der Kette gewachsen und
+niemandem aufgefallen, weil kein Wächter Laufzeiten prüft. Dieselbe Familie
+wie „Version v42", die 61 Versionen lang dastand.
 
 ---
 
-## 2. Nutzen — schlägt das Tor an, wenn man den Fehler einbaut?
+## 3. Kosten der Gegenproben
 
-In jedes Tor wurde ein Fehler eingebaut, der genau zu seinem Zweck passt.
-Wiederherstellung jeweils über Git.
+142 Proben. Jede baut einen Fehler ein, fährt **ein ganzes Tor** und nimmt
+zurück. Die Kosten sind deshalb `Anzahl × Laufzeit dieses Tors`:
 
-| Tor | Eingebauter Fehler | Ergebnis |
+| Tor | Proben | je Lauf | zusammen | Anteil |
+|---|---|---|---|---|
+| browsertor | 22 | 34,8 s | 765 s | 32 % |
+| bildtor | 9 | 69,4 s | 624 s | 26 % |
+| smoke | 46 | 13,0 s | 596 s | 25 % |
+| zielplattentor | 2 | 76,2 s | 152 s | 6 % |
+| guards | 19 | 3,5 s | 67 s | 3 % |
+| die übrigen 44 Proben | | | 121 s | 5 % |
+| **gesamt (Modell)** | **142** | | **2 374 s ≈ 40 min** | |
+| **gemessen** | | | **34 min** | |
+
+Das Modell trifft die Messung; die Lücke sind warme Zwischenspeicher im
+laufenden Betrieb.
+
+**Vier Tore machen 90 % der Probenzeit aus.** Und `browsertor` baut die
+1,45-MB-Datei zweiundzwanzig Mal neu, nur um sie einmal zu laden.
+
+---
+
+## 4. Nutzen — schlägt jedes Tor an?
+
+**Ja, alle 142 Proben schlagen an** (Lauf vom 24.08.2026, v153). Kein Tor ist
+zahnlos. Das ist keine Kleinigkeit: es ist der Grund, warum diese Bilanz
+überhaupt über Verschlankung reden darf statt über Reparatur.
+
+Woher die Befunde kommen, über die ganze Projektgeschichte:
+
+| Quelle | Befunde | Anmerkung |
 |---|---|---|
-| tsc | Zahl durch Text ersetzt | **schlägt an** |
-| guards | Pfadabschnitt diagonal gemacht | **schlägt an** |
-| art | Assetmodul von Hand ergänzt | **schlägt an** |
-| determinism | `Math.random` statt Aussaat | **schlägt an** |
-| sim | alle Türme +60 % | **schlägt an** |
-| sim | alle Türme −40 % | **schlägt an** |
-| bench | 3 Mio. Rechenschritte je Bild | **schlägt an** (6,28 statt 4 ms) |
-| bench-draw | 1000 Kreise je Bild | **schlägt an** |
-| smoke | Kamerabegrenzung entfernt | **schlägt an** |
-| autarkie | externe Schriftart eingebunden | **schlägt an** |
-| benchmark | — | schlägt nie an, ist informativ |
+| Simulation / Balance | 32 | die Werkbank — mehr als die Hälfte aller Erkenntnisse über das Spiel |
+| Datenwächter | 12 | |
+| **Bildschirmfoto, also der Mensch** | **11** | mehr als jedes einzelne Tor |
+| Rauchtest | 5 | |
+| Determinismus | 5 | |
+| Zeichenmessung | 4 | |
+| Autarkie | 2 | |
 
-**Elf von elf tun, was sie sollen.** Kein Tor ist zahnlos.
+Dazu, was die jüngeren Tore in diesem Jahr gefunden haben: das Browsertor
+fand beim ersten Lauf drei Fehler, die dreizehn andere Tore durchgelassen
+hatten (v105), und einen Knopf hinter dem Prüfsteg (v149). `streifen` fand
+eine Wellenvorschau, die 24 % des Schirms fraß (v151). Die neue Lichtmessung
+fand einen Gleiter, der 66° von der eigenen Sonne beleuchtet ist (v153).
 
----
-
-## 3. Der eigentliche Befund dieser Runde
-
-Drei der ersten Proben meldeten „schlägt nicht an" — und **alle drei waren
-Fehler in der Probe, nicht im Tor:**
-
-- Beim Bogenturm traf `damage: 8` nur die erste Ausbaustufe; die Balance ändert
-  sich davon kaum. Erst ein Eingriff über alle Werte war ein echter Test.
-- Die teure Schleife landete in der **falschen Methode** — der erste Treffer
-  von `update(dt` gehörte gar nicht zur Spielschleife. Am richtigen Ort
-  eingebaut, schlug das Tor sofort an.
-- Die externe Schriftart wurde in die Quelldatei geschrieben, geprüft wurde
-  aber die gebaute Datei. Ohne Neubau kein Befund.
-
-Und ein vierter, teurerer: Meine erste Prüfumgebung sicherte den Quellbaum mit
-`cp -r src /tmp/src.bak`. Das Verzeichnis existierte schon, also landete die
-Kopie **darin** — und beim Zurückspielen war der Baum verschachtelt und
-beschädigt. Aufgefallen ist es nur, weil eine Karte plötzlich anders aussah.
-
-> **Die Lehre ist dieselbe wie bei jeder Messung in diesem Projekt: Erst
-> prüfen, ob der Eingriff überhaupt angekommen ist.** Ein Test, der nichts
-> meldet, ist kein Beweis für Korrektheit — er ist erst mal nur ein Test, der
-> nichts gemeldet hat. Die Prüfumgebung arbeitet seitdem mit `git checkout`
-> statt eigener Kopien.
-
----
-
-## 4. Welches Tor hat welche Befunde gebracht?
-
-Von 57 festgehaltenen Befunden:
-
-| Quelle | Befunde |
-|---|---|
-| Simulation / Balance | 32 |
-| Datenwächter | 12 |
-| **Bildschirmfoto, also der Mensch** | **11** |
-| Rauchtest | 5 |
-| Determinismus | 5 |
-| Zeichenmessung | 4 |
-| Autarkie | 2 |
-
-Zwei Dinge stechen heraus.
-
-**Die Simulation ist die Werkbank.** Mehr als die Hälfte aller Erkenntnisse
-über dieses Spiel kommt aus ihr — Zweigwaage, Einkommensspirale, Sättigung des
-Feldes, Abstand der Spielstile, Robustheit. Sie kostet 15 Sekunden und ist
-jeden davon wert.
-
-**Der Mensch am Gerät ist die zweitwichtigste Quelle.** Elf Befunde stammen aus
-Bildschirmfotos, und es waren die peinlichsten: Bedienung über dem Spielfeld,
-fehlende Umlaute, unsichtbare Bauplätze, ein flachgedrücktes Spielfeld. Zehn
-grüne Tore und ein Spiel, dessen Bedienung auf dem Brett lag.
-
-> Die Tore prüfen **Verhalten**, nicht **Darstellung**. Kein Tor ersetzt den
-> Blick aufs Gerät, und kein Blick aufs Gerät ersetzt die Tore.
+**Kein Tor ist zu streichen.** Die Frage ist nicht *ob*, sondern *wie oft*.
 
 ---
 
 ## 5. Was sich ändern sollte
 
-**A · Das Bildwerkzeug hat ein Gedächtnis bekommen — erledigt.** Ein Abdruck
-über Beschreibung *und* jede Rohdatei steht jetzt im erzeugten Modul. Stimmt
-er, ist nichts zu tun.
+### A · Abdruck für die drei teuren Tore
 
-```
-art vorher   62,3 s
-art nachher   0,3 s
-Torkette     107 s  ->  40 s
-```
+`zielplattentor` durchsucht bei jedem Lauf drei Kartenbilder mit einem Raster
+nach der Zielplattform. Das Ergebnis ändert sich, wenn die Kartenbilder oder
+die Bahnen sich ändern — sonst nie. `bildtor` rendert fünf Aufnahmen neu.
+`grafiktor` dekodiert den ganzen Bildvorrat.
 
-Der Abdruck reagiert auf beides: Gegenprobe mit einem um ein Grad gedrehten
-Rohbild meldet sofort *„passt nicht mehr zu den Rohbildern"*. Mit `--force`
-lässt sich das Neuerzeugen erzwingen.
+Der Trick ist erprobt: v31 hat dem Bildwerkzeug einen Abdruck über alle
+Eingänge gegeben und es von **62,3 s auf 0,3 s** gebracht. Dieselbe Bauart
+hier.
 
-**B · Der Genre-Abgleich heißt jetzt Bericht — erledigt.** Er schlägt nie an
-und kann es auch nicht. Aus `npm run bericht` wurde `npm run bericht`, und
-die Ausgabe sagt es selbst: *„GENRE-BERICHT (kein Tor)"*. Die Kette prüft damit
-zehn Dinge und berichtet eines — vorher sah sie nach vierzehn Prüfungen aus.
+> Erwartung: Kette **264 s → rund 110 s**.
+> Bedingung: eine Gegenprobe je Tor, die eine Eingangsdatei ändert und prüft,
+> dass das Tor wieder rechnet. Ein Abdruck, der die falschen Dateien liest,
+> überspringt stillschweigend — und das sähe aus wie ein bestandenes Tor.
 
-**C · Die Balance-Simulation misst inzwischen zwei Dinge.** Sie prüft die
-Balance *und* modelliert das Spielverhalten. Als in v30 die Bewertung der
-Bauplätze kurz an den Turmwerten hing, änderte jede Turmänderung zugleich das
-Botverhalten. Die Trennung ist wiederhergestellt, gehört aber als Regel
-festgeschrieben: **das Modell darf nicht vom Gemessenen abhängen.**
+### B · Gegenproben nach Bedarf statt immer
 
-**D · Ein Lesbarkeitstor gibt es jetzt — erledigt, und es hat zugeschlagen.**
-`npm run lesbarkeit` liest die ausgelieferten Bilder aus den erzeugten Modulen,
-wendet dieselbe Einfärbung an wie die Engine und rechnet drei Dinge: Kontrast
-gegen jeden Untergrund, Breite der Silhouette in Bildschirmpunkten im
-schlechtesten Fall (iPhone quer, Feld füllt den Bildschirm) und den Farbabstand
-der Gegnerarten in Lab.
+Regel 5 verlangt, dass jede Prüfung eine stehende Gegenprobe hat **und dass
+sie ausgeführt wird**. Sie verlangt nicht, dass alle 142 bei jeder Änderung
+laufen. Vorschlag in drei Stufen:
 
-**Beim ersten Lauf: zwölf Befunde.** Mörser und Prisma standen auf der
-Frostspalte bei Kontrast 1,14 bis 1,40, der Koloss bei 1,01 — praktisch
-unsichtbar. Der Span war elf Bildschirmpunkte breit. Spalter und Span lagen
-farblich 8,2 auseinander, Koloss und Leerentitan 9,4.
+1. **`npm run proben --muster`** (rund 2 s): prüft nur, ob jede der 142
+   Regeln noch greift — ohne ein einziges Tor zu fahren. Das fängt den
+   häufigsten Verfall, und zwar genau den, der bei v152 **zweimal** zuschlug:
+   eine Probe zeigte auf eine umnummerierte Tabellenzeile, eine andere auf
+   eine zu kurz gewordene Liste deutscher Zahlwörter. Beide meldeten
+   „schlägt nicht an", und beide waren Fehler in der Probe.
+2. **Betroffene Proben** bei jeder Runde: wer ein Tor ändert, fährt dessen
+   Proben. Das sind typisch zwei bis zehn, also unter einer Minute.
+3. **Voller Lauf** vor jeder Auslieferung auf `master` und zusätzlich in
+   festem Abstand, damit die Ratschen nicht verrotten.
 
-Und ein Befund über die Sache selbst: **Lesbarkeit entsteht an der Kante, nicht
-in der Fläche.** Mitteldunkel auf mittelhell hat in beide Richtungen wenig
-Kontrast. Alle drei Untergründe liegen gemessen zwischen 1,6 und 6,1 %
-Helligkeit — auch der Winterboden, der im Bild hell wirkt. Ein dunkler Saum
-bringt darauf 2,0, ein heller 8,6. Also überall ein heller Saum, im Ton der
-Karte, zweieinhalb Punkte breit und in die Bilder eingebacken.
+> Erwartung: **34 min → unter 1 min** im Normalfall, voller Lauf nur dann,
+> wenn er etwas prüfen kann.
 
-Behoben: Saum je Karte · Koloss deutlich heller · Span von Orange auf Gelb ·
-Mindestbreite für den Span, bewusst von der Treffererkennung entkoppelt ·
-kräftigere Einfärbung der Türme.
+### C · Die Stufung liegt schon da — sie wird nur nicht genutzt
 
-**E · Und die Messung machte denselben Fehler wie die Proben.** Sie hatte die
-Größenregel der Engine *nachgebaut* statt sie zu benutzen — `Math.max(radius *
-3, 50)` stand zweimal da. Die Gegenprobe fiel deshalb durch: eine Änderung im
-Spiel änderte die Messung nicht. Jetzt importiert das Werkzeug `enemyArtWidth`
-und `towerArtScale` direkt aus der Engine, und die Gegenprobe schlägt an.
+Die Auslieferung fährt die **volle** Kette auf dem GitHub-Runner, in 163 s,
+und liefert nur bei Grün aus. Das ist kein Doppel, sondern eine zweite
+Umgebung: **v151a hat genau dort einen Fehler gefunden**, den die lokale
+Kette nicht finden konnte — ein fest verdrahteter Chromium-Pfad, den es nur
+in diesem Container gibt.
 
-**Nichts streichen.** Nach dieser Prüfung gibt es kein Tor, das nur Arbeit
-erzeugt. Das billigste (Autarkie, 0,2 s) hat zwei Befunde gebracht, darunter
-die fehlenden Umlaute.
+Daraus folgt die Arbeitsteilung:
+
+| Wann | Was | Dauer |
+|---|---|---|
+| vor jedem Commit | Kette ohne die drei teuren Tore | ~40 s |
+| vor der Auslieferung | volle Kette + betroffene Proben | ~2 min |
+| bei jedem Push auf `master` | volle Kette auf dem Runner | 163 s, läuft ohne mich |
+| alle fünf Versionen | voller Probenlauf | 34 min |
+
+### D · Was ich **nicht** ändern würde
+
+* **Kein Tor streichen.** Alle 142 Proben schlagen an; jedes Tor bewacht
+  etwas, das schon einmal kaputt war.
+* **Den Blick nicht sparen.** Elf von 57 Befunden kamen aus
+  Bildschirmfotos — mehr als aus jedem einzelnen Tor. Regel 7 und 8 bleiben.
+* **Die Auslieferungskette nicht kürzen.** Sie ist das einzige Tor in einer
+  fremden Umgebung, und sie läuft ohne meine Zeit.
 
 ---
 
-## 6. Zusammenfassung in einem Satz
+## 6. Was das an Tempo bringt
 
-Zehn Tore, alle nachweislich wirksam, dazu ein Bericht; zusammen jetzt 40
-statt 107 Sekunden. Die wertvollsten Erkenntnisse kommen aus der Simulation,
-die peinlichsten vom Menschen mit dem Handy in der Hand — und die teuerste
-Lehre dieser Runde war, dass auch eine Prüfung geprüft werden muss.
+| | heute | nach A und B |
+|---|---|---|
+| Kette vor einem Commit | 264 s | ~40 s |
+| Prüfung vor der Auslieferung | 264 s + 34 min | ~2 min |
+| **je Runde** | **rund 40 min** | **rund 3 min** |
+
+Bei drei Runden am Tag sind das zwei gesparte Stunden — Zeit, die in Punkte
+der Liste geht statt in Warten.
+
+---
+
+## 7. Die Messung von v31 — historisch
+
+Damals: zehn Tore, 107 s, und ein einziges Tor (das Bildwerkzeug) fraß 58 %
+davon. Ein Abdruck über alle Eingänge brachte es auf 0,3 s und die Kette auf
+40 s. Elf von elf Toren schlugen an.
+
+Der eigentliche Befund von damals gilt unverändert und ist der Grund, warum
+`npm run proben` heute existiert:
+
+> Drei der ersten Proben meldeten „schlägt nicht an" — und **alle drei waren
+> Fehler in der Probe, nicht im Tor.** Ein Test, der nichts meldet, ist kein
+> Beweis für Korrektheit; er ist erst mal nur ein Test, der nichts gemeldet
+> hat.
+
+Und der zweite, der die Arbeitsteilung bis heute bestimmt:
+
+> Die Tore prüfen **Verhalten**, nicht **Darstellung**. Kein Tor ersetzt den
+> Blick aufs Gerät, und kein Blick aufs Gerät ersetzt die Tore.

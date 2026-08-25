@@ -29,15 +29,40 @@ import { GameState } from '../src/game/state';
 import { candidateSpots } from './spots';
 
 const TOR = process.argv.includes('--tor');
+/** Die Ausbaustufen, die es im Spiel gibt - siehe UPGRADES. */
+const STUFEN = [1, 2, 3, 4, 5, 6];
 let fehler = 0;
 const fail = (m: string): void => { console.error(`  FEHLER: ${m}`); fehler++; };
 
-/** Welches Bild traegt die Muendung: das Waffenbild oder das Turmbild. */
-function bildFuer(id: TowerId): { name: string; daten: string } {
-  const waffe = (OBJECT_ART as Record<string, string>)[`waffe_${id}`];
-  if (waffe) return { name: `waffe_${id}`, daten: waffe };
-  const turm = (TOWER_ART as Record<string, string>)[`${id}_1_1`];
-  return { name: `${id}_1_1`, daten: turm };
+/** JEDES Bild, das die Muendung tragen kann - eines je Ausbaustufe.
+ *
+ *  **Vorher stand hier genau ein Bild:** `waffe_${id}`, die stufenlose
+ *  Rueckfallfassung. Solange es je Turm nur eine Waffe gab, war das
+ *  dasselbe. Seit der Bogenturm vier Waffenbilder hat, ist es das nicht
+ *  mehr - gezeichnet wird `waffe_arrow_4`, geprueft wurde `waffe_arrow`,
+ *  und ein Tor, das ein anderes Bild misst als das gezeichnete, beweist
+ *  nichts (Regel 15). Der neue Bildsatz kam durch, obwohl die Muendung um
+ *  ein Vielfaches danebenlag.
+ *
+ *  Aufgeloest wird dieselbe Kette wie in `getObjectArtStufe`: von der
+ *  Stufe abwaerts bis zur stufenlosen Fassung. Doppelte fallen raus - vier
+ *  Bilder auf sechs Stufen sind vier Pruefungen, nicht sechs. */
+function bilderFuer(id: TowerId): { name: string; daten: string }[] {
+  const objekte = OBJECT_ART as Record<string, string>;
+  const raus: { name: string; daten: string }[] = [];
+  const gesehen = new Set<string>();
+  const nimm = (name: string, daten: string | undefined): boolean => {
+    if (!daten) return false;
+    if (!gesehen.has(name)) { gesehen.add(name); raus.push({ name, daten }); }
+    return true;
+  };
+  for (const stufe of STUFEN) {
+    let gefunden = false;
+    for (let l = stufe; l >= 1 && !gefunden; l--) gefunden = nimm(`waffe_${id}_${l}`, objekte[`waffe_${id}_${l}`]);
+    if (!gefunden) gefunden = nimm(`waffe_${id}`, objekte[`waffe_${id}`]);
+    if (!gefunden) nimm(`${id}_1_${stufe}`, (TOWER_ART as Record<string, string>)[`${id}_1_${stufe}`]);
+  }
+  return raus;
 }
 
 async function alpha(daten: string): Promise<{ d: Buffer; w: number; h: number }> {
@@ -56,8 +81,9 @@ const KLEINSTER = Math.max(844 / WORLD_W, 390 / WORLD_H);
 for (const id of Object.keys(MUENDUNG) as TowerId[]) {
   const m = MUENDUNG[id];
   if (!m) continue;
-  const { name, daten } = bildFuer(id);
-  if (!daten) { fail(`${id}: kein Bild "${name}" im Vorrat.`); continue; }
+  const bilder = bilderFuer(id);
+  if (!bilder.length) { fail(`${id}: kein Bild fuer die Muendung im Vorrat.`); continue; }
+  for (const { name, daten } of bilder) {
   const { d, w, h } = await alpha(daten);
 
   // Kasten der Figur - der Rand der Kachel ist leer.
@@ -120,6 +146,7 @@ for (const id of Object.keys(MUENDUNG) as TowerId[]) {
   if (dreh < 10) {
     fail(`${TOWERS[id].name}: die Muendung bewegt sich beim Zielwechsel nur `
       + `${dreh.toFixed(0)} Weltpunkte - sie zeigt nicht, wohin der Turm blickt.`);
+  }
   }
 }
 

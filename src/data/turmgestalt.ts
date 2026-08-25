@@ -36,10 +36,36 @@ export const FUELLUNG = 0.94;
 export const FUSS = 0.28;
 /** Wo die Waffenplattform sitzt, von der OBERKANTE aus gemessen, in
  *  Turmhoehen. Von der Oberkante und nicht von der Mitte: die Plattform ist
- *  ein Punkt IM Bild und wandert mit ihm nach oben. */
-export const WAFFE_HOCH = 0.12;
-/** Breite des Waffenbildes, in Zeichenbreiten des Turms. */
-export const WAFFE_BREIT = 0.56;
+ *  ein Punkt IM Bild und wandert mit ihm nach oben.
+ *
+ *  **Gemessen an der Nabe, nicht geschaetzt** (Regel 10 und 12). Der
+ *  Sockel traegt oben einen Drehkranz mit einem Loch in der Mitte - das
+ *  IST der Drehpunkt, er ist gemalt und muss nicht abgeleitet werden. Er
+ *  liegt bei 0,25 der gepackten Kachel (256 x 256), und zwar auf allen
+ *  sechs Stufen: nachgesehen mit einem Raster ueber allen sechs Bildern.
+ *
+ *  Vorher stand hier 0,12. Das war am alten Armbrustturm richtig - einem
+ *  schlanken Bau, dessen Plattform fast an der Oberkante sass. Der
+ *  Bunker ist gedrungen, seine Nabe liegt doppelt so tief, und mit 0,12
+ *  hing die Waffe ueber der linken Kante in der Luft. Die Zahl gehoert
+ *  zum BILD, nicht zum Turm - wer den Bildsatz tauscht, misst sie neu.
+ *  `npm run muendung` faengt es, seit es die gezeichnete Stufe liest. */
+export const WAFFE_HOCH = 0.25;
+/** Breite der Waffenkachel, in Zeichenbreiten des Turms.
+ *
+ *  **Im Raum durchprobiert, nicht nachjustiert** (Regel 9): 0,56 / 0,75 /
+ *  0,95 / 1,15 nebeneinander an derselben Aufnahme. Ab 0,95 haengt die
+ *  Munitionstrommel hinter dem Drehpunkt ueber die Kuppel hinaus - die
+ *  Waffe steht dann nicht mehr auf dem Turm, sondern neben ihm.
+ *
+ *  Gemessen, was 0,75 bedeutet: der Waffenkoerper ist auf Drehpunkthoehe
+ *  0,588 der Waffenkachel breit (Mittel der vier Stufen), der Drehkranz
+ *  0,675 der Sockelkachel. Der Koerper deckt damit 65 % des Kranzes - er
+ *  sitzt darauf, ohne ihn zu verschlucken. Die 0,56 von vorher waren
+ *  49 %; auf dem gedrungenen Bunker las sich das als aufgesetztes Detail.
+ *
+ *  Messstelle: gepackte Kacheln 256 x 256, Aufnahme `nah` bei 844 x 390. */
+export const WAFFE_BREIT = 0.75;
 
 /** Kasten, in dem ein Turm gezeichnet wird - Weltpunkte, relativ zu seiner
  *  Standmitte. `oben` ist die Oberkante (negativ, also ueber der Mitte). */
@@ -54,7 +80,15 @@ export function turmMasse(): { w: number; h: number; oben: number } {
  *  `x` und `y` sind Bruchteile des Bildes (0 links/oben, 1 rechts/unten),
  *  gemessen an der obersten Kante der Figur: beim Moerser die
  *  Rohroeffnung, beim Prisma die Kristallspitze, beim Bogenturm die
- *  Bolzenspitze auf dem WAFFENBILD.
+ *  Muendung des LINKEN Laufs auf dem Waffenbild.
+ *
+ *  **`x` zaehlt auch bei drehenden Waffen.** Bis v159 tat es das nicht: die
+ *  Rechnung unten nahm nur `y` und setzte die Muendung auf die Zielachse.
+ *  Das war beim Armbrustturm richtig - ein Bolzen liegt in der Mitte. Die
+ *  Zwillingskanone hat ihre Laeufe bei 0,352 und 0,646, also 0,147 neben
+ *  der Achse; auf der Achse liegt zwischen ihnen Luft. Der Blitz waere
+ *  neben der Waffe erschienen, und das Tor hat es gemeldet, sobald es die
+ *  gezeichnete Stufe las.
  *
  *  `dreht` unterscheidet die beiden Zeichenwege:
  *  - `true`  - der Turm hat ein eigenes Waffenbild, das voll mitdreht. Die
@@ -67,8 +101,11 @@ export function turmMasse(): { w: number; h: number; oben: number } {
 export interface MuendungsPunkt { x: number; y: number; dreht: boolean; }
 
 export const MUENDUNG: Partial<Record<TowerId, MuendungsPunkt>> = {
-  // Bolzenspitze auf `waffe_arrow`, Mittelband gemessen: oberste Zeile 0,074.
-  arrow: { x: 0.5, y: 0.074, dreht: true },
+  // Linker Lauf der Zwillingskanone. Gemessen an allen vier Waffenbildern:
+  // oberste Materialzeile y 0,031 auf jedem, Laufmitten x 0,346 bis 0,355.
+  // Genommen wird der kleinste gemeinsame Nenner, nicht ein Mittelwert -
+  // ein Mittelwert saesse auf keinem der vier Bilder ganz genau.
+  arrow: { x: 0.352, y: 0.031, dreht: true },
   // Rohroeffnung auf `mortar_1_1`: Schwerpunkt der obersten sechs Prozent.
   mortar: { x: 0.404, y: 0.032, dreht: false },
   // Kristallspitze auf `prism_1_1`.
@@ -87,12 +124,18 @@ export function muendung(id: TowerId, angle: number): Vec {
   const masse = turmMasse();
   if (m.dreht) {
     // Die Waffe haengt an der Plattform und dreht um sie. Das Bild blickt
-    // nach oben, gedreht wird um `angle + PI/2` - ausgerechnet bleibt davon
-    // genau "L Weltpunkte in Zielrichtung".
+    // nach oben, gedreht wird um `angle + PI/2`. Der Punkt im Bild wird
+    // also mitgedreht - `laengs` zeigt in Zielrichtung, `quer` daneben.
+    //
+    // Die Kachel ist quadratisch (256 x 256, siehe art/objekte.json), also
+    // ist ihre gezeichnete Hoehe dieselbe wie ihre Breite. Sonst muesste
+    // `quer` mit der Breite und `laengs` mit der Hoehe rechnen.
     const nabe = masse.oben + masse.h * WAFFE_HOCH;
     const ww = masse.w * WAFFE_BREIT;
-    const l = (0.5 - m.y) * ww;
-    return { x: Math.cos(angle) * l, y: nabe + Math.sin(angle) * l };
+    const laengs = (0.5 - m.y) * ww;
+    const quer = (m.x - 0.5) * ww;
+    const c = Math.cos(angle), si = Math.sin(angle);
+    return { x: c * laengs - si * quer, y: nabe + si * laengs + c * quer };
   }
   // Fester Punkt im Bild. Gespiegelt, sobald der Turm nach links blickt -
   // genau wie das Bild selbst.

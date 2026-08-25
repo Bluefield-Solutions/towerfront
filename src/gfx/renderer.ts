@@ -1428,7 +1428,21 @@ export class Renderer {
   private turmBoden(s: GameState, t: Tower): void {
     const ctx = this.ctx;
     const def = TOWERS[t.def];
-    const art = getTowerArt(t.def, t.branch, t.level, s.map.id);
+    // Der Schatten kommt von der Figur, die WIRKLICH dasteht.
+    //
+    // Bis v159 stand hier nur das Ganzbild. Beim Bogenturm ist das seit
+    // dieser Runde ein anderer Bau als der gezeichnete: das Feld zeigt
+    // den Bunker aus Sockel und Waffe, das Ganzbild noch den schlanken
+    // Armbrustturm. Der Bunker warf damit den Schatten eines Turms, der
+    // nicht mehr existiert - schmal und hoch unter einer breiten Kuppel.
+    // Ein Schatten soll sagen, WAS dasteht (siehe der Kasten darueber);
+    // dieser sagte etwas Falsches.
+    //
+    // Genommen wird der Sockel, nicht Sockel plus Waffe: der Sockel
+    // traegt die Masse, und die Waffe dreht sich - ihr Schatten muesste
+    // mitdrehen und waere in jedem Bild neu zu backen.
+    const sockel = getObjectArtStufeEingebettet(`sockel_${t.def}`, t.level, s.map.id);
+    const art = sockel ?? getTowerArt(t.def, t.branch, t.level, s.map.id);
     if (!art) return;
     const masse = this.artMasse();
     const w = masse.w, h = masse.h;
@@ -1450,7 +1464,7 @@ export class Renderer {
     ctx.save();
     {
       const riss = getSchattenriss(
-        art, `turm:${t.def}:${t.branch}:${t.level}`, w, h,
+        art, `turm:${sockel ? 'sockel:' : ''}${t.def}:${t.branch}:${t.level}`, w, h,
       );
       // Am Fuss ansetzen. Die Laenge des Schattens erzaehlt die Hoehe:
       // wuchs der Turm nach oben, ohne dass der Schatten mitwaechst,
@@ -1736,9 +1750,29 @@ export class Renderer {
   private paintTower(
     def: TowerDef, level: number, x: number, y: number, time: number, mapId = 'spiralhain',
   ): void {
+    const m = this.artMasse();
+    // Die Vorschau zeigt, was gebaut wird - also dieselbe Figur wie das Feld.
+    //
+    // Der Bogenturm besteht seit dieser Runde aus Sockel und Waffe. Nahm die
+    // Vorschau weiter das Ganzbild, sah der Spieler beim Setzen den alten
+    // Armbrustturm und bekam den Bunker: eine Vorschau, die etwas anderes
+    // verspricht als sie liefert, ist schlimmer als gar keine.
+    //
+    // Die Waffe blickt nach oben, ungedreht - ein noch nicht gebauter Turm
+    // hat kein Ziel, und ein Winkel waere hier eine Behauptung.
+    const sockel = getObjectArtStufeEingebettet(`sockel_${def.id}`, level, mapId);
+    const waffe = getObjectArtStufeEingebettet(`waffe_${def.id}`, level, mapId);
+    if (sockel && waffe) {
+      this.ctx.drawImage(sockel, x - m.w / 2, y + m.oben, m.w, m.h);
+      const ww = m.w * WAFFE_BREIT;
+      const wh = ww * (waffe.height / waffe.width);
+      this.ctx.drawImage(
+        waffe, x - ww / 2, y + m.oben + m.h * WAFFE_HOCH - wh / 2, ww, wh,
+      );
+      return;
+    }
     const art = getTowerArt(def.id, null, level, mapId);
     if (art) {
-      const m = this.artMasse();
       this.ctx.drawImage(art, x - m.w / 2, y + m.oben, m.w, m.h);
       return;
     }

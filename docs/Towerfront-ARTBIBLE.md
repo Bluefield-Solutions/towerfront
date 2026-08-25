@@ -1,6 +1,6 @@
 # Towerfront — Art Bible
 
-Stand: v159 · 24.08.2026
+Stand: v160 · 25.08.2026
 
 **Dieses Dokument ist verbindlich.** Wer ein Bild bestellt, malt oder einbaut,
 richtet sich danach. Es ist die einzige Stelle, an der die Festlegungen
@@ -140,6 +140,16 @@ Was neue Bilder braucht, nach Dringlichkeit. Das ist zugleich, was
 | 4 | ~~Späher und Leerentitan~~ **erledigt v159** | beide unter 26° |
 | 5 | **Alle Figuren mit weniger Feindetail** — für die Gegner gebessert, nicht gelöst | 6,0-fach → **5,3-fach** gegen den Untergrund, erlaubt sind 3,0. Bleibt Befund B1, jetzt vor allem an den Türmen |
 | 6 | **Ein Kamerawinkel** für alle | TF-017, und dafür alle Figuren neu |
+| 7 | `waffe_bogen_5` und `waffe_bogen_6` | v160: Sockel 1–6 und Waffen 1–4 stehen im Spiel. Stufe 5 und 6 zeigen die vierte Waffe — der Turm ist vollständig, aber die beiden teuersten Ausbauten sehen aus wie der vorletzte |
+| 8 | **Frostturm, Mörser, Prisma** — je sechs Stufen | die drei laufen noch als Ganzbild und im alten Fantasy-Stil. Neben dem Bunker fallen sie sofort auf; auf der Aufnahme `nah` stehen beide Welten nebeneinander |
+| 9 | **Sockelstufen, die sich im Umriss unterscheiden** | v160 gemessen: Silhouetten-Ähnlichkeit **0,95 bis 0,96** zwischen den sechs Bogen-Sockeln. Auf 60 Bildschirmpunkten ist Stufe 6 von Stufe 1 nicht zu unterscheiden. Zielwert höchstens 0,85 zwischen Stufe 1 und 6 |
+
+### Zwei Festlegungen, die aus der ersten Turmlieferung kommen (v160)
+
+| Festlegung | Wert | Woher | Womit geprüft |
+|---|---|---|---|
+| Nabe im Sockelbild | 0,25 der Kachelhöhe | am gelieferten Bild gemessen: der Zeichner hat den Drehkranz mit einem Loch in der Mitte gemalt, auf allen sechs Stufen an derselben Stelle | `npm run muendung` — es liest seit v160 **jede gezeichnete Stufe**, nicht mehr nur die stufenlose Rückfallfassung |
+| Drehpunkt im Waffenbild | Bildmitte, waagerecht **und** senkrecht | dieselbe Lieferung: ein Nabenbolzen sitzt genau dort | dasselbe Tor; ein verschobener Drehpunkt lässt die Waffe beim Schwenken um einen Punkt neben sich eiern |
 
 ---
 

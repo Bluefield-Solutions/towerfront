@@ -1,6 +1,6 @@
 # Towerfront — Bildauftrag
 
-Stand: v159 · 24.08.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v160 · 25.08.2026 · **Auftragsdokument für den Bild-Agenten**
 
 Dieses Dokument ist die vollständige Bestellung. Es enthält alles, was zum
 Erzeugen der Bilder nötig ist: Stil, Maße, Blickrichtung, Dateinamen,
@@ -191,16 +191,55 @@ gesehen, wie ein Gebäude auf einer Landkarte.
 
 ### 3.4 Der Bogenturm ist zweiteilig
 
-Er ist der einzige Turm mit getrenntem Sockel und Waffe:
+Er ist der einzige Turm mit getrenntem Sockel und Waffe, **je Ausbaustufe
+ein Paar**:
 
-* `sockel_arrow.png` — der Turm **ohne** Waffe, quadratisch, wie 3.3.
-* `waffe_arrow.png` — nur die Waffe, **darf rechteckig sein**, behält ihr
-  Seitenverhältnis (wird *nicht* gestreckt), **blickt nach OBEN** und dreht
-  sich im Spiel um ihre Bildmitte zum Ziel.
-* Die Waffe wird mit **56 % der Turmbreite** gezeichnet und sitzt bei 12 %
-  der Turmhöhe unterhalb der Oberkante.
-* Das Mündungsende muss klar erkennbar sein — `npm run muendung` misst, wo
-  das Rohr endet.
+* `sockel_bogen_1..6.png` — der Turm **ohne** Waffe, quadratisch, wie 3.3.
+* `waffe_bogen_1..6.png` — nur die Waffe, **darf rechteckig sein**, behält
+  ihr Seitenverhältnis, **blickt nach OBEN** und dreht sich im Spiel zum
+  Ziel.
+* **Der Drehpunkt ist die Bildmitte.** Der Nabenbolzen der Waffe muss
+  genau dort liegen — waagerecht wie senkrecht. Liegt er woanders, eiert
+  die Waffe beim Schwenken um einen Punkt neben sich.
+* **Der Sockel braucht einen sichtbaren Drehkranz mit einer Nabe.** Sie
+  ist nicht Zierrat: das Spiel setzt die Waffe genau dorthin, und die
+  Zahl wird am Bild gemessen (v160: Nabe bei 0,25 der Kachelhöhe, auf
+  allen sechs Stufen an derselben Stelle — nur deshalb reicht *eine* Zahl
+  für alle sechs).
+* Die Waffe wird mit **75 % der Turmbreite** gezeichnet (v160 im Raum
+  durchprobiert) und sitzt auf der Nabe.
+* Das Mündungsende muss klar erkennbar sein — `npm run muendung` misst es
+  **auf jeder gelieferten Stufe**.
+
+> **Fehlende Stufen sind erlaubt.** Findet das Spiel `waffe_bogen_5`
+> nicht, nimmt es die nächstniedrigere. Ein Satz darf also Stück für Stück
+> wachsen; nur ganz ohne Waffe bleibt die Ebene ungenutzt.
+
+#### Abnahme Paket 1 (v160) — angenommen
+
+Geliefert: `sockel_bogen_1..6`, `waffe_bogen_1..4`. Eingebaut und im Spiel.
+
+| Was | Ergebnis |
+|---|---|
+| Stil, Sujet | **trifft.** Moderner Bunker mit Drehkranz, Zwillings-Autokanone mit Gurtzuführung. Genau die Absage an das „Bogenschützenzimmer", die bestellt war |
+| Drehpunkt | **exakt.** Nabenbolzen auf der Bildmitte, alle vier Waffen |
+| Nabe im Sockel | **exakt.** 0,25 der Kachelhöhe auf allen sechs Stufen |
+| Streckung | **kein Problem.** Der Kasten der Figur ist breiter als hoch (278 × 217 bei 300 Punkten längster Kante); nach der 16-%-Streckung bleibt er breiter als hoch |
+| Läufe | zwei, bei x 0,346 und 0,355 bzw. 0,643 und 0,654 — über alle vier Bilder stabil |
+| Reines Schwarz | **3,1 bis 8,6 %**, erlaubt sind 2. Beim Packen mit `schwarzHeben 0,11` gehoben, wie im Gegnersatz |
+| Lichtwinkel | Sockel **15° bis 29°** neben der Sonne, Waffen **0° bis 18°**. Innerhalb der Ratsche, aber die Sockel 2, 3, 5 und 6 sind fast von oben beleuchtet statt von oben *links* |
+| Rand | Figur berührt in 9 von 10 Bildern den Kachelrand. Beim Packen abgefangen (getrimmt und neu eingepasst), aber am Bild besser |
+| Stufen unterscheidbar | **nein.** Silhouetten-Ähnlichkeit **0,95 bis 0,96** zwischen den Sockeln. Bei 60 Bildschirmpunkten sind Stufe 1 und Stufe 6 nicht auseinanderzuhalten. Bei den Waffen ist es besser (Stufe 3 deutlich breiter) |
+
+**Offen aus diesem Paket:** `waffe_bogen_5` und `waffe_bogen_6`. Solange
+sie fehlen, zeigen Stufe 5 und 6 die vierte Waffe — der Turm ist
+vollständig, aber die beiden teuersten Ausbauten sehen aus wie der
+vorletzte.
+
+**Für die nächsten Sockel-Sätze:** die Stufen müssen sich in der
+**Silhouette** unterscheiden, nicht nur in der Bestückung. Ein Anbau, der
+innerhalb des Umrisses bleibt, ist auf dem Telefon unsichtbar. Zielwert:
+höchstens 0,85 Ähnlichkeit zwischen Stufe 1 und Stufe 6.
 
 ---
 
@@ -444,7 +483,36 @@ Masse und Bestückung — nicht der Stil.
 | 5 | Zweite Waffenebene, Kühlrippen oder Kabelbäume, deutlich schwerer |
 | 6 | Endstufe: größte Bestückung, Akzentfarbe am stärksten, ein leuchtendes Element |
 
-### 6.2 `turm_bogen_1.png` … `turm_bogen_6.png` — Autokanone
+### 6.2 `sockel_bogen_1..6.png` + `waffe_bogen_1..6.png` — Autokanone
+
+> **Dieser Turm wird NICHT als Ganzbild gebraucht.** Er ist zweiteilig
+> (siehe 3.4): ein stehender Sockel und eine Waffe in Aufsicht, die sich
+> darüber dreht. `turm_bogen_*.png` wäre eine Datei, die das Spiel nie
+> zeichnet. **Sockel 1–6 und Waffen 1–4 sind seit v160 geliefert und
+> eingebaut**; offen sind nur `waffe_bogen_5` und `waffe_bogen_6`.
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+SUBJECT: The rotating weapon only, of a modern rapid-fire autocannon
+emplacement — TOP-DOWN, barrels pointing straight UP the image. Level [5-6]
+of six. Twin belt-fed autocannons on a compact turret housing, ammunition
+feed chute curving to one side, spent-case deflector. Dark gunmetal steel
+with gold-yellow accents (#F2C14E).
+
+Level 5: a second weapon element and cooling ribs, visibly heavier than
+level 4. Level 6: the largest fit-out, strongest accent colour, one glowing
+element.
+
+PIVOT: a small round hub bolt must sit EXACTLY at the centre of the canvas,
+horizontally and vertically. The game rotates this image around that point.
+
+FRAMING: 1122x1402 transparent PNG, the weapon fills about 92 percent of the
+canvas height, at least 5 percent clear margin on every side, nothing
+cropped. No base, no ground, no shadow — the pedestal is a separate image.
+```
+
+### 6.2b Der alte Ganzbild-Prompt (nur noch für die Silhouette der Sockel)
 
 ```
 [STYLE-BLOCK EINFÜGEN]

@@ -920,16 +920,32 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 // benutzt, wenn beides vorliegt - und hier geprueft, dass die Bildgruppe nie
 // nur die Haelfte enthaelt.
 {
-  const { OBJECT_ART } = await import('../src/gfx/assets/objects');
-  // Jetzt auch je Ausbaustufe: `waffe_frost_4` braucht `sockel_frost_4`.
+  // Gefragt ist, was der Renderer FINDET - nicht, was gleich heisst.
+  //
+  // Vorher stand hier `waffe_${id}_4` neben `sockel_${id}_4` und beides
+  // musste zugleich da sein oder zugleich fehlen. Das war richtig, solange
+  // es je Turm hoechstens ein Paar gab. Seit `getObjectArtStufe` eine
+  // Rueckfallkette aufloest, ist es zu streng: der Bogenturm hat sechs
+  // Sockel und vier Waffen, Stufe 5 und 6 nehmen die vierte Waffe - und
+  // im Spiel steht ein vollstaendiger Turm, wo die alte Regel eine Luecke
+  // meldete. Ein Tor, das eine Wahrheit meldet, die keine ist, kostet
+  // genauso viel wie eins, das schweigt.
+  //
+  // Geprueft wird deshalb dieselbe Kette wie im Renderer: von der Stufe
+  // abwaerts bis zur stufenlosen Fassung. Was der Renderer verlangt, ist
+  // `waffe && sockel` - also muessen BEIDE Ketten aufgehen oder KEINE.
+  // Die Kette kommt aus dem Renderer selbst, nicht aus einem Nachbau hier.
+  const { objektStufenSchluessel } = await import('../src/gfx/objectart');
+  const kette = (art: string, id: string, level: number): string | null =>
+    objektStufenSchluessel(`${art}_${id}`, level);
   for (const id of ['arrow', 'frost', 'mortar', 'prism']) {
-    for (const suffix of ['', '_1', '_2', '_3', '_4', '_5', '_6']) {
-      const hatWaffe = `waffe_${id}${suffix}` in OBJECT_ART;
-      const hatSockel = `sockel_${id}${suffix}` in OBJECT_ART;
-      if (hatWaffe !== hatSockel) {
+    for (let level = 1; level <= MAX_LEVEL; level++) {
+      const waffe = kette('waffe', id, level);
+      const sockel = kette('sockel', id, level);
+      if (!waffe !== !sockel) {
         problems.push(
-          `Waffenebene ${id}${suffix}: ${hatWaffe ? 'Waffe ohne Sockel' : 'Sockel ohne Waffe'} - ` +
-          'die Ebene braucht beide Teile, sonst bleibt sie ungenutzt.',
+          `Waffenebene ${id} Stufe ${level}: ${waffe ? `Waffe (${waffe}) ohne Sockel` : `Sockel (${sockel}) ohne Waffe`} - `
+          + 'die Ebene braucht beide Teile, sonst bleibt sie ungenutzt.',
         );
       }
     }

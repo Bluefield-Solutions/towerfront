@@ -23,11 +23,25 @@ export const objectArtVersion = (): number => stand;
  *  `waffe_frost`. So kann ein Satz Stueck fuer Stueck wachsen, ohne dass
  *  zwischendurch eine Luecke entsteht. Dieselbe Kette wie bei den Tuermen. */
 export function getObjectArtStufe(basis: string, level: number): HTMLImageElement | null {
+  const schluessel = objektStufenSchluessel(basis, level);
+  return schluessel ? getObjectArt(schluessel) : null;
+}
+
+/** Welcher EINTRAG die Rueckfallkette fuer diese Stufe liefert - oder null.
+ *
+ *  Die Kette selbst, ohne Bild und ohne Browser. Sie steht hier allein,
+ *  weil sie drei Leser hat: die beiden `getObjectArtStufe*` und den
+ *  Rauchtest, der prueft, dass zu jedem Sockel auch eine Waffe gefunden
+ *  wird. Der Rauchtest hatte sie bis v159 nachgebaut - und ein Nachbau
+ *  veraltet (Regel 15): er verlangte Sockel und Waffe auf DERSELBEN Stufe
+ *  und meldete den Bogenturm als kaputt, waehrend im Spiel ein
+ *  vollstaendiger Turm stand. Wer die Kette aendert, aendert sie jetzt an
+ *  einer Stelle, und die Gegenprobe trifft alle drei. */
+export function objektStufenSchluessel(basis: string, level: number): string | null {
   for (let l = Math.max(1, Math.round(level)); l >= 1; l--) {
-    const treffer = getObjectArt(`${basis}_${l}`);
-    if (treffer) return treffer;
+    if (`${basis}_${l}` in OBJECT_ART) return `${basis}_${l}`;
   }
-  return getObjectArt(basis);
+  return basis in OBJECT_ART ? basis : null;
 }
 
 /** Dasselbe, aber in die Karte eingebettet.
@@ -40,11 +54,9 @@ export function getObjectArtStufe(basis: string, level: number): HTMLImageElemen
 export function getObjectArtStufeEingebettet(
   basis: string, level: number, mapId: string,
 ): HTMLCanvasElement | HTMLImageElement | null {
-  for (let l = Math.max(1, Math.round(level)); l >= 1; l--) {
-    const id = `${basis}_${l}` as keyof typeof OBJECT_ART;
-    if (OBJECT_ART[id]) return getObjectArtEingebettet(id, mapId);
-  }
-  return getObjectArtEingebettet(basis as keyof typeof OBJECT_ART, mapId);
+  const schluessel = objektStufenSchluessel(basis, level);
+  if (!schluessel) return null;
+  return getObjectArtEingebettet(schluessel as keyof typeof OBJECT_ART, mapId);
 }
 
 /** Dasselbe Bild, aber in die Karte eingebettet.

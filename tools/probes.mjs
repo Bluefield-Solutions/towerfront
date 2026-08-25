@@ -1192,6 +1192,38 @@ const PROBEN = [
     tor: 'muendungstor',
   },
   {
+    // Die alte Muendung des Bogenturms - richtig auf dem Armbrustbild, falsch
+    // auf der Zwillingskanone: dort liegt auf der Mittelachse Luft zwischen
+    // den Laeufen. Sie kommt nur durch, wenn das Tor die STUFENLOSE
+    // Rueckfallfassung misst statt der gezeichneten Stufe. Genau das war der
+    // Fehler, den v160 aufgehoben hat.
+    name: 'Muendung wieder auf der Mittelachse',
+    datei: 'src/data/turmgestalt.ts',
+    regel: /^  arrow: \{ x: 0\.352, y: 0\.031, dreht: true \},$/m,
+    ersatz: '  arrow: { x: 0.5, y: 0.074, dreht: true },',
+    tor: 'muendungstor',
+  },
+  {
+    // Die Querlage wieder unterschlagen: dann sitzt die Muendung auf der
+    // Zielachse, egal was in `x` steht - und der Blitz erscheint zwischen
+    // den Laeufen in der Luft.
+    name: 'Drehende Waffe unterschlaegt die Querlage',
+    datei: 'src/data/turmgestalt.ts',
+    regel: /^    const quer = \(m\.x - 0\.5\) \* ww;$/m,
+    ersatz: '    const quer = 0;',
+    tor: 'muendungstor',
+  },
+  {
+    // Die Rueckfallkette abgeschaltet: dann finden Stufe 5 und 6 des
+    // Bogenturms keine Waffe mehr, und der Rauchtest muss das melden.
+    // Trifft zugleich den Renderer - beide lesen dieselbe Kette.
+    name: 'Rueckfallkette der Bildstufen abgeschaltet',
+    datei: 'src/gfx/objectart.ts',
+    regel: /^  for \(let l = Math\.max\(1, Math\.round\(level\)\); l >= 1; l--\) \{$/m,
+    ersatz: '  for (let l = Math.max(1, Math.round(level)); l >= Math.max(1, Math.round(level)); l--) {',
+    tor: 'smoke',
+  },
+  {
     // Und einer, der im Sockel sitzt statt oben am Rohr.
     name: 'Muendung sitzt im Sockel',
     datei: 'src/data/turmgestalt.ts',

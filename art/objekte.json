@@ -1,9 +1,9 @@
 {
-  "comment": "Einzelobjekte: Tor der Leere, spaeter auch der Herzkristall.",
+  "comment": "Einzelobjekte: Tor der Leere, Herzkristall - und der Bogenturm, der als einziger aus zwei Ebenen besteht: ein stehender Sockel und eine Waffe in Aufsicht, die darueber dreht. Je Ausbaustufe ein eigenes Paar; fehlende Stufen fallen auf die naechstniedrigere zurueck (getObjectArtStufe).",
   "source": "roh/objekte",
   "output": "objects.ts",
   "exportName": "OBJECT_ART",
-  "budgetKb": 320,
+  "budgetKb": 620,
   "defaults": {
     "size": 256,
     "fill": 0.92,
@@ -16,7 +16,7 @@
       "comment": "Gemessen Dichte 15,6 - der wirbelnde Durchgang ist sehr unruhig, entrauscht.",
       "entrauschen": 1.6,
       "farbe": 0.8,
-      "helligkeit": 1.0
+      "helligkeit": 1
     },
     "crystal": {
       "file": "kristall.png",
@@ -44,6 +44,100 @@
       "schwarzHeben": 0.03,
       "helligkeit": 0.96,
       "farbe": 0.88
+    },
+    "sockel_arrow_1": {
+      "file": "sockel_bogen_1.png",
+      "comment": "Bogenturm Stufe 1, Sockel. Steht still, waehrend die Waffe darueber dreht. Gemessen 1: reines Schwarz ueber der Grenze, deshalb schwarzHeben wie im Gegnersatz.",
+      "fill": 0.94,
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.11,
+      "helligkeit": 1.06,
+      "farbe": 1.6
+    },
+    "sockel_arrow_2": {
+      "file": "sockel_bogen_2.png",
+      "comment": "Bogenturm Stufe 2, Sockel. Steht still, waehrend die Waffe darueber dreht. Gemessen 2: reines Schwarz ueber der Grenze, deshalb schwarzHeben wie im Gegnersatz.",
+      "fill": 0.94,
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.11,
+      "helligkeit": 1.06,
+      "farbe": 1.6
+    },
+    "sockel_arrow_3": {
+      "file": "sockel_bogen_3.png",
+      "comment": "Bogenturm Stufe 3, Sockel. Steht still, waehrend die Waffe darueber dreht. Gemessen 3: reines Schwarz ueber der Grenze, deshalb schwarzHeben wie im Gegnersatz.",
+      "fill": 0.94,
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.11,
+      "helligkeit": 1.06,
+      "farbe": 1.6
+    },
+    "sockel_arrow_4": {
+      "file": "sockel_bogen_4.png",
+      "comment": "Bogenturm Stufe 4, Sockel. Steht still, waehrend die Waffe darueber dreht. Gemessen 4: reines Schwarz ueber der Grenze, deshalb schwarzHeben wie im Gegnersatz.",
+      "fill": 0.94,
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.11,
+      "helligkeit": 1.06,
+      "farbe": 1.6
+    },
+    "sockel_arrow_5": {
+      "file": "sockel_bogen_5.png",
+      "comment": "Bogenturm Stufe 5, Sockel. Steht still, waehrend die Waffe darueber dreht. Gemessen 5: reines Schwarz ueber der Grenze, deshalb schwarzHeben wie im Gegnersatz.",
+      "fill": 0.94,
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.11,
+      "helligkeit": 1.06,
+      "farbe": 1.6
+    },
+    "sockel_arrow_6": {
+      "file": "sockel_bogen_6.png",
+      "comment": "Bogenturm Stufe 6, Sockel. Steht still, waehrend die Waffe darueber dreht. Gemessen 6: reines Schwarz ueber der Grenze, deshalb schwarzHeben wie im Gegnersatz.",
+      "fill": 0.94,
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.11,
+      "helligkeit": 1.06,
+      "farbe": 1.6
+    },
+    "waffe_arrow_1": {
+      "file": "waffe_bogen_1.png",
+      "comment": "Bogenturm Stufe 1, Waffe. Wird um die BILDMITTE gedreht - deshalb mittig gesetzt und nicht auf eine Standlinie.",
+      "fill": 0.94,
+      "center": true,
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.11,
+      "helligkeit": 1.06,
+      "farbe": 1.6
+    },
+    "waffe_arrow_2": {
+      "file": "waffe_bogen_2.png",
+      "comment": "Bogenturm Stufe 2, Waffe. Wird um die BILDMITTE gedreht - deshalb mittig gesetzt und nicht auf eine Standlinie.",
+      "fill": 0.94,
+      "center": true,
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.11,
+      "helligkeit": 1.06,
+      "farbe": 1.6
+    },
+    "waffe_arrow_3": {
+      "file": "waffe_bogen_3.png",
+      "comment": "Bogenturm Stufe 3, Waffe. Wird um die BILDMITTE gedreht - deshalb mittig gesetzt und nicht auf eine Standlinie.",
+      "fill": 0.94,
+      "center": true,
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.11,
+      "helligkeit": 1.06,
+      "farbe": 1.6
+    },
+    "waffe_arrow_4": {
+      "file": "waffe_bogen_4.png",
+      "comment": "Bogenturm Stufe 4, Waffe. Wird um die BILDMITTE gedreht - deshalb mittig gesetzt und nicht auf eine Standlinie.",
+      "fill": 0.94,
+      "center": true,
+      "entrauschen": 0.8,
+      "schwarzHeben": 0.11,
+      "helligkeit": 1.06,
+      "farbe": 1.6
     }
   }
 }

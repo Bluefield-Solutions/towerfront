@@ -20,11 +20,13 @@
     },
     "crystal": {
       "file": "kristall.png",
-      "comment": "Der Herzkristall als Burg. Gemessen 10,5 Detaildichte - fuer ein Einzelobjekt sehr unruhig, entrauscht. Er soll den Blick tragen, nicht flimmern.",
-      "entrauschen": 1.4,
-      "farbe": 0.86,
-      "helligkeit": 0.92,
-      "fill": 0.96
+      "comment": "Der Herzkristall als Ringstation (Bildpaket 3, v164). Aufsicht, nicht stehend - sie LIEGT auf der gemalten Plattform, und der Schein der Platte scheint durch ihre hohle Mitte. Gemessen am Kandidaten: Lichtwinkel 4 Grad neben der Sonne (bester Wert aller Lieferungen), aber 8,9 Prozent reines Schwarz und Figur bis an den Kachelrand.",
+      "entrauschen": 1.2,
+      "farbe": 1.6,
+      "helligkeit": 1,
+      "fill": 0.96,
+      "schwarzHeben": 0.1,
+      "randOk": true
     },
     "sockel_arrow": {
       "file": "sockel_arrow.png",

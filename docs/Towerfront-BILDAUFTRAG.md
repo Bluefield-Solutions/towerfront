@@ -1,6 +1,6 @@
 # Towerfront — Bildauftrag
 
-Stand: v163 · 25.08.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v164 · 25.08.2026 · **Auftragsdokument für den Bild-Agenten**
 
 Dieses Dokument ist die vollständige Bestellung. Es enthält alles, was zum
 Erzeugen der Bilder nötig ist: Stil, Maße, Blickrichtung, Dateinamen,
@@ -739,6 +739,44 @@ it at a glance.
 FRAMING: fills about 92 percent of a 256x256 transparent canvas, centred,
 nothing cropped.
 ```
+
+#### Abnahme (v164) — angenommen, und der Auftrag hatte unrecht
+
+Geliefert wurde eine **Ringstation in Aufsicht** — acht Geschütztürme nach
+außen, ein leuchtender Kern in der Mitte, hohle Öffnung. Der Auftrag oben
+verlangt eine *stehende Dreiviertelansicht*. **Die Lieferung ist trotzdem
+die bessere Lösung**, und zwar aus einem Grund, den der Auftrag nicht kannte:
+jede Karte bringt am Ziel eine **gemalte Rundplattform** mit, und die liegt
+in der Kartenebene. Ein Ring liegt darauf, statt darauf zu stehen — und der
+türkise Schein der Platte scheint durch seine hohle Mitte. Das ist kein
+Zufallstreffer, aber ein glücklicher.
+
+| Messung | Wert |
+|---|---|
+| Lichtwinkel neben der Sonne | **4°** — der beste Wert aller Lieferungen |
+| Reines Schwarz (Kandidat) | 8,9 % — der schlechteste Wert aller Lieferungen |
+| Rand berührt | ja, auf allen vier Seiten |
+| Detaildichte | 7,9 |
+
+**Zwei Dinge im Code mussten mit**, beide von derselben Art wie der
+Turmschatten in v160 — eine Zahl, die zu einer Figur gehörte, die es nicht
+mehr gibt:
+
+* **Der Sitz.** `0,74` des Bildes lagen über dem Zielpunkt: richtig für
+  einen hohen Bau, der auf der Platte *steht*. Die Aufsicht *liegt*, ihre
+  Mitte ist ihr Auflagepunkt. Mit 0,74 schwebte sie 90 Weltpunkte über
+  ihrem eigenen Kontaktschatten. Jetzt 0,5.
+* **Der Schatten.** Zwei von Hand gemalte Ellipsen, für einen geschlossenen
+  Bau gedacht, lagen als dunkle Scheibe mitten im hohlen Ring. Ersetzt
+  durch den Schatten aus dem **Umriss** — dieselbe Antwort wie bei den
+  Türmen, und sie gilt für jede Form.
+
+**Für einen künftigen Ersatz gilt deshalb:** eine Aufsicht ist beim
+Herzkristall erlaubt und sogar erwünscht, solange sie auf der Plattform
+aufliegt und eine Mitte hat, die Licht durchlässt oder selbst leuchtet.
+Was bleibt: **kein reines Schwarz** und **5 % Rand**.
+
+---
 
 ### 7.2 `tor.png` — das Spawn-Tor der Angreifer
 

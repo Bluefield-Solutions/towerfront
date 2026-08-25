@@ -1116,6 +1116,20 @@ export class Renderer {
     if (burg) {
       const b = 300 * pulse;
       const h = b * (burg.height / burg.width);
+      // Wieviel des Bildes UEBER dem Zielpunkt liegt.
+      //
+      // Bis v163 waren es 0,74 - richtig fuer die alte Kristallfestung, ein
+      // hoher Bau, der auf der Platte STEHT und dessen Fuss unten im Bild
+      // sitzt. Die neue Ringstation ist eine Aufsicht: sie LIEGT auf der
+      // Platte, ihre Mitte ist ihr Auflagepunkt. Mit 0,74 schwebte sie 90
+      // Weltpunkte ueber ihrem eigenen Kontaktschatten - derselbe Fehler
+      // wie beim atmenden Turm in v161, nur staerker.
+      //
+      // Nachgerechnet: die Figur fuellt die Kachel von 0 bis 241 von 256,
+      // ihre Mitte liegt also bei 0,47 der Kachel. Bei 0,5 liegt sie neun
+      // Weltpunkte ueber der Standmitte, der Kontaktschatten neun darunter
+      // - beide fallen praktisch zusammen. */
+      const HOCH = 0.5;
       ctx.save();
       // KEIN eigenes Podest mehr.
       //
@@ -1125,25 +1139,37 @@ export class Renderer {
       // zweite Scheibe ueber die erste - und zwar eine mit anderer
       // Perspektive, weil eine Ellipse mit festem Verhaeltnis flacher liegt
       // als die gemalte Platte. Zwei Boeden sind schlimmer als keiner.
-      // Schatten in Lichtrichtung, wie bei allem anderen.
-      ctx.globalAlpha = 0.34;
-      ctx.fillStyle = C.ink;
-      ctx.beginPath();
-      ctx.ellipse(x + LICHT.x * 60, y + LICHT.y * 26, b * 0.36, b * 0.13, 0, 0, Math.PI * 2);
-      ctx.fill();
-      // Kontaktschatten unter der Burg.
-      ctx.globalAlpha = 0.52;
-      ctx.beginPath();
-      ctx.ellipse(x, y + b * 0.03, b * 0.30, b * 0.11, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = 1;
+      // Der Schatten kommt vom UMRISS, nicht aus zwei gemalten Ellipsen.
+      //
+      // Hier standen zwei: ein Schlagschatten in Lichtrichtung und ein
+      // Kontaktschatten darunter, beide mit fester Groesse. Bei der alten
+      // Kristallfestung - einem geschlossenen Bau - war das richtig. Die
+      // Ringstation ist HOHL, und die Ellipsen lagen als dunkle Scheibe
+      // mitten in ihrem Loch: ein Schatten fuer eine Form, die es nicht
+      // mehr gibt. Genau derselbe Fehler wie beim Turmschatten in v160,
+      // und dieselbe Antwort - der Umriss weiss, was Schatten wirft.
+      //
+      // Kurzer Hebel (0,55 statt der 1,25 eines Turms): die Station LIEGT
+      // auf der Platte, sie ragt nicht auf. Ein langer Schatten erzaehlte
+      // eine Hoehe, die sie nicht hat.
+      {
+        // Der Riss ist am FUSS der Figur verankert (siehe getSchattenriss);
+        // die Station wird aber MITTIG gesetzt. Ohne Versatz lag ihr
+        // Schatten oberhalb von ihr. Im Raum durchprobiert (0,0 / 0,25 /
+        // 0,5 nebeneinander): bei 0,5 haengt er als eigener Fleck unten
+        // rechts und die Station schwebt wieder, bei 0,0 liegt er ueber
+        // ihr. Bei 0,25 bleibt sie geerdet, und der ferne Rand wirft in
+        // die Oeffnung - genau das, was ein Ring auf einer Platte tut.
+        const riss = getSchattenriss(burg, `kristall:${s.map.id}`, b, h, 0.55);
+        drawSprite(ctx, riss, x, y + h * 0.25);
+      }
       // Bei Treffern zuckt die Burg rot, wie jeder andere Getroffene auch.
-      ctx.drawImage(burg, x - b / 2, y - h * 0.74, b, h);
+      ctx.drawImage(burg, x - b / 2, y - h * HOCH, b, h);
       if (s.crystalHit > 0.01) {
         ctx.globalAlpha = s.crystalHit * 0.5;
         ctx.globalCompositeOperation = 'source-atop';
         ctx.fillStyle = C.danger;
-        ctx.fillRect(x - b / 2, y - h * 0.74, b, h);
+        ctx.fillRect(x - b / 2, y - h * HOCH, b, h);
         ctx.globalCompositeOperation = 'source-over';
         ctx.globalAlpha = 1;
       }

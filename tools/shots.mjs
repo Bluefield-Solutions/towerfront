@@ -894,7 +894,18 @@ pruefungen.push(async () => {
       let n = 0;
       for (let x = 0; x < W; x++) {
         const i = (y * W + x) * 4;
-        if (Math.abs(a[i] - b[i]) > 6) n++;
+        // Der KOERPER, nicht seine Schatten.
+        //
+        // Der erste Anlauf nahm den Betrag und fand als Unterkante den Rand
+        // des Kontaktschattens - und der bewegt sich nie, ganz gleich was
+        // der Turm tut. Die Gegenprobe blieb deshalb gruen, obwohl der Turm
+        // wieder verschoben wurde: das Tor mass eine Kante, die mit dem
+        // Atem nichts zu tun hat (Regel 13).
+        //
+        // Ein Turm macht sein Bild dort HELLER, wo sein Koerper steht, und
+        // dunkler, wo seine Schatten liegen. Das Vorzeichen trennt beides
+        // ohne eine Schwelle, die zum Bild passen muesste.
+        if (a[i] - b[i] > 20) n++;
       }
       // Mehr als sechs Punkte in einer Zeile: eine einzelne Kante aus dem
       // Kantenglaetten soll die Messung nicht verschieben.

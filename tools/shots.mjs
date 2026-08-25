@@ -907,7 +907,23 @@ pruefungen.push(async () => {
     throw new Error(`der Gegner ist vor dem Turm nur ${vorn} Bildpunkte gross - `
       + 'dann misst die Verdeckungspruefung nichts.');
   }
-  if (verdeckt < 15) {
+  // Die Grenze liegt dort, wo die beiden Faelle WIRKLICH auseinanderliegen.
+  //
+  // Gemessen mit Sortierung: 100 %. Ohne Sortierung: 16 % - nicht null, weil
+  // ein Gegner auf dem grauen Bunkerkoerper weniger Bildpunkte veraendert
+  // als auf dem braunen Boden. Das ist keine Verdeckung, sondern Aehnlichkeit
+  // der Farben, und sie zaehlt hier faelschlich mit.
+  //
+  // Die alte Grenze war 15 % - gewaehlt, als der Bogenturm noch der schmale
+  // Armbrustturm war und der Rest bei wenigen Prozent lag. Mit dem breiten,
+  // hellgrauen Bunker aus v160 ist der Rest auf 16 % gewachsen, und die
+  // Grenze trennte nichts mehr: die Gegenprobe "Szene ohne Tiefensortierung"
+  // ist im vollen Lauf zu v162 als erste von 150 durchgefallen. Regel 2 in
+  // neuer Kleidung - eine absolute Grenze, die still bedeutungslos wird,
+  // weil sich das Gemessene aendert.
+  //
+  // 60 % laesst zu beiden Seiten vierzig Punkte Luft.
+  if (verdeckt < 60) {
     throw new Error(
       `ein Gegner hinter einem Turm wird nur zu ${verdeckt.toFixed(0)} % verdeckt `
       + '- die Szene hat keine Tiefe, alles liegt in einer Ebene.',

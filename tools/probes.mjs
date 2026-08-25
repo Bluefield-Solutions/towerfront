@@ -1220,7 +1220,8 @@ const PROBEN = [
     name: 'Rueckfallkette der Bildstufen abgeschaltet',
     datei: 'src/gfx/objectart.ts',
     regel: /^  for \(let l = Math\.max\(1, Math\.round\(level\)\); l >= 1; l--\) \{$/m,
-    ersatz: '  for (let l = Math.max(1, Math.round(level)); l >= Math.max(1, Math.round(level)); l--) {',
+    ersatz: '  if (!(`${basis}_${Math.round(level)}` in OBJECT_ART)) return null;\n'
+      + '  for (let l = Math.max(1, Math.round(level)); l >= 1; l--) {',
     tor: 'smoke',
   },
   {

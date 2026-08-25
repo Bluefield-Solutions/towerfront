@@ -147,6 +147,31 @@ for (const id of Object.keys(MUENDUNG) as TowerId[]) {
     fail(`${TOWERS[id].name}: die Muendung bewegt sich beim Zielwechsel nur `
       + `${dreh.toFixed(0)} Weltpunkte - sie zeigt nicht, wohin der Turm blickt.`);
   }
+
+  // Und die Querlage: wird `x` ueberhaupt benutzt?
+  //
+  // Die Pruefungen oben messen alle den PUNKT IM BILD. Ob das Spiel ihn
+  // dann auch dorthin setzt, sagt keine von ihnen - und genau das war bis
+  // v160 falsch: `muendung()` unterschlug bei drehenden Waffen die
+  // Querlage und setzte den Punkt immer auf die Zielachse. Ein Tor, das
+  // den richtigen Punkt bezeugt und die falsche Verwendung durchlaesst,
+  // beweist die Haelfte (Regel 13: die Zahl muss OHNE die Sache fallen).
+  //
+  // Der Drehpunkt wird aus der Funktion selbst gewonnen, nicht noch einmal
+  // ausgerechnet: bei zwei entgegengesetzten Winkeln liegt er in der Mitte
+  // zwischen beiden Muendungen. Was uebrig bleibt, ist der Abstand quer
+  // zur Zielrichtung - und der muss die Querlage aus dem Bild sein.
+  if (m.dreht) {
+    const a = muendung(id, 0), b2 = muendung(id, Math.PI);
+    const nabeY = (a.y + b2.y) / 2;
+    const querIst = a.y - nabeY;
+    const querSoll = (m.x - 0.5) * (turmMasse().w * WAFFE_BREIT);
+    if (Math.abs(querIst - querSoll) > 0.5) {
+      fail(`${TOWERS[id].name}: die Muendung liegt ${querIst.toFixed(1)} Weltpunkte quer `
+        + `zur Zielrichtung, laut Bild muessten es ${querSoll.toFixed(1)} sein - `
+        + 'die Querlage aus dem Bild wird nicht verwendet.');
+    }
+  }
   }
 }
 

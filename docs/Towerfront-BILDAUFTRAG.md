@@ -506,6 +506,11 @@ element.
 
 PIVOT: a small round hub bolt must sit EXACTLY at the centre of the canvas,
 horizontally and vertically. The game rotates this image around that point.
+Levels 1 to 4 got this exactly right — keep it.
+
+TWIN BARRELS, SYMMETRIC: two muzzles left and right of the centre line, at
+about 0.35 and 0.65 of the image width, both tips on the same top row. The
+game takes the LEFT barrel as the muzzle and measures it from the picture.
 
 FRAMING: 1122x1402 transparent PNG, the weapon fills about 92 percent of the
 canvas height, at least 5 percent clear margin on every side, nothing
@@ -573,28 +578,80 @@ der noch aus der alten Welt stammt, und er fällt daneben sofort auf.
 
 ### 6.3 `turm_frost_1.png` … `turm_frost_6.png` — Kryo-Emitter
 
+**Der letzte fehlende Satz (Stand v163).** Bogenturm, Haubitze und
+Laserturm sind geliefert und im Spiel; der Frostturm ist der einzige, der
+noch aus der alten Fantasy-Welt stammt. Er muss zu den drei anderen
+passen — gedrungener Bunkerbau mit Auslegern, Warnschraffen an den Füßen,
+Panzerstahl in Grau, **eine** Akzentfarbe.
+
 ```
 [STYLE-BLOCK EINFÜGEN]
 
-SUBJECT: A cryogenic area-denial emitter, seen from a slightly elevated
-three-quarter front angle, standing on the ground (NOT top-down). Level [1-6]
-of six. A heavy generator block with coolant tanks, thick insulated cabling
-and a wide upward-facing dish ring of emitter coils — NO gun barrel, this
-weapon has no projectile. Frost rimes the coils. Dark gunmetal with turquoise
-(#7FE7E0) glowing coils and turquoise coolant lines.
+SUBJECT: A cryogenic area-denial emplacement, seen from a slightly elevated
+three-quarter front angle, standing on the ground (NOT top-down). Level [N]
+of six. A squat armoured generator bunker with four short outrigger feet,
+coolant tanks, thick insulated cabling, and a wide upward-facing ring of
+emitter coils on top. NO gun barrel and NO muzzle — this weapon fires no
+projectile, it pulses in a radius. Light frost rimes the coils and the tank
+shoulders. Dark gunmetal grey with ONE accent: turquoise #7FE7E0 on the
+coils, the coolant lines and the hazard chevrons on the feet.
+
+MATCH THE EXISTING SET: this tower stands next to an autocannon bunker, a
+howitzer and a laser turret from the same family. Same squat proportions,
+same short outrigger feet with diagonal hazard stripes, same panelled
+armour plates, same grey. Only the accent colour and the weapon differ.
+
+SILHOUETTE MUST GROW WITH THE LEVEL — this is the one thing the previous
+two deliveries got wrong. Measured, level 1 and level 6 were 90 to 96
+percent identical in outline; at 60 screen pixels nobody can tell them
+apart. Each level must change the OUTLINE, not only the fit-out:
+  1  bare: low ring of coils, two small tanks, no cabling
+  2  wider: a second coil ring, first cable loom bulging out on one side
+  3  taller: coolant tanks stacked, a squat radiator fin block added at the
+     back so the outline is no longer symmetric
+  4  wider again: full armour skirt, a slanted sensor mast off to one side
+  5  a second emitter ring lifted above the first on short pillars, so the
+     top half becomes visibly taller and more open
+  6  the largest fit-out: outer coil crown spreading beyond the base
+     footprint, heaviest cabling, strongest accent colour
+An anchor that stays inside the existing outline is invisible on a phone.
 
 IMPORTANT: on levels 4 to 6 the emitter coils must NOT reach the top edge —
 the previous generation was clipped there. Keep 12 percent clearance above.
 
 PROPORTION WARNING: draw the tower about 14 percent SQUATTER than it should
 finally look — the game stretches this square image 16 percent vertically.
+Draw circles and coil rings as slightly wide ovals.
 
 The base sits on the ground at 28 percent of the image height from the
 bottom; nothing below it.
 
-FRAMING: the tower fills about 86 percent of a 256x256 transparent canvas,
-centred, nothing cropped.
+FRAMING: 1024x1024 transparent PNG, square. The tower fills about 86 percent
+of the canvas, centred, at least 5 percent clear margin on every side —
+nothing cropped, not a coil, not a mast tip.
 ```
+
+#### Die vier Zahlen, an denen diese Lieferung gemessen wird
+
+`npm run probebild -- <ordner>` sagt in einer Minute, ob sie trägt. Die
+Werte der beiden gelieferten Pakete stehen daneben, damit klar ist, was
+schon erreicht ist:
+
+| Messung | Grenze | Paket 1 (Bunker) | Paket 2 (Mörser/Prisma) |
+|---|---|---|---|
+| Reines Schwarz | höchstens **2 %** der Fläche | 3,1–8,6 % ✗ | 1,8–3,2 % ✗ knapp |
+| Lichtwinkel neben der Sonne | höchstens **20°** | 15–29° ✗ | 8–27° ✗ knapp |
+| Rand berührt | **nie** | 9 von 10 ✗ | 0 von 12 ✓ |
+| Silhouette Stufe 1 zu Stufe 6 | höchstens **0,85** | 0,96 ✗ | 0,90 ✗ |
+
+Die dritte Spalte ist geschafft — die anderen drei nicht. **Reines
+Schwarz** entsteht fast immer in Schattenfugen zwischen zwei Platten und
+unter Kabeln; der dunkelste Wert im ganzen Bild muss noch als dunkles Grau
+lesbar sein. **Der Lichtwinkel** ist die häufigste stille Abweichung: die
+Sonne steht auf 10 Uhr, nicht auf 12. Wenn die Oberseite gleichmäßig hell
+ist und nur die Unterseite dunkel, kommt das Licht von oben — dann
+widerspricht die Figur ihrem eigenen Schatten, den das Spiel nach unten
+rechts wirft.
 
 ### 6.4 `turm_moerser_1.png` … `turm_moerser_6.png` — Haubitze
 

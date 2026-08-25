@@ -661,14 +661,6 @@ takes.push(['d17-geschosse', () => shot('d17-geschosse', 844, 390, (s) => {
   return 0;
 })]);
 
-takes.push(['d18-atem-a', () => shot('d18-atem-a', 844, 390, (s) => {
-  s.reset(9, 'normal', 'spiralhain'); stock(s, 8, ['arrow']); return 0;
-})]);
-takes.push(['d18-atem-b', () => shot('d18-atem-b', 844, 390, (s) => {
-  s.reset(9, 'normal', 'spiralhain'); stock(s, 8, ['arrow']);
-  for (let i = 0; i < 50; i++) s.update(DT);
-  return 0;
-})]);
 
 takes.push(['c24-tor', () => shot('c24-tor', 844, 390, (s) => {
   // Der Augenblick, in dem das Tor ZU ist - sonst zeigt das Bild ein
@@ -733,120 +725,28 @@ takes.push(['welle15', () => shot('welle15', 844, 390, (s) => {
   return 60 * 16;
 })]);
 
-// --- Lebt ein ruhendes Feld, und zwar wegen der TUERME? (D18)
+// --- Steht ein ruhender Turm STILL? (Rueckbau von D18, v162)
 //
-// Kein Bild, sondern eine Messung: zwischen zwei Wellen wurde bis v116 nichts
-// bewegt, was zum Spiel gehoert. Kingdom Rush und Bloons lassen ihre Tuerme
-// atmen; das macht aus einem Diagramm einen Ort.
+// Von v116 bis v161 atmeten die Tuerme: zwei Weltpunkte auf und ab, damit
+// ein ruhendes Feld kein Standbild ist. Der Nutzer hat es zweimal gemeldet
+// und entschieden, dass ein Turm stillsteht. Hier standen deshalb frueher
+// zwei Pruefungen, die das Gegenteil verlangten - DASS sich die Tuerme
+// bewegen, und WO die Bewegung sitzt.
 //
-// Der erste Entwurf verglich einfach zwei Aufnahmen desselben ruhenden
-// Feldes - und meldete 3,41 % bewegte Bildpunkte. Mit abgeschalteter Atmung
-// meldete er GENAU DIESELBEN 3,41 %: gemessen hatte er den Bodennebel, der
-// sich ohnehin bewegt. Eine Pruefung, die auch ohne die Sache besteht,
-// bezeugt sie nicht.
-//
-// Also ein Unterschied von Unterschieden: dasselbe Feld einmal MIT und
-// einmal OHNE Tuerme, jeweils zwei Zeitpunkte. Was der Nebel beitraegt,
-// steht in beiden Zahlen und kuerzt sich heraus.
-pruefungen.push(async () => {
-  const bewegung = async (mitTuermen) => {
-    const canvas = createCanvas(844 * 2, 390 * 2);
-    Object.defineProperty(canvas, 'clientWidth', { get: () => 844 });
-    Object.defineProperty(canvas, 'clientHeight', { get: () => 390 });
-    const s = new GameState();
-    const r = new Renderer(canvas);
-    r.menu = null;
-    s.reset(9, 'normal', 'spiralhain');
-    // NUR Bogentuerme. Der Frostturm pulst im Umkreis und das Prisma
-    // leuchtet - beides bewegt sich von selbst und uebertoente die Atmung um
-    // zwei Groessenordnungen. Ein Messplatz ist erst dann einer, wenn das
-    // Gesuchte das Lauteste darauf ist.
-    if (mitTuermen) stock(s, 8, ['arrow']);
-    // KEINE Welle starten: gemessen wird genau der ruhende Zustand.
-    //
-    // Und in NIEDRIGER Qualitaet, weil dort das Leuchten entfaellt. Mit
-    // Leuchten war der Beitrag der Tuerme 2,37 % - und blieb 2,37 %, wenn man
-    // die Atmung ganz abschaltete. Gemessen wurde also das Pulsieren des
-    // Leuchtens, nicht die Bewegung. Ein Messplatz, auf dem das Gesuchte im
-    // Rauschen liegt, misst das Rauschen (Regel 12: die Messstelle gehoert
-    // zur Zahl).
-    s.quality = 'niedrig';
-    r.resize();
-    r.draw(s);
-    for (const k of Object.keys(OBJECT_ART)) getObjectArt(k);
-    getBackground(s.map.id);
-    for (const id of TOWER_ORDER) getTowerArt(id, null, 1, s.map.id);
-    await settle();
-    r.kartenaufbauAbschliessen(s);
-
-    const g = canvas.getContext('2d');
-    const nimm = () => {
-      r.draw(s);
-      return Uint8ClampedArray.from(g.getImageData(0, 0, canvas.width, canvas.height).data);
-    };
-    // Fehlen Bilder, faellt die Zeichnung auf gemalte Ersatztuerme zurueck -
-    // und die atmen nicht. Dann maesse dieser Platz etwas anderes als gemeint.
-    const fehlt = r.fehlendeBilder(s);
-    if (fehlt.length) throw new Error(`Ruhepruefung ohne Bilder: ${fehlt.slice(0, 3).join(', ')}`);
-
-    const a = nimm();
-    // Ein VIERTEL der Atemperiode weiter, nicht die Haelfte.
-    //
-    // Der erste Aufbau lief 100 Bilder, also 1,67 s - bei 1,9 rad/s ist das
-    // fast genau eine halbe Periode. Von sin(0) nach sin(pi): beide Male
-    // null. Ich habe zwei Nulldurchgaenge verglichen und daraus geschlossen,
-    // die Bewegung gebe es nicht. Ein Messzeitpunkt ist Teil der Messstelle
-    // (Regel 12).
-    for (let i = 0; i < 50; i++) s.update(1 / 60);
-    const b = nimm();
-    let anders = 0;
-    for (let i = 0; i < a.length; i += 4) {
-      if (Math.abs(a[i] - b[i]) > 3 || Math.abs(a[i + 1] - b[i + 1]) > 3) anders++;
-    }
-    return (100 * anders) / (a.length / 4);
-  };
-
-  const mit = await bewegung(true);
-  const ohne = await bewegung(false);
-  const durchTuerme = mit - ohne;
-  console.log(`  ruhendes Feld: ${mit.toFixed(2)} % bewegt, ohne Tuerme ${ohne.toFixed(2)} % `
-    + `- die Tuerme tragen ${durchTuerme.toFixed(2)} % bei`);
-  if (durchTuerme < 0.15) {
-    throw new Error(
-      `die Tuerme bewegen sich im ruhenden Feld nicht (${durchTuerme.toFixed(3)} % gegenueber `
-      + 'dem Feld ohne sie) - zwischen zwei Wellen steht das Spiel still.',
-    );
-  }
-});
-
-// --- Steht der FUSS still, waehrend der Turm atmet? (v161)
-//
-// Die Pruefung darueber sagt nur, DASS sich die Tuerme bewegen. Wie, sagt
-// sie nicht - und genau daran hing ein Fehler, den ein Nutzer gesehen hat
-// und kein Tor: der Atem war eine Verschiebung des ganzen Bildes. Damit
-// wandert die Unterkante mit, loest sich vom Kontaktschatten, der liegen
-// bleibt, und der Turm schwebt. Am schlanken Armbrustturm fiel es nicht auf
-// (senkrechte Kanten zeigen senkrechte Bewegung kaum), am breiten Bunker mit
-// seinen lauter waagerechten Kanten sofort.
-//
-// **Gemessen werden die beiden KANTEN, nicht bewegte Flaeche.** Zwei
-// Entwuerfe davor haben Bildpunkte gezaehlt und beide etwas anderes
-// gemessen: der erste den Bodennebel (89 % Fussanteil, mit einem Profil,
-// das nach unten zunimmt - das Gegenteil einer Streckung aus dem Fuss), der
-// zweite die Laenge des Umrisses, die dort am groessten ist, wo die Kuppel
-// am breitesten ist, nicht dort, wo sich etwas bewegt. Die Frage ist
-// einfach: wandert die Oberkante, und bleibt die Unterkante liegen?
+// Ersatzlos zu streichen waere falsch: dann waere der Rueckbau eine Zeile,
+// die beim naechsten Umbau versehentlich zurueckkommt und die niemand
+// bemerkt (Regel 5). Also dieselbe Messstelle, umgekehrte Frage.
 //
 // **Der Turm wird gefunden, nicht ausgerechnet.** Zu jedem Zeitpunkt ein
-// Bild mit und eines ohne Turm; was sich unterscheidet, IST er. Der Nebel
-// steht in beiden gleich und faellt heraus, statt hinterher abgezogen zu
-// werden. So haengt die Messstelle an keiner zweiten Rechnung, die driften
-// kann (Regel 15).
+// Bild mit und eines ohne Turm; was sich unterscheidet, IST er. Der
+// Bodennebel steht in beiden gleich und faellt dabei heraus - er bewegt
+// sich weiter, und das soll er auch.
 //
-// **Ueber eine ganze Periode, in acht Schritten.** Die Phase des Atems
-// haengt an der Standposition; sie hier nachzurechnen waere die zweite
-// Rechnung, die ich gerade vermieden habe. Acht Proben treffen die
-// Umkehrpunkte auf 22 Grad genau, also auf 92 % des vollen Ausschlags.
+// **Koerper, nicht Schatten.** Ein Turm macht sein Bild dort heller, wo
+// sein Koerper steht, und dunkler, wo seine Schatten liegen. Ohne diese
+// Trennung fand die Vorgaengerfassung als Unterkante den Rand des
+// Kontaktschattens - und der bewegt sich nie, ganz gleich was der Turm
+// tut. Die Gegenprobe blieb dadurch gruen (Regel 13).
 pruefungen.push(async () => {
   const rig = async (mitTurm) => {
     const canvas = createCanvas(844 * 2, 390 * 2);
@@ -856,14 +756,22 @@ pruefungen.push(async () => {
     const r = new Renderer(canvas);
     r.menu = null;
     s.reset(9, 'normal', 'spiralhain');
-    // Niedrige Qualitaet und keine Welle: das Gesuchte muss das Lauteste auf
-    // dem Messplatz sein (siehe der Kasten bei der Ruhepruefung).
+    // Niedrige Qualitaet und keine Welle: gemessen werden soll der ruhende
+    // Turm, nicht die Stimmung um ihn herum.
     s.quality = 'niedrig';
     s.gold = 99999;
     if (mitTurm) {
       const platz = candidateSpots(s)[0];
-      if (!s.build(platz.x, platz.y, 'arrow')) throw new Error('Fusspruefung: kein Turm setzbar.');
+      if (!s.build(platz.x, platz.y, 'arrow')) throw new Error('Ruhepruefung: kein Turm setzbar.');
     }
+    // Das Einfedern beim Bau ausklingen lassen - das ist eine Handlung und
+    // darf sich bewegen; gemeint ist der Turm DANACH.
+    //
+    // In BEIDEN Laeufen, auch im leeren. Der erste Anlauf liess die Uhr nur
+    // im Lauf mit Turm vorlaufen; damit stand der Bodennebel in den beiden
+    // Bildern an verschiedenen Stellen, und die Messung meldete eine
+    // Unterkante 314 Zeilen tiefer - Nebel, kein Turm.
+    for (let i = 0; i < 120; i++) s.update(1 / 60);
     r.resize();
     r.draw(s);
     for (const k of Object.keys(OBJECT_ART)) getObjectArt(k);
@@ -872,7 +780,7 @@ pruefungen.push(async () => {
     await settle();
     r.kartenaufbauAbschliessen(s);
     const fehlt = r.fehlendeBilder(s);
-    if (fehlt.length) throw new Error(`Fusspruefung ohne Bilder: ${fehlt.slice(0, 3).join(', ')}`);
+    if (fehlt.length) throw new Error(`Ruhepruefung ohne Bilder: ${fehlt.slice(0, 3).join(', ')}`);
     const g = canvas.getContext('2d');
     return {
       s,
@@ -884,51 +792,52 @@ pruefungen.push(async () => {
   const mit = await rig(true);
   const ohne = await rig(false);
   const { W, H } = mit;
-  // Eine Atemperiode bei 1,9 rad/s sind 3,3 s, also 199 Bilder. Acht Proben.
+  // Acht Proben ueber gut drei Sekunden. So lang, weil die alte
+  // Ruhebewegung eine Periode von 3,3 s hatte - eine kuerzere Reihe koennte
+  // sie zwischen zwei Proben verstecken.
   const SCHRITT = 25;
-  const obenAll = [], untenAll = [];
+  const oben = [], unten = [], flaeche = [];
   for (let probe = 0; probe < 8; probe++) {
     const a = mit.nimm(), b = ohne.nimm();
-    let o = -1, u = -1;
+    let o = -1, u = -1, f = 0;
     for (let y = 0; y < H; y++) {
       let n = 0;
       for (let x = 0; x < W; x++) {
         const i = (y * W + x) * 4;
-        // Der KOERPER, nicht seine Schatten.
-        //
-        // Der erste Anlauf nahm den Betrag und fand als Unterkante den Rand
-        // des Kontaktschattens - und der bewegt sich nie, ganz gleich was
-        // der Turm tut. Die Gegenprobe blieb deshalb gruen, obwohl der Turm
-        // wieder verschoben wurde: das Tor mass eine Kante, die mit dem
-        // Atem nichts zu tun hat (Regel 13).
-        //
-        // Ein Turm macht sein Bild dort HELLER, wo sein Koerper steht, und
-        // dunkler, wo seine Schatten liegen. Das Vorzeichen trennt beides
-        // ohne eine Schwelle, die zum Bild passen muesste.
         if (a[i] - b[i] > 20) n++;
       }
+      f += n;
       // Mehr als sechs Punkte in einer Zeile: eine einzelne Kante aus dem
       // Kantenglaetten soll die Messung nicht verschieben.
       if (n > 6) { if (o < 0) o = y; u = y; }
     }
-    if (o < 0) throw new Error('Fusspruefung: der Turm ist im Bild nicht zu finden.');
-    obenAll.push(o); untenAll.push(u);
+    if (o < 0) throw new Error('Ruhepruefung: der Turm ist im Bild nicht zu finden.');
+    oben.push(o); unten.push(u); flaeche.push(f);
     for (let i = 0; i < SCHRITT; i++) { mit.s.update(1 / 60); ohne.s.update(1 / 60); }
   }
   const spanne = (v) => Math.max(...v) - Math.min(...v);
-  const oS = spanne(obenAll), uS = spanne(untenAll);
-  console.log(`  Atem: Oberkante wandert ${oS} Bildzeilen, Unterkante ${uS} `
-    + '(acht Proben ueber eine Atemperiode, 844 x 390 bei 2x)');
-  if (oS < 2) {
-    throw new Error(`die Oberkante wandert nur ${oS} Bildzeilen - `
-      + 'entweder atmet der Turm nicht, oder diese Pruefung sieht es nicht.');
+  const oS = spanne(oben), uS = spanne(unten);
+  const fMittel = flaeche.reduce((a, b) => a + b, 0) / flaeche.length;
+  // Die Flaeche steht daneben, ist aber KEIN Kriterium - sie misst die
+  // Umgebung, nicht den Turm.
+  //
+  // Nachgemessen: sie schwankt um 1,5 % in einer glatten Kurve, und die
+  // Kurve gehoert dem Lichtteich am Kristall (`lichtteich`, 1,4 rad/s, also
+  // 4,5 s). Der hellt den Boden neben dem Turm auf und ab; damit wandert
+  // der Abstand zwischen Turm und Boden ueber die Schwelle dieser Messung,
+  // ohne dass sich am Turm etwas ruehrt. Eine Zahl, die sich ohne die Sache
+  // aendert, misst die Sache nicht (Regel 13) - sie wird berichtet, damit
+  // niemand sie noch einmal fuer eine Bewegung haelt, und nicht geprueft.
+  console.log(`  ruhender Turm: Oberkante wandert ${oS} Bildzeilen, Unterkante ${uS} `
+    + `(acht Proben ueber 3,3 s, Figur ${fMittel.toFixed(0)} Bildpunkte, 844 x 390 bei 2x)`);
+  if (fMittel < 500) {
+    throw new Error(`der Turm ist nur ${fMittel.toFixed(0)} Bildpunkte gross - `
+      + 'dann misst diese Pruefung nicht den Turm, sondern das Rauschen.');
   }
-  // Anteilig, nicht absolut (Regel 2): wird der Atem staerker, waechst die
-  // Oberkante mit, und eine feste Zahl waere still bedeutungslos geworden.
-  if (uS > oS / 3) {
+  if (oS > 0 || uS > 0) {
     throw new Error(
-      `die Unterkante wandert ${uS} Bildzeilen, die Oberkante ${oS} - der Turm wird `
-      + 'verschoben statt aus dem Fuss gestreckt und loest sich vom Kontaktschatten.',
+      `ein ruhender Turm bewegt sich: Oberkante ${oS} Bildzeilen, Unterkante ${uS} `
+      + '- zwischen zwei Wellen soll ein Turm stillstehen.',
     );
   }
 });

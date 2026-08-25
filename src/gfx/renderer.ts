@@ -1556,31 +1556,28 @@ export class Renderer {
       // Waffe allein, mit dem Drehpunkt in der Bildmitte. Fehlt eines von
       // beiden, bleibt es beim gedaempften Schwenk darunter; ein Sockel mit
       // eingebauter Waffe plus zweiter Waffe darueber waere doppelt.
-      // --- Ruhebewegung (D18): der Turm atmet.
+      // --- Ein stehender Turm steht. (Ruhebewegung D18, zurueckgebaut in v162)
       //
-      // Ein ruhendes Feld war bis v116 ein Standbild - zwischen zwei Wellen
-      // bewegte sich nichts ausser dem Nebel. Kingdom Rush und Bloons lassen
-      // ihre Tuerme leicht atmen; das kostet nichts und macht aus einem
-      // Diagramm einen Ort.
+      // Von v116 bis v161 atmeten die Tuerme: eine langsame Bewegung von
+      // zwei Weltpunkten, damit ein ruhendes Feld kein Standbild ist. Der
+      // Nutzer hat sie zweimal gemeldet - erst als Schweben des Bunkers,
+      // dann als Bewegung ueberhaupt - und entschieden, dass ein Turm
+      // stillstehen soll.
       //
-      // HIER berechnet, nicht weiter unten: es gibt ZWEI Zeichenwege. Tuerme
-      // mit eigenem Sockel- und Waffenbild (der Bogenturm) laufen durch den
-      // Zweig gleich darunter und enden dort mit `continue`. Mein erster
-      // Versuch stand hinter diesem `continue` - bei Amplitude 60, also
-      // einem halben Turm Versatz, bewegte sich nichts. Zwei Aufnahmen
-      // nebeneinander haben es gezeigt, keine Kennzahl.
+      // Die erste Meldung war ein Fehler und ist in v161 behoben worden
+      // (verschieben statt aus dem Fuss strecken). Die zweite ist keiner,
+      // sondern ein Urteil ueber die Sache selbst, und dafuer ist das Auge
+      // des Nutzers die Instanz - nicht das Vorbild, aus dem sie kam
+      // (Kingdom Rush und Bloons lassen ihre Tuerme atmen; dieses Spiel
+      // nicht mehr).
       //
-      // Drei Entscheidungen:
-      //  - KLEIN, aber nicht unsichtbar. 2 Weltpunkte sind bei kleinstem
-      //    Massstab rund 1,6 Bildschirmpunkte. Der erste Wert (0,75) waere
-      //    ein halber Punkt gewesen - Regel 12: beurteilt wird in
-      //    Anzeigegroesse, und ein halber Punkt ist keine Bewegung.
-      //  - VERSETZT. Die Phase kommt aus der Standposition, sonst atmet das
-      //    ganze Feld im Gleichtakt. Aus der Position und nicht aus einem
-      //    Zufall, damit sie ueber Sichern und Laden dieselbe bleibt.
-      //  - OHNE SCHATTEN. Der Schatten liegt schon und bleibt liegen. Bewegt
-      //    er sich mit, schwebt der Turm; bleibt er, hebt sich der Turm.
-      const atem = Math.sin(s.time * 1.9 + (t.x + t.y * 1.7) * 0.03) * 2;
+      // Was ein ruhendes Feld noch bewegt: der Bodennebel, das Leuchten und
+      // der Kristall. Gemessen tragen die allein 4,4 % bewegte Bildpunkte,
+      // also ist es weiterhin kein Standbild.
+      //
+      // Was BLEIBT, weil es keine Ruhebewegung ist: das Einfedern beim Bau
+      // (`t.spring`, einmalig), der Rueckstoss beim Schuss und der Schwenk
+      // zum Ziel. Die alle sind Handlungen und sagen etwas.
 
       // Eingebettet wie der Turm daneben - siehe getObjectArtStufeEingebettet.
       const waffe = getObjectArtStufeEingebettet(`waffe_${t.def}`, t.level, s.map.id);
@@ -1611,39 +1608,12 @@ export class Renderer {
         // derselben Stelle.
         const sh = g2.h;
         const oben = g2.oben;
-        // Der Atem hebt die Figur, ohne den Fuss vom Boden zu nehmen.
-        //
-        // Bis v160 war er eine Verschiebung des ganzen Bildes. Der Kommentar
-        // unten sagt, warum das falsch ist - "der Schatten bleibt liegen,
-        // also hebt sich der Turm" -, aber eine Verschiebung hebt eben nicht
-        // den Turm, sondern nimmt ihn vom Boden: die Unterkante wandert mit
-        // und loest sich vom Kontaktschatten, der liegen bleibt.
-        //
-        // An den schlanken Tuermen fiel es nicht auf, weil ihre Silhouette
-        // aus SENKRECHTEN Kanten besteht - eine senkrechte Kante zeigt eine
-        // senkrechte Bewegung kaum. Der Bunker ist das Gegenteil: eine breite
-        // Kuppel aus lauter WAAGERECHTEN Kanten, und die unterste liegt
-        // direkt auf dem Schatten. Dieselben zwei Weltpunkte lasen sich dort
-        // nicht als Atem, sondern als Schweben (vom Nutzer gemeldet).
-        //
-        // Jetzt wird um die UNTERKANTE gestreckt statt verschoben: der
-        // Scheitel geht um dieselben zwei Punkte hoch und runter, der Fuss um
-        // null. Der Turm hebt sich wirklich, statt zu schweben.
-        ctx.save();
-        this.atemAuftrag(ctx, atem, oben, sh);
         ctx.drawImage(sockel, -bw / 2, oben, bw, sh);
-        ctx.restore();
         // Die Waffe sitzt auf der Plattform, nicht auf dem Boden.
         // Auf die Plattform, nicht in den Schaft. Ihr Platz wird von der
         // Oberkante aus gemessen, nicht von der Mitte - die Plattform ist
         // ein Punkt IM Bild und wandert mit ihm nach oben.
-        // Die Waffe wird MITGEHOBEN, nicht mitgestreckt.
-        //
-        // Sie dreht sich; eine ungleiche Streckung wuerde sie beim Schwenken
-        // scheren. Sie bekommt deshalb genau den Weg, den ihre Nabe in der
-        // gestreckten Kuppel zurueckgelegt hat - die Nabe sitzt bei
-        // WAFFE_HOCH von oben, also (1 - WAFFE_HOCH) ueber dem Fuss.
-        ctx.translate(0, oben + sh * WAFFE_HOCH + atem * (1 - WAFFE_HOCH));
+        ctx.translate(0, oben + sh * WAFFE_HOCH);
         // Das Bild blickt nach oben, der Winkel zaehlt von rechts.
         ctx.rotate(t.angle + Math.PI / 2);
         // Rueckstoss laeuft entgegen der Schussrichtung.
@@ -1689,29 +1659,7 @@ export class Renderer {
       // ist, waere es der Punkt, an dem der Turm vom Boden abhebt: die
       // Oberkante waechst mit der Hoehe mit, die Unterkante nicht.
       // Zwei Stellen, die dieselbe Zahl ausrechnen, driften auseinander.
-      // --- Ruhebewegung (D18): der Turm atmet.
-      //
-      // Ein ruhendes Feld war bis v116 ein Standbild - zwischen zwei Wellen
-      // bewegte sich nichts ausser dem Nebel. Kingdom Rush und Bloons lassen
-      // ihre Tuerme leicht atmen; das kostet nichts und macht aus einem
-      // Diagramm einen Ort.
-      //
-      // Drei Entscheidungen, jede mit Grund:
-      //  - KLEIN. Eineinhalb Weltpunkte, bei kleinstem Massstab gut ein
-      //    Bildschirmpunkt. Mehr laese sich als Rueckstoss, also als
-      //    Handlung - und eine Ruhebewegung, die nach Handlung aussieht,
-      //    luegt.
-      //  - VERSETZT. Die Phase kommt aus der Standposition, sonst atmet das
-      //    ganze Feld im Gleichtakt und wirkt wie ein Fehler. Aus der
-      //    Position und nicht aus einem Zufall, damit sie ueber Sichern und
-      //    Laden dieselbe bleibt.
-      //  - OHNE SCHATTEN. Der Schatten liegt schon und bleibt liegen. Bewegt
-      //    er sich mit, schwebt der Turm; bleibt er, hebt sich der Turm.
-      //  - AUS DEM FUSS, nicht als Verschiebung. Siehe den Kasten im Zweig
-      //    mit Sockel und Waffe: eine Verschiebung nimmt die Unterkante vom
-      //    Kontaktschatten mit, und was sich vom eigenen Schatten loest,
-      //    schwebt. Gestreckt wird um die Unterkante, damit der Fuss steht.
-      this.atemAuftrag(ctx, atem, masse.oben, h);
+      // Ohne Ruhebewegung - siehe der Kasten im Zweig mit Sockel und Waffe.
       ctx.drawImage(art, -w / 2, masse.oben, w, h);
       ctx.restore();
     } else {
@@ -1777,33 +1725,6 @@ export class Renderer {
     // also fuellen sie ihre Kachel schon gleich, und die richtige Antwort
     // ist, gar nichts auszugleichen.
     return turmMasse();
-  }
-
-  /** Der Atem als Streckung aus dem Fuss - nicht als Verschiebung.
-   *
-   *  Bis v160 wurde das Turmbild um `atem` VERSCHOBEN. Der Kommentar an der
-   *  Ruhebewegung sagt selbst, warum das falsch ist ("der Schatten bleibt
-   *  liegen, also hebt sich der Turm") - eine Verschiebung hebt den Turm aber
-   *  nicht, sie nimmt ihn vom Boden: die Unterkante wandert mit und loest
-   *  sich vom Kontaktschatten, der liegen bleibt.
-   *
-   *  An den schlanken Tuermen fiel es nicht auf, weil ihre Silhouette aus
-   *  SENKRECHTEN Kanten besteht, und eine senkrechte Kante zeigt eine
-   *  senkrechte Bewegung kaum. Der Bunker aus v160 ist das Gegenteil: eine
-   *  breite Kuppel aus lauter waagerechten Kanten, und die unterste liegt
-   *  direkt auf dem Schatten. Dieselben zwei Weltpunkte lasen sich dort nicht
-   *  als Atem, sondern als Schweben - gemeldet vom Nutzer, von keinem Tor.
-   *
-   *  Hier steht es EINMAL, obwohl es zwei Zeichenwege gibt. Zwei Fassungen
-   *  waeren zwei, die auseinanderdriften (Regel 15) - und eine Gegenprobe,
-   *  die nur eine von beiden trifft. */
-  private atemAuftrag(
-    ctx: CanvasRenderingContext2D, atem: number, oben: number, hoehe: number,
-  ): void {
-    const fussY = oben + hoehe;
-    ctx.translate(0, fussY);
-    ctx.scale(1, 1 - atem / hoehe);
-    ctx.translate(0, -fussY);
   }
 
   private paintTower(

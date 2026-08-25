@@ -633,14 +633,13 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
-    // D18: ein ruhendes Feld darf kein Standbild sein.
-    name: 'Tuerme atmen nicht mehr',
+    // Die Umkehrung von D18, seit v162: ein ruhender Turm steht still.
+    // Eingebaut wird die alte Ruhebewegung - zwei Weltpunkte auf und ab -,
+    // und das Tor muss sie sehen.
+    name: 'Tuerme atmen wieder',
     datei: 'src/gfx/renderer.ts',
-    // Ohne Einrueckung in der Regel: die Zeile ist beim Umbau der
-    // Zeichenschichten (v140) von acht auf sechs Leerzeichen gerutscht, und
-    // die Probe traf sie seitdem nicht mehr.
-    regel: /const atem = Math\.sin\(s\.time \* 1\.9 \+ \(t\.x \+ t\.y \* 1\.7\) \* 0\.03\) \* 2;/,
-    ersatz: 'const atem = 0;',
+    regel: /^        ctx\.drawImage\(sockel, -bw \/ 2, oben, bw, sh\);$/m,
+    ersatz: '        ctx.drawImage(sockel, -bw / 2, oben + Math.sin(s.time * 1.9) * 2, bw, sh);',
     tor: 'bildtor',
   },
   {
@@ -1212,17 +1211,6 @@ const PROBEN = [
     regel: /^    const quer = \(m\.x - 0\.5\) \* ww;$/m,
     ersatz: '    const quer = 0;',
     tor: 'muendungstor',
-  },
-  {
-    // Der Atem wieder als Verschiebung statt als Streckung aus dem Fuss:
-    // dann wandert die Unterkante mit, loest sich vom Kontaktschatten, und
-    // der Turm schwebt. Trifft beide Zeichenwege, weil beide denselben
-    // Helfer benutzen.
-    name: 'Atem verschiebt den Turm, statt ihn zu strecken',
-    datei: 'src/gfx/renderer.ts',
-    regel: /^    ctx\.scale\(1, 1 - atem \/ hoehe\);$/m,
-    ersatz: '    ctx.translate(0, atem);',
-    tor: 'bildtor',
   },
   {
     // Die Rueckfallkette abgeschaltet: dann finden Stufe 5 und 6 des

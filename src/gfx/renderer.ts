@@ -1598,7 +1598,7 @@ export class Renderer {
         const bw = g2.w;
         const rec2 = t.recoil * 4;
         ctx.save();
-        ctx.translate(t.x, t.y + atem);
+        ctx.translate(t.x, t.y);
         // Auch dieser Weg bekommt die Hoehe - sonst waere der Bogenturm der
         // einzige, der nicht mitwaechst.
         //
@@ -1611,12 +1611,39 @@ export class Renderer {
         // derselben Stelle.
         const sh = g2.h;
         const oben = g2.oben;
+        // Der Atem hebt die Figur, ohne den Fuss vom Boden zu nehmen.
+        //
+        // Bis v160 war er eine Verschiebung des ganzen Bildes. Der Kommentar
+        // unten sagt, warum das falsch ist - "der Schatten bleibt liegen,
+        // also hebt sich der Turm" -, aber eine Verschiebung hebt eben nicht
+        // den Turm, sondern nimmt ihn vom Boden: die Unterkante wandert mit
+        // und loest sich vom Kontaktschatten, der liegen bleibt.
+        //
+        // An den schlanken Tuermen fiel es nicht auf, weil ihre Silhouette
+        // aus SENKRECHTEN Kanten besteht - eine senkrechte Kante zeigt eine
+        // senkrechte Bewegung kaum. Der Bunker ist das Gegenteil: eine breite
+        // Kuppel aus lauter WAAGERECHTEN Kanten, und die unterste liegt
+        // direkt auf dem Schatten. Dieselben zwei Weltpunkte lasen sich dort
+        // nicht als Atem, sondern als Schweben (vom Nutzer gemeldet).
+        //
+        // Jetzt wird um die UNTERKANTE gestreckt statt verschoben: der
+        // Scheitel geht um dieselben zwei Punkte hoch und runter, der Fuss um
+        // null. Der Turm hebt sich wirklich, statt zu schweben.
+        ctx.save();
+        this.atemAuftrag(ctx, atem, oben, sh);
         ctx.drawImage(sockel, -bw / 2, oben, bw, sh);
+        ctx.restore();
         // Die Waffe sitzt auf der Plattform, nicht auf dem Boden.
         // Auf die Plattform, nicht in den Schaft. Ihr Platz wird von der
         // Oberkante aus gemessen, nicht von der Mitte - die Plattform ist
         // ein Punkt IM Bild und wandert mit ihm nach oben.
-        ctx.translate(0, oben + sh * WAFFE_HOCH);
+        // Die Waffe wird MITGEHOBEN, nicht mitgestreckt.
+        //
+        // Sie dreht sich; eine ungleiche Streckung wuerde sie beim Schwenken
+        // scheren. Sie bekommt deshalb genau den Weg, den ihre Nabe in der
+        // gestreckten Kuppel zurueckgelegt hat - die Nabe sitzt bei
+        // WAFFE_HOCH von oben, also (1 - WAFFE_HOCH) ueber dem Fuss.
+        ctx.translate(0, oben + sh * WAFFE_HOCH + atem * (1 - WAFFE_HOCH));
         // Das Bild blickt nach oben, der Winkel zaehlt von rechts.
         ctx.rotate(t.angle + Math.PI / 2);
         // Rueckstoss laeuft entgegen der Schussrichtung.
@@ -1680,7 +1707,12 @@ export class Renderer {
       //    Laden dieselbe bleibt.
       //  - OHNE SCHATTEN. Der Schatten liegt schon und bleibt liegen. Bewegt
       //    er sich mit, schwebt der Turm; bleibt er, hebt sich der Turm.
-      ctx.drawImage(art, -w / 2, masse.oben + atem, w, h);
+      //  - AUS DEM FUSS, nicht als Verschiebung. Siehe den Kasten im Zweig
+      //    mit Sockel und Waffe: eine Verschiebung nimmt die Unterkante vom
+      //    Kontaktschatten mit, und was sich vom eigenen Schatten loest,
+      //    schwebt. Gestreckt wird um die Unterkante, damit der Fuss steht.
+      this.atemAuftrag(ctx, atem, masse.oben, h);
+      ctx.drawImage(art, -w / 2, masse.oben, w, h);
       ctx.restore();
     } else {
       this.paintWeapon(t.def, t.branch, t.level, t.x, t.y, t.angle, t.recoil, t.pulse, s.crystalPulse);
@@ -1745,6 +1777,33 @@ export class Renderer {
     // also fuellen sie ihre Kachel schon gleich, und die richtige Antwort
     // ist, gar nichts auszugleichen.
     return turmMasse();
+  }
+
+  /** Der Atem als Streckung aus dem Fuss - nicht als Verschiebung.
+   *
+   *  Bis v160 wurde das Turmbild um `atem` VERSCHOBEN. Der Kommentar an der
+   *  Ruhebewegung sagt selbst, warum das falsch ist ("der Schatten bleibt
+   *  liegen, also hebt sich der Turm") - eine Verschiebung hebt den Turm aber
+   *  nicht, sie nimmt ihn vom Boden: die Unterkante wandert mit und loest
+   *  sich vom Kontaktschatten, der liegen bleibt.
+   *
+   *  An den schlanken Tuermen fiel es nicht auf, weil ihre Silhouette aus
+   *  SENKRECHTEN Kanten besteht, und eine senkrechte Kante zeigt eine
+   *  senkrechte Bewegung kaum. Der Bunker aus v160 ist das Gegenteil: eine
+   *  breite Kuppel aus lauter waagerechten Kanten, und die unterste liegt
+   *  direkt auf dem Schatten. Dieselben zwei Weltpunkte lasen sich dort nicht
+   *  als Atem, sondern als Schweben - gemeldet vom Nutzer, von keinem Tor.
+   *
+   *  Hier steht es EINMAL, obwohl es zwei Zeichenwege gibt. Zwei Fassungen
+   *  waeren zwei, die auseinanderdriften (Regel 15) - und eine Gegenprobe,
+   *  die nur eine von beiden trifft. */
+  private atemAuftrag(
+    ctx: CanvasRenderingContext2D, atem: number, oben: number, hoehe: number,
+  ): void {
+    const fussY = oben + hoehe;
+    ctx.translate(0, fussY);
+    ctx.scale(1, 1 - atem / hoehe);
+    ctx.translate(0, -fussY);
   }
 
   private paintTower(

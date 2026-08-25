@@ -1214,6 +1214,17 @@ const PROBEN = [
     tor: 'muendungstor',
   },
   {
+    // Der Atem wieder als Verschiebung statt als Streckung aus dem Fuss:
+    // dann wandert die Unterkante mit, loest sich vom Kontaktschatten, und
+    // der Turm schwebt. Trifft beide Zeichenwege, weil beide denselben
+    // Helfer benutzen.
+    name: 'Atem verschiebt den Turm, statt ihn zu strecken',
+    datei: 'src/gfx/renderer.ts',
+    regel: /^    ctx\.scale\(1, 1 - atem \/ hoehe\);$/m,
+    ersatz: '    ctx.translate(0, atem);',
+    tor: 'bildtor',
+  },
+  {
     // Die Rueckfallkette abgeschaltet: dann finden Stufe 5 und 6 des
     // Bogenturms keine Waffe mehr, und der Rauchtest muss das melden.
     // Trifft zugleich den Renderer - beide lesen dieselbe Kette.

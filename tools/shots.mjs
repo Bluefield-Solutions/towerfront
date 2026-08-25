@@ -819,6 +819,109 @@ pruefungen.push(async () => {
   }
 });
 
+// --- Steht der FUSS still, waehrend der Turm atmet? (v161)
+//
+// Die Pruefung darueber sagt nur, DASS sich die Tuerme bewegen. Wie, sagt
+// sie nicht - und genau daran hing ein Fehler, den ein Nutzer gesehen hat
+// und kein Tor: der Atem war eine Verschiebung des ganzen Bildes. Damit
+// wandert die Unterkante mit, loest sich vom Kontaktschatten, der liegen
+// bleibt, und der Turm schwebt. Am schlanken Armbrustturm fiel es nicht auf
+// (senkrechte Kanten zeigen senkrechte Bewegung kaum), am breiten Bunker mit
+// seinen lauter waagerechten Kanten sofort.
+//
+// **Gemessen werden die beiden KANTEN, nicht bewegte Flaeche.** Zwei
+// Entwuerfe davor haben Bildpunkte gezaehlt und beide etwas anderes
+// gemessen: der erste den Bodennebel (89 % Fussanteil, mit einem Profil,
+// das nach unten zunimmt - das Gegenteil einer Streckung aus dem Fuss), der
+// zweite die Laenge des Umrisses, die dort am groessten ist, wo die Kuppel
+// am breitesten ist, nicht dort, wo sich etwas bewegt. Die Frage ist
+// einfach: wandert die Oberkante, und bleibt die Unterkante liegen?
+//
+// **Der Turm wird gefunden, nicht ausgerechnet.** Zu jedem Zeitpunkt ein
+// Bild mit und eines ohne Turm; was sich unterscheidet, IST er. Der Nebel
+// steht in beiden gleich und faellt heraus, statt hinterher abgezogen zu
+// werden. So haengt die Messstelle an keiner zweiten Rechnung, die driften
+// kann (Regel 15).
+//
+// **Ueber eine ganze Periode, in acht Schritten.** Die Phase des Atems
+// haengt an der Standposition; sie hier nachzurechnen waere die zweite
+// Rechnung, die ich gerade vermieden habe. Acht Proben treffen die
+// Umkehrpunkte auf 22 Grad genau, also auf 92 % des vollen Ausschlags.
+pruefungen.push(async () => {
+  const rig = async (mitTurm) => {
+    const canvas = createCanvas(844 * 2, 390 * 2);
+    Object.defineProperty(canvas, 'clientWidth', { get: () => 844 });
+    Object.defineProperty(canvas, 'clientHeight', { get: () => 390 });
+    const s = new GameState();
+    const r = new Renderer(canvas);
+    r.menu = null;
+    s.reset(9, 'normal', 'spiralhain');
+    // Niedrige Qualitaet und keine Welle: das Gesuchte muss das Lauteste auf
+    // dem Messplatz sein (siehe der Kasten bei der Ruhepruefung).
+    s.quality = 'niedrig';
+    s.gold = 99999;
+    if (mitTurm) {
+      const platz = candidateSpots(s)[0];
+      if (!s.build(platz.x, platz.y, 'arrow')) throw new Error('Fusspruefung: kein Turm setzbar.');
+    }
+    r.resize();
+    r.draw(s);
+    for (const k of Object.keys(OBJECT_ART)) getObjectArt(k);
+    getBackground(s.map.id);
+    for (const id of TOWER_ORDER) getTowerArt(id, null, 1, s.map.id);
+    await settle();
+    r.kartenaufbauAbschliessen(s);
+    const fehlt = r.fehlendeBilder(s);
+    if (fehlt.length) throw new Error(`Fusspruefung ohne Bilder: ${fehlt.slice(0, 3).join(', ')}`);
+    const g = canvas.getContext('2d');
+    return {
+      s,
+      nimm: () => { r.draw(s); return g.getImageData(0, 0, canvas.width, canvas.height).data; },
+      W: canvas.width, H: canvas.height,
+    };
+  };
+
+  const mit = await rig(true);
+  const ohne = await rig(false);
+  const { W, H } = mit;
+  // Eine Atemperiode bei 1,9 rad/s sind 3,3 s, also 199 Bilder. Acht Proben.
+  const SCHRITT = 25;
+  const obenAll = [], untenAll = [];
+  for (let probe = 0; probe < 8; probe++) {
+    const a = mit.nimm(), b = ohne.nimm();
+    let o = -1, u = -1;
+    for (let y = 0; y < H; y++) {
+      let n = 0;
+      for (let x = 0; x < W; x++) {
+        const i = (y * W + x) * 4;
+        if (Math.abs(a[i] - b[i]) > 6) n++;
+      }
+      // Mehr als sechs Punkte in einer Zeile: eine einzelne Kante aus dem
+      // Kantenglaetten soll die Messung nicht verschieben.
+      if (n > 6) { if (o < 0) o = y; u = y; }
+    }
+    if (o < 0) throw new Error('Fusspruefung: der Turm ist im Bild nicht zu finden.');
+    obenAll.push(o); untenAll.push(u);
+    for (let i = 0; i < SCHRITT; i++) { mit.s.update(1 / 60); ohne.s.update(1 / 60); }
+  }
+  const spanne = (v) => Math.max(...v) - Math.min(...v);
+  const oS = spanne(obenAll), uS = spanne(untenAll);
+  console.log(`  Atem: Oberkante wandert ${oS} Bildzeilen, Unterkante ${uS} `
+    + '(acht Proben ueber eine Atemperiode, 844 x 390 bei 2x)');
+  if (oS < 2) {
+    throw new Error(`die Oberkante wandert nur ${oS} Bildzeilen - `
+      + 'entweder atmet der Turm nicht, oder diese Pruefung sieht es nicht.');
+  }
+  // Anteilig, nicht absolut (Regel 2): wird der Atem staerker, waechst die
+  // Oberkante mit, und eine feste Zahl waere still bedeutungslos geworden.
+  if (uS > oS / 3) {
+    throw new Error(
+      `die Unterkante wandert ${uS} Bildzeilen, die Oberkante ${oS} - der Turm wird `
+      + 'verschoben statt aus dem Fuss gestreckt und loest sich vom Kontaktschatten.',
+    );
+  }
+});
+
 // --- Verdeckt ein Turm einen Gegner, der HINTER ihm steht? (Stapel 3.1)
 //
 // Bis v139 nicht, und das war der groesste einzelne Posten fuer den

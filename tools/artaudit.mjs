@@ -664,16 +664,31 @@ if (!befunde.length) console.log('  Keine. Alle Prinzipien erfüllt.\n');
  *  Wer ein Bild neu bestellt, traegt hier den besseren Wert ein - dann
  *  schnappt die Klinke eine Stufe weiter.
  *
+ *  **v159: von 67 auf 32.** Die neue Gegnerlieferung ist am Rohbild mit 2
+ *  bis 19 Grad beleuchtet; gepackt bleiben 31 (Infanterie) statt der 66,1
+ *  des Gleiters von vorher. Genau dafuer ist eine Ratsche da - sie wird
+ *  gezogen, sobald der Stand es hergibt, sonst bewacht sie irgendwann
+ *  nichts mehr.
+ *
  *  Die Tuerme zeigen, dass es geht: 2° bis 19°. Sie sind aus einer Hand.  */
-const LICHT_RATSCHE = 67;
+const LICHT_RATSCHE = 32;
 /** Wie stark eine Figur ueberhaupt modelliert sein muss.
  *
  *  Ohne diese Zahl waere die Winkelmessung ein Gluecksspiel: eine flach
  *  ausgeleuchtete Figur hat gar keine Lichtrichtung, und der gemessene
  *  Winkel ist dann Rauschen. Die Infanterie liegt bei 0,0025 - eine
  *  Groessenordnung unter allen anderen (0,007 bis 0,059). Auch das ist eine
- *  Ratsche auf dem heutigen Schlusslicht. */
-const MODELLIERUNG_RATSCHE = 0.0024;
+ *  Ratsche auf dem heutigen Schlusslicht.
+ *
+ *  **v159: von 0,0024 auf 0,0038.** Die flachste Figur der neuen Lieferung
+ *  ist der Koloss mit 0,0040 - eine grosse, glatt gepanzerte Flaeche hat
+ *  nun einmal wenig Gefaelle. Die alte Infanterie lag bei 0,0025, also
+ *  darunter.
+ *
+ *  Erst stand hier 0,0100, weil ich die falsche Zeile gelesen hatte (den
+ *  Spalter mit 0,0102 statt des Koloss). Das Tor hat es sofort gemeldet -
+ *  eine zu eng gezogene Ratsche faellt auf, eine zu weite nicht. */
+const MODELLIERUNG_RATSCHE = 0.0038;
 
 if (process.argv.includes('--tor')) {
   // Regel 5, bevor irgendetwas geprueft wird: eine leere Liste besteht jede

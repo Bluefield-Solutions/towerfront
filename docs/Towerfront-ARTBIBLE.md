@@ -1,6 +1,6 @@
 # Towerfront — Art Bible
 
-Stand: v158 · 24.08.2026
+Stand: v159 · 24.08.2026
 
 **Dieses Dokument ist verbindlich.** Wer ein Bild bestellt, malt oder einbaut,
 richtet sich danach. Es ist die einzige Stelle, an der die Festlegungen
@@ -127,13 +127,18 @@ Ehrlich benannt, statt als erfüllt abgehakt:
 Was neue Bilder braucht, nach Dringlichkeit. Das ist zugleich, was
 `art/roh/` fehlt (TF-041):
 
+> **v159: die acht Gegner sind geliefert und eingebaut.** Was unten stand,
+> ist damit für die Gegner erledigt — die Zeilen bleiben als Beleg stehen und
+> tragen jetzt ihren Nachher-Wert. Offen sind die **Türme**, die **Objekte**
+> und die **Untergründe**.
+
 | # | Was | Warum, gemessen |
 |---|---|---|
-| 1 | **Gleiter** neu beleuchtet | 66° neben der Sonne — die schlimmste Figur im Spiel |
-| 2 | **Infanterie** neu | 42° daneben, Modellierung 0,0025 — eine Größenordnung flacher als alles andere. Füllt ihre Kachel nur zu 0,22 statt 0,35 und bleibt deshalb bei 17 px |
-| 3 | **Koloss**, Kante | Saumkontrast 1,02 auf der Frostspalte — die Kante hat die Helligkeit des Bodens |
-| 4 | **Späher** und **Leerentitan** neu beleuchtet | 35° und 32° daneben |
-| 5 | **Alle zwölf Figuren** mit weniger Feindetail | 6,0-fach statt 2,1-fach gegen den Untergrund (B1) |
+| 1 | ~~Gleiter neu beleuchtet~~ **erledigt v159** | war 66° neben der Sonne, jetzt liegt die schlimmste Figur (Infanterie) bei **31°** |
+| 2 | ~~Infanterie neu~~ **erledigt v159** | war 42° und 0,0025; jetzt 31° und die flachste Figur ist der Koloss mit 0,0040. Als Fußtrupp aus drei Soldaten füllt sie ihre Kachel |
+| 3 | ~~Koloss, Kante~~ **erledigt v156/v159** | Randlicht plus neues Bild: schwache Kanten 9 → **8 von 20** |
+| 4 | ~~Späher und Leerentitan~~ **erledigt v159** | beide unter 26° |
+| 5 | **Alle Figuren mit weniger Feindetail** — für die Gegner gebessert, nicht gelöst | 6,0-fach → **5,3-fach** gegen den Untergrund, erlaubt sind 3,0. Bleibt Befund B1, jetzt vor allem an den Türmen |
 | 6 | **Ein Kamerawinkel** für alle | TF-017, und dafür alle Figuren neu |
 
 ---

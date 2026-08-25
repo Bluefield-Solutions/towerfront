@@ -72,7 +72,7 @@ const RIM_HINWEIS = 1.5;        // darunter: sichtbar schwach, aber kein Abbruch
  *  Randlicht aus TF-012. Bis dahin steht die Zahl in jedem Lauf da, statt in
  *  einer gruenen Meldung zu verschwinden - und wer neue Bilder einbaut, die
  *  schlechter sind, wird rot. */
-const MAX_SCHWACHE_KANTEN = 9;
+const MAX_SCHWACHE_KANTEN = 8;
 const MIN_BODY_CONTRAST = 1.15; // Körper gegen den Boden - nur noch Rückhalt
 const MIN_TOWER_PX = 26;       // Bildschirmpunkte Breite der Turmsilhouette
 const MIN_ENEMY_PX = 13;       // dasselbe für Gegner

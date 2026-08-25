@@ -1462,27 +1462,6 @@ const PROBEN = [
     tor: 'zielplattentor',
   },
   {
-    // Die Stufung aus v155: der volle Probenlauf darf hoechstens drei
-    // Fassungen zurueckliegen. Ohne diese Probe waere die Zahl eine
-    // Absichtserklaerung - und die Bilanz von v31 sagt genau darueber, dass
-    // eine nur aufgeschriebene Regel gebrochen wird.
-    //
-    // **Am Zeilenanfang verankert, und das ist kein Schoenheitsfehler.**
-    // Ohne `^...$m` traf das Muster ZUERST diese Zeile hier - die Regel der
-    // Probe steht im Quelltext vor der Konstanten, und `replace` nimmt den
-    // ersten Treffer. Die Probe hat sich damit selbst umgeschrieben statt
-    // den Code, das Tor blieb gruen, und sie meldete "schlaegt nicht an".
-    //
-    // Aufgefallen ist es durch den Musterlauf, der genau das als Hinweis
-    // ausgibt ("2 Treffer - greift den ersten"). Der Hinweis hat sich damit
-    // am Tag seiner Einfuehrung bezahlt gemacht.
-    name: 'Voller Probenlauf liegt zu lange zurueck',
-    datei: 'tools/probes.mjs',
-    regel: /^const STAND_ABSTAND = 3;$/m,
-    ersatz: 'const STAND_ABSTAND = -1;',
-    tor: 'muster',
-  },
-  {
     // TF-012: das Randlicht abgeschaltet. Regel 13 in ihrer reinsten Form -
     // wer eine Wirkung misst, schaltet sie zuerst ab. Ohne diese Probe
     // koennte das Randlicht ein Fuellwort sein, das die Zahl nicht bewegt.
@@ -1605,6 +1584,59 @@ const fassung = () => (readFileSync(join(ROOT, 'src/data/config.ts'), 'utf8')
  *  schwerer ist es, den Tag zu finden, an dem es passiert ist. */
 const STAND_ABSTAND = 3;
 
+/** Ist der Abstand zum letzten vollen Lauf zu gross - und was ist zu sagen?
+ *
+ *  Als eigene Funktion, damit sie sich pruefen laesst, ohne ein Tor zu
+ *  fahren. Siehe `standSelbsttest` weiter unten: die Gegenprobe zu dieser
+ *  Regel kann NICHT ueber das Tor laufen, weil sie sich selbst im Weg
+ *  steht. */
+const standAbstandFehler = (jetzt, damals) => (jetzt - damals > STAND_ABSTAND
+  ? `der letzte volle Probenlauf war v${damals}, jetzt ist v${jetzt} `
+    + `- ${jetzt - damals} Fassungen dazwischen, erlaubt sind ${STAND_ABSTAND}.`
+  : null);
+
+/** Die Regel selbst pruefen, ohne ein Tor und ohne Ringschluss.
+ *
+ *  **Warum das hier steht und nicht als Gegenprobe.** Bis v162 gab es eine:
+ *  sie setzte `STAND_ABSTAND` auf -1 und erwartete, dass `npm run muster`
+ *  rot wird. Am Tag, an dem der volle Lauf faellig wurde, hat sich der
+ *  Ringschluss gezeigt: `muster` war rot, WEIL der Lauf faellig war - und
+ *  der volle Lauf verweigerte den Dienst, weil `muster` rot war. Beide
+ *  warteten aufeinander, und der Lauf, der die Lage aufgeloest haette, kam
+ *  nicht zustande.
+ *
+ *  Aufgeloest in zwei Schritten. Erstens: waehrend `npm run proben`
+ *  laeuft, ist die Forderung "fahr den vollen Lauf" gegenstandslos - er
+ *  laeuft ja gerade. Die Tore, die der Probenlauf startet, bekommen
+ *  deshalb `PROBENLAUF=1` und ueberspringen genau diese eine Pruefung.
+ *  Zweitens: damit kann keine Gegenprobe die Regel mehr ueber das Tor
+ *  bezeugen - also bezeugt sie dieser Selbsttest, direkt an der Regel und
+ *  bei JEDEM Lauf statt alle drei Fassungen. Dieselbe Antwort wie bei
+ *  `pack-art` in v157, wo der Fehlerfall ohne `art/roh/` unerreichbar war.
+ *
+ *  Geprueft wird beides: dass sie bei einem Schritt zu viel anschlaegt und
+ *  dass sie beim erlaubten Abstand schweigt. Eine Pruefung, die nur die
+ *  eine Richtung kennt, besteht auch eine Regel, die immer anschlaegt. */
+const standSelbsttest = () => {
+  const zuviel = standAbstandFehler(100 + STAND_ABSTAND + 1, 100);
+  const gerade = standAbstandFehler(100 + STAND_ABSTAND, 100);
+  if (!zuviel || gerade) {
+    console.error('PROBEN: der Selbsttest der Standregel ist gescheitert - '
+      + `${STAND_ABSTAND + 1} Fassungen Abstand ${zuviel ? 'schlagen an' : 'schlagen NICHT an'}, `
+      + `${STAND_ABSTAND} ${gerade ? 'schlagen AN' : 'schweigen'}.`);
+    process.exit(1);
+  }
+  console.log(`  Selbsttest: die Standregel schlaegt bei ${STAND_ABSTAND + 1} Fassungen `
+    + `Abstand an und schweigt bei ${STAND_ABSTAND}.`);
+};
+
+/** Umgebung fuer jedes Tor, das dieser Lauf startet.
+ *
+ *  `PROBENLAUF` schaltet in `--muster` die Abstandspruefung ab - siehe
+ *  `standSelbsttest`. Nur diese eine; die Mustererkennung selbst laeuft
+ *  vollstaendig weiter. */
+const TOR_UMGEBUNG = { ...process.env, PROBENLAUF: '1' };
+
 if (process.argv.includes('--muster')) {
   console.log(`Musterlauf: ${liste.length} Regel(n), kein Tor wird gefahren.\n`);
   const stumm = [], mehrdeutig = [];
@@ -1659,9 +1691,12 @@ if (process.argv.includes('--muster')) {
   const damals = existsSync(STAND_DATEI)
     ? Number(readFileSync(STAND_DATEI, 'utf8').trim().replace(/^v/, '')) : 0;
   const abstand = jetzt - damals;
-  if (abstand > STAND_ABSTAND) {
-    console.error(`\nMUSTERLAUF: der letzte volle Probenlauf war v${damals}, jetzt ist v${jetzt} `
-      + `- ${abstand} Fassungen dazwischen, erlaubt sind ${STAND_ABSTAND}.`);
+  // Waehrend `npm run proben` laeuft, ist diese Forderung gegenstandslos:
+  // der Lauf, den sie verlangt, laeuft gerade. Ohne die Ausnahme stehen
+  // sich beide im Weg - siehe den Kasten an `standSelbsttest`.
+  const meldung = process.env.PROBENLAUF ? null : standAbstandFehler(jetzt, damals);
+  if (meldung) {
+    console.error(`\nMUSTERLAUF: ${meldung}`);
     console.error('  `npm run proben` faehrt ihn (rund 33 Minuten). Der Musterlauf prueft nur,');
     console.error('  ob jede Probe noch einen Gegenstand hat - nicht, ob ihr Tor ihn meldet.');
     process.exit(1);
@@ -1687,10 +1722,12 @@ if (process.argv.includes('--muster')) {
 const BAUT = new Set(['browsertor', 'browser', 'build', 'autarkie', 'bildtor', 'smoke']);
 const zuruecknehmen = (tor) => {
   execSync('git checkout -- .', { cwd: ROOT, stdio: 'pipe' });
-  if (BAUT.has(tor)) execSync('npm run build', { cwd: ROOT, stdio: 'pipe' });
+  if (BAUT.has(tor)) execSync('npm run build', { cwd: ROOT, stdio: 'pipe', env: TOR_UMGEBUNG });
 };
 
 console.log(`Gegenproben: ${liste.length} von ${PROBEN.length}\n`);
+standSelbsttest();
+
 
 // --- Zuerst: sind die betroffenen Tore ueberhaupt GRUEN?
 //
@@ -1711,8 +1748,8 @@ console.log(`Gegenproben: ${liste.length} von ${PROBEN.length}\n`);
   const tore = [...new Set(liste.map((p) => p.tor))].sort();
   const rot = [];
   for (const t of tore) {
-    if (BAUT.has(t)) execSync('npm run build', { cwd: ROOT, stdio: 'pipe' });
-    try { execSync(`npm run ${t}`, { cwd: ROOT, stdio: 'pipe' }); }
+    if (BAUT.has(t)) execSync('npm run build', { cwd: ROOT, stdio: 'pipe', env: TOR_UMGEBUNG });
+    try { execSync(`npm run ${t}`, { cwd: ROOT, stdio: 'pipe', env: TOR_UMGEBUNG }); }
     catch { rot.push(t); }
   }
   if (rot.length) {
@@ -1749,7 +1786,9 @@ for (const p of liste) {
   let schlaegtAn = false;
   let ausgabe = '';
   try {
-    ausgabe = execSync(`npm run ${p.tor}`, { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' });
+    ausgabe = execSync(`npm run ${p.tor}`, {
+      cwd: ROOT, encoding: 'utf8', stdio: 'pipe', env: TOR_UMGEBUNG,
+    });
   } catch (e) {
     schlaegtAn = true;
     ausgabe = `${e.stdout ?? ''}${e.stderr ?? ''}`;

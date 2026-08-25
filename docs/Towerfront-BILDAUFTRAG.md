@@ -37,7 +37,19 @@ ist eine eigene Runde im Code und in `src/data/*.ts`.
 
 ## 1. Der globale Stil-Prompt
 
-**Jedem einzelnen Bild-Prompt wörtlich voranstellen:**
+**Jedem einzelnen Bild-Prompt wörtlich voranstellen** — aber nicht von
+Hand: `npm run bildprompt -- <suchtext>` gibt einen Prompt **vollständig**
+aus, mit eingesetztem Stil-Block, zum Kopieren in einem Stück. Ohne
+Suchtext listet es alle.
+
+> **Warum das Dokument den Block trotzdem nur einmal hält.** Siebzehn
+> Kopien wären siebzehn Fassungen, die auseinanderdriften (Regel 15). Für
+> den Empfänger ist ein Bruchstück aber unbrauchbar — er muss den Rest
+> zusammensuchen, und wer zusammensucht, vergisst. Also beides: **eine**
+> Fassung hier, **vollständig** beim Ausgeben. Das Werkzeug bricht ab, wenn
+> der Platzhalter im Ergebnis stehen bleibt.
+
+
 
 ```
 STYLE: Modern military science-fiction, near-future. Hand-painted game asset

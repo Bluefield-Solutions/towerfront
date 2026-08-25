@@ -59,7 +59,8 @@
     "geschosse": "tsx tools/geschosse.ts",
     "geschossetor": "tsx tools/geschosse.ts --tor",
     "turmprobe": "node tools/turmprobe.mjs",
-    "turmzeichnen": "node tools/turmzeichnen.mjs"
+    "turmzeichnen": "node tools/turmzeichnen.mjs",
+    "bildprompt": "tsx tools/bildprompt.ts"
   },
   "keywords": [],
   "author": "",

@@ -112,6 +112,11 @@ npm run kritik      Wertung nach Testerkategorien, Ziel über 90
                     längste Bildlücke. Läuft weiter — erst in eine Karte
                     tippen, dann ablesen. Die Zahlen, die hier nicht
                     entstehen können.
+npm run bildprompt  gibt EINEN Bild-Prompt vollstaendig aus - Stil-Block
+                    schon eingesetzt, zum Kopieren in einem Stueck. Ohne
+                    Suchtext listet es alle. Das Dokument haelt den
+                    Stil-Block einmal (Regel 15), der Empfaenger bekommt
+                    ihn trotzdem jedes Mal mit.
 npm run probebild   Kandidatenbilder pruefen, BEVOR sie gepackt werden:
                     Format, Alpha, Rand, reines Schwarz, Feindetail,
                     Lichtwinkel - und die Silhouetten-Aehnlichkeit

@@ -1,6 +1,6 @@
 # Towerfront — Bildauftrag
 
-Stand: v162 · 25.08.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v163 · 25.08.2026 · **Auftragsdokument für den Bild-Agenten**
 
 Dieses Dokument ist die vollständige Bestellung. Es enthält alles, was zum
 Erzeugen der Bilder nötig ist: Stil, Maße, Blickrichtung, Dateinamen,
@@ -534,6 +534,42 @@ bottom; nothing below it.
 FRAMING: the tower fills about 86 percent of a 256x256 transparent canvas,
 centred, nothing cropped.
 ```
+
+#### Abnahme Paket 2 (v163) — angenommen
+
+Geliefert: `turm_moerser_1..6` und `turm_prisma_1..6`, zwölf Ganzbilder.
+Eingebaut und im Spiel. **Deutlich sauberer als Paket 1.**
+
+| Was | Mörser | Prisma |
+|---|---|---|
+| Reines Schwarz (Kandidat) | 2,0–3,2 % | 1,8–3,2 % |
+| Lichtwinkel neben der Sonne | 8°–22° | 19°–27° |
+| Rand berührt | nirgends | nirgends |
+| Silhouetten-Ähnlichkeit Stufe zu Stufe | bis 0,91 | bis 0,90 |
+| Stufung im Bild angelegt | **ja** — Sättigung 0,095 → 0,187 | **ja** — 0,190 → 0,273 |
+
+**Kein einziges Bild berührt den Kachelrand** — die beiden `randOk`-Ausnahmen
+für Stufe 6, die für die alte Kunst nötig waren, sind entfallen. Eine
+Ausnahme, die niemand mehr braucht, versteckt den nächsten echten Fall.
+
+**Die Stufung steckt jetzt im Bild statt in der Backerei.** Die alte Rampe
+`farbe 1,00 → 0,72` korrigierte die alte Fantasy-Kunst, deren Sättigung zu
+stark stieg. Auf der neuen hätte sie die Steigerung genau flachgezogen: das
+Prisma wäre auf Stufe 6 kaum farbiger gewesen als auf Stufe 1. Jetzt eine
+Zahl für alle sechs.
+
+**Zwei Mündungen mussten neu gemessen werden**, und das Tor hat es beim
+ersten Lauf gemeldet: die alten Punkte lagen auf elf von zwölf Stufen in
+der Luft. Das Prisma zielte vorher nach **rechts**, das neue Rohr zeigt
+nach links.
+
+**Was auffällt und für Paket 3 gilt:** die Stufen sind einander noch immer
+sehr ähnlich (0,90 gegen den Zielwert 0,85), und die neuen Türme sind
+**gedrungen und breit**, wo die alten schlank und hoch waren. Das ist kein
+Fehler — es ist der Stilwechsel —, aber der Frostturm ist jetzt der letzte,
+der noch aus der alten Welt stammt, und er fällt daneben sofort auf.
+
+---
 
 ### 6.3 `turm_frost_1.png` … `turm_frost_6.png` — Kryo-Emitter
 

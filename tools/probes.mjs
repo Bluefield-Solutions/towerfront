@@ -1186,8 +1186,8 @@ const PROBEN = [
     // Ein Punkt, der neben der Figur liegt - das Rohr endet im Nichts.
     name: 'Muendung schwebt neben dem Turm',
     datei: 'src/data/turmgestalt.ts',
-    regel: /  mortar: \{ x: 0\.404, y: 0\.032, dreht: false \},/,
-    ersatz: '  mortar: { x: 0.93, y: 0.032, dreht: false },',
+    regel: /^  mortar: \{ x: 0\.280, y: 0\.012, dreht: false \},$/m,
+    ersatz: '  mortar: { x: 0.93, y: 0.012, dreht: false },',
     tor: 'muendungstor',
   },
   {
@@ -1227,7 +1227,7 @@ const PROBEN = [
     // Und einer, der im Sockel sitzt statt oben am Rohr.
     name: 'Muendung sitzt im Sockel',
     datei: 'src/data/turmgestalt.ts',
-    regel: /  prism: \{ x: 0\.589, y: 0\.035, dreht: false \},/,
+    regel: /^  prism: \{ x: 0\.316, y: 0\.012, dreht: false \},$/m,
     ersatz: '  prism: { x: 0.5, y: 0.62, dreht: false },',
     tor: 'muendungstor',
   },

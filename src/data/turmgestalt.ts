@@ -106,10 +106,23 @@ export const MUENDUNG: Partial<Record<TowerId, MuendungsPunkt>> = {
   // Genommen wird der kleinste gemeinsame Nenner, nicht ein Mittelwert -
   // ein Mittelwert saesse auf keinem der vier Bilder ganz genau.
   arrow: { x: 0.352, y: 0.031, dreht: true },
-  // Rohroeffnung auf `mortar_1_1`: Schwerpunkt der obersten sechs Prozent.
-  mortar: { x: 0.404, y: 0.032, dreht: false },
-  // Kristallspitze auf `prism_1_1`.
-  prism: { x: 0.589, y: 0.035, dreht: false },
+  // Rohroeffnung der Haubitze. Gemessen ueber ALLE sechs Stufen, nicht an
+  // einer: der Schwerpunkt der obersten sechs Prozent wandert von 0,247 bis
+  // 0,328, weil das Rohr mit dem Ausbau die Neigung leicht aendert. Genommen
+  // ist der Punkt, der auf jeder Stufe traegt - bei 0,280 / 0,012 liegen
+  // mindestens 90 % Material dahinter.
+  //
+  // Vorher 0,404 / 0,032, gemessen am alten Fantasy-Moerser. Auf der neuen
+  // Haubitze lag der Punkt auf fuenf von sechs Stufen in der LUFT (0 bis
+  // 43 % Deckung) - das Tor hat es beim ersten Lauf gemeldet.
+  mortar: { x: 0.280, y: 0.012, dreht: false },
+  // Die Muendung des Laserrohrs, dieselbe Messung: Schwerpunkte 0,322 bis
+  // 0,368, gewaehlt 0,316 / 0,012 mit mindestens 90 % Deckung.
+  //
+  // Vorher 0,589 / 0,035 - die Kristallspitze des alten Turms zeigte nach
+  // RECHTS, das neue Rohr zeigt nach links. Der Punkt lag danach auf allen
+  // sechs Stufen im Leeren.
+  prism: { x: 0.316, y: 0.012, dreht: false },
   // Der Frostturm hat kein Rohr - er pulst im Umkreis. Kein Eintrag ist
   // hier die richtige Antwort, nicht die Turmmitte als Ersatz.
 };

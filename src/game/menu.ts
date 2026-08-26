@@ -33,8 +33,40 @@ export interface Hotspot {
   round?: boolean;
 }
 
+/** Wie lange ein Ansichtswechsel dauert, in Sekunden.
+ *
+ *  Kurz genug, dass niemand darauf wartet, lang genug, dass das Auge den
+ *  Wechsel als Bewegung liest statt als Sprung. Bis v171 schaltete das
+ *  Menue hart um - Landkarte, Einweisung, Fortschritt, Ergebnis wechselten
+ *  von einem Bild aufs naechste (D5). */
+export const UEBERGANG = 0.18;
+
 export class Menu {
-  view: MenuView = 'map';
+  /** Die gezeigte Ansicht.
+   *
+   *  Sie liegt hinter einem Zugriff, damit der Uebergang von SELBST
+   *  anspringt. Ein `wechselStarten()`, das man neben jeder Zuweisung rufen
+   *  muss, waere die naechste Stelle zum Vergessen - und dieses Verzeichnis
+   *  hat fuenf Runden an genau dieser Sorte Fehler verloren (Regel 6). */
+  private _view: MenuView = 'map';
+  get view(): MenuView { return this._view; }
+  set view(v: MenuView) {
+    if (v === this._view) return;
+    this._view = v;
+    this.wechselZeit = this.time;
+  }
+  /** `time` beim letzten Ansichtswechsel.
+   *
+   *  Der Uebergang haengt an der Menueuhr, nicht an einer eigenen: jeder
+   *  Aufrufer treibt `time` ohnehin schon voran, eine zweite Uhr haette
+   *  einer von ihnen vergessen. Der Anfangswert liegt so weit zurueck, dass
+   *  das erste Bild fertig eingeblendet ist - ein Menue, das beim ersten
+   *  Oeffnen aus dem Nichts auftaucht, sieht nach Ladefehler aus. */
+  wechselZeit = -99;
+  /** 0 beim Wechsel, 1 wenn er durch ist. */
+  uebergang(): number {
+    return Math.min(1, Math.max(0, (this.time - this.wechselZeit) / UEBERGANG));
+  }
   /** Welcher Ort ist geöffnet - Index in MAPS. */
   picked = 0;
   /** Bereich unter dem Finger, für die Rückmeldung beim Drücken. */

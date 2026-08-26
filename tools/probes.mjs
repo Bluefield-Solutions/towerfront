@@ -1200,6 +1200,38 @@ const PROBEN = [
     tor: 'lesbarkeit',
   },
   {
+    // D5, v172: der Ansichtswechsel muss von SELBST anspringen. Wird `view`
+    // wieder ein einfaches Feld, laeuft das Menue ohne Uebergang - und die
+    // Pruefung auf den Versatz saehe nichts davon, weil sie die Uhr von Hand
+    // stellt.
+    name: 'Ansichtswechsel springt nicht mehr an',
+    datei: 'src/game/menu.ts',
+    regel: /^  set view\(v: MenuView\) \{\n    if \(v === this\._view\) return;\n    this\._view = v;\n    this\.wechselZeit = this\.time;\n  \}$/m,
+    ersatz: '  set view(v: MenuView) { this._view = v; }',
+    tor: 'smoke',
+  },
+  {
+    // D5, v172: die Trefferflaechen wandern beim Ansichtswechsel MIT. Bleiben
+    // sie an der Endlage, gibt es fuer zwei Zehntelsekunden Knoepfe, die man
+    // sieht, aber nicht trifft - der Fehler, gegen den die Menuezeichnung von
+    // Anfang an gebaut ist.
+    name: 'Trefferflaechen bleiben beim Ansichtswechsel stehen',
+    datei: 'src/gfx/menurender.ts',
+    regel: /^    m\.hotspots\.push\(dy \? \{ \.\.\.h, y: h\.y \+ dy \} : h\);$/m,
+    ersatz: '    m.hotspots.push(h);',
+    tor: 'smoke',
+  },
+  {
+    // Und der Waechter dagegen, dass eine Aufnahme mitten im Uebergang
+    // faellt: bei 93 Prozent Deckkraft sieht ein Bild richtig aus und ist es
+    // trotzdem nicht.
+    name: 'Aufnahme faellt mitten im Ansichtswechsel',
+    datei: 'tools/shots.mjs',
+    regel: /  \/\/ aus sieht und es trotzdem nicht ist\.\n  return 20;/,
+    ersatz: '  // aus sieht und es trotzdem nicht ist.\n  return 4;',
+    tor: 'bildtor',
+  },
+  {
     // D12, v171: die Bilanz muss den ganzen Schaden zeigen. Eingebaut wird
     // der echte Fehler, den es bis v170 gab - die Balkenliste laeuft ueber
     // TOWER_ORDER, und die Zielunit steht da nicht drin.

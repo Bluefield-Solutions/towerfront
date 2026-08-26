@@ -13,6 +13,7 @@
  *  Aufruf: npx tsx tools/smoke.ts */
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
+import type { MenuView } from '../src/game/menu';
 
 const html = readFileSync('index.html', 'utf8');
 const dom = new JSDOM(html, { pretendToBeVisual: true, url: 'https://local.test/' });
@@ -1066,6 +1067,70 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   const g = canvas.getContext('2d')!;
 
   const ids = () => { drawMenu(g, m); return m.hotspots.map((h) => h.id); };
+
+  // D5, v172: der Ansichtswechsel blendet ein UND zieht herauf - und die
+  // Trefferflaechen muessen dabei mitwandern. Stuenden sie an der Endlage,
+  // gaebe es fuer knapp zwei Zehntelsekunden Knoepfe, die man sieht, aber
+  // nicht trifft: der eine Fehler, gegen den die Menuezeichnung von Anfang
+  // an gebaut ist.
+  //
+  // Gemessen wird die Lage DESSELBEN Bereichs einmal mitten im Uebergang
+  // und einmal danach. Die Differenz muss der Zeichenversatz sein - nicht
+  // null, und auch nicht irgendetwas.
+  {
+    const { UEBERGANG } = await import('../src/game/menu');
+    const { WORLD_H } = await import('../src/data/config');
+    m.time = 0; m.wechselZeit = 0;             // ganz am Anfang des Wechsels
+    drawMenu(g, m);
+    const fruehe = new Map(m.hotspots.map((h) => [h.id, h.y]));
+    const p0 = m.uebergang();
+    m.time = UEBERGANG * 2;                    // laengst durch
+    drawMenu(g, m);
+    const spaete = new Map(m.hotspots.map((h) => [h.id, h.y]));
+    if (m.uebergang() !== 1 || p0 !== 0) {
+      problems.push(`Uebergang: die Probe steht bei ${p0} und ${m.uebergang()}, gebraucht werden 0 und 1.`);
+    }
+    const soll = WORLD_H * 0.03;
+    // Erst zaehlen, dann urteilen: wird die Zaehlung vom ersten Fund
+    // abgebrochen, meldet die Probe zusaetzlich "zu wenig gemessen" und
+    // verdeckt damit ihren eigenen Befund.
+    const gemeinsam = [...spaete.keys()].filter((id) => fruehe.has(id));
+    const geprueft = gemeinsam.length;
+    for (const id of gemeinsam) {
+      const y0 = fruehe.get(id)!;
+      const y1 = spaete.get(id)!;
+      if (Math.abs((y0 - y1) - soll) > 0.6) {
+        problems.push(
+          `Uebergang: Trefferflaeche "${id}" liegt mitten im Wechsel bei ${y0.toFixed(1)}, `
+          + `danach bei ${y1.toFixed(1)} - der Versatz ist ${(y0 - y1).toFixed(1)} statt ${soll.toFixed(1)}. `
+          + 'Gezeichnet wird verschoben, getroffen wird woanders.',
+        );
+        break;
+      }
+    }
+    if (geprueft < 3) problems.push(`Uebergang: nur ${geprueft} Trefferflaechen verglichen - die Probe misst zu wenig.`);
+
+    // Und der Ausloeser selbst: eine Zuweisung an `view` MUSS den Wechsel
+    // starten. Die Pruefung oben stellt die Uhr von Hand und saehe es
+    // nicht, wenn der Zugriff wieder ein einfaches Feld waere - dann liefe
+    // das Menue ohne Uebergang, und alles hier bliebe gruen.
+    //
+    // Zugewiesen wird ueber eine Hilfe und nicht direkt: eine Zuweisung mit
+    // einem festen Wort verengt den Typ von `m.view` fuer alles Folgende,
+    // und die Pruefungen weiter unten waeren dann "unmoegliche Vergleiche".
+    const ansicht = (v: MenuView): void => { m.view = v; };
+    m.time = 50; m.wechselZeit = -99;
+    ansicht('progress');
+    if (m.wechselZeit !== 50) {
+      problems.push('Uebergang: eine Zuweisung an `view` startet keinen Wechsel - er springt wieder hart um.');
+    }
+    ansicht('progress');
+    if (m.wechselZeit !== 50) {
+      problems.push('Uebergang: dieselbe Ansicht noch einmal zugewiesen startet einen Wechsel - das Menue blendet sich selbst neu ein.');
+    }
+    ansicht('map');
+    m.wechselZeit = -99;                       // fuer alles Folgende: fertig
+  }
 
   const onMap = ids();
   for (let i = 0; i < MAPS.length; i++) {

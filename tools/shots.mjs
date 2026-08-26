@@ -145,6 +145,21 @@ async function shot(name, w, h, build) {
     s.update(DT);
     if (r.menu) { r.menu.time += DT; r.menu.resultAge += DT; }
   }
+  // Ein Menue mitten im Ansichtswechsel ist kein Beleg.
+  //
+  // Seit v172 blendet das Menue seine Ansichten ein (D5). Wird eine Aufnahme
+  // waehrend des Uebergangs gemacht, zeigt sie eine halb durchsichtige,
+  // verschobene Oberflaeche - und die Bildpruefung dahinter urteilt ueber
+  // etwas, das im Spiel niemals eine Zehntelsekunde lang stillsteht. Dieselbe
+  // Lehre wie beim Kartenaufbau eine Zeile weiter unten.
+  if (r.menu && r.menu.uebergang() < 1) {
+    throw new Error(
+      `Aufnahme mitten im Ansichtswechsel (${r.menu.uebergang().toFixed(2)} von 1). `
+      + 'Der Aufbau muss genug Bilder laufen lassen, sonst zeigt das Bild einen Zustand, '
+      + 'den es im Spiel nicht gibt.',
+    );
+  }
+
   // Den Kartenaufbau zu Ende rechnen, BEVOR das Bild faellt.
   //
   // Seit v113 verteilt sich der Aufbau ueber rund 28 Bilder. Hier werden nur
@@ -282,7 +297,11 @@ takes.push(['menu-sieg', () => shot('menu-sieg', 844, 390, (s, r) => {
     lives: 47, maxLives: 60, stars: 2, before: 1,
     kills: 214, built: 9, damage: 98000, duration: 512,
   };
-  return 10;
+  // 10 Bilder waren es bis v172, und das reichte fuer den Ansichtswechsel
+  // nicht - die Aufnahme lag bei 0,93 von 1. Gefangen hat es der Waechter
+  // oben, nicht das Auge: bei 93 Prozent Deckkraft sieht ein Bild richtig
+  // aus sieht und es trotzdem nicht ist.
+  return 20;
 })]);
 
 takes.push(['menu-niederlage', () => shot('menu-niederlage', 844, 390, (s, r) => {

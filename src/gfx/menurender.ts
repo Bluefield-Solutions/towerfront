@@ -13,14 +13,35 @@ import { hexA } from './glow';
  *  den Bildschirmrand gerutscht war. */
 export function drawMenu(ctx: CanvasRenderingContext2D, m: Menu): void {
   m.hotspots = [];
-  const add = (h: Hotspot): Hotspot => { m.hotspots.push(h); return h; };
 
+  // Der Grund bleibt stehen, der Inhalt wechselt. Beides zugleich zu
+  // ueberblenden saehe nach Ladebildschirm aus - der Ort ist ja derselbe,
+  // nur die Auskunft darueber ist eine andere.
   backdrop(ctx, m.time);
 
+  // Der Uebergang: einblenden und ein Stueck heraufziehen (D5).
+  //
+  // **Die Trefferflaechen wandern mit.** Sie werden beim Zeichnen angelegt,
+  // und das Zeichnen ist waehrend des Uebergangs verschoben - stuenden sie
+  // an der Endlage, gaebe es fuer zwei Zehntelsekunden Knoepfe, die man
+  // sieht, aber nicht trifft. Genau der Fehler, gegen den diese Datei von
+  // Anfang an gebaut ist.
+  const p = m.uebergang();
+  const ease = 1 - (1 - p) ** 3;
+  const dy = (1 - ease) * WORLD_H * 0.03;
+  const add = (h: Hotspot): Hotspot => {
+    m.hotspots.push(dy ? { ...h, y: h.y + dy } : h);
+    return h;
+  };
+
+  ctx.save();
+  ctx.globalAlpha = ease;
+  if (dy) ctx.translate(0, dy);
   if (m.view === 'result') drawResult(ctx, m, add);
   else if (m.view === 'map') drawMap(ctx, m, add);
   else if (m.view === 'brief') drawBrief(ctx, m, add);
   else drawProgress(ctx, m, add);
+  ctx.restore();
 }
 
 // ------------------------------------------------------------------ Grundbild
@@ -316,7 +337,11 @@ function drawResult(
     const earned = i < r.stars;
     const pop = earned ? 1 + Math.sin(t * Math.PI) * 0.35 : 1;
     ctx.save();
-    ctx.globalAlpha = earned ? t : 0.9;
+    // MAL der Deckkraft, die schon anliegt, nicht statt ihr: waehrend des
+    // Ansichtswechsels steht hier der Uebergang drin, und eine absolute
+    // Zuweisung haette die Sterne allein voll sichtbar stehen lassen,
+    // waehrend alles andere um sie herum noch einblendet.
+    ctx.globalAlpha *= earned ? t : 0.9;
     star(ctx, WORLD_W / 2 + (i - 1) * 130, y0 + 268, 52 * pop, earned);
     ctx.restore();
     if (!earned) { star(ctx, WORLD_W / 2 + (i - 1) * 130, y0 + 268, 52, false); }

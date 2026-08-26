@@ -1,6 +1,6 @@
 # Towerfront — Bildauftrag
 
-Stand: v170 · 26.08.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v171 · 26.08.2026 · **Auftragsdokument für den Bild-Agenten**
 
 Dieses Dokument ist die vollständige Bestellung. Es enthält alles, was zum
 Erzeugen der Bilder nötig ist: Stil, Maße, Blickrichtung, Dateinamen,
@@ -776,6 +776,99 @@ bottom; nothing below it.
 FRAMING: the tower fills about 86 percent of a 256x256 transparent canvas,
 centred, nothing cropped.
 ```
+
+### 6.6 `turm_flak_1.png` … `turm_flak_6.png` — Flakstellung (der fünfte Turm)
+
+**Noch nicht im Spiel.** Diese Bestellung geht der Umsetzung voraus, weil ein
+fünfter Turm ohne Bildsatz vom Rauchtest als fehlend gemeldet wird — der Code
+kann erst folgen, wenn die Bilder da sind.
+
+> **Er trifft Luft *und* Boden, nicht nur Luft** — und das ist gemessen, nicht
+> gemeint. Das Rückstandsverzeichnis hatte ihn als reinen Luftabwehrturm
+> notiert. Nachgezählt fliegen aber nur **3,8 % (Frostspalte) bis 14,0 %
+> (Spiralhain) der Lebenspunkte**, und nur 3 bis 6 von 15 Wellen enthalten
+> überhaupt etwas Fliegendes. Ein Turm, der nur Luft trifft, stünde zwei
+> Drittel des Spiels nutzlos herum — ein Fehlkauf, kein Turm. Für das Bild
+> ändert das nichts: eine Flak ist eine Flak. Für die Zahlen steht die
+> Entscheidung offen (C16 im Rückstandsverzeichnis).
+
+**Und er ist die erste Lieferung unter den Formregeln aus Art Bible 5.2.**
+Die vier vorhandenen Türme überdecken sich untereinander alle über 0,65 —
+dieser hier darf das Feld nicht noch enger machen. Sein Umriss ist deshalb
+Teil der Bestellung, nicht Zugabe.
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+SUBJECT: A mobile anti-air flak position, seen from a slightly elevated
+three-quarter front angle, standing on the ground (NOT top-down). Level [N]
+of six. Dark gunmetal grey with ONE accent: warm amber #F2B03C on the
+ammunition feeds, the tracer-loaded belts and the hazard chevrons.
+
+THE OUTLINE IS THE POINT — READ THIS BEFORE DRAWING ANYTHING.
+The four towers already in this game are all an upright armoured block with
+something on top, and measured they are far too alike. This one must read as
+a different KIND of object even as a black shape:
+  - a LOW, WIDE flat platform — clearly broader than it is tall, the
+    opposite of the squat towers, which are as tall as they are wide,
+  - four outrigger jacks pushed out to the corners, with OPEN TRANSPARENT
+    GAPS between them and the platform body,
+  - twin barrels ELEVATED steeply skyward at roughly 60 degrees, reaching
+    diagonally out of the top-right of the silhouette — this diagonal is the
+    single most recognisable thing about the tower and no other tower in the
+    game has one,
+  - an ammunition drum standing PROUD of the platform on the left side,
+    balancing the diagonal.
+The shape to aim for is a wide, low base with one strong diagonal leaving it.
+
+WHAT STILL TIES IT TO THE FAMILY (do not drop these):
+the same panelled armour plates, the same diagonal hazard stripes on the
+jacks, the same grey, the same light. The family lives in the SURFACE, never
+in the outline.
+
+SILHOUETTE MUST GROW WITH THE LEVEL — an addition that stays inside the
+previous outline is invisible on a phone:
+  1  bare: single barrel, two jacks, a small open drum
+  2  twin barrels side by side; the second jack pair folds out
+  3  a radar dish cantilevered off the LEFT rear, breaking the symmetry
+  4  full armour skirt on the platform and a taller ammunition tower on the
+     left, clearly outside the previous outline
+  5  a second barrel pair mounted ABOVE the first on a raised trunnion — the
+     diagonal doubles and thickens
+  6  the largest fit-out: four barrels, the radar dish grown to a wide flat
+     panel, heaviest belts, strongest accent colour
+
+NO ground clutter, NO shell casings, NO crew figures — nothing that is not
+part of the machine.
+
+PROPORTION WARNING: draw the tower about 14 percent SQUATTER than it should
+finally look — the game stretches this square image 16 percent vertically.
+
+The jacks stand on the ground at 28 percent of the image height from the
+bottom; nothing below that line.
+
+FRAMING: 1024x1024 transparent PNG, square. The tower fills about 86 percent
+of the canvas, centred, at least 5 percent clear margin on every side —
+nothing cropped, not a barrel tip, not the radar dish.
+```
+
+#### Die sechs Zahlen, an denen diese Lieferung gemessen wird
+
+`npm run probebild -- <ordner>` prüft alle sechs, **vor** dem Packen:
+
+| Messung | Grenze | woher |
+|---|---|---|
+| Reines Schwarz | höchstens **2 %** der Fläche | Art Bible 2 |
+| Lichtwinkel neben der Sonne | höchstens **20°** | Art Bible 1 |
+| Rand berührt | **nie** | sonst beschneidet das Packen |
+| Silhouette Stufe 1 zu Stufe 6 | höchstens **0,70** | Art Bible 5.2 |
+| Silhouette gegen **jede** vorhandene Figur | höchstens **0,60** | Art Bible 5.2 — hier zählt vor allem der Bogenturm-Sockel |
+| Leere Fläche im Deckrechteck | mindestens **35 %**, auf jeder Stufe | die offenen Ecken zwischen den Jacks und unter der Rohrdiagonale bringen sie |
+
+Die letzte Zeile ist die, aus der die vorletzte von selbst folgt: die vier
+vorhandenen Türme sind massive Rechtecke, und zwei massive Rechtecke
+überdecken sich immer stark. Eine niedrige, breite Plattform mit einer
+Diagonale und offenen Ecken ist das Gegenteil davon.
 
 ---
 

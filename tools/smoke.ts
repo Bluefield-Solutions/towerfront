@@ -1288,6 +1288,102 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// D12: die Bilanz ist MITTEN im Lauf abrufbar, nicht erst am Ende.
+//
+// Geprueft wird nicht, dass sich ein Knopf druecken laesst, sondern dass das
+// Blatt danach WAS SAGT - und zwar vollstaendig. Genau daran ist die alte
+// Fassung gescheitert: sie listete `TOWER_ORDER`, und die Zielunit steht da
+// nicht drin. Ihr Schaden ging in die Summe ein und fehlte in den Balken,
+// die Anteile summierten sich auf unter 100 % und niemand sah es.
+{
+  // Die Pausenkarte haengt an `phase === 'playing'`. Nach dem Hauptlauf steht
+  // die Partie auf "won" - also wird hier ein frischer Lauf aufgesetzt und so
+  // weit gespielt, bis wirklich Schaden mitgeschrieben ist. Ein Blatt ohne
+  // Zahlen wuerde nichts beweisen.
+  const { candidateSpots: spotsB } = await import('./spots');
+  state.reset(7, 'normal', 'spiralhain');
+  state.gold = 999999;
+  const platz = spotsB(state)[0];
+  if (platz) state.build(platz.x, platz.y, 'arrow');
+  // Gespielt wird, bis MEHRERE Quellen Schaden gemacht haben - darunter die
+  // Zielunit. Ein Lauf, in dem nur der eine Turm trifft, koennte die
+  // Vollstaendigkeitspruefung unten gar nicht scheitern lassen: eine fehlende
+  // Quelle faellt nur auf, wenn es sie gibt (Regel 13).
+  for (let i = 0; i < 60 * 600; i++) {
+    if (!state.waveActive && state.canStartWave) state.startWave();
+    state.update(DT);
+    if ((state.stats.damageBy.core ?? 0) > 0 && (state.stats.damageBy.arrow ?? 0) > 0) break;
+  }
+  const quellenZahl = Object.values(state.stats.damageBy).filter((v) => v > 0).length;
+  if (quellenZahl < 2) {
+    problems.push(
+      `Bilanz: die Probe hat nur ${quellenZahl} Schadensquelle(n) zustande gebracht - `
+      + 'die Vollstaendigkeitspruefung unten kann so gar nicht scheitern.',
+    );
+  }
+  state.paused = true;
+  ui.sync();
+  const knopf = document.getElementById('p-bilanz') as HTMLButtonElement | null;
+  const wahl = document.getElementById('p-wahl');
+  const blatt = document.getElementById('p-blatt');
+  const body = document.getElementById('p-blatt-body');
+  if (!knopf || !wahl || !blatt || !body) {
+    problems.push('Bilanz: die Pausenkarte hat kein Bilanzblatt.');
+  } else {
+    if (knopf.hidden) problems.push('Bilanz: der Knopf fehlt, obwohl Schaden mitgeschrieben ist.');
+    if (!blatt.hidden) problems.push('Bilanz: das Blatt liegt offen, ohne dass jemand es geoeffnet hat.');
+    knopf.dispatchEvent(new window.Event('click'));
+    ui.sync();
+    if (blatt.hidden || !wahl.hidden) {
+      problems.push('Bilanz: nach dem Tippen liegt immer noch die Knopfseite oben.');
+    }
+    const text = body.textContent ?? '';
+    if (text.length < 40) problems.push(`Bilanz: das Blatt ist so gut wie leer (${text.length} Zeichen).`);
+
+    // Die laufende Welle, nicht die ueberstandene. Mitten im Spiel meldete
+    // das Blatt "Wellen 0/15", waehrend die erste lief - am Ende ist
+    // "ueberstanden" die richtige Lesart, waehrend des Laufs die falsche.
+    const wellenFeld = [...body.querySelectorAll('.fig')]
+      .find((n) => (n.querySelector('span')?.textContent ?? '').startsWith('Welle'));
+    const gezeigt = Number((wellenFeld?.querySelector('strong')?.textContent ?? '0').split('/')[0]);
+    if (gezeigt !== Math.max(1, state.waveNumber)) {
+      problems.push(
+        `Bilanz: das Blatt meldet Welle ${gezeigt}, gespielt wird ${state.waveNumber}.`,
+      );
+    }
+
+    // Die eigentliche Pruefung: decken die Balken den ganzen Schaden ab?
+    const anteile = [...body.querySelectorAll('.bars dd')]
+      .map((n) => Number((n.textContent ?? '').replace(/[^0-9]/g, '')));
+    const summe = anteile.reduce((a, b) => a + b, 0);
+    if (!anteile.length) {
+      problems.push('Bilanz: keine einzige Schadensquelle aufgefuehrt.');
+    } else if (summe < 97 || summe > 103) {
+      problems.push(
+        `Bilanz: die Anteile summieren sich auf ${summe} %, nicht auf 100. `
+        + 'Eine Schadensquelle fehlt in der Aufschluesselung oder wird doppelt gezaehlt.',
+      );
+    }
+
+    (document.getElementById('p-zurueck') as HTMLButtonElement).dispatchEvent(new window.Event('click'));
+    ui.sync();
+    if (!blatt.hidden || wahl.hidden) problems.push('Bilanz: "Zurueck" fuehrt nicht zurueck.');
+
+    // Und die Ableitung: endet die Pause, ist das Blatt zu (Regel 6).
+    knopf.dispatchEvent(new window.Event('click'));
+    ui.sync();
+    state.paused = false;
+    ui.sync();
+    state.paused = true;
+    ui.sync();
+    if (!blatt.hidden) {
+      problems.push('Bilanz: das Blatt stand nach dem Fortsetzen noch offen - es haengt an einem Schalter statt an einer Ableitung.');
+    }
+  }
+  state.paused = false;
+  ui.sync();
+}
+
 // Die Turmwahl erscheint am angetippten Platz.
 //
 // Bis v101 musste man erst in der Leiste einen Turm waehlen und dann aufs Feld

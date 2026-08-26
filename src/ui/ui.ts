@@ -24,6 +24,7 @@ import { TUTORIAL, kartenEinfuehrung, type TutorialStep } from '../game/tutorial
 import { konterSatz } from '../data/konter';
 import type { GameState } from '../game/state';
 import { werteAmTurm, werteVorKauf, type Wertzeile } from '../game/turmwerte';
+import { bilanzblatt } from './statsblatt';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
@@ -45,6 +46,19 @@ export class UI {
   private bSpeed = $<HTMLButtonElement>('b-speed');
   private bPause = $<HTMLButtonElement>('b-pause');
   private pauseMenu = $<HTMLElement>('pause-menu');
+  /** Zeigt die Pausenkarte gerade das Bilanzblatt statt der Knoepfe?
+   *
+   *  Reine Anzeigefrage, deshalb hier und nicht im Spielzustand. Sie faellt
+   *  in `syncBilanz` von selbst zurueck, sobald die Pause endet - ein
+   *  Schalter, den jemand zuruecksetzen muss, waere die naechste Stelle zum
+   *  Vergessen (Regel 6). */
+  private bilanzOffen = false;
+  private pBilanz = $<HTMLButtonElement>('p-bilanz');
+  private pWahl = $<HTMLElement>('p-wahl');
+  private pBlatt = $<HTMLElement>('p-blatt');
+  private pBlattBody = $<HTMLElement>('p-blatt-body');
+  private pTitle = $<HTMLElement>('p-title');
+  private letzteBilanz = '';
   private pick = $<HTMLElement>('pick');
   private pickRow = $<HTMLElement>('pick-row');
   private pickKey = '';
@@ -277,6 +291,8 @@ export class UI {
     });
     this.bPause.addEventListener('click', () => { this.s.paused = !this.s.paused; });
     $<HTMLButtonElement>('p-resume').addEventListener('click', () => { this.s.paused = false; });
+    this.pBilanz.addEventListener('click', () => { this.bilanzOffen = true; this.letzteBilanz = ''; });
+    $<HTMLButtonElement>('p-zurueck').addEventListener('click', () => { this.bilanzOffen = false; });
     $<HTMLButtonElement>('p-restart').addEventListener('click', () => {
       this.s.paused = false;
       this.onRestart?.();
@@ -512,63 +528,14 @@ export class UI {
   }
 
   /** Auswertung nach der Partie. Alle Zahlen wurden waehrend des Spiels
-   *  ohnehin mitgeschrieben - hier werden sie nur lesbar gemacht. */
+   *  ohnehin mitgeschrieben - hier werden sie nur lesbar gemacht.
+   *
+   *  Das Blatt selbst entsteht in `bilanzblatt` - dieselbe Fassung, die
+   *  seit v171 auch die Pausenkarte fuellt (Regel 15). */
   private renderStats(): void {
-    const s = this.s;
-    const st = s.stats;
-    if (!st.damage) { this.sStats.hidden = true; return; }
-    this.sStats.hidden = false;
-
-    const mins = Math.floor(st.duration / 60);
-    const secs = Math.floor(st.duration % 60);
-    const figs = [
-      ['Wellen', `${s.phase === 'won' ? s.totalWaves : Math.max(0, s.waveNumber - 1)}/${s.totalWaves}`],
-      ['Kristall', `${s.lives}/${s.maxLives}`],
-      ['Dauer', `${mins}:${String(secs).padStart(2, '0')}`],
-      ['Türme', String(st.towersBuilt)],
-      ['Erledigt', String(st.kills)],
-      ['Gold verbaut', String(st.goldSpent)],
-    ].map(([l, v]) => `<div class="fig"><span>${l}</span><strong>${v}</strong></div>`).join('');
-
-    // Woran der Schaden hing - die eigentlich interessante Zahl.
-    const sources: [string, string, number][] = TOWER_ORDER.map(
-      (id) => [TOWERS[id].name, TOWERS[id].accent, st.damageBy[id] ?? 0],
-    );
-    if (st.damageBy.meteor) sources.push(['Meteor', '#F08A3C', st.damageBy.meteor]);
-    sources.sort((a, b) => b[2] - a[2]);
-    const bars = sources
-      .filter(([, , v]) => v > 0)
-      .map(([name, tone, v]) => {
-        const pct = Math.round((v / st.damage) * 100);
-        return `<dt>${name}</dt>` +
-          `<div class="track"><i style="width:${pct}%;background:${tone}"></i></div>` +
-          `<dd>${pct} %</dd>`;
-      }).join('');
-
-    // Der Turm mit dem meisten Schaden - meist verrät seine Lage mehr als er selbst.
-    let best = s.towers[0] ?? null;
-    for (const t of s.towers) if (t.damageDone > (best?.damageDone ?? 0)) best = t;
-    const bestLine = best && best.damageDone > 0
-      ? `<p class="note-line">Stärkster Turm: <b>${TOWERS[best.def].name} Stufe ${best.level}</b> ` +
-        `bei ${Math.round(best.x)}/${Math.round(best.y)} — ${Math.round(best.damageDone)} Schaden, ` +
-        `${best.kills} erledigt.</p>`
-      : '';
-
-    const leaks = st.leaksByWave
-      .map((v, i) => (v > 0 ? `Welle ${i + 1} (−${v})` : ''))
-      .filter(Boolean);
-    const leakLine = leaks.length
-      ? `<p class="note-line">Kristall verloren in: <b>${leaks.join(', ')}</b>.</p>`
-      : `<p class="note-line">Kein einziger Gegner ist durchgekommen.</p>`;
-
-    const uses = (st.abilityUses.meteor ?? 0) + (st.abilityUses.freeze ?? 0);
-    const abilityLine = `<p class="note-line">Fähigkeiten eingesetzt: <b>${uses}</b> ` +
-      `(Meteor ${st.abilityUses.meteor ?? 0}, Frostschlag ${st.abilityUses.freeze ?? 0}).</p>`;
-
-    this.sStats.innerHTML =
-      `<div class="figs">${figs}</div>` +
-      (bars ? `<h2>Schaden nach Quelle</h2><dl class="bars">${bars}</dl>` : '') +
-      bestLine + leakLine + abilityLine;
+    const html = bilanzblatt(this.s);
+    this.sStats.hidden = !html;
+    this.sStats.innerHTML = html;
   }
 
   /** Welche Einfuehrung passt zu dieser Partie?
@@ -756,6 +723,13 @@ export class UI {
       // Zweiter Fall derselben Art nach dem Startknopf in v105: eine
       // Ableitung schuetzt nur, was sie aufzaehlt.
       sel ? `${sel.id}:${sel.level}:${sel.branch}:${sel.zielwahl}` : '-',
+      // Dritter Fall derselben Art nach dem Startknopf (v105) und der
+      // Zielwahl - und diesmal beim Schreiben sofort aufgelaufen: das
+      // Bilanzblatt oeffnete sich nicht, weil `sync` vorher aussteigt.
+      // Der Knopf tat, was er sollte, der Schalter stand richtig, und die
+      // Anzeige folgte trotzdem nicht. Wer hier etwas anzeigt, das nicht
+      // aus dem Spielzustand kommt, traegt es in diese Zeile ein.
+      this.bilanzOffen ? 'b' : '-',
     ].join('|');
 
     this.updateTutorial();
@@ -797,6 +771,7 @@ export class UI {
     // Das Pausenmenue haengt am Pausenzustand, nicht an einem eigenen
     // Schalter - sonst gaebe es zwei Wahrheiten ueber denselben Zustand.
     this.pauseMenu.hidden = !s.paused || s.phase !== 'playing';
+    this.syncBilanz(s);
     this.syncPick(s);
     this.bWave.disabled = !s.canStartWave;
     this.bWaveT.textContent = s.waveActive
@@ -844,6 +819,29 @@ export class UI {
       this.insp.hidden = true;
     }
   }
+  /** Die Pausenkarte: Knoepfe oder Bilanzblatt.
+   *
+   *  Beides wird JEDES BILD abgeleitet, nichts wird auf Zuruf gesetzt.
+   *  Endet die Pause, faellt das Blatt zu; gibt es noch keine Zahlen, ist
+   *  der Knopf gar nicht erst da - ein Knopf, der ein leeres Blatt oeffnet,
+   *  ist schlimmer als keiner. */
+  private syncBilanz(s: GameState): void {
+    if (this.pauseMenu.hidden) this.bilanzOffen = false;
+    const gibtZahlen = s.stats.damage > 0;
+    if (!gibtZahlen) this.bilanzOffen = false;
+    this.pBilanz.hidden = !gibtZahlen;
+    this.pWahl.hidden = this.bilanzOffen;
+    this.pBlatt.hidden = !this.bilanzOffen;
+    this.pTitle.textContent = this.bilanzOffen ? 'Bilanz' : 'Pause';
+    if (this.bilanzOffen) {
+      const html = bilanzblatt(s, true);
+      if (html !== this.letzteBilanz) {
+        this.pBlattBody.innerHTML = html;
+        this.letzteBilanz = html;
+      }
+    }
+  }
+
   /** Die vier Knoepfe fuer die Ziellogik.
    *
    *  Sie stehen an EINEM Turm, nicht an der Turmsorte: zwei Bogentuerme an

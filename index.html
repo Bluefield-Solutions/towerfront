@@ -69,10 +69,23 @@
        Stelle, an der man ohnehin innehaelt. -->
   <div class="pause-menu" id="pause-menu" hidden>
     <div class="pause-card">
-      <span class="pause-title">Pause</span>
-      <button class="pause-btn primary" id="p-resume">Weiter spielen</button>
-      <button class="pause-btn warn" id="p-restart">Level neu starten</button>
-      <button class="pause-btn" id="p-quit">Zurück zur Karte</button>
+      <span class="pause-title" id="p-title">Pause</span>
+      <div class="pause-wahl" id="p-wahl">
+        <button class="pause-btn primary" id="p-resume">Weiter spielen</button>
+        <!-- Die Bilanz stand bis v171 nur am Ende der Partie. Gebraucht wird
+             sie aber MITTEN im Lauf: zwischen zwei Wellen entscheidet sich,
+             wohin das nächste Gold geht, und dafür muss man wissen, welcher
+             Turm trägt. Sie sitzt in der Pausenkarte, weil deren Sichtbarkeit
+             schon abgeleitet ist — eine zweite Regel dafür wäre eine zweite
+             Stelle zum Vergessen (Regel 6). -->
+        <button class="pause-btn" id="p-bilanz" hidden>Bilanz ansehen</button>
+        <button class="pause-btn warn" id="p-restart">Level neu starten</button>
+        <button class="pause-btn" id="p-quit">Zurück zur Karte</button>
+      </div>
+      <div class="pause-blatt stats" id="p-blatt" hidden>
+        <div id="p-blatt-body"></div>
+        <button class="pause-btn" id="p-zurueck">Zurück</button>
+      </div>
     </div>
   </div>
 

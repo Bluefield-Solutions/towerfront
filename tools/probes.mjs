@@ -1200,6 +1200,47 @@ const PROBEN = [
     tor: 'lesbarkeit',
   },
   {
+    // D12, v171: die Bilanz muss den ganzen Schaden zeigen. Eingebaut wird
+    // der echte Fehler, den es bis v170 gab - die Balkenliste laeuft ueber
+    // TOWER_ORDER, und die Zielunit steht da nicht drin.
+    name: 'Bilanz laesst die Zielunit weg',
+    datei: 'src/ui/statsblatt.ts',
+    regel: /^  liste\.push\(\[TOWERS\.core\.name, TOWERS\.core\.accent, st\.damageBy\.core \?\? 0\]\);$/m,
+    ersatz: '  // Zielunit weggelassen.',
+    tor: 'smoke',
+  },
+  {
+    // Beim HINSEHEN gefunden, nicht von einem Tor (Regel 8): das Blatt
+    // meldete mitten in der ersten Welle "Wellen 0/15". Am Ende ist
+    // "ueberstanden" die richtige Lesart, waehrend des Laufs die falsche.
+    name: 'Bilanz zaehlt mitten im Lauf die ueberstandenen Wellen',
+    datei: 'src/ui/statsblatt.ts',
+    regel: /\? \[`Welle`, `\$\{Math\.max\(1, s\.waveNumber\)\}\/\$\{s\.totalWaves\}`\]/,
+    ersatz: "? ['Welle', `${Math.max(0, s.waveNumber - 1)}/${s.totalWaves}`]",
+    tor: 'smoke',
+  },
+  {
+    // Regel 6 am Bilanzblatt: seine Sichtbarkeit wird ABGELEITET, nicht
+    // gesetzt. Faellt die Ableitung weg, bleibt es nach dem Fortsetzen
+    // offen liegen - genau die Verfallsart, die im Menue zweimal die
+    // Spielbedienung sichtbar gelassen hat.
+    name: 'Bilanzblatt haengt an einem Schalter',
+    datei: 'src/ui/ui.ts',
+    regel: /^    if \(this\.pauseMenu\.hidden\) this\.bilanzOffen = false;$/m,
+    ersatz: '    // Ableitung entfernt.',
+    tor: 'smoke',
+  },
+  {
+    // Und die dritte Falle derselben Familie: `sync` steigt frueh aus, wenn
+    // sich die Signatur nicht geaendert hat. Steht der Zustand nicht darin,
+    // tut der Knopf alles richtig und die Anzeige folgt trotzdem nicht.
+    name: 'Bilanzblatt fehlt in der Signatur',
+    datei: 'src/ui/ui.ts',
+    regel: /^      this\.bilanzOffen \? 'b' : '-',$/m,
+    ersatz: "      '-',",
+    tor: 'smoke',
+  },
+  {
     // v169: die Turmformmessung muss die STUFE sehen. Wird der Rueckfall auf
     // Stufe 1 festgenagelt, sind alle sechs Stufen dasselbe Bild - und der
     // Ausbau, fuer den man bis 1950 Gold zahlt, waere im Umriss nicht mehr

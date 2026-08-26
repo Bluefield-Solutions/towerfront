@@ -675,13 +675,33 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // Seit v166 hat der Bogenturm kein Ganzbild mehr. Fragt die Bildpruefung
+    // nur danach, meldet sie ihn dauerhaft als fehlend - und die Bildabnahme
+    // bricht ab, obwohl im Feld ein vollstaendiger Turm steht.
+    name: 'Zweiteiliger Turm gilt als bildlos',
+    datei: 'src/gfx/renderer.ts',
+    regel: /^      if \(!zweiteilig && !getTowerArt\(id, null, 1, s\.map\.id\)\) fehlt\.push\(`Turmbild \$\{id\}`\);$/m,
+    ersatz: '      if (!getTowerArt(id, null, 1, s.map.id)) fehlt.push(`Turmbild ${id}`);',
+    tor: 'bildtor',
+  },
+  {
+    // Und dieselbe Frage in der Lesbarkeitsmessung: ohne den Rueckfall auf
+    // den Sockel misst sie drei Tuerme statt vier - und was nicht gemessen
+    // wird, faellt auch nicht auf.
+    name: 'Lesbarkeit misst den Bogenturm nicht mehr',
+    datei: 'tools/readability.mjs',
+    regel: /^      if \(!buf && objectArt\.has\(`sockel_\$\{id\}`\)\) \{ key = `sockel_\$\{id\}`; buf = objectArt\.get\(key\); \}$/m,
+    ersatz: '      // Rueckfall auf den Sockel entfernt.',
+    tor: 'lesbarkeit',
+  },
+  {
     // Die Umkehrung von D18, seit v162: ein ruhender Turm steht still.
     // Eingebaut wird die alte Ruhebewegung - zwei Weltpunkte auf und ab -,
     // und das Tor muss sie sehen.
     name: 'Tuerme atmen wieder',
     datei: 'src/gfx/renderer.ts',
-    regel: /^        ctx\.drawImage\(sockel, -bw \/ 2, oben, bw, sh\);$/m,
-    ersatz: '        ctx.drawImage(sockel, -bw / 2, oben + Math.sin(s.time * 1.9) * 2, bw, sh);',
+    regel: /^      ctx\.drawImage\(sockel, -bw \/ 2, oben, bw, sh\);$/m,
+    ersatz: '      ctx.drawImage(sockel, -bw / 2, oben + Math.sin(s.time * 1.9) * 2, bw, sh);',
     tor: 'bildtor',
   },
   {

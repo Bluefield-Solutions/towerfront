@@ -71,8 +71,18 @@ const RIM_HINWEIS = 1.5;        // darunter: sichtbar schwach, aber kein Abbruch
  *  Zu beheben ist das am BILD, nicht am Code (Befund B1), oder durch das
  *  Randlicht aus TF-012. Bis dahin steht die Zahl in jedem Lauf da, statt in
  *  einer gruenen Meldung zu verschwinden - und wer neue Bilder einbaut, die
- *  schlechter sind, wird rot. */
-const MAX_SCHWACHE_KANTEN = 8;
+ *  schlechter sind, wird rot.
+ *
+ *  **v166: 8 -> 10, und das Spiel ist dabei nicht schlechter geworden.**
+ *  Der Bogenturm wurde bis dahin ueber sein GANZBILD gemessen (`arrow_1_*`,
+ *  Kante 1,52). Gezeichnet hat das Spiel es aber seit v160 nicht mehr - dort
+ *  steht der Sockel, und der liegt bei 1,49. Die Messung hat also sechs
+ *  Fassungen lang eine Figur beurteilt, die niemand sieht (derselbe Fund wie
+ *  in v156, als sie die gepackten Quellbilder statt der gebackenen mass).
+ *  Seit die Ganzbilder entfernt sind, misst sie den Sockel - und die Ratsche
+ *  muss auf dem neuen Messplatz neu sitzen, sonst spraeche sie ueber etwas
+ *  anderes als die Zahl daneben (Regel 12). */
+const MAX_SCHWACHE_KANTEN = 10;
 const MIN_BODY_CONTRAST = 1.15; // Körper gegen den Boden - nur noch Rückhalt
 const MIN_TOWER_PX = 26;       // Bildschirmpunkte Breite der Turmsilhouette
 const MIN_ENEMY_PX = 13;       // dasselbe für Gegner
@@ -237,6 +247,12 @@ const problems = [];
 const bgArt = readAssets('backgrounds.ts');
 const towerArt = readAssets('towers.ts');
 const enemyArt = readAssets('enemies.ts');
+/** Die Einzelobjekte - Sockel und Waffen der zweiteiligen Tuerme.
+ *
+ *  Seit v166 hat der Bogenturm kein Ganzbild mehr. Ohne diese Zeile meldete
+ *  die Messung drei fehlende Turmbilder und maass drei Tuerme statt vier -
+ *  und was nicht gemessen wird, faellt auch nicht auf. */
+const objectArt = readAssets('objects.ts');
 
 // Der dunkelste Untergrund ist der schwierigste Fall für helle Objekte, der
 // hellste für dunkle. Gemessen wird gegen den, bei dem der Kontrast am
@@ -281,7 +297,18 @@ for (const id of TOWER_ORDER) {
     }
     if (!key) for (const k of [`${id}_${zweig}`, `${id}_1`]) if (towerArt.has(k)) key = k;
     const levelScale = towerArtScale(level);
-    const buf = key ? towerArt.get(key) : null;
+    let buf = key ? towerArt.get(key) : null;
+    // Zweiteilige Tuerme: gemessen wird der SOCKEL.
+    //
+    // Er ist das, was auf dem Boden steht und Kontrast gegen ihn braucht;
+    // die Waffe sitzt oben darauf und wird vom Sockel getragen. Dieselbe
+    // Rueckfallkette wie im Renderer - Stufe abwaerts, dann stufenlos.
+    if (!buf) {
+      for (let l = level; l >= 1 && !buf; l--) {
+        if (objectArt.has(`sockel_${id}_${l}`)) { key = `sockel_${id}_${l}`; buf = objectArt.get(key); }
+      }
+      if (!buf && objectArt.has(`sockel_${id}`)) { key = `sockel_${id}`; buf = objectArt.get(key); }
+    }
     if (!buf) { problems.push(`Turmbild fuer ${id}/${zweig} Stufe ${level} fehlt.`); continue; }
     const accent = hexRgb(accentFor(def, branch));
     const m = await measureSprite(buf, accent, 0.38);

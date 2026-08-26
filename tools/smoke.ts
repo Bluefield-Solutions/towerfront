@@ -1204,9 +1204,18 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 
 // Jeder Turmzustand braucht ein gerendertes Bild - sonst steht ein
 // gezeichneter Turm neben elf gerenderten und faellt sofort auf.
+//
+// **Zwei Wege zaehlen, nicht einer.** Seit v166 hat der Bogenturm kein
+// Ganzbild mehr, sondern Sockel und Waffe; danach zu fragen allein haette
+// ihn dauerhaft als fehlend gemeldet, obwohl im Feld ein vollstaendiger
+// Turm steht. Gefragt ist "wird er gezeichnet?", nicht "gibt es DIESE
+// Datei?" - dieselbe Unterscheidung wie in `fehlendeBilder`.
 {
   const { hasTowerArt } = await import('../src/gfx/towerart');
+  const { OBJECT_ART } = await import('../src/gfx/assets/objects');
+  const zweiteilig = (id: string) => `sockel_${id}_1` in OBJECT_ART && `waffe_${id}_1` in OBJECT_ART;
   for (const id of TOWER_ORDER) {
+    if (zweiteilig(id)) continue;
     if (!hasTowerArt(id, null)) problems.push(`Turmbild fehlt: ${id} Stufe 1.`);
     for (const b of [0, 1] as const) {
       if (!hasTowerArt(id, b)) {

@@ -153,7 +153,14 @@ export class Renderer {
     if (this.menu) return fehlt;
     if (!getBackground(s.map.id)) fehlt.push(`Untergrund ${s.map.id}`);
     for (const id of TOWER_ORDER) {
-      if (!getTowerArt(id, null, 1, s.map.id)) fehlt.push(`Turmbild ${id}`);
+      // Ein Turm ist gezeichnet, wenn ER GEZEICHNET WIRD - egal auf welchem
+      // der beiden Wege. Der Bogenturm hat seit v166 kein Ganzbild mehr,
+      // sondern Sockel und Waffe; die Frage nach dem Ganzbild allein haette
+      // ihn dauerhaft als fehlend gemeldet, und die Bildabnahme haette
+      // abgebrochen, obwohl im Feld ein vollstaendiger Turm steht.
+      const zweiteilig = getObjectArtStufeEingebettet(`sockel_${id}`, 1, s.map.id)
+        && getObjectArtStufeEingebettet(`waffe_${id}`, 1, s.map.id);
+      if (!zweiteilig && !getTowerArt(id, null, 1, s.map.id)) fehlt.push(`Turmbild ${id}`);
     }
     for (const id of Object.keys(ENEMIES) as EnemyId[]) {
       if (!getEnemyArt(id, false, s.map.id)) fehlt.push(`Gegnerbild ${id}`);
@@ -493,6 +500,9 @@ export class Renderer {
       // Zielunit hat kein Turmbild, also faellt sie hier auf die gezeichnete
       // Ersatzform zurueck - mitten in ihre eigene Station hinein.
       if (t.def === 'core') continue;
+      // Dieselbe Frage wie in `fehlendeBilder`: hat dieser Turm ein Bild?
+      // Seit v166 kann die Antwort auch "zwei Bilder" lauten.
+      if (getObjectArtStufeEingebettet(`sockel_${t.def}`, t.level, s.map.id)) continue;
       if (getTowerArt(t.def, t.branch, t.level, s.map.id)) continue;
       drawSprite(g, getTowerBase(t.def, t.branch, t.level), t.x, t.y);
     }
@@ -1579,86 +1589,94 @@ export class Renderer {
     // Bei gerenderten Tuermen entfaellt die drehbare Waffe: ein Objekt in
     // Dreiviertelansicht kippt, wenn man es in der Flaeche dreht. Statt zu
     // drehen wird gespiegelt, sobald das Ziel links steht.
+    // ZUERST der zweiteilige Weg, dann das Ganzbild.
+    //
+    // Bis v166 stand dieser Zweig INNERHALB von `if (art)`: ein Turm aus
+    // Sockel und Waffe wurde nur gezeichnet, wenn es AUSSERDEM ein
+    // Ganzbild von ihm gab. Das hat sechs Bilder am Leben gehalten, die
+    // seit v160 kein Bildpunkt mehr zeigt - `arrow_1_1` bis `arrow_1_6`,
+    // rund 120 KB tote Fracht in einer 1,59-MB-Datei. Sie standen nicht
+    // aus Versehen da, sondern weil diese eine Klammer sie verlangte.
+    // Liegt die Waffe als eigenes Bild vor, wird sie einzeln gedreht.
+    //
+    // Das ist der saubere Weg: der Sockel steht still, die Waffe zielt.
+    // Er braucht zwei Bilder je Turm - einen Sockel OHNE Waffe und die
+    // Waffe allein, mit dem Drehpunkt in der Bildmitte. Fehlt eines von
+    // beiden, bleibt es beim gedaempften Schwenk darunter; ein Sockel mit
+    // eingebauter Waffe plus zweiter Waffe darueber waere doppelt.
+    // --- Ein stehender Turm steht. (Ruhebewegung D18, zurueckgebaut in v162)
+    //
+    // Von v116 bis v161 atmeten die Tuerme: eine langsame Bewegung von
+    // zwei Weltpunkten, damit ein ruhendes Feld kein Standbild ist. Der
+    // Nutzer hat sie zweimal gemeldet - erst als Schweben des Bunkers,
+    // dann als Bewegung ueberhaupt - und entschieden, dass ein Turm
+    // stillstehen soll.
+    //
+    // Die erste Meldung war ein Fehler und ist in v161 behoben worden
+    // (verschieben statt aus dem Fuss strecken). Die zweite ist keiner,
+    // sondern ein Urteil ueber die Sache selbst, und dafuer ist das Auge
+    // des Nutzers die Instanz - nicht das Vorbild, aus dem sie kam
+    // (Kingdom Rush und Bloons lassen ihre Tuerme atmen; dieses Spiel
+    // nicht mehr).
+    //
+    // Was ein ruhendes Feld noch bewegt: der Bodennebel, das Leuchten und
+    // der Kristall. Gemessen tragen die allein 4,4 % bewegte Bildpunkte,
+    // also ist es weiterhin kein Standbild.
+    //
+    // Was BLEIBT, weil es keine Ruhebewegung ist: das Einfedern beim Bau
+    // (`t.spring`, einmalig), der Rueckstoss beim Schuss und der Schwenk
+    // zum Ziel. Die alle sind Handlungen und sagen etwas.
+
+    // Eingebettet wie der Turm daneben - siehe getObjectArtStufeEingebettet.
+    const waffe = getObjectArtStufeEingebettet(`waffe_${t.def}`, t.level, s.map.id);
+    const sockel = getObjectArtStufeEingebettet(`sockel_${t.def}`, t.level, s.map.id);
+    if (waffe && sockel) {
+      // Die Groesse kommt aus dem SOCKELBILD, nicht aus dem Ganzbild.
+      //
+      // `w` oben stammt aus artMasse und rechnet den Breitenanteil des
+      // Ganzbilds heraus - das fuellt seine Kachel nur zur Haelfte. Auf
+      // den Sockel angewandt war er dadurch fast doppelt so gross und
+      // schob den Kristall aus dem Bild. Die Einzelobjekte sind mit
+      // Fuellgrad 0,94 gepackt (siehe art/objekte.json), also fuellt die
+      // Figur die Kachel fast ganz.
+      const g2 = turmMasse();
+      const bw = g2.w;
+      const rec2 = t.recoil * 4;
+      ctx.save();
+      ctx.translate(t.x, t.y);
+      // Auch dieser Weg bekommt die Hoehe - sonst waere der Bogenturm der
+      // einzige, der nicht mitwaechst.
+      //
+      // Er ist der einzige Turm mit eigenem Sockel- und Waffenbild und
+      // laeuft deshalb hier durch statt durch artMasse. Ohne diese Zeile
+      // haetten drei Tuerme die neue Hoehe und einer die alte - genau der
+      // Fall, gegen den die Gegenprobe "Tuerme verschieden gross" steht.
+      // Die Sockelbilder sind quadratisch gepackt (256 x 256), also ist der
+      // Kasten derselbe wie bei jedem anderen Turm - und kommt aus
+      // derselben Stelle.
+      const sh = g2.h;
+      const oben = g2.oben;
+      ctx.drawImage(sockel, -bw / 2, oben, bw, sh);
+      // Die Waffe sitzt auf der Plattform, nicht auf dem Boden.
+      // Auf die Plattform, nicht in den Schaft. Ihr Platz wird von der
+      // Oberkante aus gemessen, nicht von der Mitte - die Plattform ist
+      // ein Punkt IM Bild und wandert mit ihm nach oben.
+      ctx.translate(0, oben + sh * WAFFE_HOCH);
+      // Das Bild blickt nach oben, der Winkel zaehlt von rechts.
+      ctx.rotate(t.angle + Math.PI / 2);
+      // Rueckstoss laeuft entgegen der Schussrichtung.
+      ctx.translate(0, rec2);
+      const ww = bw * WAFFE_BREIT;
+      const wh = ww * (waffe.height / waffe.width);
+      ctx.drawImage(waffe, -ww / 2, -wh / 2, ww, wh);
+      ctx.restore();
+      return;
+    }
     const art = getTowerArt(t.def, t.branch, t.level, s.map.id);
     if (art) {
       const masse = this.artMasse();
       const w = masse.w, h = masse.h;
 
-      // Liegt die Waffe als eigenes Bild vor, wird sie einzeln gedreht.
-      //
-      // Das ist der saubere Weg: der Sockel steht still, die Waffe zielt.
-      // Er braucht zwei Bilder je Turm - einen Sockel OHNE Waffe und die
-      // Waffe allein, mit dem Drehpunkt in der Bildmitte. Fehlt eines von
-      // beiden, bleibt es beim gedaempften Schwenk darunter; ein Sockel mit
-      // eingebauter Waffe plus zweiter Waffe darueber waere doppelt.
-      // --- Ein stehender Turm steht. (Ruhebewegung D18, zurueckgebaut in v162)
-      //
-      // Von v116 bis v161 atmeten die Tuerme: eine langsame Bewegung von
-      // zwei Weltpunkten, damit ein ruhendes Feld kein Standbild ist. Der
-      // Nutzer hat sie zweimal gemeldet - erst als Schweben des Bunkers,
-      // dann als Bewegung ueberhaupt - und entschieden, dass ein Turm
-      // stillstehen soll.
-      //
-      // Die erste Meldung war ein Fehler und ist in v161 behoben worden
-      // (verschieben statt aus dem Fuss strecken). Die zweite ist keiner,
-      // sondern ein Urteil ueber die Sache selbst, und dafuer ist das Auge
-      // des Nutzers die Instanz - nicht das Vorbild, aus dem sie kam
-      // (Kingdom Rush und Bloons lassen ihre Tuerme atmen; dieses Spiel
-      // nicht mehr).
-      //
-      // Was ein ruhendes Feld noch bewegt: der Bodennebel, das Leuchten und
-      // der Kristall. Gemessen tragen die allein 4,4 % bewegte Bildpunkte,
-      // also ist es weiterhin kein Standbild.
-      //
-      // Was BLEIBT, weil es keine Ruhebewegung ist: das Einfedern beim Bau
-      // (`t.spring`, einmalig), der Rueckstoss beim Schuss und der Schwenk
-      // zum Ziel. Die alle sind Handlungen und sagen etwas.
-
-      // Eingebettet wie der Turm daneben - siehe getObjectArtStufeEingebettet.
-      const waffe = getObjectArtStufeEingebettet(`waffe_${t.def}`, t.level, s.map.id);
-      const sockel = getObjectArtStufeEingebettet(`sockel_${t.def}`, t.level, s.map.id);
-      if (waffe && sockel) {
-        // Die Groesse kommt aus dem SOCKELBILD, nicht aus dem Ganzbild.
-        //
-        // `w` oben stammt aus artMasse und rechnet den Breitenanteil des
-        // Ganzbilds heraus - das fuellt seine Kachel nur zur Haelfte. Auf
-        // den Sockel angewandt war er dadurch fast doppelt so gross und
-        // schob den Kristall aus dem Bild. Die Einzelobjekte sind mit
-        // Fuellgrad 0,94 gepackt (siehe art/objekte.json), also fuellt die
-        // Figur die Kachel fast ganz.
-        const g2 = turmMasse();
-        const bw = g2.w;
-        const rec2 = t.recoil * 4;
-        ctx.save();
-        ctx.translate(t.x, t.y);
-        // Auch dieser Weg bekommt die Hoehe - sonst waere der Bogenturm der
-        // einzige, der nicht mitwaechst.
-        //
-        // Er ist der einzige Turm mit eigenem Sockel- und Waffenbild und
-        // laeuft deshalb hier durch statt durch artMasse. Ohne diese Zeile
-        // haetten drei Tuerme die neue Hoehe und einer die alte - genau der
-        // Fall, gegen den die Gegenprobe "Tuerme verschieden gross" steht.
-        // Die Sockelbilder sind quadratisch gepackt (256 x 256), also ist der
-        // Kasten derselbe wie bei jedem anderen Turm - und kommt aus
-        // derselben Stelle.
-        const sh = g2.h;
-        const oben = g2.oben;
-        ctx.drawImage(sockel, -bw / 2, oben, bw, sh);
-        // Die Waffe sitzt auf der Plattform, nicht auf dem Boden.
-        // Auf die Plattform, nicht in den Schaft. Ihr Platz wird von der
-        // Oberkante aus gemessen, nicht von der Mitte - die Plattform ist
-        // ein Punkt IM Bild und wandert mit ihm nach oben.
-        ctx.translate(0, oben + sh * WAFFE_HOCH);
-        // Das Bild blickt nach oben, der Winkel zaehlt von rechts.
-        ctx.rotate(t.angle + Math.PI / 2);
-        // Rueckstoss laeuft entgegen der Schussrichtung.
-        ctx.translate(0, rec2);
-        const ww = bw * WAFFE_BREIT;
-        const wh = ww * (waffe.height / waffe.width);
-        ctx.drawImage(waffe, -ww / 2, -wh / 2, ww, wh);
-        ctx.restore();
-        return;
-      }
 
       // Der Turm dreht sich zum Ziel - aber nur der obere Teil.
       //

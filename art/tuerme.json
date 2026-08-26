@@ -14,60 +14,6 @@
     "farbe": 2.3
   },
   "items": {
-    "arrow_1_1": {
-      "file": "turm_bogen_1.png",
-      "comment": "Sechs Ausbaustufen des Bogenturms.",
-      "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 1,
-      "helligkeit": 0.94,
-      "fill": 0.94
-    },
-    "arrow_1_2": {
-      "file": "turm_bogen_2.png",
-      "comment": "Sechs Ausbaustufen des Bogenturms.",
-      "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 1,
-      "helligkeit": 0.94,
-      "fill": 0.94
-    },
-    "arrow_1_3": {
-      "file": "turm_bogen_3.png",
-      "comment": "Sechs Ausbaustufen des Bogenturms.",
-      "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 1,
-      "helligkeit": 0.94,
-      "fill": 0.94
-    },
-    "arrow_1_4": {
-      "file": "turm_bogen_4.png",
-      "comment": "Sechs Ausbaustufen des Bogenturms.",
-      "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 1,
-      "helligkeit": 0.94,
-      "fill": 0.94
-    },
-    "arrow_1_5": {
-      "file": "turm_bogen_5.png",
-      "comment": "Sechs Ausbaustufen des Bogenturms.",
-      "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 1,
-      "helligkeit": 0.94,
-      "fill": 0.94
-    },
-    "arrow_1_6": {
-      "file": "turm_bogen_6.png",
-      "comment": "Sechs Ausbaustufen des Bogenturms.",
-      "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 1,
-      "helligkeit": 0.94,
-      "fill": 0.94
-    },
     "frost_1_1": {
       "file": "turm_frost_1.png",
       "comment": "Sechs Ausbaustufen des Frostturms.",

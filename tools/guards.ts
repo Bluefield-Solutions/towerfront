@@ -315,7 +315,16 @@ for (const map of MAPS) {
     }
   }
 
+  // Die Palette traegt seit v173 einen Eintrag, der keine Farbe ist: die
+  // Wetterart. Sie wird deshalb GEGEN IHRE EIGENE LISTE geprueft und nicht
+  // uebersprungen - ein Eintrag, den niemand prueft, ist die Stelle, an der
+  // beim naechsten Mal ein Tippfehler stehen bleibt.
+  const WETTER_ARTEN = ['regen', 'asche', 'schnee', 'keines'];
+  if (!WETTER_ARTEN.includes(map.palette.wetter)) {
+    fail(`${map.id}: Wetterart "${map.palette.wetter}" gibt es nicht - erlaubt sind ${WETTER_ARTEN.join(', ')}.`);
+  }
   for (const [key, val] of Object.entries(map.palette)) {
+    if (key === 'wetter') continue;
     if (!isHex(val)) fail(`${map.id}: Farbe "${key}" ist ungueltig (${val}).`);
   }
 

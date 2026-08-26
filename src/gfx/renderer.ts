@@ -23,7 +23,7 @@ import {
   drawSprite, getEnemySprite, getSchattenriss, getShadow, getTowerBase, getTowerWeapon,
   roundRect, ENEMY_FRAMES,
 } from './sprites';
-import { drawAurora, drawGroundFog, getMoodLayer } from './atmosphere';
+import { drawAurora, drawGroundFog, drawWetter, getMoodLayer } from './atmosphere';
 
 /** Wieviel Zeit ein Bild in den Kartenaufbau stecken darf.
  *
@@ -441,6 +441,10 @@ export class Renderer {
     this.drawBolts(s);
     this.drawParticles(s);
     drawGroundFog(ctx, s.crystalPulse, hi, s.map.palette.haze);
+    // Wetter liegt ueber allem, was auf dem Boden steht - Regen faellt vor
+    // dem Turm, nicht hinter ihm -, aber UNTER der Bedienung darunter:
+    // Bauplatz, Reichweiten und Hinweise muessen lesbar bleiben.
+    drawWetter(ctx, s.crystalPulse, hi, s.map.palette.wetter, s.map.palette.wetterTon);
     this.drawMeteors(s, hi);
     this.drawBauplatz(s);
     this.drawGhost(s);

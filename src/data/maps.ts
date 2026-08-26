@@ -4,6 +4,14 @@ import {
   PLAN_SPIRALHAIN, PLAN_ASCHESCHLUCHT, PLAN_FROSTSPALTE, type Wave,
 } from './waves';
 
+/** Was ueber einer Karte vom Himmel kommt (D2).
+ *
+ *  Drei Karten, drei Stimmungen - und der Unterschied ist nicht nur Zierde:
+ *  die drei Orte sahen sich bisher vor allem im Bodenton unaehnlich, und ein
+ *  Ton allein traegt nicht weit, wenn das Feld ohnehin dunkel ist. Etwas,
+ *  das sich BEWEGT, sagt "anderer Ort" schneller als eine Farbe es kann. */
+export type WetterArt = 'regen' | 'asche' | 'schnee' | 'keines';
+
 /** Farbwelt einer Karte. Jedes Biom setzt eigene Toene fuer Boden und Pfad -
  *  Kristall, Gold und Gefahr bleiben ueberall gleich, damit die Bedeutung der
  *  Farben nicht von der Karte abhaengt. */
@@ -19,6 +27,16 @@ export interface MapPalette {
   mood: string;
   /** Farbe des treibenden Bodennebels. */
   haze: string;
+  /** Was ueber dieser Karte vom Himmel kommt, und in welchem Ton (D2).
+   *
+   *  Die drei Orte unterschieden sich bis v173 vor allem im Bodenton - und
+   *  ein Ton allein traegt nicht weit, wenn das Feld ohnehin dunkel ist.
+   *  Etwas, das sich BEWEGT, sagt "anderer Ort" schneller als eine Farbe.
+   *
+   *  `keines` ist erlaubt und gehoert dazu: eine vierte Karte muss nicht
+   *  Wetter haben, nur weil die ersten drei es haben. */
+  wetter: WetterArt;
+  wetterTon: string;
   /** Saumfarbe fuer Tuerme und Gegner.
    *
    *  Ein Objekt ist nicht deshalb lesbar, weil seine Flaeche sich vom Boden
@@ -150,6 +168,8 @@ const MOOS: MapPalette = {
   path: '#C9A86A', pathEdge: '#9C7F49',
   rock: '#2A3348', rockHi: '#3D4A66',
   mood: '#BEE2FF', haze: '#B4D6E2', sonne: '#FFC26A',
+  // Spiralhain: Nieselregen. Moos steht nicht ohne Wasser.
+  wetter: 'regen', wetterTon: '#CFE6F2',
 };
 
 const LAUB: MapPalette = {
@@ -157,6 +177,8 @@ const LAUB: MapPalette = {
   path: '#CBB48A', pathEdge: '#8E7A52',
   rock: '#39332A', rockHi: '#5C5242',
   mood: '#FFD9A8', haze: '#B8A882', sonne: '#FFB661',
+  // Ascheschlucht: Aschefall, warm und langsam. Der Name ist das Wetter.
+  wetter: 'asche', wetterTon: '#E8C79A',
 };
 
 const FROST: MapPalette = {
@@ -164,6 +186,8 @@ const FROST: MapPalette = {
   path: '#E4EEF6', pathEdge: '#A6BACD',
   rock: '#2C3E5B', rockHi: '#44608A',
   mood: '#D6ECFF', haze: '#CFE6F5', sonne: '#FFD9A0',
+  // Frostspalte: Schneetreiben, seitlich verweht.
+  wetter: 'schnee', wetterTon: '#EFF7FF',
 };
 
 /** Karte 1 "Spiralhain": Ein einziger Weg, der sich einmal um den Herzkristall

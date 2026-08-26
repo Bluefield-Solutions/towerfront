@@ -1200,6 +1200,38 @@ const PROBEN = [
     tor: 'lesbarkeit',
   },
   {
+    // Und die Wetterart selbst wird geprueft, nicht uebersprungen: ein
+    // Eintrag in der Palette, den niemand ansieht, ist die Stelle, an der
+    // beim naechsten Mal ein Tippfehler stehen bleibt.
+    name: 'Wetterart mit Tippfehler',
+    datei: 'src/data/maps.ts',
+    regel: /  wetter: 'regen', wetterTon: '#CFE6F2',/,
+    ersatz: "  wetter: 'nieselregen' as never, wetterTon: '#CFE6F2',",
+    tor: 'guards',
+  },
+  {
+    // D2, v173: die Asche muss glimmen. Ohne Glut ist Aschefall
+    // beigefarbener Schnee - und die erste Fassung dieser Pruefung hat das
+    // NICHT gemerkt: sie fragte nach "warm", und der Ascheton ist selbst
+    // warm. Sie meldete mit abgeschalteter Glut unveraendert 29 Prozent.
+    // Gemessen wird jetzt die Saettigung, die nur die Glut hat.
+    name: 'Der Ascheschlucht geht die Glut aus',
+    datei: 'src/gfx/atmosphere.ts',
+    regel: /^        const istGlut = art === 'asche' && rnd\(\) < 0\.125;$/m,
+    ersatz: '        const istGlut = false;',
+    tor: 'bildtor',
+  },
+  {
+    // Und die Sparfassung: bei niedriger Qualitaet duenner, aber nicht aus.
+    // Ein Ort, dessen Wetter auf schwachen Geraeten verschwindet, waere
+    // dort ein anderer Ort.
+    name: 'Wetter faellt bei niedriger Qualitaet ganz weg',
+    datei: 'src/gfx/atmosphere.ts',
+    regel: /^  regen: \[130, 60\],$/m,
+    ersatz: '  regen: [130, 0],',
+    tor: 'bildtor',
+  },
+  {
     // D5, v172: der Ansichtswechsel muss von SELBST anspringen. Wird `view`
     // wieder ein einfaches Feld, laeuft das Menue ohne Uebergang - und die
     // Pruefung auf den Versatz saehe nichts davon, weil sie die Uhr von Hand

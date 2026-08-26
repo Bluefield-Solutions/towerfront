@@ -753,6 +753,85 @@ takes.push(['welle15', () => shot('welle15', 844, 390, (s) => {
   return 60 * 16;
 })]);
 
+// --- Hat jede Karte ihr Wetter, und sind die drei zu unterscheiden? (D2)
+//
+// Gemessen wird die SCHICHT ALLEIN, auf schwarzem Grund. Ueber dem Feld
+// waere sie nicht zu fassen: bei 0,15 bis 0,47 Prozent veraenderter
+// Bildpunkte verschwindet sie in jeder Schwelle, die man gegen ein Foto
+// setzt - und eine Messung, die ihren Gegenstand nicht sieht, bezeugt ihn
+// nur (Regel 13).
+//
+// Und die zweite Frage ist die wichtigere: Aschefall darf nicht einfach
+// beigefarbener Schnee sein. Beide sind herabfallender Staub, beide rund,
+// beide langsam - was sie trennt, ist die GLUT: jede achte Flocke der
+// Ascheschlucht ist ein warmer, pulsierender Punkt. Ohne sie unterscheiden
+// sich die beiden allein im Farbton, und ein Farbton allein traegt bei zwei
+// Bildpunkten Durchmesser nicht.
+pruefungen.push(async () => {
+  const { drawWetter } = await import('../src/gfx/atmosphere.ts');
+  const messen = (art, ton, dicht) => {
+    const cv = createCanvas(1920, 1080);
+    const g = cv.getContext('2d');
+    g.fillStyle = '#000';
+    g.fillRect(0, 0, 1920, 1080);
+    drawWetter(g, 12.5, dicht, art, ton);
+    const d = g.getImageData(0, 0, 1920, 1080).data;
+    let gesetzt = 0, glut = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i] + d[i + 1] + d[i + 2] < 8) continue;
+      gesetzt++;
+      // Glut heisst NICHT "warm" - der Ascheton ist selbst warm (#E8C79A,
+      // Blau/Rot 0,66), und ein Warmtest meldete mit abgeschalteter Glut
+      // unveraendert 29 Prozent. Er hat sie bezeugt, ohne sie je zu messen
+      // (Regel 13). Was nur die Glut hat, ist die SAETTIGUNG: #FF9A3C liegt
+      // bei Blau/Rot 0,24.
+      if (d[i] > 12 && d[i + 2] / d[i] < 0.45) glut++;
+    }
+    return { gesetzt, glutAnteil: gesetzt ? glut / gesetzt : 0 };
+  };
+
+  const zeilen = [];
+  for (const m of MAPS) {
+    const art = m.palette.wetter;
+    if (art === 'keines') { zeilen.push(`  ${m.name}: kein Wetter`); continue; }
+    const hoch = messen(art, m.palette.wetterTon, true);
+    const niedrig = messen(art, m.palette.wetterTon, false);
+    if (hoch.gesetzt < 800) {
+      throw new Error(
+        `Wetter ${m.name} (${art}): nur ${hoch.gesetzt} Bildpunkte gesetzt - das ist keine Stimmung, das ist nichts.`,
+      );
+    }
+    // Niedrige Qualitaet duenn, aber NICHT aus: ein Ort, dessen Wetter auf
+    // schwachen Geraeten verschwindet, waere dort ein anderer Ort.
+    if (niedrig.gesetzt < 200 || niedrig.gesetzt >= hoch.gesetzt) {
+      throw new Error(
+        `Wetter ${m.name}: bei niedriger Qualitaet ${niedrig.gesetzt} gegen ${hoch.gesetzt} Bildpunkte - `
+        + 'entweder ist es dort ganz weg oder es spart nichts.',
+      );
+    }
+    if (art === 'asche' && hoch.glutAnteil < 0.05) {
+      throw new Error(
+        `Wetter ${m.name}: nur ${(hoch.glutAnteil * 100).toFixed(1)} % der Aschepunkte glimmen - `
+        + 'ohne Glut ist Aschefall beigefarbener Schnee.',
+      );
+    }
+    if (art !== 'asche' && hoch.glutAnteil > 0.01) {
+      throw new Error(
+        `Wetter ${m.name}: ${(hoch.glutAnteil * 100).toFixed(1)} % der Punkte glimmen - `
+        + 'nur die Asche hat Glut.',
+      );
+    }
+    zeilen.push(`  ${m.name}: ${art}, ${hoch.gesetzt} Punkte (niedrig ${niedrig.gesetzt}), `
+      + `Glut ${(hoch.glutAnteil * 100).toFixed(1)} %`);
+  }
+  const arten = new Set(MAPS.map((m) => m.palette.wetter).filter((w) => w !== 'keines'));
+  if (arten.size < 2) {
+    throw new Error(`Wetter: nur ${arten.size} Art(en) im Spiel - dann trennt es die Orte nicht.`);
+  }
+  console.log('Wetter je Karte:');
+  for (const z of zeilen) console.log(z);
+});
+
 // --- Steht ein ruhender Turm STILL? (Rueckbau von D18, v162)
 //
 // Von v116 bis v161 atmeten die Tuerme: zwei Weltpunkte auf und ab, damit

@@ -25,6 +25,7 @@ import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { umriss, ueberdeckung } from './silhouette';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ordner = process.argv[2];
@@ -112,29 +113,15 @@ async function messen(pfad: string, datei: string): Promise<Mass | null> {
   };
 }
 
-/** Die Silhouette auf ein 64er Raster normieren - Größe und Lage fallen
- *  heraus, die FORM bleibt. Zwei Panzer, die sich nur in der Farbe
- *  unterscheiden, kommen so auf über 0,9. */
-function normieren(m: Mass): Uint8Array {
-  const N = 64, out = new Uint8Array(N * N);
-  const bw = m.x1 - m.x0 + 1, bh = m.y1 - m.y0 + 1;
-  for (let y = 0; y < N; y++) {
-    for (let x = 0; x < N; x++) {
-      const sx = m.x0 + Math.floor((x * bw) / N);
-      const sy = m.y0 + Math.floor((y * bh) / N);
-      out[y * N + x] = m.maske[sy * m.N + sx];
-    }
-  }
-  return out;
-}
-const ueberdeckung = (a: Uint8Array, b: Uint8Array): number => {
-  let und = 0, oder = 0;
-  for (let k = 0; k < a.length; k++) {
-    if (a[k] && b[k]) und++;
-    if (a[k] || b[k]) oder++;
-  }
-  return oder ? und / oder : 1;
-};
+// Die Silhouettenrechnung steht in `tools/silhouette.ts` - EINMAL.
+//
+// Bis v170 hatte dieses Werkzeug eine eigene zweite Fassung: sie rasterte
+// die Maske auf 300 Punkte laengste Kante statt am vollen Bild. Gemessen
+// wichen die beiden fuer dasselbe Bildpaar um 0,014 voneinander ab
+// (frost_1_1 gegen frost_1_6: 0,737 hier, 0,723 dort). Klein - und genau
+// die Drift, vor der Regel 15 warnt: eine Lieferung haette die Abnahme
+// hier bestehen und im Tor scheitern koennen, ohne dass jemand versteht,
+// warum. Jetzt heisst "aehnlich" in beiden Werkzeugen dasselbe.
 
 // --- Messen
 const dateien = readdirSync(ordner).filter((f) => /\.(png|webp|jpe?g)$/i.test(f)).sort();
@@ -177,8 +164,30 @@ for (const f of dateien) {
 }
 
 // --- Die Form, und zwar im Vergleich untereinander
+const norm = await Promise.all(masse.map((m) => umriss(readFileSync(join(ordner, m.datei)))));
+
+// --- Wie voll ist das Deckrechteck?
+//
+// Ein aufrechter Klotz fuellt seinen Kasten fast ganz; ein Dreibein, ein
+// Radfahrzeug mit Taille oder ein Laeufer mit abstehenden Beinen lassen
+// viel Leerraum. Genau daran haengt, ob zwei Figuren im Umriss ueberhaupt
+// auseinandergehen KOENNEN - zwei volle Rechtecke ueberdecken sich immer
+// stark, ganz gleich was auf ihnen gemalt ist.
+//
+// **Hier steht bewusst keine Grenze.** Sie waere fuer einen Turm eine
+// andere als fuer einen Spaeher, und eine erfundene gemeinsame Zahl
+// verwuerfe entweder alles oder nichts (Regel 10). Die Bestellungen in der
+// Art Bible tragen ihre eigene Zahl; dieses Werkzeug liefert sie.
+const fuellung = norm.map((f) => f.reduce((n, v) => n + v, 0) / f.length);
+if (masse.length) {
+  console.log('\n  Füllung des Deckrechtecks (1,00 = volles Rechteck, '
+    + 'leere Fläche = 1 minus dieser Wert):');
+  for (let i = 0; i < masse.length; i++) {
+    console.log(`    ${masse[i].datei.slice(0, 28).padEnd(29)} ${fuellung[i].toFixed(2)}  `
+      + `leer ${((1 - fuellung[i]) * 100).toFixed(0)} %`);
+  }
+}
 if (masse.length > 1) {
-  const norm = masse.map(normieren);
   const paare: { i: number; j: number; v: number }[] = [];
   for (let i = 0; i < norm.length; i++) {
     for (let j = i + 1; j < norm.length; j++) {
@@ -199,6 +208,64 @@ if (masse.length > 1) {
       + `${AEHNLICH_MAX} Silhouetten-Ähnlichkeit (schlimmstes ${paare[0].v.toFixed(2)}). `
       + 'Bei 17 bis 40 Bildschirmpunkten sind sie dann nur noch an der Farbe zu '
       + 'unterscheiden - und Farbe darf nie das einzige Merkmal sein.');
+  }
+}
+
+// --- Und gegen den AUSGELIEFERTEN Satz.
+//
+// Der Vergleich untereinander allein reicht nicht, und das ist gemessen:
+// die sechs Frostbilder sind untereinander zu aehnlich UND der Frostturm
+// ist zugleich das schlimmste Sortenpaar mit dem Bogenturm (0,76). Eine
+// Lieferung von sechs Frostbildern haette hier bestehen koennen und waere
+// im Tor trotzdem gerissen - gegen eine Figur, die dieses Werkzeug gar
+// nicht ansieht.
+//
+// Verglichen wird gegen alles, was heute gezeichnet wird: Turmbilder,
+// Sockel und Gegner - aber NICHT gegen den eigenen Vorgaenger. Eine
+// Lieferung `turm_frost_4.png` soll ja gerade `frost_1_4` ersetzen; dass
+// die beiden sich aehneln, ist keine Auskunft. Uebersprungen wird deshalb
+// jede Bestandsfigur, deren Stamm im Dateinamen des Kandidaten steckt
+// (`frost_1_4` -> Stamm `frost`). Die Frage, die uebrig bleibt, ist die
+// richtige: sieht die neue Figur aus wie eine ANDERE?
+{
+  const vorrat = new Map<string, Buffer>();
+  for (const datei of ['towers.ts', 'objects.ts', 'enemies.ts']) {
+    const pfad = join(ROOT, 'src/gfx/assets', datei);
+    if (!existsSync(pfad)) continue;
+    const quelle = readFileSync(pfad, 'utf8');
+    for (const hit of quelle.matchAll(/'([^']+)':\s*'data:image\/[a-z+]+;base64,([^']+)'/g)) {
+      vorrat.set(hit[1], Buffer.from(hit[2], 'base64'));
+    }
+  }
+  if (vorrat.size) {
+    const stamm = (name: string): string =>
+      name.replace(/\.(png|webp|jpe?g)$/i, '').replace(/^(turm|gegner|sockel|waffe)_/, '')
+        .replace(/(_\d+)+$/, '');
+    const bestand: { name: string; stamm: string; form: Uint8Array }[] = [];
+    for (const [name, buf] of vorrat) bestand.push({ name, stamm: stamm(name), form: await umriss(buf) });
+    console.log(`\n  Gegen den ausgelieferten Satz (${bestand.length} Figuren, `
+      + `ohne den eigenen Vorgänger), Grenze ${AEHNLICH_MAX}:`);
+    let schlimm = 0;
+    for (let i = 0; i < masse.length; i++) {
+      const eigen = stamm(masse[i].datei);
+      let schlimmste = { v: 0, name: '' };
+      for (const b of bestand) {
+        if (b.stamm === eigen) continue;   // der eigene Vorgaenger
+        if (!b.stamm) continue;
+        const v = ueberdeckung(norm[i], b.form);
+        if (v > schlimmste.v) schlimmste = { v, name: b.name };
+      }
+      const reisst = schlimmste.v > AEHNLICH_MAX;
+      if (reisst) schlimm++;
+      console.log(`    ${masse[i].datei.slice(0, 28).padEnd(29)} `
+        + `${schlimmste.v.toFixed(2)} gegen ${schlimmste.name}${reisst ? '   ZU ÄHNLICH' : ''}`);
+    }
+    if (schlimm) {
+      befunde.push(`${schlimm} von ${masse.length} Kandidaten liegen über ${AEHNLICH_MAX} `
+        + 'gegen eine Figur, die HEUTE SCHON im Spiel steht. Der Vergleich untereinander '
+        + 'sagt darüber nichts - eine in sich vielfältige Lieferung kann trotzdem auf '
+        + 'dem Feld mit dem Bestand verschmelzen.');
+    }
   }
 }
 

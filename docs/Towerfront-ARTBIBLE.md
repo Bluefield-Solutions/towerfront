@@ -1,6 +1,6 @@
 # Towerfront — Art Bible
 
-Stand: v169 · 26.08.2026
+Stand: v170 · 26.08.2026
 
 **Dieses Dokument ist verbindlich.** Wer ein Bild bestellt, malt oder einbaut,
 richtet sich danach. Es ist die einzige Stelle, an der die Festlegungen
@@ -109,7 +109,23 @@ Kandidaten *vor* dem Packen) verletzt der Satz die eigene Bestellregel von
 | 0,65 | Infanterie / Koloss | 39,8 | ja |
 
 Sieben davon trägt heute die Farbe. **Koloss und Spalter** trägt nichts: sie
-sind grau wie grau und fast deckungsgleich. Am Code ist daran nichts zu
+sind grau wie grau und fast deckungsgleich.
+
+**Und es gibt eine gemessene Ursache dafür, keine zufällige.** Die Füllung
+des Deckrechtecks — wieviel vom umschließenden Rechteck die Figur wirklich
+belegt — trennt die acht sauber:
+
+| leere Fläche | Figur |
+|---|---|
+| 52 % · 48 % · 41 % · 40 % | Gleiter · Span · Infanterie · Leerentitan |
+| 31 % · 30 % | Schleicher · Späher |
+| **23 %** | **Koloss** |
+| **14 %** | **Spalter** |
+
+Die beiden Figuren, die sich nicht trennen lassen, sind zugleich die beiden
+massivsten Rechtecke im Satz. Das ist kein Zufall: zwei fast volle Rechtecke
+überdecken sich stark, ganz gleich was auf sie gemalt ist. **Umriss-Ähnlichkeit
+ist zum großen Teil eine Frage der Füllung** — und die ist bestellbar. Am Code ist daran nichts zu
 holen — gemessen bewegt die Körperfarbe über die ganze Gunmetal-Familie
 hinweg den Abstand nur zwischen 7,1 und 9,1; über die Grenze käme erst ein
 Braun oder ein Marineblau, und dann wäre die Fraktionsfamilie dahin.
@@ -136,6 +152,7 @@ nachgestellt, die Ratsche steht in `tools/readability.mjs`.
 | Nichts Rechteckiges auf dem Feld | alles, was zu einer Figur gehört, liegt auf dem Boden oder auf der Figur | Vorbilder | von Hand beurteilt |
 | **Form der vier Turmsorten** | keine zwei über **0,65** Umriss-Überdeckung, auf **jeder** Stufe | Dieselbe Regel wie bei den Gegnern (3.2b). Zwölf Türme auf einem Feld — der Umriss sagt, welcher wo steht | `npm run lesbarkeit` |
 | **Sichtbarkeit des Ausbaus** | Ratsche, kein Soll: kleiner ist besser | Die sechs Stufen sind absichtlich eine Familie (Bildauftrag 6.1), also ist eine hohe Zahl nicht schon ein Fehler. Wo die Grenze liegt, sagt erst ein Referenzabgleich — nicht ich (Regel 10) | `npm run lesbarkeit` |
+| **Füllung des Deckrechtecks** | wird gemessen und berichtet, ohne gemeinsame Grenze | Für einen Turm ist sie eine andere als für einen Späher; eine erfundene gemeinsame Zahl verwürfe alles oder nichts (Regel 10). Die Bestellungen tragen ihre eigene | `npm run probebild` |
 | Messstelle der Turmform | der Turm, wie er **gezeichnet** wird — beim Bogenturm Sockel **und** Waffe zusammengesetzt | Der Sockel allein wäre der fünfte Fall einer Zahl an einer Figur, die niemand sieht | `umrissZusammen` in `tools/silhouette.ts` |
 
 ### 5.2 Bestellung: die vier Türme sind im Umriss eine Familie

@@ -1,6 +1,6 @@
 # Towerfront — Bildauftrag
 
-Stand: v169 · 26.08.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v170 · 26.08.2026 · **Auftragsdokument für den Bild-Agenten**
 
 Dieses Dokument ist die vollständige Bestellung. Es enthält alles, was zum
 Erzeugen der Bilder nötig ist: Stil, Maße, Blickrichtung, Dateinamen,
@@ -472,7 +472,7 @@ transparent canvas, centred, nothing cropped.
 |---|---|---|
 | Umriss gegen `gegner_koloss.png` | **höchstens 0,60** | heute 0,76; 0,65 ist die Grenze, 0,60 der Abstand dazu |
 | Umriss gegen `gegner_spaeher.png` | höchstens 0,65 | heute 0,69 — beide sind Radfahrzeuge, die Taille trennt sie |
-| leere Fläche im Deckrechteck | **mindestens 25 %** | ein Rechteck hat 0 %; die Taille und die Radlücken bringen sie |
+| leere Fläche im Deckrechteck | **mindestens 35 %** | heute **14 %** — das vollste Rechteck aller acht Gegner. Der Koloss liegt bei 23 %, alle übrigen zwischen 30 und 52 %. Zwei fast massive Rechtecke *müssen* sich stark überdecken; hier liegt die Ursache, nicht in den Rädern |
 | Breite der Silhouette | 160–180 px | schmaler als der Koloss (200), sonst hilft die Taille nichts |
 
 ### 5.7 `gegner_titan.png` — superschwerer Läufer (Boss)
@@ -621,77 +621,110 @@ der noch aus der alten Welt stammt, und er fällt daneben sofort auf.
 
 ### 6.3 `turm_frost_1.png` … `turm_frost_6.png` — Kryo-Emitter
 
-**Der letzte fehlende Satz (Stand v163).** Bogenturm, Haubitze und
-Laserturm sind geliefert und im Spiel; der Frostturm ist der einzige, der
-noch aus der alten Fantasy-Welt stammt. Er muss zu den drei anderen
-passen — gedrungener Bunkerbau mit Auslegern, Warnschraffen an den Füßen,
-Panzerstahl in Grau, **eine** Akzentfarbe.
+**Der letzte fehlende Satz (Stand v170).** Bogenturm, Haubitze und Laserturm
+sind geliefert und im Spiel; der Frostturm ist der einzige, der noch aus der
+alten Fantasy-Welt stammt.
+
+> **Diese Bestellung wurde in v170 geschärft, und zwar gegen sich selbst.**
+> Sie enthielt bis dahin den Satz „*Same squat proportions, same short
+> outrigger feet … Only the accent colour and the weapon differ*". Genau das
+> ist eingetreten: gemessen überdeckt der heutige Frostturm den Bogenturm zu
+> **0,76** (gepackt, im Tor) beziehungsweise **0,79 bis 0,88** (an der
+> Kandidatendatei) — das schlimmste von sechs Sortenpaaren, die alle über
+> der Grenze liegen. Die Familie darf nicht am **Umriss** hängen. Sie hängt
+> an Panzerplatten, Warnschraffen, Grauton und Licht; der Umriss ist das,
+> woran der Spieler die Sorte erkennt, und der muss sich unterscheiden.
 
 ```
 [STYLE-BLOCK EINFÜGEN]
 
 SUBJECT: A cryogenic area-denial emplacement, seen from a slightly elevated
 three-quarter front angle, standing on the ground (NOT top-down). Level [N]
-of six. A squat armoured generator bunker with four short outrigger feet,
-coolant tanks, thick insulated cabling, and a wide upward-facing ring of
-emitter coils on top. NO gun barrel and NO muzzle — this weapon fires no
-projectile, it pulses in a radius. Light frost rimes the coils and the tank
-shoulders. Dark gunmetal grey with ONE accent: turquoise #7FE7E0 on the
-coils, the coolant lines and the hazard chevrons on the feet.
+of six. NO gun barrel and NO muzzle — this weapon fires no projectile, it
+pulses in a radius. Dark gunmetal grey with ONE accent: turquoise #7FE7E0 on
+the coils, the coolant lines and the hazard chevrons on the feet.
 
-MATCH THE EXISTING SET: this tower stands next to an autocannon bunker, a
-howitzer and a laser turret from the same family. Same squat proportions,
-same short outrigger feet with diagonal hazard stripes, same panelled
-armour plates, same grey. Only the accent colour and the weapon differ.
+THE OUTLINE IS THE POINT — READ THIS BEFORE DRAWING ANYTHING.
+The other three towers in this game are all an upright armoured block with
+something on top, and measured they are already too alike. This one must NOT
+be a block. Build it as a THREE-LEGGED EMITTER:
+  - three splayed legs meeting under a raised central hub, with OPEN
+    TRANSPARENT GAPS between the legs — a viewer must see background
+    through the lower half of the silhouette,
+  - the hub sits clearly ABOVE the ground, carried by the legs, not resting
+    on a plinth,
+  - a wide horizontal ring of emitter coils crowns the hub and OVERHANGS
+    the legs on every side, so the silhouette is wide at the top, open in
+    the middle and narrow at the feet.
+The recognisable shape is therefore an inverted, top-heavy tripod — the
+opposite of the squat bunkers. That contrast is the whole job.
 
-SILHOUETTE MUST GROW WITH THE LEVEL — this is the one thing the previous
-two deliveries got wrong. Measured, level 1 and level 6 were 90 to 96
-percent identical in outline; at 60 screen pixels nobody can tell them
-apart. Each level must change the OUTLINE, not only the fit-out:
-  1  bare: low ring of coils, two small tanks, no cabling
-  2  wider: a second coil ring, first cable loom bulging out on one side
-  3  taller: coolant tanks stacked, a squat radiator fin block added at the
-     back so the outline is no longer symmetric
-  4  wider again: full armour skirt, a slanted sensor mast off to one side
-  5  a second emitter ring lifted above the first on short pillars, so the
-     top half becomes visibly taller and more open
-  6  the largest fit-out: outer coil crown spreading beyond the base
-     footprint, heaviest cabling, strongest accent colour
-An anchor that stays inside the existing outline is invisible on a phone.
+WHAT STILL TIES IT TO THE FAMILY (do not drop these):
+the same panelled armour plates, the same diagonal hazard stripes on the
+feet, the same grey, the same light. The family lives in the SURFACE, never
+in the outline.
 
-IMPORTANT: on levels 4 to 6 the emitter coils must NOT reach the top edge —
-the previous generation was clipped there. Keep 12 percent clearance above.
+SILHOUETTE MUST GROW WITH THE LEVEL. Each level must change the OUTLINE,
+not only the fit-out — an addition that stays inside the previous outline is
+invisible on a phone:
+  1  bare: three thin legs, a small hub, one narrow coil ring
+  2  a second coil ring widens the crown beyond the legs; first cable loom
+     bulging out on one side
+  3  a squat radiator fin block cantilevered off the BACK of the hub, so the
+     outline stops being symmetric
+  4  full armour skirt around the hub and a slanted sensor mast off to one
+     side, clearly outside the crown
+  5  a second emitter ring lifted above the first on short pillars — the top
+     half becomes visibly taller and more open
+  6  outer coil crown spreading well beyond the leg footprint, heaviest
+     cabling, strongest accent colour
+
+IMPORTANT: on levels 4 to 6 the coils must NOT reach the top edge — the
+previous generation was clipped there. Keep 12 percent clearance above.
 
 PROPORTION WARNING: draw the tower about 14 percent SQUATTER than it should
 finally look — the game stretches this square image 16 percent vertically.
 Draw circles and coil rings as slightly wide ovals.
 
-The base sits on the ground at 28 percent of the image height from the
-bottom; nothing below it.
+The feet stand on the ground at 28 percent of the image height from the
+bottom; nothing below that line.
 
 FRAMING: 1024x1024 transparent PNG, square. The tower fills about 86 percent
 of the canvas, centred, at least 5 percent clear margin on every side —
 nothing cropped, not a coil, not a mast tip.
 ```
 
-#### Die vier Zahlen, an denen diese Lieferung gemessen wird
+#### Die sechs Zahlen, an denen diese Lieferung gemessen wird
 
-`npm run probebild -- <ordner>` sagt in einer Minute, ob sie trägt. Die
-Werte der beiden gelieferten Pakete stehen daneben, damit klar ist, was
-schon erreicht ist:
+`npm run probebild -- <ordner>` sagt in einer Minute, ob sie trägt — **vor**
+dem Packen. Daneben steht, was der heutige Frostturm an derselben Messstelle
+liefert, damit die Größe der Änderung klar ist:
 
-| Messung | Grenze | Paket 1 (Bunker) | Paket 2 (Mörser/Prisma) |
-|---|---|---|---|
-| Reines Schwarz | höchstens **2 %** der Fläche | 3,1–8,6 % ✗ | 1,8–3,2 % ✗ knapp |
-| Lichtwinkel neben der Sonne | höchstens **20°** | 15–29° ✗ | 8–27° ✗ knapp |
-| Rand berührt | **nie** | 9 von 10 ✗ | 0 von 12 ✓ |
-| Silhouette Stufe 1 zu Stufe 6 | höchstens **0,85** | 0,96 ✗ | 0,90 ✗ |
+| Messung | Grenze | Frostturm heute |
+|---|---|---|
+| Reines Schwarz | höchstens **2 %** der Fläche | 3,4–6,1 % ✗ |
+| Lichtwinkel neben der Sonne | höchstens **20°** | bis 44° ✗ |
+| Rand berührt | **nie** | 3 von 6 ✗ |
+| Silhouette Stufe 1 zu Stufe 6 | höchstens **0,70** | 0,74 ✗ |
+| Silhouette gegen jede ANDERE Figur | höchstens **0,60** | 0,79–0,88 ✗ |
+| Leere Fläche im Deckrechteck | mindestens **30 %**, auf **jeder** Stufe | Stufe 1: 34 % ✓ · Stufe 3: 29 % · Stufe 6: **18 %** ✗ |
 
-Die dritte Spalte ist geschafft — die anderen drei nicht. **Reines
-Schwarz** entsteht fast immer in Schattenfugen zwischen zwei Platten und
-unter Kabeln; der dunkelste Wert im ganzen Bild muss noch als dunkles Grau
-lesbar sein. **Der Lichtwinkel** ist die häufigste stille Abweichung: die
-Sonne steht auf 10 Uhr, nicht auf 12. Wenn die Oberseite gleichmäßig hell
+Die letzte Zeile ist neu und sie ist die wichtigste — sie sagt, **warum** der
+Frostturm heute mit dem Bogenturm verschmilzt: er **füllt sich beim Ausbau
+zu**. Auf Stufe 1 sind noch 34 % seines Deckrechtecks leer, auf Stufe 6 nur
+noch 18 %. Damit wird er mit jeder Stufe mehr zu dem, was die anderen drei
+schon sind: ein massives Rechteck. Zwei massive Rechtecke überdecken sich
+immer stark, ganz gleich was auf sie gemalt ist.
+
+**Der Ausbau muss also nach AUSSEN wachsen, nicht nach innen.** Jede Stufe
+fügt etwas hinzu, das über den bisherigen Umriss hinausragt — und die freie
+Fläche zwischen den Beinen bleibt frei. Das ist die eine Regel, aus der die
+beiden Silhouettenzahlen darüber von selbst folgen.
+
+**Reines Schwarz** entsteht fast immer in Schattenfugen zwischen zwei Platten
+und unter Kabeln; der dunkelste Wert im ganzen Bild muss noch als dunkles
+Grau lesbar sein. **Der Lichtwinkel** ist die häufigste stille Abweichung:
+die Sonne steht auf 10 Uhr, nicht auf 12. Wenn die Oberseite gleichmäßig hell
 ist und nur die Unterseite dunkel, kommt das Licht von oben — dann
 widerspricht die Figur ihrem eigenen Schatten, den das Spiel nach unten
 rechts wirft.

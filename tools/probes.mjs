@@ -1200,14 +1200,35 @@ const PROBEN = [
     tor: 'lesbarkeit',
   },
   {
+    // v169: die Turmformmessung muss die STUFE sehen. Wird der Rueckfall auf
+    // Stufe 1 festgenagelt, sind alle sechs Stufen dasselbe Bild - und der
+    // Ausbau, fuer den man bis 1950 Gold zahlt, waere im Umriss nicht mehr
+    // zu unterscheiden, ohne dass sich am Spiel etwas geaendert haette.
+    name: 'Turmform misst jede Stufe als Stufe 1',
+    datei: 'tools/readability.mjs',
+    regel: /    for \(let l = level; l >= 1 && !buf; l--\) buf = towerArt\.get\(`\$\{id\}_1_\$\{l\}`\) \?\? null;/,
+    ersatz: '    for (let l = 1; l >= 1 && !buf; l--) buf = towerArt.get(`${id}_1_${l}`) ?? null;',
+    tor: 'lesbarkeit',
+  },
+  {
+    // Und die andere Haelfte: vier Sorten, die auf dem Feld dieselbe Figur
+    // sind. Eingebaut wird der echte Fehler - drei Sorten holen sich das
+    // Bild des Moersers -, nicht das Entfernen der Pruefung.
+    name: 'Drei Turmsorten mit demselben Bild',
+    datei: 'tools/readability.mjs',
+    regel: /buf = towerArt\.get\(`\$\{id\}_1_\$\{l\}`\) \?\? null;/,
+    ersatz: 'buf = towerArt.get(`mortar_1_${l}`) ?? null;',
+    tor: 'lesbarkeit',
+  },
+  {
     // Regel 13 an der Formmessung: wer eine Wirkung misst, schaltet sie
     // zuerst ab. Liefert `umriss` fuer jedes Bild dieselbe volle Maske,
     // ueberdecken sich ALLE Paare zu 1,00 - und die Paare, die heute allein
     // die Farbe traegt, muessen dann als neu und zu nah gemeldet werden.
     name: 'Silhouettenmessung sieht ueberall dieselbe Form',
     datei: 'tools/silhouette.ts',
-    regel: /^  const N = 64, out = new Uint8Array\(N \* N\);$/m,
-    ersatz: '  const N = 64, out = new Uint8Array(N * N).fill(1); return out;',
+    regel: /^  for \(let i = 0; i < W \* H; i\+\+\) if \(data\[i \* 4 \+ 3\] > 24\) maske\[i\] = 1;$/m,
+    ersatz: '  for (let i = 0; i < W * H; i++) maske[i] = 1;',
     tor: 'lesbarkeit',
   },
   {

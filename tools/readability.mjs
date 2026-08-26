@@ -114,6 +114,31 @@ const FORM_MAX = 0.65;
  *  Meldung zu verschwinden. Rot wird die Pruefung trotzdem - naemlich wenn
  *  ein NEUES Paar zusammenrueckt, oder wenn dieses hier schlechter wird als
  *  hier eingetragen. */
+/** Turmsorten, die sich heute schon zu aehnlich sehen - Ratsche wie oben. */
+const BEKANNTE_ENGE_TUERME = [
+  { a: 'arrow', b: 'frost', form: 0.76 },
+  { a: 'mortar', b: 'prism', form: 0.69 },
+  { a: 'frost', b: 'prism', form: 0.69 },
+  { a: 'arrow', b: 'mortar', form: 0.70 },
+  { a: 'arrow', b: 'prism', form: 0.66 },
+  { a: 'frost', b: 'mortar', form: 0.65 },
+];
+/** Wie stark sich Stufe 1 und Stufe 6 einer Sorte heute noch ueberdecken.
+ *
+ *  **Hier steht bewusst kein Soll.** Die sechs Stufen sind absichtlich eine
+ *  Familie (Bildauftrag 6.1), also ist eine hohe Zahl nicht schon ein
+ *  Fehler - und wo die Grenze liegt, sagt erst ein Referenzabgleich, nicht
+ *  ich (Regel 10). Bis dahin: kleiner ist besser, schlechter wird es nicht.
+ *
+ *  Gemessen am 26.08.2026. Der Bogenturm liegt bei 0,92, und das ist der
+ *  Befund: seine Waffe sitzt mit 0,75 Breite auf einem Sockel voller
+ *  Breite und auf einem Viertel der Hoehe - sie liegt also GANZ INNERHALB
+ *  des Sockelumrisses und traegt zum Umriss nichts bei. Der Ausbau steht
+ *  in der Bestueckung, nicht in der Silhouette; von der Sandsackschuerze
+ *  auf Stufe 3 bis zum Zielmast auf Stufe 4 hat nichts davon die Kante
+ *  erreicht. Bestellung dazu: Art Bible 5.2. */
+const AUSBAU_STAND = { arrow: 0.92, frost: 0.72, mortar: 0.74, prism: 0.83 };
+
 const BEKANNTE_ENGE_PAARE = [
   { a: 'Koloss', b: 'Spalter', farbe: 7.3, form: 0.76 },
 ];
@@ -271,6 +296,8 @@ const { MAPS } = await import('../src/data/maps');
 // Tor-Bilanz an drei eigenen Proben gefunden hat.
 const { enemyArtWidth, FARBSCHLEIER: SCHLEIER_GEGNER } = await import('../src/gfx/enemyart');
 const { towerArtScale, FARBSCHLEIER: SCHLEIER_TURM } = await import('../src/gfx/towerart');
+const { turmMasse, WAFFE_HOCH, WAFFE_BREIT } = await import('../src/data/turmgestalt');
+const { umriss, umrissZusammen, ueberdeckung } = await import('./silhouette.ts');
 
 
 const problems = [];
@@ -383,6 +410,129 @@ for (const id of TOWER_ORDER) {
   }
 }
 
+// --- Die Form der Tuerme: vier Sorten, sechs Stufen.
+//
+// Dieselbe Frage wie bei den Gegnern, und bis v168 hat sie fuer Tuerme
+// niemand gestellt. Sie zerfaellt in zwei:
+//
+//  A) **Vier Sorten** muessen auseinanderzuhalten sein. Auf einem Feld mit
+//     zwoelf Tuermen entscheidet der Umriss, welcher wo steht.
+//  B) **Sechs Stufen** einer Sorte sind absichtlich eine Familie (Bildauftrag
+//     6.1: derselbe Sockel, dieselbe Silhouettenlogik). Aber der Ausbau muss
+//     zu SEHEN sein - sonst zahlt man 1950 Gold fuer dieselbe Figur.
+//
+// Gemessen wird der Bogenturm ZUSAMMENGESETZT, aus Sockel und Waffe, so wie
+// der Renderer ihn zeichnet. Der Sockel allein waere die falsche Messstelle
+// (Regel 12) - und das ist keine Vorsichtsmassnahme, sondern gemessen: mit
+// Waffe steigt sein Abstand von Stufe 1 zu Stufe 6 von 0,89 auf 0,92. Die
+// Vermutung, die Waffe trage den Ausbau, war falsch.
+console.log('\nTürme (Form: vier Sorten, sechs Stufen):');
+const turmFormen = new Map();
+for (const id of TOWER_ORDER) {
+  for (let level = 1; level <= 6; level++) {
+    let sockel = null, waffe = null;
+    for (let k = level; k >= 1 && !sockel; k--) sockel = objectArt.get(`sockel_${id}_${k}`) ?? null;
+    for (let k = level; k >= 1 && !waffe; k--) waffe = objectArt.get(`waffe_${id}_${k}`) ?? null;
+    if (sockel && waffe) {
+      const m = turmMasse();
+      const meta = await sharp(waffe).metadata();
+      const ww = m.w * WAFFE_BREIT, wh = ww * (meta.height / meta.width);
+      turmFormen.set(`${id}:${level}`, await umrissZusammen([
+        { bild: sockel, x: -m.w / 2, y: m.oben, w: m.w, h: m.h },
+        { bild: waffe, x: -ww / 2, y: m.oben + m.h * WAFFE_HOCH - wh / 2, w: ww, h: wh },
+      ]));
+      continue;
+    }
+    let buf = null;
+    for (let l = level; l >= 1 && !buf; l--) buf = towerArt.get(`${id}_1_${l}`) ?? null;
+    if (!buf && sockel) buf = sockel;
+    if (!buf) { problems.push(`Turmbild fuer ${id} Stufe ${level} fehlt - die Form ist nicht zu messen.`); continue; }
+    turmFormen.set(`${id}:${level}`, await umriss(buf));
+  }
+}
+
+// A) die Sorten gegeneinander, auf JEDER Stufe - ein Paar, das erst auf
+//    Stufe 4 zusammenrueckt, faellt bei einer Stichprobe durch.
+let schlimmstesSortenpaar = { v: 0, text: '' };
+for (let level = 1; level <= 6; level++) {
+  for (let i = 0; i < TOWER_ORDER.length; i++) {
+    for (let j = i + 1; j < TOWER_ORDER.length; j++) {
+      const a = turmFormen.get(`${TOWER_ORDER[i]}:${level}`);
+      const b = turmFormen.get(`${TOWER_ORDER[j]}:${level}`);
+      if (!a || !b) continue;
+      const v = ueberdeckung(a, b);
+      if (v > schlimmstesSortenpaar.v) {
+        schlimmstesSortenpaar = { v, text: `${TOWER_ORDER[i]}/${TOWER_ORDER[j]} auf Stufe ${level}` };
+      }
+    }
+  }
+}
+console.log(`  Sorten untereinander: am nächsten ${schlimmstesSortenpaar.text} `
+  + `bei ${schlimmstesSortenpaar.v.toFixed(2)} (Grenze ${FORM_MAX})`);
+console.log(`  BEFUND (Ratsche): ${BEKANNTE_ENGE_TUERME.length} von 6 Sortenpaaren über ${FORM_MAX} - `
+  + 'die vier Türme sind im Umriss eine Familie. Bestellung: Art Bible 5.2.');
+
+// B) Stufe 1 gegen Stufe 6 - sieht man, wofuer man bezahlt hat?
+const ausbau = [];
+for (const id of TOWER_ORDER) {
+  const a = turmFormen.get(`${id}:1`), b = turmFormen.get(`${id}:6`);
+  if (a && b) ausbau.push({ id, v: ueberdeckung(a, b) });
+}
+console.log('  Stufe 1 gegen Stufe 6: '
+  + ausbau.map((e) => `${e.id} ${e.v.toFixed(2)}`).join('   '));
+
+{
+  const passtT = (e, a, b) => (e.a === a && e.b === b) || (e.a === b && e.b === a);
+  const getroffen = new Set();
+  for (let level = 1; level <= 6; level++) {
+    for (let i = 0; i < TOWER_ORDER.length; i++) {
+      for (let j = i + 1; j < TOWER_ORDER.length; j++) {
+        const a = turmFormen.get(`${TOWER_ORDER[i]}:${level}`);
+        const b = turmFormen.get(`${TOWER_ORDER[j]}:${level}`);
+        if (!a || !b) continue;
+        const v = ueberdeckung(a, b);
+        if (v <= FORM_MAX) continue;
+        const bekannt = BEKANNTE_ENGE_TUERME.find((e) => passtT(e, TOWER_ORDER[i], TOWER_ORDER[j]));
+        const zeile = `${TOWER_ORDER[i]} und ${TOWER_ORDER[j]} überdecken sich auf Stufe ${level} `
+          + `zu ${v.toFixed(2)} (Grenze ${FORM_MAX})`;
+        if (!bekannt) {
+          problems.push(`${zeile} - zwei Türme, die auf dem Feld dieselbe Figur sind.`);
+        } else {
+          getroffen.add(bekannt);
+          if (v > bekannt.form + 0.02) {
+            problems.push(`${zeile} - schlechter als eingetragen (${bekannt.form}).`);
+          }
+        }
+      }
+    }
+  }
+  for (const e of BEKANNTE_ENGE_TUERME) {
+    if (!getroffen.has(e)) {
+      problems.push(
+        `Der Eintrag ${e.a}/${e.b} in BEKANNTE_ENGE_TUERME trifft auf nichts mehr - `
+        + 'die Sorten sind getrennt, der Freibrief gehört gelöscht.',
+      );
+    }
+  }
+  // Und der Ausbau: kein Soll, aber auch kein Zurueck.
+  for (const e of ausbau) {
+    const stand = AUSBAU_STAND[e.id];
+    if (stand === undefined) {
+      problems.push(`Für ${e.id} steht kein Ausbaustand in AUSBAU_STAND - eine neue Sorte gehört eingetragen.`);
+    } else if (e.v > stand + 0.02) {
+      problems.push(
+        `${e.id}: Stufe 1 und Stufe 6 überdecken sich zu ${e.v.toFixed(2)}, eingetragen war ${stand} - `
+        + 'der Ausbau ist im Umriss noch weniger zu sehen als vorher.',
+      );
+    }
+  }
+  for (const id of Object.keys(AUSBAU_STAND)) {
+    if (!ausbau.some((e) => e.id === id)) {
+      problems.push(`AUSBAU_STAND kennt ${id}, gemessen wurde die Sorte nicht - der Eintrag ist blind.`);
+    }
+  }
+}
+
 console.log('\nGegner (Kontrast, Breite, Farbe):');
 const enemyColours = [];
 for (const [id, def] of Object.entries(ENEMIES)) {
@@ -433,7 +583,7 @@ for (const [id, def] of Object.entries(ENEMIES)) {
 // Satzes ueberhaupt misst; `npm run probebild` tut es nur an Kandidaten,
 // bevor sie gepackt werden.
 console.log('\nFarbabstand und Form der Gegnerarten (CIE76 / Silhouettenüberdeckung):');
-const { umriss, ueberdeckung } = await import('./silhouette.ts');
+
 for (const e of enemyColours) e.form = await umriss(enemyArt.get(e.id));
 const engePaare = [];
 for (let i = 0; i < enemyColours.length; i++) {

@@ -1,6 +1,6 @@
 # Towerfront — Art Bible
 
-Stand: v168 · 26.08.2026
+Stand: v169 · 26.08.2026
 
 **Dieses Dokument ist verbindlich.** Wer ein Bild bestellt, malt oder einbaut,
 richtet sich danach. Es ist die einzige Stelle, an der die Festlegungen
@@ -134,6 +134,58 @@ nachgestellt, die Ratsche steht in `tools/readability.mjs`.
 | Mündung | jedes Rohr endet an der Figur, nicht im Sockel — und ändert **nur** das Bild | v145: der Mündungspunkt als Flugstrecke gedacht kostete 18 Punkte Balance | `npm run muendungstor` |
 | Geschossform je Turm | eine Signaturform, keine zwei gleich | Vorbilder geben jedem Turm eine erkennbare Handschrift | `npm run guards` → „Geschossformen" |
 | Nichts Rechteckiges auf dem Feld | alles, was zu einer Figur gehört, liegt auf dem Boden oder auf der Figur | Vorbilder | von Hand beurteilt |
+| **Form der vier Turmsorten** | keine zwei über **0,65** Umriss-Überdeckung, auf **jeder** Stufe | Dieselbe Regel wie bei den Gegnern (3.2b). Zwölf Türme auf einem Feld — der Umriss sagt, welcher wo steht | `npm run lesbarkeit` |
+| **Sichtbarkeit des Ausbaus** | Ratsche, kein Soll: kleiner ist besser | Die sechs Stufen sind absichtlich eine Familie (Bildauftrag 6.1), also ist eine hohe Zahl nicht schon ein Fehler. Wo die Grenze liegt, sagt erst ein Referenzabgleich — nicht ich (Regel 10) | `npm run lesbarkeit` |
+| Messstelle der Turmform | der Turm, wie er **gezeichnet** wird — beim Bogenturm Sockel **und** Waffe zusammengesetzt | Der Sockel allein wäre der fünfte Fall einer Zahl an einer Figur, die niemand sieht | `umrissZusammen` in `tools/silhouette.ts` |
+
+### 5.2 Bestellung: die vier Türme sind im Umriss eine Familie
+
+Beim ersten Lauf der Formmessung über **Türme** (v169 — bis dahin hat sie nur
+Gegner gemessen) liegen **alle sechs Sortenpaare** über der Grenze von 0,65:
+
+| schlechtester Wert | Paar | wo |
+|---|---|---|
+| **0,76** | Bogenturm / Frostturm | Stufe 3 |
+| 0,70 | Bogenturm / Mörser | Stufe 6 |
+| 0,69 | Mörser / Prisma | Stufe 3 |
+| 0,69 | Frostturm / Prisma | Stufe 3 |
+| 0,66 | Bogenturm / Prisma | Stufe 3 |
+| 0,65 | Frostturm / Mörser | Stufe 6 |
+
+Der Grund ist derselbe wie beim Spalter: alle vier sind ein **aufrechter
+Klotz mit etwas obendrauf**, gepackt auf dieselbe Kachel mit demselben
+Füllgrad. Im normierten Umriss fällt weg, was sie unterscheidet — Rohr,
+Kristall, Emitter —, weil es innerhalb des Deckrechtecks liegt.
+
+**Und dasselbe noch einmal über die Stufen.** Stufe 1 gegen Stufe 6:
+
+| Sorte | Überdeckung | was das heißt |
+|---|---|---|
+| **Bogenturm** | **0,92** | der Ausbau ist im Umriss praktisch nicht zu sehen |
+| Prisma | 0,83 | wenig |
+| Mörser | 0,74 | erkennbar |
+| Frostturm | 0,72 | erkennbar |
+
+Beim Bogenturm ist die Ursache **gerechnet, nicht vermutet**: seine Waffe ist
+0,75 Zeichenbreiten breit und sitzt auf einem Viertel der Höhe — sie liegt
+damit **ganz innerhalb** des Sockelumrisses und trägt zum Umriss nichts bei.
+Von der Sandsackschürze auf Stufe 3 bis zum Zielmast auf Stufe 4 hat nichts
+davon die Kante erreicht.
+
+**Was zu bestellen ist** — für jede neue Turmlieferung, und zuerst für den
+ohnehin offenen Frostturm (Bildauftrag 6.3):
+
+1. **Eine Sorte, eine Grundform am Rand.** Nicht das Rohr unterscheidet,
+   sondern was aus dem Deckrechteck heraussteht: der Mörser eine schräg nach
+   hinten geneigte Wanne, das Prisma ein schmaler Turm mit auskragendem Kopf,
+   der Frostturm ein dreibeiniger Emitter mit Lücken zwischen den Beinen.
+2. **Ab Stufe 3 muss der Ausbau die Kante erreichen.** Sandsackschürze,
+   Zielmast, Kühlrippen: mindestens eines je Stufe **außerhalb** der
+   Silhouette von Stufe 1. Beim zweiteiligen Bogenturm heißt das: der Ausbau
+   gehört auf den **Sockel**, nicht auf die Waffe — die Waffe kann er nicht
+   tragen, sie steht innen.
+3. **Abnahme:** Sortenpaare höchstens 0,60, Stufe 1 gegen Stufe 6 höchstens
+   0,70. Beides mit `npm run lesbarkeit`.
 
 ---
 

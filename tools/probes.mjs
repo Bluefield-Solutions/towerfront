@@ -690,8 +690,8 @@ const PROBEN = [
     // wird, faellt auch nicht auf.
     name: 'Lesbarkeit misst den Bogenturm nicht mehr',
     datei: 'tools/readability.mjs',
-    regel: /^      if \(!buf && objectArt\.has\(`sockel_\$\{id\}`\)\) \{ key = `sockel_\$\{id\}`; buf = objectArt\.get\(key\); \}$/m,
-    ersatz: '      // Rueckfall auf den Sockel entfernt.',
+    regel: /^    if \(!buf\) \{\n      for \(let l = level; l >= 1 && !buf; l--\) \{\n.*\n      \}\n      if \(!buf && objectArt\.has\(`sockel_\$\{id\}`\)\).*\n    \}$/m,
+    ersatz: '    // Rueckfall auf den Sockel entfernt.',
     tor: 'lesbarkeit',
   },
   {

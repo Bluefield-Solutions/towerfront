@@ -1185,6 +1185,44 @@ const PROBEN = [
     tor: 'lesbarkeit',
   },
   {
+    // TF-024, v168: das Lesbarkeitstor muss denselben Farbschleier auftragen
+    // wie das Spiel. Bis v168 rechnete es mit 0,38 - dem Wert des
+    // Alt-Zweigs, der seit v147 nicht mehr laeuft - und beurteilte damit
+    // eine Figur, die niemand sieht (Regel 12).
+    //
+    // Der Eingriff stellt genau diesen Fehler wieder her. Er muss auffallen,
+    // weil die eingetragenen Werte der Ratsche an der Messstelle haengen:
+    // mit 0,38 rueckt Koloss/Spalter von 7,3 auf 5,4.
+    name: 'Lesbarkeitstor faerbt anders als das Spiel',
+    datei: 'src/gfx/enemyart.ts',
+    regel: /export const FARBSCHLEIER = 0\.15;/,
+    ersatz: 'export const FARBSCHLEIER = 0.38;',
+    tor: 'lesbarkeit',
+  },
+  {
+    // Regel 13 an der Formmessung: wer eine Wirkung misst, schaltet sie
+    // zuerst ab. Liefert `umriss` fuer jedes Bild dieselbe volle Maske,
+    // ueberdecken sich ALLE Paare zu 1,00 - und die Paare, die heute allein
+    // die Farbe traegt, muessen dann als neu und zu nah gemeldet werden.
+    name: 'Silhouettenmessung sieht ueberall dieselbe Form',
+    datei: 'tools/silhouette.ts',
+    regel: /^  const N = 64, out = new Uint8Array\(N \* N\);$/m,
+    ersatz: '  const N = 64, out = new Uint8Array(N * N).fill(1); return out;',
+    tor: 'lesbarkeit',
+  },
+  {
+    // Und die Gegenrichtung, weil eine Ratsche sonst zum Freibrief wird:
+    // findet die Formmessung NIRGENDS mehr eine Aehnlichkeit, trifft der
+    // Eintrag Koloss/Spalter auf nichts - und ein Eintrag ohne Gegenstand
+    // ist genau die Verfallsart, die dieses Verzeichnis viermal gekostet
+    // hat.
+    name: 'Silhouettenmessung findet nie eine Aehnlichkeit',
+    datei: 'tools/silhouette.ts',
+    regel: /^  return oder \? und \/ oder : 1;$/m,
+    ersatz: '  return oder ? 0 : 1;',
+    tor: 'lesbarkeit',
+  },
+  {
     // TF-030: die Figuren wachsen ueber die Strasse hinaus.
     name: 'Gegner passen nicht mehr auf die Strasse',
     datei: 'src/gfx/enemyart.ts',

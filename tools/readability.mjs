@@ -87,6 +87,36 @@ const MIN_BODY_CONTRAST = 1.15; // Körper gegen den Boden - nur noch Rückhalt
 const MIN_TOWER_PX = 26;       // Bildschirmpunkte Breite der Turmsilhouette
 const MIN_ENEMY_PX = 13;       // dasselbe für Gegner
 const MIN_COLOUR_DIST = 12;    // Abstand zweier Gegnerfarben (CIE76)
+/** Ab welcher Silhouettenüberdeckung zwei Formen als gleich gelten.
+ *
+ *  Dieselbe Grenze wie in `npm run probebild` und in der Art Bible - dort
+ *  steht sie als Bestellregel für neue Bilder, hier als Wächter über den
+ *  ausgelieferten Satz. */
+const FORM_MAX = 0.65;
+
+/** Paare, die heute schon zu nah beieinanderliegen - eine RATSCHE, kein Soll.
+ *
+ *  Beim ersten Lauf dieser Pruefung (v168) hat sich herausgestellt, dass der
+ *  AUSGELIEFERTE Gegnersatz die eigene Bestellregel verletzt: acht Paare
+ *  ueberdecken sich staerker als die erlaubten 0,65, das schlimmste
+ *  (Schleicher/Koloss) zu 0,84. Bei sieben davon traegt die Farbe die
+ *  Unterscheidung allein - beim achten, Koloss und Spalter, nicht.
+ *
+ *  Am Code ist daran nichts zu holen, und das ist gemessen, nicht vermutet:
+ *  die Koerperfarbe liegt im Spiel mit 15 Prozent ueber dem Bild, und ueber
+ *  die ganze Gunmetal-Familie hinweg bewegt das den Abstand der beiden nur
+ *  zwischen 7,1 und 9,1. Erst ein Braun oder ein Marineblau kommt ueber die
+ *  Grenze - dann waere die Fraktionsfamilie aus TF-024 wieder dahin. Das
+ *  Paar ist am BILD zu trennen (Bestellung in der Art Bible, 4.3), nicht an
+ *  einer Zahl.
+ *
+ *  Bis dahin steht der Befund in jedem Lauf da, statt in einer gruenen
+ *  Meldung zu verschwinden. Rot wird die Pruefung trotzdem - naemlich wenn
+ *  ein NEUES Paar zusammenrueckt, oder wenn dieses hier schlechter wird als
+ *  hier eingetragen. */
+const BEKANNTE_ENGE_PAARE = [
+  { a: 'Koloss', b: 'Spalter', farbe: 7.3, form: 0.76 },
+];
 
 /** Figuren, deren Kante zwar noch da, aber schwach ist. Sie stehen am Ende
  *  des Laufs, damit sie nicht in zwanzig Zeilen untergehen. */
@@ -239,8 +269,8 @@ const { MAPS } = await import('../src/data/maps');
 // Ausdruck in dieser Messung. Die Gegenprobe fiel dadurch durch - eine
 // Aenderung im Spiel aenderte die Messung nicht. Genau der Fehler, den die
 // Tor-Bilanz an drei eigenen Proben gefunden hat.
-const { enemyArtWidth } = await import('../src/gfx/enemyart');
-const { towerArtScale } = await import('../src/gfx/towerart');
+const { enemyArtWidth, FARBSCHLEIER: SCHLEIER_GEGNER } = await import('../src/gfx/enemyart');
+const { towerArtScale, FARBSCHLEIER: SCHLEIER_TURM } = await import('../src/gfx/towerart');
 
 
 const problems = [];
@@ -311,7 +341,7 @@ for (const id of TOWER_ORDER) {
     }
     if (!buf) { problems.push(`Turmbild fuer ${id}/${zweig} Stufe ${level} fehlt.`); continue; }
     const accent = hexRgb(accentFor(def, branch));
-    const m = await measureSprite(buf, accent, 0.38);
+    const m = await measureSprite(buf, accent, SCHLEIER_TURM);
     const lum = luminance(...m.rgb);
     const kante = luminance(...await measureEdge(buf));
     const { worstBody, worstRim, where } = worstContrast(lum, kante);
@@ -359,7 +389,7 @@ for (const [id, def] of Object.entries(ENEMIES)) {
   const buf = enemyArt.get(id);
   if (!buf) { problems.push(`Gegnerbild ${id} fehlt.`); continue; }
   const body = hexRgb(def.body);
-  const m = await measureSprite(buf, body, 0.38);
+  const m = await measureSprite(buf, body, SCHLEIER_GEGNER);
   const lum = luminance(...m.rgb);
   const kante = luminance(...await measureEdge(buf));
   const { worstBody, worstRim, where } = worstContrast(lum, kante);
@@ -386,23 +416,92 @@ for (const [id, def] of Object.entries(ENEMIES)) {
   }
 }
 
-console.log('\nFarbabstand der Gegnerarten (CIE76, kleinster Wert entscheidet):');
-let minPair = { d: Infinity, a: '', b: '' };
+// --- Farbe ODER Form: mindestens eines von beiden muss trennen.
+//
+// **Bis v167 verlangte diese Pruefung Farbabstand, Punkt.** Seit TF-024 ist
+// das falsch: die Fraktionsfarben lassen zwei Gegner DERSELBEN ROLLE
+// denselben Akzent tragen - Schleicher und Spaeher sind beide leicht und
+// schnell, Koloss und Spalter beide gepanzert. Das ist die Absicht, nicht
+// ein Versehen: die Farbe sagt, wogegen zu spielen ist, die Form sagt, wer
+// da kommt.
+//
+// Also die Bedingung, die wirklich gemeint ist: zwei Gegner muessen sich
+// AN IRGENDETWAS unterscheiden lassen. Liegen sie farblich nah beieinander,
+// muessen ihre Silhouetten weit auseinanderliegen - und umgekehrt. Erst
+// wenn BEIDES nah ist, sind sie im Feld nicht mehr zu trennen. Das ist
+// zugleich der erste Wächter, der die Silhouetten des AUSGELIEFERTEN
+// Satzes ueberhaupt misst; `npm run probebild` tut es nur an Kandidaten,
+// bevor sie gepackt werden.
+console.log('\nFarbabstand und Form der Gegnerarten (CIE76 / Silhouettenüberdeckung):');
+const { umriss, ueberdeckung } = await import('./silhouette.ts');
+for (const e of enemyColours) e.form = await umriss(enemyArt.get(e.id));
+const engePaare = [];
 for (let i = 0; i < enemyColours.length; i++) {
   for (let j = i + 1; j < enemyColours.length; j++) {
     const d = labDist(enemyColours[i].lab, enemyColours[j].lab);
-    if (d < minPair.d) minPair = { d, a: enemyColours[i].name, b: enemyColours[j].name };
+    const form = ueberdeckung(enemyColours[i].form, enemyColours[j].form);
+    // Nah ist ein Paar nur, wenn BEIDES nah ist. Ein Paar mit gleicher Farbe
+    // und verschiedener Form ist keines - und umgekehrt.
+    if (form < FORM_MAX || d >= MIN_COLOUR_DIST) continue;
+    engePaare.push({ a: enemyColours[i].name, b: enemyColours[j].name, d, form });
   }
 }
-console.log(
-  `  am nächsten: ${minPair.a} und ${minPair.b} bei ${minPair.d.toFixed(1)} ` +
-  `(mindestens ${MIN_COLOUR_DIST})`,
-);
-if (minPair.d < MIN_COLOUR_DIST) {
-  problems.push(
-    `${minPair.a} und ${minPair.b} liegen farblich nur ${minPair.d.toFixed(1)} auseinander - ` +
-    'im Feld nicht zu unterscheiden.',
-  );
+{
+  // Und das engste Paar ueberhaupt, damit die Zahl nicht unsichtbar wird.
+  let eng = { d: Infinity, a: '', b: '', form: 0 };
+  for (let i = 0; i < enemyColours.length; i++) {
+    for (let j = i + 1; j < enemyColours.length; j++) {
+      const d = labDist(enemyColours[i].lab, enemyColours[j].lab);
+      if (d < eng.d) {
+        eng = { d, a: enemyColours[i].name, b: enemyColours[j].name,
+          form: ueberdeckung(enemyColours[i].form, enemyColours[j].form) };
+      }
+    }
+  }
+  console.log(`  farblich am nächsten: ${eng.a} und ${eng.b} bei ${eng.d.toFixed(1)} `
+    + `(Form ${eng.form.toFixed(2)}, Grenze: unter ${MIN_COLOUR_DIST} nur mit Form unter ${FORM_MAX})`);
+}
+// `PAARE=1` stellt die Bestellung in der Art Bible (4.3) nach: alle Paare,
+// deren Silhouetten sich zu nah sind, und was die Farbe dazu noch traegt.
+// Nicht im Regellauf, weil acht Zeilen die Befunde darunter zudecken.
+if (process.env.PAARE) {
+  const rows = [];
+  for (let i = 0; i < enemyColours.length; i++) for (let j = i + 1; j < enemyColours.length; j++) {
+    const d = labDist(enemyColours[i].lab, enemyColours[j].lab);
+    const f = ueberdeckung(enemyColours[i].form, enemyColours[j].form);
+    if (f >= FORM_MAX) rows.push([d, f, enemyColours[i].name, enemyColours[j].name]);
+  }
+  rows.sort((a, b) => a[0] - b[0]);
+  console.log('  Formnahe Paare (Form >= ' + FORM_MAX + '), nach Farbabstand:');
+  for (const r of rows) console.log('    Farbe ' + r[0].toFixed(1).padStart(5) + '  Form ' + r[1].toFixed(2) + '  ' + r[2] + ' / ' + r[3]);
+}
+// Die Ratsche: eingetragene Paare stehen als Befund da, neue und
+// verschlechterte machen rot. Ein Eintrag, den niemand mehr misst, macht
+// ebenfalls rot - sonst bliebe er als Freibrief stehen, nachdem das Bild
+// laengst getauscht wurde (derselbe Fund wie viermal zuvor: eine Zahl, die
+// zu einer Figur gehoert, die es nicht mehr gibt).
+const passt = (e, p) => (e.a === p.a && e.b === p.b) || (e.a === p.b && e.b === p.a);
+for (const p of engePaare) {
+  const bekannt = BEKANNTE_ENGE_PAARE.find((e) => passt(e, p));
+  const zeile = `${p.a} und ${p.b}: farblich ${p.d.toFixed(1)} auseinander (Grenze ${MIN_COLOUR_DIST}), `
+    + `Silhouetten überdecken sich zu ${p.form.toFixed(2)} (Grenze ${FORM_MAX})`;
+  if (!bekannt) {
+    problems.push(`${zeile} - im Feld nicht zu unterscheiden.`);
+  } else if (p.d < bekannt.farbe - 0.3 || p.form > bekannt.form + 0.02) {
+    problems.push(
+      `${zeile} - schlechter als eingetragen (${bekannt.farbe} / ${bekannt.form}).`,
+    );
+  } else {
+    console.log(`  BEFUND (Ratsche): ${zeile} - am Bild zu trennen, siehe Art Bible 4.3.`);
+  }
+}
+for (const e of BEKANNTE_ENGE_PAARE) {
+  if (!engePaare.some((p) => passt(e, p))) {
+    problems.push(
+      `Der Eintrag ${e.a}/${e.b} in BEKANNTE_ENGE_PAARE trifft auf nichts mehr - `
+      + 'das Paar ist getrennt, der Freibrief gehört gelöscht.',
+    );
+  }
 }
 
 // Misst die Kantenmessung ueberhaupt etwas? (v147)

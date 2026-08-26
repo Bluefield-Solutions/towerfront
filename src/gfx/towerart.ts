@@ -51,7 +51,9 @@ import { einbetten, einbettungSchluessel } from './einbettung';
 // Farbe ohne Verlauf, alte 0,38 mit. Die Liste der "neuen" enthielt aber
 // alle vier Turmarten - der zweite Fall lief nie. Er ist weg, und was
 // bleibt, ist die Zahl, die tatsaechlich gilt.
-const FARBSCHLEIER = 0.13;
+// Exportiert aus demselben Grund wie bei den Gegnern: das Lesbarkeitstor
+// misst die gebackene Figur und muss denselben Schleier auftragen.
+export const FARBSCHLEIER = 0.13;
 
 const tinted = new Map<string, HTMLCanvasElement>();
 

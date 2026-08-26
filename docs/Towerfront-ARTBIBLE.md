@@ -1,6 +1,6 @@
 # Towerfront — Art Bible
 
-Stand: v167 · 25.08.2026
+Stand: v168 · 26.08.2026
 
 **Dieses Dokument ist verbindlich.** Wer ein Bild bestellt, malt oder einbaut,
 richtet sich danach. Es ist die einzige Stelle, an der die Festlegungen
@@ -79,15 +79,49 @@ Grafik-Audit. Nachbearbeitung hilft nicht — nachgewiesen mit
 
 | Festlegung | Wert | Herkunft | Messstelle |
 |---|---|---|---|
-| **Saumkontrast** | höchstens **9 von 20** Figuren unter 1,5 — Ratsche | Gemessen wird der äußerste Ring der Figur gegen den Boden. Ein Soll gibt es nicht; die alte Grenze war für die alte Messung gedacht und hätte alle zwanzig gerissen | `npm run lesbarkeit` |
+| **Saumkontrast** | höchstens **10 von 20** Figuren unter 1,5 — Ratsche | Gemessen wird der äußerste Ring der Figur gegen den Boden. Ein Soll gibt es nicht; die alte Grenze war für die alte Messung gedacht und hätte alle zwanzig gerissen | `npm run lesbarkeit` |
 | Prüfung der Prüfung | liefert die Messung für alle Figuren fast denselben Wert, misst sie nicht die Figur | v148: sie rechnete die Kartenfarbe statt der Figur — zwanzig grüne Zeilen über eine Farbe, die kein Bildpunkt je trug | `npm run lesbarkeit`, Spannenprüfung |
 | Silhouettenbreite | jede Gegnerfigur passt auf die engste Wegstelle | gemessen am gepackten Bild, nicht an der Kachel | `npm run gedraengetor` |
-| Farbabstand der Gegner | keine zwei Arten fast gleich | Ohne das ist die Vorschau nutzlos | `npm run lesbarkeit` |
+| Farbe **oder** Form trennt | zwei Arten dürfen nicht zugleich unter 12 (CIE76) und über 0,65 Überdeckung liegen | Seit den Fraktionsfarben (TF-024) tragen zwei Gegner **derselben Rolle** denselben Akzent — das ist gewollt. Getrennt werden sie dann an der Form | `npm run lesbarkeit` |
+| Messstelle der Gegnerfarbe | mittlere Farbe der **gebackenen** Figur, Körperfarbe mit 15 % darüber | v168: das Tor rechnete mit 38 % — dem Wert des Alt-Zweigs, der seit v147 nicht mehr läuft. Es maß eine Figur, die niemand sieht | `FARBSCHLEIER` in `src/gfx/enemyart.ts`, von `lesbarkeit` importiert |
 
 **Gemessen (v153):** 9 von 20 Figuren unter 1,5. Der Koloss liegt auf der
 Frostspalte bei **1,02** — seine Kante hat praktisch die Helligkeit des
 Bodens. Am Bild zu beheben oder durch das Randlicht aus TF-012.
 Der Koloss füllt die engste Straße zu **96 %** — viel bleibt nicht.
+
+### 4.3 Bestellung: die Silhouetten des ausgelieferten Satzes
+
+Beim ersten Lauf der Form-Messung über den **ausgelieferten** Gegnersatz
+(v168 — vorher hat kein Tor sie je gemessen, `npm run probebild` prüft nur
+Kandidaten *vor* dem Packen) verletzt der Satz die eigene Bestellregel von
+0,65. Acht Paare liegen darüber:
+
+| Überdeckung | Paar | Farbabstand | trennt die Farbe? |
+|---|---|---|---|
+| **0,84** | Schleicher / Koloss | 28,4 | ja |
+| **0,76** | Koloss / Spalter | **7,3** | **nein — der eine offene Befund** |
+| 0,69 | Späher / Spalter | 21,1 | ja |
+| 0,68 | Schleicher / Spalter | 22,4 | ja |
+| 0,68 | Späher / Koloss | 27,2 | ja |
+| 0,67 | Infanterie / Spalter | 35,0 | ja |
+| 0,65 | Koloss / Leerentitan | 16,9 | ja |
+| 0,65 | Infanterie / Koloss | 39,8 | ja |
+
+Sieben davon trägt heute die Farbe. **Koloss und Spalter** trägt nichts: sie
+sind grau wie grau und fast deckungsgleich. Am Code ist daran nichts zu
+holen — gemessen bewegt die Körperfarbe über die ganze Gunmetal-Familie
+hinweg den Abstand nur zwischen 7,1 und 9,1; über die Grenze käme erst ein
+Braun oder ein Marineblau, und dann wäre die Fraktionsfamilie dahin.
+
+**Was zu bestellen ist:** ein neues Bild für den **Spalter**, dessen Umriss
+sich vom Koloss zu höchstens 0,60 überdeckt. Der Koloss ist ein Block; der
+Spalter soll *zerfallen* können — eine Silhouette mit einer sichtbaren
+Trennfuge, schmaler Taille oder aufgesetzten Segmenten liest das schon im
+Umriss. Die Farbe bleibt in der Familie; die Trennung kommt aus der Form.
+
+Die Zahlen werden bei jedem Lauf mit `PAARE=1 npm run lesbarkeit`
+nachgestellt, die Ratsche steht in `tools/readability.mjs`.
 
 ---
 

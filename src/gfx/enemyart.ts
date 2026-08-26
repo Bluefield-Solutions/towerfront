@@ -13,6 +13,16 @@ import { randlicht } from './einbettung';
  *  Eine weisse Fassung fuer den Trefferblitz wird gleich mitgebacken; sie
  *  ersetzt das Weisstoenen zur Laufzeit, das je Treffer Rechenzeit kosten
  *  wuerde. */
+/** Wieviel Koerperfarbe ueber das Gegnerbild gelegt wird.
+ *
+ *  Exportiert, weil `tools/readability.mjs` dieselbe Zahl braucht: es misst
+ *  die mittlere Farbe der GEBACKENEN Figur, und die haengt daran. Bis v168
+ *  stand dort 0,38 - der Wert des Alt-Zweigs, der seit v147 nicht mehr
+ *  laeuft. Das Tor mass damit eine Figur, die niemand sieht, und rechnete
+ *  den Farbabstand zweier Gegner um mehr als das Doppelte zu gross
+ *  (Regel 12, Regel 15). */
+export const FARBSCHLEIER = 0.15;
+
 const baked = new Map<string, HTMLCanvasElement>();
 const raw = new Map<string, HTMLImageElement>();
 const ready = new Set<string>();
@@ -71,14 +81,16 @@ export function getEnemyArt(
     // Aufsichten haben eigene Farben und eigenes Licht - ein starker Schleier
     // verwaescht sie, der Verlauf legt ein zweites Licht darueber.
     //
-    // Beim Span bleibt der Schleier hoeher: er kommt aus demselben Bild wie
-    // der Spalter, und ohne Farbe waere er nur ein kleinerer Spalter.
+    // Der Span hatte hier bis v168 den doppelten Schleier, weil er sich das
+    // Bild mit dem Spalter teilte und ohne Farbe nur ein kleinerer Spalter
+    // gewesen waere. Seit v159 hat er ein EIGENES Bild - die Ausnahme galt
+    // einem Zustand, den es nicht mehr gibt, und faerbte ihn seither
+    // doppelt so stark ein wie alle anderen.
     // Die Unterscheidung "neu/alt" ist in v147 gefallen: `topdown` stand bei
     // allen acht Arten auf `true`, der Alt-Zweig (0,38 Schleier plus
     // Lichtverlauf) lief nie. Nachgewiesen ueber die sha1-Summe aller
     // gebackenen Figuren - vor und nach dem Ausbau bitgleich.
-    const staerke = id === 'splitling' ? 0.30 : 0.15;
-    bg.fillStyle = hexA(def.body, staerke);
+    bg.fillStyle = hexA(def.body, FARBSCHLEIER);
     bg.fillRect(0, 0, size, size);
 
     // Sonnenanstrich, wie bei den Tuermen.

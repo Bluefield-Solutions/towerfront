@@ -1586,7 +1586,12 @@ export class GameState {
       this.stats.kills++;
       if (owner) owner.kills++;
       this.float(e.x, e.y - 12, `+${bounty}`, C.gold, def.boss ? 30 : 20);
-      this.spark(e.x, e.y, def.body, this.quality === 'hoch' ? (def.boss ? 44 : 12) : 6, def.boss ? 320 : 180);
+      // Der Funke traegt den AKZENT, nicht die Grundfarbe.
+      //
+      // Seit v168 ist `body` fuer alle acht dieselbe Familie (Gunmetal) -
+      // ein Funke daraus waere bei jedem Gegner derselbe graue Staub, und
+      // die einzige Rueckmeldung "was ist da gerade gestorben" waere weg.
+      this.spark(e.x, e.y, def.trim, this.quality === 'hoch' ? (def.boss ? 44 : 12) : 6, def.boss ? 320 : 180);
       Sfx.play('kill');
       this.husks.push({
         def: e.def, x: e.x, y: e.y,

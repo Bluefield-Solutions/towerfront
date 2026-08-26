@@ -1063,7 +1063,9 @@ export class UI {
       // und leer ist schlechter als grob.
       const symbol = bild
         ? `<img class="next-bild" src="${bild}" alt="">`
-        : `<b style="background:${d.body}"></b>`;
+        // Der Punkt traegt den AKZENT: `body` ist seit v168 fuer alle acht
+        // dieselbe Familie, und acht gleiche graue Punkte sagen nichts.
+        : `<b style="background:${d.trim}"></b>`;
       parts.push(`<i title="${d.name}">${symbol}${n}×${mark}</i>`);
     }
     if (w.note) parts.push(`<i class="next-note">${w.note}</i>`);

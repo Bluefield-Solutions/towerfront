@@ -446,7 +446,7 @@ Teile zerfällt, und das muss man ihm schon als schwarzer Fläche ansehen.
 SUBJECT: An armoured drone carrier, seen STRICTLY FROM DIRECTLY ABOVE
 (orthographic top-down), facing UP toward the top edge of the image. The
 hull is built as TWO SEPARATE SEGMENTS joined by a narrow central coupling,
-like a articulated hauler: a shorter front module carrying the cab and two
+like an articulated hauler: a shorter front module carrying the cab and two
 wheels on each side, and a longer rear module carrying the open launch
 cradle. The waist between the two modules is NARROW — no more than half the
 width of either module — so the outline reads as two blocks on a stalk, not

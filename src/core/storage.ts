@@ -6,7 +6,21 @@ const KEY = 'towerfront.v1';
 
 export interface Settings {
   sound: boolean;
+  /** Lautstaerke 0 bis 1.
+   *
+   *  Getrennt von `sound`: der Schalter sagt "Ton aus", der Regler sagt "so
+   *  laut". Wer den Regler auf null zieht, hat den Ton nicht abgeschaltet -
+   *  er findet ihn beim naechsten Mal dort wieder, wo er ihn gelassen hat. */
+  volume: number;
   quality: 'auto' | 'hoch' | 'niedrig';
+  /** Weniger Bewegung auf dem Feld: kein Wetter, kein Ruckeln, weniger
+   *  Partikel.
+   *
+   *  Nicht nur Bequemlichkeit. Ein Feld, auf dem staendig etwas fliegt,
+   *  ruckelt und aufblitzt, ist fuer manche Menschen unbenutzbar - und die
+   *  Voreinstellung nimmt deshalb die Systemeinstellung des Geraets
+   *  (`prefers-reduced-motion`) als Ausgangspunkt, statt sie zu ignorieren. */
+  bewegung: 'voll' | 'reduziert';
   /** Kleine Technikanzeige: Bildrate, Objektzahlen, Qualitaetsstufe. */
   perf: boolean;
   /** Einfuehrung beim naechsten neuen Spiel zeigen. */
@@ -52,8 +66,23 @@ export interface Progress {
 
 interface Store { settings: Settings; best: BestMap; progress: Progress; }
 
+/** Was das Geraet ueber Bewegung sagt. Ohne Medienabfrage: volle Bewegung. */
+function systemBewegung(): 'voll' | 'reduziert' {
+  try {
+    return typeof matchMedia === 'function'
+      && matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reduziert' : 'voll';
+  } catch { return 'voll'; }
+}
+
 const DEFAULTS: Store = {
-  settings: { sound: true, quality: 'auto', perf: false, tutorial: true, difficulty: 'normal', map: 'spiralhain', endless: false },
+  settings: {
+    sound: true, volume: 0.7, quality: 'auto',
+    // Die Voreinstellung kommt vom GERAET, nicht von mir. Wer im System
+    // "Bewegung reduzieren" gesetzt hat, hat die Frage laengst beantwortet -
+    // ihn noch einmal zu fragen waere so, als haette man nicht zugehoert.
+    bewegung: systemBewegung(),
+    perf: false, tutorial: true, difficulty: 'normal', map: 'spiralhain', endless: false,
+  },
   best: {},
   progress: { stars: {}, perks: [], seenMaps: [] },
 };

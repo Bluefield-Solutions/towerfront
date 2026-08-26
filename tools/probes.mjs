@@ -1210,6 +1210,48 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    // D6, v176: der Ausweg aus einem Dialog muss GANZ im Bild stehen. Kein
+    // anderes Tor konnte das melden: der Rauchtest fragt in jsdom nach
+    // `hidden` und kennt keine Hoehen, die Beruehrungsmessung rechnet
+    // Groessen aus der Stilvorlage statt aus dem Bild.
+    name: 'Dialogkarte schneidet ihren Ausweg ab',
+    datei: 'src/style.css',
+    regel: /  min-width: 260px; max-height: 92vh; overflow: hidden; padding: 18px 24px;/,
+    ersatz: '  min-width: 260px; max-height: 60vh; overflow: hidden; padding: 18px 24px;',
+    tor: 'browser',
+  },
+  {
+    // D6, v176: "Bewegung reduziert" muss dem Bild wirklich Bewegung
+    // nehmen. Ein Schalter, der nur seinen eigenen Stand aendert, verspricht
+    // eine Wahl, die es nicht gibt.
+    name: 'Bewegungsreduktion laesst das Wetter stehen',
+    datei: 'src/gfx/renderer.ts',
+    regel: /^    if \(!ruhig\) drawWetter\(ctx, s\.crystalPulse, hi, s\.map\.palette\.wetter, s\.map\.palette\.wetterTon\);$/m,
+    ersatz: '    drawWetter(ctx, s.crystalPulse, hi, s.map.palette.wetter, s.map.palette.wetterTon);',
+    tor: 'bildtor',
+  },
+  {
+    // Und die gespeicherte Lautstaerke muss beim Start ankommen: sie steht
+    // im Speicher, der Regler zeigt sie an, und gehoert wird der
+    // Standardwert - der haeufigste Fehler dieser Sorte.
+    name: 'Gespeicherte Lautstaerke wird beim Start vergessen',
+    datei: 'src/ui/ui.ts',
+    regel: /^    Sfx\.setVolume\(getSettings\(\)\.volume\);$/m,
+    ersatz: '    // Lautstaerke nicht uebernommen.',
+    tor: 'smoke',
+  },
+  {
+    // Vierter Fall derselben Familie: `sync` steigt frueh aus, wenn sich die
+    // Signatur nicht geaendert hat - und die beschreibt den Spielzustand,
+    // nicht die Einstellungen. Steht die Ableitung dahinter, bleibt der
+    // gewaehlte Knopf ungewaehlt, bis sich zufaellig das Gold aendert.
+    name: 'Einstellungen werden hinter dem Ausstieg abgeleitet',
+    datei: 'src/ui/ui.ts',
+    regel: /^    this\.syncOptionen\(\);$/m,
+    ersatz: '    // Ableitung verschoben.',
+    tor: 'smoke',
+  },
+  {
     // C28, v175: der Nachteil des Moersers muss ueberall etwas kosten. Wird
     // die Luft einer Karte wieder duenn, ist er dort geschenkt - und der
     // Moerser zum selben Preis der bessere Turm.

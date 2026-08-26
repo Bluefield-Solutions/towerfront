@@ -53,6 +53,15 @@ export class UI {
    *  Schalter, den jemand zuruecksetzen muss, waere die naechste Stelle zum
    *  Vergessen (Regel 6). */
   private bilanzOffen = false;
+  /** Liegt der Einstellungsdialog offen? Wie `bilanzOffen` eine reine
+   *  Anzeigefrage - und wie dort in der Signatur aufgezaehlt, sonst sieht
+   *  `sync` die Aenderung nicht. */
+  private optionenOffen = false;
+  private optMenu = $<HTMLElement>('optionen-menu');
+  private oVol = $<HTMLInputElement>('o-vol');
+  private oVolW = $<HTMLElement>('o-vol-w');
+  private oQual = $<HTMLElement>('o-qual');
+  private oBew = $<HTMLElement>('o-bew');
   private pBilanz = $<HTMLButtonElement>('p-bilanz');
   private pWahl = $<HTMLElement>('p-wahl');
   private pBlatt = $<HTMLElement>('p-blatt');
@@ -276,6 +285,10 @@ export class UI {
     });
 
     Sfx.setEnabled(getSettings().sound);
+    // Und die Lautstaerke gleich mit. Sie beim Start zu vergessen waere der
+    // haeufigste Fehler dieser Sorte: die Einstellung steht im Speicher, der
+    // Regler zeigt sie an, und gehoert wird trotzdem der Standardwert.
+    Sfx.setVolume(getSettings().volume);
     this.bSound.addEventListener('click', () => {
       Sfx.unlock();
       const on = !getSettings().sound;
@@ -292,6 +305,40 @@ export class UI {
     this.bPause.addEventListener('click', () => { this.s.paused = !this.s.paused; });
     $<HTMLButtonElement>('p-resume').addEventListener('click', () => { this.s.paused = false; });
     this.pBilanz.addEventListener('click', () => { this.bilanzOffen = true; this.letzteBilanz = ''; });
+    const oeffneOptionen = () => { this.optionenOffen = true; this.sync(); };
+    this.zeigeOptionen = oeffneOptionen;
+    $<HTMLButtonElement>('p-optionen').addEventListener('click', oeffneOptionen);
+    $<HTMLButtonElement>('o-zurueck').addEventListener('click', () => { this.optionenOffen = false; this.sync(); });
+    // Tippen NEBEN die Karte schliesst den Dialog.
+    //
+    // Nicht nur Bequemlichkeit: ein Fenster, das nur ueber einen einzigen
+    // Knopf zu verlassen ist, sperrt ein, sobald der Knopf einmal nicht
+    // erreichbar ist. Das Browsertor hat es sofort gezeigt - sein blinder
+    // Tastraster oeffnete den Dialog und kam nicht mehr heraus, und danach
+    // meldete es "man kommt nicht ins Spiel".
+    this.optMenu.addEventListener('click', (e) => {
+      if (e.target !== this.optMenu) return;      // nur der Grund, nicht die Karte
+      this.optionenOffen = false;
+      this.sync();
+    });
+    this.oVol.addEventListener('input', () => {
+      const v = Number(this.oVol.value) / 100;
+      saveSettings({ volume: v });
+      Sfx.setVolume(v);
+      this.oVolW.textContent = `${Math.round(v * 100)} %`;
+    });
+    this.oQual.addEventListener('click', (e) => {
+      const q = (e.target as HTMLElement).closest<HTMLButtonElement>('.opt-btn')?.dataset.q;
+      if (!q) return;
+      saveSettings({ quality: q as 'auto' | 'hoch' | 'niedrig' });
+      this.sync();
+    });
+    this.oBew.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.opt-btn')?.dataset.b;
+      if (!b) return;
+      saveSettings({ bewegung: b as 'voll' | 'reduziert' });
+      this.sync();
+    });
     $<HTMLButtonElement>('p-zurueck').addEventListener('click', () => { this.bilanzOffen = false; });
     $<HTMLButtonElement>('p-restart').addEventListener('click', () => {
       this.s.paused = false;
@@ -705,6 +752,17 @@ export class UI {
     const s = this.s;
     // Jedes Bild neu abgeleitet, nicht auf Zuruf gesetzt.
     this.setSpielansicht(!this.istMenuOffen());
+    // VOR dem Ausstieg unten. `sync` kehrt frueh zurueck, wenn sich die
+    // Signatur nicht geaendert hat - und die Signatur beschreibt den
+    // SPIELZUSTAND. Der Einstellungsdialog haengt aber an Einstellungen:
+    // Lautstaerke, Effektdichte, Bewegung. Stuende er dahinter, bliebe der
+    // gewaehlte Knopf ungewaehlt, bis sich zufaellig das Gold aendert.
+    //
+    // Vierter Fall derselben Familie nach dem Startknopf (v105), der
+    // Zielwahl und dem Bilanzblatt (v171). Die beiden Auswege sind: in die
+    // Signatur eintragen, oder - wie hier - davor rechnen, weil es billig
+    // ist und mit dem Spielzustand nichts zu tun hat.
+    this.syncOptionen();
     const sel = s.selectedTower;
     const sig = [
       s.gold, s.lives, s.waveNumber, s.waveActive, s.speed, s.paused,
@@ -730,6 +788,7 @@ export class UI {
       // Anzeige folgte trotzdem nicht. Wer hier etwas anzeigt, das nicht
       // aus dem Spielzustand kommt, traegt es in diese Zeile ein.
       this.bilanzOffen ? 'b' : '-',
+      this.optionenOffen ? 'o' : '-',
     ].join('|');
 
     this.updateTutorial();
@@ -839,6 +898,30 @@ export class UI {
         this.pBlattBody.innerHTML = html;
         this.letzteBilanz = html;
       }
+    }
+  }
+
+  /** Den Einstellungsdialog oeffnen.
+   *
+   *  Von der Landkarte aus fuehrt der Weg ueber die LEINWAND: das Menue
+   *  meldet den Tipp auf "Einstellungen", `main.ts` reicht ihn hierher. Ein
+   *  HTML-Knopf im Menue waere Spielbedienung (Regel 6), und das Browsertor
+   *  hat genau das am ersten Anlauf gemeldet. */
+  zeigeOptionen: () => void = () => {};
+
+  /** Der Einstellungsdialog: Sichtbarkeit und Stand, jedes Bild abgeleitet. */
+  private syncOptionen(): void {
+    this.optMenu.hidden = !this.optionenOffen;
+    if (!this.optionenOffen) return;
+    const st = getSettings();
+    const prozent = Math.round(st.volume * 100);
+    if (this.oVol.value !== String(prozent)) this.oVol.value = String(prozent);
+    this.oVolW.textContent = `${prozent} %`;
+    for (const b of this.oQual.querySelectorAll<HTMLButtonElement>('.opt-btn')) {
+      b.dataset.on = b.dataset.q === st.quality ? '1' : '0';
+    }
+    for (const b of this.oBew.querySelectorAll<HTMLButtonElement>('.opt-btn')) {
+      b.dataset.on = b.dataset.b === st.bewegung ? '1' : '0';
     }
   }
 

@@ -753,6 +753,56 @@ takes.push(['welle15', () => shot('welle15', 844, 390, (s) => {
   return 60 * 16;
 })]);
 
+// --- Nimmt "Bewegung reduziert" dem Bild wirklich Bewegung? (D6)
+//
+// Die Einstellung verspricht ein ruhigeres Feld. Ob sie es haelt, sagt kein
+// Schalterstand, sondern nur ein Vergleich zweier Bilder: derselbe
+// Zeitpunkt, dieselbe Karte, einmal voll und einmal reduziert - und
+// dazwischen darf sich nichts anderes aendern.
+//
+// Gemessen wird der ruhende Fall ohne Welle. Genau dort muss der
+// Unterschied stehen: Wetter und Ruckeln sind Stimmung, und wenn ein
+// leeres Feld mit und ohne sie gleich aussieht, tut die Einstellung nichts.
+pruefungen.push(async () => {
+  const { getSettings, saveSettings } = await import('../src/core/storage.ts');
+  const vorher = getSettings().bewegung;
+  const bild = (modus) => {
+    saveSettings({ bewegung: modus });
+    const canvas = createCanvas(844 * 2, 390 * 2);
+    Object.defineProperty(canvas, 'clientWidth', { get: () => 844 });
+    Object.defineProperty(canvas, 'clientHeight', { get: () => 390 });
+    const s = new GameState();
+    const r = new Renderer(canvas);
+    r.menu = null;
+    s.reset(9, 'normal', 'spiralhain');
+    r.resize();
+    for (let i = 0; i < 120; i++) s.update(DT);
+    r.kartenaufbauAbschliessen(s);
+    r.draw(s); r.draw(s);
+    return canvas.getContext('2d').getImageData(0, 0, 844 * 2, 390 * 2).data;
+  };
+  const voll = bild('voll');
+  const ruhig = bild('reduziert');
+  saveSettings({ bewegung: vorher });
+  let anders = 0;
+  for (let i = 0; i < voll.length; i += 4) {
+    if (Math.abs(voll[i] - ruhig[i]) + Math.abs(voll[i + 1] - ruhig[i + 1])
+      + Math.abs(voll[i + 2] - ruhig[i + 2]) > 6) anders++;
+  }
+  const anteil = anders / (voll.length / 4);
+  // Das Wetter des Spiralhains deckt gemessen 0,47 Prozent der Bildpunkte
+  // ab (v173). Die Grenze liegt darunter, damit sie nicht an einer
+  // Nachkommastelle haengt - aber weit ueber null, denn null hiesse: die
+  // Einstellung tut nichts.
+  if (anteil < 0.002) {
+    throw new Error(
+      `Bewegung reduziert: nur ${(anteil * 100).toFixed(3)} % der Bildpunkte aendern sich gegenueber `
+      + '"voll". Die Einstellung verspricht ein ruhigeres Feld und liefert dasselbe.',
+    );
+  }
+  console.log(`Bewegung reduziert: ${(anteil * 100).toFixed(2)} % der Bildpunkte anders als bei voller Bewegung.`);
+});
+
 // --- Hat jede Karte ihr Wetter, und sind die drei zu unterscheiden? (D2)
 //
 // Gemessen wird die SCHICHT ALLEIN, auf schwarzem Grund. Ueber dem Feld

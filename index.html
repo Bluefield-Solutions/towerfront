@@ -79,12 +79,48 @@
              schon abgeleitet ist — eine zweite Regel dafür wäre eine zweite
              Stelle zum Vergessen (Regel 6). -->
         <button class="pause-btn" id="p-bilanz" hidden>Bilanz ansehen</button>
+        <button class="pause-btn" id="p-optionen">Einstellungen</button>
         <button class="pause-btn warn" id="p-restart">Level neu starten</button>
         <button class="pause-btn" id="p-quit">Zurück zur Karte</button>
       </div>
       <div class="pause-blatt stats" id="p-blatt" hidden>
         <div id="p-blatt-body"></div>
         <button class="pause-btn" id="p-zurueck">Zurück</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Einstellungen (D6) — eine eigene Ebene, kein Teil der Pausenkarte.
+       Sie sind auch OHNE laufende Partie erreichbar: von der Landkarte über
+       das Zahnrad. Die Pausenkarte hätte sie an eine Partie gebunden, und
+       wer die Lautstärke ändern will, soll dafür kein Spiel anfangen
+       müssen. -->
+  <div class="pause-menu" id="optionen-menu" hidden>
+    <div class="pause-card">
+      <span class="pause-title">Einstellungen</span>
+      <div class="pause-blatt optionen" id="p-opt">
+        <label class="opt" for="o-vol">
+          <span>Lautstärke</span>
+          <input type="range" id="o-vol" min="0" max="100" step="5" />
+          <b id="o-vol-w">70 %</b>
+        </label>
+        <div class="opt">
+          <span>Effektdichte</span>
+          <div class="opt-wahl" id="o-qual">
+            <button class="opt-btn" data-q="auto">Automatik</button>
+            <button class="opt-btn" data-q="hoch">Hoch</button>
+            <button class="opt-btn" data-q="niedrig">Sparsam</button>
+          </div>
+        </div>
+        <div class="opt">
+          <span>Bewegung</span>
+          <div class="opt-wahl" id="o-bew">
+            <button class="opt-btn" data-b="voll">Voll</button>
+            <button class="opt-btn" data-b="reduziert">Reduziert</button>
+          </div>
+        </div>
+        <p class="opt-hinweis">Reduziert nimmt Wetter und Ruckeln heraus. Gegner, Geschosse und Wirkungen bleiben — die bedeuten etwas.</p>
+        <button class="pause-btn" id="o-zurueck">Zurück</button>
       </div>
     </div>
   </div>
@@ -118,6 +154,7 @@
        Er stand bisher nur auf dem Titelbildschirm - und wer eine Partie
        fortsetzt, sieht den nie. Klein, unten mittig, nicht anfassbar. -->
   <div class="version" id="v-version" aria-hidden="true"></div>
+
 
   <div class="perf" id="perf" hidden></div>
 

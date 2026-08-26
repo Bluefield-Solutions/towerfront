@@ -23,6 +23,7 @@ import {
   drawSprite, getEnemySprite, getSchattenriss, getShadow, getTowerBase, getTowerWeapon,
   roundRect, ENEMY_FRAMES,
 } from './sprites';
+import { getSettings } from '../core/storage';
 import { drawAurora, drawGroundFog, drawWetter, getMoodLayer } from './atmosphere';
 
 /** Wieviel Zeit ein Bild in den Kartenaufbau stecken darf.
@@ -420,7 +421,12 @@ export class Renderer {
     if (this.sky) ctx.drawImage(this.sky, 0, 0, this.cssW, this.cssH);
 
     ctx.save();
-    const sh = s.shake;
+    // "Bewegung reduziert" (D6) nimmt dem Bild das, was ohne Not wackelt:
+    // das Ruckeln bei Einschlaegen und das Wetter. Beides ist Stimmung, kein
+    // Spielinhalt - wer sie abstellt, verpasst keine Auskunft. Was bleibt,
+    // sind Gegner, Geschosse und Wirkungen: die BEDEUTEN etwas.
+    const ruhig = getSettings().bewegung === 'reduziert';
+    const sh = ruhig ? 0 : s.shake;
     const jx = sh > 0 ? (Math.random() - 0.5) * 14 * sh : 0;
     const jy = sh > 0 ? (Math.random() - 0.5) * 14 * sh : 0;
     ctx.translate(this.offX + jx, this.offY + jy);
@@ -444,7 +450,7 @@ export class Renderer {
     // Wetter liegt ueber allem, was auf dem Boden steht - Regen faellt vor
     // dem Turm, nicht hinter ihm -, aber UNTER der Bedienung darunter:
     // Bauplatz, Reichweiten und Hinweise muessen lesbar bleiben.
-    drawWetter(ctx, s.crystalPulse, hi, s.map.palette.wetter, s.map.palette.wetterTon);
+    if (!ruhig) drawWetter(ctx, s.crystalPulse, hi, s.map.palette.wetter, s.map.palette.wetterTon);
     this.drawMeteors(s, hi);
     this.drawBauplatz(s);
     this.drawGhost(s);

@@ -176,6 +176,24 @@ function drawMap(
   ctx.fillText('Fortschritt ›', WORLD_W - 60, py + 34);
   ctx.restore();
   add({ id: 'progress', x: px - 60, y: py - 34, w: 250, h: 84 });
+
+  // Einstellungen (D6) - auf der LEINWAND, nicht als HTML-Knopf.
+  //
+  // Der erste Anlauf setzte ein Zahnrad als HTML-Element in die Ecke, und das
+  // Browsertor hat es sofort gemeldet: im Menue ist jedes bedienbare
+  // HTML-Element Spielbedienung (Regel 6). Die Regel ist in diesem
+  // Verzeichnis dreimal gebrochen worden und jedes Mal teuer gewesen - ein
+  // Loch fuer den einen guten Fall haette den vierten vorbereitet. Der
+  // Dialog selbst bleibt HTML; er erscheint erst, wenn jemand hier tippt.
+  ctx.save();
+  ctx.textAlign = 'right';
+  ctx.font = '400 19px system-ui, sans-serif';
+  ctx.fillStyle = C.stoneDark;
+  ctx.fillText('Einstellungen ›', WORLD_W - 60, py + 86);
+  ctx.restore();
+  // Dieselbe Trefferhoehe wie "Fortschritt" darueber: 48 Weltpunkte waren
+  // auf dem Telefon gerechnet zu klein, und der Rauchtest hat es gemeldet.
+  add({ id: 'optionen', x: px - 60, y: py + 52, w: 250, h: 76 });
 }
 
 // -------------------------------------------------------------- Die Einweisung

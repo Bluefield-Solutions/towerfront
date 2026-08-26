@@ -35,6 +35,7 @@ menu.onStart = (mapId, difficulty, endless) => {
   ui.hideScreen();
   ui.setSpielansicht(true);
 };
+menu.onOptionen = () => ui.zeigeOptionen();
 menu.onResume = () => {
   const save = loadGame();
   if (save && state.restore(save)) {

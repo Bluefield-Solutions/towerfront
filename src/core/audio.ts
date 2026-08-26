@@ -42,6 +42,14 @@ class AudioEngine {
     if (this.master) this.master.gain.value = on ? this.volume : 0;
   }
 
+  /** Lautstaerke 0 bis 1. Der Schalter bleibt, wie er ist: wer den Regler auf
+   *  null zieht, hat den Ton nicht ABGESCHALTET, und wer ihn wieder
+   *  aufzieht, muss ihn nicht erst wieder einschalten. */
+  setVolume(v: number): void {
+    this.volume = Math.max(0, Math.min(1, v));
+    if (this.master) this.master.gain.value = this.enabled ? this.volume : 0;
+  }
+
   /** Pro Frame aufrufen: begrenzt gleichartige Klänge, damit es bei 3× Tempo
    *  nicht zu einer Geräuschwand wird. */
   frame(): void { this.budget.clear(); }

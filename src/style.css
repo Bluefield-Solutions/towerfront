@@ -830,17 +830,57 @@ html, body {
 .pause-menu[hidden] { display: none; }
 .pause-card {
   display: flex; flex-direction: column; gap: 10px;
-  min-width: 260px; max-height: 86vh; padding: 24px;
+  /* 92vh und ein knapperer Innenabstand: auf iPhone quer (390 Punkte) blieb
+     bei 86vh und 24 Punkten der Zurueck-Knopf um wenige Bildpunkte
+     angeschnitten. Eine Karte, die genau an ihrer eigenen Grenze klebt,
+     schneidet ab, statt zu rollen. */
+  min-width: 260px; max-height: 92vh; overflow: hidden; padding: 18px 24px;
   background: var(--panel); border: 1px solid var(--edge); border-radius: 18px;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
 }
 .pause-wahl { display: flex; flex-direction: column; gap: 10px; }
-/* Das Bilanzblatt in der Pausenkarte. Es kann laenger sein als das Fenster
-   hoch ist - iPhone quer hat 390 Punkte -, also rollt es in sich selbst
-   statt die Karte aus dem Bild zu schieben. */
+/* Einstellungen (D6). */
+.optionen { min-width: 300px; }
+.opt { display: flex; align-items: center; gap: 12px; min-height: 46px; }
+.opt > span {
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); flex: 0 0 108px;
+}
+.opt > b { font-variant-numeric: tabular-nums; font-size: 13px; min-width: 46px; text-align: right; }
+.opt input[type="range"] { flex: 1; min-height: 46px; accent-color: var(--accent, #7FE7E0); }
+.opt-wahl { display: flex; gap: 6px; flex: 1; }
+.opt-btn {
+  flex: 1; min-height: 46px; padding: 8px 10px;
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--text);
+  background: rgba(231, 236, 247, 0.07);
+  border: 1px solid var(--edge); border-radius: 11px; cursor: pointer;
+}
+.opt-btn[data-on="1"] { background: #7FE7E0; color: #06121A; border-color: #7FE7E0; }
+.opt-hinweis { margin: 2px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--muted); }
+/* Das Zahnrad auf der Landkarte. */
+.gear {
+  position: absolute; right: 12px; bottom: 12px; z-index: 5;
+  width: 46px; height: 46px; padding: 0;
+  font-size: 20px; line-height: 1; color: var(--text);
+  background: rgba(12, 18, 34, 0.78); border: 1px solid var(--edge);
+  border-radius: 50%; cursor: pointer;
+}
+.gear[hidden] { display: none; }
+/* Der rollende Teil einer Karte - Bilanzblatt oder Einstellungen.
+   Er nimmt, was nach Titel und Zurueck-Knopf uebrig bleibt, und rollt in
+   sich selbst.
+
+   **Keine feste Hoehe.** Bis v176 stand hier `max-height: 62vh`, und auf
+   iPhone quer (390 Punkte) ergab das zusammen mit Titel, Knopf und
+   Innenabstand mehr als die Karte hoch sein darf: der Zurueck-Knopf wurde
+   unten abgeschnitten. Gesehen, nicht gemessen - kein Tor fragt, ob ein
+   Knopf VOLLSTAENDIG im Bild steht (Regel 8).
+
+   `min-height: 0` ist der Kern: ohne das weigert sich ein Flex-Kind zu
+   schrumpfen, und die Karte laeuft ueber statt der Bereich zu rollen. */
 .pause-blatt {
   display: flex; flex-direction: column; gap: 12px;
-  max-width: 420px; max-height: 62vh; overflow-y: auto;
+  max-width: 420px; flex: 0 1 auto; min-height: 0; overflow-y: auto;
 }
 .pause-blatt[hidden] { display: none; }
 .pause-wahl[hidden] { display: none; }

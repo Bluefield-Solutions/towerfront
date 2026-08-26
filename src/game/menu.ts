@@ -86,6 +86,8 @@ export class Menu {
   /** Startet das Spiel - wird von außen gesetzt. */
   onStart: (mapId: string, difficulty: DifficultyId, endless: boolean) => void = () => {};
   onResume: () => void = () => {};
+  /** Wird gerufen, wenn auf der Landkarte "Einstellungen" getippt wird. */
+  onOptionen: () => void = () => {};
   /** Dieselbe Karte, derselbe Grad, noch einmal. */
   onRetry: () => void = () => {};
   /** Liegt ein Spielstand vor? */
@@ -146,6 +148,9 @@ export class Menu {
     if (id === 'tomap') { this.result = null; this.view = 'map'; return true; }
     if (id === 'back') { this.view = 'map'; return true; }
     if (id === 'progress') { this.view = 'progress'; return true; }
+    // Die Einstellungen sind kein Menue-Bild, sondern ein Dialog darueber.
+    // Das Menue meldet nur, dass jemand danach gefragt hat.
+    if (id === 'optionen') { this.onOptionen(); return true; }
     if (id.startsWith('node:')) {
       this.picked = Number(id.slice(5));
       this.view = 'brief';

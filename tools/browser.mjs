@@ -892,6 +892,58 @@ if (streuung < 6) {
   await ctx2.close();
 }
 
+// --- 6c. Steht der Ausweg aus einem Dialog GANZ im Bild? (v176)
+//
+// Der Einstellungsdialog war beim ersten Blick unten angeschnitten: sein
+// "Zurueck" lag im rollenden Bereich, und die Karte klebte an ihrer eigenen
+// Hoehengrenze. Man kam noch heran - mit Rollen -, aber ein Dialog, aus dem
+// man erst herausrollen muss, ist eine Falle.
+//
+// Kein Tor hat das gemeldet, und keines konnte es: der Rauchtest fragt in
+// jsdom nach `hidden`, dort gibt es keine Hoehen. Die Beruehrungsmessung
+// rechnet Groessen aus der Stilvorlage, nicht aus dem Bild. Erst hier steht
+// beides zusammen - gerechnete Lage und wirkliches Fenster.
+{
+  // Geoeffnet wird ueber die Pausenkarte - denselben Weg, den ein Spieler
+  // MITTEN IM SPIEL nimmt. Von der Landkarte aus fuehrt der Weg ueber die
+  // Leinwand, und deren Trefferflaechen hier nachzurechnen hiesse, die
+  // Koordinaten ein zweites Mal aufzuschreiben (Regel 15). Gemessen wird
+  // ohnehin dieselbe Karte mit demselben Knopf.
+  {
+    await seite.evaluate(() => document.getElementById('b-pause')?.click());
+    await seite.waitForTimeout(200);
+    await seite.evaluate(() => document.getElementById('p-optionen')?.click());
+    await seite.waitForTimeout(250);
+    const lage = await seite.evaluate(() => {
+      const knopf = document.getElementById('o-zurueck');
+      const karte = document.querySelector('#optionen-menu .pause-card');
+      if (!knopf || !karte) return null;
+      const k = knopf.getBoundingClientRect(), c = karte.getBoundingClientRect();
+      return {
+        knopfUnten: k.bottom, knopfOben: k.top, hoehe: k.height,
+        karteUnten: c.bottom, fenster: window.innerHeight,
+      };
+    });
+    if (!lage) {
+      fail('Der Einstellungsdialog hat keinen Zurueck-Knopf.');
+    } else {
+      if (lage.hoehe < 40) fail(`Zurueck im Einstellungsdialog ist nur ${lage.hoehe.toFixed(0)} Punkte hoch.`);
+      if (lage.knopfUnten > lage.karteUnten + 0.5) {
+        fail(`Zurueck im Einstellungsdialog steht ${(lage.knopfUnten - lage.karteUnten).toFixed(0)} Punkte `
+          + 'ueber die Unterkante seiner Karte hinaus - er wird abgeschnitten.');
+      }
+      if (lage.knopfUnten > lage.fenster || lage.knopfOben < 0) {
+        fail('Zurueck im Einstellungsdialog liegt ausserhalb des Fensters.');
+      }
+      console.log(`Einstellungen: Zurueck ${lage.hoehe.toFixed(0)} Punkte hoch, `
+        + `${(lage.karteUnten - lage.knopfUnten).toFixed(0)} Punkte Luft zur Kartenkante.`);
+    }
+    await seite.evaluate(() => document.getElementById('o-zurueck')?.click());
+    await seite.evaluate(() => document.getElementById('b-pause')?.click());
+    await seite.waitForTimeout(150);
+  }
+}
+
 // --- 7. Der Schreibtisch. Nichts darf ihn aussperren.
 //
 // Bis v121 tat genau das ein zweiter, vergessener Hochkant-Hinweis: er fragte

@@ -88,7 +88,8 @@ const { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, statsFor } = await import('../s
 
 const { TUTORIAL } = await import('../src/game/tutorial');
 const { auswertung } = await import('../src/game/auswertung');
-const { getBest, getProgress, getStars, gegnerVergessen, saveSettings } = await import('../src/core/storage');
+const { getBest, getProgress, getSettings, getStars, gegnerVergessen, saveSettings } = await import('../src/core/storage');
+const { Sfx } = await import('../src/core/audio');
 const { konterSatz } = await import('../src/data/konter');
 const { wirkungAnlegen, wirkungenTicken, tempoFaktor } = await import('../src/data/wirkungen');
 type EnemyId = Parameters<typeof konterSatz>[0];
@@ -120,7 +121,21 @@ const state = new GameState();
 const renderer = new Renderer(canvas);
 let ui!: InstanceType<typeof UI>;
 
+// Eine Lautstaerke, die NICHT der Standard ist - sonst bewiese die Pruefung
+// darunter nichts: 0,7 stuende auch dann im Tonwerk, wenn niemand sie
+// gesetzt haette (Regel 13).
+saveSettings({ volume: 0.42 });
 step('Oberflaeche aufbauen', () => { ui = new UI(state); });
+step('Gespeicherte Lautstaerke wird beim Start uebernommen', () => {
+  if (Math.abs(Sfx.volume - 0.42) > 0.001) {
+    throw new Error(
+      `Das Tonwerk steht nach dem Aufbau auf ${Sfx.volume}, gespeichert waren 0,42. `
+      + 'Die Einstellung steht im Speicher, der Regler zeigt sie an - und gehoert wird der Standardwert.',
+    );
+  }
+  saveSettings({ volume: 0.7 });
+  Sfx.setVolume(0.7);
+});
 step('Groesse berechnen', () => renderer.resize());
 step('Eingabe verbinden', () => bindInput(canvas, state, renderer));
 step('Titelbild zeichnen', () => renderer.draw(state));
@@ -239,6 +254,61 @@ step('Partie durchspielen', () => {
   }
   outcome = state.phase;
 });
+
+// D6: der Einstellungsdialog.
+//
+// Geprueft wird nicht, dass sich Knoepfe druecken lassen, sondern dass die
+// Einstellung ANKOMMT - im Speicher, im Tonwerk und im Bild. Ein Dialog,
+// dessen Regler sich bewegt und sonst nichts, ist schlimmer als keiner: er
+// verspricht eine Wahl, die es nicht gibt.
+{
+  const vorher = { ...getSettings() };
+  const dialog = document.getElementById('optionen-menu');
+  const vol = document.getElementById('o-vol') as HTMLInputElement | null;
+  if (!dialog || !vol) {
+    problems.push('Einstellungen: der Dialog fehlt im Dokument.');
+  } else {
+    if (!dialog.hidden) problems.push('Einstellungen: der Dialog liegt offen, ohne dass jemand ihn geoeffnet hat.');
+    // Geoeffnet wird ueber den Weg, den auch der Spieler nimmt: den Eintrag
+    // auf der LEINWAND. Ein HTML-Knopf im Menue waere Spielbedienung
+    // (Regel 6), und das Browsertor hat den ersten Anlauf dafuer gemeldet.
+    ui.zeigeOptionen();
+    ui.sync();
+    if (dialog.hidden) problems.push('Einstellungen: der Eintrag auf der Landkarte oeffnet den Dialog nicht.');
+
+    // Lautstaerke: der Regler muss den Speicher UND das Tonwerk erreichen.
+    vol.value = '35';
+    vol.dispatchEvent(new window.Event('input'));
+    if (Math.abs(getSettings().volume - 0.35) > 0.001) {
+      problems.push(`Einstellungen: Lautstaerke steht nach dem Regler auf ${getSettings().volume}, erwartet 0,35.`);
+    }
+    if (Math.abs(Sfx.volume - 0.35) > 0.001) {
+      problems.push(`Einstellungen: das Tonwerk steht auf ${Sfx.volume}, der Regler auf 0,35 - die Einstellung kommt nicht an.`);
+    }
+
+    // Effektdichte und Bewegung: gewaehlte Knoepfe werden auch als gewaehlt
+    // angezeigt, sonst weiss niemand, was gilt.
+    const waehle = (raum: string, wert: string) => {
+      const b = document.querySelector(`#${raum} .opt-btn[data-${raum === 'o-qual' ? 'q' : 'b'}="${wert}"]`) as HTMLButtonElement;
+      b.dispatchEvent(new window.Event('click', { bubbles: true }));
+      ui.sync();
+      return b.dataset.on === '1';
+    };
+    if (!waehle('o-qual', 'niedrig') || getSettings().quality !== 'niedrig') {
+      problems.push('Einstellungen: "Sparsam" kommt nicht an oder wird nicht als gewaehlt gezeigt.');
+    }
+    if (!waehle('o-bew', 'reduziert') || getSettings().bewegung !== 'reduziert') {
+      problems.push('Einstellungen: "Bewegung reduziert" kommt nicht an oder wird nicht als gewaehlt gezeigt.');
+    }
+
+    (document.getElementById('o-zurueck') as HTMLButtonElement).dispatchEvent(new window.Event('click'));
+    ui.sync();
+    if (!dialog.hidden) problems.push('Einstellungen: "Zurueck" schliesst den Dialog nicht.');
+  }
+  saveSettings(vorher);
+  Sfx.setVolume(vorher.volume);
+  ui.sync();
+}
 
 // --- T6: jede Karte und der Endlosmodus, ungezeichnet durchgespielt.
 //

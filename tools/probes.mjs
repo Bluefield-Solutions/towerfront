@@ -663,10 +663,15 @@ const PROBEN = [
   {
     // Der Ausbau muss WIRKEN. Hier wird der Schadenszuwachs eingeebnet:
     // die Kosten bleiben, die Wirkung nicht.
+    //
+    // Auf der LETZTEN Stufe, nicht auf der vorletzten. Der erste Anlauf
+    // traf Stufe 5, der Rauchtest misst aber Stufe 1 gegen Stufe 6 - der
+    // Eingriff kam an und wurde trotzdem nicht gemessen. Eine Probe muss
+    // dort ansetzen, wo die Pruefung hinsieht (Regel 3).
     name: 'Ausbau der Zielunit wirkt nicht mehr',
     datei: 'src/data/towers.ts',
-    regel: /^          \{ cost: 1500, damage: 150, cooldown: 0\.60, pierce: 3 \},$/m,
-    ersatz: '          { cost: 1500, damage: 11, cooldown: 0.60, pierce: 3 },',
+    regel: /^          \{ cost: 1950, damage: 210, cooldown: 0\.55, pierce: 3 \},$/m,
+    ersatz: '          { cost: 1950, damage: 11, cooldown: 0.55, pierce: 3 },',
     tor: 'smoke',
   },
   {

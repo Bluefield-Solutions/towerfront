@@ -1166,14 +1166,24 @@ export class GameState {
   /** Ein Gegner erreicht den Kristall. */
   private leak(e: Enemy, def: typeof ENEMIES[EnemyId]): void {
     e.leaked = true; e.dead = true;
-    this.lives -= def.leak;
+    // Verbucht wird, was WIRKLICH verloren geht, nicht was der Gegner
+    // mitbringt.
+    //
+    // Der Kristall wird bei null abgeschnitten. Ein Koloss mit drei Punkten
+    // Durchschlag, der auf einen Kristall mit einem Punkt Rest trifft,
+    // kostete bis v174 trotzdem drei: die Bilanz meldete "Welle 14 (-3)",
+    // die Anzeige zeigte "-3", und das Spiel verlor einen. Gefunden hat es
+    // der Durchlauf ueber jede Karte (T6) - auf der Ascheschlucht standen
+    // 61 verbuchte Punkte gegen 60 wirklich verlorene.
+    const wirklich = Math.min(def.leak, Math.max(0, this.lives));
+    this.lives -= wirklich;
     this.leakedTotal++;
     this.stats.leaksByWave[this.waveIndex] =
-      (this.stats.leaksByWave[this.waveIndex] ?? 0) + def.leak;
+      (this.stats.leaksByWave[this.waveIndex] ?? 0) + wirklich;
     this.crystalHit = 1;
     this.shake = Math.min(1, this.shake + 0.55);
     this.stop(0.8);
-    this.float(this.goal.x, this.goal.y - 44, `-${def.leak}`, C.danger, 28);
+    this.float(this.goal.x, this.goal.y - 44, `-${wirklich}`, C.danger, 28);
     this.ring(this.goal.x, this.goal.y, 120, C.danger, 0.5, 5);
   }
 

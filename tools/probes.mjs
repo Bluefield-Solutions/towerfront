@@ -1210,6 +1210,37 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    // T6, v174: verbucht wird, was WIRKLICH verloren geht. Der Kristall
+    // wird bei null abgeschnitten; ein Gegner mit drei Punkten Durchschlag
+    // auf einen Kristall mit einem Punkt Rest kostete bis dahin trotzdem
+    // drei in der Bilanz. Gefunden hat es der Durchlauf ueber jede Karte.
+    name: 'Kristallverlust wird zu hoch verbucht',
+    datei: 'src/game/state.ts',
+    regel: /^    const wirklich = Math\.min\(def\.leak, Math\.max\(0, this\.lives\)\);$/m,
+    ersatz: '    const wirklich = def.leak;',
+    tor: 'smoke',
+  },
+  {
+    // Und die eine Zusage des Endlosmodus: er geht ueber den Plan hinaus.
+    // Bis v174 hat das nie jemand nachgespielt.
+    name: 'Endlosmodus endet mit dem Wellenplan',
+    datei: 'src/game/state.ts',
+    regel: /^    return !this\.waveActive && \(this\.endless \|\| this\.waveIndex < this\.waves\.length\);$/m,
+    ersatz: '    return !this.waveActive && this.waveIndex < this.waves.length;',
+    tor: 'smoke',
+  },
+  {
+    // Eine Pruefung, die nebenbei den Zustand aendert, den andere Pruefungen
+    // lesen, ist keine Pruefung. Der Durchlauf spielt drei Partien zu Ende
+    // und traegt dabei Sterne ein - stellt er sie nicht zurueck, faellt die
+    // Sternepruefung darunter um.
+    name: 'Durchlauf laesst seinen Fortschritt stehen',
+    datei: 'tools/smoke.ts',
+    regel: /^  fortschritt\.stars = sterneVorher;$/m,
+    ersatz: '  // Fortschritt nicht zurueckgestellt.',
+    tor: 'smoke',
+  },
+  {
     // D2, v173: die Asche muss glimmen. Ohne Glut ist Aschefall
     // beigefarbener Schnee - und die erste Fassung dieser Pruefung hat das
     // NICHT gemerkt: sie fragte nach "warm", und der Ascheton ist selbst

@@ -14,6 +14,7 @@
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
 import type { MenuView } from '../src/game/menu';
+import type { GameState as Spielzustand } from '../src/game/state';
 
 const html = readFileSync('index.html', 'utf8');
 const dom = new JSDOM(html, { pretendToBeVisual: true, url: 'https://local.test/' });
@@ -76,6 +77,9 @@ g.cancelAnimationFrame = (id: number) => win.clearTimeout(id);
 // Erst nach dem Aufbau der Umgebung laden - die Module greifen beim Import
 // bereits auf document zu.
 const { GameState } = await import('../src/game/state');
+// Fuer den Durchlauf ueber jede Karte (T6) - `step` ist synchron, der Import
+// gehoert also hierher und nicht in den Schritt.
+const { MAPS: ALLE_KARTEN } = await import('../src/data/maps');
 const { Renderer } = await import('../src/gfx/renderer');
 const { UI } = await import('../src/ui/ui');
 const { bindInput } = await import('../src/core/input');
@@ -84,7 +88,7 @@ const { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, statsFor } = await import('../s
 
 const { TUTORIAL } = await import('../src/game/tutorial');
 const { auswertung } = await import('../src/game/auswertung');
-const { getBest, getStars, gegnerVergessen, saveSettings } = await import('../src/core/storage');
+const { getBest, getProgress, getStars, gegnerVergessen, saveSettings } = await import('../src/core/storage');
 const { konterSatz } = await import('../src/data/konter');
 const { wirkungAnlegen, wirkungenTicken, tempoFaktor } = await import('../src/data/wirkungen');
 type EnemyId = Parameters<typeof konterSatz>[0];
@@ -179,20 +183,34 @@ let outcome = 'playing';
 const plan = TOWER_ORDER;
 const DT = 1 / 60;
 
+/** Was der Bot in einem Bild entscheidet: bauen, ausbauen, Welle starten.
+ *
+ *  Herausgezogen, weil er seit v174 an zwei Stellen gebraucht wird - in der
+ *  gezeichneten Partie hier und in den ungezeichneten Durchlaeufen ueber
+ *  jede Karte und den Endlosmodus (T6). Zwei Bots waeren einer zu viel: der
+ *  zweite haette angefangen, anders zu spielen als der erste, und dann
+ *  saehen die beiden Laeufe nur noch aus, als pruefen sie dasselbe
+ *  (Regel 15). */
+function botSchritt(g: Spielzustand, plaetze: { x: number; y: number }[], z: { spot: number; si: number }): void {
+  const id = TOWER_ORDER[z.si % TOWER_ORDER.length];
+  if (z.spot < plaetze.length && g.gold >= TOWERS[id].base.cost) {
+    const sp = plaetze[z.spot++];
+    if (g.build(sp.x, sp.y, id)) z.si++;
+  }
+  const up = g.towers.find((t) => {
+    if (t.level >= MAX_LEVEL) return false;
+    const n = nextFor(TOWERS[t.def], t.branch ?? ((t.id % 2) as 0 | 1), t.level);
+    return !!n && g.gold >= n.cost + 80;
+  });
+  if (up) g.upgrade(up, (up.branch ?? ((up.id % 2) as 0 | 1)) as 0 | 1);
+  if (g.canStartWave) g.startWave();
+}
+
 step('Partie durchspielen', () => {
+  const zustand = { spot: spotIdx, si };
   while (state.phase === 'playing' && frames < 60 * 60 * 12) {
-    const id = plan[si % plan.length];
-    if (spotIdx < spots.length && state.gold >= TOWERS[id].base.cost) {
-      const sp = spots[spotIdx++];
-      if (state.build(sp.x, sp.y, id)) si++;
-    }
-    const up = state.towers.find((t) => {
-      if (t.level >= MAX_LEVEL) return false;
-      const n = nextFor(TOWERS[t.def], t.branch ?? ((t.id % 2) as 0 | 1), t.level);
-      return !!n && state.gold >= n.cost + 80;
-    });
-    if (up) state.upgrade(up, (up.branch ?? ((up.id % 2) as 0 | 1)) as 0 | 1);
-    if (state.canStartWave) state.startWave();
+    botSchritt(state, spots, zustand);
+    spotIdx = zustand.spot; si = zustand.si;
     // Faehigkeiten mitlaufen lassen - Zielhilfe und Einschlag zeichnen eigene Wege.
     if (frames % 300 === 0) state.chooseAbility('meteor');
     if (frames % 300 === 60 && state.enemies.length) {
@@ -220,6 +238,122 @@ step('Partie durchspielen', () => {
     frames++;
   }
   outcome = state.phase;
+});
+
+// --- T6: jede Karte und der Endlosmodus, ungezeichnet durchgespielt.
+//
+// Die Partie oben laeuft auf EINER Karte und im normalen Modus. Damit war
+// bis v174 die Haelfte des Spiels nie durchgespielt worden: zwei von drei
+// Wellenplaenen und der Endlosmodus ueberhaupt nicht. Ein Wellenplan, der
+// nicht zu Ende kommt, oder ein Endlosmodus, der bei Welle 16 stehenbleibt,
+// waere niemandem aufgefallen ausser dem Spieler.
+//
+// Ungezeichnet, und das ist Absicht. Was hier gesucht wird, sind Abstuerze,
+// Sackgassen und Plaene, die nicht enden - alles Fragen an die
+// SIMULATION. Was die Zeichnung angeht, prueft die Partie oben, und die
+// dreimal zu wiederholen kostete Sekunden ohne neue Auskunft.
+step('Jede Karte und der Endlosmodus durchspielen', () => {
+  // **Der Block laesst den Spielstand zurueck, wie er ihn vorfand.**
+  //
+  // Er spielt drei Partien zu Ende, und jede traegt Sterne und Bestwerte
+  // ein. Beim ersten Lauf hat das die Sternepruefung darunter umgeworfen -
+  // sie fand drei Sterne, wo zwei stehen sollten. Eine Pruefung, die
+  // nebenbei den Zustand aendert, den andere Pruefungen lesen, ist keine
+  // Pruefung, sondern eine Fehlerquelle.
+  // Zurueckgestellt wird der Fortschritt IM SPEICHERMODUL, nicht in
+  // `localStorage`: das Modul haelt eine eigene Kopie und liest sie nur
+  // beim Laden ein. Die erste Fassung stellte brav den Browserspeicher
+  // wieder her - und die Sternepruefung fiel trotzdem um, weil niemand ihn
+  // noch einmal las (Regel 12: eine Zahl gehoert an ihre Messstelle).
+  const fortschritt = getProgress();
+  const sterneVorher = { ...fortschritt.stars };
+  const perksVorher = [...fortschritt.perks];
+  const zeilen: string[] = [];
+  const GRENZE = 60 * 60 * 20;
+
+  const durchspielen = (mapId: string, endlos: boolean) => {
+    const g = new GameState();
+    g.reset(4242, 'normal', mapId, { endless: endlos });
+    const plaetze = candidateSpots(g);
+    const z = { spot: 0, si: 0 };
+    let f = 0;
+    let hoechsteWelle = 0;
+    // **Gezaehlt wird, was WIRKLICH gestartet ist.**
+    //
+    // `waveNumber` zaehlt die naechste Welle, nicht eine gespielte: nach der
+    // letzten Welle des Plans steht sie auf 16, ohne dass je eine 16. Welle
+    // lief. Die erste Fassung dieser Pruefung fragte danach - und blieb
+    // gruen, als der Endlosmodus abgeschaltet wurde. Sie hat ihn bezeugt,
+    // ohne ihn je zu pruefen (Regel 13).
+    let gestartet = 0;
+    let warAktiv = false;
+    while (g.phase === 'playing' && f < GRENZE) {
+      botSchritt(g, plaetze, z);
+      g.update(DT);
+      if (g.waveActive && !warAktiv) gestartet++;
+      warAktiv = g.waveActive;
+      hoechsteWelle = Math.max(hoechsteWelle, g.waveNumber);
+      f++;
+      // Der Endlosmodus endet nur durch Verlieren. Damit der Lauf nicht an
+      // der Bildgrenze haengt, wird nach fuenf Wellen ueber dem Plan
+      // abgebrochen - bewiesen ist dann, was zu beweisen war.
+      if (endlos && gestartet > g.totalWaves + 5) break;
+    }
+    return { g, f, hoechsteWelle, gestartet };
+  };
+
+  for (const m of ALLE_KARTEN) {
+    const { g, f, hoechsteWelle } = durchspielen(m.id, false);
+    if (f >= GRENZE) {
+      throw new Error(
+        `${m.name}: die Partie kam in ${GRENZE / 60} Sekunden Spielzeit nicht zu Ende `
+        + `(Welle ${hoechsteWelle} von ${g.totalWaves}). Der Wellenplan endet nicht.`,
+      );
+    }
+    if (g.phase !== 'won' && g.phase !== 'lost') {
+      throw new Error(`${m.name}: die Partie endete als "${g.phase}" - weder gewonnen noch verloren.`);
+    }
+    if (!g.stats.kills) throw new Error(`${m.name}: kein einziger Gegner erledigt - der Lauf misst nichts.`);
+    const verbucht = g.stats.leaksByWave.reduce((a, b) => a + (b ?? 0), 0);
+    if (verbucht !== g.maxLives - g.lives) {
+      throw new Error(
+        `${m.name}: ${verbucht} Kristallverlust verbucht, aber ${g.maxLives - g.lives} fehlen.`,
+      );
+    }
+    zeilen.push(`  ${m.name.padEnd(14)} ${g.phase === 'won' ? 'gewonnen' : 'verloren '} `
+      + `nach Welle ${hoechsteWelle}/${g.totalWaves}, ${g.stats.kills} erledigt, `
+      + `Kristall ${g.lives}/${g.maxLives}`);
+  }
+
+  // Und der Endlosmodus: er muss ueber den Plan HINAUS gehen. Genau das ist
+  // seine einzige Zusage, und genau das hat nie jemand nachgesehen.
+  const e = durchspielen(ALLE_KARTEN[0].id, true);
+  if (e.gestartet <= e.g.totalWaves) {
+    throw new Error(
+      `Endlosmodus: nur ${e.gestartet} Wellen wirklich gestartet, der Plan hat ${e.g.totalWaves} - `
+      + 'er endet also mit dem Plan wie jede andere Partie.',
+    );
+  }
+  if (e.f >= GRENZE) {
+    throw new Error(
+      `Endlosmodus: haengt nach ${GRENZE / 60} Sekunden Spielzeit bei Welle ${e.gestartet} fest, `
+      + 'ohne zu verlieren und ohne weiterzugehen.',
+    );
+  }
+  if (!e.g.endless) throw new Error('Endlosmodus: das Feld `endless` steht nach dem Aufsetzen auf false.');
+  // Im Endlosmodus gibt es keine Sterne - er ist kein Fortschritt, sondern
+  // eine Bestenliste (C27 waere ihre Anzeige).
+  if (e.g.phase !== 'playing' && e.g.stars !== 0) {
+    throw new Error(`Endlosmodus: ${e.g.stars} Stern(e) vergeben - dort gibt es keine.`);
+  }
+  zeilen.push(`  Endlosmodus    ${e.gestartet} Wellen gestartet (Plan hat ${e.g.totalWaves}), `
+    + `${e.g.stats.kills} erledigt`);
+
+  fortschritt.stars = sterneVorher;
+  fortschritt.perks = perksVorher;
+
+  console.log('Durchgespielt:');
+  for (const z of zeilen) console.log(z);
 });
 
 // --- Die Auswertung der eben gespielten Partie (P2).

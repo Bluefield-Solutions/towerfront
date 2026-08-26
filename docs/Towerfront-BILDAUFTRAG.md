@@ -420,29 +420,60 @@ transparent canvas, centred, nothing cropped.
 
 ### 5.6 `gegner_spalter.png` — Trägerfahrzeug
 
-> Ein Bild, zwei Gegner: der **Span** wird aus derselben Datei erzeugt,
-> kleiner, blasser und kühler. Das Bild muss deshalb auch stark verkleinert
-> noch lesbar sein.
+> **Nachbestellung v168 — dieses Bild ist zu ersetzen.** Gemessen überdeckt
+> sein Umriss den des Koloss zu **0,76**, erlaubt sind 0,65. Beide sind ein
+> kastiger Rumpf von rund 200 × 220 px; im auf 64 × 64 normierten Umriss
+> fallen Ketten und Räder weg, und übrig bleibt zweimal dasselbe Rechteck.
+> **Die Grundformen aus 3.2b stimmten also auf dem Papier und nicht im
+> Bild** — sie beschreiben die Oberfläche, entschieden wird am Umriss.
+>
+> Getragen hat die Unterscheidung bis v167 die Farbe allein. Seit die
+> Fraktionsfarben (4.1) alle acht in eine Familie stellen, trägt sie es
+> nicht mehr: gemessen liegen Koloss und Spalter nur **7,3** auseinander,
+> nötig wären 12, und über die ganze Familie hinweg ist der Wert nicht über
+> 9,1 zu bringen. **Die Trennung muss aus der Form kommen.**
+>
+> Die alte Zeile „ein Bild, zwei Gegner" ist gestrichen: der Span hat seit
+> v159 eine eigene Datei.
 
 ```
 [STYLE-BLOCK EINFÜGEN]
 
-GRUNDFORM: Radfahrzeug — sechs einzeln sichtbare Räder, KEIN Geschützrohr.
-Die Dachluke ist das Erkennungsmerkmal, nicht eine Waffe.
+GRUNDFORM: Radfahrzeug mit SICHTBAR GETEILTEM Rumpf — kein Geschützrohr,
+kein geschlossener Kasten. Der Spalter ist der Gegner, der im Spiel in zwei
+Teile zerfällt, und das muss man ihm schon als schwarzer Fläche ansehen.
 
-SUBJECT: An armoured carrier vehicle that deploys drones, seen STRICTLY FROM
-DIRECTLY ABOVE (orthographic top-down), facing UP toward the top edge of the
-image. Six-wheeled boxy hull with sloped side armour, a large segmented
-launch hatch on the roof split down the middle, two small folded drone racks
-visible through the opening. Dark gunmetal with steel-blue armour panels and
-orange hazard chevrons around the roof hatch.
+SUBJECT: An armoured drone carrier, seen STRICTLY FROM DIRECTLY ABOVE
+(orthographic top-down), facing UP toward the top edge of the image. The
+hull is built as TWO SEPARATE SEGMENTS joined by a narrow central coupling,
+like a articulated hauler: a shorter front module carrying the cab and two
+wheels on each side, and a longer rear module carrying the open launch
+cradle. The waist between the two modules is NARROW — no more than half the
+width of either module — so the outline reads as two blocks on a stalk, not
+as one box. Six wheels stand clearly PROUD of the hull on both sides, with
+visible gaps of empty canvas between them.
 
-The roof hatch is the recognition feature — it must stay readable when the
-image is scaled down to a third of its size.
+The rear cradle is OPEN at the top: two folded drone racks sit in a recess
+whose walls break the rectangle of the outline.
 
-FRAMING: silhouette about 180 px wide and 220 px tall inside a 256x256
+NO gun barrel. NO continuous tracks. Nothing that makes the outline a
+closed rectangle.
+
+Dark gunmetal, same faction family as the other units, with orange hazard
+chevrons around the open cradle.
+
+FRAMING: silhouette about 170 px wide and 230 px tall inside a 256x256
 transparent canvas, centred, nothing cropped.
 ```
+
+**Abnahme — vier Zahlen, alle mit `npm run probebild -- <ordner>` zu prüfen:**
+
+| Größe | Soll | warum |
+|---|---|---|
+| Umriss gegen `gegner_koloss.png` | **höchstens 0,60** | heute 0,76; 0,65 ist die Grenze, 0,60 der Abstand dazu |
+| Umriss gegen `gegner_spaeher.png` | höchstens 0,65 | heute 0,69 — beide sind Radfahrzeuge, die Taille trennt sie |
+| leere Fläche im Deckrechteck | **mindestens 25 %** | ein Rechteck hat 0 %; die Taille und die Radlücken bringen sie |
+| Breite der Silhouette | 160–180 px | schmaler als der Koloss (200), sonst hilft die Taille nichts |
 
 ### 5.7 `gegner_titan.png` — superschwerer Läufer (Boss)
 

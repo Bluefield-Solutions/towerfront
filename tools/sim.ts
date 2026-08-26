@@ -173,7 +173,17 @@ function play(
         if (affordable.length) id = affordable[0];
       }
 
-      const wantBuild = s.towers.length < bot.maxTowers * bot.deepenAt &&
+      // Gezaehlt werden die GEBAUTEN Tuerme, nicht die Zielunit.
+      //
+      // Seit v165 steht sie als fuenfter Turm von Anfang an im Feld. Ohne
+      // diese Unterscheidung baute der Bot einen Turm weniger und schuettete
+      // sein Gold in die teuerste Ausbaulinie des Spiels: die Zielunit steht
+      // dort, wo alle Bahnen enden, sammelt deshalb schnell den meisten
+      // Schaden - und "bau den aus, der am meisten leistet" fuehrte
+      // geradewegs dorthin. Gemessen kostete das Normal/Meister 23 -> 11 von
+      // 60, und das war kein Balancebefund, sondern ein Botfehler.
+      const gebaut = s.gebaute;
+      const wantBuild = gebaut.length < bot.maxTowers * bot.deepenAt &&
         spotIdx < spots.length && s.gold >= TOWERS[id].base.cost + reserve;
 
       if (wantBuild) {
@@ -183,14 +193,14 @@ function play(
       } else {
         // In die Tiefe: immer in den Turm, der bisher am meisten geleistet hat.
         let best: (typeof s.towers)[number] | null = null;
-        for (const tw of s.towers) {
+        for (const tw of gebaut) {
           if (tw.level >= Math.min(bot.maxLevel, MAX_LEVEL)) continue;
           const n = nextFor(TOWERS[tw.def], tw.branch ?? pick(tw.def), tw.level);
           if (!n || s.gold < n.cost + reserve) continue;
           if (!best || tw.damageDone > best.damageDone) best = tw;
         }
         if (best && s.upgrade(best, (best.branch ?? pick(best.def)) as 0 | 1)) upgrades++;
-        else if (s.towers.length < bot.maxTowers && spotIdx < spots.length &&
+        else if (gebaut.length < bot.maxTowers && spotIdx < spots.length &&
           s.gold >= TOWERS[id].base.cost + reserve) {
           const sp = spots[spotIdx];
           if (s.build(sp.x, sp.y, id)) { stelleZiel(s, opts.ziel); si++; }
@@ -212,7 +222,7 @@ function play(
   }
   return {
     lives: s.lives, wave: s.waveNumber, won: s.phase === 'won',
-    towers: s.towers.length, upgrades, peakEnemies, peakFx, leakByWave, maxLives: s.maxLives,
+    towers: s.gebaute.length, upgrades, peakEnemies, peakFx, leakByWave, maxLives: s.maxLives,
     earned: s.stats.goldEarned, spent: s.stats.goldSpent,
   };
 }

@@ -22,13 +22,13 @@ export const TUTORIAL: TutorialStep[] = [
     id: 'pick',
     text: 'Tipp auf den Bogenturm.',
     target: 'tb-arrow',
-    done: (s) => s.buildChoice !== null || s.towers.length > 0,
+    done: (s) => s.buildChoice !== null || s.gebaute.length > 0,
   },
   {
     id: 'place',
     text: 'Jetzt auf eine helle Fläche neben dem Pfad drücken. Gebaut wird erst beim Loslassen.',
     target: 'world',
-    done: (s) => s.towers.length > 0,
+    done: (s) => s.gebaute.length > 0,
   },
   {
     id: 'start',
@@ -41,7 +41,7 @@ export const TUTORIAL: TutorialStep[] = [
     text: 'Tipp deinen Turm an. Ausbauen ist meistens stärker als ein zweiter Turm daneben.',
     target: 'world',
     wait: (s) => s.waveIndex < 1,
-    done: (s) => s.towers.some((t) => t.level > 1) || s.waveIndex > 1,
+    done: (s) => s.gebaute.some((t) => t.level > 1) || s.waveIndex > 1,
   },
   {
     id: 'early',
@@ -93,6 +93,6 @@ export function kartenEinfuehrung(s: GameState): TutorialStep[] {
     id: `karte:${s.map.id}`,
     text: `${text} Engste Stelle: ${eng} Punkte.`,
     target: 'world',
-    done: (g) => g.towers.length > 0,
+    done: (g) => g.gebaute.length > 0,
   }];
 }

@@ -539,6 +539,68 @@ for (const id of TOWER_ORDER) {
   }
 }
 
+// ------------------------------------------------------------------ Zielunit
+
+// Die Zielunit ist ein Turm - aber ein anderer als die vier kaufbaren.
+//
+// Sie steht nicht in TOWER_ORDER, also sieht die Schleife darueber sie nie.
+// Drei Zusagen haengen an ihr, und alle drei stuenden sonst nur in einem
+// Kommentar: sie hat genau EINEN Zweig, sie kostet beim Bauen nichts, und
+// ihr Ausbau ist DEUTLICH teurer als jede Turmlinie. Die letzte ist eine
+// Vorgabe des Nutzers ("hier muss es aber teurer sein") - eine Vorgabe, die
+// niemand prueft, ist eine Absichtserklaerung.
+{
+  const c = TOWERS.core;
+  if (TOWER_ORDER.includes('core')) {
+    fail('Zielunit: sie steht in TOWER_ORDER - dann erschiene sie in der Bauleiste '
+      + 'und jede Torpruefung wuerde ein Turmbild fuer sie verlangen.');
+  }
+  if (c.branches.length !== 1) {
+    fail(`Zielunit: ${c.branches.length} Zweige statt einem. Eine Verzweigung an dem `
+      + 'Bauwerk, das man nicht verlieren darf, waere eine Falle ohne Ausweg - '
+      + 'verkaufen und neu setzen geht dort nicht.');
+  }
+  if (c.base.cost !== 0) {
+    fail(`Zielunit: Grundkosten ${c.base.cost} statt null - sie wird nicht gekauft, `
+      + 'sie steht von Anfang an da.');
+  }
+  // Teurer als die teuerste Turmlinie, und zwar mit Abstand. Anteilig
+  // gerechnet (Regel 2): wer die Turmkosten anhebt, hebt die Schwelle mit.
+  const linie = (id: typeof TOWER_ORDER[number]) => {
+    const t = TOWERS[id];
+    return Math.max(...t.branches.map(
+      (b) => t.base.cost + b.levels.reduce((n, l) => n + l.cost, 0)));
+  };
+  const teuerste = Math.max(...TOWER_ORDER.map(linie));
+  const zielunit = c.base.cost + c.branches[0].levels.reduce((n, l) => n + l.cost, 0);
+  const FAKTOR = 1.8;
+  if (zielunit < teuerste * FAKTOR) {
+    fail(`Zielunit: voll ausgebaut kostet sie ${zielunit} Gold, die teuerste Turmlinie `
+      + `${teuerste} - das ist das ${(zielunit / teuerste).toFixed(2)}-fache, verlangt ist `
+      + `mindestens das ${FAKTOR.toFixed(1)}-fache.`);
+  }
+  // Und sie darf nicht zugleich teurer UND staerker sein - dann waere sie
+  // nicht teuer, sondern einfach der beste Turm.
+  const spitze = (id: typeof TOWER_ORDER[number]) => {
+    const t = TOWERS[id];
+    return Math.max(...t.branches.map((b) => {
+      const l = b.levels[b.levels.length - 1];
+      return l.damage / l.cooldown;
+    }));
+  };
+  const cl = c.branches[0].levels[c.branches[0].levels.length - 1];
+  const cDps = cl.damage / cl.cooldown;
+  const besterTurm = Math.max(...TOWER_ORDER.map(spitze));
+  if (cDps > besterTurm) {
+    fail(`Zielunit: auf Stufe 6 macht sie ${cDps.toFixed(0)} Schaden je Sekunde, der beste `
+      + `Turm ${besterTurm.toFixed(0)} - teurer und staerker zugleich waere keine `
+      + 'Entscheidung, sondern die einzige richtige.');
+  }
+  console.log(`  Zielunit: voll ausgebaut ${zielunit} Gold gegen ${teuerste} `
+    + `(${(zielunit / teuerste).toFixed(2)}-fach), ${cDps.toFixed(0)} Schaden je Sekunde `
+    + `gegen ${besterTurm.toFixed(0)} beim besten Turm.`);
+}
+
 // --------------------------------------------------------------- Zweig-Waage
 //
 // Der Simulationsbot baut rund hundert Tuerme und ueberdeckt damit jeden

@@ -46,7 +46,7 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 |---|---|---|
 | **jede Runde** | `npm run gate` — enthält den Musterlauf | **rund 2,5 min** |
 | jede Runde | die Gegenproben der Tore, die ich angefasst habe | unter 1 min |
-| **jede dritte Fassung** | `npm run proben` — alle 150, voll | rund 33 min |
+| **jede dritte Fassung** | `npm run proben` — alle 154, voll | rund 33 min |
 | jeder Push auf `master` | die volle Kette auf dem Runner | 3–4 min, ohne mich |
 
 **Die Drei ist erzwungen, nicht aufgeschrieben.** `npm run muster` liest
@@ -85,7 +85,7 @@ npm run bahntreue   prueft am Kartenbild, ob jede Bahn auf der GEMALTEN
                     Strasse laeuft - Ratsche, kein Soll.
 npm run konter      prueft, ob jede Gegnerart, an der etwas zu kontern ist,
                     es auch sagt - und ob es nicht ALLE tun.
-npm run muster      prueft in 0,4 s, ob jede der 150 Gegenproben noch einen
+npm run muster      prueft in 0,4 s, ob jede der 154 Gegenproben noch einen
                     Gegenstand hat - ohne ein Tor zu fahren. Ersetzt den
                     vollen Probenlauf nicht, faengt aber seine haeufigste
                     Verfallsart - und schlaegt an, wenn der volle Lauf mehr
@@ -246,7 +246,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v164. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v165. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

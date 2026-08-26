@@ -115,6 +115,16 @@ console.log(`Groesste Richtungsaenderung eines Schusses: ${grad.toFixed(0)} Grad
 {
   const merk = TOWERS.arrow.hitsAir;
   TOWERS.arrow.hitsAir = false;
+  // Und die Zielunit mit, sonst misst der Block sie statt des Filters.
+  //
+  // Sie steht seit v165 von Anfang an im Feld, trifft Luftziele und schiesst
+  // genau dort, wo die Gleiter ankommen. Gezaehlt wird hier aber JEDER
+  // Lebensverlust eines Fliegers - der Block hat beim ersten Lauf nach v165
+  // drei Treffer gemeldet, und keiner davon kam vom geprueften Schuetzen
+  // (Regel 13: wer eine Wirkung misst, schaltet alles andere ab, das
+  // dieselbe Spur hinterlaesst).
+  const merkCore = TOWERS.core.hitsAir;
+  TOWERS.core.hitsAir = false;
   let getroffen = 0;
   const flieger = new Set<object>();
   try {
@@ -139,6 +149,7 @@ console.log(`Groesste Richtungsaenderung eines Schusses: ${grad.toFixed(0)} Grad
     }
   } finally {
     TOWERS.arrow.hitsAir = merk;
+    TOWERS.core.hitsAir = merkCore;
   }
   console.log(`Luftfilter: ein Schuetze ohne Luftziel trifft ${getroffen}x einen Flieger ` +
     `(Soll 0, ${flieger.size} Flieger auf dem Feld).`);

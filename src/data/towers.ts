@@ -1,6 +1,18 @@
 import { WORLD_W } from './config';
 
-export type TowerId = 'arrow' | 'frost' | 'mortar' | 'prism';
+/** Die vier kaufbaren Tuerme - und die Zielunit.
+ *
+ *  **`core` steht hier drin, aber NICHT in `TOWER_ORDER`.** Sie ist ein Turm
+ *  in allem, was zaehlt: sie zielt, schiesst, wird ausgebaut und rechnet
+ *  ihren Schaden mit. Nur kaufen kann man sie nicht - sie steht von Anfang
+ *  an da, und verkaufen kann man sie auch nicht.
+ *
+ *  Das ist die Antwort auf Regel 15: eine zweite, eigene Fassung von
+ *  "etwas, das ein Ziel sucht und darauf schiesst" waere ein Nachbau
+ *  gewesen, und Nachbauten veralten. Jede Torpruefung laeuft ueber
+ *  `TOWER_ORDER`, also sieht keine von ihnen die Zielunit - und keine
+ *  musste dafuer angefasst werden. */
+export type TowerId = 'arrow' | 'frost' | 'mortar' | 'prism' | 'core';
 
 /** Wie ein Turm angreift. Der Angriffstyp bestimmt die Rolle im Feld,
  *  nicht die Zahlenhoehe - sonst waeren es nur Varianten voneinander. */
@@ -68,7 +80,16 @@ export interface TowerDef {
   projectileSpeed: number;
   /** Stufe 1 - vor der Verzweigung. */
   base: TowerLevel;
-  branches: [TowerBranch, TowerBranch];
+  /** Ein Zweig oder zwei.
+   *
+   *  Die vier kaufbaren Tuerme haben ZWEI: ab Stufe 2 entscheidet man sich,
+   *  und die Entscheidung ist endgueltig. Die Zielunit hat EINEN - eine
+   *  Verzweigung an dem Bauwerk, das man nicht verlieren darf, waere eine
+   *  Falle ohne Ausweg, denn verkaufen und neu setzen geht dort nicht.
+   *
+   *  `npm run guards` haelt beides fest: vier Tuerme mit genau zwei Zweigen,
+   *  die Zielunit mit genau einem. */
+  branches: TowerBranch[];
 }
 
 export const MAX_LEVEL = 6;
@@ -254,8 +275,47 @@ export const TOWERS: Record<TowerId, TowerDef> = {
       },
     ],
   },
+  core: {
+    id: 'core', footprint: 200, name: 'Zielunit', role: 'Letzte Linie',
+    blurb: 'Steht von Anfang an und schiesst mit. Ausbau kostet ein Vielfaches.',
+    color: '#C9D4E4', accent: '#7FE7E0',
+    attack: 'single', hitsAir: true, projectileSpeed: 900,
+    // Stufe 1 ist ABSICHTLICH schwach und kostet nichts: die Station steht
+    // von Anfang an da, und ein starkes Geschenk zu Beginn haette die ganze
+    // fruehe Balance verschoben. Wer sie zur Waffe machen will, bezahlt.
+    base: { cost: 0, damage: 10, cooldown: 0.9 },
+    branches: [
+      {
+        id: 'geschuetzring', name: 'Geschützring', color: '#7FE7E0',
+        blurb: 'Die acht Türme der Station werden aufgerüstet. Teuer, aber sie steht dort, wo alles ankommt.',
+        // Teurer als jede Turmlinie, und zwar mit Abstand: 5500 Gold gegen
+        // 3010 beim Prisma, der teuersten der acht Turmlinien - das
+        // 1,83-fache. Ein ganzer Durchgang bringt gemessen rund 7300 Gold
+        // (`npm run sim`), die Zielunit voll auszubauen kostet also gut zwei
+        // Drittel des Einkommens einer Partie. Das ist die Vorgabe des
+        // Nutzers ("hier muss es aber teurer sein"), und `npm run guards`
+        // prueft sie - sonst waere es eine Behauptung im Kommentar.
+        //
+        // Nicht zugleich staerker: auf Stufe 6 macht sie 382 Schaden je
+        // Sekunde, der beste Turm 495. Teurer UND staerker waere keine
+        // Entscheidung, sondern die einzige richtige.
+        levels: [
+          { cost: 400, damage: 30, cooldown: 0.82, pierce: 1 },
+          { cost: 650, damage: 60, cooldown: 0.74, pierce: 2 },
+          { cost: 1000, damage: 100, cooldown: 0.66, pierce: 2 },
+          { cost: 1500, damage: 150, cooldown: 0.60, pierce: 3 },
+          { cost: 1950, damage: 210, cooldown: 0.55, pierce: 3 },
+        ],
+      },
+    ],
+  },
 };
 
+/** Die kaufbaren Tuerme, in der Reihenfolge der Bauleiste.
+ *
+ *  Die Zielunit steht hier NICHT: sie wird nicht gebaut. Jede Torpruefung
+ *  laeuft ueber diese Liste, nicht ueber `TOWERS` - deshalb hat der fuenfte
+ *  Eintrag keine einzige davon angefasst. */
 export const TOWER_ORDER: TowerId[] = ['arrow', 'frost', 'mortar', 'prism'];
 
 /** Zweig 0 oder 1, oder null solange der Turm auf Stufe 1 steht. */
@@ -299,6 +359,14 @@ const REICHWEITE_GRUND: Record<TowerId, number> = {
   arrow: 0.170,   // 326 px - der Allrounder
   prism: 0.160,   // 307 px - Ketten brauchen Nachbarn in Reichweite
   mortar: 0.225,  // 432 px - schlaegt weit hinten ein
+  // Die Zielunit deckt ihren eigenen Vorplatz, nicht die Karte. Sie steht
+  // dort, wo alle Bahnen enden - mit der Weite eines Moersers waere sie der
+  // beste Turm im Spiel und noch dazu geschenkt.
+  //
+  // Der Grundwert ist klein, WEIL der Zuwachs gross ist: `rangeFor` rechnet
+  // fuer Zweig 0 mit dem Weiten-Faktor 1,35, also steht am Ende 353 px. Mit
+  // 250 als Grund waeren es 459 gewesen - ein Moerser rings um das Ziel.
+  core: 0.100,    // 192 px auf Stufe 1, 353 px auf Stufe 6
 };
 
 /** Vielfaches der Grundreichweite je Stufe. Fuer alle Tuerme gleich. */
@@ -326,6 +394,9 @@ const WUCHT_AUSGLEICH: Record<TowerId, number> = {
   frost: 1.10,   // die Bremse trifft alles im Umkreis, Weite wiegt schwer
   mortar: 1.06,
   prism: 1.02,
+  // Die Zielunit hat nur einen Zweig, also greift der Ausgleich nie. Der
+  // Eintrag steht hier, weil der Typ ihn verlangt, und nicht, weil er wirkt.
+  core: 1.00,
 };
 
 /** Die Reichweite eines Turms - die eine Stelle, an der sie entsteht. */
@@ -364,8 +435,18 @@ export function statsFor(def: TowerDef, branch: BranchIndex, level: number): Tow
  *  klafften 519 gegen 600 Pixel. */
 export function nextFor(def: TowerDef, branch: BranchIndex, level: number): TowerStats | null {
   if (level >= MAX_LEVEL) return null;
-  if (branch === null) return null; // Der Zweig muss erst gewaehlt werden.
-  return statsFor(def, branch, level + 1);
+  const zweig = branch ?? (def.branches.length === 1 ? 0 : null);
+  if (zweig === null) return null; // Der Zweig muss erst gewaehlt werden.
+  return statsFor(def, zweig, level + 1);
+}
+
+/** Muss dieser Turm sich beim ersten Ausbau fuer einen Zweig entscheiden?
+ *
+ *  Eine Frage an die DATEN, keine Liste von Ausnahmen: wer einen Zweig hat,
+ *  waehlt nicht. So gilt die Antwort auch fuer den naechsten Turm, den
+ *  jemand ohne Verzweigung anlegt. */
+export function hatZweigwahl(def: TowerDef): boolean {
+  return def.branches.length > 1;
 }
 
 /** Farbe, die den gewaehlten Zweig sichtbar macht. */

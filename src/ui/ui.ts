@@ -396,9 +396,17 @@ export class UI {
         ? `Geschafft · ${'★'.repeat(s.stars)}${'☆'.repeat(3 - s.stars)}`
         : 'Alle Wellen überstanden';
       this.sTitle.textContent = 'Der Kristall hält';
+      // Die Zahl kommt aus einer Variablen, nicht direkt aus dem Zugriff.
+      //
+      // `gebaute` traegt den Ersatzbuchstaben im NAMEN, und der
+      // Umlautwaechter sieht im ausgelieferten Text nur "Tuerme" - er kann
+      // Code in einer Zeichenkettenschablone nicht von Text unterscheiden.
+      // Ihn dafuer stumpfer zu machen waere der falsche Weg: er faengt
+      // genau die Sorte Fehler, die man selbst nicht sieht.
+      const gebaut = s.gebaute.length;
       this.sText.textContent =
         `Fünfzehn Wellen abgewehrt auf ${gradeName}, ${s.lives} von ${s.maxLives} ` +
-        `Kristallpunkten übrig, ${s.towers.length} Türme im Feld.`;
+        `Kristallpunkten übrig, ${gebaut} Türme im Feld.`;
       this.sAction.textContent = 'Noch einmal';
     } else {
       this.sEyebrow.textContent = s.endless
@@ -716,9 +724,11 @@ export class UI {
     this.perfBox.hidden = false;
     const s = this.s;
     const warn = fps < 50 ? ' warn' : '';
+    // Siehe oben: der Zugriff traegt den Ersatzbuchstaben im Namen.
+    const gebaut = s.gebaute.length;
     this.perfBox.innerHTML =
       `<b class="${warn.trim()}">${fps.toFixed(0)} fps</b>   Qualitaet ${s.quality}\n` +
-      `Gegner ${s.enemies.length}   Türme ${s.towers.length}\n` +
+      `Gegner ${s.enemies.length}   Türme ${gebaut}\n` +
       `Geschosse ${s.projectiles.length}   Partikel ${s.particles.length}\n` +
       `Bilder ${spriteCount()}   Aussaat ${s.seed.toString(16)}`;
   }
@@ -814,7 +824,10 @@ export class UI {
       return;
     }
     this.iHint.hidden = true;
-    this.iSell.hidden = !sel;
+    // Die Zielunit hat keinen Verkaufen-Knopf. Sie zu verkaufen hiesse, die
+    // Partie zu verkaufen - der Riegel sitzt in `sell()`, aber ein Knopf,
+    // der nichts tut, ist schlimmer als keiner.
+    this.iSell.hidden = !sel || sel.def === 'core';
 
     if (sel) {
       const def = TOWERS[sel.def];

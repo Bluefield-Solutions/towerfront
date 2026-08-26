@@ -489,6 +489,10 @@ export class Renderer {
     // Nur die gezeichneten Tuerme kommen in die Schicht. Gerenderte werden
     // je Bild gezeichnet, weil sie sich zum Ziel hin spiegeln.
     for (const t of s.towers) {
+      // Dieselbe Ausnahme wie in `turmMalen`, und aus demselben Grund: die
+      // Zielunit hat kein Turmbild, also faellt sie hier auf die gezeichnete
+      // Ersatzform zurueck - mitten in ihre eigene Station hinein.
+      if (t.def === 'core') continue;
       if (getTowerArt(t.def, t.branch, t.level, s.map.id)) continue;
       drawSprite(g, getTowerBase(t.def, t.branch, t.level), t.x, t.y);
     }
@@ -1559,6 +1563,11 @@ export class Renderer {
   private turmMalen(s: GameState, t: Tower, hi: boolean): void {
     const ctx = this.ctx;
     void hi;
+    // Die Zielunit ist ein Turm im Modell, aber nicht im Bild: sie wird von
+    // `drawCrystal` gezeichnet, dreimal so gross wie ein Turm und auf ihrer
+    // eigenen Plattform. Ohne diesen Riegel faende `getTowerArt` kein Bild
+    // fuer sie und der Renderer maelte seine gezeichnete Ersatzform obendrauf.
+    if (t.def === 'core') return;
     const def = TOWERS[t.def];
     if (def.attack === 'aura' && t.pulse > 0) {
       ctx.strokeStyle = hexA(accentFor(def, t.branch), t.pulse * 0.5);
@@ -2290,7 +2299,9 @@ export class Renderer {
       const h = s.map.hint;
       x = h.x; y = h.y; r = 62;
     } else {
-      const t = s.towers[0];
+      // Der erste Turm, den der SPIELER gestellt hat - nicht die Zielunit,
+      // die seit v165 an Stelle null steht.
+      const t = s.gebaute[0];
       if (!t) return;
       x = t.x; y = t.y; r = 62;
     }

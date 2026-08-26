@@ -85,6 +85,15 @@ const { ENEMIES } = await import('../src/data/enemies.ts');
 
 const DT = 1 / 60;
 
+/** Der erste Turm, den der SPIELER gestellt hat.
+ *
+ *  Seit v165 steht die Zielunit als fuenfter Turm von Anfang an in
+ *  `s.towers`, und zwar an Stelle NULL. Jede Messung hier meint aber den
+ *  gebauten Turm. Die Verdeckungspruefung hat es sofort gezeigt: sie setzte
+ *  ihren Testgegner hinter die ZIELUNIT statt hinter den Turm, und dort
+ *  deckt ihn nichts - 100 Prozent verdeckt wurden zu 49. */
+const ersterTurm = (g) => g.gebaute[0];
+
 const TOR = ['menu-karte', 'menu-einweisung', 'menu-sieg', 'welle8'];
 const nurTor = process.argv.includes('--tor');
 
@@ -456,7 +465,7 @@ takes.push(['schwenk', () => shot('schwenk', 844, 390, (s, r) => {
   s.waveIndex = 7;
   s.startWave();
   for (let i = 0; i < 60 * 12; i++) s.update(DT);
-  const turm = s.towers.find((t) => t.target) ?? s.towers[0];
+  const turm = s.gebaute.find((t) => t.target) ?? ersterTurm(s);
   if (turm) {
     r.resize();
     r.zoomAt(2.6, 422, 195);
@@ -480,10 +489,10 @@ takes.push(['stufen', () => shot('stufen', 844, 390, (s, r) => {
     for (let k = 1; k < stufen[i]; k++) s.upgrade(t, 0);
     i++;
   }
-  if (s.towers[0]) {
+  if (ersterTurm(s)) {
     r.resize();
     r.zoomAt(1.9, 422, 195);
-    const p = r.worldToScreen(s.towers[0].x, s.towers[0].y);
+    const p = r.worldToScreen(ersterTurm(s).x, ersterTurm(s).y);
     r.panBy(422 - p.x + 150, 195 - p.y);
   }
   return 4;
@@ -868,7 +877,7 @@ pruefungen.push(async () => {
     s.gold = 99999;
     const platz = candidateSpots(s)[0];
     if (!s.build(platz.x, platz.y, 'arrow')) throw new Error('Verdeckung: kein Turm setzbar.');
-    const t = s.towers[0];
+    const t = ersterTurm(s);
     r.resize();
     r.draw(s);
     for (const k of Object.keys(OBJECT_ART)) getObjectArt(k);
@@ -1127,12 +1136,12 @@ takes.push(['nah', () => shot('nah', 844, 390, (s, r) => {
   s.reset(1, 'normal', 'spiralhain');
   stock(s, 6);
   s.gold = 100000;
-  for (const t of s.towers) { s.upgrade(t, 0); s.upgrade(t, 0); s.upgrade(t, 0); }
-  s.selectedTower = s.towers[0] ?? null;
+  for (const t of s.gebaute) { s.upgrade(t, 0); s.upgrade(t, 0); s.upgrade(t, 0); }
+  s.selectedTower = ersterTurm(s) ?? null;
   s.waveIndex = 5;
   s.startWave();
   r.resize();
-  const t = s.towers[0];
+  const t = ersterTurm(s);
   if (t) { r.zoomAt(2.6, 422, 195); r.panBy((422 - t.x) * 0, 0); }
   return 60 * 6;
 })]);

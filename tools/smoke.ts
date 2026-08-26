@@ -92,6 +92,16 @@ const { WORLD_W, WORLD_H } = await import('../src/data/config');
 
 // ---------------------------------------------------------------- Ablauf
 
+/** Der erste Turm, den der SPIELER gestellt hat.
+ *
+ *  Seit v165 steht die Zielunit als fuenfter Turm von Anfang an in
+ *  `state.towers` - an Stelle NULL. Jede Pruefung hier meint aber den
+ *  gebauten Turm: Ausbauzweige, Ziellogik, Versetzen, Verkaufen. Der
+ *  Rauchtest hat es beim ersten Lauf selbst gemeldet, mit sechs Befunden
+ *  auf einmal, und drei davon waren echte Spielfehler und keine
+ *  Testartefakte (die Einweisung galt sofort als erledigt). */
+const ersterTurm = (g: { gebaute: unknown[] }): any => g.gebaute[0];
+
 const problems: string[] = [];
 const step = (name: string, fn: () => void): void => {
   try { fn(); } catch (e) { problems.push(`${name}: ${(e as Error).message}`); }
@@ -141,7 +151,7 @@ for (const step of TUTORIAL) {
     pick: () => { probe.buildChoice = 'arrow'; },
     place: () => { probe.build(probe.map.hint.x, probe.map.hint.y, 'arrow'); },
     start: () => probe.startWave(),
-    upgrade: () => { probe.gold += 2000; probe.upgrade(probe.towers[0], 0); },
+    upgrade: () => { probe.gold += 2000; probe.upgrade(ersterTurm(probe), 0); },
     early: () => { probe.waveIndex = 1; probe.waveActive = false; probe.startWave(); },
     meteor: () => { probe.cast('meteor', probe.goal.x, probe.goal.y); },
     end: () => { probe.waveIndex = 3; },
@@ -199,7 +209,7 @@ step('Partie durchspielen', () => {
     if (frames % 180 === 90) {
       state.buildChoice = null;
       state.pendingPoint = null;
-      state.selectedTower = state.towers[0] ?? null;
+      state.selectedTower = ersterTurm(state) ?? null;
     }
 
     state.update(DT);
@@ -518,7 +528,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   probe.reset();
   probe.gold = 5000;
   probe.build(probe.map.hint.x, probe.map.hint.y, 'arrow');
-  const t = probe.towers[0];
+  const t = ersterTurm(probe);
   if (t.branch !== null) problems.push('Zweige: ein frisch gebauter Turm hat schon einen Zweig.');
   if (probe.upgrade(t)) problems.push('Zweige: Ausbau ohne Zweigwahl war moeglich.');
   if (!probe.upgrade(t, 1)) problems.push('Zweige: Ausbau mit Zweigwahl schlug fehl.');
@@ -536,7 +546,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 
   // Und die Oberflaeche muss die Wahl auch anbieten - geprueft am echten
   // Zustand, an dem die Oberflaeche haengt.
-  const live = state.towers[0];
+  const live = ersterTurm(state);
   if (live) {
     const keepLevel = live.level, keepBranch = live.branch;
     live.level = 1; live.branch = null;
@@ -596,7 +606,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   probe.reset();
   probe.gold = 9000;
   probe.build(probe.map.hint.x, probe.map.hint.y, 'arrow');
-  const t = probe.towers[0];
+  const t = ersterTurm(probe);
   const scale = Math.max(568 / 1920, 320 / 1080);
   // 22 Bildschirmpunkte entsprechen so vielen Weltpixeln:
   const weit = 22 / scale;
@@ -654,13 +664,13 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   probe.gold = 9000;
   probe.build(probe.map.hint.x, probe.map.hint.y, 'arrow');
   state.selectedTower = null;
-  const before = state.towers.length;
+  const before = state.gebaute.length;
   void before;
 
   // Denselben Zustand im echten Steg herstellen.
   state.gold = 9000;
-  if (!state.towers.length) state.build(state.map.hint.x, state.map.hint.y, 'arrow');
-  const tw = state.towers[0];
+  if (!state.gebaute.length) state.build(state.map.hint.x, state.map.hint.y, 'arrow');
+  const tw = ersterTurm(state);
   tw.branch = null; tw.level = 1;
   state.selectedTower = tw;
   ui.sync();
@@ -681,10 +691,10 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   for (const branch of [0, 1] as const) {
     const t2 = new GameState();
     t2.reset(); t2.gold = 9000; t2.build(t2.map.hint.x, t2.map.hint.y, 'arrow');
-    if (!t2.upgrade(t2.towers[0], branch)) {
+    if (!t2.upgrade(ersterTurm(t2), branch)) {
       problems.push(`Ausbau: Zweig ${branch} liess sich nicht waehlen.`);
-    } else if (t2.towers[0].branch !== branch) {
-      problems.push(`Ausbau: Zweig ${branch} gewaehlt, gespeichert wurde ${t2.towers[0].branch}.`);
+    } else if (ersterTurm(t2).branch !== branch) {
+      problems.push(`Ausbau: Zweig ${branch} gewaehlt, gespeichert wurde ${ersterTurm(t2).branch}.`);
     }
   }
   state.selectedTower = null;
@@ -1028,7 +1038,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   // Auch nach einem Turmbau und einer Auswahl darf nichts durchschlagen.
   state.gold = 9000;
   state.build(state.map.hint.x, state.map.hint.y, 'arrow');
-  state.selectedTower = state.towers[0] ?? null;
+  state.selectedTower = ersterTurm(state) ?? null;
   state.buildChoice = 'frost';
   ui.sync();
   for (const id of bedienung) {
@@ -1255,8 +1265,8 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   const st = state.stats;
   if (st.damage <= 0) problems.push('Auswertung: kein Schaden mitgeschrieben.');
   if (st.goldSpent <= 0) problems.push('Auswertung: kein ausgegebenes Gold mitgeschrieben.');
-  if (st.towersBuilt < state.towers.length) {
-    problems.push(`Auswertung: ${st.towersBuilt} gebaute Tuerme, aber ${state.towers.length} stehen im Feld.`);
+  if (st.towersBuilt < state.gebaute.length) {
+    problems.push(`Auswertung: ${st.towersBuilt} gebaute Tuerme, aber ${state.gebaute.length} stehen im Feld.`);
   }
   const bySource = Object.values(st.damageBy).reduce((a, b) => a + b, 0);
   if (Math.abs(bySource - st.damage) > 1) {
@@ -1423,12 +1433,22 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
     state.reset(12345, 'normal', 'spiralhain');
     state.gold = 99999;
     for (const sp of candidateSpots(state).slice(0, 6)) state.build(sp.x, sp.y, 'arrow');
-    for (const t of state.towers) t.zielwahl = wahl;
+    // Ohne die Zielunit - gemessen wird die WAHL, nicht der Standort.
+    //
+    // Sie steht am Ziel, wo alle Bahnen zusammenlaufen, und sieht deshalb
+    // fast nur Gegner, die ohnehin schon fast durch sind: gleiche Strecke,
+    // aehnlicher Lebensstand. Ihre Stichproben ziehen jede Wahl auf
+    // denselben Mittelwert. Beim ersten Lauf nach v165 meldeten "schwach"
+    // und "stark" beide 56 Prozent, und die Wahl wirkte tadellos - sie ging
+    // nur im Rauschen unter (Regel 13: der Messplatz muss das Gesuchte zum
+    // Lautesten machen).
+    const gemessen = state.gebaute;
+    for (const t of gemessen) t.zielwahl = wahl;
     state.startWave();
     let summe = 0, weg = 0, n = 0;
     for (let i = 0; i < 60 * 60 && state.phase === 'playing'; i++) {
       state.update(1 / 60);
-      for (const t of state.towers) {
+      for (const t of gemessen) {
         if (t.target) { summe += t.target.hp / t.target.hpMax; weg += t.target.travelled; n++; }
       }
     }
@@ -1459,17 +1479,94 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
     state.gold = 99999;
     const sp = candidateSpots(state)[0];
     state.build(sp.x, sp.y, 'arrow');
-    state.towers[0].zielwahl = 'schwach';
+    ersterTurm(state).zielwahl = 'schwach';
     const stand = state.snapshot();
     const zweit = new GameState();
     if (!zweit.restore(stand)) {
       problems.push('Ziellogik: der Spielstand liess sich nicht zurueckladen.');
-    } else if (zweit.towers[0]?.zielwahl !== 'schwach') {
+    } else if (ersterTurm(zweit)?.zielwahl !== 'schwach') {
       problems.push(
         `Ziellogik ueberlebt das Sichern nicht: gespeichert "schwach", geladen ` +
-        `"${zweit.towers[0]?.zielwahl}".`,
+        `"${ersterTurm(zweit)?.zielwahl}".`,
       );
     }
+  }
+}
+
+// Die Zielunit: sie steht, sie schiesst, und man wird sie nicht los.
+//
+// Drei Zusagen, und alle drei koennte man mit einer Zeile brechen, ohne dass
+// etwas anderes rot wuerde. Sie zu verkaufen hiesse, die Partie zu
+// verkaufen - und der Spieler bekaeme dafuer auch noch Gold.
+{
+  const { candidateSpots } = await import('./spots');
+  const g = new GameState();
+  g.reset(4242, 'normal', 'spiralhain');
+  const core = g.towers.find((t) => t.def === 'core');
+  if (!core) {
+    problems.push('Zielunit: nach dem Zuruecksetzen steht keine im Feld.');
+  } else {
+    // Verkaufen: muss folgenlos bleiben, und zwar OHNE Gutschrift.
+    const goldVorher = g.gold;
+    g.sell(core);
+    if (!g.towers.includes(core)) problems.push('Zielunit: sie liess sich verkaufen.');
+    if (g.gold !== goldVorher) {
+      problems.push(`Zielunit: das Verkaufen hat ${g.gold - goldVorher} Gold gebracht.`);
+    }
+    // Versetzen: ebenfalls nicht - die Bahnen enden dort, wo sie steht.
+    const sp = candidateSpots(g)[0];
+    if (g.moveTower(core, sp.x, sp.y)) problems.push('Zielunit: sie liess sich versetzen.');
+
+    // Sie zaehlt nicht als gebauter Turm.
+    if (g.gebaute.includes(core)) {
+      problems.push('Zielunit: sie zaehlt als gebauter Turm - die Einweisung gaelte sofort als erledigt.');
+    }
+
+    // Und sie schiesst. Ohne einen einzigen eigenen Turm.
+    g.gold = 0;
+    g.waveIndex = 8;
+    g.startWave();
+    for (let i = 0; i < 60 * 90 && g.phase === 'playing'; i++) g.update(1 / 60);
+    if (core.damageDone <= 0) {
+      problems.push('Zielunit: sie hat in einer ganzen Welle keinen Schaden gemacht - '
+        + 'sie steht nur da.');
+    }
+  }
+}
+
+// Der Ausbau der Zielunit muss WIRKEN - sonst ist er nur eine Rechnung.
+//
+// Gemessen wird an dem, was sie ausrichtet, nicht daran, dass sich die Zahl
+// im Menue aendert (Regel 13): dieselbe Welle, einmal auf Stufe 1 und einmal
+// voll ausgebaut, ohne einen einzigen anderen Turm.
+{
+  const lauf = (stufe: number): { schaden: number; bezahlt: number } => {
+    const g = new GameState();
+    g.reset(4242, 'normal', 'spiralhain');
+    const core = g.towers.find((t) => t.def === 'core')!;
+    g.gold = 99999;
+    let bezahlt = 0;
+    while (core.level < stufe) {
+      const v = g.gold;
+      if (!g.upgrade(core)) break;
+      bezahlt += v - g.gold;
+    }
+    if (core.level !== stufe) problems.push(`Zielunit: Ausbau auf Stufe ${stufe} misslungen.`);
+    g.gold = 0;
+    g.waveIndex = 8;
+    g.startWave();
+    for (let i = 0; i < 60 * 90 && g.phase === 'playing'; i++) g.update(1 / 60);
+    return { schaden: core.damageDone, bezahlt };
+  };
+  const eins = lauf(1), sechs = lauf(6);
+  console.log(`  Zielunit: Stufe 1 macht ${eins.schaden.toFixed(0)} Schaden, `
+    + `voll ausgebaut ${sechs.schaden.toFixed(0)} fuer ${sechs.bezahlt} Gold.`);
+  if (sechs.bezahlt <= 0) problems.push('Zielunit: der Ausbau hat nichts gekostet.');
+  // Anteilig, nicht absolut (Regel 2): wer die Werte anhebt, hebt beide.
+  if (sechs.schaden < eins.schaden * 4) {
+    problems.push(`Zielunit: voll ausgebaut macht sie ${sechs.schaden.toFixed(0)} Schaden gegen `
+      + `${eins.schaden.toFixed(0)} auf Stufe 1 - fuer ${sechs.bezahlt} Gold muss mehr `
+      + 'herauskommen als das Vierfache.');
   }
 }
 
@@ -1485,7 +1582,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   state.gold = 99999;
   const plaetze = candidateSpots(state);
   state.build(plaetze[0].x, plaetze[0].y, 'arrow');
-  const turm = state.towers[0];
+  const turm = ersterTurm(state);
 
   if (!turm) {
     problems.push('Versetzen: es liess sich kein Turm zum Pruefen bauen.');
@@ -2002,9 +2099,9 @@ step('Beruehrbare Kleinigkeiten', () => {
     const p = imFlug();
     if (!p) throw new Error('Es kam kein Geschoss in die Luft - die Probe misst nichts.');
     const vorher = p.stats.damage;
-    p.sell(p.towers[0]);
+    p.sell(ersterTurm(p));
     for (let i = 0; i < 120; i++) p.update(DT);
-    if (p.towers.length !== 0) throw new Error('Der Turm steht nach dem Verkauf noch da.');
+    if (p.gebaute.length !== 0) throw new Error('Der Turm steht nach dem Verkauf noch da.');
     if (p.stats.damage <= vorher) {
       throw new Error('Das Geschoss des verkauften Turms hat keinen Schaden mehr gemacht - '
         + 'ein bezahlter Schuss darf nicht verfallen, weil der Turm weg ist.');

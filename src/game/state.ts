@@ -3,7 +3,7 @@ import { muendung } from '../data/turmgestalt';
 import { tempoFaktor, wirkungAnlegen, wirkungenTicken, type Wirkung, type WirkungsArt } from '../data/wirkungen';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import {
-  TOWERS, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor,
+  TOWERS, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor, hatZweigwahl,
   type BranchIndex, type TowerId,
 } from '../data/towers';
 import { EARLY_BONUS_MAX, EARLY_BONUS_WINDOW } from '../data/waves';
@@ -522,8 +522,30 @@ export class GameState {
     return !this.waveActive && this.phase === 'playing';
   }
 
+  /** Die Tuerme, die der SPIELER gestellt hat - ohne die Zielunit.
+   *
+   *  Seit die Zielunit ein Turm ist, steht in `towers` von Anfang an einer
+   *  drin. Jede Stelle, die "hat der Spieler schon gebaut?" oder "wieviele
+   *  Tuerme stehen im Feld?" fragt, meint diese Liste und nicht jene. Die
+   *  Einweisung hat es sofort gezeigt: drei ihrer Schritte galten mit dem
+   *  ersten Bild als erledigt und erschienen nie mehr.
+   *
+   *  **Der Name heisst nicht `gebauteTuerme`, und das hat einen Grund.**
+   *  Der Autarkie-Waechter liest die GEBAUTE Datei und sucht dort nach
+   *  Ersatzschreibungen wie "Tuerme" - Eigenschaftsnamen ueberleben die
+   *  Verkleinerung und stehen mit drin. Er faengt genau die Sorte Fehler,
+   *  die man selbst nicht mehr sieht ("Moerser" stand bis v21 im Spiel);
+   *  ihn dafuer stumpfer zu machen waere der falsche Weg. */
+  get gebaute(): Tower[] {
+    return this.towers.filter((t) => t.def !== 'core');
+  }
+
   /** Einen Turm versetzen. Gibt zurueck, ob es geklappt hat. */
   moveTower(t: Tower, x: number, y: number): boolean {
+    // Die Zielunit steht auf der Zielplattform. Sie zu verschieben hiesse,
+    // das Ziel zu verschieben - die Bahnen enden weiterhin dort, wo sie
+    // stand, und das Bauwerk staende daneben.
+    if (t.def === 'core') return false;
     if (!this.canMove()) return false;
     if (!this.canPlace(t.def, x, y, t)) return false;
     t.x = x;
@@ -579,6 +601,10 @@ export class GameState {
 
 
   build(wx: number, wy: number, id: TowerId): boolean {
+    // Die Zielunit steht schon. Sie ist nicht in TOWER_ORDER, also bietet
+    // die Bauleiste sie nie an - hier steht der Riegel trotzdem, weil
+    // "steht nicht im Menue" keine Regel ist, sondern eine Beobachtung.
+    if (id === 'core') return false;
     const def = TOWERS[id];
     const x = snap(wx), y = snap(wy);
     if (!this.canPlace(id, x, y) || this.gold < def.base.cost) return false;
@@ -606,7 +632,8 @@ export class GameState {
   upgrade(t: Tower, branch?: 0 | 1): boolean {
     const def = TOWERS[t.def];
     if (t.level >= MAX_LEVEL) return false;
-    const chosen: BranchIndex = t.branch ?? (branch ?? null);
+    // Ein Turm ohne Verzweigung waehlt nicht - er baut geradeaus aus.
+    const chosen: BranchIndex = t.branch ?? (hatZweigwahl(def) ? (branch ?? null) : 0);
     if (chosen === null) return false;
     const next = nextFor(def, chosen, t.level);
     if (!next || this.gold < next.cost) return false;
@@ -622,6 +649,9 @@ export class GameState {
   }
 
   sell(t: Tower): void {
+    // Die Zielunit ist das Spielziel. Sie zu verkaufen hiesse, die Partie zu
+    // verkaufen - und der Spieler haette dafuer auch noch Gold bekommen.
+    if (t.def === 'core') return;
     const def = TOWERS[t.def];
     const value = sellValue(def, t.branch, t.level, this.perks.refund);
     this.gold += value;
@@ -1744,6 +1774,33 @@ export class GameState {
     this.phase = 'playing';
     // Frisch betretene Karte: der Weg zeigt sich einmal von selbst.
     this.wegvorschauAb = this.time;
+    this.zielunitSetzen();
+  }
+
+  /** Die Zielunit an ihren Platz stellen.
+   *
+   *  Sie steht dort, wo auch das Bild sie zeigt: auf der gemalten
+   *  Rundplattform (`map.ziel`), nicht am rechnerischen Bahnende. Beide
+   *  Punkte fallen seit v131 zusammen; der Rueckfall bleibt fuer eine Karte
+   *  ohne eingetragene Platte stehen.
+   *
+   *  Sie wird NICHT als gebauter Turm gezaehlt: `stats.towersBuilt` ist die
+   *  Zahl der Tuerme, die der Spieler gestellt hat, und sie steht auf dem
+   *  Ergebnisbildschirm. Eine geschenkte Station dort mitzuzaehlen waere
+   *  eine falsche Auskunft ueber die eigene Leistung. */
+  private zielunitSetzen(): void {
+    const { x, y } = this.map.ziel ?? this.goal;
+    this.towers.push({
+      id: this.nextId++, def: 'core', x, y,
+      // Zweig 0 von Anfang an: die Zielunit hat nur einen, also gibt es
+      // nichts zu waehlen, und `null` haette das Ausbaumenue eine Wahl
+      // anbieten lassen, die es nicht gibt.
+      level: 1, branch: 0, cooldownLeft: 0, angle: -Math.PI / 2, recoil: 0, flash: 0,
+      pulse: 0, spring: 0,
+      zielwahl: 'vorn',
+      target: null, retargetIn: 0, kills: 0, damageDone: 0,
+    });
+    this.towersVersion++;
   }
 
   /** Die Wegvorschau noch einmal abspielen (Wiederholknopf). */
@@ -1835,6 +1892,10 @@ export class GameState {
     {
       const probe = new GameState(save.map);
       for (const [def, tx, ty] of save.towers) {
+        // Die Zielunit steht auf der Zielplattform, und die ist kein
+        // Bauplatz - sie muesste diese Pruefung nicht bestehen und wuerde
+        // sonst jeden Spielstand ungueltig machen.
+        if (def === 'core') continue;
         if (!probe.canPlace(def, tx, ty)) return false;
         probe.towers.push({ x: tx, y: ty, def } as Tower);
       }
@@ -1874,6 +1935,10 @@ export class GameState {
     }
 
     const targetIdx: number[] = [];
+    // `reset` hat die Zielunit gerade gestellt; im Spielstand steht sie auch
+    // drin. Ohne diese Zeile stuenden zwei uebereinander - eine mit der
+    // gespeicherten Ausbaustufe und eine frische.
+    this.towers.length = 0;
     for (const [def, tx, ty, level, kills, damageDone, cooldownLeft, retargetIn, branch, tIdx,
       zIdx, winkel] of save.towers) {
       targetIdx.push(tIdx ?? -1);
@@ -1887,6 +1952,10 @@ export class GameState {
       };
       this.towers.push(t);
       }
+    // Ein Spielstand aus der Zeit vor der Zielunit hat sie nicht. Statt ihn
+    // wegzuwerfen bekommt er eine frische auf Stufe 1 - dieselbe Haltung wie
+    // beim Wirkungsformat in v158: eine laufende Partie soll weiterlaufen.
+    if (!this.towers.some((t) => t.def === 'core')) this.zielunitSetzen();
     this.towersVersion++;
 
     // Ein Stand von VOR v158 hat an Stelle 6 den alten Bremsfaktor als ZAHL

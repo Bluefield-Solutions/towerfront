@@ -249,8 +249,8 @@ const PROBEN = [
   {
     name: 'Ausbaumenue zeigt falsche Werte',
     datei: 'src/data/towers.ts',
-    regel: /  return statsFor\(def, branch, level \+ 1\);/,
-    ersatz: '  return def.branches[branch].levels[level - 1] as TowerStats;',
+    regel: /^  return statsFor\(def, zweig, level \+ 1\);$/m,
+    ersatz: '  return def.branches[zweig].levels[level - 1] as TowerStats;',
     tor: 'smoke',
   },
   {
@@ -631,6 +631,43 @@ const PROBEN = [
     regel: /      if \(luecke > groessteLuecke\) groessteLuecke = luecke;/,
     ersatz: '      void luecke;',
     tor: 'browsertor',
+  },
+  {
+    // Die Zielunit muss teurer sein als jede Turmlinie - Vorgabe des
+    // Nutzers. Hier wird die letzte Stufe verbilligt, bis die Linie unter
+    // die Schwelle faellt.
+    name: 'Zielunit wird billiger als ein Turm',
+    datei: 'src/data/towers.ts',
+    regel: /^          \{ cost: 1950, damage: 210, cooldown: 0\.55, pierce: 3 \},$/m,
+    ersatz: '          { cost: 195, damage: 210, cooldown: 0.55, pierce: 3 },',
+    tor: 'guards',
+  },
+  {
+    // Teurer UND staerker waere keine Entscheidung, sondern die einzige
+    // richtige. Hier bekommt die Zielunit die Spitze des besten Turms.
+    name: 'Zielunit wird zugleich die staerkste Waffe',
+    datei: 'src/data/towers.ts',
+    regel: /^          \{ cost: 1950, damage: 210, cooldown: 0\.55, pierce: 3 \},$/m,
+    ersatz: '          { cost: 1950, damage: 600, cooldown: 0.55, pierce: 3 },',
+    tor: 'guards',
+  },
+  {
+    // Verkaufen hiesse, die Partie zu verkaufen. Der Riegel raus, und der
+    // Rauchtest muss es sehen.
+    name: 'Zielunit laesst sich verkaufen',
+    datei: 'src/game/state.ts',
+    regel: /^    if \(t\.def === 'core'\) return;$/m,
+    ersatz: '    // Riegel entfernt.',
+    tor: 'smoke',
+  },
+  {
+    // Der Ausbau muss WIRKEN. Hier wird der Schadenszuwachs eingeebnet:
+    // die Kosten bleiben, die Wirkung nicht.
+    name: 'Ausbau der Zielunit wirkt nicht mehr',
+    datei: 'src/data/towers.ts',
+    regel: /^          \{ cost: 1500, damage: 150, cooldown: 0\.60, pierce: 3 \},$/m,
+    ersatz: '          { cost: 1500, damage: 11, cooldown: 0.60, pierce: 3 },',
+    tor: 'smoke',
   },
   {
     // Die Umkehrung von D18, seit v162: ein ruhender Turm steht still.
@@ -1060,8 +1097,8 @@ const PROBEN = [
     // er zeigt, bevor man ihn einmal gedrueckt hat.
     name: 'Wegvorschau laeuft nicht beim Betreten',
     datei: 'src/game/state.ts',
-    regel: /    this\.wegvorschauAb = this\.time;\n  \}/,
-    ersatz: '    this.wegvorschauAb = -99;\n  }',
+    regel: /^    this\.wegvorschauAb = this\.time;\n    this\.zielunitSetzen\(\);$/m,
+    ersatz: '    this.wegvorschauAb = -99;\n    this.zielunitSetzen();',
     tor: 'smoke',
   },
   {

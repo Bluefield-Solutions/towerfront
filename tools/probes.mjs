@@ -1210,6 +1210,26 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    // C28, v175: der Nachteil des Moersers muss ueberall etwas kosten. Wird
+    // die Luft einer Karte wieder duenn, ist er dort geschenkt - und der
+    // Moerser zum selben Preis der bessere Turm.
+    name: 'Eine Karte verliert ihre Luft',
+    datei: 'src/data/waves.ts',
+    regel: /    \{ enemy: 'flyer', count: 7, gap: 1\.8, delay: 6 \} \] \},/,
+    ersatz: "    { enemy: 'flyer', count: 1, gap: 1.8, delay: 6 } ] },",
+    tor: 'guards',
+  },
+  {
+    // Und die zweite Haelfte derselben Regel: Luft muss oft genug vorkommen,
+    // um eine Entscheidung zu sein. Eine einzelne Luftwelle laesst sich
+    // aussitzen.
+    name: 'Luft nur noch in zwei Wellen',
+    datei: 'src/data/waves.ts',
+    regel: /    \{ enemy: 'flyer', count: 3, gap: 1\.6, delay: 10 \} \] \},/,
+    ersatz: "    { enemy: 'flyer', count: 0, gap: 1.6, delay: 10 } ] },",
+    tor: 'guards',
+  },
+  {
     // T6, v174: verbucht wird, was WIRKLICH verloren geht. Der Kristall
     // wird bei null abgeschnitten; ein Gegner mit drei Punkten Durchschlag
     // auf einen Kristall mit einem Punkt Rest kostete bis dahin trotzdem

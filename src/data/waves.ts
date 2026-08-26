@@ -183,7 +183,7 @@ export const PLAN_ASCHESCHLUCHT: Wave[] = [
     { enemy: 'runner', count: 5, gap: 0.5, delay: 5 } ] },
   { bonus: 203, note: 'Erste Gleiter', groups: [
     { enemy: 'crawler', count: 17, gap: 0.4, delay: 0 },
-    { enemy: 'flyer', count: 5, gap: 1.4, delay: 6 } ] },
+    { enemy: 'flyer', count: 7, gap: 1.4, delay: 6 } ] },
   { bonus: 220, groups: [
     { enemy: 'brute', count: 5, gap: 2.0, delay: 0 },
     { enemy: 'splitter', count: 6, gap: 1.3, delay: 4 } ] },
@@ -194,7 +194,7 @@ export const PLAN_ASCHESCHLUCHT: Wave[] = [
   { bonus: 508, note: 'Ein Leerentitan', groups: [
     { enemy: 'titan', count: 1, gap: 1, delay: 0 },
     { enemy: 'splitter', count: 5, gap: 1.1, delay: 5 },
-    { enemy: 'flyer', count: 3, gap: 1.3, delay: 9 } ] },
+    { enemy: 'flyer', count: 5, gap: 1.3, delay: 9 } ] },
   { bonus: 266, note: 'Sturm im Laub', groups: [
     { enemy: 'runner', count: 20, gap: 0.3, delay: 0 },
     { enemy: 'splitter', count: 8, gap: 1.1, delay: 5 } ] },
@@ -204,12 +204,12 @@ export const PLAN_ASCHESCHLUCHT: Wave[] = [
   { bonus: 312, groups: [
     { enemy: 'splitter', count: 4, gap: 1.0, delay: 0 },
     { enemy: 'runner', count: 9, gap: 0.3, delay: 5 },
-    { enemy: 'flyer', count: 3, gap: 0.9, delay: 10 } ] },
+    { enemy: 'flyer', count: 5, gap: 0.9, delay: 10 } ] },
   { bonus: 334, note: 'Alles gleichzeitig', groups: [
     { enemy: 'brute', count: 3, gap: 1.2, delay: 0 },
     { enemy: 'splitter', count: 3, gap: 1.2, delay: 4 },
     { enemy: 'runner', count: 7, gap: 0.3, delay: 8 },
-    { enemy: 'flyer', count: 3, gap: 0.9, delay: 12 } ] },
+    { enemy: 'flyer', count: 5, gap: 0.9, delay: 12 } ] },
   { bonus: 1089, note: 'Zwei Titanen und der ganze Rest', groups: [
     { enemy: 'titan', count: 1, gap: 8, delay: 0 },
     { enemy: 'brute', count: 3, gap: 1.4, delay: 4 },
@@ -242,7 +242,7 @@ export const PLAN_FROSTSPALTE: Wave[] = [
     { enemy: 'crawler', count: 7, gap: 0.6, delay: 4 } ] },
   { bonus: 172, note: 'Erste Gleiter', groups: [
     { enemy: 'crawler', count: 22, gap: 0.5, delay: 0 },
-    { enemy: 'flyer', count: 4, gap: 1.8, delay: 6 } ] },
+    { enemy: 'flyer', count: 7, gap: 1.8, delay: 6 } ] },
   { bonus: 187, groups: [
     { enemy: 'brute', count: 6, gap: 1.9, delay: 0 },
     { enemy: 'splitter', count: 6, gap: 1.4, delay: 4 } ] },
@@ -251,7 +251,10 @@ export const PLAN_FROSTSPALTE: Wave[] = [
     { enemy: 'brute', count: 10, gap: 2.1, delay: 5 } ] },
   { bonus: 440, note: 'Ein Leerentitan', groups: [
     { enemy: 'titan', count: 2, gap: 1, delay: 0 },
-    { enemy: 'crawler', count: 9, gap: 0.6, delay: 6 } ] },
+    { enemy: 'crawler', count: 9, gap: 0.6, delay: 6 },
+    // Luft auf der Titanwelle: wer alles auf den Boden stellt, sieht die
+    // Gleiter durchziehen, waehrend seine Tuerme am Titan haengen.
+    { enemy: 'flyer', count: 3, gap: 1.6, delay: 10 } ] },
   { bonus: 229, note: 'Panzerwand mit Schilden — Schnellfeuer räumt sie weg', groups: [
     // Der erste Schild im Spiel, und bewusst spaet.
     //
@@ -264,7 +267,7 @@ export const PLAN_FROSTSPALTE: Wave[] = [
   { bonus: 249, groups: [
     { enemy: 'splitter', count: 6, gap: 1.2, delay: 0 },
     { enemy: 'runner', count: 12, gap: 0.36, delay: 5 },
-    { enemy: 'flyer', count: 4, gap: 1.4, delay: 9 } ] },
+    { enemy: 'flyer', count: 7, gap: 1.4, delay: 9 } ] },
   { bonus: 268, groups: [
     { enemy: 'brute', count: 5, gap: 1.4, delay: 0 },
     { enemy: 'crawler', count: 11, gap: 0.4, delay: 5 } ] },
@@ -272,7 +275,7 @@ export const PLAN_FROSTSPALTE: Wave[] = [
     { enemy: 'brute', count: 4, gap: 1.6, delay: 0 },
     { enemy: 'splitter', count: 4, gap: 1.2, delay: 4 },
     { enemy: 'runner', count: 8, gap: 0.36, delay: 8 },
-    { enemy: 'flyer', count: 2, gap: 1.4, delay: 12 } ] },
+    { enemy: 'flyer', count: 5, gap: 1.4, delay: 12 } ] },
   { bonus: 946, note: 'Ein Titan und eine Panzerwand', groups: [
     { enemy: 'titan', count: 1, gap: 8, delay: 0 },
     { enemy: 'brute', count: 3, gap: 1.8, delay: 5 },

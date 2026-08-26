@@ -1014,6 +1014,65 @@ for (const map of MAPS) {
   }
 }
 
+// --- C28: der Nachteil des Moersers muss ueberall etwas kosten.
+//
+// Der Moerser ist der einzige Turm, der keine Flieger erreicht - dafuer ist
+// er der staerkste Flaechenschaden im Spiel. Der Handel ist nur dann einer,
+// wenn Luft ueberhaupt vorkommt.
+//
+// **Gemessen kam sie sehr ungleich vor** (v175): 14,0 Prozent der
+// Lebenspunkte auf dem Spiralhain, 6,0 auf der Ascheschlucht, 3,8 auf der
+// Frostspalte - Faktor 3,7 zwischen der besten und der duennsten Karte.
+// Derselbe Turm kostet ueberall 125 Gold und hatte je nach Ort einen voellig
+// verschiedenen Nachteil; auf der Frostspalte war er praktisch geschenkt.
+//
+// **Die Grenze ist ein Verhaeltnis, keine feste Zahl** (Regel 2). Wieviel
+// Luft richtig ist, sagt diese Pruefung nicht - das ist eine Frage an die
+// Referenz. Sie sagt nur: was ein Turm auf einer Karte kostet, darf er auf
+// einer anderen nicht geschenkt bekommen. Steigt eine Karte, muessen die
+// anderen mit.
+{
+  const anteile = MAPS.map((map) => {
+    let hp = 0, luft = 0, wellenMitLuft = 0;
+    for (const w of map.waves) {
+      let luftHier = 0;
+      for (const g of w.groups) {
+        const e = ENEMIES[g.enemy];
+        if (!e) continue;
+        hp += g.count * e.hp;
+        if (e.flying) luftHier += g.count * e.hp;
+      }
+      luft += luftHier;
+      if (luftHier > 0) wellenMitLuft++;
+    }
+    return { id: map.id, name: map.name, anteil: hp ? luft / hp : 0, wellenMitLuft, wellen: map.waves.length };
+  });
+  const beste = Math.max(...anteile.map((a) => a.anteil));
+  const duennste = Math.min(...anteile.map((a) => a.anteil));
+  const SPREIZUNG = 2;
+  if (duennste <= 0) {
+    const ohne = anteile.filter((a) => a.anteil <= 0).map((a) => a.name).join(', ');
+    fail(`Keine Luft auf: ${ohne}. Dort ist der Nachteil des Moersers geschenkt.`);
+  } else if (beste / duennste > SPREIZUNG) {
+    fail(
+      `Luftanteil zwischen den Karten: ${anteile.map((a) => `${a.name} ${(a.anteil * 100).toFixed(1)} %`).join(', ')} - `
+      + `Faktor ${(beste / duennste).toFixed(1)}, erlaubt sind ${SPREIZUNG}. Der Nachteil des Moersers `
+      + '("erreicht keine Flieger") kostet dann auf der duennsten Karte fast nichts, auf der '
+      + 'dichtesten viel - bei gleichem Preis.',
+    );
+  }
+  // Und er muss oft genug vorkommen, um eine Entscheidung zu sein: eine
+  // einzige Luftwelle laesst sich aussitzen, vier nicht.
+  for (const a of anteile) {
+    if (a.wellenMitLuft < 4) {
+      fail(`${a.name}: nur ${a.wellenMitLuft} von ${a.wellen} Wellen tragen Luft - `
+        + 'eine oder zwei lassen sich aussitzen, dann ist der Luftschutz keine Entscheidung.');
+    }
+  }
+  warn(`Luftanteil je Karte: ${anteile.map((a) => `${a.name} ${(a.anteil * 100).toFixed(1)} % `
+    + `(${a.wellenMitLuft}/${a.wellen} Wellen)`).join(', ')}`);
+}
+
 // --- Kein Zahlwort im Kartentext, das der Karte widerspricht.
 //
 // Der Blurb der zweiten Karte sagte "Zwei Zuwege", die Karte hat drei, und

@@ -611,6 +611,35 @@ if (ground && ground.won && ground.lives >= mixed.lives) {
   errors.push('Moerserlastig kommt genauso weit wie gemischt - Flieger stellen keine Frage.');
 }
 
+// 3b. **Hier stand ein vierter Anlauf, und er ist weg** (C28, v175).
+//
+// Gesucht war eine Zahl, die sagt, was der Nachteil des Moersers ("erreicht
+// keine Flieger") auf JEDER Karte kostet - Pruefung 3 darueber laeuft nur
+// auf `MAPS[0]`, also ausgerechnet dort, wo die Luft am dicksten ist.
+//
+// Drei Entwuerfe, alle verworfen, und alle aus demselben Grund: sie messen
+// das Umfeld statt der Sache (Regel 13).
+//
+//  1. **Bodenlastig gegen gemischt, je Karte.** Der Abstand blieb positiv,
+//     selbst als die Frostspalte auf 1,2 Prozent Luft heruntergesetzt wurde
+//     (Abstand 12). Ein gemischtes Feld ist aus zehn Gruenden besser, und
+//     die Luft ist nur einer davon - die Zahl haette nie anschlagen koennen.
+//  2. **Derselbe Lauf mit und ohne `hitsAir` am Moerser.** Klingt sauber, ist
+//     es nicht: mit Luftfaehigkeit zielt der Moerser auch auf Flieger, seine
+//     Flaechenwirkung verpufft dort, und der Lauf wird SCHLECHTER (Preis -46
+//     auf der Frostspalte, 0 auf den anderen beiden). Der Eingriff aendert
+//     das Zielverhalten mit, nicht nur die Reichweite.
+//  3. **Verlorene Leben je Luftwelle.** Verworfen ohne Lauf: der Bot baut
+//     nach fester Reihenfolge, und welche Welle ihn umwirft, haengt mehr an
+//     seiner Kasse als an der Gegnerart.
+//
+// **Die Sache selbst ist messbar, nur nicht hier**: es ist der Anteil der
+// Lebenspunkte, den der Moerser nicht erreichen kann. Der steht in
+// `npm run guards` und ist dort eine Sperre - Faktor hoechstens 2 zwischen
+// der dichtesten und der duennsten Karte. Eine zweite, schwaechere Fassung
+// derselben Frage waere schlimmer als keine: sie stuende gruen daneben und
+// saehe aus wie ein zweiter Beweis.
+
 // 4. Keine einzelne Turmsorte darf das Spiel allein tragen.
 for (const [name, r] of results) {
   if (name === 'gemischt') continue;

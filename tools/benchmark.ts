@@ -125,10 +125,10 @@ function tonJeHandlung(): boolean {
   try {
     const handlungen: (() => void)[] = [
       () => { t.build(spot.x, spot.y, 'arrow'); },
-      () => { t.upgrade(t.towers[0], 0); },
+      () => { t.upgrade(t.gebaute[0], 0); },
       () => { t.startWave(); },
       () => { t.cast('meteor', t.goal.x, t.goal.y); },
-      () => { t.sell(t.towers[0]); },
+      () => { t.sell(t.gebaute[0]); },
     ];
     const toene = new Set<SfxName>();
     for (const tun of handlungen) {

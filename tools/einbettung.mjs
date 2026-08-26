@@ -64,6 +64,23 @@ const TOR = process.argv.includes('--tor');
 const FARBE_MAX = 0.24;
 const HELL_MIN = 0.10;
 
+/** Wieviel das Farbklima am Farbabstand mindestens gutmachen muss.
+ *
+ *  Eine RATSCHE auf dem heutigen Stand, kein erfundenes Soll (Regel 10):
+ *  gemessen sinkt der Abstand im Mittel um 0,040 ueber alle Figuren und
+ *  Karten. Die Ratsche steht knapp darunter, damit sie nicht bei jedem
+ *  neuen Bild anschlaegt - aber weit genug ueber null, dass ein
+ *  abgeschaltetes Klima sie reisst.
+ *
+ *  **Warum es diese Zahl ueberhaupt gibt.** Bis v165 prueften hier nur
+ *  Grenzen auf dem PEGEL: "keine Figur weiter als 0,24 vom Boden". Mit
+ *  `KLIMA_STAERKE = 0` blieb das gruen, weil die schlimmste Figur mit UND
+ *  ohne Klima bei 0,20 liegt - eine Grenze auf dem Pegel kann die Wirkung
+ *  gar nicht sehen, egal wie eng man sie zieht. Zwei Gegenproben
+ *  behaupteten seit v132 das Gegenteil und bewiesen es nicht mehr; der
+ *  volle Lauf zu v166 hat es gefunden. */
+const KLIMA_MIN = 0.035;
+
 const quelle = (datei, id) => {
   const t = new RegExp(`'${id}': 'data:image/(?:webp|jpeg|png);base64,([^']+)'`)
     .exec(readFileSync(join(ROOT, datei), 'utf8'));
@@ -224,18 +241,31 @@ const einbettenMit = async (buf, karte, staerke, klimaStaerke) => {
 const einbetten = (buf, karte, staerke) =>
   einbettenMit(buf, karte, staerke, KLIMA_STAERKE);
 
-const FIGUREN = [
-  ['Zielturm', 'src/gfx/assets/objects.ts', 'crystal', 0.72],
-  // Seit v132 laeuft auch das Tor der Leere durch die Einbettung - es war
-  // die letzte Gruppe, die ihr eigenes Licht behielt. Volle Staerke: es ist
-  // klein, ein halber Anstrich waere dort kaum zu sehen.
-  ['Tor der Leere', 'src/gfx/assets/objects.ts', 'gate', 1],
-  // Und seit v134 die letzten beiden: Sockel und Waffe des Bogenturms. Sie
-  // stehen NEBEN einem laengst eingebetteten Turm - ein eigenes Licht faellt
-  // dort mehr auf als irgendwo sonst im Feld.
-  ['Sockel Bogenturm', 'src/gfx/assets/objects.ts', 'sockel_arrow', 1],
-  ['Waffe Bogenturm', 'src/gfx/assets/objects.ts', 'waffe_arrow', 1],
-];
+/** Die Staerke, mit der eine Figur eingebettet wird - wie im Renderer.
+ *
+ *  Der Zielturm bekommt weniger als ein Turm: er ist dreimal so gross, und
+ *  derselbe Anstrich waere auf dieser Flaeche eine Waschung statt einer
+ *  Beleuchtung (siehe `drawCrystal`). Alles andere volle Staerke. */
+const STAERKE = { crystal: 0.72 };
+
+/** JEDES Einzelobjekt, nicht eine Liste von vieren.
+ *
+ *  Bis v166 standen hier vier Namen von Hand. Das hat zweimal geschadet:
+ *  seit v160 gibt es zehn weitere Eintraege (Sockel und Waffen je
+ *  Ausbaustufe), und keiner davon wurde je gemessen - das Tor sagte "alle
+ *  Figuren liegen im Band" und meinte vier von vierzehn. Und eine
+ *  Gegenprobe, die eine Zeile aus der Liste nimmt, bewiese nichts: das Tor
+ *  misst dann eben eine weniger und bleibt gruen.
+ *
+ *  Jetzt kommt die Liste aus `OBJECT_ART` selbst - derselben Quelle, aus der
+ *  der Renderer sie holt. Was das Spiel zeichnet, wird gemessen; wer ein
+ *  Objekt hinzufuegt, bekommt die Messung geschenkt und kann sie nicht
+ *  vergessen (dieselbe Antwort wie bei Regel 6: eine Ableitung statt einer
+ *  Aufzaehlung). */
+const { OBJECT_ART } = await import('../src/gfx/assets/objects.ts');
+const FIGUREN = Object.keys(OBJECT_ART).map(
+  (id) => [id, 'src/gfx/assets/objects.ts', id, STAERKE[id] ?? 1],
+);
 
 // --- Eichen: den Raum ansehen, statt an einer Zahl zu drehen (Regel 9).
 if (process.argv.includes('--eichen')) {
@@ -380,6 +410,9 @@ const befunde = [];
   }
 }
 
+// Wieviel das FARBKLIMA allein ausmacht - gesammelt ueber alle Figuren.
+const klimaWirkung = [];
+
 for (const [name, datei, id, staerke] of FIGUREN) {
   const roh = quelle(datei, id);
   if (!roh) { befunde.push(`${name}: Bild nicht gefunden.`); continue; }
@@ -387,8 +420,11 @@ for (const [name, datei, id, staerke] of FIGUREN) {
   for (const k of KARTEN) {
     const vorher = await kennwert(roh);
     const nachher = await kennwert(await einbetten(roh, k, staerke));
+    // Dieselbe Figur, dieselbe Karte, nur ohne Klima (Regel 13).
+    const ohneKlima = await kennwert(await einbettenMit(roh, k, staerke, 0));
     const abst = (v) => Math.hypot(v.ca - k.ca, v.cb - k.cb);
     const hell = (v) => Math.abs(v.hell - k.hell);
+    klimaWirkung.push({ name, karte: k.id, ohne: abst(ohneKlima), mit: abst(nachher) });
     const fv = abst(vorher), fn = abst(nachher);
     const hv = hell(vorher), hn = hell(nachher);
     const schlecht = fn > FARBE_MAX || hn < HELL_MIN;
@@ -405,6 +441,40 @@ for (const [name, datei, id, staerke] of FIGUREN) {
     }
   }
   console.log('');
+}
+
+// --- Ist wirklich JEDES Einzelobjekt gemessen worden?
+//
+// Die Ableitung oben schuetzt vor dem Vergessen, nicht vor dem Wegnehmen.
+// Ohne diese Zeile bliebe das Tor gruen, wenn jemand einen Eintrag aus der
+// Liste filtert - es maesse dann eben einen weniger und meldete weiter
+// "alle Figuren liegen im Band" (Regel 5).
+{
+  const soll = Object.keys(OBJECT_ART).length;
+  const ist = new Set(klimaWirkung.map((w) => w.name)).size;
+  if (ist !== soll) {
+    befunde.push(`Vollzaehligkeit: gemessen wurden ${ist} von ${soll} Einzelobjekten. `
+      + 'Was der Renderer einbettet, muss dieses Tor auch pruefen.');
+  }
+}
+
+// --- Was das Farbklima allein bewirkt.
+{
+  const n = klimaWirkung.length;
+  if (!n) {
+    befunde.push('Klimawirkung: keine Figur gemessen - dann prueft dieser Abschnitt nichts.');
+  } else {
+    const mittel = klimaWirkung.reduce((a, w) => a + (w.ohne - w.mit), 0) / n;
+    const beste = [...klimaWirkung].sort((a, b) => (b.ohne - b.mit) - (a.ohne - a.mit))[0];
+    console.log(`Klimawirkung: der Farbabstand sinkt im Mittel um ${mittel.toFixed(3)} `
+      + `(${n} Messungen, am staerksten "${beste.name}" auf ${beste.karte}: `
+      + `${beste.ohne.toFixed(2)} → ${beste.mit.toFixed(2)}). Ratsche ${KLIMA_MIN}.`);
+    if (mittel < KLIMA_MIN) {
+      befunde.push(`Klimawirkung: der Farbabstand sinkt nur um ${mittel.toFixed(3)}, `
+        + `die Ratsche steht bei ${KLIMA_MIN}. Das Farbklima traegt nichts mehr bei - `
+        + 'dann ist es ein Fuellwort und keine Einbettung.');
+    }
+  }
 }
 
 if (befunde.length) {

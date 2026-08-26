@@ -2112,7 +2112,13 @@ step('Beruehrbare Kleinigkeiten', () => {
     const p = imFlug();
     if (!p) throw new Error('Es kam kein Geschoss in die Luft - die Probe misst nichts.');
     const unterwegs = p.projectiles[0].damage;
-    const t = p.towers[0];
+    // Der GEBAUTE Turm, nicht die Zielunit.
+    //
+    // Sie steht seit v165 an Stelle null, und das Geschoss in der Luft
+    // gehoert dem Bogenturm. Ausgebaut wurde damit ein anderer Turm als der,
+    // dessen Schuss geprueft wird - die Gegenprobe "Ausbau wirkt
+    // rueckwirkend" blieb deshalb im vollen Lauf zu v166 stumm.
+    const t = ersterTurm(p);
     if (!p.upgrade(t, 0)) throw new Error('Der Ausbau schlug fehl - die Probe misst nichts.');
     const neu = p.towerStats(t).damage;
     if (neu <= unterwegs) {

@@ -806,9 +806,15 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
-    // Ohne Farbklima laeuft der Zielturm wieder mit seiner eigenen Farbwelt
-    // ueber die Karte - genau der Zustand, den der Nutzer beanstandet hat.
-    name: 'Der Zielturm bringt seine eigene Farbwelt mit',
+    // Ohne Farbklima laufen Zielturm und Tor der Leere wieder mit ihrer
+    // eigenen Farbwelt ueber die Karte - der Zustand, den der Nutzer
+    // beanstandet hat.
+    //
+    // **Diese Probe stand bis v166 ZWEIMAL da**, wortgleich, einmal fuer den
+    // Zielturm und einmal fuer das Tor: dieselbe Datei, dieselbe Regel,
+    // dasselbe Tor. Zwei Fassungen einer Probe sind eine zu viel (Regel 15) -
+    // und beide bewiesen im vollen Lauf zu v166 dasselbe Nichts.
+    name: 'Farbklima abgeschaltet',
     datei: 'src/gfx/einbettung.ts',
     regel: /export const KLIMA_STAERKE = 0\.40;/,
     ersatz: 'export const KLIMA_STAERKE = 0;',
@@ -844,12 +850,14 @@ const PROBEN = [
     tor: 'guards',
   },
   {
-    // Ohne Farbklima bringt auch das Tor der Leere wieder seine eigene
-    // Farbwelt mit - es war bis v132 die letzte Gruppe, die das tat.
-    name: 'Das Tor der Leere bleibt uneingebettet',
-    datei: 'src/gfx/einbettung.ts',
-    regel: /export const KLIMA_STAERKE = 0\.40;/,
-    ersatz: 'export const KLIMA_STAERKE = 0;',
+    // Das Tor der Leere war bis v132 die letzte Gruppe ohne Einbettung.
+    // Hier faellt es aus der Figurenliste des Tors heraus - dann prueft es
+    // niemand mehr, und das Tor meldet trotzdem gruen. Genau die Bauart, an
+    // der eine Messung leise aufhoert zu messen.
+    name: 'Das Tor der Leere wird gar nicht mehr geprueft',
+    datei: 'tools/einbettung.mjs',
+    regel: /^const FIGUREN = Object\.keys\(OBJECT_ART\)\.map\($/m,
+    ersatz: "const FIGUREN = Object.keys(OBJECT_ART).filter((k) => k !== 'gate').map(",
     tor: 'einbettungstor',
   },
   {

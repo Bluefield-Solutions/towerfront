@@ -47,3 +47,27 @@ Drei Fallen, die alle **still** waren — nichts wurde rot:
 
 Alle drei sind der Grund, warum das Tor `topologie` den Umlaufsinn, die
 Flächenvorzeichen und die erwarteten Teile und Löcher prüft.
+
+## Stand nach MG
+
+```
+node tools/backen-kontinente.mjs     Ebene 1
+node tools/backen-deutschland.mjs    Ebene 3
+node entwuerfe/bauen.mjs             Vierfärbung + Entwurfsdaten
+node tor/ansicht.mjs                 visuelles Regressionstor
+node tor/ansicht.mjs --aktualisieren Vorbilder erneuern (bewusst!)
+```
+
+Gemessen, nicht geschätzt (Hausdorff-Grenze 0,75 px eingehalten):
+
+| | grob | mittel | fein |
+|---|---|---|---|
+| Kontinente | 29,7 KB gz | 105,0 KB | 134,2 KB |
+| Deutschland | 34,3 KB gz | 55,7 KB | 57,5 KB |
+
+## Neuer offener Punkt aus MG
+
+**Antarktika sieht in jeder Weltprojektion wie ein Sockel aus.** Für Fionas
+Runden 1 und 2 stört das nicht — dort ist es kein Kandidat. Für Runde 3
+braucht es eine eigene, polare Ansicht. Das ist eine zweite Projektion für
+einen einzigen Kontinent und keine Kleinigkeit.

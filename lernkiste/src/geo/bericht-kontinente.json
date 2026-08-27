@@ -9,26 +9,26 @@
     {
       "stufe": "grob",
       "breitePx": 200,
-      "hausdorffPxMax": 0.729,
-      "punkte": 10035,
-      "bytes": 115974,
-      "gzip": 40835
+      "hausdorffPxMax": 0.721,
+      "punkte": 7139,
+      "bytes": 83186,
+      "gzip": 30401
     },
     {
       "stufe": "mittel",
       "breitePx": 800,
-      "hausdorffPxMax": 0.743,
-      "punkte": 30429,
-      "bytes": 347873,
-      "gzip": 109229
+      "hausdorffPxMax": 0.708,
+      "punkte": 30229,
+      "bytes": 347039,
+      "gzip": 107492
     },
     {
       "stufe": "fein",
       "breitePx": 2000,
-      "hausdorffPxMax": 0.741,
-      "punkte": 41420,
-      "bytes": 472994,
-      "gzip": 141575
+      "hausdorffPxMax": 0.737,
+      "punkte": 40303,
+      "bytes": 462562,
+      "gzip": 137454
     }
   ]
 }

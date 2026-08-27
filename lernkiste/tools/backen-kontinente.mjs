@@ -64,10 +64,14 @@ for (const k of KONTINENTE) {
     + `   lat ${b[0][1].toFixed(0).padStart(4)} … ${b[1][1].toFixed(0).padStart(3)}`);
 }
 
-// Weltansicht: geoNaturalEarth1 gibt es in d3-geo nicht, also Aequirektangular
-// mit gestauchter Breite - fuer die Uebersicht reicht das und es ist ehrlich
-// benannt.
-const projRoh = () => d3.geoEquirectangular();
+// Weltansicht: geoNaturalEarth1, wie im Konzept festgelegt.
+//
+// Der erste Anlauf nahm ersatzweise geoEquirectangular, mit der Begruendung,
+// d3-geo kenne geoNaturalEarth1 nicht. Das war schlicht falsch - sie steht
+// dort. Der Entwurf hat es sofort gezeigt: Antarktika wurde ein Band am
+// unteren Rand, breiter als Afrika. Genau Befund F4 aus dem Pruefbericht,
+// diesmal am eigenen Werk.
+const projRoh = () => d3.geoNaturalEarth1();
 
 const alles = { type:'FeatureCollection',
   features: Object.values(stuecke).flatMap(s=>s.geo.features) };

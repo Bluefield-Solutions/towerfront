@@ -78,7 +78,12 @@ for (const a of AUFNAHMEN) {
   }
   const el = await seite.$(a.wahl);
   if (!el) { console.log(`  FEHLT   ${a.name}  (${a.wahl} nicht gefunden)`); rot++; continue; }
-  const jetzt = await el.screenshot();
+  // `animations: 'disabled'` haelt laufende Animationen an und spult sie ans
+  // Ende. Ohne das bleibt eine ENDLOSE Animation - der atmende Ring am
+  // Mikrofonknopf - auch bei 1 ms Dauer irgendwo stehen, und das Tor meldet
+  // bei jedem Lauf einen anderen Unterschied. Das Tor war nicht
+  // deterministisch; gefunden hat es sich selbst.
+  const jetzt = await el.screenshot({ animations: 'disabled' });
   const ziel = path.join(VORBILDER, a.name + '.png');
 
   if (AKTUALISIEREN || !fs.existsSync(ziel)) {

@@ -6,8 +6,13 @@
   "description": "Lernspiel fuer Fiona und Lea - Staging-Baum, zieht in ein eigenes Repository um",
   "scripts": {
     "geo-holen": "node tools/geo-holen.mjs",
-    "geo-backen": "node tools/geo-backen.mjs",
-    "ansicht": "node tor/ansicht.mjs"
+    "backen": "node --max-old-space-size=6144 tools/backen-kontinente.mjs && node --max-old-space-size=6144 tools/backen-deutschland.mjs && node --max-old-space-size=6144 tools/backen-laender.mjs && node --max-old-space-size=4096 tools/backen-antarktika.mjs && node tools/backen-staedte.mjs",
+    "prototyp": "node prototyp/bauen.mjs",
+    "entwuerfe": "node entwuerfe/bauen.mjs",
+    "inhalt": "node tor/inhalt.mjs",
+    "ansicht": "node tor/ansicht.mjs",
+    "smoke": "node tor/smoke.mjs",
+    "tor": "npm run inhalt && npm run entwuerfe && npm run prototyp && npm run ansicht && npm run smoke"
   },
   "devDependencies": {
     "d3-geo": "^3.1.1",

@@ -45,11 +45,11 @@ blockiert M0.
 | | |
 |---|---|
 | Ebenen | 4 |
-| Gebiete gesamt | **69** (7 Kontinente + 30 Länder + 16 Bundesländer + 16 Städte) |
+| Gebiete gesamt | **64** (7 Kontinente + 25 Länder + 16 Bundesländer + 16 Städte) |
 | Eingabewege | 3 (Ziehen · Sprechen · Tippen) |
 | Tore in der Kette | **22** |
 
-Die Zahlen 69 und 22 werden nicht geschrieben, sondern gezählt: `inhalt`
+Die Zahlen 64 und 22 werden nicht geschrieben, sondern gezählt: `inhalt`
 zählt die Gebiete aus den Daten, `doku` zählt die Torschritte gegen diese
 Prosa. Eine Zahl, die niemand prüft, veraltet lautlos — in Towerfront stand
 einundsechzig Fassungen lang die falsche.
@@ -379,7 +379,7 @@ geläufigen.
 | **Südamerika** | Brasilien | Kolumbien | Argentinien | Peru | Venezuela |
 
 Australien/Ozeanien ist beauftragt ausgenommen, Antarktika hat keine Länder.
-**30 Länder** für Lea, 15 für Fiona.
+**25 Länder** für Lea, 15 für Fiona.
 
 Wie gut die Aufteilung greift, zeigt Nordamerika: Fiona bekommt USA, Mexiko
 und Kanada — genau die drei, die sie kennt. Guatemala und Haiti erreichen nur
@@ -471,9 +471,18 @@ Ländern, die Ebene wäre also überall sonst leer.
 
 ### 4.5 Wo die Zahl 69 herkommt
 
-7 Kontinente + 30 Länder + 16 Bundesländer + 16 Städte = **69 Gebiete**.
-Fiona sieht davon 54 (15 statt 30 Länder). In K1 stand „53" — das zählte drei
-Ebenen, während daneben „4 Ebenen" stand. Befund I2.
+7 Kontinente + **25** Länder + 16 Bundesländer + 16 Städte = **64 Gebiete**.
+Fiona sieht davon 54 (15 statt 25 Länder).
+
+**Diese Zahl war zweimal falsch, und beide Male hat sie niemand gerechnet.**
+In K1 stand „53", das zählte nur drei Ebenen (Befund I2). K2 und K3 sagten
+„69" und rechneten mit **30** Ländern — als gäbe es sechs Kontinente mit
+Ländern. Es sind fünf: Australien ist beauftragt ausgenommen, Antarktika hat
+keine. Fünf mal fünf ist fünfundzwanzig.
+
+Gefunden hat es das Tor `inhalt`, beim ersten Lauf, gegen die echten Daten.
+Genau dafür ist es da — und deshalb wird die Zahl ab jetzt **gezählt und
+gegen diesen Absatz geprüft**, nicht geschrieben.
 
 ### 4.6 Jede Liste trägt ihren Stand
 
@@ -938,7 +947,7 @@ Eine Leistungsangabe ohne Messstelle ist keine. Messgerät: **iPad
 | davon Geometrie (nur grobe Stufe) | < 90 KB | Tor `budget` |
 | davon Schriften (zwei, beschnitten) | < 60 KB | Tor `budget` |
 | **Nachladbar je Ebene** (mittel/fein) | < 250 KB | Tor `budget` |
-| Geometrie gesamt über alle Stufen | ≈ 600–900 KB, **geschätzt** | wird in M2 gemessen |
+| Geometrie gesamt über alle Stufen | **2,0 MB, gemessen** (siehe `Lernkiste-STAND.md`) | M2 gelaufen |
 | Erstes Bild, kalt | < 1,5 s | Playwright + Lighthouse in CI |
 | Ebene erstmalig öffnen, mit Netz | < 800 ms bis zur feinen Stufe | Tor `browser` |
 | Ebene öffnen, danach | < 100 ms | Tor `offline` |
@@ -958,6 +967,11 @@ sondern von vornherein vermeiden:
    Stil.
 4. Sehr lange `d`-Attribute im DOM anfassen. Sie werden einmal gesetzt und nie
    wieder — Zustände laufen ausschließlich über Klassen und `transform`.
+
+**Nachgemessen in M2** (`Lernkiste-STAND.md`): das Startbündel braucht nur
+`kontinente.grob` mit **29,7 KB** — ein Drittel der 90-KB-Grenze. Zwei feine
+Stufen liegen über 250 KB (Asien 268, Nordamerika 253); beide werden auf
+Ebene 2 aber nur in der mittleren Stufe gezeigt.
 
 **Das Budget ist geteilt, seit die Karten feiner geworden sind** (Kapitel
 5.3b). Das Startbündel bleibt bei 400 KB und enthält nur die grobe Stufe;
@@ -1665,7 +1679,7 @@ Klippung, drei Auflösungsstufen, Grenzbögen, Inselregel, Beschriftungs&shy;lag
 und Vierfärbung. Tore `geo`, `topologie` und `lizenz`.
 
 **Abnahme, dreiteilig:**
-- Sieben Kontinente, 30 Länder, 16 Bundesländer und 16 Städtelagen liegen in
+- Sieben Kontinente, 25 Länder, 16 Bundesländer und 16 Städtelagen liegen in
   **drei Auflösungsstufen** vor, Tore `geo`, `topologie` und `lizenz` grün.
 - Die **echten Geometriegrößen sind gemessen** und stehen im Bericht — das ist
   der Lauf, der die Schätzung aus Kapitel 8 ersetzt.
@@ -1725,7 +1739,7 @@ nicht nur *dass*.
 
 ### M5 · Ebenen 2, 3 und 4
 
-30 Länder, 16 Bundesländer, 16 Landeshauptstädte als Paarbildung, die
+25 Länder, 16 Bundesländer, 16 Landeshauptstädte als Paarbildung, die
 Stadtstaaten-Lerneinheit, Ablenker, Ebenenwahl, Leitner-Logik, Sammlung.
 
 **Abnahme:** Torkette grün, **Bremen ist auf dem iPhone quer sicher treffbar**

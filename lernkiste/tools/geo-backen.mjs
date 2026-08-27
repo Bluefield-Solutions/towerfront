@@ -304,3 +304,64 @@ function inselnFiltern(geo, proj, minPx = 4) {
 export { ringe, projiziere, hausdorff, shaper, bisAufGrenze, kegel, passe, svgPfad,
          teileUndLoecher, ringFlaeche, inselnFiltern, nachD3, alsSammlung, vorzeichenFlaeche,
          ROH, AUS, HAUSDORFF_GRENZE };
+
+/* -------------------------------------------------- Anker und Beschriftung */
+
+/** Punkt-in-Polygon mit Loechern (gerade-ungerade). */
+function imRing(x, y, r) {
+  let drin = false;
+  for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+    const [xi, yi] = r[i], [xj, yj] = r[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) drin = !drin;
+  }
+  return drin;
+}
+function imPolygon(x, y, poly) {
+  if (!imRing(x, y, poly[0])) return false;
+  for (let i = 1; i < poly.length; i++) if (imRing(x, y, poly[i])) return false;  // Loch
+  return true;
+}
+function abstandZumRand(x, y, poly) {
+  let min = Infinity;
+  for (const ring of poly)
+    for (let i = 0; i + 1 < ring.length; i++) {
+      const d = abstandSeg(x, y, ring[i][0], ring[i][1], ring[i+1][0], ring[i+1][1]);
+      if (d < min) min = d;
+    }
+  return imPolygon(x, y, poly) ? min : -min;
+}
+
+/**
+ * Pol der Unzugaenglichkeit: der Punkt IM Gebiet mit dem groessten Abstand
+ * zum Rand. NICHT der Schwerpunkt - der Schwerpunkt Italiens liegt im Meer,
+ * der von Bremen zwischen seinen beiden Teilen.
+ *
+ * Der Abstand ist zugleich der Radius des groessten Kreises, der ins Gebiet
+ * passt - und entscheidet damit, ob der Name hineinpasst (Befund G10).
+ */
+function polDerUnzugaenglichkeit(polygone) {
+  // Nur der groesste Teil - der Anker gehoert nach Bremen-Stadt, nicht
+  // zwischen Bremen und Bremerhaven.
+  let poly = null, best = -1;
+  for (const p of polygone) {
+    const a = ringFlaeche(p[0]);
+    if (a > best) { best = a; poly = p; }
+  }
+  if (!poly) return null;
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  for (const [x,y] of poly[0]) { x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y); }
+  let beste = null, besterAbstand = -Infinity, schritt = Math.max(x1-x0, y1-y0) / 24;
+  let mx = (x0+x1)/2, my = (y0+y1)/2;
+  for (let runde = 0; runde < 7; runde++) {
+    for (let i = -6; i <= 6; i++) for (let j = -6; j <= 6; j++) {
+      const x = mx + i*schritt, y = my + j*schritt;
+      const d = abstandZumRand(x, y, poly);
+      if (d > besterAbstand) { besterAbstand = d; beste = [x,y]; }
+    }
+    if (beste) { mx = beste[0]; my = beste[1]; }
+    schritt /= 3;
+  }
+  return { punkt: beste, radius: besterAbstand };
+}
+
+export { imPolygon, abstandZumRand, polDerUnzugaenglichkeit };

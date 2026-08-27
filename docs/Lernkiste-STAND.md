@@ -336,6 +336,84 @@ sechs liefen. Die Zahl wird jetzt gezählt, nicht geschrieben.
 
 ---
 
+## Die Sichtrunde am Gerät
+
+Der Anlass war eine Bitte um **Gestaltungsvorschläge**. Beim Nachmessen auf
+sechs Gerätegrößen kam heraus, dass die App auf dem **Zielgerät kaputt war** —
+und drei Tore meldeten grün.
+
+### Sechzehn Elemente waren nicht erreichbar
+
+| Gerät | Was fehlte |
+|---|---|
+| iPhone quer 844×390 | vierte Antwort 22 px unter dem Rand · „Bundesländer" und „Landeshauptstädte" 10 px · „Verstanden" der Stadtstaaten-Einweisung 42 px |
+| iPhone SE quer 667×375 | dasselbe, dazu drei Tasten der Eltern-PIN |
+| iPhone hoch 390×844 | „Landeshauptstädte" 64 px · „Zurück" und „Eltern" **verdeckt** von der Überschrift |
+| iPad, Schreibtisch | in Ordnung — deshalb ist es nie aufgefallen |
+
+Im Klartext: das Kind sah auf dem iPhone die vierte Antwort nicht, kam nicht
+in die Landeshauptstädte, und auf dem SE ließ sich die Eltern-PIN nicht
+eingeben.
+
+### Warum kein Tor es sah
+
+Der Rauchtest sucht Etiketten über das **DOM**, nicht über das Sichtbare — ein
+Element in einem scrollenden Behälter *existiert*, es ist nur nicht da. Das
+Tor `ansicht` fotografiert bei 1240 × 1000, wo alles passt. Und `beruehrung`
+misst Kartenflächen, keine Knöpfe.
+
+### Die Ursachen, der Reihe nach
+
+1. **`justify-content:center` auf `.mitte`.** Läuft der Inhalt über, schiebt
+   zentrierter Inhalt nach **oben und unten gleichzeitig** hinaus — deshalb lag
+   die Überschrift über den Kopfknöpfen. Für `.seite` war das seit v109
+   repariert, für `.mitte` nie nachgezogen. Regel 15, wörtlich.
+2. **`style="min-width:200px"` inline im Markup.** Inline schlägt jede
+   Stilregel. Vier Größen waren rot, während im Stylesheet ein sauberes Raster
+   stand, das gegen eine Zahl im Markup arbeitete.
+3. **Ein Rasterfeld ist mindestens so breit wie sein längstes Wort.**
+   „Landeshauptstädte" sprengte die Spalte um bis zu 36 px.
+4. **Eine Medienabfrage erhöht die Spezifität nicht.** Der Kurzschirm-Block
+   stand vor `.ziffern` und war für die wirkungslos.
+5. **Ohne `min-width:0` läuft der Text aus seinem eigenen Knopf** — der Kasten
+   saß, der Inhalt nicht.
+
+### Vier Marken, die es nie gab
+
+Beim Aufräumen fiel auf: `--app-gut`, `--app-warn`, `--app-linie` und
+`--f-mono` wurden an **neun Stellen benutzt und nirgends definiert**. Deshalb
+hat sich **kein Fortschrittsbalken je gefüllt**, und „Richtig — Thüringen!"
+stand nie in Grün. `marken.css` und die Kopie in `vorlage.html` waren
+außerdem auseinandergelaufen (`--tinte-2` gegen `--tinte2`).
+
+Die Kopie ist weg. Der Bau setzt `marken.css` jetzt selbst ein.
+
+### Das Tor `passt`
+
+Sechs Gerätegrößen × sieben Bildschirme. Kein bedienbares Element darf über
+den Rand seines Behälters laufen, keines darf **verdeckt** sein
+(`elementFromPoint` in seiner Mitte), und der **Text muss in seinen Knopf
+passen**. `overflow:auto` zählt nicht als Lösung: ein Kind scrollt nicht in
+einer Liste, von der es nicht weiß, dass sie weitergeht.
+
+Alle drei Prüfungen sind gegengeprobt — jede meldet den Fehler, für den sie
+gebaut wurde, und schweigt danach.
+
+### Die Knöpfe
+
+Vorher war **jeder** Knopf dieselbe weiße Pille: die Antwort, die
+Ebenenkachel, „Zurück", „Eltern". Deshalb wirkte nichts gestaltet — es gab
+keine Rangfolge. Jetzt drei Gewichte: `.knopf` **leise** (Werkzeug am Rand,
+kein Füllton), `.kachel` **mittel**, `.etikett` **laut** (die Antwort, der
+wichtigste Knopf der App).
+
+Die Tiefe ist keine versetzte Fläche mehr, sondern eine **Kante**: helle Linie
+oben innen, dunklere unten. Beim Drücken fährt der Knopf um genau die
+Kantenhöhe nach unten. Und bei falscher Antwort **wackelt das Etikett** —
+vorher passierte dort gar nichts, es kam nur ein Satz darunter.
+
+---
+
 ## Offen
 
 | | Was | Wer |
@@ -345,6 +423,8 @@ sechs liefen. Die Zahl wird jetzt gezählt, nicht geschrieben.
 | — | **Die Entwürfe und den Prototyp auf dem iPad ansehen.** Kein Tor läuft auf iOS. | ihr |
 | — | Schriftentscheidung: Plus Jakarta Sans oder Nunito, am Gerät | ihr |
 | — | M1: Vite und Svelte. PWA, Service Worker und Ablage stehen bereits. | ich |
+| D29 | **Der Grundriss.** 26–61 % der Fläche bleiben ungenutzt; die Aufteilung Karte/Antworten kennt das Seitenverhältnis der Karte nicht. Deutschland ist hochformatig, die Weltkarte quer. | ich |
+| D30 | Gekonnte Gebiete behalten ihre Farbe über die Sitzung — die Karte füllt sich beim Spielen. Stärkster Belohnungshebel, fast umsonst. | ich |
 | D28 | `ansicht` auf dem Runner: nur im festgenagelten Playwright-Abbild sinnvoll, samt dort aufgenommener Vorbilder | ich |
 | — | Beschriftungsfahnen zeichnen (14 von 16 brauchen eine) | ich |
 | — | Leitner, Elternbereich, Protokoll | ich |

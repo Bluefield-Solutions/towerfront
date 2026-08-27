@@ -1,6 +1,6 @@
 # Towerfront — Bildauftrag
 
-Stand: v176 · 26.08.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v177 · 26.08.2026 · **Auftragsdokument für den Bild-Agenten**
 
 Dieses Dokument ist die vollständige Bestellung. Es enthält alles, was zum
 Erzeugen der Bilder nötig ist: Stil, Maße, Blickrichtung, Dateinamen,
@@ -620,6 +620,19 @@ der noch aus der alten Welt stammt, und er fällt daneben sofort auf.
 ---
 
 ### 6.3 `turm_frost_1.png` … `turm_frost_6.png` — Kryo-Emitter
+
+> **GELIEFERT am 27.08.2026 und eingebaut (v177).** Der Auftrag ist zum
+> größten Teil eingelöst: sechs von sechs Sortenpaaren über der Grenze
+> wurden **vier**, der schlimmste Wert des ganzen Turmsatzes fiel von 0,76
+> auf 0,70, und der Ausbau ist zum ersten Mal wirklich zu sehen (Stufe 1
+> gegen 6: 0,72 → **0,48**). Lichtwinkel und Rand sind erledigt.
+>
+> **Offen bleiben die Stufen 5 und 6** — dort füllt sich das Dreibein wieder
+> zu (leere Fläche 63 % → 32 %), und der Wert gegen den Mörser stieg von
+> 0,65 auf 0,70. Die Nachbestellung dafür steht in der **Art Bible 5.3**;
+> der Prompt unten gilt unverändert weiter, nur eben für zwei Stufen.
+
+
 
 **Der letzte fehlende Satz (Stand v170).** Bogenturm, Haubitze und Laserturm
 sind geliefert und im Spiel; der Frostturm ist der einzige, der noch aus der

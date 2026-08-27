@@ -16,60 +16,57 @@
   "items": {
     "frost_1_1": {
       "file": "turm_frost_1.png",
-      "comment": "Sechs Ausbaustufen des Frostturms.",
+      "comment": "Sechs Ausbaustufen des Kryo-Emitters (v177). Loest die alte Fantasy-Kunst ab und gehoert jetzt in dieselbe Familie wie Moerser und Prisma - also auch dieselbe Einbackung, MIT EINER AUSNAHME: farbe 1,3 statt 2,0. Durchprobiert an 0,9 / 1,3 / 1,7 / 2,0 und in ECHTER Anzeigegroesse (67 Bildschirmpunkte) neben Moerser und Prisma angesehen, nicht an der gepackten Kachel (Regel 9 und 12): bei 0,9 ist der Frostturm blasser als seine Nachbarn, ab 1,7 flutet das Tuerkis die graue Panzerung und der Turm wird blau statt grau mit blauem Akzent. Die 2,0 der beiden anderen sind fuer Orange und Violett auf Grau geeicht - der Frostturm traegt seinen Akzent schon im Bild, und eine gemeinsame Zahl waere hier die falsche Familie.",
       "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 0.9,
-      "helligkeit": 0.8,
+      "schwarzHeben": 0.08,
+      "farbe": 1.3,
+      "helligkeit": 1.0,
       "fill": 0.94
     },
     "frost_1_2": {
       "file": "turm_frost_2.png",
-      "comment": "Sechs Ausbaustufen des Frostturms.",
+      "comment": "Sechs Ausbaustufen des Kryo-Emitters (v177). Loest die alte Fantasy-Kunst ab und gehoert jetzt in dieselbe Familie wie Moerser und Prisma - also auch dieselbe Einbackung, MIT EINER AUSNAHME: farbe 1,3 statt 2,0. Durchprobiert an 0,9 / 1,3 / 1,7 / 2,0 und in ECHTER Anzeigegroesse (67 Bildschirmpunkte) neben Moerser und Prisma angesehen, nicht an der gepackten Kachel (Regel 9 und 12): bei 0,9 ist der Frostturm blasser als seine Nachbarn, ab 1,7 flutet das Tuerkis die graue Panzerung und der Turm wird blau statt grau mit blauem Akzent. Die 2,0 der beiden anderen sind fuer Orange und Violett auf Grau geeicht - der Frostturm traegt seinen Akzent schon im Bild, und eine gemeinsame Zahl waere hier die falsche Familie.",
       "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 0.9,
-      "helligkeit": 0.8,
+      "schwarzHeben": 0.08,
+      "farbe": 1.3,
+      "helligkeit": 1.0,
       "fill": 0.94
     },
     "frost_1_3": {
       "file": "turm_frost_3.png",
-      "comment": "Sechs Ausbaustufen des Frostturms.",
+      "comment": "Sechs Ausbaustufen des Kryo-Emitters (v177). Loest die alte Fantasy-Kunst ab und gehoert jetzt in dieselbe Familie wie Moerser und Prisma - also auch dieselbe Einbackung, MIT EINER AUSNAHME: farbe 1,3 statt 2,0. Durchprobiert an 0,9 / 1,3 / 1,7 / 2,0 und in ECHTER Anzeigegroesse (67 Bildschirmpunkte) neben Moerser und Prisma angesehen, nicht an der gepackten Kachel (Regel 9 und 12): bei 0,9 ist der Frostturm blasser als seine Nachbarn, ab 1,7 flutet das Tuerkis die graue Panzerung und der Turm wird blau statt grau mit blauem Akzent. Die 2,0 der beiden anderen sind fuer Orange und Violett auf Grau geeicht - der Frostturm traegt seinen Akzent schon im Bild, und eine gemeinsame Zahl waere hier die falsche Familie.",
       "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 0.9,
-      "helligkeit": 0.8,
+      "schwarzHeben": 0.08,
+      "farbe": 1.3,
+      "helligkeit": 1.0,
       "fill": 0.94
     },
     "frost_1_4": {
       "file": "turm_frost_4.png",
-      "comment": "Stufe 4: obere Eisspitzen angeschnitten (19 % der Kante). Hingenommen, Koerper vollstaendig.",
+      "comment": "Sechs Ausbaustufen des Kryo-Emitters (v177). Loest die alte Fantasy-Kunst ab und gehoert jetzt in dieselbe Familie wie Moerser und Prisma - also auch dieselbe Einbackung, MIT EINER AUSNAHME: farbe 1,3 statt 2,0. Durchprobiert an 0,9 / 1,3 / 1,7 / 2,0 und in ECHTER Anzeigegroesse (67 Bildschirmpunkte) neben Moerser und Prisma angesehen, nicht an der gepackten Kachel (Regel 9 und 12): bei 0,9 ist der Frostturm blasser als seine Nachbarn, ab 1,7 flutet das Tuerkis die graue Panzerung und der Turm wird blau statt grau mit blauem Akzent. Die 2,0 der beiden anderen sind fuer Orange und Violett auf Grau geeicht - der Frostturm traegt seinen Akzent schon im Bild, und eine gemeinsame Zahl waere hier die falsche Familie.",
       "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 0.9,
-      "helligkeit": 0.8,
-      "fill": 0.94,
-      "randOk": true
+      "schwarzHeben": 0.08,
+      "farbe": 1.3,
+      "helligkeit": 1.0,
+      "fill": 0.94
     },
     "frost_1_5": {
       "file": "turm_frost_5.png",
-      "comment": "Stufe 5: obere Eisspitzen angeschnitten (18 % der Kante). Hingenommen, Koerper vollstaendig.",
+      "comment": "Sechs Ausbaustufen des Kryo-Emitters (v177). Loest die alte Fantasy-Kunst ab und gehoert jetzt in dieselbe Familie wie Moerser und Prisma - also auch dieselbe Einbackung, MIT EINER AUSNAHME: farbe 1,3 statt 2,0. Durchprobiert an 0,9 / 1,3 / 1,7 / 2,0 und in ECHTER Anzeigegroesse (67 Bildschirmpunkte) neben Moerser und Prisma angesehen, nicht an der gepackten Kachel (Regel 9 und 12): bei 0,9 ist der Frostturm blasser als seine Nachbarn, ab 1,7 flutet das Tuerkis die graue Panzerung und der Turm wird blau statt grau mit blauem Akzent. Die 2,0 der beiden anderen sind fuer Orange und Violett auf Grau geeicht - der Frostturm traegt seinen Akzent schon im Bild, und eine gemeinsame Zahl waere hier die falsche Familie.",
       "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 0.9,
-      "helligkeit": 0.8,
-      "fill": 0.94,
-      "randOk": true
+      "schwarzHeben": 0.08,
+      "farbe": 1.3,
+      "helligkeit": 1.0,
+      "fill": 0.94
     },
     "frost_1_6": {
       "file": "turm_frost_6.png",
-      "comment": "Stufe 6: die Eiskronen sind oben angeschnitten (31 % der Kante). Hingenommen - der Turmkoerper ist vollstaendig, nur die obersten Spitzen enden flach. Bei Gelegenheit neu bestellen.",
+      "comment": "Sechs Ausbaustufen des Kryo-Emitters (v177). Loest die alte Fantasy-Kunst ab und gehoert jetzt in dieselbe Familie wie Moerser und Prisma - also auch dieselbe Einbackung, MIT EINER AUSNAHME: farbe 1,3 statt 2,0. Durchprobiert an 0,9 / 1,3 / 1,7 / 2,0 und in ECHTER Anzeigegroesse (67 Bildschirmpunkte) neben Moerser und Prisma angesehen, nicht an der gepackten Kachel (Regel 9 und 12): bei 0,9 ist der Frostturm blasser als seine Nachbarn, ab 1,7 flutet das Tuerkis die graue Panzerung und der Turm wird blau statt grau mit blauem Akzent. Die 2,0 der beiden anderen sind fuer Orange und Violett auf Grau geeicht - der Frostturm traegt seinen Akzent schon im Bild, und eine gemeinsame Zahl waere hier die falsche Familie.",
       "entrauschen": 0.8,
-      "schwarzHeben": 0,
-      "farbe": 0.9,
-      "helligkeit": 0.8,
-      "fill": 0.94,
-      "randOk": true
+      "schwarzHeben": 0.08,
+      "farbe": 1.3,
+      "helligkeit": 1.0,
+      "fill": 0.94
     },
     "mortar_1_1": {
       "file": "turm_moerser_1.png",

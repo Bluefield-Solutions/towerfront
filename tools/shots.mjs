@@ -94,7 +94,17 @@ const DT = 1 / 60;
  *  deckt ihn nichts - 100 Prozent verdeckt wurden zu 49. */
 const ersterTurm = (g) => g.gebaute[0];
 
-const TOR = ['menu-karte', 'menu-einweisung', 'menu-sieg', 'welle8'];
+// **Alle Menueaufnahmen gehoeren in den Torlauf, nicht nur zwei.**
+//
+// Seit v172 blendet das Menue seine Ansichten ein, und der Waechter oben
+// verwirft eine Aufnahme, die mitten im Wechsel faellt. In v177 hat er genau
+// das gemeldet - aber erst im vollen Lauf: `menu-niederlage` stand mit zehn
+// Bildern da und lag bei 0,93 von 1. Die Torkette faehrt nur den
+// Querschnitt, also war `npm run bilder` fuenf Fassungen lang kaputt, ohne
+// dass irgendetwas rot wurde. Ein Tor, das weniger prueft als das Werkzeug,
+// das es bewacht, laesst genau die Luecke.
+const TOR = ['menu-karte', 'menu-einweisung', 'menu-fortschritt', 'menu-sieg',
+  'menu-niederlage', 'welle8'];
 const nurTor = process.argv.includes('--tor');
 
 /** Eine Aufnahme: Zustand herstellen, ein paar Bilder laufen lassen, ausgeben.
@@ -314,7 +324,10 @@ takes.push(['menu-niederlage', () => shot('menu-niederlage', 844, 390, (s, r) =>
     lives: 0, maxLives: 60, stars: 0, before: 0,
     kills: 168, built: 8, damage: 71000, duration: 402,
   };
-  return 10;
+  // 20 statt 10, aus demselben Grund wie bei der Siegaufnahme: der
+  // Ansichtswechsel braucht 0,18 Sekunden, und bei 10 Bildern faellt die
+  // Aufnahme mitten hinein.
+  return 20;
 })]);
 
 takes.push(['start', () => shot('start', 844, 390, (s) => {

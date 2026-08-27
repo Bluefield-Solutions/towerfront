@@ -1,6 +1,6 @@
 # Towerfront — Art Bible
 
-Stand: v176 · 26.08.2026
+Stand: v177 · 26.08.2026
 
 **Dieses Dokument ist verbindlich.** Wer ein Bild bestellt, malt oder einbaut,
 richtet sich danach. Es ist die einzige Stelle, an der die Festlegungen
@@ -138,6 +138,43 @@ Umriss. Die Farbe bleibt in der Familie; die Trennung kommt aus der Form.
 
 Die Zahlen werden bei jedem Lauf mit `PAARE=1 npm run lesbarkeit`
 nachgestellt, die Ratsche steht in `tools/readability.mjs`.
+
+### 5.3 Nachbestellung v177: der Frostturm auf Stufe 5 und 6
+
+Die Lieferung vom 27.08.2026 hat den Auftrag zum größten Teil eingelöst —
+ein Dreibein mit offenen Lücken statt eines Klotzes. Gemessen:
+
+| | vorher | Lieferung | |
+|---|---|---|---|
+| Sortenpaare über 0,65 | **6 von 6** | **4 von 6** | zwei gewonnen |
+| Bogenturm / Frostturm | 0,76 | **0,63** | unter der Grenze |
+| Frostturm / Prisma | 0,69 | **0,56** | unter der Grenze |
+| Frostturm / Mörser | 0,65 | **0,70** | **schlechter** |
+| Stufe 1 gegen Stufe 6 | 0,72 | **0,48** | der Ausbau ist zu sehen |
+| Lichtwinkel | bis 44° | 2–16° | erledigt |
+| Rand berührt | 3 von 6 | keine | erledigt |
+
+**Was nachzubessern ist, steht in einer Zahl:** die leere Fläche im
+Deckrechteck fällt von **63 % auf Stufe 1 auf 32 % auf Stufe 6**. Der
+Emitterkranz wächst so weit nach außen, dass er die Beine verdeckt — und
+damit wird die Figur auf den oberen Stufen wieder ein geschlossener Umriss.
+Genau daran hängt der eine verlorene Wert.
+
+**Zu liefern sind nur die Stufen 5 und 6 neu:**
+
+1. Der Kranz darf wachsen, aber **die Lücken zwischen den Beinen müssen offen
+   bleiben** — mindestens 45 % leere Fläche auf jeder Stufe, statt der
+   heutigen 43 % und 32 %.
+2. Was auf Stufe 5 und 6 dazukommt, gehört **nach oben und zur Seite**, nicht
+   in die Mitte: ein zweiter Ring auf Stützen, ein auskragendes Kühlpaket,
+   ein Mast — nichts, was den Raum zwischen den Beinen füllt.
+3. **Abnahme:** gegen den Mörser höchstens 0,60 auf jeder Stufe (heute 0,70
+   auf Stufe 6), leere Fläche mindestens 45 %.
+
+Bis dahin steht `frost/mortar 0,70` als Ratscheneintrag in
+`tools/readability.mjs`.
+
+
 
 ---
 

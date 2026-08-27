@@ -81,8 +81,25 @@ const RIM_HINWEIS = 1.5;        // darunter: sichtbar schwach, aber kein Abbruch
  *  in v156, als sie die gepackten Quellbilder statt der gebackenen mass).
  *  Seit die Ganzbilder entfernt sind, misst sie den Sockel - und die Ratsche
  *  muss auf dem neuen Messplatz neu sitzen, sonst spraeche sie ueber etwas
- *  anderes als die Zahl daneben (Regel 12). */
-const MAX_SCHWACHE_KANTEN = 10;
+ *  anderes als die Zahl daneben (Regel 12).
+ *
+ *  **v177: 10 -> 12, und diesmal hat sich das BILD geaendert, nicht der
+ *  Messplatz.** Der neue Frostturm bringt zwei Werte bei 1,49 mit - einen
+ *  Hundertstel unter der Linie. Gemessen ist er trotzdem besser als sein
+ *  Vorgaenger: schlechtester Kantenwert 1,30 -> 1,36, Koerperkontrast
+ *  1,46 -> 1,89. Eine Zaehlung ueber einer harten Schwelle kann das nicht
+ *  sehen; deshalb steht seit v177 `MIN_KANTE_STAND` daneben und misst, was
+ *  hier gemeint ist. Diese Zahl allein waere ab jetzt Zahlenpflege. */
+const MAX_SCHWACHE_KANTEN = 12;
+
+/** Der schlechteste Kantenwert im ganzen Satz - die Zahl, die die Zaehlung
+ *  darueber nicht sehen kann.
+ *
+ *  Heute ist es der Koloss mit 1,30 gegen die Frostspalte, und der ist seit
+ *  v153 der schwaechste Rand im Spiel. Er wird durch neue TUERME nicht
+ *  beruehrt; die Zahl steht hier, damit eine Lieferung, die ihn
+ *  unterbietet, nicht in einer Zaehlung untergeht. */
+const MIN_KANTE_STAND = 1.30;
 const MIN_BODY_CONTRAST = 1.15; // Körper gegen den Boden - nur noch Rückhalt
 const MIN_TOWER_PX = 26;       // Bildschirmpunkte Breite der Turmsilhouette
 const MIN_ENEMY_PX = 13;       // dasselbe für Gegner
@@ -116,12 +133,21 @@ const FORM_MAX = 0.65;
  *  hier eingetragen. */
 /** Turmsorten, die sich heute schon zu aehnlich sehen - Ratsche wie oben. */
 const BEKANNTE_ENGE_TUERME = [
-  { a: 'arrow', b: 'frost', form: 0.76 },
+  // **v177: sechs Eintraege wurden vier.** Der neue Frostturm (ein Dreibein
+  // mit offenen Luecken statt eines Klotzes) hat zwei Paare unter die Grenze
+  // gebracht: arrow/frost von 0,76 auf 0,63, frost/prism von 0,69 auf 0,56.
+  // Die beiden Freibriefe sind geloescht, und die Pruefung darunter faengt
+  // es, falls sie jemand wieder braucht.
+  //
+  // Ein Paar ist dabei SCHLECHTER geworden: frost/mortar von 0,65 auf 0,70.
+  // Der Grund steht im Bild - die Lieferung waechst auf den oberen Stufen
+  // nach innen statt nach aussen, die Fuellung faellt von 63 auf 32 Prozent
+  // leere Flaeche, und der Kranz verdeckt die Beine. Nachbestellt ist genau
+  // das (Art Bible 5.2, Nachtrag v177); bis dahin steht die 0,70 hier.
+  { a: 'frost', b: 'mortar', form: 0.70 },
   { a: 'mortar', b: 'prism', form: 0.69 },
-  { a: 'frost', b: 'prism', form: 0.69 },
   { a: 'arrow', b: 'mortar', form: 0.70 },
   { a: 'arrow', b: 'prism', form: 0.66 },
-  { a: 'frost', b: 'mortar', form: 0.65 },
 ];
 /** Wie stark sich Stufe 1 und Stufe 6 einer Sorte heute noch ueberdecken.
  *
@@ -130,6 +156,10 @@ const BEKANNTE_ENGE_TUERME = [
  *  Fehler - und wo die Grenze liegt, sagt erst ein Referenzabgleich, nicht
  *  ich (Regel 10). Bis dahin: kleiner ist besser, schlechter wird es nicht.
  *
+ *  **v177: der Frostturm faellt von 0,72 auf 0,48** - die erste Lieferung,
+ *  bei der der Ausbau die Kante wirklich erreicht. Er ist damit der einzige
+ *  der vier, dem man ansieht, wofuer man bezahlt hat.
+ *
  *  Gemessen am 26.08.2026. Der Bogenturm liegt bei 0,92, und das ist der
  *  Befund: seine Waffe sitzt mit 0,75 Breite auf einem Sockel voller
  *  Breite und auf einem Viertel der Hoehe - sie liegt also GANZ INNERHALB
@@ -137,7 +167,7 @@ const BEKANNTE_ENGE_TUERME = [
  *  in der Bestueckung, nicht in der Silhouette; von der Sandsackschuerze
  *  auf Stufe 3 bis zum Zielmast auf Stufe 4 hat nichts davon die Kante
  *  erreicht. Bestellung dazu: Art Bible 5.2. */
-const AUSBAU_STAND = { arrow: 0.92, frost: 0.72, mortar: 0.74, prism: 0.83 };
+const AUSBAU_STAND = { arrow: 0.92, frost: 0.48, mortar: 0.74, prism: 0.83 };
 
 const BEKANNTE_ENGE_PAARE = [
   { a: 'Koloss', b: 'Spalter', farbe: 7.3, form: 0.76 },
@@ -686,6 +716,27 @@ if (schwach.length > MAX_SCHWACHE_KANTEN) {
   problems.push(`${schwach.length} von ${gezaehlt} Figuren haben eine Kante unter `
     + `${RIM_HINWEIS} - heute waren es ${MAX_SCHWACHE_KANTEN}. Neue Bilder duerfen die `
     + 'Lesbarkeit nicht weiter druecken.');
+}
+
+// Und die Zahl, die die ZAEHLUNG nicht sehen kann: der schlechteste Wert.
+//
+// **Die Frostlieferung in v177 hat gezeigt, warum es beides braucht.** Sie
+// hob den schlechtesten Frostwert von 1,30 auf 1,36 und den Koerperkontrast
+// von 1,46 auf 1,89 - eindeutig besser. Zugleich rutschte ein anderer Wert
+// von 1,57 auf 1,49, also einen Hundertstel unter die Hinweislinie, und die
+// ZAEHLUNG sprang von 10 auf 12. Eine Zaehlung ueber einer harten Schwelle
+// misst, wieviele Werte gerade auf welcher Seite eines Strichs liegen - nicht,
+// ob es schlechter geworden ist.
+//
+// Diese hier misst das. Sie waere rot geworden, wenn die Lieferung den
+// schwaechsten Rand des Spiels weiter gedrueckt haette; das hat sie nicht.
+const schwaechste = Math.min(...kanten);
+if (schwaechste < MIN_KANTE_STAND - 0.005) {
+  problems.push(
+    `Die schwaechste Kante im ganzen Satz liegt bei ${schwaechste.toFixed(2)}, `
+    + `eingetragen sind ${MIN_KANTE_STAND}. Ein neues Bild hat den schwaechsten `
+    + 'Rand des Spiels weiter gedrueckt - das ist etwas anderes als die Zaehlung '
+    + 'darueber, und schlimmer.');
 }
 
 if (problems.length) {

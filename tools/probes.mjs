@@ -1210,6 +1210,16 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    // v177: die Niederlageaufnahme fiel mitten in den Ansichtswechsel - und
+    // die Torkette hat es nicht gemeldet, weil sie nur den Querschnitt
+    // faehrt. Seit alle Menueaufnahmen im Querschnitt stehen, faengt sie es.
+    name: 'Niederlageaufnahme faellt in den Ansichtswechsel',
+    datei: 'tools/shots.mjs',
+    regel: /  \/\/ Aufnahme mitten hinein\.\n  return 20;/,
+    ersatz: '  // Aufnahme mitten hinein.\n  return 10;',
+    tor: 'bildtor',
+  },
+  {
     // D6, v176: der Ausweg aus einem Dialog muss GANZ im Bild stehen. Kein
     // anderes Tor konnte das melden: der Rauchtest fragt in jsdom nach
     // `hidden` und kennt keine Hoehen, die Beruehrungsmessung rechnet

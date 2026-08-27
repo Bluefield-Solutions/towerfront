@@ -5,8 +5,9 @@ Arbeitstitel. Ein Lernspiel für Fiona (6, 1. Klasse Bayern) und Lea (8,
 Startbildschirm von iPhone und iPad, liefert sich selbst aus, und lässt sich
 prüfen — fachlich, technisch und datenschutzrechtlich.
 
-Stand: **K2** · O1 und O4 entschieden · noch keine Zeile Spielcode
-Vorgänger: K1, geprüft in `Lernkiste-PRUEFBERICHT-K1.md` — 25 Befunde, alle hier eingearbeitet
+Stand: **K3** · O1 und O4 entschieden · noch keine Zeile Spielcode
+Vorgänger: K1, geprüft in `Lernkiste-PRUEFBERICHT-K1.md` — 25 Befunde eingearbeitet
+K2, geprüft in `Lernkiste-GRAFIK-AUDIT.md` — 21 Grafikbefunde eingearbeitet
 
 ---
 
@@ -17,6 +18,15 @@ Begründung, Architektur, Inhaltsmodell, Prüfbarkeit, Auslieferung,
 Meilensteine mit Abnahmekriterien. Es legt **nicht** fest, wie eine einzelne
 Schaltfläche aussieht — das entsteht in der Umsetzung.
 
+**Was sich gegenüber K2 geändert hat.** Ein Grafik-Audit hat 21 Befunde
+ergeben. Drei widersprachen K2 direkt: die Kartenquelle war eine Stufe zu
+grob (VG2500 statt VG250), das Gütemaß für die Vereinfachung war blind für
+abgeschnittene Landspitzen, und ein Gebiet kann nicht ein einzelner Pfad sein
+— Bremen hat zwei Teile, Brandenburg hat ein Loch namens Berlin. Zehn weitere
+betrafen die Oberfläche, die K2 gar nicht angefasst hatte: es gab kein
+Gestaltungssystem, keine Bewegung, keine Zustände und kein Tor, das Aussehen
+prüft. Der Bericht steht daneben.
+
 **Was sich gegenüber K1 geändert hat.** Ein vollständiger Prüfdurchgang hat
 25 Befunde ergeben: fünf Sachfehler, sechs Widersprüche, vierzehn Lücken. Der
 schwerste war strukturell — Ebene 4 (Landeshauptstädte) war zugesagt, aber im
@@ -25,7 +35,7 @@ behoben, und die Lösung hat die Ebene besser gemacht als der ursprüngliche
 Entwurf. Der Bericht steht daneben, damit die Änderungen nachvollziehbar
 bleiben.
 
-Von den fünf Punkten in **Kapitel 14** sind **O1** (Länderauswahl) und **O4**
+Von den fünf Punkten in **Kapitel 15** sind **O1** (Länderauswahl) und **O4**
 (Repository öffentlich) inzwischen entschieden. Die drei verbliebenen haben
 Vorgaben und blockieren nichts. Keiner davon
 blockiert M0.
@@ -37,9 +47,9 @@ blockiert M0.
 | Ebenen | 4 |
 | Gebiete gesamt | **69** (7 Kontinente + 30 Länder + 16 Bundesländer + 16 Städte) |
 | Eingabewege | 3 (Ziehen · Sprechen · Tippen) |
-| Tore in der Kette | **19** |
+| Tore in der Kette | **22** |
 
-Die Zahlen 69 und 19 werden nicht geschrieben, sondern gezählt: `inhalt`
+Die Zahlen 69 und 22 werden nicht geschrieben, sondern gezählt: `inhalt`
 zählt die Gebiete aus den Daten, `doku` zählt die Torschritte gegen diese
 Prosa. Eine Zahl, die niemand prüft, veraltet lautlos — in Towerfront stand
 einundsechzig Fassungen lang die falsche.
@@ -109,7 +119,7 @@ hunderte bewegte Figuren. Hier ist es falsch:
 2. **Scharf in jeder Größe.** Landesumrisse auf einem iPad mit dreifacher
    Punktdichte, zoombar bis auf Bremen.
 3. **Vorlesbar und bedienbar für Hilfstechnik.** Jedes Land ist ein Element
-   mit einem Namen — die Grundlage für Kapitel 10, und prüfbar.
+   mit einem Namen — die Grundlage für Kapitel 11, und prüfbar.
 4. **Das Bild bewegt sich fast nie.** Keine Kaskade, keine Physik, keine
    Bildrate zu verteidigen. Der einzige bewegte Vorgang ist ein Etikett am
    Finger — und das ist ein `transform` auf einem Element.
@@ -152,7 +162,8 @@ jemand diese Tabelle ergänzt.
 |---|---|---|
 | `svelte` | Oberfläche | 10 KB |
 | `idb-keyval` | IndexedDB ohne Zeremonie | 1 KB |
-| Andika (Schriftschnitt) | Buchstabenformen für Leseanfänger, mitgeliefert | ~40 KB |
+| Andika (beschnitten) | Buchstabenformen für Leseanfänger — **nur dort, wo das Kind liest** | ~20 KB |
+| Oberflächenschrift (beschnitten) | Knöpfe, Überschriften, Zahlen, Elternbereich (Kapitel 11) | ~40 KB |
 
 Keine Geo-Bibliothek zur Laufzeit. Keine Ziehbibliothek. Keine
 Zustandsbibliothek. Keine Symbolschriftart. Kein Klang- und kein
@@ -162,8 +173,9 @@ Bildvorrat — beides wird erzeugt (Kapitel 5.5).
 
 `vite`, `typescript`, `@sveltejs/vite-plugin-svelte`, `vite-plugin-pwa`
 (Workbox), `d3-geo` + `topojson-client` (Projektion, **nur im Werkzeug**),
-`mapshaper` (Vereinfachung), `zod` (Inhaltsprüfung), `vitest`,
-`@playwright/test`, `eslint`, `svelte-check`.
+`mapshaper` (Topologie **und** Vereinfachung — die Reihenfolge ist der
+Befund G3, siehe 5.3), `zod` (Inhaltsprüfung), `vitest`, `@playwright/test`
+(auch für das Tor `ansicht`), `eslint`, `svelte-check`.
 
 ### 2.5 Was ausdrücklich *nicht* gewählt wurde
 
@@ -236,6 +248,10 @@ src/
   vergleich/    normalisieren · Alias · Kölner Phonetik · Levenshtein
   profil/       Profile, Fähigkeitsschalter, Ablage (IndexedDB)
   protokoll/    Ereignisstrom für Elternbereich und Prüfung
+  marken/       Gestaltungssystem: Raster, Skalen, Farben (OKLCH),
+                Bewegungsdauern und -kurven, Symbolsatz. Die EINZIGE
+                Stelle, an der ein Zahlenwert für Farbe, Abstand,
+                Radius oder Dauer steht (Tor `marken`).
   ui/           Svelte-Komponenten. Dumm — bekommt Zustand, gibt Absicht.
   ton/          Vorlesen, erzeugte Klänge
 tools/          Torkette, Geo-Pipeline, Berichte
@@ -256,10 +272,15 @@ type Gebiet = {
   elternId: string | null; // "de"
   ebene: 1 | 2 | 3 | 4;
 
-  art: 'flaeche' | 'punkt';   // NEU in K2 — eine Stadt ist kein Umriss
-  pfad?: string;              // SVG-d, nur bei art === 'flaeche'
+  art: 'flaeche' | 'punkt';   // K2 — eine Stadt ist kein Umriss
   ort?: [number, number];     // Lage, nur bei art === 'punkt'
   zielId?: string;            // worauf gezogen wird, wenn art === 'punkt'
+
+  // K3, Befund G4: ein Gebiet ist selten EIN Ring.
+  pfad?: { grob: string; mittel: string; fein: string };  // je Stufe (G6)
+  fuellregel: 'evenodd';      // damit Löcher Löcher bleiben
+  teile: number;              // getrennte Teile — Bremen: 2
+  loecher: string[];          // erwartete Löcher — Brandenburg: ["de-be"]
 
   anker: [number, number];    // Punkt IM Gebiet, für Etikett und Kleinstflächen
   flaecheRel: number;         // Anteil an der Ansicht — steuert 5.4
@@ -277,6 +298,19 @@ erweitert, und einem, das man jedes Mal aufmacht.
 einen Pfad — für eine Stadt gibt es keinen. Ohne diese Unterscheidung wären
 Zeichnung, Treffererkennung und das Tor `geo` auf Ebene 4 alle drei
 gescheitert.
+
+**`teile`, `loecher` und `fuellregel` sind Befund G4 aus dem Grafik-Audit.**
+K2 nahm an, ein Gebiet sei ein geschlossener Ring. In Deutschland fällt das
+sofort auf: **Bremen besteht aus zwei getrennten Teilen** (Bremen und
+Bremerhaven, rund 60 km auseinander), **Brandenburg hat ein Loch** — Berlin
+liegt vollständig darin — und **Niedersachsen ebenfalls**, nämlich die Stadt
+Bremen. Ohne Lochunterstützung liegt Berlins Trefferfläche *innerhalb* der
+Füllung Brandenburgs: das Kind tippt auf Berlin und trifft Brandenburg.
+
+Ein einzelnes `d`-Attribut kann mehrere Unterpfade tragen. Aber die Tore
+müssen es wissen: „Fläche > 0" wird zu „Außenring positiv, jedes Loch negativ
+orientiert", Punkt-in-Polygon wird zu Punkt-in-Polygon-**mit-Löchern**, und
+der Anker gehört in den **größten** Teil.
 
 ### 3.4 Fächer nach Erdkunde
 
@@ -463,9 +497,20 @@ gleichzeitig betrifft.
 
 | Ebene | Quelle | Lizenz | Pflicht |
 |---|---|---|---|
-| Kontinente, Länder | **Natural Earth** 1:50m | Public Domain | keine, wird trotzdem genannt |
-| Bundesländer | **BKG VG2500** | dl-de/by-2-0 | **Namensnennung erforderlich** |
+| Kontinente | **Natural Earth 1:50m** | Public Domain | keine, wird trotzdem genannt |
+| Länder | **Natural Earth 1:10m** | Public Domain | keine |
+| Bundesländer | **BKG VG250** (1 : 250 000) | dl-de/by-2-0 | **Namensnennung erforderlich** |
 | Städtelagen | Natural Earth `populated places` | Public Domain | keine |
+
+**K2 hatte hier zwei Stufen zu grob gegriffen** (Befund G1). VG**2500** ist
+der Maßstab 1 : 2 500 000 — gemacht für Karten, auf denen Deutschland zehn
+Zentimeter breit ist. Auf einem iPad füllt Deutschland rund 1 600 Bildpunkte,
+also grob **400 Meter je Bildpunkt**; bei VG2500 wird die Nordseeküste zum
+Bogen, die Halligen verschwinden, die Elbeschleifen zwischen Niedersachsen
+und Sachsen-Anhalt verschwinden. **VG250 ist zehnmal feiner, kostenlos und
+unter derselben Lizenz** — und liegt damit unter dem, was ein Bildpunkt
+auflösen kann. Dasselbe für die Länderebene: 1:50m reicht für sieben
+Kontinentumrisse, nicht für ein formatfüllendes Frankreich.
 
 Die Namensnennung steht im Elternbereich unter „Herkunft der Karten" und wird
 vom Tor `lizenz` geprüft. Eine Lizenzpflicht, die nur in einer Textdatei
@@ -504,30 +549,97 @@ beim nächsten Datenstand still zurück.
 ### 5.3 Der Backprozess läuft zur Bauzeit, nicht im Spiel
 
 ```
-Natural Earth / BKG  (Shapefile, ~80 MB)
+Natural Earth 1:50m + 1:10m / BKG VG250   (Shapefile, mehrere hundert MB)
         │  tools/geo-backen.ts
         ├─ Kontinentkanten klippen (5.2)
-        ├─ mapshaper: vereinfachen (Visvalingam, gewichtet)
+        ├─ TOPOLOGIE ZUERST: mapshaper -combine-files über ALLE Ebenen,
+        │     dann -clean (Restlücken, Splitter, Selbstschnitte)
+        ├─ vereinfachen: -simplify weighted keep-shapes, JE STUFE
+        │     grob / mittel / fein — Ziel ist Hausdorff, nicht Fläche
         ├─ d3-geo: projizieren — je Ebene eine eigene Projektion
-        │     Welt        → geoNaturalEarth1
-        │     Kontinent   → geoConicEqualArea, auf den Kontinent zentriert
-        │     Deutschland → geoConicConformal (die Schulkartenansicht)
+        │     Welt          → geoNaturalEarth1
+        │     Kontinent     → geoConicEqualArea mit gesetzten   [G7]
+        │                     Standardparallelen bei 1/6 und 5/6 der
+        │                     Breitenausdehnung
+        │     Afrika, Südam.→ geoAzimuthalEqualArea (liegen über dem
+        │                     Äquator; Kegel taugt dort nicht)
+        │     Deutschland   → geoConicConformal, Standardparallelen
+        │                     48°40' und 53°40' — der amtliche Schnitt
         ├─ auf viewBox 0..1000 normieren, auf 1 Nachkommastelle runden
         ├─ Anker rechnen: Pol der Unzugänglichkeit, NICHT der Schwerpunkt
         │     (der Schwerpunkt Italiens liegt im Meer)
+        │     — sein Abstand ist zugleich der Radius des größten Kreises
+        │       im Gebiet und entscheidet die Beschriftung (5.7)
+        ├─ Inselregel anwenden (5.8)
+        ├─ Grenzbögen getrennt ausgeben (5.9)
         ├─ Vierfärbung der Bundesländer rechnen (5.6)
-        └─ ausgeben: src/geo/*.ts  — reine Zeichenketten
+        └─ ausgeben: src/geo/<ebene>.<stufe>.ts  — reine Zeichenketten
 ```
+
+**Standardparallelen — Befund G7.** Eine Kegelprojektion ohne gesetzte
+Standardparallelen ist nur an einer einzigen Breite verzerrungsfrei; Afrika
+bekäme oben und unten unterschiedliche Streckung, und Kinder lernten die Form
+falsch. Für Deutschland ist der amtliche Schnitt bekannt und steht oben — es
+ist die Projektion, in der Deutschland in jedem Schulatlas steht. Wer sie
+nimmt, bekommt eine Form, die Erwachsene wiedererkennen, ohne zu wissen
+warum.
+
+**Topologie vor Vereinfachung — Befund G3.** K2 sagte nur „mapshaper:
+vereinfachen" und ließ offen, worauf. Wird jedes Land für sich vereinfacht,
+wird die Grenze zwischen Deutschland und Polen zweimal vereinfacht — einmal
+als Teil Deutschlands, einmal als Teil Polens — und die Ergebnisse sind
+**nicht identisch**. Sichtbare Lücken und Überlappungen entlang jeder
+Landgrenze sind die Folge; es ist der häufigste Grund, warum selbstgemachte
+Vektorkarten billig aussehen. `-combine-files` baut die Topologie über alle
+Ebenen **vor** dem Vereinfachen, dann werden gemeinsame Bögen identisch
+vereinfacht.
 
 **Warum zur Bauzeit:** keine Geo-Bibliothek im Bündel (d3-geo + topojson wären
 ~90 KB), keine Rechenlast auf dem iPad, und die Umrisse sind
 **deterministisch** — dasselbe Eingabedatum ergibt denselben Pfad, also lässt
 sich die Geometrie überhaupt erst prüfen (Tor `geo`).
 
-**Vereinfachungsgrad wird gemessen, nicht geraten.** Messgröße ist die Fläche
-der symmetrischen Differenz gegen den unvereinfachten Umriss, Grenze 2 %.
-Italiens Stiefel und Dänemarks Zipfel überleben das; ein glatt gebügeltes
-Norwegen nicht.
+### 5.3a Das Gütemaß: Hausdorff in Bildpunkten, nicht Fläche in Prozent
+
+K2 begrenzte die Vereinfachung auf **2 % Flächenabweichung**. Das ist
+gebräuchlich und hier **falsch** (Befund G2): Die Fläche ist blind für
+Ränder. Eine abgeschnittene Landspitze — Kap Hoorn, die Spitze Jütlands, der
+Zipfel von Kaliningrad — kostet einen Bruchteil eines Prozents Fläche und ist
+genau das, woran ein Kind die Form erkennt.
+
+> **Soll: Hausdorff-Abstand ≤ 0,75 Gerätebildpunkte** bei der größten
+> Darstellungsgröße der jeweiligen Stufe.
+
+Die Hausdorff-Distanz ist die **größte** Abweichung irgendeines Punktes vom
+wahren Umriss — und sie wird nicht in Metern gemessen, sondern in
+Bildpunkten. Unter einem Bildpunkt sieht das Auge keinen Unterschied, darüber
+sofort. Damit ist „ohne Kompromisse" eine Zahl geworden statt einer Absicht.
+
+Dazu ein zweites Kriterium, weil Hausdorff eine sehr schmale Spitze übersieht,
+wenn sie kürzer als die Toleranz ist: eine **Prägnanzpunkt-Prüfung**. Punkte
+hoher Krümmung — die Ecken, die die Silhouette ausmachen — werden vor der
+Vereinfachung markiert und müssen danach noch da sein.
+
+### 5.3b Drei Auflösungsstufen je Form
+
+Höhere Quellauflösung (5.1) und ein Geometriebudget von 150 KB gehen nicht
+zusammen. Die Auflösung ist keine Abwägung, sondern eine Trennung
+(Befund G6):
+
+> Eine Form braucht nur so viele Punkte, wie die Ansicht auflösen kann, in
+> der sie gerade gezeigt wird.
+
+| Stufe | Wofür | Hausdorff-Grenze |
+|---|---|---|
+| **grob** | Übersicht, Vorschau, Aufkleber | ≤ 0,75 px bei 200 px Breite |
+| **mittel** | Kontinent mit Ländern | ≤ 0,75 px bei 800 px Breite |
+| **fein** | formatfüllend, Deutschland | ≤ 0,75 px bei 2 000 px Breite |
+
+**Nur die grobe Stufe liegt im Startbündel.** Die feineren sind eigene
+Dateien, werden beim Öffnen der Ebene geladen und danach vom Service Worker
+dauerhaft vorgehalten — beim zweiten Start ist alles da, auch ohne Netz. Der
+Wechsel muss unsichtbar sein: grob wird sofort gezeichnet, fein blendet in
+200 ms darüber. Kein Aufblitzen, kein Sprung.
 
 ### 5.4 Bremen, das Saarland und die Ehrlichkeit der Trefferfläche
 
@@ -566,19 +678,103 @@ hier stand er als Nebensatz.
 
 ### 5.6 Kartenfarben
 
-Die Zugangsregel „Farbe trägt nie allein Bedeutung" (Kapitel 10) wurde in K1
+Die Zugangsregel „Farbe trägt nie allein Bedeutung" (Kapitel 11) wurde in K1
 für die Karte selbst nirgends eingelöst. Befund L13.
 
-- **Kontinente:** sieben Farben, die unter Rot-Grün-Sehschwäche
-  unterscheidbar bleiben, geprüft mit einer Deuteranopie-Simulation.
-- **Länder** innerhalb eines Kontinents: Abstufungen seiner Farbe. Damit trägt
-  die Farbe die Zugehörigkeit, ohne die Aufgabe zu verraten.
-- **Bundesländer:** **vier Farben** so verteilt, dass keine zwei Nachbarn
-  dieselbe tragen — der Vier-Farben-Satz ist hier buchstäblich das richtige
-  Werkzeug. Gleichfarbige Nachbarn verschmelzen sonst optisch zu einer
-  Fläche.
+**Die Palette wird gerechnet, nicht gemischt (Befund G13).** Farben, die man
+in RGB oder HSL zusammenstellt, haben **unterschiedliche wahrgenommene
+Helligkeit** — ein reines Gelb wirkt viel heller als ein gleich gesättigtes
+Blau. Auf einer Karte heißt das: eine Region springt einem entgegen, die
+anderen treten zurück, und das Kind hält die lauteste für die wichtigste.
 
-Ein Tor rechnet den Kontrast benachbarter Flächen nach.
+**OKLCH** ist so gebaut, dass `L` der wahrgenommenen Helligkeit entspricht:
+
+```
+Flächen:  L = 0.88  C = 0.055  H = 25 · 75 · 130 · 175 · 230 · 285 · 330
+          → sieben Farben, exakt gleich hell, exakt gleich bunt
+Ausgewählt: dieselbe Farbe mit C = 0.12        (kräftiger, nicht heller)
+Richtig:    dieselbe Farbe mit L = 0.72, C = 0.15
+Text:       L = 0.25 — auf allen sieben identisch lesbar
+```
+
+Der letzte Punkt ist der eigentliche Gewinn: **weil alle Flächen dieselbe
+Helligkeit haben, ist derselbe Textton auf allen sieben lesbar.** Das muss
+nicht siebenmal einzeln geprüft werden. OKLCH ist in Safari seit 15.4
+verfügbar; beim Bauen wird zusätzlich ein sRGB-Rückfall ausgegeben.
+
+- **Länder** innerhalb eines Kontinents: Abstufungen seines Farbtons bei
+  gleichem `L`. Die Farbe trägt die Zugehörigkeit, ohne die Aufgabe zu
+  verraten.
+- **Bundesländer:** **vier Farbtöne** aus demselben Ring so verteilt, dass
+  keine zwei Nachbarn denselben tragen — der Vier-Farben-Satz ist hier
+  buchstäblich das richtige Werkzeug. Gleichfarbige Nachbarn verschmelzen
+  sonst optisch zu einer Fläche.
+
+Das Tor `lesbarkeit` misst den Kontrast **am gerenderten Bild**, nicht an den
+Merkmalen, und fährt zusätzlich eine Deuteranopie-Simulation.
+
+### 5.7 Wo der Name steht, wenn er nicht hineinpasst
+
+„Mecklenburg-Vorpommern" passt in Mecklenburg-Vorpommern; „Bremen" passt
+nicht in Bremen. In K2 war das ungelöst (Befund G10).
+
+Die Entscheidung fällt **beim Backen**, weil dort schon der Pol der
+Unzugänglichkeit gerechnet wird — und sein Abstand zum Rand ist zugleich der
+Radius des größten Kreises, der ins Gebiet passt:
+
+```
+Radius × 2 ≥ Textbreite  →  Name liegt IM Gebiet
+sonst                    →  Name liegt AUSSEN, mit Fahne:
+                            Haarlinie vom Anker nach außen,
+                            Punkt am Anker, Name am Linienende
+```
+
+Die Fahnen werden beim Backen so verteilt, dass sie sich nicht kreuzen und
+nicht überlappen — auf einer festen Kartengröße, also einmal, deterministisch,
+prüfbar. Kein Layoutalgorithmus zur Laufzeit.
+
+### 5.8 Welche Inseln bleiben
+
+`keep-shapes` verhindert, dass Flächen ganz verschwinden, aber nicht, dass die
+Karte von dreitausend bedeutungslosen Felsen zugestellt wird. Eine reine
+Mindestfläche ist auch falsch: Helgoland ist winzig und gehört auf eine
+deutsche Karte, ein namenloses Riff vor Norwegen nicht. **Zweistufige Regel
+(Befund G9):**
+
+1. Alle Inseln, die bei der feinsten Stufe mindestens **4 × 4 Bildpunkte**
+   ergeben.
+2. **Plus** eine von Hand gepflegte Liste: Sizilien, Sardinien, Kreta,
+   Korsika, Mallorca, Island, Sylt, Fehmarn, Rügen, Usedom, Helgoland, Föhr,
+   Amrum.
+
+Die zweite Liste ist der Punkt, an dem eine Zahl nicht mehr reicht und jemand
+entscheiden muss. Genau so macht es ein Atlas.
+
+### 5.9 Füllung, Grenze und Küste sind drei Ebenen
+
+Ist jedes Bundesland ein Pfad mit `stroke`, wird jede Binnengrenze **zweimal**
+gezeichnet — einmal von jedem Nachbarn. Bei Transparenz wird sie doppelt
+dunkel; durch die Kantenglättung entstehen feine Nähte, die beim Zoomen
+wandern (Befund G5).
+
+```
+<g class="grund">     eine einzige Fläche in der Grundfarbe
+<g class="fuellung">  alle Gebiete, NUR fill, kein stroke
+<g class="grenzen">   die gemeinsamen Bögen, EINMAL, 0,75 pt
+<g class="kueste">    Außenkante, 1,5 pt
+```
+
+Die Grenzbögen fallen bei der Topologiebildung (5.3) ohnehin an — sie *sind*
+die Arcs. Nebeneffekt: Küstenlinie und Binnengrenze bekommen
+unterschiedliche Stärken, wie in jedem guten Atlas. Die Grundfläche ganz
+unten sorgt dafür, dass die haarfeine Lücke zwischen zwei kantengeglätteten
+Nachbarn nicht den Hintergrund zeigt, sondern eine unauffällige Trennfarbe.
+
+**Drei Feinheiten für scharfe Linien auf einem 3×-Bildschirm** (Befund G8):
+`vector-effect: non-scaling-stroke` auf allen Grenzen, sonst skaliert die
+Strichstärke beim Zoomen mit; Mindeststärke **0,75 CSS-Punkte**, sonst wird
+die Linie auf 1×-Geräten grau; und `shape-rendering` bleibt auf `auto` —
+`crispEdges` klingt richtig und macht aus jeder schrägen Küste eine Treppe.
 
 ---
 
@@ -646,7 +842,7 @@ und die kann ein Kind beantworten.
 **Das Risiko, ehrlich benannt.** `SpeechRecognition` in einer vom
 Startbildschirm gestarteten iOS-App (Standalone-Modus) ist historisch
 unzuverlässig gewesen; die Erkennung läuft außerdem **über Apples Server**,
-braucht also Netz und ist datenschutzrelevant (Kapitel 12). Ob es auf *euren*
+braucht also Netz und ist datenschutzrelevant (Kapitel 13). Ob es auf *euren*
 Geräten in *diesem* Modus zuverlässig arbeitet, ist mit keinem Dokument zu
 klären, sondern nur durch Ausprobieren. **Deshalb steht das als M0 an
 allererster Stelle, vor jeder Zeile Spielcode.**
@@ -738,10 +934,14 @@ Eine Leistungsangabe ohne Messstelle ist keine. Messgerät: **iPad
 
 | Größe | Grenze | Wie geprüft |
 |---|---|---|
-| Bündel gesamt, gzip | **< 400 KB** | Tor `budget`, bricht die Kette |
-| davon Geometrie | < 150 KB | Tor `budget` |
-| davon Schrift (Andika, Teilsatz) | < 45 KB | Tor `budget` |
+| **Startbündel** gesamt, gzip | **< 400 KB** | Tor `budget`, bricht die Kette |
+| davon Geometrie (nur grobe Stufe) | < 90 KB | Tor `budget` |
+| davon Schriften (zwei, beschnitten) | < 60 KB | Tor `budget` |
+| **Nachladbar je Ebene** (mittel/fein) | < 250 KB | Tor `budget` |
+| Geometrie gesamt über alle Stufen | ≈ 600–900 KB, **geschätzt** | wird in M2 gemessen |
 | Erstes Bild, kalt | < 1,5 s | Playwright + Lighthouse in CI |
+| Ebene erstmalig öffnen, mit Netz | < 800 ms bis zur feinen Stufe | Tor `browser` |
+| Ebene öffnen, danach | < 100 ms | Tor `offline` |
 | Start, zweites Mal (offline) | < 0,5 s | Tor `offline` |
 | Ziehen | 60 Bilder/s durchgehend | Tor `browser`, Bilddauern gemessen |
 | Antwort auf Tipp | < 100 ms | Tor `browser` |
@@ -759,11 +959,23 @@ sondern von vornherein vermeiden:
 4. Sehr lange `d`-Attribute im DOM anfassen. Sie werden einmal gesetzt und nie
    wieder — Zustände laufen ausschließlich über Klassen und `transform`.
 
+**Das Budget ist geteilt, seit die Karten feiner geworden sind** (Kapitel
+5.3b). Das Startbündel bleibt bei 400 KB und enthält nur die grobe Stufe;
+die feinen Stufen werden beim Öffnen einer Ebene geladen und danach dauerhaft
+vorgehalten. Die Zahl „600–900 KB" ist **geschätzt, nicht gemessen** — sie
+hängt daran, wie viele Punkte VG250 nach der Topologievereinfachung behält.
+Der erste Pipelinelauf in M2 liefert den echten Wert; liegt er deutlich
+darüber, ist die Antwort eine vierte, gröbere Stufe — nicht eine niedrigere
+Genauigkeit.
+
+**Der einzige Kompromiss, der bleibt:** Beim allerersten Öffnen einer Ebene
+wird kurz nachgeladen. Danach nie wieder.
+
 **Die Zahlen aus der CI sind keine Gerätezahlen.** Dort läuft Chromium ohne
 Grafikkarte, nicht Safari auf iOS. Sie taugen als Ratsche („nicht schlechter
 als gestern"), nicht als Aussage über das iPad. Diese Unterscheidung hat
 Towerfront fünf Runden gekostet; hier steht sie von Anfang an — und sie hat
-eine Folge, siehe Kapitel 11.
+eine Folge, siehe Kapitel 12.
 
 ---
 
@@ -845,7 +1057,144 @@ Zwei Regeln:
 
 ---
 
-## 10. Barrierefreiheit und kindgerechte Bedienung
+## 10. Gestaltung
+
+Das Kapitel, das K2 nicht hatte. Es steht vor der Barrierefreiheit, weil die
+Merkmale, die es festlegt, dort gemessen werden.
+
+### 10.1 Warum das aufgeschrieben werden muss
+
+K2 nannte zwei Zahlen — 44 Punkte Trefferfläche, 20 Punkte Schriftgröße — und
+sonst nichts. Ohne festgelegte Skalen entsteht bei jedem Bildschirm ein neuer
+Abstand, ein neuer Radius, ein neuer Grauton. Das Ergebnis wirkt unruhig,
+ohne dass jemand sagen könnte, woran es liegt. Befund G11.
+
+### 10.2 Das Referenzsoll
+
+Drei Vorbilder, aufgeschrieben nach dem, was sie **tun** — nicht nach dem,
+wie sie aussehen. Vollständig im Grafik-Audit, hier das abgeleitete Soll:
+
+| | Soll |
+|---|---|
+| Palette | höchstens **7 Flächenfarben + 1 Akzent + 1 Warnfarbe**, alle mit gleicher wahrgenommener Helligkeit |
+| Umrisse | generalisiert nach Form, nicht nach Zahl; jede Ecke, die die Silhouette ausmacht, bleibt |
+| Grenzen | **eine** Linie zwischen zwei Ländern, nie zwei |
+| Bewegung | jeder Zustandswechsel hat benannte Dauer und Kurve; nichts springt |
+| Belohnung | ein choreografierter Ablauf unter 900 ms, der den Lerninhalt wiederholt |
+| Schrift | zwei Schnitte, nicht drei; die Leseschrift nur dort, wo das Kind liest |
+| Zierrat | keiner. Kein Verlauf, kein Schlagschatten, kein Glanz |
+
+Der wichtigste Satz daraus, aus *Pok Pok* abgeleitet: **Zurückhaltung ist der
+Unterschied zwischen hochwertig und niedlich.**
+
+### 10.3 Die Merkmale
+
+Eine Datei, `src/marken/`. Sie ist die **einzige** Stelle im ganzen Programm,
+an der ein Zahlenwert für Farbe, Abstand, Radius oder Dauer steht.
+
+```
+raster    4 pt. ALLE Abstände sind Vielfache:
+          4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 · 96
+radien    8 (klein) · 16 (Karten) · 24 (Flächen) · voll (Knöpfe)
+schrift   Grundgröße 20, Verhältnis 1,25:
+          16 (nur Elternbereich) · 20 · 25 · 31 · 39 · 49 · 61
+strich    0,75 · 1,5 · 3 (Küste)
+farbe     OKLCH, siehe Kapitel 5.6
+tiefe     3 Stufen als versetzte Fläche (10.5), nie als Filter
+dauer     120 (Tippantwort) · 200 (Zustand) · 320 (Bildschirm)
+          · 500 (Belohnung)
+kurve     standard  cubic-bezier(.2, 0, 0, 1)
+          feder     linear(…)   — siehe 10.4
+```
+
+Das Tor `marken` setzt es durch: kein Farb-, Abstands-, Radius- oder
+Dauerwert außerhalb dieser Datei.
+
+### 10.4 Bewegung — hier wird „hochwertig" entschieden
+
+Befund G14, der mit der größten Wirkung auf den Eindruck. Eine App fühlt
+sich teuer an, wenn Dinge Gewicht haben, und billig, wenn Dinge springen.
+
+| Moment | Dauer | Was passiert |
+|---|---|---|
+| **Aufnehmen** | 120 ms | Etikett wächst auf 1,06; die Schattenfläche darunter rutscht von 2 auf 6 Punkt Versatz. Es *hebt ab*. |
+| **Ziehen** | — | 1 : 1 am Finger, **kein** Nachlauf. Kinder erwarten das Etikett unter dem Finger, nicht dahinter. |
+| **Einrasten, richtig** | 500 ms | Federkurve ins Ziel. Gleichzeitig **zeichnet sich der Umriss des Gebiets in 400 ms selbst nach**, dann läuft die Füllfarbe vom Ablegepunkt aus ein. |
+| **Zurückkehren, falsch** | 320 ms | Bogen zurück auf den Platz. Kein Ruck, kein Rot, kein Rütteln. |
+| **Bildschirmwechsel** | 320 ms | Gemeinsame Elemente bleiben stehen und wandern, der Rest blendet. |
+
+**Der dritte Moment ist der wichtigste und fast umsonst zu haben.** Das
+Nachzeichnen des Umrisses ist eine Animation von `stroke-dashoffset` auf einem
+Pfad, den es ohnehin gibt — und **der Belohnungsmoment wiederholt damit den
+Lerninhalt**: das Kind sieht die Form, die es gerade benannt hat, noch einmal
+entstehen.
+
+Drei technische Regeln:
+
+- Animiert werden **nur `transform` und `opacity`** (plus `stroke-dashoffset`,
+  das ebenfalls kein Layout anfasst). Nie `width`, `top`, `margin`.
+- Die Federkurve kommt aus **CSS `linear()`** — echtes Federverhalten ohne
+  eine Zeile JavaScript. Verfügbar ab **Safari 17.2**; darunter greift ein
+  `cubic-bezier`-Rückfall, der etwas weniger schwingt. Kein Bruch, nur
+  weniger Charme.
+- **`prefers-reduced-motion`** setzt alle Bewegung auf 1 ms und ersetzt sie
+  durch eine Überblendung. Die Belohnung bleibt, sie federt nur nicht.
+
+### 10.5 Tiefe ohne Filter
+
+K2 untersagt `filter: drop-shadow` auf Kartenpfaden — richtig, das kostet auf
+einem iPad zweistellige Millisekunden je Bild. Es benannte aber keinen Ersatz,
+und flache Flächen ohne Staffelung sehen unfertig aus. Befund G15.
+
+**Ersatz: die versetzte Fläche.** Derselbe Pfad, zwei bis sechs Punkte nach
+unten versetzt, in einer dunkleren Abstufung derselben Farbe, dahinter
+gezeichnet. Kein Filter, keine Unschärfe, kein Rechenaufwand — und beim
+Aufnehmen eines Etiketts wird der Versatz animiert, was das Anheben erzeugt.
+
+Für rechteckige Flächen (Knöpfe, Karten) reicht ein weicher `box-shadow`; der
+ist billig, weil das Element rechteckig ist. Verboten bleibt der Filter auf
+komplexen Pfaden.
+
+### 10.6 Zwischenzustände
+
+Eine hochwertige App zeigt nie eine leere Fläche und nie einen Sprung. In K2
+stand dazu kein Satz. Befund G16.
+
+| Zustand | Was zu sehen ist |
+|---|---|
+| Erster Aufbau | Der Umriss wird als Haarlinie gezeichnet, bevor die Füllung da ist — der Bildschirm ist nie leer, und es sieht nach Absicht aus |
+| Stufenwechsel (5.3b) | grob sofort, fein blendet in 200 ms darüber |
+| Sprachaufnahme läuft | ein ruhiger, atmender Ring um den Mikrofonknopf — keine zappelnde Pegelanzeige |
+| Erkennung rechnet | höchstens 2,5 s; in dieser Zeit eine Anzeige, die nicht nach Fehler aussieht |
+| Kein Netz | ein ruhiger Streifen, kein Warnschild. Das Spiel läuft ja |
+| Fehler | gibt es für das Kind nicht. Alles wird zu „nochmal" oder zu einem Rückfall |
+
+### 10.7 Dunkelmodus — eine Entscheidung, keine Auslassung
+
+Karten vertragen eine naive Umkehrung schlecht: aus hellen Landflächen werden
+dunkle Löcher, die Beschriftung verliert ihren Halt, und die sorgfältig gleich
+hellen Flächen aus 5.6 stimmen nicht mehr. Befund G18.
+
+**Ein einziges, sehr sorgfältig gemachtes helles Thema** — plus einen
+**Abendmodus, der die Gesamthelligkeit senkt** statt die Farben umzukehren.
+In OKLCH ist das ein Griff: alle `L` um einen festen Betrag herunter. Das ist
+ehrlicher als ein schlechter Dunkelmodus und für ein Kind, das abends spielt,
+das eigentlich Gewünschte.
+
+### 10.8 App-Symbol und Startbild
+
+Sie sind kein Nebenprodukt eines Werkzeugs (Befund G19). Das Symbol ist das
+**erste**, was von der App zu sehen ist, und auf einem Startbildschirm steht
+es neben Symbolen, die von Gestaltungsabteilungen gemacht wurden.
+
+Von Hand entworfen, nicht generiert: eine einzelne, sofort erkennbare Form auf
+einer ruhigen Fläche — kein Text, kein Verlauf, kein Schlagschatten (iOS legt
+seine eigene Maske darüber). Das Startbild zeigt dieselbe Form auf demselben
+Grund, damit der Übergang vom Tippen zum Start nahtlos wirkt.
+
+---
+
+## 11. Barrierefreiheit und kindgerechte Bedienung
 
 Für Sechsjährige ist Barrierefreiheit keine Zusatzfunktion, sondern die
 Grundbedienung.
@@ -865,11 +1214,36 @@ Grundbedienung.
 1. Klasse lernt Fiona bestimmte Buchstabenformen. Die meisten
 Standardschriften setzen ein **zweistöckiges „a"** und ein **„g" mit
 Unterschlinge** — beides sieht anders aus als das, was sie gerade schreiben
-lernt. Deshalb wird der Spielinhalt in **Andika** gesetzt: eine Schrift, die
-ausdrücklich für Leseanfänger entworfen wurde, mit einstöckigem „a" und „g",
-offen lizenziert. Sie wird **mitgeliefert, nicht von einem CDN geladen** —
-sonst wäre sie die einzige ausgehende Verbindung im ganzen Programm
-(Kapitel 12). Befund L5.
+lernt. Befund L5.
+
+**Aber zwei Schriften, nicht eine** (Befund G12). K2 setzte *alles* in
+Andika. Andika ist hervorragend für das, wofür sie gemacht ist: einzelne
+Wörter, die ein Leseanfänger entziffert. Für Knöpfe, Überschriften, Zahlen
+und den Elternbereich ist sie schwach — wenige Schnitte, weites Bild, wenig
+Charakter. Eine App, die durchgehend in einer Lernschrift gesetzt ist, sieht
+nach Arbeitsblatt aus, nicht nach Produkt.
+
+| Wo | Schrift |
+|---|---|
+| Wörter, die das Kind **liest oder lernt** — Etiketten, Namen, Auflösungen | **Andika** |
+| alles andere — Knöpfe, Überschriften, Zahlen, Elternbereich | **eine gut gezeichnete Grotesk** |
+
+Vorschlag für die zweite: **Plus Jakarta Sans** (offene Lizenz, sehr sauber
+gezeichnet, vollständige deutsche Zeichen). Wärmere Alternative: **Nunito**,
+verbreiteter in Kinder-Apps und dadurch etwas gewöhnlicher. **Das ist eine
+Entscheidung, die man ansehen muss, nicht lesen** — sie fällt in MG
+(Kapitel 16), mit beiden Varianten nebeneinander auf dem echten Gerät.
+
+Beide werden **mitgeliefert und auf die gebrauchten Zeichen beschnitten** —
+deutsche Buchstaben, Ziffern, eine Handvoll Satzzeichen: je Schnitt etwa
+15–25 KB statt 120 KB. Kein CDN; sonst wären sie die einzige ausgehende
+Verbindung im ganzen Programm (Kapitel 13).
+
+**Und keine Emoji** (Befund G17). Sie sehen auf jedem Gerät anders aus, folgen
+keiner Strichstärke, lassen sich nicht einfärben. Stattdessen ein eigener
+Symbolsatz auf einem 24er Raster, eine Strichstärke, gerundete Enden, als
+Inline-SVG — etwa fünfzehn Zeichen. Das Tor `marken` verbietet Emoji in
+Oberflächentexten.
 
 Zwei Punkte, die man leicht übersieht: **Rot-Grün** taugt bei einem
 Besuchskind nicht als einziges Signal — richtig und falsch unterscheiden sich
@@ -879,22 +1253,23 @@ das Gebiet, auf das sie zielt.
 
 ---
 
-## 11. Prüfbarkeit — die Torkette
+## 12. Prüfbarkeit — die Torkette
 
 Übernommen aus Towerfront, weil es dort funktioniert hat: **eine Kette, die
 vor jedem Einchecken grün sein muss, und die die Auslieferung blockiert.**
 
 ```
-tsc → lint → inhalt → geo → lizenz → vergleich → einheit
-    → beruehrung → lesbarkeit → vorlesen → budget → csp
-    → bild → browser → pwa → offline → doku → proben → bericht
+tsc → lint → inhalt → geo → topologie → lizenz → marken → vergleich
+    → einheit → beruehrung → lesbarkeit → vorlesen → budget → csp
+    → bild → ansicht → browser → pwa → offline → doku → proben → bericht
 ```
 
-**Neunzehn Schritte.** In K1 waren es siebzehn, während der Text an anderer
-Stelle ein CSP-Tor und einen Gegenprobenlauf forderte, die nicht in der Kette
-standen (Befund I3) — wortwörtlich der Fehler, vor dem Towerfronts eigener
-Auslieferungsplan im Kommentar warnt. Deshalb **zählt `doku` die Torschritte
-gegen die Zahl in diesem Absatz.**
+**Zweiundzwanzig Schritte.** In K1 waren es siebzehn, während der Text an
+anderer Stelle ein CSP-Tor und einen Gegenprobenlauf forderte, die nicht in
+der Kette standen (Befund I3) — wortwörtlich der Fehler, vor dem Towerfronts
+eigener Auslieferungsplan im Kommentar warnt. K2 hatte neunzehn; das
+Grafik-Audit hat drei weitere ergeben (`topologie`, `marken`, `ansicht`).
+Deshalb **zählt `doku` die Torschritte gegen die Zahl in diesem Absatz.**
 
 **Die Tore, die hier den Unterschied machen:**
 
@@ -906,10 +1281,39 @@ Ebene 4 hat mindestens einen Ablenker, die fünf Fallen aus 4.4 namentlich den
 richtigen. **Die Gebiete werden gezählt und die Summe gegen Kapitel 4.5
 geprüft** — damit fällt auf, wenn beim Umbau eins verlorengeht.
 
-**`geo`** — jeder Pfad ist geschlossen, hat Fläche > 0, sein Anker liegt
-nachweislich *im* Pfad (Punkt-in-Polygon, nicht Schwerpunkt), die
-Vereinfachung weicht um höchstens 2 % Fläche ab, **und jede Klippkante aus 5.2
-ist gesetzt.**
+**`geo`** — Außenring positiv orientiert, jedes Loch negativ; der Anker liegt
+nachweislich *im* Gebiet (Punkt-in-Polygon **mit Löchern**, nicht Schwerpunkt)
+und im **größten** Teil; jede Klippkante aus 5.2 ist gesetzt; und die
+Vereinfachung hält je Stufe den **Hausdorff-Abstand ≤ 0,75 Bildpunkte** ein
+(5.3a) — nicht mehr 2 % Fläche, weil die Fläche für abgeschnittene
+Landspitzen blind ist. Zusätzlich: alle Prägnanzpunkte sind erhalten.
+
+**`topologie`** — neu. Gemeinsame Grenzen zweier Nachbarn sind derselbe Bogen,
+Bildpunkt für Bildpunkt; keine Lücken, keine Überlappungen, keine
+Selbstschnitte; und die **erwarteten Teile und Löcher sind da**: Bremen hat
+zwei Teile, Brandenburg hat das Loch Berlin, Niedersachsen das Loch Bremen.
+Ohne dieses Tor wandert eine Lücke beim nächsten Datenstand still zurück.
+
+**`marken`** — neu. Kein Farb-, Abstands-, Radius- oder Dauerwert außerhalb
+von `src/marken/`. Keine Emoji in Oberflächentexten. Kein `filter` auf
+Kartenpfaden. Keine Animation auf Layouteigenschaften. Vier Regeln, die
+verhindern, dass die Gestaltung sich stillschweigend auflöst.
+
+**`ansicht`** — neu, Befund G20, und der wichtigste Zuwachs. Bei jedem Lauf werden alle
+Bildschirme und alle Karten in festen Größen aufgenommen und **Bildpunkt für
+Bildpunkt** gegen freigegebene Vorbilder verglichen. Jede unbeabsichtigte
+Veränderung bricht die Kette.
+
+Damit das trägt, muss die Aufnahme deterministisch sein: Zufallskeim gesetzt,
+Bewegung aus, Schriften vollständig geladen (`document.fonts.ready`
+abgewartet), feste Gerätepunktdichte, feste Fenstergrößen, Datum eingefroren,
+Fortschrittsstand fest vorgegeben.
+
+Die Vorbilder liegen im Repository. Wer etwas absichtlich ändert, erneuert sie
+im selben Commit — dann steht die Veränderung **im Diff und ist zu sehen**.
+Das ist der Punkt: Gestaltungsänderungen werden überprüfbar wie Code.
+*Ehrlich dazu, in der Linie von Befund L4:* die Vorbilder entstehen in
+Chromium. Das Tor findet **Veränderungen**, nicht **iOS-Richtigkeit**.
 
 **`vergleich`** — der wichtigste, und der einzige, der in K1 sich selbst
 gemessen hat (Befund L10). Wer den Prüfkorpus schreibt und gleichzeitig den
@@ -945,7 +1349,7 @@ Gerät, auf dem geurteilt wird.
 erlaubt keine fremde Herkunft. Neu in K2.
 
 **`pwa` / `offline`** — Manifest gültig, Symbole in allen Größen,
-`apple-touch-icon` gesetzt, **alle Pfade gegen `base` geprüft** (Kapitel 13),
+`apple-touch-icon` gesetzt, **alle Pfade gegen `base` geprüft** (Kapitel 14),
 Service Worker registriert; zweiter Start ohne Netz funktioniert vollständig,
 und der Sprachmodus fällt sichtbar auf Stufe C zurück.
 
@@ -961,21 +1365,32 @@ bestandenes Tor.
 ### Was kein Tor leistet
 
 > **Kein Tor läuft auf iOS.** Deshalb ist die Gerätesichtung Teil jeder
-> Abnahme — bei M0, M3, M4, M5 und M6 steht sie ausdrücklich im
+> Abnahme — bei M0, MG, M3, M4, M5 und M6 steht sie ausdrücklich im
 > Abnahmekriterium.
 
-Und kein Tor sagt, ob es Spaß macht, ob Fiona den Mikrofonknopf findet, ob
-Lea nach zwei Wochen noch spielt. Dafür gibt es nur: hinsetzen, zusehen,
-nichts sagen. Elf von 57 Befunden kamen in Towerfront aus genau solchem
-Hinsehen.
+Und kein Tor sagt, ob die Palette angenehm ist, ob die Federkurve sich richtig
+anfühlt, ob das Symbol neben den anderen auf dem Startbildschirm besteht, ob
+Fiona den Belohnungsmoment schön findet, ob Lea nach zwei Wochen noch spielt.
+
+Dafür bleibt: hinsetzen, ansehen, nichts sagen. Und bei **jeder**
+Geometrieänderung die acht **Prüfformen** von Hand anschauen — die acht
+schwersten Fälle, an denen sich entscheidet, ob die Karten gut sind:
+
+> **Norwegen** (Fjorde) · **Griechenland** (Inseln) · **Chile** (Südspitze) ·
+> **Dänemark** (Jütland und Inseln) · **Italien** (Stiefel und Sizilien) ·
+> **Schleswig-Holstein** (Wattenmeer, Fehmarn, Sylt) · **Brandenburg** (Loch
+> Berlin) · **Bremen** (zwei getrennte Teile)
+
+Wenn diese acht stimmen, stimmt der Rest. Elf von 57 Befunden kamen in
+Towerfront aus genau solchem Hinsehen.
 
 ---
 
-## 12. Audit-Fähigkeit
+## 13. Audit-Fähigkeit
 
 Drei verschiedene Dinge tragen diesen Namen. Alle drei sind gemeint.
 
-### 12.1 Lern-Audit — was die Kinder tatsächlich können
+### 13.1 Lern-Audit — was die Kinder tatsächlich können
 
 Jede Antwort erzeugt einen unveränderlichen Eintrag:
 
@@ -992,7 +1407,7 @@ Jede Antwort erzeugt einen unveränderlichen Eintrag:
 
 **`roheingabe` ist der wertvollste Teil.** Nach zwei Wochen steht dort
 schwarz auf weiß, wie das Erkennungssystem Fionas Aussprache tatsächlich
-hört — und daraus wächst die eingefrorene Korpushälfte aus Kapitel 11 mit
+hört — und daraus wächst die eingefrorene Korpushälfte aus Kapitel 12 mit
 echten Daten statt mit Vermutungen. Das ist der Rückkanal, der den
 Sprachmodus über die Zeit besser macht.
 
@@ -1008,7 +1423,7 @@ eine Türklinke, kein Schloss:
 - **Löschen**: alles zu einem Profil, unwiderruflich, ein Tipp
 - Herkunft der Karten (Lizenz-Namensnennung, Kapitel 5.1)
 
-### 12.2 Technisches Audit — welche Fassung läuft hier eigentlich?
+### 13.2 Technisches Audit — welche Fassung läuft hier eigentlich?
 
 Der Klassiker bei Startbildschirm-Apps: das iPad zeigt seit sechs Wochen eine
 alte Fassung und niemand merkt es. Dagegen:
@@ -1032,7 +1447,7 @@ nicht, und die Anforderung kann abgelehnt werden. Ob sie auf euren Geräten
 greift, misst M0. Der Elternbereich zeigt den Zustand an, und die Ausfuhr
 bleibt die Rückfallebene.
 
-### 12.3 Datenschutz-Audit — was verlässt das Gerät
+### 13.3 Datenschutz-Audit — was verlässt das Gerät
 
 | Was | Wohin | Wann |
 |---|---|---|
@@ -1061,7 +1476,7 @@ Maßnahme, und die ist kein technischer Riegel, sondern ein Schalter:
 > nur, solange der Knopf gedrückt ist; ein roter Punkt zeigt sichtbar an,
 > wenn es hört. Nie Dauerlauschen, nie Schlüsselwort-Erkennung.
 
-**Bei öffentlich erreichbarer Seite** (Kapitel 13.2) können fremde Kinder das
+**Bei öffentlich erreichbarer Seite** (Kapitel 14.2) können fremde Kinder das
 Spiel benutzen; dann ist die Freigabe nicht mehr eine Entscheidung *dieser*
 Eltern. Derselbe Satz erscheint deshalb zusätzlich beim ersten Start. Das
 kostet nichts und ist unabhängig von der Entscheidung öffentlich/privat
@@ -1069,9 +1484,9 @@ richtig. Befund L11.
 
 ---
 
-## 13. Auslieferung
+## 14. Auslieferung
 
-### 13.1 Der Weg von hier auf das iPad
+### 14.1 Der Weg von hier auf das iPad
 
 ```
 git push  →  GitHub Actions
@@ -1088,7 +1503,7 @@ git push  →  GitHub Actions
 
 Ein Push, drei bis vier Minuten, das iPad hat es beim nächsten Start.
 
-### 13.2 Was einzurichten ist (einmalig, durch euch)
+### 14.2 Was einzurichten ist (einmalig, durch euch)
 
 1. **Repository anlegen** — Vorschlag: `lernkiste`, **öffentlich**
    (entschieden, O4). Damit ist GitHub Pages kostenlos nutzbar.
@@ -1097,7 +1512,7 @@ Ein Push, drei bis vier Minuten, das iPad hat es beim nächsten Start.
 
 Kein Geheimnis, kein Zugriffsschlüssel, kein Fremddienst.
 
-### 13.3 Der Unterpfad ist der häufigste Grund, warum es beim ersten Mal nicht läuft
+### 14.3 Der Unterpfad ist der häufigste Grund, warum es beim ersten Mal nicht läuft
 
 Die Seite liegt unter `/lernkiste/`, nicht auf der Wurzel. Befund L3 — in K1
 fehlte das vollständig.
@@ -1123,7 +1538,7 @@ Navigationsrückfall nicht, ist die App offline leer. Drei verschiedene
 Fehlerbilder, eine Ursache — deshalb prüft das Tor `pwa` alle fünf Zeilen
 gegen `base`.
 
-### 13.4 Das Symbol auf dem Startbildschirm
+### 14.4 Das Symbol auf dem Startbildschirm
 
 ```html
 <link rel="apple-touch-icon" href="icon-180.png">   <!-- 180×180, ohne Alpha -->
@@ -1149,7 +1564,7 @@ App.
 das Symbol darf keinen Alphakanal haben, sonst wird der durchsichtige Teil auf
 iOS schwarz.
 
-### 13.5 Zweigmodell
+### 14.5 Zweigmodell
 
 `main` ist immer auslieferbar. Gearbeitet wird auf `claude/*`-Zweigen,
 zusammengeführt wird über PRs, die die Torkette laufen lassen. Ein grüner Push
@@ -1157,7 +1572,7 @@ auf `main` liefert aus — ein roter nicht.
 
 ---
 
-## 14. Offene Punkte
+## 15. Offene Punkte
 
 Die offenen Punkte aus K1 sind erledigt: E1 (vierte Ebene) und E2
 (16 Bundesländer) sind beantwortet und
@@ -1188,7 +1603,7 @@ zweites Konto, kein Fremddienst.
 
 Eine Folge, die dadurch verbindlich wird: Die Seite ist für jeden erreichbar,
 der die Adresse kennt. Sie ist nicht verlinkt und nicht auffindbar, aber sie
-ist offen. Deshalb gilt ab jetzt ohne Wenn und Aber, was in Kapitel 12.3 steht
+ist offen. Deshalb gilt ab jetzt ohne Wenn und Aber, was in Kapitel 13.3 steht
 — der **Sprachmodus ist per Vorgabe aus**, und der Satz, wohin die Aufnahme
 geht, erscheint sowohl im Elternbereich als auch beim ersten Start. Fremde
 Kinder, die die Seite je aufrufen, können kein Mikrofon einschalten, ohne dass
@@ -1206,7 +1621,7 @@ er sollte eine Entscheidung sein, bevor zwanzig Dateinamen ihn tragen.
 
 ---
 
-## 15. Meilensteine
+## 16. Meilensteine
 
 Jeder mit einem Abnahmekriterium, das man **hinsehen** oder **messen** kann —
 nicht mit einem, das man behaupten kann. Weil kein Tor auf iOS läuft, ist die
@@ -1244,13 +1659,46 @@ sichtbar, ohne dass jemand am Gerät etwas tut.
 
 ### M2 · Kartenpipeline
 
-`tools/geo-backen.ts`, Natural Earth und BKG hinein, `src/geo/*.ts` heraus,
-inklusive Kontinentklippung und Vierfärbung. Tore `geo` und `lizenz`.
+`tools/geo-backen.ts`, Natural Earth 1:50m und 1:10m sowie BKG **VG250**
+hinein, `src/geo/<ebene>.<stufe>.ts` heraus — inklusive Topologiebildung,
+Klippung, drei Auflösungsstufen, Grenzbögen, Inselregel, Beschriftungs&shy;lagen
+und Vierfärbung. Tore `geo`, `topologie` und `lizenz`.
 
-**Abnahme:** Sieben Kontinente, 30 Länder, 16 Bundesländer und 16 Städtelagen
-liegen vor, alle Tore grün, Geometrie unter 150 KB gzip. **Und: ein Bild aller
-Umrisse nebeneinander, angesehen** — insbesondere Europa, das ohne die
-Ural-Klippung bis Wladiwostok reichen würde.
+**Abnahme, dreiteilig:**
+- Sieben Kontinente, 30 Länder, 16 Bundesländer und 16 Städtelagen liegen in
+  **drei Auflösungsstufen** vor, Tore `geo`, `topologie` und `lizenz` grün.
+- Die **echten Geometriegrößen sind gemessen** und stehen im Bericht — das ist
+  der Lauf, der die Schätzung aus Kapitel 8 ersetzt.
+- **Die acht Prüfformen sind angesehen**, bei feinster Stufe, und dazu Europa,
+  das ohne die Ural-Klippung bis Wladiwostok reichen würde.
+
+### MG · Gestaltung — zwischen M2 und M3
+
+Der Meilenstein, den K2 nicht hatte (Befund G21). Er kommt **nach** der
+Kartenpipeline, weil man ein Kartenbild nicht entwerfen kann, bevor die
+echten Umrisse da sind — und **vor** den gebauten Bildschirmen, weil sonst
+das Gebaute die Gestaltung bestimmt statt umgekehrt.
+
+Inhalt: Merkmalsdatei `src/marken/` (Raster, Skalen, Farben, Bewegung) ·
+Schriftentscheidung am Bildschirm · Symbolsatz · **drei Bildschirme als
+statische Entwürfe** — Kontinentaufgabe, Deutschland mit 16 Ländern,
+Belohnungsmoment · App-Symbol und Startbild · die ersten Vorbilder für das
+Tor `ansicht`.
+
+**Abnahme — fünf Punkte, alle auf dem Gerät:**
+- Die drei Entwürfe liegen nebeneinander und sind **angesehen** — auf dem
+  iPad, nicht auf dem Schreibtisch.
+- Die **acht Prüfformen** (Kapitel 12) sind einzeln angesehen, bei feinster
+  Stufe.
+- Die sieben Flächenfarben haben gemessen **dieselbe Helligkeit** (±0,01 in
+  OKLCH-L), und derselbe Textton ist auf allen sieben lesbar.
+- Der Belohnungsmoment läuft als Vorführung: der Umriss zeichnet sich nach,
+  die Farbe läuft ein — unter 900 ms, auf dem Gerät.
+- Danach steht das Tor `ansicht` mit seinen ersten Vorbildern.
+
+*Und die ehrliche Bedingung:* Überzeugt ein Entwurf beim Ansehen nicht, wird
+er **verworfen und neu gemacht** — nicht verbessert. Das ist der Meilenstein,
+an dem das erlaubt ist, und der einzige.
 
 ### M3 · Ebene 1, Ziehen, beide Profile
 
@@ -1298,7 +1746,7 @@ Tabellenkalkulation öffnen.
 
 ---
 
-## 16. Risiken
+## 17. Risiken
 
 | | Risiko | Wie wahrscheinlich | Gegenmaßnahme |
 |---|---|---|---|
@@ -1309,7 +1757,9 @@ Tabellenkalkulation öffnen.
 | R5 | Fassung bleibt auf dem iPad hängen | mittel | 12.2, Tor `pwa` |
 | R6 | Sprachabgleich nimmt alles an und lehrt nichts | mittel | Falsch-Positiv-Rate **auf der eingefrorenen Korpushälfte** |
 | R7 | Umfang wächst („noch ein Fach, noch eine Ebene") | hoch | Modulfuge 3.4; nichts wird gebaut, was nicht in einem Meilenstein steht |
-| R8 | Unterpfad-Fehler beim ersten Anlauf | mittel | 13.3, Tor `pwa`, und M0 Punkt 6 |
+| R8 | Unterpfad-Fehler beim ersten Anlauf | mittel | 14.3, Tor `pwa`, und M0 Punkt 6 |
+| R9 | Feine Geometrie sprengt das Budget deutlich | mittel | M2 misst statt zu schätzen; Antwort ist eine vierte, gröbere Stufe — **nie** eine niedrigere Genauigkeit |
+| R10 | Gestaltung löst sich über die Fassungen still auf | **hoch, wenn nichts geschieht** | Tore `marken` und `ansicht`; Vorbilder im Repository, Änderung steht im Diff |
 
 *R2 stand in K1 auf „gering". Das war zu optimistisch: das genaue Verhalten
 von iOS gegenüber der Ablage einer Startbildschirm-App ist von außen nicht
@@ -1317,10 +1767,16 @@ sicher zu bestimmen. Deshalb misst M0 es, statt es einzuschätzen.*
 
 ---
 
-## 17. Was als Nächstes passiert
+## 18. Was als Nächstes passiert
 
 O1 und O4 sind entschieden — **es blockiert nichts mehr.** Sobald das
-Repository steht (Kapitel 13.2), beginnt **M0**. M0 ist eine einzelne Seite und in einer
+Repository steht (Kapitel 14.2), beginnt **M0**.
+
+Zwei Dinge aus dem Grafik-Audit müssen allerdings **vor M2** erledigt sein,
+weil sie die Pipeline bestimmen und ein zweiter Durchlauf teuer ist:
+**VG250 und Natural Earth 1:10m beschaffen** (beides kostenlos, beides
+Download), und die **drei Auflösungsstufen festlegen**, weil sie die Struktur
+der erzeugten Dateien bestimmen. M0 ist eine einzelne Seite und in einer
 Runde fertig; sein Ergebnis entscheidet über die Form von M4 und damit über
 die letzte wirklich offene Stelle im Entwurf.
 

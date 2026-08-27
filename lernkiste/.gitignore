@@ -3,3 +3,6 @@ node_modules/
 # Sie werden mit tools/geo-holen.mjs beschafft; eingecheckt wird nur das
 # gebackene Ergebnis in src/geo/.
 roh/
+
+# Ausschuss der Gegenprobe - entsteht bei jedem roten Lauf neu.
+tor/abweichungen/

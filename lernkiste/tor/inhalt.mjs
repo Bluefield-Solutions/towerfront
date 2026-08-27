@@ -9,6 +9,24 @@ import * as I from '../src/inhalt/erdkunde.js';
 import { STAEDTE } from '../src/geo/staedte.js';
 import { KONTINENTE_FEIN } from '../src/geo/kontinente.fein.js';
 import { DEUTSCHLAND_FEIN } from '../src/geo/deutschland.fein.js';
+import { ANTARKTIKA_FEIN } from '../src/geo/antarktika.fein.js';
+import { LAENDER_AFRIKA_FEIN } from '../src/geo/laender-afrika.fein.js';
+import { LAENDER_ASIEN_FEIN } from '../src/geo/laender-asien.fein.js';
+import { LAENDER_EUROPA_FEIN } from '../src/geo/laender-europa.fein.js';
+import { LAENDER_NORDAMERIKA_FEIN } from '../src/geo/laender-nordamerika.fein.js';
+import { LAENDER_SUEDAMERIKA_FEIN } from '../src/geo/laender-suedamerika.fein.js';
+
+/** Alles, was gebacken wird - damit eine Pruefung nicht die Haelfte auslaesst. */
+const GEBACKEN = {
+  kontinente:   KONTINENTE_FEIN,
+  deutschland:  DEUTSCHLAND_FEIN,
+  antarktika:   ANTARKTIKA_FEIN,
+  afrika:       LAENDER_AFRIKA_FEIN,
+  asien:        LAENDER_ASIEN_FEIN,
+  europa:       LAENDER_EUROPA_FEIN,
+  nordamerika:  LAENDER_NORDAMERIKA_FEIN,
+  suedamerika:  LAENDER_SUEDAMERIKA_FEIN,
+};
 import { vorzeichenFlaeche, ringFlaeche, imPolygon } from '../tools/geo-backen.mjs';
 
 const fehler = [], hinweise = [];
@@ -121,6 +139,80 @@ for (const s of STAEDTE) {
 }
 pruefe(ankerDraussen === 0, `${ankerDraussen} Anker liegen außerhalb ihres Gebiets`);
 console.log(`    ${STAEDTE.length} Anker geprüft, ${ankerDraussen} außerhalb`);
+
+// Nadeln: Schnitte ohne Flaeche.
+//
+// Natural Earth speichert Antarktika fuer eine rechteckige Weltkarte. Der
+// Umriss laeuft dort bei 180 Grad hinunter zum Pol, am unteren Rand entlang
+// und bei -180 Grad wieder hinauf. Auf der Weltkarte deckt sich das mit dem
+// Kartenrand und faellt nicht auf. In der polaren Aufsicht sind 180 und -180
+// DIESELBE Linie: beide Schenkel liegen aufeinander und zeigen sich als
+// Strich quer durch den Kontinent. Zu sehen war es nur im Bild - keines der
+// Tore hat es gemeldet, weil eine Nadel weder die Flaeche noch die
+// Umgrenzung noch den Umlaufsinn aendert.
+//
+// Erkannt wird sie daran, was sie ausmacht: zwei Punkte desselben Ringes
+// fallen aufeinander, und der Weg dazwischen umschliesst nichts. Eine echte
+// schmale Halbinsel hat Flaeche, eine Nadel nicht.
+// Die Schwellen sind so gewaehlt, dass sie eine Naht treffen und eine
+// Kuestenlinie in Ruhe lassen. Bei 1000 px Breite liegen benachbarte
+// Kuestenpunkte der feinen Stufe teils enger als ein halbes Bildpunkt
+// beieinander - eine blosse Deckung zweier Punkte ist deshalb KEIN Befund.
+// Was eine Naht ausmacht, ist der lange Umweg, der nichts umschliesst:
+// hin zum Pol und auf demselben Weg zurueck.
+const NADEL_DECKUNG = 0.15;  // px, so genau fallen zwei Punkte aufeinander
+const NADEL_WEG     = 20;    // px, kuerzere Umwege sind Kuestenkringel
+// Die mittlere Breite trennt sauber: eine Naht laeuft auf sich selbst
+// zurueck und hat exakt 0. Die duennsten ECHTEN Gebilde im Vorrat - ein
+// paar Fjorde in Kanada, eine Nehrung in den USA - liegen bei 0,18 bis 0,27
+// px. Dazwischen ist Platz. Sie werden als Hinweis gemeldet, nicht als
+// Fehler: sie stehen so in der Wirklichkeit.
+const NADEL_BREITE  = 0.05;  // px mittlere Breite - darunter ist es ein Schnitt
+const DUENN_BREITE  = 0.3;   // px, darunter nur noch ein Haar breit
+function nadeln(d) {
+  let zahl = 0, laengste = 0, duenn = 0;
+  for (const ring of pfadZuPolys(d)) {
+    const eimer = new Map();
+    ring.forEach((p, i) => {
+      const k = `${Math.round(p[0]/NADEL_DECKUNG)},${Math.round(p[1]/NADEL_DECKUNG)}`;
+      if (!eimer.has(k)) eimer.set(k, []);
+      eimer.get(k).push(i);
+    });
+    for (const gruppe of eimer.values()) {
+      for (let a = 0; a < gruppe.length; a++) for (let b = a+1; b < gruppe.length; b++) {
+        const i = gruppe[a], j = gruppe[b];
+        if (j - i < 3) continue;
+        if (Math.hypot(ring[i][0]-ring[j][0], ring[i][1]-ring[j][1]) > NADEL_DECKUNG) continue;
+        const teil = ring.slice(i, j+1);
+        let weg = 0;
+        for (let k = 1; k < teil.length; k++)
+          weg += Math.hypot(teil[k][0]-teil[k-1][0], teil[k][1]-teil[k-1][1]);
+        if (weg < NADEL_WEG) continue;
+        const breite = ringFlaeche(teil) / (weg/2);
+        if (breite > DUENN_BREITE) continue;
+        if (breite > NADEL_BREITE) { duenn++; continue; }
+        zahl++;
+        if (weg > laengste) laengste = weg;
+      }
+    }
+  }
+  return { zahl, laengste, duenn };
+}
+let nadelZahl = 0, nadelWo = [], duennZahl = 0;
+for (const [quelle, liste] of Object.entries(GEBACKEN)) {
+  for (const q of liste) {
+    const n = nadeln(q.pfad);
+    duennZahl += n.duenn;
+    if (n.zahl) { nadelZahl += n.zahl; nadelWo.push(`${quelle}/${q.name} (${n.zahl}, längste ${n.laengste.toFixed(0)} px)`); }
+  }
+}
+if (duennZahl) hinweise.push(`${duennZahl} echte Gebilde sind nur ein Haar breit `
+  + `(unter ${DUENN_BREITE} px mittlere Breite) — sie stehen so in der Wirklichkeit, `
+  + `sind aber bei keiner Größe zu sehen`);
+pruefe(nadelZahl === 0,
+  `${nadelZahl} Nadeln ohne Fläche im Umriss: ${nadelWo.join(', ')} — auf einer anderen Projektion wird daraus ein Strich`);
+console.log(`    ${Object.values(GEBACKEN).flat().length} Umrisse auf Nadeln geprüft, `
+  + `${nadelZahl} gefunden, ${duennZahl} echte Haarlinien`);
 
 /* =================================================== Tor `beruehrung` === */
 console.log('\n  Tor `beruehrung`');

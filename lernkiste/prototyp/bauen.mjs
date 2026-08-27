@@ -7,6 +7,8 @@ import { LAENDER_AFRIKA_GROB } from '../src/geo/laender-afrika.grob.js';
 import { STAEDTE } from '../src/geo/staedte.js';
 import * as I from '../src/inhalt/erdkunde.js';
 import { inline } from './inline.mjs';
+import { polDerUnzugaenglichkeit } from '../tools/geo-backen.mjs';
+import { ANTARKTIKA_GROB } from '../src/geo/antarktika.grob.js';
 
 const NACHBARN = JSON.parse(fs.readFileSync(new URL('./nachbarn.json', import.meta.url)));
 function vierfaerben(ids){
@@ -17,6 +19,24 @@ function vierfaerben(ids){
   if(konflikte.length) throw new Error('Vierfärbung: Nachbarn gleich');
   return f;
 }
+/** Pfad zurueck in Polygone lesen - fuer die Anker. */
+function pfadZuPolys(d){
+  const polys=[];
+  for (const teil of d.split('M').slice(1)) {
+    const z=teil.match(/-?\d+\.?\d*/g); if(!z) continue;
+    const ring=[]; for(let i=0;i+1<z.length;i+=2) ring.push([+z[i],+z[i+1]]);
+    if (ring.length>2) polys.push([ring]);
+  }
+  return polys;
+}
+/** Anker fuer jede Form - der Marker im Spiel haengt daran. */
+function ankerFuer(liste){
+  return liste.map(x=>{
+    const pu = polDerUnzugaenglichkeit(pfadZuPolys(x.pfad));
+    return { ...x, anker: pu ? [+pu.punkt[0].toFixed(1), +pu.punkt[1].toFixed(1)] : null };
+  });
+}
+
 const bbox = (l)=>{ const xs=[],ys=[];
   l.forEach(o=>{ const m=o.pfad.match(/-?\d+\.?\d*/g).map(Number);
     for(let i=0;i<m.length;i+=2){xs.push(m[i]);ys.push(m[i+1]);} });
@@ -28,10 +48,13 @@ const laenderMeta = {};
 for (const [k, l] of Object.entries(I.LAENDER)) for (const x of l) laenderMeta[x.a3] = x;
 
 const D = {
-  kontinente: KONTINENTE_GROB.map(k=>({ ...k, ...kont.get(k.id) })),
+  kontinente: ankerFuer(KONTINENTE_GROB.map(k=>({ ...k, ...kont.get(k.id) }))),
+  // Antarktika bekommt eine EIGENE, polare Ansicht. In der Weltkarte liegt es
+  // als Sockel am unteren Rand - Befund F4, und im Prototyp deutlich sichtbar.
+  antarktika: ankerFuer(ANTARKTIKA_GROB.map(a=>({ ...a, ...kont.get('antarktika') })))[0],
   laender: {
-    europa: LAENDER_EUROPA_GROB.filter(l=>l.rang).map(l=>({ ...l, ...laenderMeta[l.a3] })),
-    afrika: LAENDER_AFRIKA_GROB.filter(l=>l.rang).map(l=>({ ...l, ...laenderMeta[l.a3] })),
+    europa: ankerFuer(LAENDER_EUROPA_GROB.filter(l=>l.rang).map(l=>({ ...l, ...laenderMeta[l.a3] }))),
+    afrika: ankerFuer(LAENDER_AFRIKA_GROB.filter(l=>l.rang).map(l=>({ ...l, ...laenderMeta[l.a3] }))),
   },
   deutschland: DEUTSCHLAND_MITTEL.map(b=>{
     const s = STAEDTE.find(x=>x.id===b.id);
@@ -41,9 +64,21 @@ const D = {
   }),
   farben: vierfaerben(DEUTSCHLAND_MITTEL.map(b=>b.id)),
 };
-D.vbK = bbox(D.kontinente);
+// Die Weltkarte wird UNTEN BESCHNITTEN. Natural Earth zieht Antarktikas
+// Suedkante als gerade Linie bei -90 Grad; nach der Projektion steht dort ein
+// Rechteck mit harter Unterkante, breiter als Afrika. Wir schneiden knapp
+// unterhalb der Eiskante ab - so wie es Schulatlanten tun.
+const antTeil = D.kontinente.find(k=>k.id==='antarktika');
+const bK = (()=>{ const xs=[],ys=[];
+  D.kontinente.filter(k=>k.id!=='antarktika').forEach(o=>{ const m=o.pfad.match(/-?\d+\.?\d*/g).map(Number);
+    for(let i=0;i<m.length;i+=2){xs.push(m[i]);ys.push(m[i+1]);} });
+  return { x0:Math.min(...xs), y0:Math.min(...ys), x1:Math.max(...xs), y1:Math.max(...ys) }; })();
+const antOben = (()=>{ const m=antTeil.pfad.match(/-?\d+\.?\d*/g).map(Number); const ys=[];
+  for(let i=1;i<m.length;i+=2) ys.push(m[i]); return Math.min(...ys); })();
+D.vbK = `${bK.x0-8} ${bK.y0-8} ${bK.x1-bK.x0+16} ${(antOben + 26) - (bK.y0-8)}`;
 D.vbD = bbox(D.deutschland);
 D.vbL = { europa: bbox(LAENDER_EUROPA_GROB), afrika: bbox(LAENDER_AFRIKA_GROB) };
+D.vbA = bbox([D.antarktika]);
 // Die Kontinentkarte zeigt ALLE Laender des Kontinents als Umgebung (G8),
 // nicht nur die Ziele - sonst kann man durch Ausschluss raten.
 D.umgebung = {

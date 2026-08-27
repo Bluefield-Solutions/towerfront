@@ -14,7 +14,21 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { PNG } from 'pngjs';
+import http from 'node:http';
 import { starte } from './chromium.mjs';
+
+// IndexedDB braucht eine echte Herkunft, sonst faellt die Ablage still auf
+// nichts zurueck und der Prototyp startet jedesmal anders. Also derselbe
+// winzige Server wie im Rauchtest.
+const wurzel = process.cwd();
+const server = http.createServer((q, a) => {
+  const f = path.join(wurzel, q.url === '/' ? '/prototyp/spiel.html' : q.url);
+  if (!f.startsWith(wurzel) || !fs.existsSync(f)) { a.statusCode = 404; return a.end(); }
+  a.setHeader('content-type', f.endsWith('.html') ? 'text/html; charset=utf-8' : 'text/plain');
+  a.end(fs.readFileSync(f));
+});
+await new Promise(r => server.listen(0, r));
+const SPIEL = `http://127.0.0.1:${server.address().port}/prototyp/spiel.html`;
 
 const VORBILDER = path.join(process.cwd(), 'tor/vorbilder');
 const ABWEICHUNGEN = path.join(process.cwd(), 'tor/abweichungen');
@@ -27,6 +41,15 @@ const AUFNAHMEN = [
   { name:'mg-belohnung',        seite:'entwuerfe/mg.html', wahl:'#schirm3 .geraet' },
   { name:'mg-farbstreifen',     seite:'entwuerfe/mg.html', wahl:'#s-ok' },
   { name:'karte-deutschland',   seite:'entwuerfe/mg.html', wahl:'#schirm2 .geraet svg' },
+  // Der LEBENDE Prototyp, nicht der Entwurf.
+  //
+  // Bis hierher fotografierte das Tor nur `entwuerfe/mg.html` - gemalte
+  // Bildschirme. Die Hervorhebung des Ziels (Rand, Puls, Zeiger, gedaempfte
+  // Nachbarn) steckt aber in `prototyp/spiel.js`, und die hat damit KEIN Tor
+  // gesehen: der Lauf blieb gruen, waehrend sich jeder Spielbildschirm
+  // aenderte. Genau die Luecke, vor der Regel 8 warnt.
+  { name:'spiel-kontinent',  spiel:'kontinente',    wahl:'.schirm.da' },
+  { name:'spiel-bundesland', spiel:'bundeslaender', wahl:'.schirm.da' },
 ];
 
 /** Zulaessige Abweichung: eine Handvoll Bildpunkte fuer Kantenglaettung. */
@@ -71,7 +94,23 @@ fs.mkdirSync(ABWEICHUNGEN, { recursive:true });
 let rot = 0, neu = 0, gruen = 0;
 let letzteSeite = null;
 for (const a of AUFNAHMEN) {
-  if (letzteSeite !== a.seite) {
+  if (a.spiel) {
+    // Frische Ablage je Aufnahme: der Keim kommt aus dem gespeicherten
+    // Sitzungszaehler, ein Rest von vorher wuerde eine andere Aufgabe
+    // ziehen und das Vorbild bei jedem Lauf verschieben.
+    await seite.goto(SPIEL, { waitUntil:'domcontentloaded' });
+    await seite.evaluate(async () => {
+      for (const d of await indexedDB.databases()) indexedDB.deleteDatabase(d.name);
+      localStorage.clear();
+    });
+    await seite.goto(SPIEL, { waitUntil:'domcontentloaded' });
+    await seite.evaluate(() => document.fonts.ready);
+    await seite.click('[data-profil="fiona"]');
+    await seite.waitForSelector('.schirm.da [data-ebene]');
+    await seite.click(`[data-ebene="${a.spiel}"]`);
+    await seite.waitForSelector('.schirm.da .karte svg path.ziel');
+    letzteSeite = null;
+  } else if (letzteSeite !== a.seite) {
     await seite.goto('file://' + path.join(process.cwd(), a.seite), { waitUntil:'networkidle' });
     await seite.evaluate(() => document.fonts.ready);   // sonst wandert der Text
     letzteSeite = a.seite;
@@ -106,6 +145,7 @@ for (const a of AUFNAHMEN) {
   }
 }
 await browser.close();
+server.close();
 
 console.log(`\n  ${gruen} grün, ${neu} neu, ${rot} rot`);
 if (rot) {

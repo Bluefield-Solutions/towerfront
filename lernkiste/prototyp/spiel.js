@@ -51,10 +51,12 @@ function vorrat(ebeneId){
   const [art, kont] = ebeneId.split(':');
   if (art==='kontinente')
     return D.kontinente.filter(k=>P.id==='fiona' ? k.runde<=3 : true)
-      .map(k=>({ id:k.id, name:k.name, aliasse:k.aliasse, aussprache:k.aussprache, pfad:k.pfad }));
+      .map(k=>({ id:k.id, name:k.name, aliasse:k.aliasse, aussprache:k.aussprache,
+                 pfad:k.pfad, anker:k.anker }));
   if (art==='laender')
     return D.laender[kont].filter(l=>l.rang<=P.laenderTiefe)
-      .map(l=>({ id:l.a3, name:l.name, aliasse:l.aliasse, aussprache:l.aussprache, pfad:l.pfad }));
+      .map(l=>({ id:l.a3, name:l.name, aliasse:l.aliasse, aussprache:l.aussprache,
+                 pfad:l.pfad, anker:l.anker }));
   if (art==='bundeslaender')
     return D.deutschland.map(b=>({ id:b.id, name:b.name, aliasse:[], aussprache:[b.name.toLowerCase()],
       pfad:b.pfad, anker:b.anker }));
@@ -239,13 +241,35 @@ function spielschirm(){
     kand = misch([ziel, ...misch(st.alle.filter(x=>x.id!==ziel.id), r1).slice(0, Math.max(1,n))], r1);
   }
 
-  const vb = art==='kontinente' ? D.vbK : art==='laender' ? D.vbL[kont] : D.vbD;
+  // Antarktika bekommt seine EIGENE, polare Ansicht. In der Weltkarte liegt
+  // es als Sockel am unteren Rand und ist dort gerade nicht formtypisch.
+  const polar = art==='kontinente' && ziel.id==='antarktika';
+  // Antarktika kommt in der Weltkarte GAR NICHT vor. Es hat seine eigene
+  // Ansicht; in der Weltkarte bleibt sonst ein grauer Sockel am unteren Rand
+  // stehen, der wie ein Fehler aussieht.
+  const formen = polar ? [D.antarktika]
+    : art==='kontinente' ? st.alle.filter(g=>g.id!=='antarktika') : st.alle;
+  const vb = polar ? D.vbA : art==='kontinente' ? D.vbK : art==='laender' ? D.vbL[kont] : D.vbD;
   const farbeVon=(g,i)=> (art==='bundeslaender'||istHaupt) ? `var(${VIER[(D.farben[g.id]??i)%4]})` : `var(${FL[i%7]})`;
   const umgebung = (art==='laender' && D.umgebung[kont])
     ? D.umgebung[kont].map(p=>`<path d="${p}" fill="var(--app-linie)" opacity=".55"/>`).join('') : '';
-  const flaechen = st.alle.map((g,i)=>`<path class="geb ${g.id===ziel.id?'ziel':''}" data-id="${g.id}"
+  const flaechen = formen.map((g,i)=>`<path class="geb ${g.id===ziel.id?'ziel':'ruhig'}" data-id="${g.id}"
       d="${g.pfad}" fill-rule="evenodd" fill="${farbeVon(g,i)}"/>`).join('');
-  const konturen = st.alle.map(g=>`<path d="${g.pfad}" fill-rule="evenodd"/>`).join('');
+  const konturen = formen.map(g=>`<path d="${g.pfad}" fill-rule="evenodd"/>`).join('');
+  // Der Umriss des gesuchten Gebiets, zweimal: ein ruhiger dicker Rand und
+  // darueber ein pulsierender. Ohne das ist bei sieben Pastellflaechen nicht
+  // zu erkennen, welche gemeint ist.
+  const zielForm = formen.find(g=>g.id===ziel.id) || ziel;
+  // Der Zeiger wird in BILDSCHIRMPUNKTEN gezeichnet, nicht in
+  // Kartenkoordinaten: sonst schrumpft er mit dem Massstab und ist auf
+  // Thueringen nur noch ein blauer Fleck.
+  const zeiger = zielForm.anker
+    ? `<g class="zeiger" data-x="${zielForm.anker[0]}" data-y="${zielForm.anker[1]}">
+         <path d="M0 -2 L-9 -17 L9 -17 Z" fill="var(--akzent)"/>
+         <circle cy="-26" r="11" fill="var(--akzent)" stroke="white" stroke-width="2.5"/>
+         <path d="M0 -32 L0 -21 M0 -18.5 L0 -18.4" stroke="white" stroke-width="2.6"
+               stroke-linecap="round" fill="none"/>
+       </g>` : '';
   const tippt = P.eingabe.includes('tippen'), spricht = P.eingabe.includes('sprechen');
   const frageText = istHaupt ? `Wie heißt die Hauptstadt von ${ziel.gebiet}?`
     : art==='kontinente' ? 'Wie heißt dieser Kontinent?'
@@ -271,6 +295,13 @@ function spielschirm(){
           <path id="belohn" d="" fill="oklch(.80 .12 155)" clip-path="url(#wasch)" style="display:none"/>
           <g fill="none" stroke="var(--tinte)" stroke-opacity=".5" stroke-width="1.1"
              vector-effect="non-scaling-stroke">${konturen}</g>
+          <path class="zielrand" d="${zielForm.pfad}" fill="none" fill-rule="evenodd"
+                stroke="var(--tinte)" stroke-width="3.5" stroke-linejoin="round"
+                vector-effect="non-scaling-stroke"/>
+          <path class="zielpuls" d="${zielForm.pfad}" fill="none" fill-rule="evenodd"
+                stroke="var(--akzent)" stroke-width="3" stroke-linejoin="round"
+                vector-effect="non-scaling-stroke"/>
+          ${zeiger}
           <path id="kontur" d="" fill="none" stroke="var(--tinte)" stroke-width="2.4"
                 vector-effect="non-scaling-stroke" stroke-linejoin="round" style="display:none"/>
           <circle id="stadtpunkt" r="0" fill="var(--akzent)" stroke="white" stroke-width="2"
@@ -290,7 +321,7 @@ function spielschirm(){
     const svg=s.querySelector('.karte svg'); if(!svg) return;
     const g=svg.querySelector('#treffer'); const ctm=svg.getScreenCTM(); if(!g||!ctm) return;
     const k=Math.abs(ctm.a)||1;
-    const mit = st.alle.filter(x=>x.anker).map(x=>{
+    const mit = formen.filter(x=>x.anker).map(x=>{
       const p=s.querySelector(`path.geb[data-id="${x.id}"]`); const bb=p?p.getBBox():{width:0,height:0};
       return { x, gross:Math.max(bb.width,bb.height) };
     }).sort((a,b)=>b.gross-a.gross);
@@ -299,6 +330,19 @@ function spielschirm(){
     // verschlucken. Berlins 44-Punkt-Kreis lag genau auf Brandenburgs Anker -
     // und Brandenburg war an seiner besten Stelle nicht mehr zu treffen.
     // "Das kleinere gewinnt" heisst nicht "das kleinere sperrt aus".
+    // Der Zeiger hilft bei kleinen Gebieten und stoert bei grossen.
+    const zg = s.querySelector('.zeiger');
+    if (zg) {
+      const zp = s.querySelector(`path.geb[data-id="${ziel.id}"]`);
+      const zb = zp ? zp.getBBox() : {width:0,height:0};
+      const gross = Math.max(zb.width, zb.height) * k;
+      zg.style.display = gross < 190 ? '' : 'none';
+      // Feste Groesse am Bildschirm: 1/k hebt den Kartenmassstab auf.
+      const px = 1 / k;
+      const x = +zg.dataset.x, y = +zg.dataset.y;
+      const oben = (zb.height * k < 44) ? -zb.height/2 - 4*px : 0;   // ueber winzigen Flaechen
+      zg.setAttribute('transform', `translate(${x} ${y + oben}) scale(${px.toFixed(3)})`);
+    }
     g.innerHTML = mit.filter(n=>n.gross*k<MIN_PT).map(n=>{
       let rPx = MIN_PT/2;
       for (const m of mit) {
@@ -439,11 +483,15 @@ function spielschirm(){
 
 /* ---------- Belohnungsmoment --------------------------------------------- */
 function belohnung(s, ziel, fastText, zeigeStadt){
+  // Beim Belohnen wird die Hervorhebung still - sonst blinkt es weiter,
+  // waehrend sich der Umriss nachzeichnet.
   const kontur=s.querySelector('#kontur'), fuell=s.querySelector('#belohn'),
         kreis=s.querySelector('#waschKreis'), punkt=s.querySelector('#stadtpunkt');
   const flaeche=s.querySelector(`path.geb[data-id="${ziel.id}"]`);
   if(!kontur||!flaeche) return;
   flaeche.classList.add('treffer');
+  s.querySelectorAll('.zielpuls,.zielrand,.zeiger').forEach(x=>x.style.display='none');
+  s.querySelectorAll('path.geb.ruhig').forEach(x=>x.classList.remove('ruhig'));
   kontur.setAttribute('d',ziel.pfad); fuell.setAttribute('d',ziel.pfad);
   kontur.style.display=''; fuell.style.display='';
   const b=flaeche.getBBox();

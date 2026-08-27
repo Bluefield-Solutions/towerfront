@@ -13,9 +13,41 @@ import { ROH, AUS, HAUSDORFF_GRENZE, ringe, shaper, bisAufGrenze, passe,
          svgPfad, inselnFiltern, STUFEN } from './geo-backen.mjs';
 
 const roh = JSON.parse(fs.readFileSync(path.join(ROH,'ne_50m_admin_0_countries.geojson'),'utf8'));
+
+/**
+ * Entfernt die kuenstliche Naht aus dem Umriss.
+ *
+ * Natural Earth speichert Antarktika fuer eine RECHTECKIGE Weltkarte. Der
+ * Umriss laeuft deshalb bei 180 Grad die Laengslinie hinunter bis
+ * lat -89,999, einmal quer ueber den ganzen unteren Rand und bei -180 Grad
+ * wieder hinauf. Das hat keine Flaeche und faellt auf einer Weltkarte nicht
+ * auf - in der polaren Aufsicht aber sind 180 und -180 DIESELBE Linie: die
+ * beiden Schenkel liegen aufeinander und zeigen sich als Strich, der vom
+ * Rand bis in die Mitte laeuft (im Bild von v-Vorschau deutlich sichtbar).
+ *
+ * Der Schnitt wird durch EINEN Punkt ersetzt - den echten Kuestenpunkt bei
+ * 180 Grad. Flaeche und Umgrenzung aendern sich dadurch nicht (gemessen:
+ * beide identisch), nur die Nullflaeche verschwindet.
+ */
+function nahtWeg(ring) {
+  const amPol  = p => p[1] <= -89.5;
+  const anNaht = p => Math.abs(Math.abs(p[0]) - 180) < 1e-6;
+  let a = ring.findIndex(amPol);
+  if (a < 0) return ring;
+  let b = a;
+  while (b + 1 < ring.length && amPol(ring[b + 1])) b++;
+  while (a > 0 && anNaht(ring[a - 1])) a--;
+  while (b + 1 < ring.length && anNaht(ring[b + 1])) b++;
+  const kueste = [180, Math.max(ring[a][1], ring[b][1])];
+  return [...ring.slice(0, a), kueste, ...ring.slice(b + 1)];
+}
+const ohneNaht = g => g.type === 'Polygon'
+  ? { type:'Polygon', coordinates: g.coordinates.map(nahtWeg) }
+  : { type:'MultiPolygon', coordinates: g.coordinates.map(p => p.map(nahtWeg)) };
+
 const geo = await shaper({ type:'FeatureCollection', features: roh.features
   .filter(f => f.properties.CONTINENT === 'Antarctica')
-  .map(f => ({ type:'Feature', properties:{}, geometry:f.geometry })) }, '-dissolve2');
+  .map(f => ({ type:'Feature', properties:{}, geometry: ohneNaht(f.geometry) })) }, '-dissolve2');
 
 // Aufsicht auf den Suedpol. clipAngle schneidet die Gegenhalbkugel weg.
 const projRoh = () => d3.geoAzimuthalEqualArea().rotate([0, 90]).clipAngle(60);

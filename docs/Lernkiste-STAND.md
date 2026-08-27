@@ -3,7 +3,8 @@
 Was gebaut ist, was gemessen ist, was offen bleibt. Ergänzt Konzept K3, den
 Prüfbericht und das Grafik-Audit; ersetzt keines davon.
 
-Stand: nach M0-Vorarbeit, M2, MG, dem Tor `ansicht` und **M3 bis M6**.
+Stand: nach M0-Vorarbeit, M2, MG, dem Tor `ansicht`, **M3 bis M6** und der
+Sichtrunde (Hervorhebung des Ziels, Naht in Antarktika).
 Code: `lernkiste/` — ein Arbeitsbaum, der ins eigene Repository umzieht.
 
 ---
@@ -17,7 +18,7 @@ npm --prefix lernkiste run backen     Kartenpipeline: Kontinente, Deutschland,
                                       Länder, Antarktika, Städte
 npm --prefix lernkiste run prototyp   baut prototyp/spiel.html
 npm --prefix lernkiste run tor        inhalt · topologie · beruehrung · marken
-                                      · doku · ansicht · smoke
+                                      · doku · vergleich · ansicht · smoke
 ```
 
 **Die Torkette ist grün.** Sieben Prüfungen, davon zwei mit Gegenprobe belegt.
@@ -72,7 +73,56 @@ gewinnt.
 **Antarktika ist gelöst.** Der offene Punkt aus MG: in jeder Weltprojektion
 liegt es als Sockel am unteren Rand. Es gibt jetzt eine **polare Aufsicht**
 (azimutal flächentreu, auf den Südpol gedreht, 7,8 KB grob). Runde 3 bekommt
-damit eine eigene Ansicht.
+damit eine eigene Ansicht. Auf der Weltkarte kommt es **gar nicht mehr vor** —
+sonst bliebe unten ein grauer Sockel stehen, der wie ein Fehler aussieht.
+
+---
+
+## Die Sichtrunde
+
+Drei Befunde vom Gerät, keiner davon von einem Tor gemeldet.
+
+**1. Man sah nicht, welches Gebiet gefragt ist.** Alle Flächen sahen gleich
+aus, das Ziel war nur an einer etwas anderen Füllung zu ahnen. Jetzt tragen
+die anderen `class="ruhig"` (Deckkraft 0,42, Sättigung 0,35), das Ziel behält
+seine Farbe und bekommt zwei zusätzliche Umrisse: einen dunklen festen und
+einen pulsierenden in der Akzentfarbe (Strichbreite 3 → 9, 1,5 s). Ist das
+Ziel kleiner als 190 px, kommt ein hüpfender Zeiger auf den Anker dazu — in
+fester **Bildschirmgröße**, also mit `1/k` gegenskaliert, sonst wäre er auf
+der Weltkarte winzig und auf Bremen riesig. Bei `prefers-reduced-motion` wird
+aus dem Puls ein dicker ruhender Strich. Nach der richtigen Antwort geht alles
+aus.
+
+**2. Ein Strich quer durch Antarktika.** Natural Earth speichert den Umriss
+für eine **rechteckige** Weltkarte: er läuft bei 180 Grad die Längslinie
+hinunter bis lat −89,999, einmal am unteren Rand entlang und bei −180 Grad
+wieder hinauf. Auf der Weltkarte deckt sich das mit dem Kartenrand. In der
+polaren Aufsicht sind 180 und −180 **dieselbe Linie**: beide Schenkel liegen
+aufeinander und zeigen sich als Strich vom Rand bis in die Mitte.
+
+Der Schnitt wird jetzt beim Backen durch **einen** Punkt ersetzt — den echten
+Küstenpunkt bei 180 Grad. Gemessen: Fläche und Umgrenzung bleiben
+**identisch** (432 160 px², dieselbe BBox), nur der nächste Umrisspunkt zur
+Kartenmitte springt von **0,0 px auf 100,4 px**.
+
+**3. Kein Tor hatte etwas davon gesehen** — und das war die eigentliche
+Lücke. Beide Befunde sind jetzt eingefangen:
+
+- Das Tor `topologie` sucht **Nadeln**: zwei Punkte desselben Ringes fallen
+  aufeinander (< 0,15 px), der Weg dazwischen ist lang (≥ 20 px) und
+  umschließt nichts (mittlere Breite < 0,05 px). Eine Naht ändert weder
+  Fläche noch Umgrenzung noch Umlaufsinn — sie ist genau an dieser Kombination
+  zu fassen. **Gegenprobe gefahren** (Regel 13): auf der alten Geometrie
+  meldet es *1 Nadel, längste 236 px*, auf der neuen null.
+  Die dünnsten **echten** Gebilde im Vorrat — drei Fjorde in Kanada, eine
+  Nehrung in den USA — liegen bei 0,18 bis 0,27 px mittlerer Breite und
+  kommen als Hinweis, nicht als Fehler: so stehen sie in der Wirklichkeit.
+- Das Tor `ansicht` fotografiert jetzt auch den **lebenden Prototyp**, nicht
+  nur die gemalten Entwürfe (`spiel-kontinent`, `spiel-bundesland`). Vorher
+  steckte die ganze Spieldarstellung hinter keinem Tor: der Lauf blieb grün,
+  während sich jeder Spielbildschirm änderte. Je Aufnahme wird die Ablage
+  geleert, damit der Keim aus Sitzungsnummer 0 kommt — dreimal nacheinander
+  0 Bildpunkte Unterschied.
 
 ---
 

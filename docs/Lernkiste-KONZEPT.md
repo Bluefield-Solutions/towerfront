@@ -5,7 +5,7 @@ Arbeitstitel. Ein Lernspiel für Fiona (6, 1. Klasse Bayern) und Lea (8,
 Startbildschirm von iPhone und iPad, liefert sich selbst aus, und lässt sich
 prüfen — fachlich, technisch und datenschutzrechtlich.
 
-Stand: **K2** · noch keine Zeile Spielcode
+Stand: **K2** · O1 und O4 entschieden · noch keine Zeile Spielcode
 Vorgänger: K1, geprüft in `Lernkiste-PRUEFBERICHT-K1.md` — 25 Befunde, alle hier eingearbeitet
 
 ---
@@ -25,8 +25,9 @@ behoben, und die Lösung hat die Ebene besser gemacht als der ursprüngliche
 Entwurf. Der Bericht steht daneben, damit die Änderungen nachvollziehbar
 bleiben.
 
-Fünf Punkte sind noch offen und stehen als **O1 bis O5** in **Kapitel 14**
-(neue Kennungen, damit sie nicht mit E1–E5 aus K1 verwechselt werden). Keiner davon
+Von den fünf Punkten in **Kapitel 14** sind **O1** (Länderauswahl) und **O4**
+(Repository öffentlich) inzwischen entschieden. Die drei verbliebenen haben
+Vorgaben und blockieren nichts. Keiner davon
 blockiert M0.
 
 **Vier Zahlen, die dieses Dokument beschreiben:**
@@ -1089,10 +1090,8 @@ Ein Push, drei bis vier Minuten, das iPad hat es beim nächsten Start.
 
 ### 13.2 Was einzurichten ist (einmalig, durch euch)
 
-1. **Repository anlegen** — Vorschlag: `lernkiste`. Öffentlich ist einfacher:
-   GitHub Pages für private Repositories braucht ein bezahltes Konto.
-   *Falls privat gewünscht:* Cloudflare Pages oder Netlify tun dasselbe
-   kostenlos, der Rest des Konzepts bleibt unverändert. **Offener Punkt O4.**
+1. **Repository anlegen** — Vorschlag: `lernkiste`, **öffentlich**
+   (entschieden, O4). Damit ist GitHub Pages kostenlos nutzbar.
 2. **Pages einschalten**: Settings → Pages → Source = **GitHub Actions**.
 3. Mir Schreibrecht auf dem Zweig geben. Dann läuft alles Weitere von hier.
 
@@ -1164,11 +1163,10 @@ Die offenen Punkte aus K1 sind erledigt: E1 (vierte Ebene) und E2
 (16 Bundesländer) sind beantwortet und
 eingearbeitet; die Regierungsbezirke sind gestrichen. Was bleibt:
 
-**O1 · Die Länderauswahl auf Ebene 2.** Vorgeschlagen: dieselbe Regel in zwei
-Tiefen — Lea die fünf größten, Fiona die drei größten (Kapitel 4.2). Damit
-sieht Fiona in Nordamerika genau USA, Mexiko und Kanada, und Guatemala und
-Haiti erreichen nur Lea. Bitte bestätigen; die Alternative wäre eine Auswahl
-nach Bekanntheit, die dann aber niemand mehr nachprüfen kann.
+**O1 · Die Länderauswahl auf Ebene 2 — ENTSCHIEDEN.** Dieselbe Regel in zwei
+Tiefen: Lea die fünf größten, Fiona die drei größten (Kapitel 4.2). Damit
+sieht Fiona in Nordamerika genau USA, Mexiko und Kanada; Guatemala und Haiti
+erreichen nur Lea.
 
 **O2 · Antarktika.** Geprüft, wie gewünscht. Ergebnis: Meine Begründung in K1
 war falsch (Kapitel 4.1), das Ergebnis bleibt aber — **Antarktika gehört zu
@@ -1184,8 +1182,23 @@ strenger will („nur Länder, die ganz in Europa liegen"), bekommt stattdessen
 Spanien auf Platz 5. Ich rate zu Russland: „so groß, dass es auf zwei
 Kontinente passt" ist ein guter Satz für ein Kind.
 
-**O4 · Repository öffentlich oder privat.** Blockiert M1. Öffentlich =
-kostenlos über GitHub Pages; privat = Cloudflare Pages, sonst identisch.
+**O4 · Repository — ENTSCHIEDEN: öffentlich.** Damit ist GitHub Pages
+kostenlos nutzbar und die Auslieferung bleibt vollständig bei GitHub — kein
+zweites Konto, kein Fremddienst.
+
+Eine Folge, die dadurch verbindlich wird: Die Seite ist für jeden erreichbar,
+der die Adresse kennt. Sie ist nicht verlinkt und nicht auffindbar, aber sie
+ist offen. Deshalb gilt ab jetzt ohne Wenn und Aber, was in Kapitel 12.3 steht
+— der **Sprachmodus ist per Vorgabe aus**, und der Satz, wohin die Aufnahme
+geht, erscheint sowohl im Elternbereich als auch beim ersten Start. Fremde
+Kinder, die die Seite je aufrufen, können kein Mikrofon einschalten, ohne dass
+jemand es vorher gelesen hat.
+
+Im Repository liegen ausschließlich Programm und Karten. **Fortschritt,
+Protokoll und Aufnahmen liegen nur auf den Geräten** und werden nie
+eingecheckt — auch nicht der Sprachkorpus aus M4, der Fionas Stimme enthielte.
+Er wird als Textliste geführt (was gesagt wurde, was verstanden wurde), nie
+als Tondatei. Das Tor `csp` und ein Eintrag in `.gitignore` sichern das ab.
 
 **O5 · Der Name.** „Lernkiste" ist Arbeitstitel und als Bezeichnung für
 Lernmaterial verbreitet. Bei einer Familien-App ohne Vertrieb folgenlos, aber
@@ -1306,10 +1319,10 @@ sicher zu bestimmen. Deshalb misst M0 es, statt es einzuschätzen.*
 
 ## 17. Was als Nächstes passiert
 
-Sobald **O4** beantwortet ist (Repository öffentlich oder privat) und das
-Repository steht, beginnt **M0**. M0 ist eine einzelne Seite und in einer
+O1 und O4 sind entschieden — **es blockiert nichts mehr.** Sobald das
+Repository steht (Kapitel 13.2), beginnt **M0**. M0 ist eine einzelne Seite und in einer
 Runde fertig; sein Ergebnis entscheidet über die Form von M4 und damit über
 die letzte wirklich offene Stelle im Entwurf.
 
-O1, O2, O3 und O5 haben Vorgaben, mit denen sich arbeiten lässt — sie können
-auch nach M0 noch beantwortet werden, ohne etwas aufzuhalten.
+O2, O3 und O5 haben Vorgaben, mit denen sich arbeiten lässt — sie können auch
+nach M0 noch beantwortet werden, ohne etwas aufzuhalten.

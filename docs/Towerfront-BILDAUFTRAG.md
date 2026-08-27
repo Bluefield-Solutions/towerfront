@@ -742,6 +742,76 @@ ist und nur die Unterseite dunkel, kommt das Licht von oben — dann
 widerspricht die Figur ihrem eigenen Schatten, den das Spiel nach unten
 rechts wirft.
 
+### 6.3b `turm_frost_5.png` + `turm_frost_6.png` — Nachbestellung (v177)
+
+**Nur diese beiden Stufen.** Die Stufen 1 bis 4 sind angenommen und im Spiel;
+sie bleiben, wie sie sind. Was an 5 und 6 nicht hält, steht in einer Zahl:
+die **leere Fläche im Deckrechteck** fällt von 63 % auf Stufe 1 über 43 % auf
+Stufe 5 auf **32 %** auf Stufe 6. Der Emitterkranz wächst so weit, dass er
+den Raum zwischen den Beinen zudeckt — und damit wird das Dreibein auf den
+Endstufen wieder ein geschlossener Klotz. Gemessen kostet das den Wert gegen
+den Mörser: 0,65 → **0,70** bei erlaubten 0,65.
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+SUBJECT: The SAME cryogenic three-legged emitter that was delivered for
+levels 1 to 4 — same machine, same three splayed legs, same raised hub, same
+armour plating, same turquoise #7FE7E0 accent. Only levels 5 and 6 are being
+redrawn. Seen from a slightly elevated three-quarter front angle, standing on
+the ground (NOT top-down).
+
+WHAT WENT WRONG AND MUST BE FIXED: on the delivered levels 5 and 6 the
+emitter crown grew so wide that it covers the space between the legs. The
+silhouette closes up and the tower turns back into a solid block — exactly
+what the tripod was chosen to avoid. Measured, the empty area inside the
+bounding box falls from 63 percent at level 1 to 43 at level 5 and 32 at
+level 6.
+
+THE ONE RULE: KEEP THE GAPS OPEN. A viewer must still see background through
+the lower half of the silhouette at level 6 — as much of it as at level 3.
+The legs stay separate and visible along their whole length; nothing spans
+the space between them.
+
+WHERE THE NEW MASS GOES: upward and outward past the existing outline, never
+into the middle.
+  Level 5: a SECOND emitter ring lifted above the first on three short
+    pillars, narrower than the ring below it, so the crown becomes a stack
+    rather than a disc. Cooling ribs cantilevered off the back of the hub.
+  Level 6: an outer coil crown that spreads beyond the leg footprint as
+    separate arcs with GAPS BETWEEN THEM — not a closed disc. Heaviest
+    cabling, run along the legs rather than across the opening. Strongest
+    accent colour, one glowing element.
+
+The crown may overhang the legs; it must not close the space between them.
+Think of a radio telescope on a tripod, not a mushroom cap.
+
+IMPORTANT: the coils must NOT reach the top edge. Keep 12 percent clearance
+above.
+
+PROPORTION WARNING: draw the tower about 14 percent SQUATTER than it should
+finally look — the game stretches this square image 16 percent vertically.
+Draw circles and coil rings as slightly wide ovals.
+
+The feet stand on the ground at 28 percent of the image height from the
+bottom; nothing below that line.
+
+FRAMING: 1024x1024 transparent PNG, square. The tower fills about 86 percent
+of the canvas, centred, at least 5 percent clear margin on every side —
+nothing cropped, not a coil, not a pillar tip.
+```
+
+#### Die drei Zahlen, an denen diese Nachbestellung gemessen wird
+
+| Messung | Grenze | Lieferung v177 |
+|---|---|---|
+| Leere Fläche im Deckrechteck | mindestens **45 %** auf beiden Stufen | Stufe 5: 43 % · Stufe 6: **32 %** ✗ |
+| Silhouette gegen den Mörser (Stufe 6) | höchstens **0,60** | **0,70** ✗ |
+| Silhouette Stufe 1 gegen Stufe 6 | höchstens 0,70 | 0,48 ✓ — nicht verschlechtern |
+
+Geprüft mit `npm run probebild -- <ordner>`, **bevor** gepackt wird. Die
+erste Zahl ist die, aus der die zweite von selbst folgt.
+
 ### 6.4 `turm_moerser_1.png` … `turm_moerser_6.png` — Haubitze
 
 ```

@@ -335,6 +335,13 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
 - Deutsch, auch im Quelltext (Kommentare, Bezeichner, Ausgaben).
 - Nach jeder Runde: vier nächste Schritte, davon mindestens einer technisch
   und einer grafisch.
+- **Jede neue Bildanforderung kommt mit ihrem fertigen Prompt.** Nicht "das
+  müsste nachbestellt werden", sondern der vollständige Text zum Kopieren,
+  Stil-Block schon eingesetzt (`npm run bildprompt -- <suchtext>`). Der
+  Auftrag gehört dabei ZUERST ins Dokument und wird von dort ausgegeben — ein
+  Prompt, der nur im Gespräch steht, ist beim nächsten Mal weg. Dazu die
+  Abnahmezahlen und, wo es hilft, ein Referenzblatt aus dem ausgelieferten
+  Vorrat.
 - Die fertige Datei erreichbar — hier über Pages, nicht als Anhang.
 - Getestet wird auf dem iPhone quer. Das ist das **Zielgerät** — dort wird
   geurteilt, ob es gut ist.

@@ -20,15 +20,24 @@ import { starte } from './chromium.mjs';
 // IndexedDB braucht eine echte Herkunft, sonst faellt die Ablage still auf
 // nichts zurueck und der Prototyp startet jedesmal anders. Also derselbe
 // winzige Server wie im Rauchtest.
-const wurzel = process.cwd();
+// Fotografiert wird dist/ - das, was ausgeliefert wird, samt eigener
+// Schrift. Solange die Aufnahmen an prototyp/spiel.html hingen, hielten sie
+// eine Fassung fest, die niemand bekommt.
+const wurzel = path.join(process.cwd(), 'dist');
 const server = http.createServer((q, a) => {
-  const f = path.join(wurzel, q.url === '/' ? '/prototyp/spiel.html' : q.url);
-  if (!f.startsWith(wurzel) || !fs.existsSync(f)) { a.statusCode = 404; return a.end(); }
-  a.setHeader('content-type', f.endsWith('.html') ? 'text/html; charset=utf-8' : 'text/plain');
+  const f = path.join(wurzel, q.url === '/' ? '/index.html' : q.url.split('?')[0]);
+  if (!f.startsWith(wurzel) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) {
+    a.statusCode = 404; return a.end();
+  }
+  const typ = f.endsWith('.html') ? 'text/html; charset=utf-8'
+    : f.endsWith('.css') ? 'text/css' : f.endsWith('.js') ? 'text/javascript'
+    : f.endsWith('.png') ? 'image/png' : f.endsWith('.woff2') ? 'font/woff2'
+    : f.endsWith('.webmanifest') ? 'application/manifest+json' : 'text/plain';
+  a.setHeader('content-type', typ);
   a.end(fs.readFileSync(f));
 });
 await new Promise(r => server.listen(0, r));
-const SPIEL = `http://127.0.0.1:${server.address().port}/prototyp/spiel.html`;
+const SPIEL = `http://127.0.0.1:${server.address().port}/`;
 
 const VORBILDER = path.join(process.cwd(), 'tor/vorbilder');
 const ABWEICHUNGEN = path.join(process.cwd(), 'tor/abweichungen');
@@ -104,7 +113,22 @@ for (const a of AUFNAHMEN) {
       localStorage.clear();
     });
     await seite.goto(SPIEL, { waitUntil:'domcontentloaded' });
-    await seite.evaluate(() => document.fonts.ready);
+    await seite.waitForSelector('[data-profil="fiona"]');
+    // Ohne diese Pruefung haelt das Vorbild irgendwann die Systemschrift
+    // fest, und niemand merkt es - genau so ist die erste Fassung dieser
+    // Aufnahmen entstanden. Sie steht NACH dem ersten Bildschirm, weil eine
+    // Schrift erst geladen wird, wenn wirklich Text mit ihr gesetzt wird.
+    const daSchrift = await seite.evaluate(async () => {
+      await document.fonts.ready;
+      // load() statt nur check(): eine Schrift wird erst geholt, wenn Text
+      // mit ihr gesetzt wird. Andika steht auf dem ersten Bildschirm nicht,
+      // also meldete check() sie als fehlend, obwohl sie nur ungefragt war.
+      await Promise.all([document.fonts.load('700 20px "Plus Jakarta Sans"'),
+                         document.fonts.load('400 20px "Andika"')]);
+      return document.fonts.check('700 20px "Plus Jakarta Sans"')
+          && document.fonts.check('400 20px "Andika"');
+    });
+    if (!daSchrift) { console.log(`  FEHLT   ${a.name}  (die eigene Schrift wurde nicht geladen)`); rot++; continue; }
     await seite.click('[data-profil="fiona"]');
     await seite.waitForSelector('.schirm.da [data-ebene]');
     await seite.click(`[data-ebene="${a.spiel}"]`);

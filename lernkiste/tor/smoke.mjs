@@ -9,15 +9,23 @@ import path from 'node:path';
 // IndexedDB braucht eine echte Herkunft. Unter file:// ist sie undurchsichtig,
 // und die Ablage faellt still auf nichts zurueck - genau der Fall, den das
 // Tor sonst uebersehen wuerde. Also ein winziger Server.
-const wurzel = process.cwd();
+// Geprueft wird dist/ - das, was wirklich ausgeliefert wird. Die eine
+// Datei prototyp/spiel.html ist nur zum Ansehen; sie hat weder Manifest
+// noch Service Worker, also beweist ein gruener Lauf auf ihr nichts ueber
+// die App auf dem Startbildschirm.
+const wurzel = path.join(process.cwd(), 'dist');
 const server = http.createServer((q, a) => {
-  const f = path.join(wurzel, q.url === '/' ? '/prototyp/spiel.html' : q.url);
+  const f = path.join(wurzel, q.url === '/' ? '/index.html' : q.url);
   if (!f.startsWith(wurzel) || !fs.existsSync(f)) { a.statusCode = 404; return a.end(); }
-  a.setHeader('content-type', f.endsWith('.html') ? 'text/html; charset=utf-8' : 'text/plain');
+  const typ = f.endsWith('.html') ? 'text/html; charset=utf-8'
+    : f.endsWith('.css') ? 'text/css' : f.endsWith('.js') ? 'text/javascript'
+    : f.endsWith('.png') ? 'image/png' : f.endsWith('.woff2') ? 'font/woff2'
+    : f.endsWith('.webmanifest') ? 'application/manifest+json' : 'text/plain';
+  a.setHeader('content-type', typ);
   a.end(fs.readFileSync(f));
 });
 await new Promise(r => server.listen(0, r));
-const ADRESSE = `http://127.0.0.1:${server.address().port}/prototyp/spiel.html`;
+const ADRESSE = `http://127.0.0.1:${server.address().port}/`;
 
 const b = await starte();
 const fehler = [];
@@ -156,6 +164,75 @@ try {
   console.log(`  Rechtschreibhinweis:        „${name.toLowerCase()}" → Großschreibung gemeldet`);
   await p.close();
 } catch (e) { merke('tippen', e); }
+
+/* --- Durchgang 4: Ebene 4 - vier Staedte, eine richtig ---------------- */
+//
+// Die Zusage lautet: IMMER genau vier Staedte, genau eine davon richtig,
+// genau eine aus demselben Bundesland (die Falle), und die richtige klebt
+// nicht auf einem Platz. Jede dieser vier Zusagen wird hier einzeln
+// nachgezaehlt - und zwar fuer BEIDE Profile, weil diese Ebene als einzige
+// auch bei Lea eine Auswahl ist.
+const plaetze = new Set();
+let ebene4 = 0;
+for (const wer of ['fiona', 'lea']) {
+  try {
+    const eigen = await b.newContext({ hasTouch: true, isMobile: true, locale: 'de-DE' });
+    const p = await neueSeite({ width: 844, height: 390 }, eigen);
+    await p.click(`[data-profil="${wer}"]`);
+    await p.waitForSelector('.schirm.da [data-ebene]');
+    await p.click('[data-ebene="hauptstaedte"]');
+    // Die Einweisung zu den Stadtstaaten steht beim ersten Mal davor.
+    await p.waitForSelector('.schirm.da #weiter, .schirm.da .karte svg path.ziel', { timeout: 6000 });
+    const weiter = await p.$('.schirm.da #weiter');
+    if (weiter) await weiter.click();
+    await p.waitForSelector('.schirm.da .karte svg path.ziel', { timeout: 6000 });
+    for (let n = 0; n < 5; n++) {
+      if (!(await p.$('.schirm.da .karte svg path.ziel'))) break;
+      const i = await p.evaluate(() => {
+        const s = document.querySelector('.schirm.da');
+        const D = JSON.parse(document.getElementById('daten').textContent);
+        const bl = D.deutschland.find(x => x.id === s.querySelector('path.ziel').dataset.id);
+        const namen = [...s.querySelectorAll('.etikett')].map(e => e.textContent.trim());
+        return { land: bl.name, hs: bl.hauptstadt, ausLand: bl.ablenker, namen,
+                 tippfeld: !!s.querySelector('input.eingabe') };
+      });
+      ebene4++;
+      if (i.tippfeld) merke('ebene4', new Error(`${wer}/${i.land}: Tippfeld statt Auswahl`));
+      if (i.namen.length !== 4)
+        merke('ebene4', new Error(`${wer}/${i.land}: ${i.namen.length} Städte statt 4`));
+      if (i.namen.filter(x => x === i.hs).length !== 1)
+        merke('ebene4', new Error(`${wer}/${i.land}: die richtige Stadt steht nicht genau einmal da`));
+      const gleiche = i.namen.filter(x => i.ausLand.includes(x)).length;
+      if (gleiche !== 1)
+        merke('ebene4', new Error(`${wer}/${i.land}: ${gleiche} Städte aus demselben Land, erwartet 1`));
+      if (new Set(i.namen).size !== 4)
+        merke('ebene4', new Error(`${wer}/${i.land}: doppelte Stadt unter ${i.namen.join(', ')}`));
+      plaetze.add(i.namen.indexOf(i.hs));
+      const ok = await p.evaluate(() => {
+        const s = document.querySelector('.schirm.da'); const z = s.querySelector('path.ziel');
+        const D = JSON.parse(document.getElementById('daten').textContent);
+        const bl = D.deutschland.find(x => x.id === z.dataset.id);
+        const svg = s.querySelector('.karte svg'); const pt = svg.createSVGPoint();
+        pt.x = bl.anker[0]; pt.y = bl.anker[1]; const q = pt.matrixTransform(svg.getScreenCTM());
+        const namen = [...s.querySelectorAll('.etikett')].map(e => e.textContent.trim());
+        return { x: q.x, y: q.y, idx: namen.indexOf(bl.hauptstadt) };
+      });
+      if (ok.idx < 0) break;
+      const et = (await p.$$('.schirm.da .etikett'))[ok.idx]; const bb = await et.boundingBox();
+      await p.mouse.move(bb.x + bb.width / 2, bb.y + bb.height / 2); await p.mouse.down();
+      await p.mouse.move(ok.x, ok.y, { steps: 8 }); await p.mouse.up();
+      await p.waitForTimeout(1100);
+    }
+    await eigen.close();
+  } catch (e) { merke('ebene4', e); }
+}
+// Eine Mischung, die die richtige Antwort immer auf denselben Platz legt,
+// besteht jede Einzelpruefung oben - und ist trotzdem kaputt.
+if (ebene4 && plaetze.size < 3)
+  merke('ebene4', new Error(`die richtige Stadt lag in ${ebene4} Aufgaben nur auf `
+    + `${plaetze.size} verschiedenen Plätzen (${[...plaetze].map(x=>x+1).sort().join(', ')})`));
+console.log(`  Ebene 4:                    ${ebene4} Aufgaben, immer 4 Städte, `
+  + `richtige auf Platz ${[...plaetze].map(x=>x+1).sort().join('/')}`);
 
 await ctx.close(); await b.close(); server.close();
 

@@ -3,8 +3,13 @@
 Was gebaut ist, was gemessen ist, was offen bleibt. Ergänzt Konzept K3, den
 Prüfbericht und das Grafik-Audit; ersetzt keines davon.
 
-Stand: nach M0-Vorarbeit, M2, MG, dem Tor `ansicht`, **M3 bis M6** und der
-Sichtrunde (Hervorhebung des Ziels, Naht in Antarktika).
+Stand: nach M0-Vorarbeit, M2, MG, dem Tor `ansicht`, **M3 bis M6**, der
+Sichtrunde (Hervorhebung des Ziels, Naht in Antarktika) und dem **Umzug nach
+`Bluefield-Solutions/Smart-Kids`** samt PWA und Auslieferung.
+
+> **Der Baum ist umgezogen.** Gearbeitet wird ab jetzt in
+> `Bluefield-Solutions/Smart-Kids`, nicht mehr in `towerfront/lernkiste`.
+> Diese Datei liegt dort unter demselben Namen weiter.
 Code: `lernkiste/` — ein Arbeitsbaum, der ins eigene Repository umzieht.
 
 ---
@@ -245,14 +250,82 @@ gespeicherten Sitzungsnummer.
 
 ---
 
+## Der Umzug: PWA und Auslieferung
+
+**Ebene 4 zeigt jetzt immer vier Städte.** Genau eine ist richtig, die
+Reihenfolge wird je Aufgabe neu gewürfelt, und das gilt für **beide
+Profile** — auf dieser Ebene tippt auch Lea nicht. Gefragt ist, *welche*
+Stadt es ist, nicht wie man sie schreibt; eine Stadt zu tippen, die man nie
+gesehen hat, prüft das Buchstabieren. Im Elternbereich abschaltbar.
+
+Die drei falschen sind nicht beliebig: **eine** kommt aus demselben
+Bundesland — bei fünf Ländern ist die größte Stadt nicht die Hauptstadt, und
+dort sitzt der Irrtum. **Zwei** sind Hauptstädte anderer Länder, sonst
+stünden vier Namen aus derselben Ecke Deutschlands da.
+
+**Der neue Rauchtest dafür fand sofort einen echten Fehler.** Der einfache
+lineare Kongruenzgenerator legte die richtige Antwort in **zehn Aufgaben
+hintereinander nur auf Platz 2 oder 3** — nie auf 1 oder 4. Benachbarte
+Aufgaben liegen im Keim 7919 auseinander, und bei einem LCG hängen die
+Ausgaben zu benachbarten Keimen linear zusammen. Jede Einzelprüfung war
+grün: vier Städte, eine richtig, eine aus demselben Land. Die Aufgabe war
+trotzdem kaputt — wer rät, rät in der Mitte. Jetzt Mulberry32, alle vier
+Plätze belegt.
+
+**Das App-Symbol** ist ein Globus in orthographischer Aufsicht, gedreht auf
+10° Ost / 15° Nord, aus **derselben Küste wie die Karten im Spiel** (Natural
+Earth 1:50m, auf 0,81 px Hausdorff vereinfacht). Kein Clipart — ein Symbol,
+das neben der App liegt, verspricht etwas anderes als sie hält. Die Kugel
+misst 75 % der Kante und liegt damit innerhalb der iOS-Maske *und* der
+80-%-Schutzzone maskierbarer Kacheln. Ausgeliefert werden 180 (iOS), 192 und
+512 (Manifest); die 1024 bleibt als Vorrat im Baum.
+
+**Die PWA löst zwei Zusagen auf, die einander widersprechen:** ohne Netz
+starten und immer aktuell sein. Getrennt wird an der Stelle, an der es sich
+entscheidet — die **Seite** kommt Netz zuerst (mit 2,5 s Reißleine, ein Kind
+wartet nicht auf ein mürbes Hotel-WLAN), **Schrift und Symbole** kommen
+Lager zuerst, weil sie sich innerhalb einer Fassung nie ändern.
+
+**Die Schriften liegen jetzt im Baum**, nicht bei Google. Drei Gründe: eine
+Kinder-App soll beim Start nicht bei einem Dritten anklopfen, ohne Netz gäbe
+es sonst keine Schrift, und der Bau auf dem Runner braucht so kein Netz. Nur
+der Schnitt **latin** — 51,6 KB statt 328. Beide stehen unter der SIL OFL
+1.1, Herkunft in `src/schrift/HERKUNFT.md`.
+
+### Vier neue Tore, und was sie gefunden haben
+
+| Tor | Was es prüft | Erster Fund |
+|---|---|---|
+| `schrift` | kein angezeigter Name braucht ein Zeichen außerhalb von latin | ●, ○ und ← in der PIN-Eingabe — sie sind jetzt gezeichnet statt getippt |
+| `symbol` | quadratisch, undurchsichtig, nicht leer, Kugel in der Maske | — |
+| `pwa` | Manifest vollständig, Symbole in der genannten Größe, **jede** Datei im Vorrat existiert wirklich | — |
+| `offline` | startet die App ohne Netz | — |
+
+`offline` fährt seine **Gegenprobe bei jedem Lauf mit**: ohne Service Worker
+*muss* dasselbe durchfallen. Sonst misst das Tor den Browser-Cache und wäre
+grün, ohne je etwas bewiesen zu haben (Regel 13).
+
+**Geprüft wird ab jetzt `dist/`**, nicht mehr `prototyp/spiel.html`. Die eine
+Datei ist eine Bequemlichkeit zum Verschicken; sie hat weder Manifest noch
+Service Worker, ein grüner Lauf auf ihr beweist nichts über die App auf dem
+Startbildschirm. Dabei kam heraus, dass die alten Vorbilder des Tors
+`ansicht` die **Systemschrift** festgehalten hatten — die Google-Schrift war
+beim Aufnehmen nie angekommen, und niemandem war es aufgefallen. Das Tor
+prüft jetzt vor jeder Aufnahme, dass beide Schriften wirklich geladen sind.
+
+Und die Zusammenfassung sagte „Alle **vier** Tore grün", während längst
+sechs liefen. Die Zahl wird jetzt gezählt, nicht geschrieben.
+
+---
+
 ## Offen
 
 | | Was | Wer |
 |---|---|---|
 | O4 | **BKG VG250.** Der Host ist durch die Netzrichtlinie gesperrt (403 auf CONNECT). Die Bundesländer stehen auf Natural Earth 1:10m — gut genug zum Entwerfen, zu grob zum Ausliefern. Umstellung sind zwei Zeilen. | ihr oder Freigabe |
-| — | Repository `lernkiste` anlegen, Pages auf GitHub Actions, Auslieferungsplan | ihr |
+| — | **Pages einschalten**: Settings → Pages → Source = *GitHub Actions*. Ein Klick, und die Auslieferung läuft. | ihr |
 | — | **Die Entwürfe und den Prototyp auf dem iPad ansehen.** Kein Tor läuft auf iOS. | ihr |
 | — | Schriftentscheidung: Plus Jakarta Sans oder Nunito, am Gerät | ihr |
-| — | M1: Vite, Svelte, PWA, Service Worker, Ablage | ich, sobald das Repo steht |
+| — | M1: Vite und Svelte. PWA, Service Worker und Ablage stehen bereits. | ich |
 | — | Beschriftungsfahnen zeichnen (14 von 16 brauchen eine) | ich |
 | — | Leitner, Elternbereich, Protokoll | ich |

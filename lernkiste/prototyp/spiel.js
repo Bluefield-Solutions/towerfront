@@ -12,6 +12,7 @@ const FL = ['--f1','--f2','--f3','--f4','--f5','--f6','--f7'];
 const VIER = ['--f1','--f3','--f5','--f6'];
 const el = (t,k,i)=>{ const e=document.createElement(t); if(k)e.className=k; if(i!==undefined)e.innerHTML=i; return e; };
 const STERN = (f,g=24)=>`<svg width="${g}" height="${g}" viewBox="-14 -14 28 28"><path d="M0 -12 3.7 -4 12 -2.8 6 3.2 7.4 12 0 7.8 -7.4 12 -6 3.2 -12 -2.8 -3.7 -4Z" fill="${f}" stroke="var(--tinte)" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
+const LOESCHEN='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6H9L3 12l6 6h11a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1z"/><path d="M17 10l-4 4M13 10l4 4"/></svg>';
 const ZURUECK='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg>';
 const MIKRO='<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg>';
 const sterne=(n,g)=>`<div class="sterne">${[0,1,2].map(i=>STERN(i<n?'oklch(.80 .14 85)':'oklch(.93 .01 250)',g)).join('')}</div>`;
@@ -44,7 +45,8 @@ const EBENEN = [
   { id:'bundeslaender', titel:'Bundesländer',      unter:'alle sechzehn' },
   { id:'hauptstaedte',  titel:'Landeshauptstädte', unter:'dreizehn Rätsel' },
 ];
-let P=null, Sitzung=null, Stand={}, Einst={ ton:true, abend:false, sprachmodus:false, pin:'0000', stadtstaatenGezeigt:false };
+let P=null, Sitzung=null, Stand={}, Einst={ ton:true, abend:false, sprachmodus:false, pin:'0000',
+  stadtstaatenGezeigt:false, hauptstadtAuswahl:true };
 
 /* ---------- Aufgabenvorrat ---------------------------------------------- */
 function vorrat(ebeneId){
@@ -63,7 +65,7 @@ function vorrat(ebeneId){
   if (art==='hauptstaedte')
     return D.deutschland.filter(b=>!b.stadtstaat).map(b=>({ id:b.id, name:b.hauptstadt,
       aliasse:[], aussprache:[b.hauptstadt.toLowerCase()], pfad:b.pfad, anker:b.anker,
-      gebiet:b.name, ablenker:b.ablenker||[] }));
+      gebiet:b.name, ablenker:b.ablenker||[], falle:b.falle }));
   return [];
 }
 const NAMEN = {};
@@ -228,14 +230,51 @@ function spielschirm(){
   // Kandidaten: Ziel plus Ablenker. Bei Ebene 4 sind die Ablenker das
   // Eigentliche - fuenf Bundeslaender haben eine Hauptstadt, die NICHT ihre
   // groesste Stadt ist.
-  const rnd = (k)=>{ let x=k>>>0; return ()=>{ x=(x*1664525+1013904223)>>>0; return x/4294967296; }; };
+  // Mulberry32 statt eines einfachen linearen Kongruenzgenerators.
+  //
+  // Der LCG (x = x*1664525 + 1013904223) sieht fuer sich genommen zufaellig
+  // aus, aber die Keime benachbarter Aufgaben liegen nur 7919 auseinander -
+  // und bei einem LCG haengen die Ausgaben zu benachbarten Keimen linear
+  // zusammen. Das Ergebnis: die richtige Stadt landete in zehn Aufgaben
+  // hintereinander nur auf Platz 2 oder 3, nie auf 1 oder 4. Jede
+  // Einzelpruefung war gruen - vier Staedte, eine richtig, eine aus dem
+  // gleichen Land -, und die Aufgabe war trotzdem kaputt: wer raet, raet
+  // in der Mitte.
+  //
+  // Mulberry32 verwuerfelt den Keim erst, bevor er zaehlt. Gefunden hat das
+  // der Rauchtest, nicht das Auge.
+  const rnd = (k)=>{ let x=k>>>0; return ()=>{
+    x=(x+0x6D2B79F5)>>>0;
+    let t=Math.imul(x^(x>>>15), 1|x);
+    t=(t+Math.imul(t^(t>>>7), 61|t))^t;
+    return ((t^(t>>>14))>>>0)/4294967296; }; };
   const misch=(a,r)=>{ const b=a.slice(); for(let i=b.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[b[i],b[j]]=[b[j],b[i]];} return b; };
   const r1 = rnd(st.keim + st.i*7919);
   let kand;
   if (istHaupt) {
-    const ab = (ziel.ablenker||[]).slice(0,2).map(n=>({ id:'x-'+n, name:n, aliasse:[], aussprache:[n.toLowerCase()] }));
-    const rest = misch(st.alle.filter(x=>x.id!==ziel.id), r1).slice(0, Math.max(0, 4-1-ab.length));
-    kand = misch([ziel, ...ab, ...rest], r1);
+    // IMMER genau vier Staedte, genau eine richtig, Reihenfolge je Aufgabe
+    // neu gewuerfelt.
+    //
+    // Die drei falschen sind nicht beliebig zusammengesucht:
+    //
+    // EINE kommt aus demselben Bundesland. Das ist die eigentliche Falle -
+    // bei fuenf Laendern ist die groesste Stadt NICHT die Hauptstadt
+    // (Frankfurt/Wiesbaden, Koeln/Duesseldorf, Leipzig/Dresden,
+    // Halle/Magdeburg, Rostock/Schwerin). Dort steht der Irrtum, um den es
+    // geht, also steht dort die erstgenannte Stadt fest. Bei den anderen
+    // acht wechselt sie, damit die Aufgabe nicht auswendig zu lernen ist.
+    //
+    // ZWEI sind Hauptstaedte ANDERER Bundeslaender. Ohne sie stuenden vier
+    // Namen aus derselben Ecke Deutschlands da, und das Kind koennte die
+    // richtige an der Landsmannschaft erkennen statt am Wissen.
+    const ausDemLand = ziel.ablenker || [];
+    const gewaehlt = ausDemLand.length
+      ? (ziel.falle ? ausDemLand[0] : ausDemLand[Math.floor(r1() * ausDemLand.length)])
+      : null;
+    const falle = gewaehlt
+      ? [{ id:'x-'+gewaehlt, name:gewaehlt, aliasse:[], aussprache:[gewaehlt.toLowerCase()] }] : [];
+    const fremd = misch(st.alle.filter(x=>x.id!==ziel.id), r1).slice(0, 3 - falle.length);
+    kand = misch([ziel, ...falle, ...fremd], r1);
   } else {
     const n = Math.min(P.kandidaten, st.alle.length) - 1;
     kand = misch([ziel, ...misch(st.alle.filter(x=>x.id!==ziel.id), r1).slice(0, Math.max(1,n))], r1);
@@ -270,7 +309,13 @@ function spielschirm(){
          <path d="M0 -32 L0 -21 M0 -18.5 L0 -18.4" stroke="white" stroke-width="2.6"
                stroke-linecap="round" fill="none"/>
        </g>` : '';
-  const tippt = P.eingabe.includes('tippen'), spricht = P.eingabe.includes('sprechen');
+  // Ebene 4 fragt nach der Hauptstadt, nicht nach der Schreibweise. Eine Stadt
+  // zu tippen, die man noch nie gesehen hat, prueft das Buchstabieren - nicht
+  // das Wissen, um das es hier geht. Deshalb ist diese Ebene fuer BEIDE
+  // Profile eine Auswahl. Im Elternbereich abschaltbar, dann tippt Lea auch
+  // hier wieder.
+  const tippt = P.eingabe.includes('tippen') && !(istHaupt && Einst.hauptstadtAuswahl);
+  const spricht = P.eingabe.includes('sprechen');
   const frageText = istHaupt ? `Wie heißt die Hauptstadt von ${ziel.gebiet}?`
     : art==='kontinente' ? 'Wie heißt dieser Kontinent?'
     : art==='laender' ? 'Wie heißt dieses Land?' : 'Wie heißt dieses Bundesland?';
@@ -593,13 +638,17 @@ function elternTor(){
     <div class="mitte">
       <div class="titel">Elternbereich</div>
       <div class="unter">Vier Ziffern. Voreingestellt ist <code>0000</code>.</div>
-      <div class="pin" id="pin">${'○○○○'}</div>
+      <div class="pin" id="pin">${'<i></i>'.repeat(4)}</div>
       <div class="ziffern">${[1,2,3,4,5,6,7,8,9,0].map(z=>`<button class="knopf zi" data-z="${z}">${z}</button>`).join('')}
-        <button class="knopf zi" data-z="x">←</button></div>
+        <button class="knopf zi" data-z="x" aria-label="löschen">${LOESCHEN}</button></div>
       <div class="unter" id="fehl" style="color:var(--app-warn)"></div>
     </div>`;
-  const anzeige=()=>s.querySelector('#pin').textContent =
-    '●'.repeat(eingabe.length) + '○'.repeat(4-eingabe.length);
+  // Punkte und Pfeil sind gezeichnet, nicht getippt. Als Schriftzeichen
+  // (●, ○, ←) lagen sie ausserhalb des Schnitts `latin` und waeren aus der
+  // Systemschrift gekommen - also in einer anderen Schrift als alles daneben.
+  // Gefunden hat das Tor `schrift`.
+  const anzeige=()=>s.querySelectorAll('#pin i')
+    .forEach((p,i)=>p.classList.toggle('voll', i<eingabe.length));
   s.querySelector('#zur').onclick=()=>zeige(ebenenwahl);
   s.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{
     const z=b.dataset.z;
@@ -663,6 +712,15 @@ async function elternbereich(){
         <button class="knopf" id="sprach">${Einst.sprachmodus?'Sprachmodus ausschalten':'Sprachmodus einschalten'}</button>
       </div>
 
+      <h3 class="gruppe">Landeshauptstädte</h3>
+      <p class="unter">Auf dieser Ebene stehen <strong>vier Städte</strong> zur Auswahl,
+        eine davon stimmt — für beide Kinder. Gefragt ist, <em>welche</em> Stadt es ist,
+        nicht wie man sie schreibt. Wer lieber tippt, schaltet die Auswahl hier ab;
+        dann gilt auf dieser Ebene wieder der Eingabeweg des Profils.</p>
+      <div class="reihe" style="justify-content:flex-start">
+        <button class="knopf" id="hsw">${Einst.hauptstadtAuswahl?'Auswahl abschalten, tippen lassen':'Auswahl einschalten'}</button>
+      </div>
+
       <h3 class="gruppe">Ausfuhr und Löschen</h3>
       <div class="reihe" style="justify-content:flex-start">
         <button class="knopf" id="csv">Als CSV sichern</button>
@@ -692,6 +750,9 @@ async function elternbereich(){
   s.querySelector('#sprach').onclick=async(e)=>{
     Einst.sprachmodus=!Einst.sprachmodus; await einstSichern();
     e.target.textContent=Einst.sprachmodus?'Sprachmodus ausschalten':'Sprachmodus einschalten'; };
+  s.querySelector('#hsw').onclick=async(e)=>{
+    Einst.hauptstadtAuswahl=!Einst.hauptstadtAuswahl; await einstSichern();
+    e.target.textContent=Einst.hauptstadtAuswahl?'Auswahl abschalten, tippen lassen':'Auswahl einschalten'; };
 
   const sichern=(text,name,typ)=>{
     const ausgabe=s.querySelector('#ausgabe');

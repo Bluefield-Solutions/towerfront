@@ -5,6 +5,7 @@
 // niemand prueft, veraltet lautlos.
 import fs from 'node:fs';
 import path from 'node:path';
+import { PNG } from 'pngjs';
 import * as I from '../src/inhalt/erdkunde.js';
 import { STAEDTE } from '../src/geo/staedte.js';
 import { KONTINENTE_FEIN } from '../src/geo/kontinente.fein.js';
@@ -269,6 +270,121 @@ pruefe(new Set(ls).size === 1, `Flächenfarben haben unterschiedliche Helligkeit
 console.log(`    ${ls.length} Flächenfarben, alle mit L = ${ls[0]} — derselbe Textton ist auf allen lesbar`);
 console.log(`    ${verstoesse} Markenverstöße in ${QUELLEN.length} Quellen`);
 
+/* ===================================================== Tor `schrift` === */
+console.log('\n  Tor `schrift`');
+//
+// Die Schriften liegen nur im Schnitt `latin` im Baum - 51,6 KB statt 328.
+// Das ist eine Zusage ueber den INHALT: kein angezeigter Name darf ein
+// Zeichen ausserhalb dieses Bereichs brauchen. Wer sie bricht, sieht auf
+// dem iPad ein leeres Kaestchen und sonst nichts - kein Absturz, keine
+// Meldung, nur ein Name, den das Kind nicht lesen kann.
+//
+// Der Bereich wird NICHT hier festgeschrieben, sondern aus der erzeugten
+// schrift.css gelesen. Aendert Google den Schnitt, wandert die Pruefung mit.
+{
+  const cssPfad = path.join(process.cwd(), 'src/schrift/schrift.css');
+  if (!fs.existsSync(cssPfad)) {
+    pruefe(false, 'src/schrift/schrift.css fehlt — `npm run schrift` wurde nie ausgeführt');
+  } else {
+    const css = fs.readFileSync(cssPfad, 'utf8');
+    const bereiche = [];
+    for (const m of css.matchAll(/U\+([0-9A-Fa-f]+)(?:-([0-9A-Fa-f]+))?/g))
+      bereiche.push([parseInt(m[1], 16), parseInt(m[2] || m[1], 16)]);
+    pruefe(bereiche.length > 0, 'schrift.css nennt keinen einzigen Zeichenbereich');
+    const drin = (c) => bereiche.some(([a, b]) => c >= a && c <= b);
+
+    // Was geprueft wird: alles, was als Name auf dem Schirm landen kann,
+    // plus der Text der Oberflaeche. Der Inhalt waechst - dort passiert es.
+    const quellen = [];
+    const sammle = (was, wo) => {
+      if (typeof was === 'string') quellen.push([was, wo]);
+      else if (Array.isArray(was)) was.forEach(x => sammle(x, wo));
+      else if (was && typeof was === 'object')
+        for (const [k, v] of Object.entries(was)) sammle(v, wo);
+    };
+    sammle(I.KONTINENTE, 'Kontinente');
+    sammle(I.LAENDER, 'Länder');
+    sammle(I.HAUPTSTADT_ABLENKER, 'Ablenker');
+    sammle(STAEDTE.map(x => x.hauptstadt), 'Hauptstädte');
+    sammle(DEUTSCHLAND_FEIN.map(x => x.name), 'Bundesländer');
+    for (const [quelle, liste] of Object.entries(GEBACKEN))
+      sammle(liste.map(x => x.name).filter(Boolean), quelle);
+    // Kommentare zaehlen nicht: sie werden nie angezeigt. Ohne das Streichen
+    // meldet das Tor genau den Kommentar rot, der seinen eigenen Befund
+    // beschreibt - und der Weg aus dem Rot waere, den Grund zu loeschen.
+    const ohneKommentar = (t) => t
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      .replace(/<!--[\s\S]*?-->/g, ' ')
+      .replace(/^\s*\/\/.*$/gm, ' ');
+    for (const datei of ['prototyp/spiel.js', 'prototyp/vorlage.html'])
+      quellen.push([ohneKommentar(fs.readFileSync(path.join(process.cwd(), datei), 'utf8')), datei]);
+
+    const fehlend = new Map();
+    for (const [text, wo] of quellen)
+      for (const z of text) {
+        const c = z.codePointAt(0);
+        if (!drin(c)) {
+          const k = `U+${c.toString(16).toUpperCase().padStart(4,'0')} „${z}"`;
+          if (!fehlend.has(k)) fehlend.set(k, new Set());
+          fehlend.get(k).add(wo);
+        }
+      }
+    pruefe(fehlend.size === 0, `${fehlend.size} Zeichen liegen außerhalb des Schnitts `
+      + `latin: ${[...fehlend].map(([k,w])=>`${k} in ${[...w].join('/')}`).join(', ')}`);
+    console.log(`    ${quellen.length} Texte gegen ${bereiche.length} Zeichenbereiche geprüft, `
+      + `${fehlend.size} Zeichen ohne Schrift`);
+  }
+}
+
+/* ====================================================== Tor `symbol` === */
+console.log('\n  Tor `symbol`');
+//
+// Ein Symbol faellt nicht auf, wenn es kaputt ist - es steht auf dem
+// Startbildschirm und niemand sieht es sich noch einmal an. Geprueft wird
+// deshalb das Mechanische, so wie `bildtor` es im anderen Projekt tut.
+{
+  const NOETIG = [180, 192, 512, 1024];
+  const symbolDir = path.join(process.cwd(), 'src/symbol');
+  for (const g of NOETIG) {
+    const f = path.join(symbolDir, `symbol-${g}.png`);
+    if (!fs.existsSync(f)) { pruefe(false, `symbol-${g}.png fehlt`); continue; }
+    const bild = PNG.sync.read(fs.readFileSync(f));
+    pruefe(bild.width === g && bild.height === g,
+      `symbol-${g}.png ist ${bild.width}×${bild.height}, erwartet ${g}×${g}`);
+
+    // iOS legt Durchsichtigkeit auf SCHWARZ. Ein Symbol mit Alpha sieht im
+    // Entwurf gut aus und auf dem Startbildschirm nach Loch.
+    let durchsichtig = 0;
+    for (let i = 3; i < bild.data.length; i += 4) if (bild.data[i] < 255) durchsichtig++;
+    pruefe(durchsichtig === 0,
+      `symbol-${g}.png hat ${durchsichtig} durchsichtige Bildpunkte — iOS legt die auf Schwarz`);
+
+    // Nicht einfarbig. Eine leere Flaeche besteht jede andere Pruefung.
+    const toene = new Set();
+    for (let i = 0; i < bild.data.length; i += 4)
+      toene.add((bild.data[i] >> 3 << 10) | (bild.data[i+1] >> 3 << 5) | (bild.data[i+2] >> 3));
+    pruefe(toene.size > 40, `symbol-${g}.png hat nur ${toene.size} Farbtöne — vermutlich leer`);
+
+    // Die Kugel muss INNERHALB der iOS-Maske liegen. iOS schneidet die Ecken
+    // rund ab; was dort steht, ist weg. Geprueft an den vier Ecken: dort darf
+    // nur Grund stehen, kein Meer und kein Land.
+    const punkt = (x, y) => { const i = (bild.width * y + x) << 2;
+      return [bild.data[i], bild.data[i+1], bild.data[i+2]]; };
+    const mitte = punkt(g >> 1, g >> 1);
+    const rand = Math.round(g * 0.045);
+    let eckenWieMitte = 0;
+    for (const [x, y] of [[rand,rand], [g-1-rand,rand], [rand,g-1-rand], [g-1-rand,g-1-rand]]) {
+      const e = punkt(x, y);
+      const d = Math.max(Math.abs(e[0]-mitte[0]), Math.abs(e[1]-mitte[1]), Math.abs(e[2]-mitte[2]));
+      if (d < 40) eckenWieMitte++;
+    }
+    pruefe(eckenWieMitte === 0,
+      `symbol-${g}.png: ${eckenWieMitte} Ecken sehen aus wie die Mitte — die Kugel läuft in die iOS-Maske`);
+  }
+  console.log(`    ${NOETIG.length} Größen geprüft: quadratisch, undurchsichtig, nicht leer, `
+    + `Kugel innerhalb der Maske`);
+}
+
 /* ======================================================== Tor `doku` ==== */
 console.log('\n  Tor `doku`');
 const KONZEPT = '../docs/Lernkiste-KONZEPT.md';
@@ -290,4 +406,9 @@ if (fehler.length) {
   fehler.forEach(f=>console.log(`    ✗ ${f}`));
   process.exit(1);
 }
-console.log(`\n  Alle vier Tore grün. ${ids.size} eindeutige IDs, ${ZAHL.gesamt} Gebiete.`);
+// Die Zahl wird GEZAEHLT, nicht hingeschrieben: hier stand "Alle vier Tore
+// grün", während längst sechs liefen. Eine Zahl, die niemand nachrechnet,
+// veraltet still.
+const torZahl = (fs.readFileSync(new URL(import.meta.url), 'utf8')
+  .match(/^console\.log\('\\n  Tor `/gm) || []).length;
+console.log(`\n  Alle ${torZahl} Tore grün. ${ids.size} eindeutige IDs, ${ZAHL.gesamt} Gebiete.`);

@@ -60,7 +60,8 @@ const D = {
     const s = STAEDTE.find(x=>x.id===b.id);
     return { id:b.id, name:b.name, pfad:b.pfad, hauptstadt:s.hauptstadt,
              stadtstaat:s.stadtstaat, anker:s.anker,
-             ablenker: I.HAUPTSTADT_ABLENKER[b.id] || [] };
+             ablenker: I.HAUPTSTADT_ABLENKER[b.id] || [],
+             falle: I.ECHTE_FALLEN.includes(b.id) };
   }),
   farben: vierfaerben(DEUTSCHLAND_MITTEL.map(b=>b.id)),
 };
@@ -103,12 +104,113 @@ const BAU = {
   standJahr: I.STAND.jahr,
 };
 
-const html = fs.readFileSync(new URL('./vorlage.html', import.meta.url), 'utf8')
-  .replace('__DATEN__', JSON.stringify(D))
-  .replace('__BAU__', JSON.stringify(BAU))
-  + '<script>' + module + '\n' + fs.readFileSync(new URL('./spiel.js', import.meta.url), 'utf8') + '</script>\n</body></html>';
-fs.writeFileSync(new URL('./spiel.html', import.meta.url), html);
-const gz = zlib.gzipSync(Buffer.from(html)).length;
-console.log(`  spiel.html  ${(html.length/1024).toFixed(0)} KB  →  ${(gz/1024).toFixed(0)} KB gzip`);
+const vorlage = fs.readFileSync(new URL('./vorlage.html', import.meta.url), 'utf8');
+const rumpf = '<script>' + module + '\n'
+  + fs.readFileSync(new URL('./spiel.js', import.meta.url), 'utf8') + '</script>\n</body></html>';
+
+/** Zwei Fassungen aus EINER Quelle - der Unterschied steckt nur im Kopf. */
+function bauen(kopf) {
+  return vorlage.replace('__DATEN__', JSON.stringify(D))
+                .replace('__BAU__', JSON.stringify(BAU))
+                .replace('__KOPF__', kopf) + rumpf;
+}
+
+const SCHRIFT = new URL('../src/schrift/', import.meta.url);
+const SYMBOL  = new URL('../src/symbol/',  import.meta.url);
+const schriftCss = fs.readFileSync(new URL('schrift.css', SCHRIFT), 'utf8');
+const schriftDateien = fs.readdirSync(SCHRIFT).filter(f => f.endsWith('.woff2'));
+
+/* --- Fassung 1: EINE Datei, zum Ansehen -------------------------------- */
+//
+// Alles drin, auch die Schrift als Daten-URI. Diese Fassung laesst sich
+// verschicken und mit einem Doppelklick oeffnen - dafuer ist sie 70 KB
+// groesser. Die Tore pruefen sie, weil sie ohne Server auskommt.
+const eingebettet = schriftCss.replace(/url\(\.\/schrift\/([^)]+)\)/g, (_, datei) =>
+  `url(data:font/woff2;base64,${fs.readFileSync(new URL(datei, SCHRIFT)).toString('base64')})`);
+const einzeln = bauen(`<style>${eingebettet}</style>`);
+fs.writeFileSync(new URL('./spiel.html', import.meta.url), einzeln);
+console.log(`  prototyp/spiel.html  ${(einzeln.length/1024).toFixed(0)} KB`
+  + `  →  ${(zlib.gzipSync(Buffer.from(einzeln)).length/1024).toFixed(0)} KB gzip  (eine Datei)`);
+
+/* --- Fassung 2: dist/, das was ausgeliefert wird ------------------------ */
+//
+// Hier liegen Schrift und Symbole DANEBEN statt drin. Das ist kein
+// Schoenheitsfehler, sondern der Grund, warum die App schnell startet: die
+// Seite aendert sich bei jeder Auslieferung, die Schrift nie. Wer sie
+// einbettet, laedt sie bei jeder Fassung neu.
+const DIST = new URL('../dist/', import.meta.url);
+fs.rmSync(DIST, { recursive: true, force: true });
+fs.mkdirSync(new URL('schrift/', DIST), { recursive: true });
+
+// Ausgeliefert werden nur die drei, die ein Geraet wirklich anfasst:
+// 180 fuer iOS, 192 und 512 fuers Manifest. Die 1024 bleibt in src/symbol
+// als Vorrat - sie waere 577 KB in jedem Lager, fuer nichts.
+const symbole = [180, 192, 512];
+const kopf = [
+  `<link rel="manifest" href="./manifest.webmanifest">`,
+  `<link rel="apple-touch-icon" href="./symbol-180.png">`,
+  `<link rel="icon" type="image/png" sizes="192x192" href="./symbol-192.png">`,
+  ...schriftDateien.map(f => `<link rel="preload" as="font" type="font/woff2" `
+    + `href="./schrift/${f}" crossorigin>`),
+  `<link rel="stylesheet" href="./schrift.css">`,
+].join('\n');
+const verteilt = bauen(kopf).replace('</body></html>',
+  `<script>
+// Der Service Worker haelt die App offline lauffaehig und holt trotzdem bei
+// jedem Start die neueste Fassung. Faellt er aus, laeuft alles wie vorher -
+// nur eben ohne Netz nicht.
+if ('serviceWorker' in navigator)
+  addEventListener('load', () => navigator.serviceWorker.register('./sw.js')
+    .catch(e => console.warn('Service Worker nicht registriert:', e)));
+</script>
+</body></html>`);
+
+fs.writeFileSync(new URL('index.html', DIST), verteilt);
+fs.writeFileSync(new URL('schrift.css', DIST), schriftCss);
+for (const f of schriftDateien)
+  fs.copyFileSync(new URL(f, SCHRIFT), new URL('schrift/' + f, DIST));
+for (const g of symbole)
+  fs.copyFileSync(new URL(`symbol-${g}.png`, SYMBOL), new URL(`symbol-${g}.png`, DIST));
+
+// GitHub Pages laesst sonst Jekyll darueberlaufen und verschluckt alles,
+// was mit einem Unterstrich anfaengt. Kostet nichts, verhindert Raetselraten.
+fs.writeFileSync(new URL('.nojekyll', DIST), '');
+
+fs.writeFileSync(new URL('manifest.webmanifest', DIST), JSON.stringify({
+  name: 'Smart Kids — Erdkunde',
+  short_name: 'Smart Kids',
+  description: 'Kontinente, Länder, Bundesländer und Landeshauptstädte '
+    + 'für Fiona und Lea.',
+  lang: 'de', dir: 'ltr',
+  start_url: './', scope: './', id: './',
+  display: 'standalone',
+  orientation: 'any',
+  background_color: '#f6f3ee',   // = --grund, in Chromium ausgerechnet
+  theme_color: '#1b2835',        // = --tinte
+  icons: [
+    { src:'./symbol-192.png',  sizes:'192x192',   type:'image/png', purpose:'any' },
+    { src:'./symbol-512.png',  sizes:'512x512',   type:'image/png', purpose:'any' },
+    // Die Kugel misst 75 % der Kante, die Schutzzone einer maskierbaren
+    // Kachel 80 % - sie passt also hinein, egal welche Form das System
+    // darum herum schneidet.
+    { src:'./symbol-512.png',  sizes:'512x512',   type:'image/png', purpose:'maskable' },
+  ],
+}, null, 2) + '\n');
+
+const vorrat = ['./', './index.html', './manifest.webmanifest', './schrift.css',
+  ...symbole.map(g => `./symbol-${g}.png`),
+  ...schriftDateien.map(f => `./schrift/${f}`)];
+fs.writeFileSync(new URL('sw.js', DIST),
+  fs.readFileSync(new URL('./pwa/sw.js', import.meta.url), 'utf8')
+    .replace('__FASSUNG__', BAU.fassung + '-' + BAU.datum.replace(/[^0-9]/g, ''))
+    .replace('__VORRAT__', JSON.stringify(vorrat, null, 2)));
+
+const distGroesse = fs.readdirSync(DIST, { recursive:true })
+  .map(f => { const st = fs.statSync(new URL(f, DIST)); return st.isFile() ? st.size : 0; })
+  .reduce((a, b) => a + b, 0);
+console.log(`  dist/                ${(verteilt.length/1024).toFixed(0)} KB Seite`
+  + `  →  ${(zlib.gzipSync(Buffer.from(verteilt)).length/1024).toFixed(0)} KB gzip`
+  + `,  ${(distGroesse/1024).toFixed(0)} KB gesamt mit Schrift und Symbolen`);
+const html = verteilt;
 console.log(`  ${D.kontinente.length} Kontinente, ${D.laender.europa.length}+${D.laender.afrika.length} Länder, `
   + `${D.deutschland.length} Bundesländer, ${D.deutschland.filter(b=>!b.stadtstaat).length} Hauptstadt-Rätsel`);

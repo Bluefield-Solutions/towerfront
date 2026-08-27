@@ -5,11 +5,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Lernkiste">
-<title>Lernkiste — Prototyp</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
+<meta name="apple-mobile-web-app-title" content="Smart Kids">
+<meta name="theme-color" content="#1b2835">
+<meta name="description" content="Erdkunde für Fiona und Lea: Kontinente, Länder, Bundesländer, Landeshauptstädte.">
+<title>Smart Kids</title>
+__KOPF__
 <style>
 /* === Marken. Identisch zu src/marken/marken.css. ====================== */
 :root{
@@ -167,7 +167,10 @@ body{background:var(--grund);color:var(--tinte);font-family:var(--f-ui);line-hei
   color:var(--auf-flaeche);text-align:center;line-height:1.15;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 
-.pin{font-family:var(--f-mono,monospace);font-size:var(--s3);letter-spacing:.3em;color:var(--akzent)}
+.pin{display:flex;gap:var(--r3);justify-content:center;align-items:center;min-height:34px}
+.pin i{width:16px;height:16px;border-radius:var(--rund-voll);border:2.5px solid var(--akzent);
+  transition:background var(--d-tipp) var(--k-standard)}
+.pin i.voll{background:var(--akzent)}
 .ziffern{display:grid;grid-template-columns:repeat(4,64px);gap:var(--r2);justify-content:center}
 .zi{justify-content:center;font-size:var(--s1);min-height:56px}
 

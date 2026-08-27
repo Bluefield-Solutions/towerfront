@@ -305,6 +305,24 @@ der Schnitt **latin** — 51,6 KB statt 328. Beide stehen unter der SIL OFL
 *muss* dasselbe durchfallen. Sonst misst das Tor den Browser-Cache und wäre
 grün, ohne je etwas bewiesen zu haben (Regel 13).
 
+### Das Tor `ansicht` läuft nicht auf dem Runner
+
+Beim ersten Lauf dort waren **alle sieben Aufnahmen rot** — zwei davon mit
+*geänderten Maßen*, also anderem Zeilenumbruch, nicht nur anderen
+Bildpunkten. Das ist kein Befund über die App, sondern einer über die
+Maschine: der Runner hat einen anderen Chromium-Bau, andere Ersatzschriften
+und andere Kantenglättung. Ein Bildpunktvergleich gilt nur bei **gleicher
+Zeichenumgebung**.
+
+Es wird deshalb auf dem Runner übersprungen — **laut und mit Begründung im
+Protokoll**, nicht still. Ein Tor, das sich unbemerkt überspringt, ist
+schlimmer als keines. Ortsfest läuft es weiter mit `npm run ansicht`.
+
+**Offen (D28):** Wer die Aufnahmen auch auf dem Runner will, muss die
+Umgebung festnageln — im Playwright-Abbild bauen *und* die Vorbilder darin
+aufnehmen. Solange beides nicht in derselben Umgebung passiert, misst der
+Vergleich die Maschine.
+
 **Geprüft wird ab jetzt `dist/`**, nicht mehr `prototyp/spiel.html`. Die eine
 Datei ist eine Bequemlichkeit zum Verschicken; sie hat weder Manifest noch
 Service Worker, ein grüner Lauf auf ihr beweist nichts über die App auf dem
@@ -327,5 +345,6 @@ sechs liefen. Die Zahl wird jetzt gezählt, nicht geschrieben.
 | — | **Die Entwürfe und den Prototyp auf dem iPad ansehen.** Kein Tor läuft auf iOS. | ihr |
 | — | Schriftentscheidung: Plus Jakarta Sans oder Nunito, am Gerät | ihr |
 | — | M1: Vite und Svelte. PWA, Service Worker und Ablage stehen bereits. | ich |
+| D28 | `ansicht` auf dem Runner: nur im festgenagelten Playwright-Abbild sinnvoll, samt dort aufgenommener Vorbilder | ich |
 | — | Beschriftungsfahnen zeichnen (14 von 16 brauchen eine) | ich |
 | — | Leitner, Elternbereich, Protokoll | ich |

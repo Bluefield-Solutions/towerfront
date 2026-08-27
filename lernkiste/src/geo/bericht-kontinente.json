@@ -1,0 +1,34 @@
+{
+  "ebene": "kontinente",
+  "quelle": "Natural Earth 1:50m admin_0",
+  "klippkanten": {
+    "europaAsien": "Ural, Uralfluss, Kaspisches Meer, Kaukasus (Maske in Grad)"
+  },
+  "grenze": 0.75,
+  "stufen": [
+    {
+      "stufe": "grob",
+      "breitePx": 200,
+      "hausdorffPxMax": 0.729,
+      "punkte": 10035,
+      "bytes": 115974,
+      "gzip": 40835
+    },
+    {
+      "stufe": "mittel",
+      "breitePx": 800,
+      "hausdorffPxMax": 0.743,
+      "punkte": 30429,
+      "bytes": 347873,
+      "gzip": 109229
+    },
+    {
+      "stufe": "fein",
+      "breitePx": 2000,
+      "hausdorffPxMax": 0.741,
+      "punkte": 41420,
+      "bytes": 472994,
+      "gzip": 141575
+    }
+  ]
+}

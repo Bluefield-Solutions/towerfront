@@ -1,0 +1,20 @@
+{
+  "name": "lernkiste",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Lernspiel fuer Fiona und Lea - Staging-Baum, zieht in ein eigenes Repository um",
+  "scripts": {
+    "geo-holen": "node tools/geo-holen.mjs",
+    "geo-backen": "node tools/geo-backen.mjs",
+    "ansicht": "node tor/ansicht.mjs"
+  },
+  "devDependencies": {
+    "d3-geo": "^3.1.1",
+    "mapshaper": "^0.6.102",
+    "topojson-client": "^3.1.0"
+  },
+  "dependencies": {
+    "playwright": "^1.62.1"
+  }
+}

@@ -1,0 +1,5 @@
+node_modules/
+# Rohdaten gehoeren nicht ins Repository - wie art/roh in Towerfront.
+# Sie werden mit tools/geo-holen.mjs beschafft; eingecheckt wird nur das
+# gebackene Ergebnis in src/geo/.
+roh/

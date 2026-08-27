@@ -3,7 +3,7 @@
 Was gebaut ist, was gemessen ist, was offen bleibt. Ergänzt Konzept K3, den
 Prüfbericht und das Grafik-Audit; ersetzt keines davon.
 
-Stand: nach M0-Vorarbeit, M2, MG und dem Tor `ansicht`.
+Stand: nach M0-Vorarbeit, M2, MG, dem Tor `ansicht` und **M3 bis M6**.
 Code: `lernkiste/` — ein Arbeitsbaum, der ins eigene Repository umzieht.
 
 ---
@@ -102,6 +102,44 @@ stehen.
 
 ---
 
+## M3 bis M6
+
+Vier Kernmodule, alle einzeln prüfbar und ohne DOM:
+
+| Modul | Was |
+|---|---|
+| `src/vergleich/` | Kölner Phonetik, Damerau-Levenshtein, drei Ausgänge (angenommen · Rückfrage · nochmal), Rechtschreibbewertung |
+| `src/kern/leitner.js` | fünf Fächer, deterministische Sitzungsauswahl, Fortschritt |
+| `src/profil/ablage.js` | IndexedDB ohne Abhängigkeit, `storage.persist()`, profilweises Löschen |
+| `src/protokoll/` | anhängender Ereignisstrom, Auswertung, CSV- und JSON-Ausfuhr |
+
+Im Prototyp sind sie eingebettet — ein kleiner Inliner wickelt jedes Modul in
+eine benannte IIFE. Ohne das kollidiert `mischen` aus dem Leitner mit
+`mischen` aus dem Spiel, und niemand merkt es.
+
+### Das Tor `vergleich`
+
+| Korpus | Trefferquote | Falsch-Positiv |
+|---|---|---|
+| erfunden (65 / 43 Fälle) | 100 % | 2,3 % |
+| eingefroren | **fehlt noch** — entsteht aus echten Aufnahmen | — |
+
+**Solange die eingefrorene Hälfte fehlt, gilt keine Zielzahl.** Das Tor sagt
+das ausdrücklich, statt eine Zahl zu melden, die nichts bezeugt. Es fängt
+trotzdem eine offensichtliche Fehlfunktion: ein Abgleich, der alles annimmt,
+fällt durch.
+
+Der erste Lauf meldete **11,6 % Falsch-Positiv**: „euro" wurde als Europa
+angenommen, „bayer" als Bayern, „afrikaner" als Afrika. Lauter kürzere oder
+längere Wörter, die klanglich fast gleich sind. Zwei Regeln haben es
+behoben — eine Längenstrafe im Abstand, und die Regel, dass ein Wort, das
+eine Silbe zu kurz oder zu lang ist, **nie ohne Rückfrage** angenommen wird.
+„Meintest du Bayern?" ist die richtige Antwort auf „Bayer", nicht „richtig".
+
+Was bleibt: **„aussen" wird als „Asien" angenommen.** Die Kölner Phonetik
+gibt beiden denselben Code, und sie sind gleich lang. Das ist eine echte
+Grenze des Verfahrens, kein Einstellfehler.
+
 ## Der Prototyp
 
 `lernkiste/prototyp/spiel.html` — **eine Datei, läuft ohne Server**, 766 KB.
@@ -120,9 +158,40 @@ hatte — die Karte wuchs auf ihre Eigengröße. Und im Querformat rutschte das
 erste Etikett **unter die Kopfleiste**, weil `justify-content: center` bei
 Überlauf über die obere Kante hinausschiebt. Der Finger traf dort die Leiste.
 
-**Was der Prototyp NICHT ist:** kein Leitner, kein Fortschritt über Sitzungen
-hinweg, kein Elternbereich, keine Ablage, keine PWA. Er zeigt die Mechanik und
-die Gestaltung an echten Daten — mehr nicht.
+Neu mit M3 bis M6: **Ablage in IndexedDB** (der Fortschritt überlebt den
+Neustart), **Leitner mit fünf Fächern**, **Forscherbuch** (der Aufkleber ist
+der Umriss des Gebiets selbst), die **Stadtstaaten-Lerneinheit** vor Ebene 4,
+und der **Elternbereich** hinter einer vierstelligen PIN: Trefferquoten,
+Wackelkandidaten, Ausspracheliste, CSV- und JSON-Ausfuhr, profilweises
+Löschen, Fassungsstempel, Speicherzustand und die Herkunft der Karten.
+
+**Was der Prototyp NICHT ist:** keine PWA, kein Service Worker, kein
+Startbildschirm-Symbol, keine Auslieferung. Das ist M1 und braucht das
+Repository.
+
+### Fünf Fehler, die erst der Rauchtest gezeigt hat
+
+1. **Die CSS-Regeln fürs Spielfeld waren auf `#spiel` gezielt**, während der
+   Bildschirm gar keine id hatte — die Karte wuchs auf ihre Eigengröße.
+2. **Im Querformat rutschte das erste Etikett unter die Kopfleiste**, weil
+   `justify-content: center` bei Überlauf über die obere Kante hinausschiebt.
+   Der Finger traf dort die Leiste.
+3. **Berlins 44-Punkt-Trefferkreis lag über Brandenburgs Anker.** Brandenburg
+   war an seiner besten Stelle nicht mehr treffbar. „Das kleinere gewinnt"
+   heißt nicht „das kleinere sperrt aus" — die Kreise schrumpfen jetzt, bevor
+   sie den Anker eines Nachbarn verschlucken.
+4. **Der Aufkleber kam erst bei Fach 5**, also nach vier richtigen Antworten
+   über drei Wochen. Für eine Sechsjährige bliebe das Forscherbuch wochenlang
+   leer. Jetzt ab Fach 3, mit einem Siegel bei Fach 5.
+5. **Die Auffüllung der Sitzung bevorzugte Neues vor Angefangenem.** Ein Kind
+   bekam in der zweiten Sitzung fast nur neue Gebiete, keines erreichte Fach 3,
+   und das Buch blieb leer — bei zwölf richtigen Antworten.
+
+Dazu zwei Fehler im Tor selbst: die Fortschrittsprüfung `/[1-9]/` traf die
+**16** in „0 von 16 geschafft" und meldete grün, obwohl nichts abgelegt war —
+sie liest jetzt die Ablage statt den Text. Und der Zufallskeim kam aus der
+Uhr, womit keine Sitzung reproduzierbar war; er kommt jetzt aus einer
+gespeicherten Sitzungsnummer.
 
 ---
 

@@ -1,210 +1,263 @@
-/* Lernkiste - spielbarer Prototyp.
- * Eine Aufgabe, drei Eingabewege. Die Aufgabenlogik sieht nur Antworten. */
+/* Lernkiste - Prototyp mit M3 bis M6.
+ *
+ * Eine Aufgabe, drei Eingabewege. Die Aufgabenlogik sieht nur Antworten.
+ * Leitner statt Zufall, Protokoll statt Vergessen, Elternbereich statt
+ * Vermuten.
+ */
 const D = JSON.parse(document.getElementById('daten').textContent);
+const BAU = JSON.parse(document.getElementById('bau').textContent);
 const buehne = document.getElementById('buehne');
 
-/* ---------- Marken und Werkzeug ---------------------------------------- */
 const FL = ['--f1','--f2','--f3','--f4','--f5','--f6','--f7'];
 const VIER = ['--f1','--f3','--f5','--f6'];
-const el = (t, k, i) => { const e=document.createElement(t); if(k) e.className=k;
-  if(i!==undefined) e.innerHTML=i; return e; };
-const STERN = (f)=>`<svg width="24" height="24" viewBox="-14 -14 28 28"><path d="M0 -12 3.7 -4 12 -2.8 6 3.2 7.4 12 0 7.8 -7.4 12 -6 3.2 -12 -2.8 -3.7 -4Z" fill="${f}" stroke="var(--tinte)" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
-const ZURUECK = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg>';
-const MIKRO = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg>';
-const sterne = (n)=>`<div class="sterne">${[0,1,2].map(i=>STERN(i<n?'oklch(.80 .14 85)':'oklch(.93 .01 250)')).join('')}</div>`;
+const el = (t,k,i)=>{ const e=document.createElement(t); if(k)e.className=k; if(i!==undefined)e.innerHTML=i; return e; };
+const STERN = (f,g=24)=>`<svg width="${g}" height="${g}" viewBox="-14 -14 28 28"><path d="M0 -12 3.7 -4 12 -2.8 6 3.2 7.4 12 0 7.8 -7.4 12 -6 3.2 -12 -2.8 -3.7 -4Z" fill="${f}" stroke="var(--tinte)" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
+const ZURUECK='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg>';
+const MIKRO='<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg>';
+const sterne=(n,g)=>`<div class="sterne">${[0,1,2].map(i=>STERN(i<n?'oklch(.80 .14 85)':'oklch(.93 .01 250)',g)).join('')}</div>`;
 
-/* ---------- Vorlesen. Fuer Fiona die Bedingung, nicht der Komfort. ------ */
-let stimme = null, tonAn = true;
-function stimmeSuchen(){
-  const s = speechSynthesis.getVoices().filter(v=>v.lang.startsWith('de'));
-  stimme = s.find(v=>v.localService) || s[0] || null;
-}
-if ('speechSynthesis' in window) {
-  stimmeSuchen(); speechSynthesis.addEventListener('voiceschanged', stimmeSuchen);
-}
-let entsperrt = false;
+/* ---------- Vorlesen ---------------------------------------------------- */
+let stimme=null, tonAn=true, entsperrt=false;
+function stimmeSuchen(){ const s=speechSynthesis.getVoices().filter(v=>v.lang.startsWith('de'));
+  stimme=s.find(v=>v.localService)||s[0]||null; }
+if ('speechSynthesis' in window){ stimmeSuchen(); speechSynthesis.addEventListener('voiceschanged',stimmeSuchen); }
 function vorlesen(text){
-  if (!tonAn || !('speechSynthesis' in window)) return;
-  try {
-    if (!entsperrt) { speechSynthesis.speak(new SpeechSynthesisUtterance('')); entsperrt = true; }
+  if(!tonAn||!('speechSynthesis' in window)||!text) return;
+  try{ if(!entsperrt){ speechSynthesis.speak(new SpeechSynthesisUtterance('')); entsperrt=true; }
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang='de-DE'; u.rate=.92; if (stimme) u.voice=stimme;
-    speechSynthesis.speak(u);
-  } catch(e){}
+    const u=new SpeechSynthesisUtterance(text); u.lang='de-DE'; u.rate=.92;
+    if(stimme)u.voice=stimme; speechSynthesis.speak(u);
+  }catch(e){}
 }
 
-/* ---------- Namensabgleich: normalisieren, Alias, Levenshtein ----------- */
-function normal(s){
-  return (s||'').toLowerCase().trim()
-    .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
-    .replace(/^(das ist|ich glaube|das heisst|aeh|oehm)\s+/,'')
-    .replace(/[^a-z0-9]/g,'');
-}
-function levenshtein(a,b){
-  const m=a.length,n=b.length; if(!m)return n; if(!n)return m;
-  let v0=Array.from({length:n+1},(_,i)=>i), v1=new Array(n+1);
-  for(let i=0;i<m;i++){ v1[0]=i+1;
-    for(let j=0;j<n;j++) v1[j+1]=Math.min(v1[j]+1, v0[j+1]+1, v0[j]+(a[i]===b[j]?0:1));
-    [v0,v1]=[v1,v0]; }
-  return v0[n];
-}
-/** Gibt {id, sicherheit} oder null. Geschlossene Kandidatenmenge. */
-function abgleich(eingabe, kandidaten){
-  const e = normal(eingabe); if (!e) return null;
-  let best=null, bestD=Infinity, zweitD=Infinity;
-  for (const k of kandidaten) {
-    const formen = [k.name, ...(k.aliasse||[]), ...(k.aussprache||[])].map(normal);
-    const d = Math.min(...formen.map(f => levenshtein(e,f) / Math.max(f.length,1)));
-    if (d < bestD) { zweitD = bestD; bestD = d; best = k; }
-    else if (d < zweitD) zweitD = d;
-  }
-  if (bestD > 0.42) return null;
-  // Abstand zum Zweitbesten: sonst rueckfragen statt annehmen.
-  const sicher = bestD < 0.12 || (zweitD - bestD) > 0.20;
-  return { id: best.id, name: best.name, sicherheit: sicher ? 1 : 0.5, abstand: bestD };
-}
-
-/* ---------- Zustand ----------------------------------------------------- */
+/* ---------- Profile und Ebenen ------------------------------------------ */
 const PROFILE = {
-  fiona: { name:'Fiona', alter:6, eingabe:['ziehen','sprechen'], vorlesen:true,
-           kandidaten:4, laenderTiefe:3, sitzung:6, streng:false, farbe:'--f7' },
-  lea:   { name:'Lea', alter:8, eingabe:['ziehen','tippen'], vorlesen:false,
-           kandidaten:99, laenderTiefe:5, sitzung:8, streng:true, farbe:'--f5' },
+  fiona:{ id:'fiona', name:'Fiona', alter:6, eingabe:['ziehen','sprechen'], vorlesen:true,
+          kandidaten:4, laenderTiefe:3, sitzung:6, streng:false, farbe:'--f7' },
+  lea:  { id:'lea', name:'Lea', alter:8, eingabe:['ziehen','tippen'], vorlesen:false,
+          kandidaten:99, laenderTiefe:5, sitzung:8, streng:true, farbe:'--f5' },
 };
-let P = null, Sitzung = null;
+const EBENEN = [
+  { id:'kontinente',    titel:'Kontinente',        unter:'die sieben' },
+  { id:'laender:europa',titel:'Länder in Europa',  unter:'die größten' },
+  { id:'laender:afrika',titel:'Länder in Afrika',  unter:'die größten' },
+  { id:'bundeslaender', titel:'Bundesländer',      unter:'alle sechzehn' },
+  { id:'hauptstaedte',  titel:'Landeshauptstädte', unter:'dreizehn Rätsel' },
+];
+let P=null, Sitzung=null, Stand={}, Einst={ ton:true, abend:false, sprachmodus:false, pin:'0000', stadtstaatenGezeigt:false };
 
-/* ---------- Aufgabenvorrat --------------------------------------------- */
-function vorrat(ebene, kontinent){
-  if (ebene === 'kontinente')
-    return D.kontinente
-      .filter(k => P.name === 'Fiona' ? k.runde <= 2 : true)
-      .map(k => ({ id:k.id, name:k.name, aliasse:k.aliasse, aussprache:k.aussprache, pfad:k.pfad }));
-  if (ebene === 'laender')
-    return D.laender[kontinent].filter(l => l.rang <= P.laenderTiefe)
-      .map(l => ({ id:l.a3, name:l.name, aliasse:l.aliasse, aussprache:l.aussprache, pfad:l.pfad }));
-  if (ebene === 'bundeslaender')
-    return D.deutschland.map(b => ({ id:b.id, name:b.name, aliasse:[],
-      aussprache:[b.name.toLowerCase()], pfad:b.pfad, anker:b.anker }));
-  if (ebene === 'hauptstaedte')
-    return D.deutschland.filter(b => !b.stadtstaat)
-      .map(b => ({ id:b.id, name:b.hauptstadt, aliasse:[], aussprache:[b.hauptstadt.toLowerCase()],
-                   pfad:b.pfad, anker:b.anker, gebiet:b.name, ablenker:b.ablenker||[] }));
+/* ---------- Aufgabenvorrat ---------------------------------------------- */
+function vorrat(ebeneId){
+  const [art, kont] = ebeneId.split(':');
+  if (art==='kontinente')
+    return D.kontinente.filter(k=>P.id==='fiona' ? k.runde<=3 : true)
+      .map(k=>({ id:k.id, name:k.name, aliasse:k.aliasse, aussprache:k.aussprache, pfad:k.pfad }));
+  if (art==='laender')
+    return D.laender[kont].filter(l=>l.rang<=P.laenderTiefe)
+      .map(l=>({ id:l.a3, name:l.name, aliasse:l.aliasse, aussprache:l.aussprache, pfad:l.pfad }));
+  if (art==='bundeslaender')
+    return D.deutschland.map(b=>({ id:b.id, name:b.name, aliasse:[], aussprache:[b.name.toLowerCase()],
+      pfad:b.pfad, anker:b.anker }));
+  if (art==='hauptstaedte')
+    return D.deutschland.filter(b=>!b.stadtstaat).map(b=>({ id:b.id, name:b.hauptstadt,
+      aliasse:[], aussprache:[b.hauptstadt.toLowerCase()], pfad:b.pfad, anker:b.anker,
+      gebiet:b.name, ablenker:b.ablenker||[] }));
   return [];
 }
-function mischen(a, keim){
-  const r = () => { keim = (keim*1664525+1013904223)>>>0; return keim/4294967296; };
-  const b = a.slice();
-  for (let i=b.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [b[i],b[j]]=[b[j],b[i]]; }
-  return b;
-}
+const NAMEN = {};
+D.kontinente.forEach(k=>NAMEN[k.id]=k.name);
+Object.values(D.laender).flat().forEach(l=>NAMEN[l.a3]=l.name);
+D.deutschland.forEach(b=>NAMEN[b.id]=b.name);
 
-/* ---------- Bildschirme ------------------------------------------------- */
+const standSchluessel = (ebeneId)=>`${P.id}:${ebeneId}`;
+async function standLaden(ebeneId){
+  try { Stand = (await Ablage.hole('fortschritt', standSchluessel(ebeneId))) || Leitner.neuerStand(); }
+  catch(e){ Stand = Leitner.neuerStand(); }
+}
+async function standSichern(ebeneId){
+  try { await Ablage.setze('fortschritt', standSchluessel(ebeneId), Stand); } catch(e){}
+}
+async function einstLaden(){
+  try { Einst = { ...Einst, ...(await Ablage.hole('einstellungen','alles') || {}) }; } catch(e){}
+  tonAn = Einst.ton;
+  document.documentElement.setAttribute('data-abend', Einst.abend ? 'an' : 'aus');
+}
+async function einstSichern(){ try{ await Ablage.setze('einstellungen','alles',Einst); }catch(e){} }
+
+/* ---------- Bildschirmwechsel ------------------------------------------- */
 function zeige(bau){
-  const alt = buehne.querySelector('.schirm.da');
-  const neu = bau();
-  neu.classList.add('schirm');
-  buehne.appendChild(neu);
-  requestAnimationFrame(()=>{ neu.classList.add('da'); if(alt){ alt.classList.remove('da');
-    setTimeout(()=>alt.remove(), 340); } });
+  Promise.resolve(bau()).then(neu=>{
+    // ALLE bisherigen Bildschirme, nicht nur den sichtbaren. Wird zeige()
+    // zweimal kurz hintereinander gerufen, bleibt sonst einer haengen -
+    // im Elternbereich schimmerten drei Bildschirme uebereinander.
+    const alte = [...buehne.querySelectorAll('.schirm')];
+    neu.classList.add('schirm'); buehne.appendChild(neu);
+    requestAnimationFrame(()=>{
+      neu.classList.add('da');
+      alte.forEach(a=>{ a.classList.remove('da'); setTimeout(()=>a.remove(),340); });
+    });
+  });
 }
 
+/* ---------- Profilwahl --------------------------------------------------- */
 function profilwahl(){
   const s = el('div');
   s.innerHTML = `<div class="kopf"><span></span>
-      <button class="knopf" id="ton">${tonAn?'Ton an':'Ton aus'}</button></div>
+      <div class="reihe">
+        <button class="knopf" id="ton">${tonAn?'Ton an':'Ton aus'}</button>
+        <button class="knopf" id="abend">${Einst.abend?'Abend':'Tag'}</button>
+      </div></div>
     <div class="mitte">
       <div class="titel">Wer spielt?</div>
-      <div class="wahl">${Object.entries(PROFILE).map(([id,p])=>`
-        <button class="kachel" data-profil="${id}">
+      <div class="wahl">${Object.values(PROFILE).map(p=>`
+        <button class="kachel" data-profil="${p.id}">
           <div class="kreis" style="background:var(${p.farbe})">${p.name[0]}</div>
           <div class="name">${p.name}</div>
           <div class="rolle">${p.alter} Jahre · ${p.eingabe.includes('sprechen')?'sprechen und ziehen':'tippen und ziehen'}</div>
         </button>`).join('')}</div>
-      <div class="unter">Prototyp. Die Karten sind echt gebacken — Umrisse aus Natural Earth, Hausdorff unter 0,75 Bildpunkte.</div>
+      <div class="unter">Prototyp · Fassung ${BAU.fassung} · ${BAU.datum}</div>
     </div>`;
-  s.querySelector('#ton').onclick = (e)=>{ tonAn=!tonAn; e.target.textContent = tonAn?'Ton an':'Ton aus'; };
-  s.querySelectorAll('[data-profil]').forEach(b => b.onclick = ()=>{
-    P = PROFILE[b.dataset.profil]; vorlesen(P.name); zeige(ebenenwahl); });
+  s.querySelector('#ton').onclick=(e)=>{ tonAn=!tonAn; Einst.ton=tonAn; einstSichern();
+    e.target.textContent=tonAn?'Ton an':'Ton aus'; };
+  s.querySelector('#abend').onclick=(e)=>{ Einst.abend=!Einst.abend; einstSichern();
+    document.documentElement.setAttribute('data-abend',Einst.abend?'an':'aus');
+    e.target.textContent=Einst.abend?'Abend':'Tag'; };
+  s.querySelectorAll('[data-profil]').forEach(b=>b.onclick=()=>{
+    P=PROFILE[b.dataset.profil]; Ablage.setze('profile',P.id,{ id:P.id, zuletzt:Date.now() }).catch(()=>{});
+    vorlesen(P.name); zeige(ebenenwahl); });
   return s;
 }
 
-function ebenenwahl(){
+/* ---------- Ebenenwahl mit Fortschritt ----------------------------------- */
+async function ebenenwahl(){
   const s = el('div');
-  const kacheln = [
-    { e:'kontinente', t:'Kontinente', u: P.name==='Fiona' ? 'sechs Formen' : 'alle sieben' },
-    { e:'laender', k:'europa', t:'Länder in Europa', u:`die ${P.laenderTiefe} größten` },
-    { e:'laender', k:'afrika', t:'Länder in Afrika', u:`die ${P.laenderTiefe} größten` },
-    { e:'bundeslaender', t:'Bundesländer', u:'alle sechzehn' },
-    { e:'hauptstaedte', t:'Landeshauptstädte', u:'dreizehn Rätsel' },
-  ];
+  const balken = [];
+  for (const e of EBENEN) {
+    let st = {};
+    try { st = (await Ablage.hole('fortschritt', `${P.id}:${e.id}`)) || {}; } catch(err){}
+    const alle = vorrat(e.id);
+    balken.push({ ...e, ...Leitner.fortschritt(alle, st) });
+  }
   s.innerHTML = `<div class="kopf">
       <button class="knopf" id="zur">${ZURUECK}<span>Zurück</span></button>
-      <span class="fortschritt">${P.name}</span></div>
+      <span class="fortschritt">${P.name}</span>
+      <div class="reihe">
+        <button class="knopf" id="buch">Forscherbuch</button>
+        <button class="knopf" id="eltern">Eltern</button>
+      </div></div>
     <div class="mitte">
       <div class="titel">Was möchtest du üben?</div>
-      <div class="wahl">${kacheln.map((k,i)=>`
-        <button class="kachel" data-i="${i}" style="min-width:190px">
-          <div class="name" style="font-size:var(--s1)">${k.t}</div>
-          <div class="rolle">${k.u}</div></button>`).join('')}</div>
+      <div class="wahl">${balken.map(b=>`
+        <button class="kachel" data-ebene="${b.id}" style="min-width:200px">
+          <div class="name" style="font-size:var(--s1)">${b.titel}</div>
+          <div class="rolle">${b.gesammelt} von ${b.gesamt} gesammelt${b.gekonnt?` · ${b.gekonnt} sicher`:''}</div>
+          <div class="balken"><i style="width:${Math.round(b.anteil*100)}%"></i></div>
+        </button>`).join('')}</div>
     </div>`;
-  s.querySelector('#zur').onclick = ()=>zeige(profilwahl);
-  s.querySelectorAll('[data-i]').forEach(b => b.onclick = ()=>{
-    const k = kacheln[+b.dataset.i];
-    starten(k.e, k.k); });
+  s.querySelector('#zur').onclick=()=>zeige(profilwahl);
+  s.querySelector('#buch').onclick=()=>zeige(forscherbuch);
+  s.querySelector('#eltern').onclick=()=>zeige(elternTor);
+  s.querySelectorAll('[data-ebene]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.ebene;
+    if (id==='hauptstaedte' && !Einst.stadtstaatenGezeigt) zeige(()=>stadtstaaten(id));
+    else starten(id); });
   return s;
 }
 
-function starten(ebene, kontinent){
-  const alle = vorrat(ebene, kontinent);
-  const keim = (Date.now() ^ 0x9e3779b9) >>> 0;
-  Sitzung = { ebene, kontinent, alle,
-    liste: mischen(alle, keim).slice(0, Math.min(P.sitzung, alle.length)),
-    i:0, richtig:0, versuche:0 };
+/* ---------- Die Stadtstaaten-Lerneinheit --------------------------------- */
+function stadtstaaten(danach){
+  const s = el('div');
+  const drei = D.deutschland.filter(b=>b.stadtstaat);
+  s.innerHTML = `<div class="kopf">
+      <button class="knopf" id="zur">${ZURUECK}<span>Zurück</span></button><span></span></div>
+    <div class="mitte">
+      <div class="titel">Drei sind anders</div>
+      <div class="unter">Berlin, Hamburg und Bremen sind <strong>Stadtstaaten</strong>:
+        die Stadt ist das ganze Bundesland. Sie haben keine eigene Hauptstadt —
+        sie <em>sind</em> ihre Hauptstadt.</div>
+      <div class="wahl">${drei.map((b,i)=>`
+        <button class="kachel" data-lesen="${b.name}" style="min-width:150px">
+          <svg viewBox="${D.vbD}" style="width:96px;height:96px" aria-hidden="true">
+            <path d="${b.pfad}" fill-rule="evenodd" fill="var(${VIER[i%4]})"
+                  stroke="var(--tinte)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+          <div class="name" style="font-size:var(--s1)">${b.name}</div>
+        </button>`).join('')}</div>
+      <button class="knopf" id="weiter" style="font-size:var(--s1);padding:var(--r3) var(--r8)">Verstanden</button>
+    </div>`;
+  s.querySelector('#zur').onclick=()=>zeige(ebenenwahl);
+  s.querySelectorAll('[data-lesen]').forEach(b=>b.onclick=()=>vorlesen(b.dataset.lesen));
+  s.querySelector('#weiter').onclick=()=>{ Einst.stadtstaatenGezeigt=true; einstSichern(); starten(danach); };
+  vorlesen('Drei sind anders. Berlin, Hamburg und Bremen sind Stadtstaaten.');
+  return s;
+}
+
+/* ---------- Sitzung starten ---------------------------------------------- */
+/** Ein Keim, der sich reproduzieren laesst. Aus der Uhr geht das nicht. */
+function keimAus(text){
+  let h = 2166136261;
+  for (let i=0;i<text.length;i++){ h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+async function starten(ebeneId){
+  await standLaden(ebeneId);
+  const alle = vorrat(ebeneId);
+  // Die Sitzungsnummer waechst, die Uhr nicht: gleicher Fortschritt +
+  // gleiche Nummer = gleiche Aufgabenfolge. Ohne das laesst sich die
+  // Lernlogik nur behaupten, nicht nachrechnen (Konzept K3, Kapitel 7).
+  const nrSchluessel = `nr:${P.id}:${ebeneId}`;
+  let nr = 0;
+  try { nr = (await Ablage.hole('einstellungen', nrSchluessel)) || 0; } catch(e){}
+  nr++;
+  try { await Ablage.setze('einstellungen', nrSchluessel, nr); } catch(e){}
+  const keim = keimAus(`${P.id}|${ebeneId}|${nr}`);
+  const liste = Leitner.sitzung(alle, Stand, P.sitzung, Date.now(), keim);
+  Sitzung = { ebeneId, alle, liste, i:0, richtig:0, versuche:0, keim, begonnen:Date.now() };
   zeige(spielschirm);
 }
 
-/* ---------- Der Spielbildschirm ---------------------------------------- */
+/* ---------- Der Spielbildschirm ------------------------------------------ */
 function spielschirm(){
-  const s = el('div');
-  const st = Sitzung, ziel = st.liste[st.i];
-  const istHaupt = st.ebene === 'hauptstaedte';
+  const s = el('div'), st = Sitzung, ziel = st.liste[st.i];
+  const [art, kont] = st.ebeneId.split(':');
+  const istHaupt = art==='hauptstaedte';
+  const beginn = Date.now();
+  let versuch = 0, erledigt = false;
 
-  // Kandidaten: das Ziel plus Ablenker aus derselben Menge.
+  // Kandidaten: Ziel plus Ablenker. Bei Ebene 4 sind die Ablenker das
+  // Eigentliche - fuenf Bundeslaender haben eine Hauptstadt, die NICHT ihre
+  // groesste Stadt ist.
+  const rnd = (k)=>{ let x=k>>>0; return ()=>{ x=(x*1664525+1013904223)>>>0; return x/4294967296; }; };
+  const misch=(a,r)=>{ const b=a.slice(); for(let i=b.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[b[i],b[j]]=[b[j],b[i]];} return b; };
+  const r1 = rnd(st.keim + st.i*7919);
   let kand;
   if (istHaupt) {
-    const ablenker = (ziel.ablenker||[]).slice(0,2)
-      .map(n=>({ id:'x-'+n, name:n, aliasse:[], aussprache:[n.toLowerCase()] }));
-    const andere = st.alle.filter(x=>x.id!==ziel.id);
-    kand = mischen([ziel, ...ablenker,
-      ...mischen(andere, st.i*7919+13).slice(0, Math.max(0, 4-1-ablenker.length))], st.i*104729+7);
+    const ab = (ziel.ablenker||[]).slice(0,2).map(n=>({ id:'x-'+n, name:n, aliasse:[], aussprache:[n.toLowerCase()] }));
+    const rest = misch(st.alle.filter(x=>x.id!==ziel.id), r1).slice(0, Math.max(0, 4-1-ab.length));
+    kand = misch([ziel, ...ab, ...rest], r1);
   } else {
-    const andere = mischen(st.alle.filter(x=>x.id!==ziel.id), st.i*7919+13);
     const n = Math.min(P.kandidaten, st.alle.length) - 1;
-    kand = mischen([ziel, ...andere.slice(0, Math.max(1,n))], st.i*104729+7);
+    kand = misch([ziel, ...misch(st.alle.filter(x=>x.id!==ziel.id), r1).slice(0, Math.max(1,n))], r1);
   }
 
-  const vb = st.ebene === 'kontinente' ? D.vbK
-           : st.ebene === 'laender' ? D.vbL[st.kontinent] : D.vbD;
-  const farbeVon = (g, i) => st.ebene === 'bundeslaender' || istHaupt
-    ? `var(${VIER[(D.farben[g.id] ?? i) % 4]})` : `var(${FL[i % 7]})`;
-  const flaechen = st.alle.map((g,i)=>
-    `<path class="geb ${g.id===ziel.id?'ziel':''}" data-id="${g.id}" d="${g.pfad}"
-       fill-rule="evenodd" fill="${farbeVon(g,i)}"/>`).join('');
+  const vb = art==='kontinente' ? D.vbK : art==='laender' ? D.vbL[kont] : D.vbD;
+  const farbeVon=(g,i)=> (art==='bundeslaender'||istHaupt) ? `var(${VIER[(D.farben[g.id]??i)%4]})` : `var(${FL[i%7]})`;
+  const umgebung = (art==='laender' && D.umgebung[kont])
+    ? D.umgebung[kont].map(p=>`<path d="${p}" fill="var(--app-linie)" opacity=".55"/>`).join('') : '';
+  const flaechen = st.alle.map((g,i)=>`<path class="geb ${g.id===ziel.id?'ziel':''}" data-id="${g.id}"
+      d="${g.pfad}" fill-rule="evenodd" fill="${farbeVon(g,i)}"/>`).join('');
   const konturen = st.alle.map(g=>`<path d="${g.pfad}" fill-rule="evenodd"/>`).join('');
-
-  const tippt = P.eingabe.includes('tippen');
-  const spricht = P.eingabe.includes('sprechen');
-  const frageText = istHaupt
-    ? `Wie heißt die Hauptstadt von ${ziel.gebiet}?`
-    : st.ebene === 'kontinente' ? 'Wie heißt dieser Kontinent?'
-    : st.ebene === 'laender' ? 'Wie heißt dieses Land?' : 'Wie heißt dieses Bundesland?';
+  const tippt = P.eingabe.includes('tippen'), spricht = P.eingabe.includes('sprechen');
+  const frageText = istHaupt ? `Wie heißt die Hauptstadt von ${ziel.gebiet}?`
+    : art==='kontinente' ? 'Wie heißt dieser Kontinent?'
+    : art==='laender' ? 'Wie heißt dieses Land?' : 'Wie heißt dieses Bundesland?';
+  const fach = Stand[ziel.id]?.fach ?? 1;
 
   s.innerHTML = `
     <div class="kopf">
       <button class="knopf" id="zur">${ZURUECK}<span>Zurück</span></button>
-      <span class="fortschritt">${st.i+1} von ${st.liste.length}</span>
-      ${sterne(Math.min(3, Math.floor(st.richtig / Math.max(1,Math.ceil(st.liste.length/3)))))}
+      <span class="fortschritt">${st.i+1} von ${st.liste.length}
+        <span class="fach" title="Leitner-Fach">Fach ${fach}</span></span>
+      ${sterne(Math.min(3, Math.floor(st.richtig/Math.max(1,Math.ceil(st.liste.length/3)))))}
     </div>
     <div class="frage" id="frage">${frageText}</div>
     <div class="feld">
@@ -212,6 +265,7 @@ function spielschirm(){
         <svg viewBox="${vb}" preserveAspectRatio="xMidYMid meet">
           <defs><clipPath id="wasch"><circle id="waschKreis" cx="0" cy="0" r="900"
             style="transform-box:fill-box;transform-origin:center"/></clipPath></defs>
+          <g id="umg">${umgebung}</g>
           <g id="fl">${flaechen}</g>
           <g id="treffer"></g>
           <path id="belohn" d="" fill="oklch(.80 .12 155)" clip-path="url(#wasch)" style="display:none"/>
@@ -219,246 +273,407 @@ function spielschirm(){
              vector-effect="non-scaling-stroke">${konturen}</g>
           <path id="kontur" d="" fill="none" stroke="var(--tinte)" stroke-width="2.4"
                 vector-effect="non-scaling-stroke" stroke-linejoin="round" style="display:none"/>
+          <circle id="stadtpunkt" r="0" fill="var(--akzent)" stroke="white" stroke-width="2"
+                  vector-effect="non-scaling-stroke" style="display:none"/>
         </svg>
       </div>
       <div class="seite" id="seite"></div>
     </div>`;
 
-  /* --- Entkoppelte Trefferflaeche (Konzept 5.4, Befund G-Beruehrung) ---
-     Bremen ist auf dem iPhone quer 9 Punkte breit, Hamburg 17, Berlin 18.
-     Ein Spiel, in dem man Bremen nicht treffen kann, ist fuer ein Kind
-     kaputt - egal was die Tore sagen. Der gezeichnete Umriss bleibt
-     massstabsgetreu, die TREFFERFLAECHE ist ein unsichtbarer Kreis um den
-     Anker. Ueberlappen sich zwei, gewinnt das KLEINERE Gebiet: es liegt
-     weiter hinten im Dokument und damit obenauf. */
-  const MIN_PT = 44;
-  function trefferflaechen(){
-    const svg = s.querySelector('.karte svg'); if (!svg) return;
-    const g = svg.querySelector('#treffer'); if (!g) return;
-    const ctm = svg.getScreenCTM(); if (!ctm) return;
-    const k = Math.abs(ctm.a) || 1;                 // Nutzer- zu Bildpunkten
-    const rNutzer = (MIN_PT/2) / k;
-    const mit = st.alle.filter(x=>x.anker);
-    // Nach Groesse absteigend: das kleinste Gebiet landet zuletzt, also oben.
-    const nach = mit.map(x=>{
-      const p = s.querySelector(`path.geb[data-id="${x.id}"]`);
-      const bb = p ? p.getBBox() : {width:0,height:0};
-      return { x, gross: Math.max(bb.width, bb.height) };
-    }).sort((a,b)=>b.gross-a.gross);
-    g.innerHTML = nach
-      .filter(n => n.gross * k < MIN_PT)            // nur, wer es noetig hat
-      .map(n => `<circle data-id="${n.x.id}" cx="${n.x.anker[0]}" cy="${n.x.anker[1]}"
-           r="${rNutzer.toFixed(1)}" fill="transparent" style="pointer-events:all"/>`).join('');
-  }
-
   const seite = s.querySelector('#seite');
-  // Die Wahlliste scrollt, das Werkzeug bleibt stehen. Sonst liegt der
-  // Mikrofonknopf im Querformat unter der Falz und ist nicht zu sehen.
   const liste = el('div','wahlliste'), werkzeug = el('div','werkzeug');
   seite.append(liste, werkzeug);
-  const karte = s.querySelector('#karte');
-  s.querySelector('#zur').onclick = ()=>zeige(ebenenwahl);
+  s.querySelector('#zur').onclick=()=>zeige(ebenenwahl);
 
-  /* --- Eingabeweg Tippen (Lea) --- */
+  const MIN_PT = 44, MIN_REST = 20;
+  function trefferflaechen(){
+    const svg=s.querySelector('.karte svg'); if(!svg) return;
+    const g=svg.querySelector('#treffer'); const ctm=svg.getScreenCTM(); if(!g||!ctm) return;
+    const k=Math.abs(ctm.a)||1;
+    const mit = st.alle.filter(x=>x.anker).map(x=>{
+      const p=s.querySelector(`path.geb[data-id="${x.id}"]`); const bb=p?p.getBBox():{width:0,height:0};
+      return { x, gross:Math.max(bb.width,bb.height) };
+    }).sort((a,b)=>b.gross-a.gross);
+
+    // Ein Trefferkreis darf den Anker eines ANDEREN Gebiets nicht
+    // verschlucken. Berlins 44-Punkt-Kreis lag genau auf Brandenburgs Anker -
+    // und Brandenburg war an seiner besten Stelle nicht mehr zu treffen.
+    // "Das kleinere gewinnt" heisst nicht "das kleinere sperrt aus".
+    g.innerHTML = mit.filter(n=>n.gross*k<MIN_PT).map(n=>{
+      let rPx = MIN_PT/2;
+      for (const m of mit) {
+        if (m.x.id === n.x.id) continue;
+        const d = Math.hypot(n.x.anker[0]-m.x.anker[0], n.x.anker[1]-m.x.anker[1]) * k;
+        if (d > 0) rPx = Math.min(rPx, d * 0.55);
+      }
+      rPx = Math.max(rPx, MIN_REST/2);
+      return `<circle data-id="${n.x.id}" cx="${n.x.anker[0]}" cy="${n.x.anker[1]}"
+        r="${(rPx/k).toFixed(1)}" fill="transparent" style="pointer-events:all"/>`;
+    }).join('');
+  }
+
   if (tippt) {
-    const eing = el('input','eingabe');
-    eing.type='text'; eing.autocapitalize='off'; eing.autocorrect='off';
-    eing.spellcheck=false; eing.placeholder='hier schreiben';
+    const eing=el('input','eingabe'); eing.type='text'; eing.autocapitalize='off';
+    eing.autocorrect='off'; eing.spellcheck=false; eing.placeholder='hier schreiben';
     eing.setAttribute('inputmode','text');
-    const hin = el('div'); hin.style.minHeight='0';
-    const ok = el('button','knopf'); ok.style.justifyContent='center';
-    ok.style.fontSize='var(--s0)'; ok.textContent='Prüfen';
+    const hin=el('div');
+    const ok=el('button','knopf'); ok.style.justifyContent='center'; ok.style.fontSize='var(--s0)';
+    ok.textContent='Prüfen';
     liste.append(eing, ok, hin);
-    const pruefen = ()=>bewerte(eing.value, 'tippen', {eing, hin});
-    ok.onclick = pruefen;
-    eing.addEventListener('keydown', e=>{ if(e.key==='Enter') pruefen(); });
-    setTimeout(()=>eing.focus(), 360);
+    const p=()=>bewerte(eing.value,'tippen',{eing,hin});
+    ok.onclick=p; eing.addEventListener('keydown',e=>{ if(e.key==='Enter')p(); });
+    setTimeout(()=>eing.focus(),360);
+  } else {
+    kand.forEach(k=>{ const b=el('div','etikett'); b.textContent=k.name; b.dataset.id=k.id;
+      b.onclick=()=>vorlesen(k.name); ziehbar(b,k); liste.appendChild(b); });
   }
 
-  /* --- Eingabeweg Ziehen (beide) --- */
-  if (!tippt) {
-    kand.forEach(k=>{
-      const b = el('div','etikett'); b.textContent = k.name; b.dataset.id = k.id;
-      b.onclick = ()=>{ if(!b.dataset.gezogen) vorlesen(k.name); };
-      ziehbar(b, k);
-      liste.appendChild(b);
-    });
-  }
-
-  /* --- Eingabeweg Sprechen (Fiona) --- */
   if (spricht) {
-    const mik = el('button','mikro', MIKRO);
-    const status = el('div','unter'); status.style.fontSize='var(--s-klein)';
+    const mik=el('button','mikro',MIKRO);
+    const status=el('div','unter'); status.style.fontSize='var(--s-klein)';
     const Erk = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!Erk) {
+    if (!Erk || !Einst.sprachmodus) {
       mik.classList.add('tonaus');
-      status.textContent = 'Sprechen geht in diesem Browser nicht — Stufe C: sag es laut und zieh dann.';
-      mik.onclick = ()=>vorlesen('Sag es laut!');
+      status.textContent = !Erk
+        ? 'Sprechen geht in diesem Browser nicht — Stufe C: sag es laut, dann zieh.'
+        : 'Sprachmodus ist aus. Im Elternbereich einschalten.';
+      mik.onclick=()=>vorlesen('Sag es laut!');
     } else {
-      mik.onclick = ()=>{
-        const e = new Erk(); e.lang='de-DE'; e.interimResults=false; e.maxAlternatives=3;
+      mik.onclick=()=>{
+        const e=new Erk(); e.lang='de-DE'; e.interimResults=false; e.maxAlternatives=3;
         status.textContent='… ich höre';
-        e.onresult = (ev)=>{
-          const roh = ev.results[0][0].transcript;
-          status.textContent = `gehört: „${roh}“`;
-          bewerte(roh, 'sprechen', {status});
-        };
-        e.onerror = ()=>{ status.textContent='Das hat nicht geklappt — sag es noch einmal.'; };
-        e.onend = ()=>{ if(status.textContent==='… ich höre') status.textContent='Nichts gehört.'; };
-        try { e.start(); } catch(err){ status.textContent='Mikrofon nicht verfügbar.'; }
+        e.onresult=(ev)=>{ const roh=ev.results[0][0].transcript;
+          status.textContent=`gehört: „${roh}“`; bewerte(roh,'sprechen',{status}); };
+        e.onerror=()=>{ status.textContent='Das hat nicht geklappt — sag es noch einmal.'; };
+        try{ e.start(); }catch(err){ status.textContent='Mikrofon nicht verfügbar.'; }
       };
     }
-    werkzeug.appendChild(mik);
-    liste.appendChild(status);
+    werkzeug.appendChild(mik); liste.appendChild(status);
   }
 
-  /* --- Ziehen mit Pointer Events. NICHT HTML5-Drag - das laeuft auf
-         iOS Safari nicht verlaesslich. --- */
-  function ziehbar(b, k){
-    let start=null, versatz=null;
-    b.addEventListener('pointerdown', ev=>{
-      if (b.classList.contains('weg')) return;
+  function ziehbar(b,k){
+    let start=null;
+    b.addEventListener('pointerdown',ev=>{
+      if(b.classList.contains('weg')) return;
       b.setPointerCapture(ev.pointerId);
-      const r = b.getBoundingClientRect();
-      start = { x:ev.clientX, y:ev.clientY };
-      versatz = { x:ev.clientX-r.left, y:ev.clientY-r.top, w:r.width, h:r.height, l:r.left, t:r.top };
-      b.classList.add('zieht');
-      b.style.position='fixed'; b.style.left=r.left+'px'; b.style.top=r.top+'px';
-      b.style.width=r.width+'px'; b.style.margin='0';
-      b.style.transform='scale(1.06) rotate(-1.5deg)';
-      vorlesen(k.name);
+      const r=b.getBoundingClientRect(); start={x:ev.clientX,y:ev.clientY};
+      b.classList.add('zieht'); b.style.position='fixed'; b.style.left=r.left+'px';
+      b.style.top=r.top+'px'; b.style.width=r.width+'px'; b.style.margin='0';
+      b.style.transform='scale(1.06) rotate(-1.5deg)'; vorlesen(k.name);
     });
-    b.addEventListener('pointermove', ev=>{
-      if (!start) return;
-      // Kein Zustand waehrend der Bewegung - direkt am Element.
-      b.style.transform =
-        `translate3d(${ev.clientX-start.x}px, ${ev.clientY-start.y}px, 0) scale(1.06) rotate(-1.5deg)`;
-    });
-    const los = (ev)=>{
-      if (!start) return;
-      b.style.transform=''; b.classList.remove('zieht');
-      b.style.position=''; b.style.left=''; b.style.top=''; b.style.width=''; b.style.margin='';
-      const unten = document.elementFromPoint(ev.clientX, ev.clientY);
-      start = null;
-      // Erst der unsichtbare Trefferkreis, dann die gezeichnete Flaeche.
-      const kreis = unten && unten.closest && unten.closest('#treffer circle');
-      const pfad  = unten && unten.closest && unten.closest('path.geb');
-      const id = kreis ? kreis.dataset.id : (pfad ? pfad.dataset.id : null);
-      if (id) bewerte(k.name, 'ziehen', { etikett:b, getroffen: id });
-      else if (istHaupt) { /* daneben: nichts */ }
+    b.addEventListener('pointermove',ev=>{ if(!start) return;
+      b.style.transform=`translate3d(${ev.clientX-start.x}px,${ev.clientY-start.y}px,0) scale(1.06) rotate(-1.5deg)`; });
+    const los=(ev)=>{ if(!start) return;
+      b.style.transform=''; b.classList.remove('zieht'); b.style.position='';
+      b.style.left=''; b.style.top=''; b.style.width=''; b.style.margin='';
+      const unten=document.elementFromPoint(ev.clientX,ev.clientY); start=null;
+      const kreis=unten&&unten.closest&&unten.closest('#treffer circle');
+      const pfad =unten&&unten.closest&&unten.closest('path.geb');
+      const id = kreis?kreis.dataset.id : (pfad?pfad.dataset.id:null);
+      if (id) bewerte(k.name,'ziehen',{ etikett:b, getroffen:id });
     };
-    b.addEventListener('pointerup', los);
-    b.addEventListener('pointercancel', ()=>{ start=null; b.style.transform='';
+    b.addEventListener('pointerup',los);
+    b.addEventListener('pointercancel',()=>{ start=null; b.style.transform='';
       b.classList.remove('zieht'); b.style.position=''; });
   }
 
   /* --- Bewertung. EIN Ort, egal welcher Eingabeweg. --- */
-  let erledigt = false;
-  function bewerte(roh, art, ctx){
+  async function bewerte(roh, eingabeart, ctx){
     if (erledigt) return;
-    st.versuche++;
-    let richtig = false, fast = false, text = '';
+    versuch++; st.versuche++;
+    let ergebnis='falsch', text='', sicherheit=null;
 
-    if (art === 'ziehen') {
-      // Beim Ziehen zaehlt, WOHIN gezogen wurde.
-      richtig = ctx.getroffen === ziel.id && roh === ziel.name;
-      if (!richtig && roh === ziel.name) text = 'Fast! Das ist das falsche Gebiet.';
-      else if (!richtig) text = 'Das ist ein anderer Name.';
+    if (eingabeart==='ziehen') {
+      if (ctx.getroffen===ziel.id && roh===ziel.name) ergebnis='richtig';
+      else if (roh===ziel.name) text='Fast! Das ist das falsche Gebiet.';
+      else text='Das ist ein anderer Name.';
+    } else if (eingabeart==='tippen') {
+      const r = Vergleich.rechtschreibung(roh, ziel.name);
+      if (r.urteil==='richtig') ergebnis='richtig';
+      else if (r.urteil==='fast'){ ergebnis='fast'; text=r.hinweis; }
+      else { const t=Vergleich.abgleich(roh,kand);
+        text = t.art==='nochmal' ? 'Das kenne ich nicht.'
+             : t.id===ziel.id ? 'Fast! Schau noch mal genau hin.' : `Das wäre ${t.name}.`; }
     } else {
-      const t = abgleich(roh, kand);
-      if (!t) text = P.name==='Fiona' ? 'Sag es noch einmal.' : 'Das kenne ich nicht.';
-      else if (t.id !== ziel.id) text = `Das wäre ${t.name}.`;
-      else if (t.sicherheit < 1) { text = `Meintest du ${t.name}?`; }
-      else richtig = true;
-      // Rechtschreibung nur beim Tippen und nur fuer Lea.
-      if (art === 'tippen' && !richtig) {
-        const e = (roh||'').trim();
-        if (e && e.toLowerCase() === ziel.name.toLowerCase()) {
-          fast = true; text = 'Fast! Namen schreibt man groß.';
-        } else if (e && normal(e) === normal(ziel.name)) {
-          fast = true; text = e.includes(' ') && ziel.name.includes('-')
-            ? 'Fast! Da fehlt ein Bindestrich.' : 'Fast! Achte auf die Umlaute.';
-        }
-      }
+      const t = Vergleich.abgleich(roh, kand);
+      sicherheit = t.abstand!==undefined ? +(1-t.abstand).toFixed(2) : null;
+      if (t.art==='nochmal') text='Sag es noch einmal.';
+      else if (t.id!==ziel.id) text=`Das wäre ${t.name}.`;
+      else if (t.art==='rueckfrage'){ text=`Meintest du ${t.name}?`; ergebnis='fast'; }
+      else ergebnis='richtig';
     }
 
-    if (richtig || fast) {
-      erledigt = true; st.richtig += richtig ? 1 : 0.5;
+    const fachVorher = Stand[ziel.id]?.fach ?? 1;
+    if (ergebnis!=='falsch') {
+      erledigt = true;
+      Stand = Leitner.verschieben(Stand, ziel.id, ergebnis==='richtig', Date.now());
+      st.richtig += ergebnis==='richtig' ? 1 : 0.5;
       if (ctx.etikett) ctx.etikett.classList.add('weg');
-      belohnung(s, ziel, fast ? text : null);
-      vorlesen(fast ? text : ziel.name);
-      setTimeout(()=>{ st.i++;
-        if (st.i >= st.liste.length) zeige(endschirm); else zeige(spielschirm); }, fast ? 2400 : 1500);
-      return;
+      belohnung(s, ziel, ergebnis==='fast' ? text : null, istHaupt);
+      vorlesen(ergebnis==='fast' ? text : ziel.name);
+      standSichern(st.ebeneId);
+    } else {
+      if (ctx.hin){ ctx.hin.className='hinweis nochmal'; ctx.hin.textContent=text; }
+      else if (ctx.status) ctx.status.textContent=text;
+      else { let h=liste.querySelector('.hinweis');
+        if(!h){ h=el('div','hinweis nochmal'); liste.appendChild(h); } h.textContent=text; }
+      vorlesen(text);
     }
 
-    // Falsch: kein Rot, kein Ruckeln, nur ein zweiter Versuch.
-    if (ctx.hin) { ctx.hin.className='hinweis nochmal'; ctx.hin.textContent = text; }
-    if (ctx.status) ctx.status.textContent = text;
-    if (!ctx.hin && !ctx.status && text) {
-      let h = liste.querySelector('.hinweis');
-      if (!h) { h = el('div','hinweis nochmal'); liste.appendChild(h); }
-      h.textContent = text;
-    }
-    vorlesen(text);
+    Protokoll.schreiben(Protokoll.eintrag({
+      zeit: Date.now(), profil: P.id, ebene: st.ebeneId, gebietId: ziel.id,
+      eingabeart, ergebnis, roheingabe: eingabeart==='ziehen' ? '' : roh,
+      sicherheit, dauerMs: Date.now()-beginn, versuch,
+      fachVorher, fachNachher: Stand[ziel.id]?.fach ?? fachVorher,
+    }));
+
+    if (erledigt) setTimeout(()=>{ st.i++;
+      if (st.i>=st.liste.length) zeige(endschirm); else zeige(spielschirm);
+    }, ergebnis==='fast' ? 2400 : 1600);
   }
 
-  // Nach dem Einblenden messen - vorher steht die Groesse nicht fest.
   requestAnimationFrame(()=>requestAnimationFrame(trefferflaechen));
-  addEventListener('resize', trefferflaechen, { once:false });
-
+  addEventListener('resize', trefferflaechen);
   return s;
 }
 
-/* ---------- Der Belohnungsmoment ---------------------------------------- */
-function belohnung(s, ziel, fastText){
-  const kontur = s.querySelector('#kontur'), fuell = s.querySelector('#belohn'),
-        kreis = s.querySelector('#waschKreis');
-  const flaeche = s.querySelector(`path.geb[data-id="${ziel.id}"]`);
-  if (!kontur || !flaeche) return;
+/* ---------- Belohnungsmoment --------------------------------------------- */
+function belohnung(s, ziel, fastText, zeigeStadt){
+  const kontur=s.querySelector('#kontur'), fuell=s.querySelector('#belohn'),
+        kreis=s.querySelector('#waschKreis'), punkt=s.querySelector('#stadtpunkt');
+  const flaeche=s.querySelector(`path.geb[data-id="${ziel.id}"]`);
+  if(!kontur||!flaeche) return;
   flaeche.classList.add('treffer');
-  kontur.setAttribute('d', ziel.pfad); fuell.setAttribute('d', ziel.pfad);
+  kontur.setAttribute('d',ziel.pfad); fuell.setAttribute('d',ziel.pfad);
   kontur.style.display=''; fuell.style.display='';
-  const b = flaeche.getBBox();
-  kreis.setAttribute('cx', b.x + b.width/2); kreis.setAttribute('cy', b.y + b.height/2);
-  kreis.setAttribute('r', Math.max(b.width, b.height));
-  const ruhig = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const L = kontur.getTotalLength();
-  kontur.style.strokeDasharray = L;
-  if (ruhig) { kontur.style.strokeDashoffset = 0; kreis.style.transform='scale(1)'; }
+  const b=flaeche.getBBox();
+  kreis.setAttribute('cx',b.x+b.width/2); kreis.setAttribute('cy',b.y+b.height/2);
+  kreis.setAttribute('r',Math.max(b.width,b.height));
+  const ruhig=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const L=kontur.getTotalLength(); kontur.style.strokeDasharray=L;
+  if (ruhig){ kontur.style.strokeDashoffset=0; kreis.style.transform='scale(1)'; }
   else {
-    kontur.style.strokeDashoffset = L;
+    kontur.style.strokeDashoffset=L;
     kontur.animate([{strokeDashoffset:L},{strokeDashoffset:0}],
-      {duration:400, easing:'cubic-bezier(.2,0,0,1)', fill:'forwards'});
+      {duration:400,easing:'cubic-bezier(.2,0,0,1)',fill:'forwards'});
     kreis.style.transform='scale(0)';
     kreis.animate([{transform:'scale(0)'},{transform:'scale(1)'}],
-      {duration:400, delay:360, easing:'cubic-bezier(.2,0,0,1)', fill:'forwards'});
+      {duration:400,delay:360,easing:'cubic-bezier(.2,0,0,1)',fill:'forwards'});
   }
-  const frage = s.querySelector('#frage');
+  // Ebene 4: der Stadtpunkt erscheint NACH der richtigen Antwort - als Zugabe.
+  const stadt = zeigeStadt && D.deutschland.find(x=>x.id===ziel.id);
+  if (stadt && stadt.ort && punkt) {
+    punkt.setAttribute('cx',stadt.ort[0]); punkt.setAttribute('cy',stadt.ort[1]);
+    punkt.style.display='';
+    punkt.animate([{r:0},{r:7}],{duration:300,delay:600,easing:'cubic-bezier(.34,1.56,.64,1)',fill:'forwards'});
+  }
+  const frage=s.querySelector('#frage');
   if (frage) frage.innerHTML = fastText
-    ? `<span style="color:var(--warn)">${fastText}</span>`
-    : `<span style="color:var(--gut)">Richtig — ${ziel.name}!</span>`;
+    ? `<span style="color:var(--app-warn)">${fastText}</span>`
+    : `<span style="color:var(--app-gut)">Richtig — ${ziel.name}!</span>`;
 }
 
-/* ---------- Ende --------------------------------------------------------- */
+/* ---------- Ende ---------------------------------------------------------- */
 function endschirm(){
-  const st = Sitzung, s = el('div');
-  const n = Math.max(1, Math.min(3, Math.round(st.richtig / st.liste.length * 3)));
-  s.innerHTML = `<div class="kopf"><span></span><span></span></div>
+  const st=Sitzung, s=el('div');
+  const n=Math.max(1,Math.min(3,Math.round(st.richtig/st.liste.length*3)));
+  const f=Leitner.fortschritt(st.alle, Stand);
+  s.innerHTML=`<div class="kopf"><span></span><span></span></div>
     <div class="mitte">
-      <div>${sterne(n).replace(/width="24" height="24"/g,'width="56" height="56"')}</div>
+      <div>${sterne(n,56)}</div>
       <div class="gross">Geschafft!</div>
       <div class="unter">${Math.round(st.richtig)} von ${st.liste.length} richtig,
-        ${st.versuche} Versuche.</div>
+        ${st.versuche} Versuche.<br>Du hast <strong>${f.gesammelt} von ${f.gesamt}</strong> Aufklebern${
+        f.gekonnt?`, ${f.gekonnt} davon sicher`:''}.</div>
+      <div class="balken" style="width:min(340px,70vw)"><i style="width:${Math.round(f.anteil*100)}%"></i></div>
       <div class="reihe" style="margin-top:var(--r6)">
         <button class="knopf" id="nochmal">Noch einmal</button>
+        <button class="knopf" id="buch">Forscherbuch</button>
         <button class="knopf" id="andere">Etwas anderes</button>
       </div>
     </div>`;
-  s.querySelector('#nochmal').onclick = ()=>starten(st.ebene, st.kontinent);
-  s.querySelector('#andere').onclick = ()=>zeige(ebenenwahl);
+  s.querySelector('#nochmal').onclick=()=>starten(st.ebeneId);
+  s.querySelector('#buch').onclick=()=>zeige(forscherbuch);
+  s.querySelector('#andere').onclick=()=>zeige(ebenenwahl);
   vorlesen('Geschafft!');
   return s;
 }
 
-zeige(profilwahl);
+/* ---------- Forscherbuch: der Aufkleber IST der Umriss ------------------- */
+async function forscherbuch(){
+  const s = el('div');
+  const gruppen = [];
+  for (const e of EBENEN) {
+    let st={}; try{ st=(await Ablage.hole('fortschritt',`${P.id}:${e.id}`))||{}; }catch(err){}
+    const alle = vorrat(e.id);
+    const vb = e.id.startsWith('kontinente') ? D.vbK
+             : e.id.startsWith('laender') ? D.vbL[e.id.split(':')[1]] : D.vbD;
+    gruppen.push({ titel:e.titel, vb, stuecke: alle.map((g,i)=>({
+      ...g, gesammelt: Leitner.istGesammelt(st, g.id), gekonnt: Leitner.istGekonnt(st, g.id),
+      fach: st[g.id]?.fach ?? 0, i })) });
+  }
+  const gesamt = gruppen.reduce((a,g)=>a+g.stuecke.filter(x=>x.gesammelt).length,0);
+  s.innerHTML = `<div class="kopf">
+      <button class="knopf" id="zur">${ZURUECK}<span>Zurück</span></button>
+      <span class="fortschritt">${gesamt} Aufkleber</span><span></span></div>
+    <div class="rollen">
+      ${gruppen.map(g=>`
+        <h3 class="gruppe">${g.titel}</h3>
+        <div class="kleber">${g.stuecke.map(x=>`
+          <button class="aufkleber ${x.gesammelt?'da':''} ${x.gekonnt?'sicher':''}"
+                  data-lesen="${x.name}" title="Fach ${x.fach||'—'}">
+            <svg viewBox="${g.vb}" aria-hidden="true"><path d="${x.pfad}" fill-rule="evenodd"
+              fill="${x.gesammelt?`var(${FL[x.i%7]})`:'var(--app-linie)'}"
+              stroke="var(--tinte)" stroke-opacity="${x.gesammelt?.6:.25}" stroke-width="1.6"
+              vector-effect="non-scaling-stroke"/></svg>
+            <span>${x.gesammelt?x.name:'?'}</span>
+            ${x.gekonnt?'<i class="siegel"></i>':''}
+          </button>`).join('')}</div>`).join('')}
+    </div>`;
+  s.querySelector('#zur').onclick=()=>zeige(ebenenwahl);
+  s.querySelectorAll('[data-lesen]').forEach(b=>b.onclick=()=>vorlesen(b.dataset.lesen));
+  return s;
+}
+
+/* ---------- Elternbereich ------------------------------------------------ */
+/* Die PIN ist eine Tuerklinke, kein Schloss: sie liegt unverschluesselt in
+   der Ablage und haelt neugierige Achtjaehrige ab, nicht Angreifer. */
+function elternTor(){
+  const s = el('div'); let eingabe='';
+  s.innerHTML = `<div class="kopf">
+      <button class="knopf" id="zur">${ZURUECK}<span>Zurück</span></button><span></span></div>
+    <div class="mitte">
+      <div class="titel">Elternbereich</div>
+      <div class="unter">Vier Ziffern. Voreingestellt ist <code>0000</code>.</div>
+      <div class="pin" id="pin">${'○○○○'}</div>
+      <div class="ziffern">${[1,2,3,4,5,6,7,8,9,0].map(z=>`<button class="knopf zi" data-z="${z}">${z}</button>`).join('')}
+        <button class="knopf zi" data-z="x">←</button></div>
+      <div class="unter" id="fehl" style="color:var(--app-warn)"></div>
+    </div>`;
+  const anzeige=()=>s.querySelector('#pin').textContent =
+    '●'.repeat(eingabe.length) + '○'.repeat(4-eingabe.length);
+  s.querySelector('#zur').onclick=()=>zeige(ebenenwahl);
+  s.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{
+    const z=b.dataset.z;
+    if (z==='x') eingabe=eingabe.slice(0,-1);
+    else if (eingabe.length<4) eingabe+=z;
+    anzeige();
+    if (eingabe.length===4) {
+      if (eingabe===(Einst.pin||'0000')) zeige(elternbereich);
+      else { s.querySelector('#fehl').textContent='Das war nicht richtig.'; eingabe=''; anzeige(); }
+    }
+  });
+  return s;
+}
+
+async function elternbereich(){
+  const s = el('div');
+  const eintraege = await Protokoll.lesen();
+  const a = Protokoll.auswerten(eintraege, NAMEN);
+  const speicher = await Ablage.dauerhaft();
+  const jeProfil = {};
+  for (const e of eintraege) jeProfil[e.profil] = (jeProfil[e.profil]||0)+1;
+
+  const zeile = (z)=>`<tr><td>${z.name}</td>
+    <td class="num">${z.n}</td>
+    <td class="num">${Math.round(z.quote*100)} %</td>
+    <td class="num">${(z.schnitt/1000).toFixed(1)} s</td>
+    <td><div class="balken klein"><i style="width:${Math.round(z.quote*100)}%;
+      background:${z.quote>.7?'var(--app-gut)':z.quote>.4?'oklch(.75 .13 85)':'var(--app-warn)'}"></i></div></td></tr>`;
+
+  s.innerHTML = `<div class="kopf">
+      <button class="knopf" id="zur">${ZURUECK}<span>Zurück</span></button>
+      <span class="fortschritt">Elternbereich</span><span></span></div>
+    <div class="rollen eltern">
+      <h3 class="gruppe">Überblick</h3>
+      <div class="kacheln">
+        <div class="wert"><b>${a.gesamt}</b><span>Antworten</span></div>
+        <div class="wert"><b>${a.gesamt?Math.round(a.richtig/a.gesamt*100):0} %</b><span>richtig</span></div>
+        <div class="wert"><b>${a.tage.length}</b><span>Tage gespielt</span></div>
+        <div class="wert"><b>${Object.keys(jeProfil).length}</b><span>Profile</span></div>
+      </div>
+
+      <h3 class="gruppe">Wackelkandidaten</h3>
+      ${a.wackelkandidaten.length ? `<table class="tab"><thead><tr><th>Gebiet</th>
+        <th class="num">Versuche</th><th class="num">richtig</th><th class="num">Ø Zeit</th><th></th></tr></thead>
+        <tbody>${a.wackelkandidaten.map(zeile).join('')}</tbody></table>`
+        : `<p class="unter">Noch zu wenig gespielt.</p>`}
+
+      <h3 class="gruppe">Ausspracheliste — was gesagt, was verstanden</h3>
+      ${a.aussprache.length ? `<table class="tab"><thead><tr><th>gesagt</th><th>gemeint</th>
+        <th class="num">Ergebnis</th></tr></thead><tbody>
+        ${a.aussprache.slice(-25).reverse().map(x=>`<tr><td><em>„${x.gesagt}“</em></td>
+          <td>${x.gemeint}</td><td class="num">${x.ergebnis}</td></tr>`).join('')}</tbody></table>`
+        : `<p class="unter">Noch nichts gesprochen. Der Sprachmodus ist
+           <strong>${Einst.sprachmodus?'an':'aus'}</strong>.</p>`}
+
+      <h3 class="gruppe">Sprachmodus</h3>
+      <p class="unter">Die Spracherkennung läuft <strong>nicht auf dem Gerät</strong>.
+        Was das Kind sagt, geht zur Erkennung an Apple beziehungsweise den Browserhersteller.
+        Alles andere — Fortschritt, Protokoll, Profile — bleibt hier und geht nirgendwohin.</p>
+      <div class="reihe" style="justify-content:flex-start">
+        <button class="knopf" id="sprach">${Einst.sprachmodus?'Sprachmodus ausschalten':'Sprachmodus einschalten'}</button>
+      </div>
+
+      <h3 class="gruppe">Ausfuhr und Löschen</h3>
+      <div class="reihe" style="justify-content:flex-start">
+        <button class="knopf" id="csv">Als CSV sichern</button>
+        <button class="knopf" id="json">Als JSON sichern</button>
+        <button class="knopf" id="weg" style="color:var(--app-warn)">Alles von ${P.name} löschen</button>
+      </div>
+      <div id="ausgabe"></div>
+
+      <h3 class="gruppe">Diese Fassung</h3>
+      <table class="tab"><tbody>
+        <tr><td>Fassung</td><td class="num">${BAU.fassung}</td></tr>
+        <tr><td>Gebaut am</td><td class="num">${BAU.datum}</td></tr>
+        <tr><td>Stand der Daten</td><td class="num">${BAU.standJahr}</td></tr>
+        <tr><td>Speicher dauerhaft</td><td class="num">${
+          speicher.moeglich ? (speicher.gewaehrt?'ja':'abgelehnt') : 'nicht verfügbar'}</td></tr>
+        ${speicher.platz ? `<tr><td>belegt</td><td class="num">${(speicher.platz.benutzt/1048576).toFixed(1)} MB</td></tr>`:''}
+      </tbody></table>
+
+      <h3 class="gruppe">Herkunft der Karten</h3>
+      <p class="unter">Kontinente, Länder und Städtelagen: <strong>Natural Earth</strong>
+        (Public Domain). Bundesländer: derzeit ebenfalls Natural Earth — vorgesehen ist
+        <strong>BKG VG250</strong>, Datenlizenz Deutschland Namensnennung 2.0
+        (© GeoBasis-DE / BKG). Einwohnerzahlen: Stand ${BAU.standJahr}.</p>
+    </div>`;
+
+  s.querySelector('#zur').onclick=()=>zeige(ebenenwahl);
+  s.querySelector('#sprach').onclick=async(e)=>{
+    Einst.sprachmodus=!Einst.sprachmodus; await einstSichern();
+    e.target.textContent=Einst.sprachmodus?'Sprachmodus ausschalten':'Sprachmodus einschalten'; };
+
+  const sichern=(text,name,typ)=>{
+    const ausgabe=s.querySelector('#ausgabe');
+    try {
+      const b=new Blob([text],{type:typ});
+      const u=URL.createObjectURL(b); const a2=document.createElement('a');
+      a2.href=u; a2.download=name; document.body.appendChild(a2); a2.click();
+      setTimeout(()=>{ URL.revokeObjectURL(u); a2.remove(); },1000);
+      ausgabe.innerHTML=`<p class="unter">Gesichert als <code>${name}</code>.</p>`;
+    } catch(err) {
+      // Faellt das Sichern aus (etwa in einer Vorschau ohne Download), wird
+      // der Inhalt gezeigt statt verschwiegen.
+      ausgabe.innerHTML=`<p class="unter">Sichern ging nicht — hier zum Kopieren:</p>
+        <textarea class="ausgabefeld" readonly>${text.replace(/</g,'&lt;')}</textarea>`;
+    }
+  };
+  s.querySelector('#csv').onclick=()=>sichern(Protokoll.alsCsv(eintraege,NAMEN),
+    `lernkiste-${new Date().toISOString().slice(0,10)}.csv`,'text/csv;charset=utf-8');
+  s.querySelector('#json').onclick=()=>sichern(Protokoll.alsJson(eintraege),
+    `lernkiste-${new Date().toISOString().slice(0,10)}.json`,'application/json');
+  s.querySelector('#weg').onclick=async(e)=>{
+    if (e.target.dataset.sicher!=='ja'){ e.target.dataset.sicher='ja';
+      e.target.textContent=`Wirklich? Alles von ${P.name} löschen`; return; }
+    await Ablage.profilLoeschen(P.id);
+    for (const eb of EBENEN) await Ablage.loesche('fortschritt',`${P.id}:${eb.id}`).catch(()=>{});
+    s.querySelector('#ausgabe').innerHTML=`<p class="unter">Gelöscht.</p>`;
+    setTimeout(()=>zeige(profilwahl),900);
+  };
+  return s;
+}
+
+/* ---------- Start --------------------------------------------------------- */
+(async ()=>{ await einstLaden(); zeige(profilwahl); })();

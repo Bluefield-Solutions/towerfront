@@ -5,7 +5,8 @@ Arbeitstitel. Ein Lernspiel für Fiona (6, 1. Klasse Bayern) und Lea (8,
 Startbildschirm von iPhone und iPad, liefert sich selbst aus, und lässt sich
 prüfen — fachlich, technisch und datenschutzrechtlich.
 
-Stand: **K3** · O1 und O4 entschieden · noch keine Zeile Spielcode
+Stand: **K3** · O1 und O4 entschieden · M2, MG und M3–M6 als Prototyp gebaut
+Laufender Stand und alle Messwerte: `Lernkiste-STAND.md`
 Vorgänger: K1, geprüft in `Lernkiste-PRUEFBERICHT-K1.md` — 25 Befunde eingearbeitet
 K2, geprüft in `Lernkiste-GRAFIK-AUDIT.md` — 21 Grafikbefunde eingearbeitet
 
@@ -1749,6 +1750,10 @@ einmal auf Frankfurt herein. Ein Ablenker, auf den niemand hereinfällt, ist
 keiner.
 
 ### M6 · Elternbereich und Audit
+
+*Stand: M3 bis M6 sind als Prototyp gebaut und vom Rauchtest gefahren
+(`Lernkiste-STAND.md`). Was fehlt, ist bei allen vieren dasselbe: die
+**Gerätesichtung**. Kein Tor läuft auf iOS.*
 
 Protokollauswertung, PIN, Ausfuhr, Löschen, Fassungsanzeige,
 Lizenz-Namensnennung, Sprachmodus-Schalter mit Hinweistext.

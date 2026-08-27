@@ -12,7 +12,8 @@
     "inhalt": "node tor/inhalt.mjs",
     "ansicht": "node tor/ansicht.mjs",
     "smoke": "node tor/smoke.mjs",
-    "tor": "npm run inhalt && npm run entwuerfe && npm run prototyp && npm run ansicht && npm run smoke"
+    "tor": "npm run inhalt && npm run vergleich && npm run entwuerfe && npm run prototyp && npm run ansicht && npm run smoke",
+    "vergleich": "node tor/vergleich.mjs"
   },
   "devDependencies": {
     "d3-geo": "^3.1.1",

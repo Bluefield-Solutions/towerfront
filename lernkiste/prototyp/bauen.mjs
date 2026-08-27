@@ -6,6 +6,7 @@ import { LAENDER_EUROPA_GROB } from '../src/geo/laender-europa.grob.js';
 import { LAENDER_AFRIKA_GROB } from '../src/geo/laender-afrika.grob.js';
 import { STAEDTE } from '../src/geo/staedte.js';
 import * as I from '../src/inhalt/erdkunde.js';
+import { inline } from './inline.mjs';
 
 const NACHBARN = JSON.parse(fs.readFileSync(new URL('./nachbarn.json', import.meta.url)));
 function vierfaerben(ids){
@@ -50,9 +51,27 @@ D.umgebung = {
   afrika: LAENDER_AFRIKA_GROB.filter(l=>!l.rang).map(l=>l.pfad),
 };
 
+// Die Kernmodule werden eingebettet - eine Datei, kein Buendler.
+const module = [
+  inline(new URL('../src/vergleich/vergleich.js', import.meta.url), 'Vergleich'),
+  inline(new URL('../src/kern/leitner.js', import.meta.url), 'Leitner'),
+  inline(new URL('../src/profil/ablage.js', import.meta.url), 'Ablage'),
+  inline(new URL('../src/protokoll/protokoll.js', import.meta.url), 'Protokoll',
+         { 'ablage.js': 'const A = Ablage;' }),
+].join('\n');
+
+// Fassungsstempel. Ohne ihn ist "welche Fassung laeuft auf diesem iPad?"
+// nicht zu beantworten - Konzept K3, Kapitel 13.2.
+const BAU = {
+  fassung: process.env.LERNKISTE_FASSUNG || 'p0.4',
+  datum: new Date(fs.statSync(new URL('./spiel.js', import.meta.url)).mtime).toISOString().slice(0,16).replace('T',' '),
+  standJahr: I.STAND.jahr,
+};
+
 const html = fs.readFileSync(new URL('./vorlage.html', import.meta.url), 'utf8')
   .replace('__DATEN__', JSON.stringify(D))
-  + '<script>' + fs.readFileSync(new URL('./spiel.js', import.meta.url), 'utf8') + '</script>\n</body></html>';
+  .replace('__BAU__', JSON.stringify(BAU))
+  + '<script>' + module + '\n' + fs.readFileSync(new URL('./spiel.js', import.meta.url), 'utf8') + '</script>\n</body></html>';
 fs.writeFileSync(new URL('./spiel.html', import.meta.url), html);
 const gz = zlib.gzipSync(Buffer.from(html)).length;
 console.log(`  spiel.html  ${(html.length/1024).toFixed(0)} KB  →  ${(gz/1024).toFixed(0)} KB gzip`);

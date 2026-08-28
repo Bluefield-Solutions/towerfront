@@ -922,8 +922,8 @@ const PROBEN = [
     // Welle eingetragen - eine Welle zuviel, bei jeder Partie.
     name: 'Bestwert eine Welle zu weit',
     datei: 'src/game/state.ts',
-    regel: /recordRun\(this\.map\.id, this\.difficulty, reached, won \? this\.lives : 0\);/,
-    ersatz: 'recordRun(this.map.id, this.difficulty, this.waveNumber, won ? this.lives : 0);',
+    regel: /recordRun\(this\.map\.id, this\.difficulty, reached, won \? this\.lives : 0, this\.endless\);/,
+    ersatz: 'recordRun(this.map.id, this.difficulty, this.waveNumber, won ? this.lives : 0, this.endless);',
     tor: 'smoke',
   },
   {
@@ -1372,6 +1372,17 @@ const PROBEN = [
     datei: 'src/game/state.ts',
     regel: /^    return !this\.waveActive && \(this\.endless \|\| this\.waveIndex < this\.waves\.length\);$/m,
     ersatz: '    return !this.waveActive && this.waveIndex < this.waves.length;',
+    tor: 'smoke',
+  },
+  {
+    // C27, v181: der Endlosmodus zaehlt ueber den Wellenplan hinaus. Bis
+    // v180 lief sein Ergebnis in denselben Bestwert wie die normale Partie,
+    // und der Titelbildschirm behauptete danach auf einer Karte mit
+    // fuenfzehn Wellen "bisher am weitesten: Welle 20".
+    name: 'Endlos schreibt in den normalen Bestwert',
+    datei: 'src/core/storage.ts',
+    regel: /^  `\$\{mapId\}\|\$\{difficulty\}\$\{endlos \? '\|endlos' : ''\}`;$/m,
+    ersatz: "  `${mapId}|${difficulty}` + (endlos ? '' : '');",
     tor: 'smoke',
   },
   {

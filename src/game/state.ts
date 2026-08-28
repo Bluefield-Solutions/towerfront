@@ -19,7 +19,7 @@ import type { Vec } from '../core/math';
 import { dist, dist2 } from '../core/math';
 import { Sfx } from '../core/audio';
 import { mischen } from '../gfx/glow';
-import { getProgress, getStars, recordRun, recordStars } from '../core/storage';
+import { getProgress, getStars, recordEndlos, recordRun, recordStars } from '../core/storage';
 import {
   NO_PERKS, perkEffect, starsFor, type PerkEffect,
 } from '../data/perks';
@@ -885,7 +885,10 @@ export class GameState {
     this.phase = won ? 'won' : 'lost';
     clearGame();
     const reached = won ? this.waveIndex : this.waveNumber - 1;
-    recordRun(this.map.id, this.difficulty, reached, won ? this.lives : 0);
+    recordRun(this.map.id, this.difficulty, reached, won ? this.lives : 0, this.endless);
+    // Und im Endlosmodus zusaetzlich in die Liste - dort ist nicht der eine
+    // Bestwert die Auskunft, sondern wie weit man ueblicherweise kommt (C27).
+    if (this.endless) recordEndlos(this.map.id, reached);
     // Der Stand VOR diesem Lauf, festgehalten bevor er ueberschrieben wird.
     this.sterneVorher = getStars(this.map.id, this.difficulty);
     // Im Endlosmodus gibt es keine Sterne - er hat kein Ende, an dem man

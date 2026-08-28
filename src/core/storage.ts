@@ -44,6 +44,9 @@ type BestMap = Partial<Record<string, Best>>;
 
 /** Fortschritt zwischen den Partien. */
 export interface Progress {
+  /** Die weitesten Endlosläufe je Karte, absteigend, hoechstens fuenf.
+   *  Fehlt in Staenden vor v181 - deshalb optional, nicht als Bruch. */
+  endlos?: Record<string, number[]>;
   /** Sterne je Karte und Grad - der beste Lauf zaehlt. */
   stars: Partial<Record<string, number>>;
   /** Gekaufte dauerhafte Verbesserungen. */
@@ -121,8 +124,36 @@ let store = read();
 
 export const getSettings = (): Settings => store.settings;
 /** Der Bestwert haengt an Karte *und* Grad - alles andere waere irrefuehrend. */
-export const getBest = (mapId: string, difficulty: string): Best =>
-  store.best[`${mapId}|${difficulty}`] ?? { wave: 0, lives: 0 };
+/** Der Schluessel eines Bestwerts.
+ *
+ *  **Der Endlosmodus hat einen eigenen** (v181). Bis dahin teilte er ihn mit
+ *  der normalen Partie, und weil er ueber den Wellenplan hinausgeht, schrieb
+ *  ein Endloslauf bis Welle 21 genau das in den Bestwert einer Karte mit
+ *  fuenfzehn Wellen. Der Titelbildschirm behauptete danach "bisher am
+ *  weitesten: Welle 20" - eine Zahl, die es dort nicht geben kann. */
+const bestSchluessel = (mapId: string, difficulty: string, endlos = false): string =>
+  `${mapId}|${difficulty}${endlos ? '|endlos' : ''}`;
+
+export const getBest = (mapId: string, difficulty: string, endlos = false): Best =>
+  store.best[bestSchluessel(mapId, difficulty, endlos)] ?? { wave: 0, lives: 0 };
+
+/** Die weitesten Endlosläufe einer Karte, absteigend. Hoechstens fuenf.
+ *
+ *  Ein einzelner Bestwert sagt, wie weit man EINMAL kam. Eine kurze Liste
+ *  sagt, wie weit man ueblicherweise kommt - und das ist die Auskunft, nach
+ *  der man im Endlosmodus sucht (C27). */
+export const endlosBesten = (mapId: string): number[] =>
+  [...(store.progress.endlos?.[mapId] ?? [])];
+
+export function recordEndlos(mapId: string, wave: number): void {
+  if (wave <= 0) return;
+  const alle = store.progress.endlos ?? (store.progress.endlos = {});
+  const liste = alle[mapId] ?? (alle[mapId] = []);
+  liste.push(wave);
+  liste.sort((a, b) => b - a);
+  liste.length = Math.min(liste.length, 5);
+  write(store);
+}
 
 export function saveSettings(patch: Partial<Settings>): void {
   store.settings = { ...store.settings, ...patch };
@@ -173,9 +204,9 @@ export const getStars = (mapId: string, difficulty: string): number =>
 
 /** Merkt sich den besten Lauf je Grad: weiter gekommen schlaegt mehr Kristall. */
 export function recordRun(
-  mapId: string, difficulty: string, wave: number, lives: number,
+  mapId: string, difficulty: string, wave: number, lives: number, endlos = false,
 ): void {
-  const key = `${mapId}|${difficulty}`;
+  const key = bestSchluessel(mapId, difficulty, endlos);
   const b = store.best[key] ?? { wave: 0, lives: 0 };
   if (wave > b.wave || (wave === b.wave && lives > b.lives)) {
     store.best[key] = { wave, lives };

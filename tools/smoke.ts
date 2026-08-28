@@ -255,6 +255,52 @@ step('Partie durchspielen', () => {
   outcome = state.phase;
 });
 
+// C27: der Endlosmodus hat einen eigenen Bestwert und eine eigene Liste.
+//
+// **Der Fund, den diese Pruefung festhaelt:** bis v181 teilte der
+// Endlosmodus seinen Bestwert mit der normalen Partie. Weil er ueber den
+// Wellenplan hinausgeht, schrieb ein Lauf bis Welle 21 genau das in den
+// Bestwert einer Karte mit fuenfzehn Wellen - und der Titelbildschirm
+// behauptete danach "bisher am weitesten: Welle 20". Eine Zahl, die es dort
+// nicht geben kann, und niemand hat sie je gemessen.
+{
+  const { getBest, endlosBesten, recordEndlos, recordRun, getProgress: fortschritt }
+    = await import('../src/core/storage');
+  const vorher = { ...fortschritt().endlos };
+  const eigen = fortschritt();
+  eigen.endlos = {};
+
+  // Gemessen wird die VERAENDERUNG, nicht ein fester Wert: die Hauptpartie
+  // weiter oben hat auf dieser Karte laengst einen Bestwert hinterlassen,
+  // und eine Pruefung, die 12 erwartet, prueft in Wahrheit die Reihenfolge
+  // der Schritte in dieser Datei.
+  const normalVorher = getBest('spiralhain', 'normal').wave;
+  recordRun('spiralhain', 'normal', 21, 0, true);
+  const normal = getBest('spiralhain', 'normal');
+  const endlos = getBest('spiralhain', 'normal', true);
+  if (normal.wave !== normalVorher) {
+    problems.push(`Endlos: ein Endloslauf hat den normalen Bestwert von ${normalVorher} auf `
+      + `${normal.wave} gehoben - auf einer Karte mit fuenfzehn Wellen ist das keine `
+      + 'moegliche Zahl.');
+  }
+  if (endlos.wave !== 21) {
+    problems.push(`Endlos: der eigene Bestwert steht auf ${endlos.wave}, erwartet 21.`);
+  }
+
+  // Die Liste: absteigend, hoechstens fuenf, und sie merkt sich mehr als eine.
+  for (const w of [8, 21, 3, 14, 30, 5, 11]) recordEndlos('spiralhain', w);
+  const liste = endlosBesten('spiralhain');
+  if (liste.length !== 5) problems.push(`Endlosliste: ${liste.length} Eintraege, hoechstens fuenf.`);
+  if (liste[0] !== 30) problems.push(`Endlosliste: fuehrt mit ${liste[0]}, erwartet 30.`);
+  if (liste.some((v, i) => i > 0 && v > liste[i - 1])) {
+    problems.push(`Endlosliste: nicht absteigend (${liste.join(', ')}).`);
+  }
+  if (endlosBesten('ascheschlucht').length) {
+    problems.push('Endlosliste: eine andere Karte hat Eintraege abbekommen.');
+  }
+  eigen.endlos = vorher;
+}
+
 // T10 und T11: einen Lauf nachstellen und weitergeben.
 //
 // **Die Pruefung, die den Punkt traegt, ist nicht die Eingabe** - sie ist

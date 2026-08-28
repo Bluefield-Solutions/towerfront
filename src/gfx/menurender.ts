@@ -4,6 +4,7 @@ import { DIFFICULTIES, DIFFICULTY_ORDER } from '../data/difficulty';
 import { PERKS } from '../data/perks';
 import type { Menu, Hotspot } from '../game/menu';
 import { hexA } from './glow';
+import { endlosBesten } from '../core/storage';
 
 /** Die Landkarte zeichnen.
  *
@@ -252,6 +253,27 @@ function drawBrief(
   button(ctx, add, 'endless', x0 + 60, y0 + 590, 330, 66,
     m.endless ? 'Endlos: an' : 'Endlos: aus',
     m.endless ? C.gold : C.stoneDark, m.pressed === 'endless', m.endless);
+
+  // Die weitesten Endlosläufe auf DIESER Karte (C27).
+  //
+  // Sie stehen neben dem Umschalter und nur dann, wenn es welche gibt: eine
+  // leere Bestenliste ist kein Ansporn, sondern eine Lücke im Bild. Ein
+  // einzelner Bestwert sagt, wie weit man EINMAL kam - die kurze Reihe sagt,
+  // wie weit man üblicherweise kommt, und das ist die Auskunft, nach der man
+  // im Endlosmodus sucht.
+  const besten = endlosBesten(map.id);
+  if (besten.length) {
+    ctx.save();
+    ctx.font = '700 15px system-ui, sans-serif';
+    ctx.fillStyle = C.stoneDark;
+    ctx.fillText('WEITESTE ENDLOSLÄUFE', x0 + 420, y0 + 594);
+    ctx.font = '700 26px system-ui, sans-serif';
+    besten.slice(0, 5).forEach((welle, i) => {
+      ctx.fillStyle = i === 0 ? C.gold : C.stoneDark;
+      ctx.fillText(`${welle}`, x0 + 420 + i * 66, y0 + 628);
+    });
+    ctx.restore();
+  }
 
   button(ctx, add, 'start', x0 + w - 60 - 420, y0 + 662, 420, 92,
     'Spielen', C.crystal, m.pressed === 'start', true);

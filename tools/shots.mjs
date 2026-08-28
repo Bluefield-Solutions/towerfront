@@ -73,6 +73,7 @@ const { TOWERS, TOWER_ORDER } = await import('../src/data/towers.ts');
 const { wirkungAnlegen } = await import('../src/data/wirkungen.ts');
 const { candidateSpots } = await import('./spots.ts');
 const { Menu } = await import('../src/game/menu.ts');
+const { recordEndlos } = await import('../src/core/storage.ts');
 // Wichtig: nicht die has*-Funktionen. Die sagen nur, ob ein Bild im Verzeichnis
 // steht - nicht, ob es dekodiert wurde. Genau daran ist die erste Gegenprobe
 // vorbeigelaufen. Die get*-Funktionen liefern erst etwas, wenn das Bild da ist.
@@ -284,6 +285,10 @@ takes.push(['menu-karte', () => shot('menu-karte', 844, 390, (s, r) => {
 
 takes.push(['menu-einweisung', () => shot('menu-einweisung', 844, 390, (s, r) => {
   s.reset(1, 'normal', 'spiralhain');
+  // Mit Endlosergebnissen, sonst zeigt die Aufnahme die Bestenliste nie:
+  // sie erscheint nur, wenn es welche gibt (C27). Eine Abnahme, die den
+  // leeren Fall zeigt, beweist ueber den vollen nichts.
+  [12, 21, 18, 9, 16, 7].forEach((w) => recordEndlos('ascheschlucht', w));
   r.menu = new Menu();
   r.menu.view = 'brief';
   r.menu.picked = 1;

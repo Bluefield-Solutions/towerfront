@@ -246,7 +246,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v177. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v178. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -261,10 +261,15 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
 **Offen:**
 - D19 (grafisch): Die drei benannten Teile sind umgesetzt (v104). Was bleibt,
   ist die Plastik im Bild selbst — Befund B1 aus dem Grafik-Audit, und der
-  braucht neue Bilder, nicht Code. Die Infanterie ist der eine Ausreißer, der
-  nicht mitgewachsen ist: ihr Bild füllt seine Kachel nur zu 0,22 statt 0,35
-  Bildschirmpunkten je Weltpunkt, sie bleibt deshalb bei 17 px. Das ist am
-  Bild zu beheben, nicht am Maßstab — und dafür braucht es `art/roh/`.
+  braucht neue Bilder, nicht Code.
+
+  **Der Zusatz über die Infanterie stand hier zwei Fassungen zu lang.** Er
+  sagte, sie fülle ihre Kachel als einzige schlechter und bleibe deshalb die
+  kleinste Figur. Nachgemessen in v178 stimmt beides nicht mehr: die
+  Lieferung vom 24.08.2026 hat alle acht auf denselben Füllgrad gebracht, und
+  die Infanterie liegt mit 2,60 Bildpunkten je Weltpunkt mitten im Band 2,30
+  bis 2,94. Seit v178 misst `npm run lesbarkeit` das, damit es nicht wieder
+  still aufgeht.
 - **Der Genre-Abgleich ist vollständig**: 30 von 30, gewichtet 100 % — und
   seit v135 zu **100 % gemessen** statt zu 79 %. Von Hand beurteilt sind noch
   P6 und P7 mit 5 von 73 Gewichtspunkten; beide sind rein sichtbar und in

@@ -596,6 +596,44 @@ for (const [id, def] of Object.entries(ENEMIES)) {
   }
 }
 
+// --- D21: keine Figur darf deutlich weniger Bildpunkte mitbringen als die
+//     anderen.
+//
+// Der Rueckstandseintrag D21 sagte bis v178, die Infanterie fuelle ihre
+// Kachel schlechter als jede andere Figur und bleibe deshalb die kleinste im
+// Spiel. **Nachgemessen stimmte das nicht mehr:** die Lieferung vom
+// 24.08.2026 hat alle acht auf denselben Fuellgrad gebracht (0,78), und die
+// Infanterie liegt mit 2,60 Bildpunkten je Weltpunkt mitten im Band 2,30 bis
+// 2,94. Der Befund war zwei Fassungen lang still erledigt, und CLAUDE.md hat
+// ihn trotzdem jeder Sitzung erzaehlt.
+//
+// Damit er nicht wieder still aufgeht, wird er ab jetzt gemessen. Die Grenze
+// ist ein VERHAELTNIS, kein fester Wert (Regel 2): wieviele Bildpunkte eine
+// Figur braucht, sagt diese Pruefung nicht - sie sagt nur, dass keine
+// deutlich weniger mitbringen darf als ihre Nachbarn. Sonst ist sie im Feld
+// matschig, waehrend alle anderen scharf sind.
+console.log('\nBildpunkte je Weltpunkt (D21):');
+{
+  const dichten = [];
+  for (const [id, def] of Object.entries(ENEMIES)) {
+    const buf = enemyArt.get(id);
+    if (!buf) continue;
+    const m = await measureSprite(buf, null, 0);
+    const anteil = Math.max(m.spanX, m.spanY) / m.frame;
+    dichten.push({ name: def.name, wert: (m.frame * anteil) / enemyArtWidth(id) });
+  }
+  dichten.sort((a, b) => b.wert - a.wert);
+  console.log('  ' + dichten.map((d) => `${d.name} ${d.wert.toFixed(2)}`).join('   '));
+  const beste = dichten[0].wert, duennste = dichten[dichten.length - 1];
+  const SPREIZUNG = 1.5;
+  if (beste / duennste.wert > SPREIZUNG) {
+    problems.push(
+      `${duennste.name} bringt ${duennste.wert.toFixed(2)} Bildpunkte je Weltpunkt mit, `
+      + `die beste Figur ${beste.toFixed(2)} - Faktor ${(beste / duennste.wert).toFixed(2)}, `
+      + `erlaubt sind ${SPREIZUNG}. Sie wird im Feld matschig, waehrend alle anderen scharf sind.`);
+  }
+}
+
 // --- Farbe ODER Form: mindestens eines von beiden muss trennen.
 //
 // **Bis v167 verlangte diese Pruefung Farbabstand, Punkt.** Seit TF-024 ist

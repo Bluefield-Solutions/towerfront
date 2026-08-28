@@ -1210,6 +1210,20 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    // D21, v178: keine Figur darf deutlich weniger Bildpunkte mitbringen als
+    // die anderen. Der Eintrag stand zwei Fassungen lang still erledigt im
+    // Rueckstandsverzeichnis und in CLAUDE.md - gemessen wurde er nie.
+    // Eingebaut wird die Ursache, die das TOR auch sieht: die Figur wird
+    // GROESSER gezeichnet, als ihr Bild hergibt. Ein Eingriff an
+    // `art/gegner.json` waere hier wirkungslos - `lesbarkeit` liest den
+    // gepackten Vorrat, und der aendert sich erst beim Neupacken (Regel 3).
+    name: 'Eine Gegnerfigur wird groesser gezeichnet als ihr Bild hergibt',
+    datei: 'src/data/enemies.ts',
+    regel: /    hp: 52, speed: 96, bounty: 3, leak: 1, radius: 24, armor: 1, slowResist: 0\.1,/,
+    ersatz: '    hp: 52, speed: 96, bounty: 3, leak: 1, radius: 60, armor: 1, slowResist: 0.1,',
+    tor: 'lesbarkeit',
+  },
+  {
     // v177: die Niederlageaufnahme fiel mitten in den Ansichtswechsel - und
     // die Torkette hat es nicht gemeldet, weil sie nur den Querschnitt
     // faehrt. Seit alle Menueaufnahmen im Querschnitt stehen, faengt sie es.

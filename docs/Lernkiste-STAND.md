@@ -414,6 +414,75 @@ vorher passierte dort gar nichts, es kam nur ein Satz darunter.
 
 ---
 
+## Die Ausbaurunde
+
+Vier Punkte, die ohne Rückfrage zu machen waren — in dieser Reihenfolge,
+damit die spätere Arbeit im System landet und nicht daneben.
+
+### 1. Das Gestaltungssystem hält jetzt
+
+Im Stylesheet standen **vier Farben, drei Dauern und ein Dutzend
+Strichstärken** frei herum, in `spiel.js` vier weitere Farben — darunter die
+der Sterne. Und `#1b2835` stand zweimal im Baum (Meta-Tag und Manifest).
+
+Alles in `marken.css`, neue Marken für Kante, Ring, Puls, Treffer, Ziel,
+Stern. Das Tor `marken` prüft es jetzt in fünf Kategorien — Farbe, Dauer,
+Radius, Strich, Abstand — und alle vier Gegenproben schlagen an. Was ein
+**Bauteilmaß** ist (44 pt Trefferfläche, 76 px Mikrofon), bleibt erlaubt:
+das sind Größen, keine Marken.
+
+### 2. Der Grundriss folgt der Karte (D29)
+
+Die Karte beanspruchte Platz, den sie nicht nutzen kann. Gemessen: auf dem
+iPhone quer war ihr Kasten **420 Punkte breit, gezeichnet wurden 213** —
+daneben ein Loch, das niemand nutzt. Deutschland ist hochformatig (0,74),
+die Weltkarte quer (1,67); ein Kasten für beide verschenkt immer bei einer.
+
+Das ist bewusst **keine Stilregel** geworden: CSS kann die eine Achse nicht
+gegen die andere abwägen. `aspect-ratio` mit `width:100%` macht die Höhe
+richtig und lässt die Breite stehen, mit `height:100%` genau andersherum.
+`kartenGroesse()` misst den freien Platz und setzt beides — ein `Math.min`.
+
+Dazu ist das Mikrofon verschwunden, wenn der Sprachmodus aus ist. Es stand
+grau da, mit einer **Anweisung an die Eltern auf dem Spielbildschirm des
+Kindes**, und kostete bis zu 120 Punkte Höhe.
+
+| | vorher | jetzt |
+|---|---|---|
+| iPhone hoch · Deutschland | 45 % des Feldes | **62 %** |
+| iPad hoch · Deutschland | 34 % | **49 %** |
+| Fenster schmal · Weltkarte | 36 % | **51 %** |
+| Karte füllt ihren Kasten | 43–100 % | **94–100 %** |
+
+### 3. Die Karte füllt sich beim Spielen (D30)
+
+Was schon saß, steht in voller Farbe und trägt einen grünen Haken; der Rest
+bleibt gedämpft. Der Fortschritt steht damit **auf der Karte**, nicht nur als
+Zahl in der Kopfzeile.
+
+Der erste Anlauf hing an der Sitzung — der Rauchtest meldete sofort *null
+gekonnte Gebiete*, weil die Karte nach jedem Neustart wieder leer war. Jetzt
+kommt es aus dem **Leitner-Stand** (Fach ≥ 2): es überlebt das Schließen der
+App und fällt zurück, wenn ein Gebiet später danebengeht.
+
+### 4. Der Name am Ort (G10)
+
+Bei richtiger Antwort steht der Name auf der Karte. Gehört hat das Kind ihn,
+gelesen auf einem Etikett — aber nicht **am Ort**, und genau diese Verbindung
+soll hängenbleiben.
+
+**14 von 16 Bundesländernamen passen nicht in ihr Gebiet**, deshalb ist die
+Fahne der Normalfall: ein Schild neben dem Gebiet mit einer Leitlinie
+darauf. Entschieden wird **gemessen** — der Text wird gesetzt, ausgemessen
+und mit dem Gebiet verglichen — nicht nach Liste. Damit gilt es auch für
+Kontinente, Länder und jede Karte, die noch dazukommt.
+
+Der Rauchtest prüft, dass der Name erscheint, ganz im Kartenfeld liegt und
+dass **beide Sorten vorkommen**: fällt die Entscheidung immer gleich aus,
+ist sie keine Messung, sondern eine feste Einstellung.
+
+---
+
 ## Offen
 
 | | Was | Wer |
@@ -423,8 +492,5 @@ vorher passierte dort gar nichts, es kam nur ein Satz darunter.
 | — | **Die Entwürfe und den Prototyp auf dem iPad ansehen.** Kein Tor läuft auf iOS. | ihr |
 | — | Schriftentscheidung: Plus Jakarta Sans oder Nunito, am Gerät | ihr |
 | — | M1: Vite und Svelte. PWA, Service Worker und Ablage stehen bereits. | ich |
-| D29 | **Der Grundriss.** 26–61 % der Fläche bleiben ungenutzt; die Aufteilung Karte/Antworten kennt das Seitenverhältnis der Karte nicht. Deutschland ist hochformatig, die Weltkarte quer. | ich |
-| D30 | Gekonnte Gebiete behalten ihre Farbe über die Sitzung — die Karte füllt sich beim Spielen. Stärkster Belohnungshebel, fast umsonst. | ich |
 | D28 | `ansicht` auf dem Runner: nur im festgenagelten Playwright-Abbild sinnvoll, samt dort aufgenommener Vorbilder | ich |
-| — | Beschriftungsfahnen zeichnen (14 von 16 brauchen eine) | ich |
 | — | Leitner, Elternbereich, Protokoll | ich |

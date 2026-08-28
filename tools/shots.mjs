@@ -84,7 +84,7 @@ const ersterTurm = (g) => g.gebaute[0];
 // dass irgendetwas rot wurde. Ein Tor, das weniger prueft als das Werkzeug,
 // das es bewacht, laesst genau die Luecke.
 const TOR = ['menu-karte', 'menu-einweisung', 'menu-fortschritt', 'menu-sieg',
-  'menu-niederlage', 'welle8', 'kristall-riss'];
+  'menu-niederlage', 'welle8', 'kristall-riss', 'zier-beruehrung'];
 const nurTor = process.argv.includes('--tor');
 
 /** Eine Aufnahme: Zustand herstellen, ein paar Bilder laufen lassen, ausgeben.
@@ -595,6 +595,21 @@ takes.push(['welle8', () => shot('welle8', 844, 390, (s) => {
   s.waveIndex = 7;
   s.startWave();
   return 60 * 12;
+})]);
+
+takes.push(['zier-beruehrung', () => shot('zier-beruehrung', 844, 390, (s) => {
+  // Die Karte reagiert auf Beruehrung (D14, Kriterium P8) - und bis v192
+  // hat das niemand GESEHEN. Geprueft war es seit v134, aber nur in Zahlen:
+  // reagiert es, reagiert es nur dort, bewegt es den Spielwuerfel nicht.
+  // Ob man den Staub im Bild findet, sagt keine dieser Zahlen (Regel 8).
+  //
+  // Genommen wird die Frostspalte, weil nur sie alle drei Gelaendearten
+  // traegt - `kalt` gibt es sonst nirgends. Angetippt werden alle Flecken
+  // auf einmal; im Spiel passiert das nacheinander, aber ein Bild kann nur
+  // einen Augenblick zeigen.
+  s.reset(1234, 'normal', 'frostspalte');
+  for (const fleck of s.map.rough) s.beruehren(fleck.x, fleck.y);
+  return 12;
 })]);
 
 takes.push(['kristall-riss', () => shot('kristall-riss', 844, 390, (s) => {

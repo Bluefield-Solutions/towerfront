@@ -2634,6 +2634,41 @@ step('Einrasten', () => {
 //
 // Zwei Fragen, und die zweite ist die wichtigere.
 step('Beruehrbare Kleinigkeiten', () => {
+  // **Jede Karte, nicht nur die erste.**
+  //
+  // Bis v192 lief diese Probe auf `MAPS[0]`. Genau so hat in v175 eine
+  // Luecke ueberlebt: die Pruefung des Moerser-Nachteils lief auf der Karte,
+  // wo Luft ohnehin am dicksten ist. Nachgemessen reagieren zwar alle drei
+  // Karten (8, 11 und 11 Flecken, 12,0 bis 13,6 Prozent des Feldes) - aber
+  // das wusste vorher niemand, weil es niemand gefragt hat.
+  //
+  // Und die drei Gelaendearten haengen an den Karten: `kalt` gibt es nur auf
+  // der Frostspalte. Wer nur die erste Karte prueft, prueft eine von drei
+  // Bewegungen.
+  const arten = new Set<string>();
+  for (const karte of ALLE_KARTEN) {
+    const p2 = new GameState();
+    p2.reset(1234, 'normal', karte.id);
+    if (!p2.map.rough.length) {
+      problems.push(`Beruehrung: Karte "${karte.id}" hat kein unwegsames Gelaende.`);
+      continue;
+    }
+    let stumm = 0;
+    for (const fleck of p2.map.rough) {
+      arten.add(fleck.art);
+      p2.particles.length = 0;
+      if (!p2.beruehren(fleck.x, fleck.y) || !p2.particles.length) stumm++;
+    }
+    if (stumm) {
+      problems.push(`Beruehrung: auf "${karte.id}" reagieren ${stumm} von `
+        + `${p2.map.rough.length} Flecken nicht.`);
+    }
+  }
+  if (arten.size < 3) {
+    problems.push(`Beruehrung: nur ${arten.size} von drei Gelaendearten kommen ueberhaupt `
+      + `vor (${[...arten].join(', ')}). Dann ist eine der drei Bewegungen ungeprueft.`);
+  }
+
   const probe = new GameState();
   probe.reset();
   const gr = probe.map.rough[0];

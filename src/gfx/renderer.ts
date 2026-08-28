@@ -2273,8 +2273,46 @@ export class Renderer {
       const bar = key.lastIndexOf('|');
       ctx.fillStyle = key.slice(0, bar);
       ctx.globalAlpha = (Number(key.slice(bar + 1)) + 0.5) / 4;
+      // **Rund, nicht eckig.**
+      //
+      // Bis v192 stand hier `rect`. Bei Treffern und Einschlaegen faellt das
+      // nicht auf: die Teilchen sind zwei bis drei Punkte gross, leben eine
+      // Zehntelsekunde und stehen in einem Getuemmel. Die Zierde der Karte
+      // ist das Gegenteil - vier bis dreizehn Punkte, eine halbe Sekunde,
+      // vor ruhigem Grund. Auf der Aufnahme waren es harte schwarze und
+      // weisse Kloetze neben den weichen Schneeflocken.
+      //
+      // Gefunden hat es kein Tor. Die Beruehrung ist seit v134 geprueft -
+      // reagiert sie, reagiert sie nur dort, bewegt sie den Spielwuerfel
+      // nicht - und all das war gruen. Wie es aussieht, hat bis v192 niemand
+      // angesehen (Regel 8).
+      //
+      // **Und es kostet etwas - nachgemessen, nicht behauptet.**
+      //
+      // Der erste Kommentar an dieser Stelle sagte, ein Kreis koste im selben
+      // Sammelpfad dasselbe wie ein Rechteck. Das ist falsch: ein Kreis
+      // braucht `moveTo` UND `arc`, ein Rechteck nur `rect`. `npm run
+      // bench-draw` misst 1423 -> 1795 Befehle je Bild, also +26 % bei einem
+      // Budget von 3000.
+      //
+      // Der Aufpreis faellt dabei fast ganz bei den TREFFERTEILCHEN an - der
+      // Messlauf enthaelt gar keine Zierde -, also genau dort, wo man die
+      // Form nicht sieht. Nur die Zierde rund zu zeichnen ginge trotzdem
+      // nicht ohne Weiteres: die Groessen ueberlappen (Zierde 4 bis 13,
+      // Treffer 2 bis 11), eine Ableitung traegt also nicht, und ein Feld am
+      // Teilchen liefe in das Ruecksetzproblem des Pools - `obtain` gibt ein
+      // gebrauchtes Teilchen heraus, und jedes Feld, das ein Erzeuger
+      // vergisst, schleppt den letzten Wert mit.
+      //
+      // Deshalb: rund fuer alle, der Aufpreis ist gemessen und liegt im
+      // Budget. Wer ihn zurueckholen will, braucht zuerst eine saubere
+      // Unterscheidung der beiden Sorten.
       ctx.beginPath();
-      for (let i = 0; i < arr.length; i += 3) ctx.rect(arr[i], arr[i + 1], arr[i + 2], arr[i + 2]);
+      for (let i = 0; i < arr.length; i += 3) {
+        const r = arr[i + 2] / 2;
+        ctx.moveTo(arr[i] + arr[i + 2], arr[i + 1] + r);
+        ctx.arc(arr[i] + r, arr[i + 1] + r, r, 0, Math.PI * 2);
+      }
       ctx.fill();
     }
     ctx.globalAlpha = 1;

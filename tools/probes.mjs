@@ -1375,6 +1375,16 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // v192: die Beruehrungsprobe laeuft ueber ALLE Karten. Bis dahin nur
+    // ueber die erste - und `kalt` gibt es nur auf der Frostspalte, also
+    // war eine von drei Bewegungen ungeprueft.
+    name: 'Beruehrung prueft nur eine Karte',
+    datei: 'tools/smoke.ts',
+    regel: /^  for \(const karte of ALLE_KARTEN\) \{$/m,
+    ersatz: '  for (const karte of ALLE_KARTEN.slice(0, 1)) {',
+    tor: 'smoke',
+  },
+  {
     // v190: die Zeichenwerkstatt wartet auf die Bilder, bevor sie eine
     // Leinwand zum Messen herausgibt. Ohne das sind zwei Bilder desselben
     // Zustands an 87 898 Punkten verschieden - und jede Messung, die zwei

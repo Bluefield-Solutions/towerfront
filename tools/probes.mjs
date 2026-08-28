@@ -1210,6 +1210,25 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    // D13, v180: der Wellenverlauf und die Gesamtsumme werden an DERSELBEN
+    // Stelle gebucht. Laufen sie auseinander, ist eine von beiden falsch,
+    // ohne dass man saehe welche.
+    name: 'Wellenverlauf laeuft von der Summe weg',
+    datei: 'src/game/state.ts',
+    regel: /^      \(this\.stats\.damageByWave\[this\.waveIndex\] \?\? 0\) \+ dmg;$/m,
+    ersatz: '      (this.stats.damageByWave[this.waveIndex] ?? 0) + dmg * 0.5;',
+    tor: 'smoke',
+  },
+  {
+    // Und die Balken selbst: der Verlauf muss gezeichnet werden, nicht nur
+    // gerechnet.
+    name: 'Wellenverlauf wird nicht gezeichnet',
+    datei: 'src/ui/statsblatt.ts',
+    regel: /^  if \(gespielt < 2\) return '';           \/\/ eine Welle ist kein Verlauf$/m,
+    ersatz: "  return '';",
+    tor: 'smoke',
+  },
+  {
     // T10, v179: dieselbe Aussaat muss denselben Lauf ergeben. Ein
     // Eingabefeld, das eine Zahl annimmt und danach etwas anderes passiert,
     // ist schlimmer als keines - es verspricht Reproduzierbarkeit und

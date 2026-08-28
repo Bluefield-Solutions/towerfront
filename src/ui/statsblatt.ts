@@ -33,6 +33,34 @@ function quellen(s: GameState): [string, string, number][] {
   return liste;
 }
 
+/** Der Wellenverlauf als kleine Balkenreihe.
+ *
+ *  Ohne Bibliothek und ohne Leinwand: ein Balken je Welle, Hoehe aus dem
+ *  Schaden, Farbe aus dem Kristallverlust. Bei fuenfzehn Wellen auf 390
+ *  Punkten Breite ist das genau die Aufloesung, die noch etwas sagt - eine
+ *  echte Kurve haette dieselbe Auskunft mit mehr Aufwand gegeben. */
+function verlaufsreihe(s: GameState): string {
+  const dmg = s.stats.damageByWave;
+  const gespielt = dmg.length;
+  if (gespielt < 2) return '';           // eine Welle ist kein Verlauf
+  const hoechster = Math.max(...dmg.map((v) => v ?? 0), 1);
+  const stuecke = dmg.map((v, i) => {
+    const anteil = Math.max(0.04, (v ?? 0) / hoechster);
+    const verlust = s.stats.leaksByWave[i] ?? 0;
+    const titel = `Welle ${i + 1}: ${Math.round(v ?? 0)} Schaden`
+      + (verlust ? `, −${verlust} Kristall` : '');
+    return `<i style="height:${(anteil * 100).toFixed(0)}%"`
+      + `${verlust ? ' data-leck="1"' : ''} title="${titel}"></i>`;
+  }).join('');
+  const engste = s.stats.leaksByWave
+    .map((v, i) => (v > 0 ? i + 1 : 0)).filter(Boolean);
+  const fuss = engste.length
+    ? `Kristall verloren in Welle ${engste.join(', ')}.`
+    : 'Kein einziger Gegner ist durchgekommen.';
+  return `<h2>Schaden je Welle</h2><div class="verlauf">${stuecke}</div>`
+    + `<p class="verlauf-fuss">${fuss}</p>`;
+}
+
 /** Das Blatt als Markup. Leer, solange nichts passiert ist. */
 export function bilanzblatt(s: GameState, kurz = false): string {
   const st = s.stats;
@@ -79,24 +107,35 @@ export function bilanzblatt(s: GameState, kurz = false): string {
       `${best.kills} erledigt.</p>`
     : '';
 
+  // Der Verlauf ueber die Wellen (D13).
+  //
+  // Die Summe sagt WIEVIEL, nicht WANN. Genau danach sucht man zwischen zwei
+  // Wellen: eine Welle, in der die Tuerme kaum Schaden gemacht haben, war
+  // eine, gegen die die Aufstellung nicht passte - und eine, in der der
+  // Kristall etwas abbekommen hat, war die, die fast schiefging.
+  //
+  // Zwei Auskuenfte in einer Reihe, weil sie zusammengehoeren: die Hoehe ist
+  // der Schaden, die Farbe sagt, ob es etwas gekostet hat. Zwei getrennte
+  // Grafiken nebeneinander muesste man erst uebereinanderlegen.
+  const verlauf = verlaufsreihe(s);
+
   const kopf = `<div class="figs">${figs}</div>`
     + (bars ? `<h2>Schaden nach Quelle</h2><dl class="bars">${bars}</dl>` : '')
+    + verlauf
     + bestLine;
   // Mitten im Lauf zaehlt, was die naechste Entscheidung traegt. Der Rest -
   // wo der Kristall verloren ging, wieviele Faehigkeiten geworfen wurden -
   // ist Rueckschau und gehoert ans Ende.
   if (kurz) return kopf;
 
-  const leaks = st.leaksByWave
-    .map((v, i) => (v > 0 ? `Welle ${i + 1} (−${v})` : ''))
-    .filter(Boolean);
-  const leakLine = leaks.length
-    ? `<p class="note-line">Kristall verloren in: <b>${leaks.join(', ')}</b>.</p>`
-    : '<p class="note-line">Kein einziger Gegner ist durchgekommen.</p>';
+  // Die Zeile "Kristall verloren in ..." stand bis v180 hier - und seit der
+  // Wellenverlauf (D13) darueber liegt, sagte sie dasselbe ein zweites Mal,
+  // nur ohne die Hoehe daneben. Was zweimal dasteht, veraltet einmal
+  // (Regel 15).
 
   const uses = (st.abilityUses.meteor ?? 0) + (st.abilityUses.freeze ?? 0);
   const abilityLine = `<p class="note-line">Fähigkeiten eingesetzt: <b>${uses}</b> `
     + `(Meteor ${st.abilityUses.meteor ?? 0}, Frostschlag ${st.abilityUses.freeze ?? 0}).</p>`;
 
-  return kopf + leakLine + abilityLine;
+  return kopf + abilityLine;
 }

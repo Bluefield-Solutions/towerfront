@@ -552,6 +552,23 @@ html, body {
   font-variant-numeric: tabular-nums; color: var(--muted); min-width: 34px;
 }
 
+/* Der Wellenverlauf im Bilanzblatt (D13). */
+.verlauf {
+  display: flex; align-items: flex-end; gap: 3px;
+  height: 46px; margin-bottom: 5px;
+}
+.verlauf i {
+  /* Der Deckel ist gegen den ANFANG einer Partie: bei zwei Wellen fuellen
+     zwei Balken sonst die ganze Breite und sehen aus wie ein Block, nicht
+     wie ein Verlauf. Bei fuenfzehn greift er nicht mehr. */
+  flex: 1; min-width: 4px; max-width: 28px; border-radius: 2px 2px 0 0;
+  background: linear-gradient(180deg, #7FE7E0, #3F8F8B);
+}
+.verlauf i[data-leck="1"] { background: linear-gradient(180deg, #F2874E, #C34A2C); }
+.verlauf-fuss {
+  margin: 0 0 4px; font-size: 11px; line-height: 1.4; color: var(--muted);
+}
+
 .note-line {
   margin: 12px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--muted);
 }

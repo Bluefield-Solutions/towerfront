@@ -1654,7 +1654,11 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   for (let i = 0; i < 60 * 600; i++) {
     if (!state.waveActive && state.canStartWave) state.startWave();
     state.update(DT);
-    if ((state.stats.damageBy.core ?? 0) > 0 && (state.stats.damageBy.arrow ?? 0) > 0) break;
+    // Und MINDESTENS zwei Wellen, sonst hat der Wellenverlauf unten keinen
+    // Gegenstand: eine einzelne Welle ist kein Verlauf, und die Pruefung auf
+    // die Balken koennte gar nicht scheitern (Regel 13).
+    if ((state.stats.damageBy.core ?? 0) > 0 && (state.stats.damageBy.arrow ?? 0) > 0
+      && state.stats.damageByWave.length >= 2) break;
   }
   const quellenZahl = Object.values(state.stats.damageBy).filter((v) => v > 0).length;
   if (quellenZahl < 2) {
@@ -1692,6 +1696,29 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
       problems.push(
         `Bilanz: das Blatt meldet Welle ${gezeigt}, gespielt wird ${state.waveNumber}.`,
       );
+    }
+
+    // D13: der Wellenverlauf muss den Lauf beschreiben, den es gab.
+    //
+    // Die Summe ueber die Wellen MUSS die Gesamtsumme sein - beide werden an
+    // derselben Stelle gebucht, und wenn sie auseinanderlaufen, ist eine von
+    // beiden falsch, ohne dass man saehe welche.
+    {
+      const proWelle = state.stats.damageByWave;
+      const summe = proWelle.reduce((a, b) => a + (b ?? 0), 0);
+      if (Math.abs(summe - state.stats.damage) > 1) {
+        problems.push(
+          `Wellenverlauf: ${Math.round(summe)} Schaden ueber die Wellen, `
+          + `${Math.round(state.stats.damage)} in der Summe - die beiden laufen auseinander.`);
+      }
+      if (proWelle.length !== state.waveNumber) {
+        problems.push(
+          `Wellenverlauf: ${proWelle.length} Wellen verbucht, gespielt wird Welle ${state.waveNumber}.`);
+      }
+      const balken = body.querySelectorAll('.verlauf i').length;
+      if (proWelle.length >= 2 && balken !== proWelle.length) {
+        problems.push(`Wellenverlauf: ${balken} Balken gezeichnet, ${proWelle.length} Wellen verbucht.`);
+      }
     }
 
     // Die eigentliche Pruefung: decken die Balken den ganzen Schaden ab?

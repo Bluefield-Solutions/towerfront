@@ -241,6 +241,13 @@ export interface RunStats {
   kills: number;
   /** Kristallverlust je Welle, Index = Wellennummer minus eins. */
   leaksByWave: number[];
+  /** Angerichteter Schaden je Welle, Index = Wellennummer minus eins.
+   *
+   *  Die Summe ist `damage`, aber die Summe sagt nur, WIEVIEL - nicht,
+   *  WANN es eng wurde. Genau danach sucht man zwischen zwei Wellen: eine
+   *  Welle, in der die Tuerme kaum Schaden gemacht haben, war eine, gegen
+   *  die die Aufstellung nicht passte (D13). */
+  damageByWave: number[];
   abilityUses: Record<string, number>;
   duration: number;
   towersBuilt: number;

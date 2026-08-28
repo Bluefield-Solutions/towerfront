@@ -41,7 +41,7 @@ interface PendingSpawn {
 function emptyStats(): RunStats {
   return {
     goldEarned: 0, goldSpent: 0, damage: 0, damageBy: {},
-    kills: 0, leaksByWave: [], abilityUses: {}, duration: 0, towersBuilt: 0,
+    kills: 0, leaksByWave: [], damageByWave: [], abilityUses: {}, duration: 0, towersBuilt: 0,
     schuesse: 0, schuesseOhneWirkung: 0,
   };
 }
@@ -1580,6 +1580,12 @@ export class GameState {
     e.squash = Math.min(1, e.squash + 0.55);
     if (owner) owner.damageDone += dmg;
     this.stats.damage += dmg;
+    // Und derselbe Schaden noch einmal, nach Wellen sortiert (D13). An
+    // DERSELBEN Stelle wie die Summe, damit die beiden nicht auseinander
+    // laufen koennen - eine zweite Buchungsstelle waere die naechste Zahl,
+    // die still falsch wird.
+    this.stats.damageByWave[this.waveIndex] =
+      (this.stats.damageByWave[this.waveIndex] ?? 0) + dmg;
     const src = owner ? owner.def : 'meteor';
     this.stats.damageBy[src] = (this.stats.damageBy[src] ?? 0) + dmg;
     if (slow > 0) {

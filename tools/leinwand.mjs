@@ -34,13 +34,31 @@ let offen = 0;
 
 /** Dokument, Fenster und Bildklasse stellen. Mehrfach aufzurufen schadet
  *  nicht - das zweite Mal tut nichts. */
-function geruest(breite, hoehe) {
+function geruest(breite, hoehe, nachLeinwand) {
   if (aufgebaut) return;
+  // **Ein fremdes Geruest ist ein Fehler, kein Sonderfall.**
+  //
+  // Der erste Entwurf liess es einfach stehen ("wer zuerst da ist, gewinnt").
+  // Das waere die schlechtere Haelfte gewesen: die fremde Bildklasse bedient
+  // ihren EIGENEN Zaehler, `bilderAbwarten` haette also sofort
+  // zurueckgegeben und falsche Sicherheit gestiftet - genau die Sorte
+  // stiller Fehler, gegen die diese Werkstatt gebaut ist.
+  if (globalThis.document) {
+    throw new Error('Es steht schon ein anderes Zeichengeruest. Zwei davon in '
+      + 'einem Prozess heisst: `bilderAbwarten` zaehlt den falschen Zaehler und '
+      + 'gibt sofort zurueck. Das Werkzeug muss `geruestStellen()` benutzen '
+      + 'statt sein eigenes Dokument zu setzen.');
+  }
   aufgebaut = true;
   globalThis.document = {
     createElement: (tag) => {
       if (tag !== 'canvas') throw new Error(`nur canvas, nicht ${tag}`);
-      return createCanvas(1, 1);
+      const c = createCanvas(1, 1);
+      // Ein Haken fuer Werkzeuge, die an JEDER Leinwand etwas mitzaehlen -
+      // `kartenwechsel` haengt sich so an `getImageData` und `putImageData`.
+      // Ohne ihn braeuchte es ein eigenes Geruest, und das waere die
+      // naechste Kopie.
+      return nachLeinwand ? (nachLeinwand(c) ?? c) : c;
     },
   };
   globalThis.window = { devicePixelRatio: 2, innerWidth: breite, innerHeight: hoehe };
@@ -60,8 +78,8 @@ function geruest(breite, hoehe) {
 /** Das Geruest allein - fuer Werkzeuge, die Bilder brauchen, bevor sie eine
  *  Werkstatt aufsetzen (das Kristalltor misst erst am gebackenen Erzeugnis
  *  und dann am Bild). */
-export function geruestStellen(breite = 844, hoehe = 390) {
-  geruest(breite, hoehe);
+export function geruestStellen(breite = 844, hoehe = 390, nachLeinwand = null) {
+  geruest(breite, hoehe, nachLeinwand);
 }
 
 /** Warten, bis kein Bild mehr laedt. */

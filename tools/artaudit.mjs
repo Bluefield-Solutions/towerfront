@@ -39,7 +39,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
-import { createCanvas, Image as NativeImage } from '@napi-rs/canvas';
+import { createCanvas } from '@napi-rs/canvas';
 import { abdruck } from './abdruck.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -65,31 +65,11 @@ if (gedaechtnis.unveraendert && process.argv.includes('--tor')) {
 
 // --- Eine Zeichenflaeche, damit das Terrain hier gebacken werden kann.
 //
-// Dieselbe Notloesung wie in der Bildabnahme: die Zeichenschicht braucht ein
-// Dokument, das Flaechen anlegt, und eine Bildklasse, die Datenadressen
-// annimmt. Kein DOM, kein Browser.
-globalThis.document = {
-  createElement: (tag) => {
-    if (tag !== 'canvas') throw new Error(`nur canvas, nicht ${tag}`);
-    return createCanvas(1, 1);
-  },
-};
-globalThis.window = { devicePixelRatio: 2, innerWidth: 844, innerHeight: 390 };
-let offen = 0;
-globalThis.Image = class extends NativeImage {
-  set src(wert) {
-    offen++;
-    const fertig = () => { offen--; };
-    const vorLoad = this.onload, vorErr = this.onerror;
-    this.onload = () => { fertig(); vorLoad?.(); };
-    this.onerror = () => { fertig(); vorErr?.(); };
-    super.src = wert;
-  }
-  get src() { return super.src; }
-};
-const warten = async () => {
-  for (let i = 0; i < 40 && offen > 0; i++) await new Promise((r) => setTimeout(r, 25));
-};
+// Geruest und Bilderladen kommen aus der gemeinsamen Werkstatt (Regel 15).
+import { geruestStellen, bilderAbwarten } from './leinwand.mjs';
+
+geruestStellen();
+const warten = bilderAbwarten;
 
 const { MAPS } = await import('../src/data/maps.ts');
 const { bakeTerrain } = await import('../src/gfx/terrain.ts');

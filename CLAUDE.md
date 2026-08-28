@@ -250,7 +250,9 @@ zweites Mal kosten.
 
    Deshalb gehört beides nicht in jedes Werkzeug, sondern in
    `tools/leinwand.mjs`: die Werkstatt gibt kein rohes „zeichne" heraus,
-   sondern eine Leinwand, auf der man messen darf. **Und jede Messung, die
+   sondern eine Leinwand, auf der man messen darf. Sie ist seit v191 die
+   einzige Stelle im Baum, die ein Zeichengerüst stellt — vorher waren es
+   sechs, und ein zweites daneben wirft jetzt. **Und jede Messung, die
    zwei Bilder vergleicht, führt eine Nullprobe mit.** Ist sie nicht null,
    ist die Messung noch keine.
 
@@ -277,7 +279,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v190. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v191. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

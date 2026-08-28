@@ -39,7 +39,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { createHash } from 'node:crypto';
-import { createCanvas, loadImage, Image as NativeImage } from '@napi-rs/canvas';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { geruestStellen, bilderAbwarten } from './leinwand.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const TOR = process.argv.includes('--tor');
@@ -313,29 +314,15 @@ const befunde = [];
 // ueber `getEnemyArt` von drei Karten holen. Drei Karten, drei verschiedene
 // Bilder - sonst greift der Zwischenspeicher zu weit.
 {
-  globalThis.document ??= {
-    createElement: (t) => { if (t !== 'canvas') throw new Error(t); return createCanvas(1, 1); },
-  };
-  globalThis.window ??= { devicePixelRatio: 2, innerWidth: 844, innerHeight: 390 };
-  // Die native Bildklasse durchreichen, nicht nachbauen: eine eigene Klasse
-  // ist fuer `drawImage` kein Bild, und der erste Anlauf brach genau daran ab.
-  let offen = 0;
-  globalThis.Image ??= class extends NativeImage {
-    set src(v) {
-      offen++;
-      const fertig = () => { offen--; };
-      const a = this.onload, b = this.onerror;
-      this.onload = () => { fertig(); a?.(); };
-      this.onerror = () => { fertig(); b?.(); };
-      super.src = v;
-    }
-    get src() { return super.src; }
-  };
+  // Geruest und Bilderladen kommen aus der gemeinsamen Werkstatt (Regel 15).
+  geruestStellen();
   const { getEnemyArt } = await import('../src/gfx/enemyart.ts');
   const { ENEMIES } = await import('../src/data/enemies.ts');
   const ids = Object.keys(ENEMIES);
   for (const id of ids) for (const k of KARTEN) getEnemyArt(id, false, k.id);
-  for (let i = 0; i < 80 && offen > 0; i++) await new Promise((r) => setTimeout(r, 40));
+  await bilderAbwarten();
+  // Der Nachschlag bleibt: das Einbetten rechnet nach dem Laden noch, und
+  // ohne ihn waren die ersten Figuren gelegentlich noch leer.
   await new Promise((r) => setTimeout(r, 600));
   let geprueft = 0, gleich = 0;
   for (const id of ids) {

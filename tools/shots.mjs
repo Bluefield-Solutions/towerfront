@@ -19,52 +19,31 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createCanvas, Image as NativeImage, GlobalFonts } from '@napi-rs/canvas';
+import { createCanvas, GlobalFonts } from '@napi-rs/canvas';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'bilder');
 mkdirSync(OUT, { recursive: true });
 void GlobalFonts;
 
-// Die Zeichenschicht erwartet ein Dokument, das Flächen anlegen kann.
-// Mehr braucht sie nicht - kein DOM, kein Browser.
-globalThis.document = {
-  createElement: (tag) => {
-    if (tag !== 'canvas') throw new Error(`nur canvas, nicht ${tag}`);
-    const c = createCanvas(1, 1);
-    // Die Zeichenschicht setzt width/height nach dem Anlegen.
-    return c;
-  },
-};
-globalThis.window = { devicePixelRatio: 2, innerWidth: 844, innerHeight: 390 };
+// Geruest und Bilderladen kommen aus der gemeinsamen Werkstatt.
+//
+// Bis v191 stand beides hier - und in `kristall.mjs` und `speicher.mjs` noch
+// einmal. Drei Kopien desselben Dokuments, derselben Bildklasse, desselben
+// Zaehlers (Regel 15). Wer eine neue Messung schrieb, kopierte sie aus dem
+// naechstbesten Werkzeug und kopierte dabei das Geruest, aber nicht die
+// Sorgfalt: genau so sind in v188 zwei Messungen entstanden, die keine
+// waren.
+//
+// Die AUFNAHME-Maschinerie bleibt, wie sie ist. Sie legt je Aufnahme eine
+// eigene Leinwand in eigener Groesse an und braucht die Werkstatt nicht -
+// gemeinsam ist nur das Geruest darunter.
+import { geruestStellen, bilderAbwarten } from './leinwand.mjs';
 
-/** Bilder aus Datenadressen.
- *
- *  Ohne das faellt die Zeichenschicht auf ihre gemalten Ersatzformen zurueck -
- *  und die Aufnahme zeigt ein anderes Spiel als der Browser. Genau der Fehler,
- *  den eine Bildabnahme verhindern soll.
- *
- *  Die native Bildklasse nimmt Datenadressen direkt an und meldet `onload`,
- *  also reicht es, sie durchzureichen. Gewartet wird ueber einen Zaehler. */
-let outstanding = 0;
-globalThis.Image = class extends NativeImage {
-  set src(value) {
-    outstanding++;
-    const done = () => { outstanding--; };
-    const prevLoad = this.onload, prevErr = this.onerror;
-    this.onload = () => { done(); prevLoad?.(); };
-    this.onerror = () => { done(); prevErr?.(); };
-    super.src = value;
-  }
-  get src() { return super.src; }
-};
+geruestStellen();
 
 /** Warten, bis alle angeforderten Bilder da sind. */
-async function settle() {
-  for (let i = 0; i < 40 && outstanding > 0; i++) {
-    await new Promise((r) => setTimeout(r, 25));
-  }
-}
+const settle = bilderAbwarten;
 
 const { GameState } = await import('../src/game/state.ts');
 const { Renderer } = await import('../src/gfx/renderer.ts');

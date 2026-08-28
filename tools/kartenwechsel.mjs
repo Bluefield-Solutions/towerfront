@@ -80,7 +80,7 @@
  *   npm run kartenwechsel              das Tor (schnell, ohne Browser)
  *   npm run kartenwechsel -- --browser zusaetzlich im Browser mit Drossel
  */
-import { createCanvas, Image as NativeImage } from '@napi-rs/canvas';
+import { createCanvas } from '@napi-rs/canvas';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -114,40 +114,28 @@ const SOLL_MS = 50;
 let punkte = 0;
 let durchgaenge = 0;
 
-globalThis.document = {
-  createElement: (tag) => {
-    if (tag !== 'canvas') throw new Error(`nur canvas, nicht ${tag}`);
-    const c = createCanvas(1, 1);
-    const echt = c.getContext.bind(c);
-    c.getContext = (art, opts) => {
-      const g = echt(art, opts);
-      if (!g || g.__gezaehlt) return g;
-      g.__gezaehlt = true;
-      const gid = g.getImageData.bind(g);
-      const pid = g.putImageData.bind(g);
-      g.getImageData = (x, y, w, h) => { punkte += w * h; durchgaenge++; return gid(x, y, w, h); };
-      g.putImageData = (bild, x, y) => {
-        punkte += bild.width * bild.height; durchgaenge++; return pid(bild, x, y);
-      };
-      return g;
-    };
-    return c;
-  },
-};
-globalThis.window = { devicePixelRatio: 2, innerWidth: 844, innerHeight: 390 };
+// Geruest und Bilderladen kommen aus der gemeinsamen Werkstatt (Regel 15).
+// Der Haken zaehlt an JEDER angelegten Leinwand mit - das ist der Grund, aus
+// dem dieses Werkzeug bis v191 ein eigenes Geruest brauchte.
+import { geruestStellen, bilderAbwarten } from './leinwand.mjs';
 
-let offen = 0;
-globalThis.Image = class extends NativeImage {
-  set src(v) {
-    offen++;
-    const fertig = () => { offen--; };
-    const l = this.onload, e = this.onerror;
-    this.onload = () => { fertig(); l?.(); };
-    this.onerror = () => { fertig(); e?.(); };
-    super.src = v;
-  }
-  get src() { return super.src; }
-};
+geruestStellen(844, 390, (c) => {
+  const echt = c.getContext.bind(c);
+  c.getContext = (art, opts) => {
+    const g = echt(art, opts);
+    if (!g || g.__gezaehlt) return g;
+    g.__gezaehlt = true;
+    const gid = g.getImageData.bind(g);
+    const pid = g.putImageData.bind(g);
+    g.getImageData = (x, y, w, h) => { punkte += w * h; durchgaenge++; return gid(x, y, w, h); };
+    g.putImageData = (bild, x, y) => {
+      punkte += bild.width * bild.height; durchgaenge++; return pid(bild, x, y);
+    };
+    return g;
+  };
+  return c;
+});
+const warten = bilderAbwarten;
 
 const { MAPS } = await import('../src/data/maps.ts');
 const { terrainAuftrag } = await import('../src/gfx/terrain.ts');
@@ -157,7 +145,7 @@ const { GameState } = await import('../src/game/state.ts');
 // Erst alle Untergrundbilder anfordern, dann warten. Ohne das misst der Lauf
 // den billigen Fall ohne Bild — und genau der ist nicht der teure.
 for (const m of MAPS) getBackground(m.id);
-for (let i = 0; i < 300 && offen > 0; i++) await new Promise((r) => setTimeout(r, 40));
+await warten();
 
 const fehlend = MAPS.filter((m) => !getBackground(m.id));
 if (fehlend.length) {

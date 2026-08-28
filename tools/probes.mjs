@@ -521,8 +521,8 @@ const PROBEN = [
     // Ein Haken, der nichts mehr sieht, sieht aus wie ein bestandenes Tor.
     name: 'Der Bildpunktzaehler haengt nicht mehr ein',
     datei: 'tools/kartenwechsel.mjs',
-    regel: /      g\.__gezaehlt = true;/,
-    ersatz: '      g.__gezaehlt = true; return g;',
+    regel: /    g\.__gezaehlt = true;/,
+    ersatz: '    g.__gezaehlt = true; return g;',
     tor: 'kartenwechsel',
   },
   {

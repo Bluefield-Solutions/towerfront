@@ -235,16 +235,24 @@ zweites Mal kosten.
    ausgesperrt hat `.rotate`: ohne Zeigerprüfung deckte er jedes schmale
    Schreibtischfenster zu, und siebzehn Tore meldeten grün.
 
-16. **Das erste gezeichnete Bild ist keine Messung.** Untergrund, Bilder und
-   Lichtstempel entstehen erst beim Zeichnen. Ein Vergleich, bei dem eine
-   Seite das erste Bild eines Laufs ist, misst das Aufwärmen — in v182
-   waren das **97,6 % aller Bildpunkte bei identischem Zustand**, in v188
-   noch 7,15 Abstand über 75 113 Punkte. Beide Male habe ich zuerst etwas
-   anderes vermutet und erst über einen Umweg gemerkt, was es war; beim
-   zweiten Mal stand die falsche Begründung schon im Verzeichnis.
-   **Also: ein Wegwerfbild vorweg, dann eine Nullprobe.** Zwei warme Läufe
-   desselben Zustands sind bitgleich — das Kristalltor zeigt 0 Punkte
-   Unterschied. Ist die Nullprobe nicht null, ist die Messung noch keine.
+16. **Das erste gezeichnete Bild ist keine Messung — und die Ursache sind
+   die Bilder, nicht das Zeichnen.** In v182 waren 97,6 % aller Bildpunkte
+   verschieden bei identischem Zustand, in v188 noch 7,15 über 75 113
+   Punkte. Beide Male habe ich zuerst etwas anderes vermutet; beim zweiten
+   Mal stand die falsche Begründung schon im Verzeichnis.
+
+   **Gemessen in v190, an der Nullprobe des Kristalltors:** ohne auf die
+   Bilder zu warten sind zwei Bilder desselben Zustands an **87 898**
+   Punkten verschieden — mit `bilderAbwarten()` an **null**. Ein Wegwerfbild
+   allein ändert daran nichts; es lässt nur Zeit vergehen und ist damit eine
+   Wette auf das Timing, keine Lösung. Wer den Kartenaufbau nicht
+   abschliesst, misst ausserdem auf einem halbfertigen Untergrund.
+
+   Deshalb gehört beides nicht in jedes Werkzeug, sondern in
+   `tools/leinwand.mjs`: die Werkstatt gibt kein rohes „zeichne" heraus,
+   sondern eine Leinwand, auf der man messen darf. **Und jede Messung, die
+   zwei Bilder vergleicht, führt eine Nullprobe mit.** Ist sie nicht null,
+   ist die Messung noch keine.
 
 ---
 
@@ -269,7 +277,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v189. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v190. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

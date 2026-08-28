@@ -32,38 +32,16 @@
  * Aufruf:  npm run kristall          Zahlen zeigen
  *          npm run kristall -- --tor Grenzen pruefen
  */
-import { createCanvas, Image as NativeImage } from '@napi-rs/canvas';
 
-// Die Zeichenschicht braucht ein Dokument, das Flaechen anlegen kann.
-globalThis.document = {
-  createElement: (tag) => {
-    if (tag !== 'canvas') throw new Error(`nur canvas, nicht ${tag}`);
-    return createCanvas(1, 1);
-  },
-};
-globalThis.window = { devicePixelRatio: 2, innerWidth: 844, innerHeight: 390 };
+// Geruest, Bilderladen und das Wegwerfbild kommen aus der gemeinsamen
+// Werkstatt. Bis v189 stand all das hier - und in zwei weiteren Werkzeugen
+// noch einmal (Regel 15).
+import { createCanvas } from '@napi-rs/canvas';
+import { zeichenwerkstatt, bilderAbwarten, geruestStellen } from './leinwand.mjs';
 
-let offen = 0;
-globalThis.Image = class extends NativeImage {
-  set src(value) {
-    offen++;
-    const fertig = () => { offen--; };
-    const vorLaden = this.onload, vorFehler = this.onerror;
-    this.onload = () => { fertig(); vorLaden?.(); };
-    this.onerror = () => { fertig(); vorFehler?.(); };
-    super.src = value;
-  }
-  get src() { return super.src; }
-};
-const abwarten = async () => {
-  for (let i = 0; i < 400 && offen > 0; i++) await new Promise((r) => setTimeout(r, 5));
-};
+geruestStellen();
 
-const { GameState } = await import('../src/game/state.ts');
-const { Renderer } = await import('../src/gfx/renderer.ts');
 const { getObjectArt } = await import('../src/gfx/objectart.ts');
-const { OBJECT_ART } = await import('../src/gfx/assets/objects.ts');
-const { getBackground } = await import('../src/gfx/backgrounds.ts');
 const { getRissbild, rissStufe, RISS_STUFEN } = await import('../src/gfx/sprites.ts');
 
 const tor = process.argv.includes('--tor');
@@ -76,7 +54,7 @@ const probleme = [];
 // Bezugsgroesse ist die Flaeche der Station selbst, nicht die der Kachel
 // (Regel 2): sonst haenge die Zahl daran, wie gross gezeichnet wird.
 getObjectArt('crystal');
-await abwarten();
+await bilderAbwarten();
 const burg = getObjectArt('crystal');
 if (!burg) {
   console.log('KRISTALL: kein Bild der Ringstation im Vorrat - nichts zu messen.');
@@ -131,27 +109,12 @@ if (rissStufe(1) !== 0 || rissStufe(0) !== RISS_STUFEN) {
 /* ------------------------------------------------------------------- 2. Bild */
 
 async function bild(leben) {
-  const c = createCanvas(1688, 780);
-  Object.defineProperty(c, 'clientWidth', { get: () => 844 });
-  Object.defineProperty(c, 'clientHeight', { get: () => 390 });
-  const s = new GameState();
-  const r = new Renderer(c);
-  r.menu = null;
-  s.reset(1, 'normal', 'spiralhain');
-  s.lives = leben;
-  r.resize();
-  r.draw(s);
-  for (const k of Object.keys(OBJECT_ART)) getObjectArt(k);
-  getBackground(s.map.id);
-  await abwarten();
-  for (let i = 0; i < 3; i++) r.draw(s);
-  const z = s.map.ziel ?? s.goal;
-  const p = r.worldToScreen(z.x, z.y);
-  const rad = 170 * r.scale;
-  const x0 = Math.max(0, Math.round((p.x - rad) * 2)), x1 = Math.min(c.width, Math.round((p.x + rad) * 2));
-  const y0 = Math.max(0, Math.round((p.y - rad) * 2)), y1 = Math.min(c.height, Math.round((p.y + rad) * 2));
-  const breite = Math.max(1, x1 - x0);
-  return { kasten: c.getContext('2d').getImageData(x0, y0, breite, Math.max(1, y1 - y0)).data, breite };
+  const w = await zeichenwerkstatt({
+    aufbau: (s) => { s.reset(1, 'normal', 'spiralhain'); s.lives = leben; },
+  });
+  const z = w.zustand.map.ziel ?? w.zustand.goal;
+  const a = w.ausschnitt(z.x, z.y, 170);
+  return { kasten: a.punkte, breite: a.breite };
 }
 
 /** Nachbarkontrast: was ein Strich hat und ein Verlauf nicht. */
@@ -172,7 +135,6 @@ function kanten(d, w) {
 // Lichtstempel entstehen erst dabei. Ein Vergleich gegen dieses Bild misst
 // das Aufwaermen: 97,6 % der Bildpunkte sind anders, und zwar bei GLEICHEM
 // Kristall. Deshalb ein Wegwerfbild vorweg und eine Nullprobe hinterher.
-await bild(60);
 const voll = await bild(60);
 const nochmal = await bild(60);
 const wenig = await bild(1);

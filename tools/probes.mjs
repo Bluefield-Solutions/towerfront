@@ -1375,6 +1375,17 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // v190: die Zeichenwerkstatt wartet auf die Bilder, bevor sie eine
+    // Leinwand zum Messen herausgibt. Ohne das sind zwei Bilder desselben
+    // Zustands an 87 898 Punkten verschieden - und jede Messung, die zwei
+    // Bilder vergleicht, misst dann das Nachladen statt der Sache.
+    name: 'Werkstatt wartet nicht auf die Bilder',
+    datei: 'tools/leinwand.mjs',
+    regel: /^  await bilderAbwarten\(\);$/m,
+    ersatz: '  // nicht auf Bilder gewartet',
+    tor: 'kristalltor',
+  },
+  {
     // v187: die Leuchtscheiben haengen nicht mehr am Halbmesser. Bis dahin
     // waren es 48 Stueck und bis zu 13 MB - ein Drittel des gesamten
     // Bildspeichers -, weil zwei Aufrufstellen einen STETIGEN Halbmesser

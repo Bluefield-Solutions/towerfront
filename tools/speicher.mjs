@@ -35,31 +35,13 @@
  * Aufruf:  npm run speicher          Zahlen zeigen
  *          npm run speicher -- --tor Grenzen pruefen
  */
-import { createCanvas, Image as NativeImage } from '@napi-rs/canvas';
+import { createCanvas } from '@napi-rs/canvas';
 
-globalThis.document = {
-  createElement: (tag) => {
-    if (tag !== 'canvas') throw new Error(`nur canvas, nicht ${tag}`);
-    return createCanvas(1, 1);
-  },
-};
-globalThis.window = { devicePixelRatio: 2, innerWidth: 844, innerHeight: 390 };
+// Geruest und Bilderladen kommen aus der gemeinsamen Werkstatt - bis v189
+// stand beides hier noch einmal (Regel 15).
+import { geruestStellen, bilderAbwarten } from './leinwand.mjs';
 
-let offen = 0;
-globalThis.Image = class extends NativeImage {
-  set src(value) {
-    offen++;
-    const fertig = () => { offen--; };
-    const vorLaden = this.onload, vorFehler = this.onerror;
-    this.onload = () => { fertig(); vorLaden?.(); };
-    this.onerror = () => { fertig(); vorFehler?.(); };
-    super.src = value;
-  }
-  get src() { return super.src; }
-};
-const abwarten = async () => {
-  for (let i = 0; i < 400 && offen > 0; i++) await new Promise((r) => setTimeout(r, 5));
-};
+geruestStellen();
 
 const { GameState } = await import('../src/game/state.ts');
 const { Renderer } = await import('../src/gfx/renderer.ts');
@@ -97,7 +79,7 @@ for (const karte of besuche) {
   s.reset(1, 'normal', karte);
   for (const k of Object.keys(OBJECT_ART)) getObjectArt(k);
   getBackground(karte);
-  await abwarten();
+  await bilderAbwarten();
   r.resize();
   // Eine Karte wirklich SPIELEN. Ohne Tuerme und ohne Gegner fuellen sich
   // die beiden Ablagen gar nicht, die am staerksten an der Karte haengen -

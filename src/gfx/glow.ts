@@ -12,9 +12,45 @@ const cache = new Map<string, HTMLCanvasElement>();
 const tafel = new Map<string, string>();
 ablageAnmelden('Leuchtscheiben', cache, tafel);
 
+/** Wie gross eine Leuchtscheibe gebacken wird - fuer JEDEN Halbmesser.
+ *
+ *  **Die Scheibe ist selbstaehnlich, und das ist der ganze Punkt.** Ihr
+ *  Verlauf hat relative Farbstopps (0, 0,35, 1 vom Halbmesser); eine Scheibe
+ *  mit Halbmesser 16 und eine mit 48 sind dieselbe Funktion in anderer
+ *  Auflösung. Und gezeichnet wurde sie ohnehin gestreckt - `stampGlow` ruft
+ *  `drawImage(scheibe, x - r, y - r, r * 2, r * 2)`. In Zielgroesse zu
+ *  backen brachte also nichts ausser einem eigenen Eintrag je gerundetem
+ *  Halbmesser.
+ *
+ *  Bis v187 kostete das **48 Scheiben und 6,8 bis 13,0 MB** - je nach
+ *  Spielstand ein Drittel des gesamten Bildspeichers. Zwei Aufrufstellen
+ *  liefern einen STETIGEN Halbmesser: der Lichtkranz des Kristalls atmet und
+ *  haengt an seiner Gesundheit, und das Muendungsfeuer waechst mit dem
+ *  Blitz. Jeder gerundete Zwischenwert bekam seine eigene Scheibe.
+ *
+ *  **96 ist gemessen, nicht geraten** (Regel 9 und 13). Verglichen wurde "in
+ *  Zielgroesse gebacken" gegen "fest gebacken und gestreckt", ueber zehn im
+ *  Spiel wirklich vorkommende Halbmesser von 16 bis 208 und drei Farben.
+ *  Dazu die Eichung, ohne die keine dieser Zahlen etwas bedeutet:
+ *
+ *    dieselbe Scheibe gegen sich selbst        0,00
+ *    Halbmesser 64 gegen 65 - EIN Bildpunkt    3,74
+ *    fest 128 gestreckt                        3,52
+ *    fest  96 gestreckt                        4,96
+ *    fest  64 gestreckt                        7,21
+ *    andere Farbe, gleicher Halbmesser       142,06
+ *    gar kein Leuchten                       491,70
+ *
+ *  Der ganze Bereich, um den es geht, liegt also zwischen 0 und knapp 8 -
+ *  bei einem Effekt, dessen Fehlen 492 ausmacht. 96 kostet so viel wie
+ *  anderthalb Bildpunkte Halbmesser, und der Kranz wandert im Spiel
+ *  ohnehin staendig um mehr als das. */
+const SCHEIBE = 96;
+
 export function getGlowDisc(color: string, radius: number): HTMLCanvasElement {
-  const r = Math.max(4, Math.round(radius));
-  const key = `${color}|${r}`;
+  void radius;
+  const r = SCHEIBE;
+  const key = color;
   const hit = cache.get(key);
   if (hit) return hit;
 

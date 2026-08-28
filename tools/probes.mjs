@@ -1375,6 +1375,17 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // v187: die Leuchtscheiben haengen nicht mehr am Halbmesser. Bis dahin
+    // waren es 48 Stueck und bis zu 13 MB - ein Drittel des gesamten
+    // Bildspeichers -, weil zwei Aufrufstellen einen STETIGEN Halbmesser
+    // liefern und die Ablage nie geraeumt wird.
+    name: 'Leuchtscheibe wieder je Halbmesser',
+    datei: 'src/gfx/glow.ts',
+    regel: /^  const key = color;$/m,
+    ersatz: '  const key = `${color}|${Math.round(radius)}`;',
+    tor: 'speichertor',
+  },
+  {
     // v186: die Gruppenbudgets muessen zur Obergrenze der Datei passen. Bis
     // dahin summierten sie sich auf 2160 KB roh - eingebettet rund 2880 -
     // bei einer Datei, die 1600 darf. Jede Gruppe konnte gruen melden,

@@ -123,6 +123,36 @@ for (const a of bildspeicher().sort((x, y) => y.byte - x.byte)) {
   console.log(`  ${a.name.padEnd(22)} ${String(a.eintraege).padStart(4)} Eintraege  ${MB(a.byte).padStart(7)} MB`);
 }
 
+// **Und die Leuchtscheiben duerfen nicht am Halbmesser haengen.**
+//
+// Sie haengen an keiner Karte, werden also nie geraeumt - der Kartentest oben
+// sieht sie nicht. Bis v187 war ihr Schluessel Farbe PLUS Halbmesser, und
+// zwei Aufrufstellen liefern einen stetigen Halbmesser: der Lichtkranz des
+// Kristalls atmet und haengt an seiner Gesundheit, das Muendungsfeuer waechst
+// mit dem Blitz. Jeder gerundete Zwischenwert bekam eine eigene Scheibe - 48
+// Stueck und bis zu 13 MB, ein Drittel des gesamten Bildspeichers.
+//
+// **Der erste Entwurf dieser Pruefung spielte eine Minute und zaehlte
+// nach.** Das dauerte allein laenger als die halbe Torkette und sagte die
+// Sache nur mittelbar. Gefragt ist nicht "waechst es in einer Minute",
+// sondern "haengt es ueberhaupt am Halbmesser" - und das ist in zwei Zeilen
+// zu beantworten: zwei sehr verschiedene Halbmesser muessen DIESELBE Scheibe
+// liefern, nicht nur eine gleich grosse.
+{
+  const { getGlowDisc } = await import('../src/gfx/glow.ts');
+  const klein = getGlowDisc('#7FE7E0', 24);
+  const gross = getGlowDisc('#7FE7E0', 208);
+  console.log('');
+  console.log(`Leuchtscheibe bei Halbmesser 24 und 208: ${klein === gross ? 'dieselbe' : 'zwei verschiedene'}`);
+  if (klein !== gross) {
+    probleme.push('Die Leuchtscheiben haengen wieder am Halbmesser: 24 und 208 liefern '
+      + 'zwei verschiedene. Zwei Aufrufstellen im Renderer geben einen STETIGEN '
+      + 'Halbmesser weiter - damit waechst die Ablage mit der Spielzeit, und sie '
+      + 'wird nie geraeumt. Die Scheibe ist selbstaehnlich; sie in Zielgroesse zu '
+      + 'backen bringt nichts, weil sie ohnehin gestreckt gezeichnet wird.');
+  }
+}
+
 // **Die Ablagen namentlich, nicht nur ihre Summe.**
 //
 // Die erste Fassung dieses Tors mass nur Byte - und die Gegenprobe "eine

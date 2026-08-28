@@ -83,7 +83,9 @@ npm run speicher    misst den Bildspeicher ueber vier Kartenbesuche: fremde
                     Eintraege je Ablage und Zuwachs gegen den ersten Besuch.
                     `--tor` prüft die Grenzen. Eine Byte-Zahl allein sieht
                     NICHT, wenn sich eine Ablage abmeldet - deshalb steht
-                    daneben eine Namensliste.
+                    daneben eine Namensliste. Und die Leuchtscheiben werden
+                    eigens geprüft: sie hängen an keiner Karte, wachsen also
+                    mit der Spielzeit statt mit den Karten.
 npm run kristall    misst, ob der Kristall seinen Zustand zeigt: Rissdeckung je
                     Stufe am gebackenen Erzeugnis und Kantenzuwachs im
                     gezeichneten Bild. `--tor` prüft die Grenzen. Der
@@ -256,7 +258,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v187. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v188. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten, sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

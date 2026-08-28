@@ -30,7 +30,13 @@ const menu = new Menu();
 renderer.menu = menu;
 menu.onStart = (mapId, difficulty, endless) => {
   saveSettings({ map: mapId, difficulty });
-  state.reset(undefined, difficulty, mapId, { endless });
+  // Eine von Hand gesetzte Aussaat gilt fuer GENAU DIESE Partie und wird
+  // danach vergessen (T10). Sie stehen zu lassen waere die schlimmere
+  // Ueberraschung: wer einen Lauf einmal nachstellt, will nicht, dass die
+  // naechsten zehn Partien dieselben sind, ohne dass es irgendwo steht.
+  const aussaat = ui.wunschAussaat ?? undefined;
+  ui.wunschAussaat = null;
+  state.reset(aussaat, difficulty, mapId, { endless });
   renderer.menu = null;
   ui.hideScreen();
   ui.setSpielansicht(true);
@@ -190,6 +196,28 @@ requestAnimationFrame(() => layout());
 window.addEventListener('load', () => layout());
 window.addEventListener('orientationchange', () => setTimeout(onResize, 250));
 window.addEventListener('pointerdown', () => Sfx.unlock(), { once: true });
+
+// T11: eine Ausnahme darf nicht stumm bleiben.
+//
+// Bis v179 blieb die Leinwand bei einem Absturz einfach stehen. Der Spieler
+// sah ein eingefrorenes Bild und hatte nichts in der Hand; ich bekam
+// "es ging nicht mehr weiter" und baute eine Vermutung drumherum. Jetzt
+// liegt der Lauf als Textblock da - Aussaat, Karte, Grad, Welle -, und
+// damit ist er nachstellbar.
+//
+// Gemeldet wird nur der ERSTE Fehler. Ein Absturz in der Zeichenschleife
+// wiederholt sich sechzig Mal in der Sekunde, und ein Fenster, das sich
+// selbst immer wieder aufreisst, ist schlimmer als keines.
+let fehlerGemeldet = false;
+const fehlerMelden = (grund: string): void => {
+  if (fehlerGemeldet) return;
+  fehlerGemeldet = true;
+  ui.zeigeFehler(grund);
+};
+window.addEventListener('error', (e) => fehlerMelden(e.message || 'Fehler'));
+window.addEventListener('unhandledrejection', (e) => {
+  fehlerMelden(String((e as PromiseRejectionEvent).reason ?? 'Abgewiesenes Versprechen'));
+});
 window.addEventListener('keydown', (ev) => {
   if (ev.key === 'f' || ev.key === 'F') ui.togglePerf();
 });

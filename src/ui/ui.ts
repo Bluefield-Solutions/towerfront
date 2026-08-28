@@ -25,6 +25,7 @@ import { konterSatz } from '../data/konter';
 import type { GameState } from '../game/state';
 import { werteAmTurm, werteVorKauf, type Wertzeile } from '../game/turmwerte';
 import { bilanzblatt } from './statsblatt';
+import { aussaatLesen, laufAlsText } from '../game/mitschrift';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
@@ -68,6 +69,24 @@ export class UI {
   private pBlattBody = $<HTMLElement>('p-blatt-body');
   private pTitle = $<HTMLElement>('p-title');
   private letzteBilanz = '';
+  /** Zeigt der Einstellungsdialog gerade die zweite Karte ("Lauf
+   *  nachstellen")? Wie `bilanzOffen` eine reine Anzeigefrage - und wie dort
+   *  vor dem fruehen Ausstieg abgeleitet. */
+  private laufOffen = false;
+  private oWahl = $<HTMLElement>('o-wahl');
+  private pOpt = $<HTMLElement>('p-opt');
+  private optTitle = $<HTMLElement>('o-title');
+  private pLauf = $<HTMLElement>('p-lauf');
+  private oLaufZurueck = $<HTMLButtonElement>('o-lauf-zurueck');
+  private oSeed = $<HTMLInputElement>('o-seed');
+  private oBlock = $<HTMLTextAreaElement>('o-block');
+  private fehlerMenu = $<HTMLElement>('fehler-menu');
+  private fBlock = $<HTMLTextAreaElement>('f-block');
+  /** Aussaat fuer die naechste Partie, aus dem Einstellungsdialog. `null`
+   *  heisst: wie immer, eine neue. Sie steht bewusst NICHT im Spielstand -
+   *  sie ist eine Absicht fuer den naechsten Lauf, kein Zustand des
+   *  laufenden. */
+  wunschAussaat: number | null = null;
   private pick = $<HTMLElement>('pick');
   private pickRow = $<HTMLElement>('pick-row');
   private pickKey = '';
@@ -326,6 +345,35 @@ export class UI {
       saveSettings({ volume: v });
       Sfx.setVolume(v);
       this.oVolW.textContent = `${Math.round(v * 100)} %`;
+    });
+    // T10: eine Aussaat von Hand setzen. Angenommen wird auch ein ganzer
+    // Block - wer einen Lauf weitergibt, kopiert ihn im Stueck, und wer ihn
+    // nachstellt, fuegt ihn im Stueck wieder ein.
+    this.oSeed.addEventListener('input', () => {
+      this.wunschAussaat = aussaatLesen(this.oSeed.value);
+      const gueltig = this.oSeed.value.trim() === '' || this.wunschAussaat !== null;
+      this.oSeed.style.borderColor = gueltig ? '' : '#D6564A';
+      if (this.wunschAussaat !== null && this.oSeed.value !== String(this.wunschAussaat)) {
+        this.oSeed.value = String(this.wunschAussaat);
+      }
+    });
+    $<HTMLButtonElement>('o-seed-ab').addEventListener('click', () => {
+      this.wunschAussaat = null;
+      this.oSeed.value = '';
+      this.oSeed.style.borderColor = '';
+    });
+    // T11: den laufenden Lauf als Text ausgeben.
+    $<HTMLButtonElement>('o-lauf').addEventListener('click', () => {
+      this.oBlock.value = laufAlsText(this.s);
+      this.oBlock.hidden = false;
+      this.oBlock.select();
+    });
+    $<HTMLButtonElement>('f-zu').addEventListener('click', () => { this.fehlerMenu.hidden = true; });
+    $<HTMLButtonElement>('o-zu-lauf').addEventListener('click', () => { this.laufOffen = true; this.sync(); });
+    this.oLaufZurueck.addEventListener('click', () => {
+      this.laufOffen = false;
+      this.oBlock.hidden = true;
+      this.sync();
     });
     this.oQual.addEventListener('click', (e) => {
       const q = (e.target as HTMLElement).closest<HTMLButtonElement>('.opt-btn')?.dataset.q;
@@ -901,6 +949,17 @@ export class UI {
     }
   }
 
+  /** Ein Absturz ist passiert - den Lauf zum Weitergeben anbieten (T11).
+   *
+   *  Bis v179 blieb die Leinwand bei einer Ausnahme einfach stehen. Was
+   *  passiert war, wusste niemand: nicht der Spieler, der es haette melden
+   *  koennen, und nicht ich, der aus "es ging nicht mehr weiter" eine
+   *  Vermutung bauen musste. */
+  zeigeFehler(grund: string): void {
+    this.fBlock.value = `${laufAlsText(this.s, grund)}\n`;
+    this.fehlerMenu.hidden = false;
+  }
+
   /** Den Einstellungsdialog oeffnen.
    *
    *  Von der Landkarte aus fuehrt der Weg ueber die LEINWAND: das Menue
@@ -912,8 +971,16 @@ export class UI {
   /** Der Einstellungsdialog: Sichtbarkeit und Stand, jedes Bild abgeleitet. */
   private syncOptionen(): void {
     this.optMenu.hidden = !this.optionenOffen;
+    if (!this.optionenOffen) { this.oBlock.hidden = true; this.laufOffen = false; }
+    this.pOpt.hidden = !this.optionenOffen || this.laufOffen;
+    this.oWahl.hidden = !this.optionenOffen || this.laufOffen;
+    this.pLauf.hidden = !this.optionenOffen || !this.laufOffen;
+    this.oLaufZurueck.hidden = !this.optionenOffen || !this.laufOffen;
+    this.optTitle.textContent = this.laufOffen ? 'Lauf nachstellen' : 'Einstellungen';
     if (!this.optionenOffen) return;
     const st = getSettings();
+    // Der Block gehoert dem Augenblick, in dem er erzeugt wurde - beim
+    // Schliessen verschwindet er, damit niemand eine alte Welle weitergibt.
     const prozent = Math.round(st.volume * 100);
     if (this.oVol.value !== String(prozent)) this.oVol.value = String(prozent);
     this.oVolW.textContent = `${prozent} %`;

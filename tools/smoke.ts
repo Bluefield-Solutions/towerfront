@@ -255,6 +255,79 @@ step('Partie durchspielen', () => {
   outcome = state.phase;
 });
 
+// T10 und T11: einen Lauf nachstellen und weitergeben.
+//
+// **Die Pruefung, die den Punkt traegt, ist nicht die Eingabe** - sie ist
+// die Frage, ob dieselbe Aussaat wirklich denselben Lauf ergibt. Ein
+// Eingabefeld, das eine Zahl entgegennimmt und danach etwas anderes
+// passiert, waere schlimmer als keines: es verspricht Reproduzierbarkeit
+// und liefert Zufall.
+{
+  const { laufAlsText, aussaatLesen } = await import('../src/game/mitschrift');
+  const { candidateSpots: spotsT } = await import('./spots');
+
+  // 1. Der Block nennt, was einen Lauf bestimmt.
+  //
+  // Auf einem EIGENEN Zustand, nicht auf dem der Hauptpartie: der erste
+  // Anlauf setzte `state` zurueck und hat damit die Auswertung darunter
+  // zerstoert - dieselbe Falle wie beim Durchlauf ueber jede Karte (T6).
+  // Eine Pruefung, die den Zustand aendert, den andere lesen, ist keine.
+  const laufProbe = new GameState();
+  laufProbe.reset(4242, 'normal', 'ascheschlucht');
+  const block = laufAlsText(laufProbe);
+  for (const noetig of ['Aussaat', '4242', 'ascheschlucht', 'normal']) {
+    if (!block.includes(noetig)) problems.push(`Laufblock: "${noetig}" fehlt darin.`);
+  }
+
+  // 2. Der Block laesst sich WIEDER EINLESEN - im Stueck, nicht nur als Zahl.
+  if (aussaatLesen(block) !== 4242) {
+    problems.push(`Laufblock: der eigene Block ergibt beim Einlesen ${aussaatLesen(block)} statt 4242.`);
+  }
+  if (aussaatLesen('4242') !== 4242) problems.push('Laufblock: eine nackte Zahl wird nicht angenommen.');
+  if (aussaatLesen('Kaese') !== null) problems.push('Laufblock: Unsinn wird als Aussaat angenommen.');
+  if (aussaatLesen('99999999999') !== null) problems.push('Laufblock: eine Zahl jenseits von 32 Bit wird angenommen.');
+
+  // 3. **Dieselbe Aussaat, derselbe Lauf.** Zweimal gespielt, gleiche Zuege,
+  //    und am Ende muessen alle Zahlen uebereinstimmen.
+  const spiele = (aussaat: number) => {
+    const g = new GameState();
+    g.reset(aussaat, 'normal', 'ascheschlucht');
+    const plaetze = spotsT(g);
+    const z = { spot: 0, si: 0 };
+    for (let i = 0; i < 60 * 90; i++) {
+      botSchritt(g, plaetze, z);
+      g.update(DT);
+      if (g.phase !== 'playing') break;
+    }
+    return `${g.phase}|${g.lives}|${g.gold}|${Math.round(g.stats.damage)}|${g.stats.kills}|${g.waveNumber}`;
+  };
+  const a = spiele(4242), b = spiele(4242), c = spiele(4243);
+  if (a !== b) {
+    problems.push(`Aussaat 4242 ergibt zweimal Verschiedenes: "${a}" gegen "${b}". `
+      + 'Ein Lauf laesst sich dann nicht nachstellen, und die Eingabe verspricht etwas Falsches.');
+  }
+  if (a === c) {
+    problems.push('Aussaat 4242 und 4243 ergeben denselben Lauf - die Aussaat wirkt gar nicht, '
+      + 'und die Pruefung darueber koennte nichts finden.');
+  }
+
+  // 4. Das Fehlerfenster: es zeigt den Lauf und laesst sich schliessen.
+  const fm = document.getElementById('fehler-menu');
+  const fb = document.getElementById('f-block') as HTMLTextAreaElement | null;
+  if (!fm || !fb) {
+    problems.push('Fehlerfenster: fehlt im Dokument.');
+  } else {
+    if (!fm.hidden) problems.push('Fehlerfenster: liegt offen, ohne dass etwas passiert ist.');
+    ui.zeigeFehler('Probe');
+    if (fm.hidden) problems.push('Fehlerfenster: bleibt zu, obwohl ein Fehler gemeldet wurde.');
+    if (!fb.value.includes('Probe') || !fb.value.includes('Aussaat')) {
+      problems.push('Fehlerfenster: der Block nennt weder den Anlass noch die Aussaat.');
+    }
+    (document.getElementById('f-zu') as HTMLButtonElement).dispatchEvent(new window.Event('click'));
+    if (!fm.hidden) problems.push('Fehlerfenster: "Schliessen" schliesst es nicht.');
+  }
+}
+
 // D6: der Einstellungsdialog.
 //
 // Geprueft wird nicht, dass sich Knoepfe druecken lassen, sondern dass die

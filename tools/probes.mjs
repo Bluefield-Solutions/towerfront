@@ -1210,6 +1210,46 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    // T10, v179: dieselbe Aussaat muss denselben Lauf ergeben. Ein
+    // Eingabefeld, das eine Zahl annimmt und danach etwas anderes passiert,
+    // ist schlimmer als keines - es verspricht Reproduzierbarkeit und
+    // liefert Zufall.
+    name: 'Aussaat wirkt nicht',
+    datei: 'src/game/state.ts',
+    regel: /^    this\.rng\.state = seed;$/m,
+    ersatz: '    this.rng.state = newSeed();',
+    tor: 'smoke',
+  },
+  {
+    // Und der Block muss sich WIEDER EINLESEN lassen. Wer einen Lauf
+    // weitergibt, kopiert ihn im Stueck; wer ihn nachstellt, fuegt ihn im
+    // Stueck wieder ein.
+    name: 'Laufblock laesst sich nicht wieder einlesen',
+    datei: 'src/game/mitschrift.ts',
+    regel: /^  const ausBlock = \/Aussaat\\s\+\(\\d\+\)\/i\.exec\(text\);$/m,
+    ersatz: '  const ausBlock = null;',
+    tor: 'smoke',
+  },
+  {
+    // T11: ein Absturz darf nicht stumm bleiben.
+    name: 'Fehlerfenster bleibt zu',
+    datei: 'src/ui/ui.ts',
+    regel: /^    this\.fehlerMenu\.hidden = false;$/m,
+    ersatz: '    this.fehlerMenu.hidden = true;',
+    tor: 'smoke',
+  },
+  {
+    // Und die Verdrahtung dazwischen, die nur die gebaute Datei zeigt: das
+    // Eingabefeld sitzt in der Oberflaeche, die Partie wird in main.ts
+    // gestartet. Der Rauchtest baut beides selbst zusammen und saehe es
+    // nicht.
+    name: 'Eingegebene Aussaat erreicht die Partie nicht',
+    datei: 'src/main.ts',
+    regel: /^  const aussaat = ui\.wunschAussaat \?\? undefined;$/m,
+    ersatz: '  const aussaat = undefined;',
+    tor: 'browser',
+  },
+  {
     // D21, v178: keine Figur darf deutlich weniger Bildpunkte mitbringen als
     // die anderen. Der Eintrag stand zwei Fassungen lang still erledigt im
     // Rueckstandsverzeichnis und in CLAUDE.md - gemessen wurde er nie.

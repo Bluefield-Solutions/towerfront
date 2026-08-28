@@ -857,6 +857,34 @@ html, body {
 }
 .opt-btn[data-on="1"] { background: #7FE7E0; color: #06121A; border-color: #7FE7E0; }
 .opt-hinweis { margin: 2px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--muted); }
+.opt-lauf input[type="text"] {
+  flex: 1; min-width: 0; min-height: 46px; padding: 0 12px;
+  font: inherit; font-size: 14px; font-variant-numeric: tabular-nums;
+  color: var(--text); background: rgba(8, 12, 22, 0.6);
+  border: 1px solid var(--edge); border-radius: 11px;
+}
+.opt-btn.opt-schmal { flex: 0 0 auto; padding: 8px 14px; }
+.opt-block {
+  width: 100%; box-sizing: border-box; padding: 10px 12px;
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--text); background: rgba(8, 12, 22, 0.6);
+  border: 1px solid var(--edge); border-radius: 11px; resize: none;
+}
+.opt-block[hidden] { display: none; }
+.opt-lauf input[type="text"] {
+  flex: 1; min-height: 46px; padding: 0 12px;
+  font: inherit; font-size: 14px; font-variant-numeric: tabular-nums;
+  color: var(--text); background: rgba(8, 12, 22, 0.6);
+  border: 1px solid var(--edge); border-radius: 11px;
+}
+.opt-btn.opt-schmal { flex: 0 0 auto; padding: 8px 14px; }
+.opt-block {
+  width: 100%; box-sizing: border-box; padding: 10px 12px;
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--text); background: rgba(8, 12, 22, 0.6);
+  border: 1px solid var(--edge); border-radius: 11px; resize: none;
+}
+.opt-block[hidden] { display: none; }
 /* Das Zahnrad auf der Landkarte. */
 .gear {
   position: absolute; right: 12px; bottom: 12px; z-index: 5;

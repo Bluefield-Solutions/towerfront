@@ -938,9 +938,61 @@ if (streuung < 6) {
       console.log(`Einstellungen: Zurueck ${lage.hoehe.toFixed(0)} Punkte hoch, `
         + `${(lage.karteUnten - lage.knopfUnten).toFixed(0)} Punkte Luft zur Kartenkante.`);
     }
+    // T10: kommt eine eingegebene Aussaat wirklich in der Partie an?
+    //
+    // Der Rauchtest kann das nicht pruefen: er baut Zustand und Oberflaeche
+    // selbst zusammen, waehrend die Verdrahtung "Eingabefeld -> naechste
+    // Partie" in `main.ts` sitzt. Genau die Sorte Luecke, die dieses
+    // Verzeichnis viermal gekostet hat - eine Ableitung schuetzt nur, was
+    // sie aufzaehlt. Hier laeuft die GEBAUTE Datei mit ihrer echten
+    // Verdrahtung, also wird es hier geprueft.
+    await seite.evaluate(() => document.getElementById('o-zu-lauf')?.click());
+    await seite.waitForTimeout(150);
+    await seite.evaluate(() => {
+      const f = document.getElementById('o-seed');
+      f.value = '12345';
+      f.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    await seite.waitForTimeout(120);
+    await seite.evaluate(() => document.getElementById('o-lauf-zurueck')?.click());
     await seite.evaluate(() => document.getElementById('o-zurueck')?.click());
     await seite.evaluate(() => document.getElementById('b-pause')?.click());
     await seite.waitForTimeout(150);
+    // Zurueck auf die Landkarte und eine neue Partie starten.
+    await seite.evaluate(() => document.getElementById('b-pause')?.click());
+    await seite.waitForTimeout(200);
+    await seite.evaluate(() => document.getElementById('p-quit')?.click());
+    await seite.waitForTimeout(600);
+    let neuDrin = false;
+    for (let y = 60; y < HOCH - 20 && !neuDrin; y += 50) {
+      for (let x = 40; x < BREIT - 20 && !neuDrin; x += 60) {
+        await seite.mouse.click(x, y);
+        await seite.waitForTimeout(70);
+        neuDrin = await seite.evaluate(() => !document.getElementById('hud')?.hidden);
+      }
+    }
+    if (!neuDrin) {
+      fail('Nach dem Setzen einer Aussaat kommt man nicht mehr ins Spiel.');
+    } else {
+      await seite.evaluate(() => document.getElementById('b-pause')?.click());
+      await seite.waitForTimeout(150);
+      await seite.evaluate(() => document.getElementById('p-optionen')?.click());
+      await seite.evaluate(() => document.getElementById('o-zu-lauf')?.click());
+      await seite.waitForTimeout(150);
+      await seite.evaluate(() => document.getElementById('o-lauf')?.click());
+      await seite.waitForTimeout(150);
+      const block = await seite.evaluate(() => document.getElementById('o-block')?.value ?? '');
+      if (!/Aussaat\s+12345/.test(block)) {
+        fail('Die eingegebene Aussaat 12345 kommt in der Partie nicht an - der Laufblock '
+          + `meldet stattdessen: ${(block.split('\n')[1] ?? '?').trim()}`);
+      } else {
+        console.log('Aussaat: 12345 eingegeben, in der Partie angekommen.');
+      }
+      await seite.evaluate(() => document.getElementById('o-lauf-zurueck')?.click());
+      await seite.evaluate(() => document.getElementById('o-zurueck')?.click());
+      await seite.evaluate(() => document.getElementById('b-pause')?.click());
+      await seite.waitForTimeout(150);
+    }
   }
 }
 

@@ -85,19 +85,32 @@
       </div>
       <div class="pause-blatt stats" id="p-blatt" hidden>
         <div id="p-blatt-body"></div>
-        <button class="pause-btn" id="p-zurueck">Zurück</button>
       </div>
+      <button class="pause-btn" id="p-zurueck" hidden>Zurück</button>
     </div>
   </div>
 
   <!-- Einstellungen (D6) — eine eigene Ebene, kein Teil der Pausenkarte.
-       Sie sind auch OHNE laufende Partie erreichbar: von der Landkarte über
-       das Zahnrad. Die Pausenkarte hätte sie an eine Partie gebunden, und
+       Sie sind auch OHNE laufende Partie erreichbar: über den Eintrag
+       „Einstellungen“ auf der Landkarte, der auf die Leinwand gezeichnet wird
+       (ein HTML-Knopf im Menü wäre Spielbedienung, Regel 6). Die Pausenkarte hätte sie an eine Partie gebunden, und
        wer die Lautstärke ändern will, soll dafür kein Spiel anfangen
        müssen. -->
+  <!-- Wenn etwas abstürzt (T11). Bis v179 blieb die Leinwand einfach stehen,
+       und was passiert war, wusste niemand — auch der Spieler nicht, der es
+       hätte melden können. -->
+  <div class="pause-menu" id="fehler-menu" hidden>
+    <div class="pause-card">
+      <span class="pause-title">Da ist etwas schiefgegangen</span>
+      <p class="opt-hinweis">Der Block unten beschreibt den Lauf. Damit lässt er sich nachstellen — bitte weitergeben.</p>
+      <textarea class="opt-block" id="f-block" readonly rows="9"></textarea>
+      <button class="pause-btn" id="f-zu">Schliessen</button>
+    </div>
+  </div>
+
   <div class="pause-menu" id="optionen-menu" hidden>
     <div class="pause-card">
-      <span class="pause-title">Einstellungen</span>
+      <span class="pause-title" id="o-title">Einstellungen</span>
       <div class="pause-blatt optionen" id="p-opt">
         <label class="opt" for="o-vol">
           <span>Lautstärke</span>
@@ -120,8 +133,31 @@
           </div>
         </div>
         <p class="opt-hinweis">Reduziert nimmt Wetter und Ruckeln heraus. Gegner, Geschosse und Wirkungen bleiben — die bedeuten etwas.</p>
+      </div>
+      <!-- Eine zweite Karte statt einer längeren: auf 390 Punkten Höhe passt
+           nur eines von beidem, und ein Feld, das man erst herunterrollen
+           muss, ist ein Feld, das niemand findet. -->
+      <div class="pause-wahl" id="o-wahl">
+        <button class="pause-btn" id="o-zu-lauf">Lauf nachstellen …</button>
         <button class="pause-btn" id="o-zurueck">Zurück</button>
       </div>
+      <div class="pause-blatt optionen" id="p-lauf" hidden>
+        <!-- Einen Lauf nachstellen (T10) und weitergeben (T11). Aus derselben
+             Aussaat entsteht derselbe Lauf noch einmal — das prüft die
+             Determinismus-Messung seit v90. -->
+        <div class="opt opt-lauf">
+          <span>Aussaat</span>
+          <input type="text" id="o-seed" inputmode="numeric" placeholder="leer = zufällig" />
+          <button class="opt-btn opt-schmal" id="o-seed-ab">Zufällig</button>
+        </div>
+        <p class="opt-hinweis">Gilt für die nächste Partie. Ein ganzer Block darf hinein.</p>
+        <div class="opt">
+          <span>Dieser Lauf</span>
+          <button class="opt-btn" id="o-lauf">Als Text ausgeben</button>
+        </div>
+        <textarea class="opt-block" id="o-block" readonly hidden rows="5"></textarea>
+      </div>
+      <button class="pause-btn" id="o-lauf-zurueck" hidden>Zurück</button>
     </div>
   </div>
 

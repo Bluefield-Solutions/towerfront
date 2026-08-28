@@ -1,6 +1,7 @@
 // Autarkie-Check: Die gebaute HTML-Datei muss ohne Netz laufen.
 // Findet externe URLs, uebrig gebliebene <script src>/<link href> und Restfehler.
-import { readFileSync, existsSync, statSync } from 'node:fs';
+import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 const file = process.argv[2] ?? 'dist/index.html';
 if (!existsSync(file)) {
@@ -91,6 +92,51 @@ if (sizeKb > SIZE_BUDGET_KB) {
   problems.push(
     `Die Datei ist ${sizeKb.toFixed(0)} KB gross - Obergrenze ${SIZE_BUDGET_KB} KB.`,
   );
+}
+
+// **Und die Gruppenbudgets muessen zu dieser Obergrenze passen.**
+//
+// Bis v185 gab es ZWEI Haushalte, die einander widersprachen. In `art/*.json`
+// steht je Gruppe ein `budgetKb`, und `pack-art` schlaegt an, wenn eine
+// Gruppe darueber liegt. Ihre Summe war 2160 KB roh - eingebettet rund
+// 2880 - bei einer Datei, die 1600 darf. Jede Gruppe konnte also grün
+// melden, waehrend die Datei laengst zu gross war; gebunden hat nur die
+// Zahl hier, und die sah niemand beim Packen.
+//
+// Der Rest wird nicht geschaetzt, sondern an der gebauten Datei GEMESSEN
+// (Regel 12): alles, was nicht WebP-Bildvorrat ist - Code, HTML, das
+// Startbildschirm-Symbol und die zehn Startbilder als PNG. Waechst der Code,
+// schrumpft der erlaubte Bildvorrat von selbst.
+{
+  const webp = [...html.matchAll(/data:image\/webp;base64,[A-Za-z0-9+/=]+/g)];
+  const vorratKb = webp.reduce((n, m) => n + m[0].length, 0) / 1024;
+  const restKb = sizeKb - vorratKb;
+  // Datenadresse: vier Zeichen je drei Byte, dazu der kurze Kopf je Eintrag.
+  const AUFSCHLAG = 4 / 3;
+  const erlaubtRohKb = (SIZE_BUDGET_KB - restKb) / AUFSCHLAG;
+
+  let summeKb = 0;
+  const gruppen = [];
+  const artDir = 'art';
+  if (existsSync(artDir)) {
+    for (const name of readdirSync(artDir).filter((f) => f.endsWith('.json'))) {
+      try {
+        const spec = JSON.parse(readFileSync(join(artDir, name), 'utf8'));
+        if (typeof spec.budgetKb !== 'number') continue;
+        summeKb += spec.budgetKb;
+        gruppen.push(`${name.replace('.json', '')} ${spec.budgetKb}`);
+      } catch { /* eine unlesbare Vorschrift meldet der Packer selbst */ }
+    }
+  }
+  if (gruppen.length && summeKb > erlaubtRohKb) {
+    problems.push(
+      `Die Gruppenbudgets summieren sich auf ${summeKb.toFixed(0)} KB roh `
+      + `(${gruppen.join(', ')}), erlaubt sind ${erlaubtRohKb.toFixed(0)} KB - `
+      + `die Datei darf ${SIZE_BUDGET_KB} KB, davon sind ${restKb.toFixed(0)} KB `
+      + 'Code, HTML und Startbilder. Zwei Haushalte, die einander widersprechen: '
+      + 'jede Gruppe kann gruen melden, waehrend die Datei zu gross wird.',
+    );
+  }
 }
 
 const kb = (statSync(file).size / 1024).toFixed(0);

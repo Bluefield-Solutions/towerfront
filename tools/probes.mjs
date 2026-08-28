@@ -1375,6 +1375,17 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // v186: die Gruppenbudgets muessen zur Obergrenze der Datei passen. Bis
+    // dahin summierten sie sich auf 2160 KB roh - eingebettet rund 2880 -
+    // bei einer Datei, die 1600 darf. Jede Gruppe konnte gruen melden,
+    // waehrend die Datei laengst zu gross war.
+    name: 'Ein Gruppenbudget sprengt die Datei',
+    datei: 'art/tuerme.json',
+    regel: /"budgetKb": 335/,
+    ersatz: '"budgetKb": 900',
+    tor: 'autarkie',
+  },
+  {
     // v185: die Hauptpartie des Rauchtests laeuft auf einer FESTEN Aussaat.
     // Bis v184 stand hier `undefined`, also jede Runde ein anderes Spiel -
     // gemessen Kristall 28, 48, 48, 45, 47 bei fuenf gleichen Laeufen. Jede

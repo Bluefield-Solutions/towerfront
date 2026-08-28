@@ -3,7 +3,7 @@
   "source": "roh/gegner",
   "output": "enemies.ts",
   "exportName": "ENEMY_ART",
-  "budgetKb": 220,
+  "budgetKb": 90,
   "defaults": {
     "size": 256,
     "fill": 0.78,

@@ -4,7 +4,7 @@
   "output": "backgrounds.ts",
   "exportName": "MAP_BACKGROUNDS",
   "mode": "background",
-  "budgetKb": 700,
+  "budgetKb": 330,
   "defaults": {
     "width": 2400,
     "height": 1350,

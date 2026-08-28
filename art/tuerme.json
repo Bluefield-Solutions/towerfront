@@ -3,7 +3,7 @@
   "source": "roh/tuerme",
   "output": "towers.ts",
   "exportName": "TOWER_ART",
-  "budgetKb": 620,
+  "budgetKb": 335,
   "defaults": {
     "size": 256,
     "fill": 0.86,

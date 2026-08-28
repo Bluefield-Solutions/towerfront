@@ -45,7 +45,18 @@ const only = args.filter((a) => !a.startsWith('--'));
  *  eine Zahl in der JSON oder ein Bild auf der Platte, fällt es auf. */
 function fingerprint(spec, srcDir) {
   const h = createHash('sha256');
-  h.update(JSON.stringify(spec));
+  // **`budgetKb` gehoert NICHT dazu.**
+  //
+  // Der Abdruck soll decken, was das ERGEBNIS bestimmt. Das Budget bestimmt
+  // es nicht: es wird hinterher mit der Summe verglichen und beruehrt keine
+  // einzige Bildzeile. Solange es mitzaehlte, erzwang jede Korrektur der
+  // Obergrenze ein vollstaendiges Neupacken - rund eine Minute Rechnen und
+  // ein Commit ueber alle Bildmodule, um am Ende dieselben Bytes zu
+  // erzeugen. Aufgefallen ist es in v185, als die Gruppenbudgets von
+  // Fantasiewerten auf gemessene gesetzt wurden.
+  const { budgetKb, ...bestimmend } = spec;
+  void budgetKb;
+  h.update(JSON.stringify(bestimmend));
   for (const [key, entry] of Object.entries(spec.items)) {
     const file = typeof entry === 'string' ? entry : entry.file;
     const p = join(srcDir, file);

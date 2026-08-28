@@ -3,7 +3,7 @@
   "source": "roh/objekte",
   "output": "objects.ts",
   "exportName": "OBJECT_ART",
-  "budgetKb": 200,
+  "budgetKb": 250,
   "defaults": {
     "size": 256,
     "fill": 0.92,

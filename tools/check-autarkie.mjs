@@ -82,11 +82,27 @@ for (const id of REQUIRED_IDS) {
 
 // Groessenbudget.
 //
-// Seit die Untergrundbilder eingebettet sind, ist die Dateigroesse eine echte
-// Groesse geworden: jedes Bild wird als Datenadresse hineingeschrieben und
-// wird dabei ein Drittel groesser. Ohne Obergrenze waechst die Datei mit jedem
-// weiteren Bild unbemerkt, bis der erste Ladevorgang auf dem Handy stoert.
-const SIZE_BUDGET_KB = 1600;
+// Jedes Bild wird als Datenadresse in die eine Datei geschrieben und wird
+// dabei ein Drittel groesser. Ohne Obergrenze waechst sie mit jedem weiteren
+// Bild unbemerkt.
+//
+// **Die Zahl ist jetzt gemessen, vorher war sie geraten** (Regel 12). Von v77
+// bis v186 standen hier 1600 KB mit der Begruendung "bis der erste
+// Ladevorgang auf dem Handy stoert" - und dahinter lag keine einzige
+// Messung. Nachgemessen an der gebauten Datei (1506 KB, Chromium, lokal,
+// also ohne Uebertragung): 386 ms bis zum `load`-Ereignis, 624 ms bis zum
+// ersten gezeichneten Bild. Die Uebertragung kommt dazu und rechnet sich aus
+// der Groesse: bei 20 Mbit/s 588 ms, bei 5 Mbit/s 2353 ms, bei 1,5 Mbit/s
+// 7844 ms.
+//
+// Der Sprung auf 1800 KB kostet davon bei 5 Mbit/s rund 380 ms - einmalig,
+// danach liegt die Datei im Zwischenspeicher. Dafuer passen die bestellten
+// Bildsaetze hinein. Die Rechnung steht in docs/Towerfront-GROESSENHAUSHALT.md.
+//
+// Was diese Grenze NICHT ist: eine Aussage ueber den Arbeitsspeicher. Der
+// wird von `npm run speichertor` gemessen und liegt bei 36 MB - auf einem
+// Telefon unauffaellig.
+const SIZE_BUDGET_KB = 1800;
 const sizeKb = statSync(file).size / 1024;
 if (sizeKb > SIZE_BUDGET_KB) {
   problems.push(

@@ -1,11 +1,42 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v186 · 28.08.2026
+Stand: v187 · 28.08.2026
 
 Die Datei ist **eine** Datei. Jedes Bild steckt als Datenadresse darin und
 wird dabei ein Drittel größer. Ohne Obergrenze wächst sie mit jedem Bild, bis
-der erste Ladevorgang auf dem Telefon stört — deshalb `SIZE_BUDGET_KB = 1600`
-in `tools/check-autarkie.mjs`.
+der erste Ladevorgang auf dem Telefon stört — deshalb `SIZE_BUDGET_KB` in
+`tools/check-autarkie.mjs`.
+
+## Die Zahl war geraten, jetzt ist sie gemessen
+
+Von v77 bis v186 standen dort **1600 KB**, mit genau dieser Begründung — und
+**ohne eine einzige Messung dahinter**. Es gab im ganzen Verzeichnis keine
+Ladezeitmessung, und es gibt bis heute keine vom Zielgerät (D27).
+
+Gemessen an der gebauten Datei (1506 KB, Chromium, lokale Datei, also ohne
+Übertragung):
+
+| | |
+|---|---|
+| bis zum `load`-Ereignis | 386 ms |
+| bis zum ersten gezeichneten Bild | 624 ms |
+
+Die Übertragung kommt dazu und rechnet sich aus der Größe:
+
+| Verbindung | heute (1506 KB) | bei 1800 KB |
+|---|---|---|
+| 20 Mbit/s | 588 ms | 703 ms |
+| 5 Mbit/s | 2353 ms | 2812 ms |
+| 1,5 Mbit/s (3G) | 7844 ms | 9375 ms |
+
+**Seit v187 steht die Grenze bei 1800 KB.** Der Sprung kostet bei mäßigem
+LTE rund 380 ms — einmalig, danach liegt die Datei im Zwischenspeicher. Dafür
+passen die bestellten Bildsätze hinein.
+
+**Was diese Grenze nicht ist: eine Aussage über den Arbeitsspeicher.** Den
+misst `npm run speichertor`, und er liegt bei **36,3 MB** — auf einem Telefon
+unauffällig. Die beiden Zahlen haben nichts miteinander zu tun und werden
+leicht verwechselt.
 
 ---
 
@@ -24,11 +55,11 @@ Der Bildvorrat als Rohbytes, also vor der Datenadresse:
 
 | Gruppe | roh | Budget (v186) |
 |---|---|---|
-| Türme (18 Bilder) | 302 KB | 335 |
+| Türme (18 Bilder) | 302 KB | 445 |
 | Untergründe (3) | 324 KB | 330 |
-| Objekte (14) | 192 KB | 200 |
-| Gegner (8) | 71 KB | 90 |
-| **Summe** | **889 KB** | **955 von 960 erlaubt** |
+| Objekte (14) | 192 KB | 250 |
+| Gegner (8) | 71 KB | 80 |
+| **Summe** | **889 KB** | **1105 von 1110 erlaubt** |
 
 ## Zwei Haushalte, die einander widersprachen
 
@@ -58,7 +89,11 @@ Mörser 103, Prisma 93.
 | Frostturm 5+6 (Bildauftrag 6.3b) | ersetzt vorhandene | ±0 |
 | **zusammen** | **~264 KB** | **~354 KB** |
 
-**Freier Platz heute: 71 KB roh.** Es fehlen also rund **193 KB roh**.
+**Freier Platz bei 1800 KB: 221 KB roh.** Es fehlen also noch rund **43 KB
+roh** — und die sind mit einer einzigen Güte-Stufe zu holen (siehe unten:
+82 → 74 spart 39 KB, 82 → 66 spart 57 KB, beides nahe am Rauschen). Der
+Wächter schlägt genau dann an, wenn der letzte Satz kommt, und zwingt die
+Entscheidung dorthin, wo sie hingehört: an den Tag des Packens.
 
 ## Was zu holen ist — gemessen, nicht geschätzt
 

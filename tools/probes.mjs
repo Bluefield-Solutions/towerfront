@@ -1381,7 +1381,7 @@ const PROBEN = [
     // waehrend die Datei laengst zu gross war.
     name: 'Ein Gruppenbudget sprengt die Datei',
     datei: 'art/tuerme.json',
-    regel: /"budgetKb": 335/,
+    regel: /"budgetKb": 445/,
     ersatz: '"budgetKb": 900',
     tor: 'autarkie',
   },

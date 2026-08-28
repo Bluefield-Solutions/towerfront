@@ -105,7 +105,7 @@ const ersterTurm = (g) => g.gebaute[0];
 // dass irgendetwas rot wurde. Ein Tor, das weniger prueft als das Werkzeug,
 // das es bewacht, laesst genau die Luecke.
 const TOR = ['menu-karte', 'menu-einweisung', 'menu-fortschritt', 'menu-sieg',
-  'menu-niederlage', 'welle8'];
+  'menu-niederlage', 'welle8', 'kristall-riss'];
 const nurTor = process.argv.includes('--tor');
 
 /** Eine Aufnahme: Zustand herstellen, ein paar Bilder laufen lassen, ausgeben.
@@ -616,6 +616,21 @@ takes.push(['welle8', () => shot('welle8', 844, 390, (s) => {
   s.waveIndex = 7;
   s.startWave();
   return 60 * 12;
+})]);
+
+takes.push(['kristall-riss', () => shot('kristall-riss', 844, 390, (s) => {
+  // Der Kristall, wie ihn niemand sehen will - und wie ihn bis v181 auch
+  // niemand SAH.
+  //
+  // Der Bildbestand zeigte das Ziel nur heil. Eine Abnahme, die ausschliesslich
+  // den unbeschaedigten Fall kennt, haette ueber die Risse nie etwas beweisen
+  // koennen (Regel 5) - dieselbe Luecke wie bei der Endlos-Bestenliste in v181.
+  s.reset(1, 'normal', 'spiralhain');
+  stock(s, 10);
+  s.lives = Math.max(1, Math.round(s.maxLives * 0.1));
+  s.waveIndex = 7;
+  s.startWave();
+  return 60 * 4;
 })]);
 
 takes.push(['r4-bollwerk', () => shot('r4-bollwerk', 844, 390, (s) => {

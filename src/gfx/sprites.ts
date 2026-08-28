@@ -1,4 +1,5 @@
 import { C, LICHT } from '../data/config';
+import { makeRng } from '../core/math';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import { TOWERS, accentFor, type BranchIndex, type TowerDef, type TowerId } from '../data/towers';
 import { hexA } from './glow';
@@ -476,6 +477,143 @@ export function spriteBytes(): number {
   let total = 0;
   for (const cv of cache.values()) total += cv.width * cv.height * 4;
   return total;
+}
+
+/** Wieviele Rissstufen der Kristall kennt. Null ist heil. */
+export const RISS_STUFEN = 6;
+
+/** Die Rissstufe zu einem Gesundheitsanteil (1 = heil, 0 = am Ende). */
+export const rissStufe = (anteil: number): number =>
+  Math.max(0, Math.min(RISS_STUFEN, Math.round((1 - anteil) * RISS_STUFEN)));
+
+/** Die Risse im Kristall — eine gebackene Ebene je Stufe, auf den Umriss
+ *  des Bauwerks beschnitten.
+ *
+ *  **Warum das hier steht und nicht mehr im Renderer.** Bis v181 zeichnete
+ *  `drawCrystal` Risse als Pfade — aber erst NACH einem `return`, das immer
+ *  fiel, sobald das Bild der Ringstation geladen war. Gemessen: von zwölf
+ *  Bildern nehmen elf den Bildzweig, den Pfadzweig nur das erste. Der Satz
+ *  „der Spielstand ist ein Gegenstand in der Welt“ stand also im Quelltext
+ *  und nicht im Spiel. Zwischen vollem und fast leerem Kristall lagen 1,45 %
+ *  der Bildpunkte, und die kamen ausschliesslich aus dem Lichtkranz, der mit
+ *  der Gesundheit schrumpft.
+ *
+ *  **Die Risse wachsen, sie mischen sich nicht neu.** Jede Stufe nimmt
+ *  dieselbe Aussaat und die ersten N Risse daraus. Ein Riss, der bei Stufe 2
+ *  da war, steht bei Stufe 3 an derselben Stelle — sonst sähe man kein
+ *  fortschreitendes Zerbrechen, sondern ein Flackern.
+ *
+ *  **Beschnitten auf das Bauwerk, nicht auf sein Rechteck.** Die Station ist
+ *  ein Ring mit einem Loch in der Mitte. Ein Riss, der frei über dem Loch
+ *  hinge, wäre ein Sprung in der Luft — derselbe Fehler, den v160 beim
+ *  Turmschatten und v163 beim Kontaktschatten gemacht haben. `destination-in`
+ *  gegen das Bild selbst lässt nur stehen, was auf Material liegt.
+ *
+ *  Kein `blur`, kein `lighter` (Regel 11): die weiche Kante entsteht aus
+ *  einem zweiten, breiteren Strich mit geringerer Deckung. */
+export function getRissbild(
+  bild: HTMLCanvasElement | HTMLImageElement, schluessel: string,
+  breite: number, hoehe: number, stufe: number,
+): HTMLCanvasElement | null {
+  const n = Math.max(0, Math.min(RISS_STUFEN, Math.round(stufe)));
+  if (n <= 0) return null;
+  return bake(`riss-kristall:${schluessel}:${Math.round(breite)}x${Math.round(hoehe)}:${n}`,
+    breite, hoehe, (g) => {
+      const W = Math.max(1, Math.ceil(breite * SS)), H = Math.max(1, Math.ceil(hoehe * SS));
+      const hilfe = document.createElement('canvas');
+      hilfe.width = W; hilfe.height = H;
+      const hg = hilfe.getContext('2d');
+      if (!hg) return;
+      hg.setTransform(SS, 0, 0, SS, (breite / 2) * SS, (hoehe / 2) * SS);
+      hg.lineCap = 'round';
+      hg.lineJoin = 'round';
+
+      // Zwei Risse je Stufe. Bei einem allein waere der Unterschied zwischen
+      // zwei Stufen im Spiel nicht zu sehen; bei dreien ist die Station schon
+      // auf Stufe 3 durchzogen und die letzten Stufen sagen nichts mehr.
+      //
+      // **Sie laufen im STEINBAND, nicht durch die Mitte.** Der erste Anlauf
+      // setzte sie von 0,16 bis 0,62 des Halbmessers an - gemessen am Bild
+      // liegen dort nur 5170 der 33 600 deckenden Punkte, der Rest sitzt
+      // zwischen 0,5 und 1,0. Angesehen (Regel 8) sah es aus wie Gekritzel
+      // ueber dem Wasser: was ich fuer einen Teich hielt, war der Lichtkranz
+      // durch das LOCH im Ring. Auf dem Material lag fast nichts.
+      //
+      // Ein Riss laeuft von innen nach aussen quer ueber das Band. Wo er
+      // eine Fuge zwischen zwei Segmenten kreuzt, schneidet ihn die Maske
+      // weg - er zerfaellt in Stuecke, und genau so bricht ein Ring.
+      const rnd = makeRng(1481);
+      const R = Math.min(breite, hoehe) * 0.5;
+      // Kreis auf die Kachel abgebildet - die Aufsicht steckt schon im Bild,
+      // ein zweites Stauchen machte aus dem Ring eine Ellipse.
+      const hoch = hoehe / breite;
+      for (let i = 0; i < n * 2; i++) {
+        // Alle Risse werden gewuerfelt, gezeichnet nur die ersten - so
+        // bleibt jeder Riss ueber die Stufen an seinem Platz.
+        const winkel = rnd() * Math.PI * 2;
+        const start = 0.48 + rnd() * 0.12;
+        const laenge = 0.20 + rnd() * 0.20;
+        const punkte: Array<[number, number]> = [];
+        let a = winkel;
+        for (let k = 0; k <= 4; k++) {
+          const r = (start + (laenge * k) / 4) * R;
+          // Das Zittern muss KLEINER bleiben als der Schritt nach aussen.
+          // Bei +-0,10 rad trug ein Punkt auf halbem Halbmesser rund zehn
+          // Bildpunkte zur Seite, waehrend er nur sieben nach aussen kam -
+          // der Riss kringelte sich, statt zu laufen, und die gebackene
+          // Ebene sah aus wie hingekritzelt.
+          a += (rnd() - 0.5) * 0.09;
+          punkte.push([Math.cos(a) * r, Math.sin(a) * r * hoch]);
+        }
+        // **Auslaufend, nicht durchgezogen.** Ein Bruch ist dort am
+        // breitesten, wo er entstanden ist, und laeuft nach aussen aus. Mit
+        // gleicher Staerke ueber die ganze Laenge sah er aus wie mit dem
+        // Filzstift gezogen - so stand er nach dem ersten Anlauf im Bild,
+        // und angesehen war das der erste Einwand (Regel 8).
+        const zeichne = (farbe: string, stark: number, deckung: number,
+          dx: number, dy: number): void => {
+          hg.strokeStyle = farbe;
+          hg.globalAlpha = deckung;
+          for (let k = 1; k < punkte.length; k++) {
+            const duenner = 1.15 - (k - 1) / (punkte.length - 1);
+            hg.lineWidth = Math.max(0.4, stark * duenner);
+            hg.beginPath();
+            hg.moveTo(punkte[k - 1][0] + dx, punkte[k - 1][1] + dy);
+            hg.lineTo(punkte[k][0] + dx, punkte[k][1] + dy);
+            hg.stroke();
+          }
+        };
+        // Erst der weiche Saum, dann der harte Kern, dann die Lichtkante auf
+        // der Sonnenseite - so liest sich der Riss als Vertiefung und nicht
+        // als aufgemalter Strich.
+        zeichne(C.ink, breite * 0.017, 0.22, 0, 0);
+        zeichne(C.ink, breite * 0.0060, 0.75, 0, 0);
+        zeichne('#FFFFFF', breite * 0.005, 0.42, -LICHT.x * 1.5, -LICHT.y * 1.5);
+      }
+      hg.globalAlpha = 1;
+      // Nur, was auf dem Bauwerk liegt - und zwar auf dem FESTEN Teil.
+      //
+      // Eine Maske aus dem rohen Alpha reicht nicht: die Innenflaeche der
+      // Station ist halbdurchsichtig, ein Riss ueberlebt dort mit einem
+      // Viertel Deckung und haengt als Kritzel ueber dem Licht, das durch
+      // das Loch faellt. Angesehen war das der zweite Einwand (Regel 8).
+      // Deshalb wird die Maske hart geschnitten: gemessen am Bild liegen
+      // 29 203 der 36 450 angefassten Punkte ueber 190 - das ist die
+      // Struktur, der Rest ist Saum und Schleier.
+      hg.setTransform(1, 0, 0, 1, 0, 0);
+      const maske = document.createElement('canvas');
+      maske.width = W; maske.height = H;
+      const mg = maske.getContext('2d');
+      if (!mg) return;
+      mg.drawImage(bild, 0, 0, W, H);
+      const felder = mg.getImageData(0, 0, W, H);
+      const px = felder.data;
+      for (let i = 3; i < px.length; i += 4) px[i] = px[i] > 190 ? 255 : 0;
+      mg.putImageData(felder, 0, 0);
+      hg.globalCompositeOperation = 'destination-in';
+      hg.drawImage(maske, 0, 0);
+      g.drawImage(hilfe, -breite / 2, -hoehe / 2, breite, hoehe);
+    });
 }
 
 /** Der Schattenriss einer Figur — ihr eigener Umriss, in Lichtrichtung

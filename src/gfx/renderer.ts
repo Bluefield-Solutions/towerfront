@@ -20,7 +20,7 @@ import { getTowerArt, towerArtVersion } from './towerart';
 import { getObjectArtEingebettet, getObjectArtStufeEingebettet } from './objectart';
 import { enemyArtWidth, enemySichtRadius, getEnemyArt, getEnemyFrost } from './enemyart';
 import {
-  drawSprite, getEnemySprite, getSchattenriss, getShadow, getTowerBase, getTowerWeapon,
+  drawSprite, getEnemySprite, getRissbild, rissStufe, getSchattenriss, getShadow, getTowerBase, getTowerWeapon,
   roundRect, ENEMY_FRAMES,
 } from './sprites';
 import { getSettings } from '../core/storage';
@@ -1189,6 +1189,17 @@ export class Renderer {
       }
       // Bei Treffern zuckt die Burg rot, wie jeder andere Getroffene auch.
       ctx.drawImage(burg, x - b / 2, y - h * HOCH, b, h);
+      // Und der Schaden bleibt stehen (T8).
+      //
+      // Bis v181 gab es Risse nur im Pfadzweig weiter unten - also hinter
+      // einem `return`, das faellt, sobald dieses Bild geladen ist. Gemessen
+      // nahmen elf von zwoelf Bildern den Bildzweig. Der Kristall zeigte
+      // seinen Zustand damit ueber den Lichtkranz und sonst gar nicht.
+      {
+        const riss = getRissbild(burg, `kristall:${s.map.id}`, b, h,
+          rissStufe(health));
+        if (riss) drawSprite(ctx, riss, x, y + h * (0.5 - HOCH));
+      }
       if (s.crystalHit > 0.01) {
         ctx.globalAlpha = s.crystalHit * 0.5;
         ctx.globalCompositeOperation = 'source-atop';
@@ -1237,21 +1248,14 @@ export class Renderer {
     ctx.moveTo(0, -h); ctx.lineTo(w * 0.55, 10);
     ctx.stroke();
 
-    // Risse: der Spielstand ist ein Gegenstand in der Welt, keine Zahl.
-    const cracks = Math.round((1 - health) * 6);
-    if (cracks > 0) {
-      const rnd = makeRng(99);
-      ctx.strokeStyle = hexA(C.ink, 0.65); ctx.lineWidth = 2;
-      for (let i = 0; i < cracks; i++) {
-        const sx = (rnd() - 0.5) * w * 1.4;
-        const sy = -h + rnd() * (h + 28);
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(sx + (rnd() - 0.5) * 18, sy + 10 + rnd() * 14);
-        ctx.lineTo(sx + (rnd() - 0.5) * 24, sy + 24 + rnd() * 12);
-        ctx.stroke();
-      }
-    }
+    // KEINE Risse mehr in diesem Zweig.
+    //
+    // Hier standen sie bis v181 - und nur hier. Der Zweig ist der Rueckfall
+    // fuer die ein, zwei Bilder, bevor das Bild der Ringstation geladen ist;
+    // danach greift oben `return`. Eine zweite, abweichende Rissformel fuer
+    // eine Zehntelsekunde ist genau das, was Regel 15 meint: was zweimal
+    // dasteht, veraltet einmal - und dieses Mal war die Fassung, die man nie
+    // sah, die gepflegte.
     ctx.restore();
   }
 

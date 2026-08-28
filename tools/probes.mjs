@@ -1375,6 +1375,26 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // T8, v182: der Kristall zeigt seinen Zustand - und zwar im Bild, nicht
+    // nur im Quelltext. Bis v181 lagen die Risse hinter einem `return`, das
+    // immer fiel: elf von zwoelf Bildern nahmen den Bildzweig.
+    name: 'Rissebene wird nicht gestempelt',
+    datei: 'src/gfx/renderer.ts',
+    regel: /^        if \(riss\) drawSprite\(ctx, riss, x, y \+ h \* \(0\.5 - HOCH\)\);$/m,
+    ersatz: '        if (false && riss) drawSprite(ctx, riss, x, y + h * (0.5 - HOCH));',
+    tor: 'kristalltor',
+  },
+  {
+    // Und die andere Haelfte: die Stufen muessen WACHSEN. Mischten sie sich
+    // je Stufe neu, saehe man ein Flackern statt eines fortschreitenden
+    // Zerbrechens - und die Deckung waere auf jeder Stufe dieselbe.
+    name: 'Rissstufen wachsen nicht mehr',
+    datei: 'src/gfx/sprites.ts',
+    regel: /^      for \(let i = 0; i < n \* 2; i\+\+\) \{$/m,
+    ersatz: '      for (let i = 0; i < 2; i++) {',
+    tor: 'kristalltor',
+  },
+  {
     // C27, v181: der Endlosmodus zaehlt ueber den Wellenplan hinaus. Bis
     // v180 lief sein Ergebnis in denselben Bestwert wie die normale Partie,
     // und der Titelbildschirm behauptete danach auf einer Karte mit

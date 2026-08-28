@@ -1,6 +1,6 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v181 · 28.08.2026
+Stand: v182 · 28.08.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Towerfront.html`
 
 > **Aufbau dieses Dokuments.** Die Abschnitte 1 bis 3.4 beschreiben den
@@ -192,7 +192,7 @@ Innerhalb von Schritt 1 gilt weiterhin:
 3. **`git diff` prüfen.** Nur die beabsichtigten Zeilen.
 4. **Erst einchecken, dann gegenproben.** Gegenproben arbeiten mit
    `git checkout` und löschen sonst die frische Arbeit. Dreimal passiert.
-5. **`npm run gate`** — siebenundzwanzig Prüfungen, rund 90 Sekunden. Alles grün, sonst
+5. **`npm run gate`** — achtundzwanzig Prüfungen, rund 90 Sekunden. Alles grün, sonst
    wird nicht ausgeliefert.
 6. **Ausliefern**, committen, `git tag vN`.
 
@@ -220,15 +220,16 @@ Ein Befehl fährt alles: `npm run gate`
 | 16 | Grafiktor | `npm run grafiktor` | einem Untergrund, dessen Helligkeit oder Spanne aus dem Band der Referenz fällt — je Karte, nicht gemittelt |
 | 17 | Einbettung | `npm run einbettungstor` | Figuren, die nicht zur Karte gehören: Klimaton, Bodenkontakt, Saum |
 | 18 | Zielplattform | `npm run zielplattentor` | einem Kristall, der nicht auf einer erkennbaren Plattform steht |
-| 19 | Geländearten | `npm run gelaendetor` | einem unwegsamen Fleck, dessen eingetragene Art oder Farbe nicht zum Kartenbild passt |
-| 20 | Lesbarkeit | `npm run lesbarkeit` | zu schwachem Saumkontrast, zu kleiner Silhouette, zu ähnlichen Gegnerfarben |
-| 21 | Berührungsflächen | `npm run beruehrung` | Bedienelementen unter 44 Bildschirmpunkten — auf der Leinwand gerechnet, im HTML aus der Stilvorlage gelesen |
-| 22 | Bänder über dem Feld | `npm run streifentor` | einer Wellenvorschau über 22 % der Bildhöhe — für **jede** Welle gemessen — oder einer Einweisungsblase über einem Drittel, gemessen am längsten Konter-Satz, den die Ableitung hergibt. Echtes Markup aus `Ui.sync()`, echte Stilvorlage in Chromium; das Browsertor sieht nur die erste, harmloseste Welle |
-| 23 | Bildabnahme | `npm run bildtor` | einfarbiger Fläche, falscher Helligkeit, nicht dekodierten Bildern |
-| 24 | Rauchtest | `npm run smoke` | Fehlern beim Zeichnen, in der Oberfläche, bei der Eingabe; unerreichbaren Menüwegen; zu kleinen Trefferflächen |
-| 25 | Build | `npm run build` | Bündelfehler |
-| 26 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id, Ersatzschreibung statt Umlaut |
-| 27 | Browser | `npm run browser` | Konsolenfehlern; Spielbedienung, die im Menü sichtbar ist; Bedienung, die über der Landkarte liegt; einem Spiel, in das man nicht hineinkommt; Knöpfen, die gerechnet unter 44 Punkten liegen oder verdeckt sind — als einziges Tor mit gerechneter Kaskade, im echten Chromium auf 844 × 390 |
+| 19 | Kristallzustand | `npm run kristalltor` | einem Kristall, dem man seinen Schaden nicht ansieht: Rissstufen, die nicht wachsen, und einer Rissebene, die niemand stempelt. Gemessen über den Nachbarkontrast, nicht über den Farbabstand — den erschlägt der Lichtkranz |
+| 20 | Geländearten | `npm run gelaendetor` | einem unwegsamen Fleck, dessen eingetragene Art oder Farbe nicht zum Kartenbild passt |
+| 21 | Lesbarkeit | `npm run lesbarkeit` | zu schwachem Saumkontrast, zu kleiner Silhouette, zu ähnlichen Gegnerfarben |
+| 22 | Berührungsflächen | `npm run beruehrung` | Bedienelementen unter 44 Bildschirmpunkten — auf der Leinwand gerechnet, im HTML aus der Stilvorlage gelesen |
+| 23 | Bänder über dem Feld | `npm run streifentor` | einer Wellenvorschau über 22 % der Bildhöhe — für **jede** Welle gemessen — oder einer Einweisungsblase über einem Drittel, gemessen am längsten Konter-Satz, den die Ableitung hergibt. Echtes Markup aus `Ui.sync()`, echte Stilvorlage in Chromium; das Browsertor sieht nur die erste, harmloseste Welle |
+| 24 | Bildabnahme | `npm run bildtor` | einfarbiger Fläche, falscher Helligkeit, nicht dekodierten Bildern |
+| 25 | Rauchtest | `npm run smoke` | Fehlern beim Zeichnen, in der Oberfläche, bei der Eingabe; unerreichbaren Menüwegen; zu kleinen Trefferflächen |
+| 26 | Build | `npm run build` | Bündelfehler |
+| 27 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id, Ersatzschreibung statt Umlaut |
+| 28 | Browser | `npm run browser` | Konsolenfehlern; Spielbedienung, die im Menü sichtbar ist; Bedienung, die über der Landkarte liegt; einem Spiel, in das man nicht hineinkommt; Knöpfen, die gerechnet unter 44 Punkten liegen oder verdeckt sind — als einziges Tor mit gerechneter Kaskade, im echten Chromium auf 844 × 390 |
 | — | Genre-Abgleich | `npm run bericht` | nichts — er meldet, er bricht nicht ab |
 
 Daneben zwei Werkzeuge, die nicht Teil der Kette sind:

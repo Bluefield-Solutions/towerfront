@@ -4,29 +4,34 @@ Was gebaut ist, was gemessen ist, was offen bleibt. Ergänzt Konzept K3, den
 Prüfbericht und das Grafik-Audit; ersetzt keines davon.
 
 Stand: nach M0-Vorarbeit, M2, MG, dem Tor `ansicht`, **M3 bis M6**, der
-Sichtrunde (Hervorhebung des Ziels, Naht in Antarktika) und dem **Umzug nach
-`Bluefield-Solutions/Smart-Kids`** samt PWA und Auslieferung.
+Sichtrunde, dem **Umzug nach `Bluefield-Solutions/Smart-Kids`** samt PWA und
+Auslieferung, der Ausbau-, der Spieler- und der **Gestaltungsrunde**.
 
-> **Der Baum ist umgezogen.** Gearbeitet wird ab jetzt in
+> **Der Baum ist umgezogen.** Gearbeitet wird in
 > `Bluefield-Solutions/Smart-Kids`, nicht mehr in `towerfront/lernkiste`.
 > Diese Datei liegt dort unter demselben Namen weiter.
-Code: `lernkiste/` — ein Arbeitsbaum, der ins eigene Repository umzieht.
 
 ---
 
 ## Was läuft
 
-Alle Befehle laufen im Unterordner `lernkiste/`, nicht in Towerfront:
-
 ```
-npm --prefix lernkiste run backen     Kartenpipeline: Kontinente, Deutschland,
-                                      Länder, Antarktika, Städte
-npm --prefix lernkiste run prototyp   baut prototyp/spiel.html
-npm --prefix lernkiste run tor        inhalt · topologie · beruehrung · marken
-                                      · doku · vergleich · ansicht · smoke
+npm run backen      Kartenpipeline: Kontinente, Deutschland, Länder,
+                    Antarktika, Städte
+npm run bauen       baut prototyp/spiel.html und dist/
+npm run tor         die ganze Kette
 ```
 
-**Die Torkette ist grün.** Sieben Prüfungen, davon zwei mit Gegenprobe belegt.
+Die Kette, in dieser Reihenfolge:
+
+```
+inhalt · topologie · beruehrung · marken · schrift · symbol · doku
+  → spielprobe → vergleich → bauen → passt → lesbarkeit → ansicht
+  → pwa · offline → smoke
+```
+
+**Die Torkette ist grün.** Vierzehn Prüfungen, jede mit mindestens einer
+Gegenprobe belegt.
 
 ---
 
@@ -564,6 +569,107 @@ schon.
 Und der **Rauchtest** spielt jetzt jede Ebene mit beiden Profilen: 16
 Kombinationen, jedes Mal eine richtige Antwort — beim Tippen bewusst der
 Alias.
+
+---
+
+## Die Gestaltungsrunde
+
+Sechs Wünsche in einem Satz: saubere Zurück- und Schließen-Knöpfe, ein Kopf
+ohne überlappende Zeichen, „farblich eine Schippe drauf", mehr Toleranz beim
+Schreiben, ein dezentes Überspringen und nach drei Fehlern die Lösung — und
+die Bundesländer als Auswahl aus vier.
+
+### Der Kopf war nirgends derselbe
+
+Acht Bildschirme, acht von Hand gebaute Kopfzeilen. Auf dem iPhone quer
+rutschten Titel und Knöpfe ineinander, weil jede Zeile ihre Breite anders
+verteilte. Es gibt jetzt **einen** Kopf:
+
+```
+.kopf { grid-template-columns: 1fr auto 1fr; min-height: 68px }
+```
+
+Links die Rückweg-Knöpfe, in der Mitte der Titel, rechts die runden
+Zeichenknöpfe (44 × 44). Unter 520 Bildpunkten fällt das Wort im Knopf weg,
+das Zeichen bleibt — der Knopf schrumpft nicht unter die Daumengröße. Alle
+acht Bildschirme rufen dieselbe Funktion `kopf({links, mitte, rechts})`; es
+gibt keine Stelle mehr, an der man eine Kopfzeile falsch bauen kann.
+
+### Die Blässe war erzwungen, nicht gewählt
+
+Die sieben Flächenfarben lagen alle auf **L 0,88**. Das war die Ursache: bei
+gleicher Helligkeit ist die stärkste Buntheit, die alle sieben Farbtöne im
+sRGB-Raum noch erreichen, an die Helligkeit gebunden. Gemessen über die
+Helligkeitsachse:
+
+| L | größte gemeinsame Buntheit C |
+|---|---|
+| 0,90 | 0,045 |
+| 0,86 | 0,070 |
+| 0,82 | 0,090 |
+| 0,78 | 0,115 |
+| **0,74** | **0,135** |
+| 0,70 | 0,130 |
+
+Bei **L 0,74** ist das Maximum — 0,135 statt 0,055, also **zweieinhalbmal so
+bunt**. Darunter fällt es wieder, weil Gelb und Grün an den Rand des Raums
+stoßen. Die dunkle Schrift darauf hält 6,1:1.
+
+Dazu: ein Farbverlauf im Grund statt einer Fläche, die Ebenenliste in acht
+verschiedenen Farben mit Überschrift („Länder in · Asien"), Kacheln mit
+farbiger Kante statt grauem Rahmen.
+
+**Eine Falle unterwegs:** `color-mix(in oklch, …)` zog alle sieben Töne nach
+Rot, weil Weiß den Farbwinkel 0 hat und in Polarkoordinaten dazwischen
+gemischt wird. Alle sieben Mischungen laufen jetzt `in oklab`.
+
+### Ein neues Tor: `lesbarkeit`
+
+Farbe anfassen heißt Kontrast riskieren. Das Tor misst **88 Texte** in der
+gebauten Seite, in Tag und Abend, jeden gegen den Grund, auf dem er
+**wirklich** steht — nicht gegen den Seitenhintergrund. WCAG-Grenzen 4,5:1 für
+kleinen, 3:1 für großen Text.
+
+Beim ersten Lauf meldete es 34 Fehler, die keine waren: berechnete Farben
+kommen als `oklch(…)` zurück, und die kann man nicht mit einer Zahlensuche
+lesen. Der Umweg geht jetzt über eine Leinwand — malen, auslesen, rechnen.
+Danach blieben **zwei echte**: `--tinte-3` erreichte auf Weiß nur 2,86:1 und
+auf getönten Kacheln 2,3:1. Kleiner Text steht jetzt auf `--tinte-2`, das auf
+0,46 abgedunkelt wurde.
+
+### Schreiben darf danebenliegen
+
+`rechtschreibung()` bekam bisher nur den kanonischen Namen — deshalb war
+„Australien" falsch, wenn der Alias gefragt war. Sie bekommt jetzt das ganze
+Ziel und urteilt in vier Stufen:
+
+1. **richtig** — trifft einen der Namen genau
+2. **fast** — trifft ihn, aber kleingeschrieben: „Namen schreibt man groß."
+3. **richtig, mit Nebenbei** — trifft ihn ohne Bindestriche und Leerzeichen:
+   „Nord-Amerika", „nordamerika", „Baden Württemberg". Antwort zählt, die
+   Schreibweise wird gezeigt.
+4. **fast/falsch** — Damerau-Levenshtein gegen den ähnlichsten Namen, mit der
+   Stelle des Fehlers
+
+Kleingeschrieben schlägt Bindestrich: „nord-amerika" gibt weiter den
+Großschreibhinweis, nicht die Punkte.
+
+### Wer nicht weiß, kommt trotzdem weiter
+
+Unter dem Feld steht **„Weiß ich nicht"** — unterstrichen, grau, ohne Rahmen,
+44 Bildpunkte hoch. Und nach dem **dritten** Fehlversuch löst die App von
+selbst auf: Zeiger und Puls gehen aus, der Name erscheint am Ort auf der
+Karte, „Das ist Thüringen." wird gesagt und geschrieben, nach 2,6 s geht es
+weiter. Beides zählt im Leitner als *nicht gekonnt* und steht im Protokoll als
+`ergebnis: gezeigt` — der Elternbereich sieht den Unterschied zwischen
+„geraten" und „gezeigt".
+
+### Bundesländer als Auswahl
+
+Wie die Hauptstädte: vier Namen, einer richtig, die Reihenfolge je Aufgabe neu
+gewürfelt. Das Tippen entfällt dort für beide Profile — sechzehn Bundesländer
+mit Bindestrich und Umlaut sind für eine Achtjährige eine Rechtschreibprüfung,
+keine Erdkundeaufgabe. Getippt wird weiter bei den Ländern.
 
 ---
 

@@ -3,6 +3,7 @@ import { makeRng } from '../core/math';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import { TOWERS, accentFor, type BranchIndex, type TowerDef, type TowerId } from '../data/towers';
 import { hexA } from './glow';
+import { ablageAnmelden } from './speicher';
 
 /** Vorgebackene Bilder.
  *
@@ -20,10 +21,15 @@ import { hexA } from './glow';
 const SS = 2;
 
 const cache = new Map<string, HTMLCanvasElement>();
+/** Welcher Eintrag gehoert zu welcher Karte. Wer hier fehlt, gehoert allen:
+ *  ein Gegnerbild ohne Klimaton haengt an keiner Karte und bleibt liegen. */
+const tafel = new Map<string, string>();
+ablageAnmelden('Sprites', cache, tafel);
 
 function bake(
   key: string, w: number, h: number,
   draw: (g: CanvasRenderingContext2D) => void,
+  karte?: string,
 ): HTMLCanvasElement {
   const hit = cache.get(key);
   if (hit) return hit;
@@ -34,6 +40,7 @@ function bake(
   g.setTransform(SS, 0, 0, SS, (w / 2) * SS, (h / 2) * SS);
   draw(g);
   cache.set(key, cv);
+  if (karte) tafel.set(key, karte);
   return cv;
 }
 
@@ -513,7 +520,7 @@ export const rissStufe = (anteil: number): number =>
  *  einem zweiten, breiteren Strich mit geringerer Deckung. */
 export function getRissbild(
   bild: HTMLCanvasElement | HTMLImageElement, schluessel: string,
-  breite: number, hoehe: number, stufe: number,
+  breite: number, hoehe: number, stufe: number, karte?: string,
 ): HTMLCanvasElement | null {
   const n = Math.max(0, Math.min(RISS_STUFEN, Math.round(stufe)));
   if (n <= 0) return null;
@@ -613,7 +620,7 @@ export function getRissbild(
       hg.globalCompositeOperation = 'destination-in';
       hg.drawImage(maske, 0, 0);
       g.drawImage(hilfe, -breite / 2, -hoehe / 2, breite, hoehe);
-    });
+    }, karte);
 }
 
 /** Der Schattenriss einer Figur — ihr eigener Umriss, in Lichtrichtung
@@ -637,7 +644,7 @@ export function getRissbild(
  *  anzufassen — und kosten beim Backen ein Dreifaches von fast nichts. */
 export function getSchattenriss(
   bild: HTMLCanvasElement | HTMLImageElement, schluessel: string,
-  breite: number, hoehe: number, hebel = 1.25,
+  breite: number, hoehe: number, hebel = 1.25, karte?: string,
 ): HTMLCanvasElement {
   // Die Schattenfläche ist breiter als die Figur, weil die Scherung sie
   // seitlich hinauszieht.
@@ -653,7 +660,31 @@ export function getSchattenriss(
   // wirft kurz. Mit demselben Hebel fuer beide zog der Schatten eines
   // Schleichers als langer dunkler Streifen hinter ihm her - er sah aus wie
   // eine Spur, nicht wie ein Schatten.
-  const B = Math.ceil(breite * 2.4), H = Math.ceil(hoehe * 1.4);
+  // **Der Kasten kommt aus der Rechnung, nicht aus zwei Konstanten.**
+  //
+  // Hier standen 2,4 x 1,4 der Figur - fuer jeden Hebel dieselben. Der Hebel
+  // bestimmt aber genau, wie weit die Scherung den Umriss zur Seite zieht.
+  // Gemessen kostete das an beiden Enden: beim Kristall (Hebel 0,55) war der
+  // Kasten 1440 x 840 und davon 15 Prozent belegt - **4,61 MB fuer einen
+  // Schatten**, der groesste einzelne Eintrag im ganzen Bildspeicher. Beim
+  // Turm (Hebel 1,25) blieben rechts zwei Bildpunkte Luft; eine Figur, die
+  // ihre Kachel etwas breiter fuellt, waere abgeschnitten worden, ohne dass
+  // etwas rot wird.
+  //
+  // Gezeichnet wird bei y von -hoehe bis 0 und x von -breite/2 bis +breite/2.
+  // Die Scherung schiebt jeden Punkt um LICHT.x * hebel * (-y) nach rechts,
+  // also hoechstens um LICHT.x * hebel * hoehe; danach wird um `wachs`
+  // (hoechstens 1,15) und in der Hoehe um 0,42 gestaucht. Der Ursprung muss
+  // in der Mitte bleiben - `drawSprite` setzt mittig, und ein einseitig
+  // beschnittener Kasten verschoebe jeden Schatten im Spiel.
+  //
+  // Der Saum von drei Punkten ist kein Sicherheitsabstand, sondern
+  // notwendig: die Rechnung ist exakt, und exakt heisst, dass die weiche
+  // Kante des aeussersten Strichs genau auf dem Rand liegt. Ohne ihn stiess
+  // der Schatten des Kristalls oben an - gemessen null Punkte Luft.
+  const WACHS = 1.15, FLACH = 0.42, SAUM = 3;
+  const B = Math.ceil(WACHS * (breite + 2 * LICHT.x * hebel * hoehe)) + SAUM * 2;
+  const H = Math.ceil(2 * WACHS * FLACH * hoehe) + SAUM * 2;
   return bake(`riss:${schluessel}:${Math.round(breite)}x${Math.round(hoehe)}:${hebel}`, B, H, (g) => {
     for (const [wachs, deckung] of [[1.0, 0.30], [1.07, 0.18], [1.15, 0.12]]) {
       g.save();
@@ -678,5 +709,5 @@ export function getSchattenriss(
       }
       g.restore();
     }
-  });
+  }, karte);
 }

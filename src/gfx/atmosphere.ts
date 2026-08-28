@@ -2,6 +2,7 @@ import { C, WORLD_H, WORLD_W } from '../data/config';
 import type { MapPalette, WetterArt } from '../data/maps';
 import { makeRng } from '../core/math';
 import { hexA } from './glow';
+import { ablageAnmelden } from './speicher';
 
 /** Stimmungsschichten.
  *
@@ -12,14 +13,23 @@ import { hexA } from './glow';
  *  bleiben davon eine Handvoll Zeichenbefehle. */
 
 const moodLayers = new Map<string, HTMLCanvasElement>();
+const moodTafel = new Map<string, string>();
 const fogDiscs = new Map<string, HTMLCanvasElement>();
+const fogTafel = new Map<string, string>();
+ablageAnmelden('Stimmung', moodLayers, moodTafel);
+ablageAnmelden('Bodennebel', fogDiscs, fogTafel);
 let auroraBand: HTMLCanvasElement | null = null;
 
 /** Ruhende Lichtstimmung ueber dem ganzen Feld: ein schraeger Mondschacht von
  *  oben links, kuehler Abfall nach unten rechts. Einmal gebacken, danach ein
  *  einziger Zeichenbefehl je Bild. */
-export function getMoodLayer(pal: MapPalette): HTMLCanvasElement {
-  const hit = moodLayers.get(pal.mood);
+export function getMoodLayer(pal: MapPalette, mapId: string): HTMLCanvasElement {
+  // Der Schluessel traegt die Karte, obwohl die Farbe allein reichen wuerde.
+  // Zwei Karten mit demselben Ton teilten sich sonst eine Ebene - und die
+  // faellt beim Raeumen der einen der anderen weg. Acht Megabyte doppelt
+  // sind billiger als eine Ebene, die im falschen Moment verschwindet.
+  const k = `${mapId}|${pal.mood}`;
+  const hit = moodLayers.get(k);
   if (hit) return hit;
   const cv = document.createElement('canvas');
   cv.width = WORLD_W; cv.height = WORLD_H;
@@ -45,12 +55,14 @@ export function getMoodLayer(pal: MapPalette): HTMLCanvasElement {
   g.fillRect(-260, -200, 520, WORLD_H + 400);
   g.restore();
 
-  moodLayers.set(pal.mood, cv);
+  moodLayers.set(k, cv);
+  moodTafel.set(k, mapId);
   return cv;
 }
 
-function getFogDisc(tone: string): HTMLCanvasElement {
-  const hit = fogDiscs.get(tone);
+function getFogDisc(tone: string, mapId: string): HTMLCanvasElement {
+  const k = `${mapId}|${tone}`;
+  const hit = fogDiscs.get(k);
   if (hit) return hit;
   const r = 190;
   const cv = document.createElement('canvas');
@@ -62,7 +74,8 @@ function getFogDisc(tone: string): HTMLCanvasElement {
   grad.addColorStop(1, hexA(tone, 0));
   g.fillStyle = grad;
   g.fillRect(0, 0, r * 2, r * 2);
-  fogDiscs.set(tone, cv);
+  fogDiscs.set(k, cv);
+  fogTafel.set(k, mapId);
   return cv;
 }
 
@@ -70,8 +83,9 @@ function getFogDisc(tone: string): HTMLCanvasElement {
  *  ziehen. Weil sie sich unterschiedlich schnell bewegen, entsteht Tiefe. */
 export function drawGroundFog(
   ctx: CanvasRenderingContext2D, time: number, dense: boolean, tone: string,
+  mapId: string,
 ): void {
-  const disc = getFogDisc(tone);
+  const disc = getFogDisc(tone, mapId);
   const n = dense ? 8 : 4;
   const rnd = makeRng(3141);
   ctx.save();

@@ -2,6 +2,7 @@ import { TOWER_ART } from './assets/towers';
 import { accentFor, TOWERS, type BranchIndex, type TowerId } from '../data/towers';
 import { hexA } from './glow';
 import { einbetten, einbettungSchluessel } from './einbettung';
+import { ablageAnmelden } from './speicher';
 
 /** Gerenderte Turmbilder.
  *
@@ -56,6 +57,8 @@ import { einbetten, einbettungSchluessel } from './einbettung';
 export const FARBSCHLEIER = 0.13;
 
 const tinted = new Map<string, HTMLCanvasElement>();
+const tintedTafel = new Map<string, string>();
+ablageAnmelden('Türme eingebettet', tinted, tintedTafel);
 
 /** Wie breit die Figur im Bild tatsaechlich ist, als Anteil der Kachel.
  *
@@ -190,6 +193,7 @@ export function getTowerArt(
   g.drawImage(body, 0, 0);
 
   tinted.set(cacheKey, cv);
+  tintedTafel.set(cacheKey, mapId);
   void level;
   return cv;
 }

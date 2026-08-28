@@ -12,6 +12,7 @@ import { GameState } from '../game/state';
 import type { Enemy, Husk, Projectile, Tower } from '../game/types';
 import { beginGlowBatch, endGlowBatch, hexA, stampGlow, stampGlowFast } from './glow';
 import { terrainAuftrag, type TerrainAuftrag } from './terrain';
+import { karteWechseln } from './speicher';
 import { snap } from '../data/maps';
 import { drawMenu } from './menurender';
 import type { Menu } from '../game/menu';
@@ -392,6 +393,16 @@ export class Renderer {
     // Untergrundbild fertig dekodiert ist.
     const bgV = backgroundVersion();
     if (!this.terrain || this.terrainFor !== s.map.id || this.terrainBgVersion !== bgV) {
+      // Beim WECHSEL der Karte das Alte wegwerfen - nicht, wenn nur das
+      // Untergrundbild fertig dekodiert ist. Der zweite Fall tritt eine
+      // halbe Sekunde nach dem ersten ein und beschriebe dieselbe Karte:
+      // wer dort raeumte, wuerfe weg, was er gerade gebacken hat.
+      //
+      // Gemessen lagen nach drei Karten 41,5 MB in den Ablagen, davon 38 an
+      // je EINE Karte gebunden - Stimmungsebene, Bodennebel, eingebettete
+      // Tuerme, Gegner und Objekte, der Schatten des Kristalls. Zwei Drittel
+      // davon sah man nie wieder (T9).
+      if (this.terrainFor && this.terrainFor !== s.map.id) karteWechseln(s.map.id);
       this.terrainArbeit = terrainAuftrag(s.map, s.lanes, s.map.palette, getBackground(s.map.id));
       this.terrainFor = s.map.id;
       this.terrainBgVersion = bgV;
@@ -433,7 +444,7 @@ export class Renderer {
     ctx.scale(this.scale, this.scale);
 
     ctx.drawImage(this.terrain!, 0, 0);
-    ctx.drawImage(getMoodLayer(s.map.palette), 0, 0);
+    ctx.drawImage(getMoodLayer(s.map.palette, s.map.id), 0, 0);
     if (hi) drawAurora(ctx, s.crystalPulse);
 
     this.lichtteich(s);
@@ -446,7 +457,7 @@ export class Renderer {
     this.drawProjectiles(s, hi);
     this.drawBolts(s);
     this.drawParticles(s);
-    drawGroundFog(ctx, s.crystalPulse, hi, s.map.palette.haze);
+    drawGroundFog(ctx, s.crystalPulse, hi, s.map.palette.haze, s.map.id);
     // Wetter liegt ueber allem, was auf dem Boden steht - Regen faellt vor
     // dem Turm, nicht hinter ihm -, aber UNTER der Bedienung darunter:
     // Bauplatz, Reichweiten und Hinweise muessen lesbar bleiben.
@@ -1184,7 +1195,7 @@ export class Renderer {
         // rechts und die Station schwebt wieder, bei 0,0 liegt er ueber
         // ihr. Bei 0,25 bleibt sie geerdet, und der ferne Rand wirft in
         // die Oeffnung - genau das, was ein Ring auf einer Platte tut.
-        const riss = getSchattenriss(burg, `kristall:${s.map.id}`, b, h, 0.55);
+        const riss = getSchattenriss(burg, `kristall:${s.map.id}`, b, h, 0.55, s.map.id);
         drawSprite(ctx, riss, x, y + h * 0.25);
       }
       // Bei Treffern zuckt die Burg rot, wie jeder andere Getroffene auch.
@@ -1197,7 +1208,7 @@ export class Renderer {
       // seinen Zustand damit ueber den Lichtkranz und sonst gar nicht.
       {
         const riss = getRissbild(burg, `kristall:${s.map.id}`, b, h,
-          rissStufe(health));
+          rissStufe(health), s.map.id);
         if (riss) drawSprite(ctx, riss, x, y + h * (0.5 - HOCH));
       }
       if (s.crystalHit > 0.01) {

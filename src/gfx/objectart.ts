@@ -1,5 +1,6 @@
 import { OBJECT_ART } from './assets/objects';
 import { einbetten, einbettungSchluessel } from './einbettung';
+import { ablageAnmelden } from './speicher';
 
 /** Einzelobjekte: das Tor der Leere, spaeter auch der Herzkristall.
  *
@@ -76,6 +77,8 @@ export function getObjectArtStufeEingebettet(
  *  gezeichnet wie ein Turm, und derselbe Anstrich waere auf dieser Flaeche
  *  eine Waschung statt einer Beleuchtung. */
 const eingebettet = new Map<string, HTMLCanvasElement>();
+const eingebettetTafel = new Map<string, string>();
+ablageAnmelden('Objekte eingebettet', eingebettet, eingebettetTafel);
 
 export function getObjectArtEingebettet(
   id: keyof typeof OBJECT_ART, mapId: string, staerke = 1,
@@ -100,6 +103,7 @@ export function getObjectArtEingebettet(
   // - Sonne von oben, Verschattung am Fuss.
   einbetten(g, Math.max(b, h), mapId, staerke);
   eingebettet.set(k, cv);
+  eingebettetTafel.set(k, mapId);
   return cv;
 }
 

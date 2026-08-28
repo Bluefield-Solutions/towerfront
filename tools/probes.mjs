@@ -1375,6 +1375,26 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // T9, v183: beim Kartenwechsel wird geraeumt. Ohne das lagen nach vier
+    // Besuchen 51,4 MB in den Ablagen statt 23,4 - und der Zuwachs hoerte
+    // nicht auf. Auf einem Telefon ist Speicher die knappere Ware.
+    name: 'Kartenwechsel raeumt nicht mehr',
+    datei: 'src/gfx/renderer.ts',
+    regel: /^      if \(this\.terrainFor && this\.terrainFor !== s\.map\.id\) karteWechseln\(s\.map\.id\);$/m,
+    ersatz: '      if (false) karteWechseln(s.map.id);',
+    tor: 'speichertor',
+  },
+  {
+    // Und die andere Haelfte: eine Ablage, die sich nicht anmeldet, wird
+    // nie geraeumt - und niemand merkt es, weil die Summe nur langsamer
+    // waechst. Die Turmbilder sind die groesste der angemeldeten.
+    name: 'Eine Ablage meldet sich nicht mehr an',
+    datei: 'src/gfx/towerart.ts',
+    regel: /^ablageAnmelden\('Türme eingebettet', tinted, tintedTafel\);$/m,
+    ersatz: 'void tintedTafel;',
+    tor: 'speichertor',
+  },
+  {
     // T8, v182: der Kristall zeigt seinen Zustand - und zwar im Bild, nicht
     // nur im Quelltext. Bis v181 lagen die Risse hinter einem `return`, das
     // immer fiel: elf von zwoelf Bildern nahmen den Bildzweig.

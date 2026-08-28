@@ -3,6 +3,7 @@ import { ENEMIES, type EnemyId } from '../data/enemies';
 import { hexA } from './glow';
 import { mapById } from '../data/maps';
 import { randlicht } from './einbettung';
+import { ablageAnmelden } from './speicher';
 
 /** Gerenderte Gegnerbilder.
  *
@@ -24,6 +25,8 @@ import { randlicht } from './einbettung';
 export const FARBSCHLEIER = 0.15;
 
 const baked = new Map<string, HTMLCanvasElement>();
+const bakedTafel = new Map<string, string>();
+ablageAnmelden('Gegner eingebettet', baked, bakedTafel);
 const raw = new Map<string, HTMLImageElement>();
 const ready = new Set<string>();
 let version = 0;
@@ -133,6 +136,7 @@ export function getEnemyArt(
   g.drawImage(body, 0, 0);
 
   baked.set(cacheKey, cv);
+  bakedTafel.set(cacheKey, mapId);
   return cv;
 }
 
@@ -206,6 +210,8 @@ export const enemySichtRadius = (id: EnemyId): number => enemyArtWidth(id) / 3.0
  *  Trefferblitz, und aus demselben Grund - ein `source-atop` je Gegner und
  *  Bild kostet mehr als ein Bild im Vorrat. */
 const frostCache = new Map<string, HTMLCanvasElement>();
+const frostTafel = new Map<string, string>();
+ablageAnmelden('Gegner vereist', frostCache, frostTafel);
 
 export function getEnemyFrost(id: EnemyId, mapId = 'spiralhain'): HTMLCanvasElement | null {
   const key = `${id}|${mapId}`;
@@ -225,6 +231,7 @@ export function getEnemyFrost(id: EnemyId, mapId = 'spiralhain'): HTMLCanvasElem
   g.fillRect(0, 0, cv.width, cv.height);
   g.globalCompositeOperation = 'source-over';
   frostCache.set(key, cv);
+  frostTafel.set(key, mapId);
   return cv;
 }
 

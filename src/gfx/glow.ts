@@ -1,3 +1,4 @@
+import { ablageAnmelden } from './speicher';
 /** Vorgebackene Leuchtscheiben.
  *  WICHTIG: Niemals ctx.drawImage(eigenesCanvas) mit filter=blur oder
  *  globalCompositeOperation='lighter' auf sich selbst - das erzeugt auf
@@ -5,6 +6,11 @@
  *  fertige Scheiben stempeln. */
 
 const cache = new Map<string, HTMLCanvasElement>();
+/** Leuchtscheiben haengen an Farbe und Halbmesser, nicht an der Karte - die
+ *  Tafel bleibt leer, und geraeumt wird hier nie. Angemeldet ist die Ablage
+ *  trotzdem: was in der Summe fehlt, kann auch nicht auffallen. */
+const tafel = new Map<string, string>();
+ablageAnmelden('Leuchtscheiben', cache, tafel);
 
 export function getGlowDisc(color: string, radius: number): HTMLCanvasElement {
   const r = Math.max(4, Math.round(radius));

@@ -483,6 +483,90 @@ ist sie keine Messung, sondern eine feste Einstellung.
 
 ---
 
+## Die Spielerrunde
+
+Anlass: ein Kind tippte **„Australien"** und die App lehnte es ab. Ich habe
+daraufhin aus Spielersicht alles durchgespielt — und **sechs Fehler**
+gefunden, von denen zwölf Tore keinen gesehen hatten. Sie prüften, ob das
+Programm läuft. Keines hatte je eine Antwort gegeben.
+
+### 1. Beim Tippen zählte kein einziger Alias
+
+`rechtschreibung()` bekam nur den kanonischen Namen. Der Kontinent heißt im
+Vorrat „Australien und Ozeanien"; **„Australien" stand als Alias da und wurde
+nie gelesen.** Mit ihm fielen durch: England, Großbritannien, Britannien,
+Kongo, Amerika, Ozeanien, Antarktis, Südpol, Canada, Mexico, Tanzania,
+Bangladesh, Aegypten, Aethiopien. **21 richtige Antworten** wurden abgelehnt.
+
+### 2. Die Hervorhebung bewachte das Ziel
+
+Der pulsierende Ring um das gesuchte Gebiet (`fill:none`, Strich bis 9 pt)
+lag **über** der Fläche und fing den Zug ab. `elementFromPoint` lieferte
+`path.zielpuls` — weder Gebiet noch Trefferkreis —, und die Bewertung lief
+**gar nicht erst an**: kein Protokolleintrag, kein Hinweis, keine Bewegung.
+Gemessen waren **21 bis 35 % der Zielfläche** blockiert; etwa jeder vierte
+Zug landete auf nichts.
+
+Ausgerechnet die Hervorhebung, die zeigen soll wohin man ziehen muss.
+
+### 3. Fionas drei Runden gab es nicht
+
+Das Konzept (4.1) gibt ihr drei aufeinander aufbauende Runden. Im Code stand
+`k.runde<=3` — **immer wahr**. Sie bekam von Anfang an alle sieben
+Kontinente, das Feld `runde` war Dekoration. Jetzt öffnet die nächste Runde,
+wenn jeder Kontinent der bisherigen einmal saß (Fach 2).
+
+Dabei ist gleich der nächste aufgefallen: die Runde begrenzte auch die
+**Karte** — auf Fionas Weltkarte fehlten Asien und Nordamerika ganz. Die
+Runde begrenzt jetzt, wonach gefragt wird, nicht was es auf der Welt gibt.
+
+### 4. Fünfzehn Länder waren nicht erreichbar
+
+Die Torkette zählte **25 Länder**, spielbar waren **10**. Asien, Nord- und
+Südamerika lagen gebacken im Baum und waren nicht verdrahtet. Die
+Ebenenwahl kommt jetzt aus den Daten statt aus einer zweiten Liste.
+
+### 5. Guatemala hatte keine Fläche
+
+Und dann waren es 24 statt 25. Auf der groben Stufe misst Guatemala rund
+anderthalb Bildpunkte, und der Inselfilter warf es weg — ein **MultiPolygon**
+behielt dort immer seine größte Fläche, ein einfaches **Polygon** fiel
+ersatzlos. Guatemala ist ein einfaches Polygon. Es stand in den Daten, wurde
+gezählt und konnte nie gefragt werden.
+
+### 6. Der ausgeblendete Bildschirm nahm noch an
+
+Die unsichtbaren Trefferkreise setzen `pointer-events:all` und hoben damit
+das `none` ihres ausgeblendeten Bildschirms auf — 340 ms lang. Gefunden beim
+Suchen nach Fehler 2, behoben, auch wenn es nicht die Ursache war.
+
+### Das Startpaket wurde dabei kleiner
+
+Mit fünf Kontinenten wäre die Seite von 297 auf **537 KB gzip** gesprungen —
+fast die Hälfte davon Umgebungskarten. Die Länderebenen werden jetzt einzeln
+nachgeladen und vom Service Worker ins Lager gelegt. **Start: 132 KB gzip**,
+je Kontinent 63–107 KB einmalig. Das Offline-Tor läuft jetzt bis zu einer
+nachgeladenen Ebene, nicht nur bis zum Startbildschirm.
+
+### Zwei neue Tore
+
+**`spielprobe`** (ohne Browser, 0,3 s): 455 Antworten und Zusammenhänge.
+Jeder Name, jeder Alias, kleingeschrieben, ein Buchstabe daneben, jede
+hinterlegte Aussprache — für alle Ebenen und beide Tiefen. Dazu: Ränge 1–5
+je Kontinent lückenlos, kein Ablenker ist die Hauptstadt, jedes Gebiet aus
+den Daten hat eine Fläche auf der Karte.
+
+**`passt`** prüft zusätzlich, ob das gesuchte Gebiet den Finger **überall**
+annimmt, wo man es sieht — mit `elementsFromPoint` über den ganzen Stapel.
+Ein Nachbargebiet an der gemeinsamen Grenze zählt nicht als Störung, Schmuck
+schon.
+
+Und der **Rauchtest** spielt jetzt jede Ebene mit beiden Profilen: 16
+Kombinationen, jedes Mal eine richtige Antwort — beim Tippen bewusst der
+Alias.
+
+---
+
 ## Offen
 
 | | Was | Wer |

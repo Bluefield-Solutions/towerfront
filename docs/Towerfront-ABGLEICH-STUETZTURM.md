@@ -1,6 +1,6 @@
 # Referenzabgleich — Stützturm (C3, „Bannturm")
 
-Stand: v184 · 28.08.2026
+Stand: v185 · 28.08.2026
 
 Schritt 0 des Durchgangs, nach `docs/Towerfront-SOLL-UND-BETRIEB.md` Teil 2.
 Er stand aus: C3 ist seit v40 im Rückstandsverzeichnis, und ein Soll dafür

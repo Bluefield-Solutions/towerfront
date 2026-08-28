@@ -1375,6 +1375,18 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // v185: die Hauptpartie des Rauchtests laeuft auf einer FESTEN Aussaat.
+    // Bis v184 stand hier `undefined`, also jede Runde ein anderes Spiel -
+    // gemessen Kristall 28, 48, 48, 45, 47 bei fuenf gleichen Laeufen. Jede
+    // Zahl darunter war ein Zufallswert, und Gegenproben an diesem Tor waren
+    // mal blind und mal nicht.
+    name: 'Titelknopf ignoriert die gesetzte Aussaat',
+    datei: 'src/ui/ui.ts',
+    regel: /^      const aussaat = this\.wunschAussaat \?\? undefined;$/m,
+    ersatz: '      const aussaat = undefined;',
+    tor: 'smoke',
+  },
+  {
     // T9, v183: beim Kartenwechsel wird geraeumt. Ohne das lagen nach vier
     // Besuchen 51,4 MB in den Ablagen statt 23,4 - und der Zuwachs hoerte
     // nicht auf. Auf einem Telefon ist Speicher die knappere Ware.

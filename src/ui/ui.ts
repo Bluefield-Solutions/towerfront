@@ -423,7 +423,28 @@ export class UI {
     this.sAction.addEventListener('click', () => {
       Sfx.unlock();
       if (this.lastScreen !== 'title') { this.openMenu(); return; }
-      this.s.reset(undefined, getSettings().difficulty, getSettings().map,
+      // **Auch dieser Weg achtet auf eine von Hand gesetzte Aussaat (T10).**
+      //
+      // Bis v184 stand hier `undefined`, also jedes Mal eine neue
+      // Zufallsaussaat. `wunschAussaat` wurde nur in `menu.onStart`
+      // beachtet - wer sie in den Einstellungen eintrug und dann auf dem
+      // Titelschirm auf "Beginnen" drueckte, bekam trotzdem ein
+      // Zufallsspiel, ohne dass irgendwo stand, dass seine Eingabe
+      // verfallen ist. Zwei Einstiege in dieselbe Partie, und nur einer
+      // hielt sich an die Angabe.
+      //
+      // Gefunden hat es der volle Probenlauf, aber nicht direkt: er meldete
+      // eine blinde Gegenprobe. Der Rauchtest startet ueber genau diesen
+      // Knopf und spielte deshalb JEDE RUNDE EIN ANDERES SPIEL - gemessen
+      // Kristall 28, 48, 48, 45, 47 bei fuenf gleichen Laeufen. Alles, was
+      // danach eine Zahl aus dieser Partie prueft, prueft jedes Mal etwas
+      // anderes.
+      //
+      // Wie in `menu.onStart` gilt sie fuer GENAU DIESE Partie und wird
+      // danach vergessen.
+      const aussaat = this.wunschAussaat ?? undefined;
+      this.wunschAussaat = null;
+      this.s.reset(aussaat, getSettings().difficulty, getSettings().map,
         { endless: this.endlessWanted });
       // Die Einfuehrung laeuft nur bei einem neuen Spiel, nie beim Fortsetzen.
       this.starteEinfuehrung();

@@ -189,10 +189,49 @@ for (const step of TUTORIAL) {
 // Eine echte Partie: bauen, ausbauen, Wellen starten, jedes Bild zeichnen.
 // Ueber den Knopf starten statt direkt zuruecksetzen - so laeuft auch die
 // Einfuehrung mit und ihre Positionsrechnung wird ausgefuehrt.
+//
+// **Mit fester Aussaat, und zwar auf dem Weg eines Spielers.**
+//
+// Bis v184 lief hier jede Runde ein ANDERES Spiel: der Knopf setzte die
+// Partie mit einer Zufallsaussaat auf. Gemessen ueber fuenf gleiche Laeufe:
+// Kristall 28, 48, 48, 45, 47 - erledigt 400 bis 419 - Sterne 2 oder 3.
+// Alles, was danach eine Zahl aus dieser Partie prueft, prueft jedes Mal
+// etwas anderes, und eine Gegenprobe an so einem Tor ist mal blind und mal
+// nicht. Genau das hat der volle Probenlauf zu v184 gemeldet.
+//
+// Gesetzt wird ueber das EINGABEFELD, nicht ueber das Feld dahinter: so
+// laeuft derselbe Weg wie beim Spieler - lesen, pruefen, uebernehmen -, und
+// die Pruefung darunter faellt um, wenn dieser Weg bricht.
+//
+// **Die Zahl ist nicht beliebig.** Sechs Aussaaten durchprobiert: bei 4711,
+// 2024, 815, 99 und 7 gewinnt die Partie mit DREI von drei Sternen, bei 1234
+// mit zweien. Drei ist der Anschlag, und an einem Anschlag kann niemand mehr
+// eine Veraenderung sehen - der Durchlauf weiter unten traegt dann keine
+// Sterne mehr ein, die Gegenprobe an seiner Rueckstellung wird blind, und
+// das Tor meldet gruen. Die Aussaat des Rauchtests muss den Stand also
+// ungesaettigt lassen (Regel 2). Der Block unten prueft das selbst.
+const AUSSAAT = 1234;
+{
+  const feld = win.document.getElementById('o-seed') as unknown as HTMLInputElement;
+  feld.value = String(AUSSAAT);
+  feld.dispatchEvent(new win.Event('input', { bubbles: true }));
+}
 (win.document.getElementById('s-action') as unknown as HTMLButtonElement).click();
+if (state.seed !== AUSSAAT) {
+  problems.push(`Die Partie laeuft auf Aussaat ${state.seed} statt ${AUSSAAT}. `
+    + 'Damit spielt der Rauchtest jede Runde ein anderes Spiel, und jede Zahl '
+    + 'darunter ist ein Zufallswert.');
+}
 const spots = candidateSpots(state);
 // Der Sternestand VOR dieser Partie - fuer die Auswertung weiter unten.
 const sterneVorDerPartie = getStars(state.map.id, state.difficulty);
+// Und der GANZE Stand, nicht nur der dieser Karte.
+//
+// Der Durchlauf weiter unten spielt drei Karten. Traegt er dabei Sterne fuer
+// Karten ein, die DIESE Partie nie gesehen hat, ist der Stand verunreinigt -
+// und das sieht eine Zahl fuer die eigene Karte nicht. Zwei Netze also: hier
+// die fremden Karten, unten im Durchlauf der Abdruck ueber alles.
+const alleSterneVorDerPartie = { ...getProgress().stars };
 let spotIdx = 0, si = 0, frames = 0;
 let outcome = 'playing';
 const plan = TOWER_ORDER;
@@ -457,6 +496,21 @@ step('Jede Karte und der Endlosmodus durchspielen', () => {
   const fortschritt = getProgress();
   const sterneVorher = { ...fortschritt.stars };
   const perksVorher = [...fortschritt.perks];
+  // Der Abdruck, an dem geprueft wird, dass der Block wirklich nichts
+  // hinterlaesst.
+  //
+  // Bis v184 wurde das INDIREKT geprueft: die Sternepruefung weiter unten
+  // fiel um, wenn hier nicht zurueckgestellt wurde. Der volle Probenlauf zu
+  // v184 hat gemeldet, dass sie es nicht mehr zuverlaessig tut - und die
+  // Ursache lag nicht in ihr, sondern darin, dass die Hauptpartie eine
+  // ZUFALLSAUSSAAT hatte. Je nach Lauf endete sie mit zwei oder mit drei von
+  // drei Sternen, und bei dreien konnte dieser Block gar nichts mehr
+  // verunreinigen. Die Gegenprobe war damit mal blind und mal nicht.
+  //
+  // Die Aussaat ist jetzt fest, und die Pruefung steht dort, wo der Vertrag
+  // steht: dieser Schritt aendert den Fortschritt nicht. Ein Abdruck ueber
+  // den GANZEN Stand haengt an keiner einzelnen Zahl.
+  const abdruckVorher = JSON.stringify(fortschritt);
   const zeilen: string[] = [];
   const GRENZE = 60 * 60 * 20;
 
@@ -538,8 +592,26 @@ step('Jede Karte und der Endlosmodus durchspielen', () => {
   zeilen.push(`  Endlosmodus    ${e.gestartet} Wellen gestartet (Plan hat ${e.g.totalWaves}), `
     + `${e.g.stats.kills} erledigt`);
 
+  // **Erst pruefen, ob es ueberhaupt etwas zurueckzustellen GIBT** (Regel 13).
+  //
+  // Eine Rueckstellung, die nichts rueckgaengig macht, ist nicht zu pruefen:
+  // schaltet man sie ab, aendert sich nichts, und jede Gegenprobe an ihr ist
+  // blind. Genau so ist es in v184 passiert - die Aussaat der Hauptpartie war
+  // zufaellig, und in den Laeufen, in denen sie drei von drei Sternen holte,
+  // konnte dieser Block gar nichts mehr verunreinigen.
+  if (JSON.stringify(fortschritt) === abdruckVorher) {
+    throw new Error('Der Durchlauf hat den Fortschritt gar nicht veraendert. '
+      + 'Dann ist seine Rueckstellung nicht pruefbar - vermutlich steht die '
+      + 'Hauptpartie schon auf dem hoechsten Sternestand, und dort kann '
+      + 'nichts mehr steigen.');
+  }
   fortschritt.stars = sterneVorher;
   fortschritt.perks = perksVorher;
+  if (JSON.stringify(fortschritt) !== abdruckVorher) {
+    throw new Error('Der Durchlauf hat den Fortschritt veraendert und nicht '
+      + 'zurueckgestellt. Alles, was danach Sterne, Verbesserungen oder '
+      + 'Bestwerte liest, misst dann diesen Block mit.');
+  }
 
   console.log('Durchgespielt:');
   for (const z of zeilen) console.log(z);
@@ -581,6 +653,19 @@ step('Auswertung', () => {
   if (jetzt !== Math.max(sterneVorDerPartie, a.stars)) {
     throw new Error(`Nach der Partie stehen ${jetzt} Sterne, erwartet war `
       + `${Math.max(sterneVorDerPartie, a.stars)}.`);
+  }
+  // Und NUR diese Karte darf sich geaendert haben. Ein Durchlauf, der seinen
+  // Fortschritt stehen laesst, traegt Sterne fuer Karten ein, die diese
+  // Partie nie gesehen hat - und das ist der Teil, den die Zahl oben nicht
+  // mehr zeigen kann, seit sie am Anschlag steht.
+  const eigen = `${state.map.id}|${state.difficulty}`;
+  const jetztAlle = getProgress().stars;
+  const fremd = Object.keys(jetztAlle)
+    .filter((k) => k !== eigen && (jetztAlle[k] ?? 0) !== (alleSterneVorDerPartie[k] ?? 0));
+  if (fremd.length) {
+    throw new Error(`Nach der Partie stehen Sterne fuer Karten, die sie nicht `
+      + `gespielt hat: ${fremd.join(', ')}. Eine Pruefung, die nebenbei den `
+      + 'Zustand aendert, den andere lesen, ist keine Pruefung.');
   }
 });
 

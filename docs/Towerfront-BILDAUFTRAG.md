@@ -1,6 +1,6 @@
 # Towerfront — Bildauftrag
 
-Stand: v183 · 28.08.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v184 · 28.08.2026 · **Auftragsdokument für den Bild-Agenten**
 
 Dieses Dokument ist die vollständige Bestellung. Es enthält alles, was zum
 Erzeugen der Bilder nötig ist: Stil, Maße, Blickrichtung, Dateinamen,
@@ -952,6 +952,102 @@ Die letzte Zeile ist die, aus der die vorletzte von selbst folgt: die vier
 vorhandenen Türme sind massive Rechtecke, und zwei massive Rechtecke
 überdecken sich immer stark. Eine niedrige, breite Plattform mit einer
 Diagonale und offenen Ecken ist das Gegenteil davon.
+
+### 6.7 `turm_bann_1.png` … `turm_bann_6.png` — Bannturm (der sechste Turm)
+
+**Noch nicht im Spiel, und aus demselben Grund wie die Flak:** ein kaufbarer
+Turm steht in `TOWER_ORDER`, und `tools/smoke.ts:1607` meldet dann
+„Turmbild fehlt". Ein vorhandenes Bild mitzubenutzen scheidet aus —
+`npm run lesbarkeit` misst die Silhouetten **untereinander** und käme auf
+1,00 gegen eine Grenze von 0,65.
+
+> **Er schießt nicht.** Das ist keine Sparsamkeit, sondern der Punkt: er gibt
+> jedem Turm im Umkreis mehr Feuerrate und verändert damit, *wohin* man baut,
+> statt *wieviel* man schießt. Der Referenzabgleich steht in
+> `docs/Towerfront-ABGLEICH-STUETZTURM.md`, und die Wette ist gemessen: ein
+> Umkreis von 190 fasst im unbedacht gebauten Feld **2,2** Türme, im
+> absichtlich gebauten **5,3** — Faktor 2,4. Für das Bild heißt das: **kein
+> Rohr, keine Mündung, nichts, was zielt.** Ein Turm, der wie ein Geschütz
+> aussieht und nicht schießt, ist ein Fehler im Bild, nicht im Code.
+
+**Sein Umriss muss der leichteste des Satzes sein.** Die vorhandenen fünf
+sind alle massive Blöcke oder eine Plattform mit Rohr. Dieser hier ist ein
+offener Rahmen — und das ist zugleich die Aussage über seine Rolle.
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+SUBJECT: A support beacon — a signal mast that empowers nearby machines and
+carries no weapon of any kind. Seen from a slightly elevated three-quarter
+front angle, standing on the ground (NOT top-down). Level [N] of six. Dark
+gunmetal grey with ONE accent: cold signal cyan #6FE3D2 in the resonator
+rings, the cable runs and the pulse markings.
+
+THE OUTLINE IS THE POINT — READ THIS BEFORE DRAWING ANYTHING.
+Every other tower in this game is a solid armoured mass. This one is mostly
+AIR. It must read as:
+  - a NARROW three-legged mast — clearly taller than it is wide, the
+    opposite of the wide flak platform and of the squat block towers,
+  - LARGE OPEN GAPS between the three legs: the background must be visible
+    straight through the middle of the tower,
+  - a ring — an open torus, not a disc — held aloft at the top, its hole
+    clearly transparent,
+  - a small instrument housing low down between the legs, the only solid
+    volume in the whole figure.
+The shape to aim for is a slender open tripod carrying a floating ring.
+
+FORBIDDEN, and this is the one rule that outranks all others here:
+NO barrel, NO muzzle, NO gun, NO launcher, NO turret head, NO aiming device,
+NO ammunition, NO shell, NO missile. Nothing that could be mistaken for a
+weapon from any angle. This machine emits, it does not fire.
+
+WHAT STILL TIES IT TO THE FAMILY (do not drop these):
+the same panelled armour on the housing, the same diagonal hazard stripes at
+the foot of each leg, the same grey, the same light. The family lives in the
+SURFACE, never in the outline.
+
+SILHOUETTE MUST GROW WITH THE LEVEL — an addition that stays inside the
+previous outline is invisible on a phone:
+  1  bare: three thin legs, a small open ring, no housing detail
+  2  the ring thickens into a segmented band; three short cable runs appear
+  3  a SECOND, smaller ring set at an angle above the first — the silhouette
+     gains a diagonal it did not have
+  4  the legs gain outward-braced struts, clearly outside the previous
+     outline, and the housing grows a panelled shoulder
+  5  a third ring; the whole mast grows taller and the top splays outward
+  6  the largest fit-out: three rings on a splayed crown, heaviest cabling,
+     strongest accent — still with open air through the middle
+
+NO ground clutter, NO crew figures, NO effects, NO glow painted into the
+image — the game bakes all light itself.
+
+PROPORTION WARNING: draw the tower about 14 percent SQUATTER than it should
+finally look — the game stretches this square image 16 percent vertically.
+
+The three feet stand on the ground at 28 percent of the image height from
+the bottom; nothing below that line.
+
+FRAMING: 1024x1024 transparent PNG, square. The tower fills about 86 percent
+of the canvas, centred, at least 5 percent clear margin on every side —
+nothing cropped, not a leg tip, not the top ring.
+```
+
+#### Die sechs Zahlen, an denen diese Lieferung gemessen wird
+
+`npm run probebild -- <ordner>` prüft alle sechs, **vor** dem Packen:
+
+| Messung | Grenze | woher |
+|---|---|---|
+| Reines Schwarz | höchstens **2 %** der Fläche | Art Bible 2 |
+| Lichtwinkel neben der Sonne | höchstens **20°** | Art Bible 1 |
+| Rand berührt | **nie** | sonst beschneidet das Packen |
+| Silhouette Stufe 1 zu Stufe 6 | höchstens **0,70** | Art Bible 5.2 |
+| Silhouette gegen **jede** vorhandene Figur | höchstens **0,55** | schärfer als bei der Flak: dies ist der sechste Turm, und der Satz ist schon eng |
+| Leere Fläche im Deckrechteck | mindestens **55 %**, auf jeder Stufe | die höchste Anforderung im ganzen Auftrag — sie ist die Aussage über die Rolle |
+
+Die letzte Zeile trägt die vorletzte: ein offener Dreibeinmast mit einem Loch
+in der Mitte kann sich mit einem massiven Block gar nicht stark überdecken.
+Wer die 55 % erreicht, hat die 0,55 geschenkt.
 
 ---
 

@@ -222,6 +222,18 @@ if (state.seed !== AUSSAAT) {
     + 'Damit spielt der Rauchtest jede Runde ein anderes Spiel, und jede Zahl '
     + 'darunter ist ein Zufallswert.');
 }
+// **Die Hauptpartie spielt mit allen vier Faehigkeiten** (C18).
+//
+// Seit v195 haengen drei davon an gewonnenen Karten, und im Rauchtest ist
+// die Ablage bei jedem Lauf leer - der Bot haette also nur den Meteor. Das
+// waere die falsche Messstelle: diese Partie ist der Abdeckungslauf, sie
+// soll Zielhilfe, Einschlag und Frostschlag ZEICHNEN. Gemessen wurde der
+// Unterschied auch: ohne den Frostschlag endet dieselbe Aussaat mit drei
+// statt zwei Sternen - und drei ist der Anschlag, den der Kommentar oben
+// ausdruecklich vermeidet.
+//
+// Die Sperre selbst wird weiter unten geprueft, mit ihren Gegenproben.
+state.karten = ALLE_KARTEN.length;
 const spots = candidateSpots(state);
 // Der Sternestand VOR dieser Partie - fuer die Auswertung weiter unten.
 const sterneVorDerPartie = getStars(state.map.id, state.difficulty);
@@ -1665,6 +1677,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
       won, mapId: 'spiralhain', mapName: 'Spiralhain', wave: won ? 15 : 11, waves: 15,
       lives: won ? 47 : 0, maxLives: 60, stars: won ? 2 : 0, before: 0,
       kills: 200, built: 9, damage: 90000, duration: 480,
+      freischaltung: won ? 'freeze' : null,
     };
     const onResult = ids();
     for (const need of ['tomap', 'retry']) {
@@ -1912,6 +1925,159 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
       if (nachher.includes(ENEMIES[art].name)) {
         problems.push('Gegnerauskunft: sie verdeckt den gewaehlten Turm.');
       }
+    }
+  }
+}
+
+// C18: die Faehigkeiten haengen am Fortschritt - und die erste Karte geht
+// ohne sie.
+//
+// Vier Fragen, und jede hat ihre Gegenrichtung (Regel 13). Dass etwas
+// gesperrt ist, beweist nichts, solange nicht auch gezeigt ist, dass es sich
+// oeffnet - und umgekehrt.
+{
+  const { ABILITIES: FAEH, ABILITY_ORDER: FOLGE } = await import('../src/data/abilities');
+  const g = new GameState();
+
+  // 1. Ohne gewonnene Karte gibt es genau die Faehigkeiten mit `braucht: 0`.
+  g.reset(1234, 'normal', 'spiralhain', { karten: 0 });
+  const offen0 = FOLGE.filter((id) => g.freigeschaltet(id));
+  const soll0 = FOLGE.filter((id) => FAEH[id].braucht === 0);
+  if (offen0.join() !== soll0.join()) {
+    problems.push(`Fortschritt: ohne Karte offen [${offen0.join(', ')}], erwartet [${soll0.join(', ')}].`);
+  }
+  if (!offen0.length) problems.push('Fortschritt: ohne Karte ist gar nichts da.');
+  if (offen0.length === FOLGE.length) {
+    problems.push('Fortschritt: ohne Karte ist schon alles offen - dann sperrt nichts.');
+  }
+
+  // 1b. Und man SIEHT es (S2 des Abgleichs): der Knopf steht da, mit Namen,
+  //     und sagt, was fehlt. Geprueft am DOM, nicht am Zustand - ein
+  //     gesperrter Zustand, den die Leiste als "bereit" zeichnet, waere die
+  //     schlimmere Haelfte des Fehlers.
+  {
+    state.karten = 0;
+    ui.sync();
+    for (const id of FOLGE) {
+      const b = win.document.getElementById(`sk-${id}`) as unknown as
+        { disabled: boolean; dataset: Record<string, string>; textContent: string };
+      const zu = FAEH[id].braucht > 0;
+      if (!b) { problems.push(`Fortschritt: kein Knopf fuer "${id}".`); continue; }
+      if (b.dataset.zu !== (zu ? '1' : '0')) {
+        problems.push(`Fortschritt: "${id}" ist ${zu ? 'gesperrt' : 'offen'}, `
+          + `der Knopf sagt data-zu="${b.dataset.zu}".`);
+      }
+      if (zu && !b.disabled) problems.push(`Fortschritt: der Knopf "${id}" ist gesperrt, aber druckbar.`);
+      if (zu && !/Karten?/.test(b.textContent)) {
+        problems.push(`Fortschritt: der gesperrte Knopf "${id}" sagt nicht, was fehlt `
+          + `("${b.textContent.trim()}").`);
+      }
+      if (zu && !b.textContent.includes(FAEH[id].name)) {
+        problems.push(`Fortschritt: der gesperrte Knopf "${id}" nennt seinen Namen nicht - `
+          + 'dann ist es ein leerer Fleck statt eines Plans.');
+      }
+      if (!zu && /Karten?/.test(b.textContent)) {
+        problems.push(`Fortschritt: der OFFENE Knopf "${id}" verlangt trotzdem Karten.`);
+      }
+    }
+    state.karten = ALLE_KARTEN.length;
+    ui.sync();
+  }
+
+  // 2. Eine gesperrte Faehigkeit laesst sich nicht ausloesen. Geprueft am
+  //    ZUSTAND, nicht am Rueckgabewert: `chooseAbility` gibt nichts zurueck.
+  const zu = FOLGE.find((id) => !g.freigeschaltet(id))!;
+  g.chooseAbility(zu);
+  if (g.abilityCd[zu] > 0 || g.aiming === zu) {
+    problems.push(`Fortschritt: "${zu}" liess sich ausloesen, obwohl es gesperrt ist.`);
+  }
+  if (!g.cast(zu, g.goal.x, g.goal.y) === false) {
+    problems.push(`Fortschritt: "${zu}" liess sich per cast() ausloesen.`);
+  }
+
+  // 3. Mit jeder Karte kommt eine dazu, und keine geht wieder weg.
+  let vorher = 0;
+  for (let k = 0; k <= ALLE_KARTEN.length; k++) {
+    g.reset(1234, 'normal', 'spiralhain', { karten: k });
+    const n = FOLGE.filter((id) => g.freigeschaltet(id)).length;
+    if (n < vorher) problems.push(`Fortschritt: bei ${k} Karten weniger offen als bei ${k - 1}.`);
+    vorher = n;
+  }
+  if (vorher !== FOLGE.length) {
+    problems.push(`Fortschritt: nach allen Karten sind ${vorher} von ${FOLGE.length} offen.`);
+  }
+
+  // 4. Die erste Karte muss OHNE die gesperrten zu gewinnen sein (S4 des
+  //    Abgleichs). Das ist die Zahl, an der die ganze Sperre haengt: eine
+  //    Eroeffnung, die man nicht gewinnen kann, ist kein Fortschritt.
+  //    Gemessen mit demselben Bot wie der Durchlauf oben - und der ruehrt
+  //    KEINE Faehigkeit an. Das ist hier die richtige Messstelle: er misst
+  //    den Boden, also den Fall, in dem die eine verbliebene auch noch
+  //    ungenutzt bleibt. Was die Faehigkeiten wert sind, misst dagegen
+  //    `npx tsx tools/sim.ts --faehigkeiten` ueber zwoelf Laeufe je Karte.
+  //
+  //    Der Fortschritt wird dabei angefasst - ein Sieg traegt Sterne ein.
+  //    Also gesichert und zurueckgestellt, wie im Durchlauf oben, sonst
+  //    misst alles Spaetere diesen Block mit.
+  {
+    const stand = getProgress();
+    const sterne = { ...stand.stars };
+    const abdruck = JSON.stringify(stand);
+
+    const h = new GameState();
+    h.reset(4242, 'normal', ALLE_KARTEN[0].id, { karten: 0 });
+    const plaetze = candidateSpots(h);
+    const z = { spot: 0, si: 0 };
+    let f = 0;
+    while (h.phase === 'playing' && f < 60 * 60 * 20) {
+      botSchritt(h, plaetze, z);
+      if (h.canStartWave) h.startWave();
+      h.update(1 / 60);
+      f++;
+    }
+    if (h.phase !== 'won') {
+      problems.push(`Fortschritt: die erste Karte ist mit ${offen0.length} Faehigkeit(en) `
+        + `nicht zu gewinnen (Ende in Welle ${h.waveNumber}). Dann sperrt C18 die Eroeffnung zu.`);
+    }
+    console.log(`  Erste Karte ohne die gesperrten: `
+      + `${h.phase === 'won' ? 'gewonnen' : 'verloren'}, `
+      + `Kristall ${h.lives}/${h.maxLives} mit ${offen0.length} von ${FOLGE.length} Faehigkeiten.`);
+
+    // 5. Der Ergebnisbildschirm sagt die Freischaltung an (S5) - und nur
+    //    dann, wenn wirklich eine dazugekommen ist. Der Lauf oben hat
+    //    gerade die erste Karte gewonnen, also muss hier eine stehen.
+    const a1 = auswertung(h);
+    if (h.phase === 'won') {
+      if (a1.freischaltung === null) {
+        problems.push('Fortschritt: die erste gewonnene Karte schaltet nichts frei.');
+      } else if (FAEH[a1.freischaltung].braucht !== 1) {
+        problems.push(`Fortschritt: die erste Karte schaltet "${a1.freischaltung}" frei, `
+          + `das aber ${FAEH[a1.freischaltung].braucht} Karten verlangt.`);
+      }
+    }
+
+    // Gegenprobe: dieselbe Karte NOCH EINMAL bringt nichts Neues. Ohne sie
+    // waere "es erscheint eine Zeile" auch dann gruen, wenn sie bei jedem
+    // Sieg erschiene - und eine Freischaltung, die man zweimal bekommt, ist
+    // keine.
+    const h2 = new GameState();
+    h2.reset(1234, 'normal', ALLE_KARTEN[0].id);
+    h2.beendenZumPruefen(true);
+    if (auswertung(h2).freischaltung !== null) {
+      problems.push('Fortschritt: dieselbe Karte zweimal gewonnen schaltet zweimal frei.');
+    }
+    // Und die zweite Gegenrichtung: eine NIEDERLAGE schaltet nie etwas frei.
+    const h3 = new GameState();
+    h3.reset(1234, 'normal', ALLE_KARTEN[1].id, { karten: 1 });
+    h3.beendenZumPruefen(false);
+    if (auswertung(h3).freischaltung !== null) {
+      problems.push('Fortschritt: eine verlorene Partie schaltet etwas frei.');
+    }
+
+    stand.stars = sterne;
+    if (JSON.stringify(stand) !== abdruck) {
+      problems.push('Fortschritt: der C18-Block hat den Fortschritt veraendert und nicht '
+        + 'zurueckgestellt.');
     }
   }
 }
@@ -2512,7 +2678,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 // Spieler sieht. Waere `slowFactor` gesetzt, aber irgendwo nicht angewandt,
 // meldete eine Pruefung auf den Wert nichts.
 {
-  state.reset(91, 'normal', 'spiralhain');
+  state.reset(91, 'normal', 'spiralhain', { karten: ALLE_KARTEN.length });
   const drin = state.spawnZumPruefen('crawler', 0);      // slowResist 0
   const zaeh = state.spawnZumPruefen('titan', 0);        // slowResist 0.55
   const raus = state.spawnZumPruefen('crawler', 0);
@@ -2556,7 +2722,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 // etwas auf dem Feld tut, waere keine Entscheidung mehr - man zoege sie
 // immer. Der Sinn ist der Verzicht.
 {
-  state.reset(92, 'normal', 'spiralhain');
+  state.reset(92, 'normal', 'spiralhain', { karten: ALLE_KARTEN.length });
   const zeuge = state.spawnZumPruefen('infantry', 0);
   const goldVorher = state.gold;
   const hpVorher = zeuge ? zeuge.hp : 0;
@@ -2588,7 +2754,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 // ist Teil des Spielstands; faellt sie beim Laden auf null, waere Sichern und
 // Laden ein Weg, sie zu umgehen.
 {
-  state.reset(93, 'normal', 'spiralhain');
+  state.reset(93, 'normal', 'spiralhain', { karten: ALLE_KARTEN.length });
   state.abilityCd.bollwerk = 0; state.abilityCd.ernte = 0;
   state.cast('bollwerk', state.goal.x, state.goal.y);
   state.cast('ernte', 0, 0);
@@ -2597,7 +2763,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
     problems.push('Faehigkeiten: nach dem Ausloesen laeuft keine Abklingzeit.');
   }
   const stand = state.snapshot();
-  state.reset(93, 'normal', 'spiralhain');
+  state.reset(93, 'normal', 'spiralhain', { karten: ALLE_KARTEN.length });
   if (!state.restore(stand)) {
     problems.push('Faehigkeiten: der Spielstand liess sich nicht zurueckladen.');
   }

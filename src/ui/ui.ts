@@ -873,7 +873,11 @@ export class UI {
     this.updateTutorial();
 
     // Abklingzeiten laufen fortlaufend - eigene, gröbere Prüfung.
-    const skillSig = ABILITY_ORDER
+    // Die Zahl gewonnener Karten steht mit drin: sie aendert sich nie
+    // waehrend einer Partie, aber sie aendert sich zwischen zweien - und
+    // ohne sie bliebe der Frostschlag nach der ersten gewonnenen Karte
+    // gesperrt, bis zufaellig eine Abklingzeit tickt.
+    const skillSig = `${this.s.karten}|` + ABILITY_ORDER
       .map((id) => `${Math.ceil(this.s.abilityCd[id])}${this.s.aiming === id ? 'a' : ''}`)
       .join(',');
     if (skillSig !== this.lastSkillSig) {
@@ -881,13 +885,27 @@ export class UI {
       for (const [id, b] of this.skillBtns) {
         const def = ABILITIES[id];
         const cd = this.s.abilityCd[id];
-        const ready = cd <= 0;
+        // **Gesperrt ist ein eigener Zustand, nicht "nie bereit"** (C18).
+        //
+        // S2 des Abgleichs: ein gesperrtes Feld soll ein PLAN sein, kein
+        // leerer Fleck. Also steht der Name weiter da - man soll wissen,
+        // was einen erwartet - und darunter die Bedingung statt der
+        // Abklingzeit. Ausgeblendet waere die Leiste vier Wochen lang
+        // dreiviertel leer und der Fortschritt unsichtbar.
+        const fehlt = this.s.fehlendeKarten(id);
+        b.dataset.zu = fehlt > 0 ? '1' : '0';
+        b.disabled = fehlt > 0;
+        const ready = fehlt === 0 && cd <= 0;
         b.dataset.ready = ready ? '1' : '0';
         b.dataset.on = this.s.aiming === id ? '1' : '0';
-        (b.querySelector('.s-cd') as HTMLElement).textContent =
-          ready ? (def.kind === 'aimed' ? 'zielen' : 'bereit') : `${Math.ceil(cd)} s`;
+        b.title = fehlt > 0 ? `${def.blurb} — noch ${fehlt} Karte${fehlt > 1 ? 'n' : ''}` : def.blurb;
+        (b.querySelector('.s-cd') as HTMLElement).textContent = fehlt > 0
+          // Abgeleitet, nicht je Faehigkeit geschrieben: der Satz gilt auch
+          // fuer eine fuenfte, und er gilt auch bei einer vierten Karte.
+          ? (fehlt === 1 ? '1 Karte' : `${fehlt} Karten`)
+          : ready ? (def.kind === 'aimed' ? 'zielen' : 'bereit') : `${Math.ceil(cd)} s`;
         (b.querySelector('.s-fill') as HTMLElement).style.transform =
-          `scaleY(${ready ? 0 : cd / def.cooldown})`;
+          `scaleY(${ready || fehlt > 0 ? 0 : cd / def.cooldown})`;
       }
     }
 

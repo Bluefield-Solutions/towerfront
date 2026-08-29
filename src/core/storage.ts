@@ -199,6 +199,25 @@ export function recordStars(mapId: string, difficulty: string, stars: number): v
   write(store);
 }
 
+/** Wieviele verschiedene Karten je gewonnen wurden (C18).
+ *
+ *  Gerechnet aus den Sternen statt aus einer eigenen Liste: Sterne gibt es
+ *  nur fuer einen Sieg (`starsFor`), sie liegen je Karte UND Grad, und sie
+ *  liegen schon in jedem alten Spielstand. Eine zweite Liste waere die
+ *  zweite Wahrheit ueber dasselbe (Regel 15) - und sie faenge bei jedem,
+ *  der schon gespielt hat, bei null an.
+ *
+ *  Der Grad zaehlt nicht mit: wer die Ascheschlucht auf "Ruhig" schafft, hat
+ *  sie geschafft. Sonst haenge der Fortschritt am Grad, und der schwerste
+ *  Grad gaebe die meisten Freischaltungen - genau verkehrt herum. */
+export function gewonneneKarten(): number {
+  const karten = new Set<string>();
+  for (const [schluessel, sterne] of Object.entries(store.progress.stars)) {
+    if ((sterne ?? 0) > 0) karten.add(schluessel.split('|')[0]);
+  }
+  return karten.size;
+}
+
 export const getStars = (mapId: string, difficulty: string): number =>
   store.progress.stars[`${mapId}|${difficulty}`] ?? 0;
 

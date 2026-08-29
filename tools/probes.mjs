@@ -389,6 +389,43 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // C18: die Sperre. Faellt sie weg, steht am Anfang alles bereit - und
+    // der Fortschritt zwischen den Karten bedeutet wieder nichts.
+    name: 'Faehigkeiten sind von Anfang an alle offen',
+    datei: 'src/game/state.ts',
+    suche: 'return this.karten >= ABILITIES[id].braucht;',
+    ersatz: 'return true;',
+    tor: 'smoke',
+  },
+  {
+    // Und die andere Haelfte: gesperrt sein reicht nicht, man muss es sehen.
+    // Ein Knopf, der aussieht wie bereit und nichts tut, ist schlimmer als
+    // ein gesperrter (S2 des Abgleichs).
+    name: 'Gesperrte Faehigkeit sieht aus wie bereit',
+    datei: 'src/ui/ui.ts',
+    suche: "b.dataset.zu = fehlt > 0 ? '1' : '0';",
+    ersatz: "b.dataset.zu = '0';",
+    tor: 'smoke',
+  },
+  {
+    // Die Ansage am Ende des Laufs (S5). Ohne sie erfaehrt der Spieler von
+    // seiner neuen Faehigkeit erst, wenn er zufaellig hinsieht.
+    name: 'Freischaltung wird nicht angesagt',
+    datei: 'src/game/state.ts',
+    regel: /this\.freischaltung = nachher > this\.karten/,
+    ersatz: 'this.freischaltung = false',
+    tor: 'smoke',
+  },
+  {
+    // Eine Faehigkeit, die mehr Karten verlangt, als es gibt, waere totes
+    // Inventar - und niemand saehe es.
+    name: 'Faehigkeit verlangt mehr Karten als es gibt',
+    datei: 'src/data/abilities.ts',
+    suche: 'gold: 120, braucht: 3,',
+    ersatz: 'gold: 120, braucht: 9,',
+    tor: 'guards',
+  },
+  {
     // Die Ziellogik muss WIRKEN, nicht nur einstellbar sein. Hier faellt die
     // Auswertung weg - alle Tuerme nehmen wieder den Vordersten.
     name: 'Ziellogik ohne Wirkung',

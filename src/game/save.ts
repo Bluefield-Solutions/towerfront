@@ -33,6 +33,15 @@ export interface SaveGame {
   speed: number;
   /** Restliche Abklingzeit je Faehigkeit. */
   abilityCd: [AbilityId, number][];
+  /** Wieviele Karten beim Start dieses Laufs gewonnen waren (C18).
+   *
+   *  ANGEHAENGT und optional: ein Stand aus v193 hat das Feld nicht und
+   *  laedt weiter - er bekommt dann den heutigen Stand aus der Ablage.
+   *  Deshalb bleibt die Formatnummer, wo sie ist. Ohne das Feld haette ein
+   *  fortgesetzter Lauf andere Regeln als der begonnene: wer zwischendurch
+   *  eine Karte gewinnt, saehe die neue Faehigkeit mitten in der alten
+   *  Partie erscheinen. */
+  karten?: number;
   /** Meteore im Anflug: [x, y, Fortschritt, Dauer, Radius, Schaden].
    *  Anders als ein Geschoss ist ein Meteor eine bereits bezahlte
    *  Entscheidung - die Abklingzeit laeuft schon. Ihn beim Fortsetzen

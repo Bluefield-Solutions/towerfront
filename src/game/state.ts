@@ -19,7 +19,9 @@ import type { Vec } from '../core/math';
 import { dist, dist2 } from '../core/math';
 import { Sfx } from '../core/audio';
 import { mischen } from '../gfx/glow';
-import { getProgress, getStars, recordEndlos, recordRun, recordStars } from '../core/storage';
+import {
+  getProgress, getStars, gewonneneKarten, recordEndlos, recordRun, recordStars,
+} from '../core/storage';
 import {
   NO_PERKS, perkEffect, starsFor, type PerkEffect,
 } from '../data/perks';
@@ -127,6 +129,29 @@ export class GameState {
   meteors: Meteor[] = [];
   /** Restliche Abklingzeit je Faehigkeit. Null heisst einsatzbereit. */
   abilityCd: Record<AbilityId, number> = { meteor: 0, freeze: 0, bollwerk: 0, ernte: 0 };
+  /** Wieviele Karten beim START dieses Laufs gewonnen waren (C18).
+   *
+   *  **Eingefroren, nicht jedes Bild gelesen.** Waehrend einer Partie kann
+   *  man keine Karte gewinnen, also gaebe es nichts zu aktualisieren - und
+   *  eine Ablageabfrage im Bildtakt waere ausserdem die einzige Stelle, an
+   *  der die Simulation aus dem Speicher des Browsers liest. Sie geht in den
+   *  Spielstand mit, sonst haette ein fortgesetzter Lauf andere Regeln als
+   *  der begonnene. */
+  karten = 0;
+  /** Was dieser Lauf freigeschaltet hat, wenn etwas (C18).
+   *
+   *  Heisst `freischaltung` und nicht `neueFaehigkeit`, weil der
+   *  Autarkie-Waechter die Ersatzschreibung "Faehigkeit" im ausgelieferten
+   *  Text verbietet - und ein Feldname ueberlebt die Minimierung. Der
+   *  Waechter hat recht: er kann nicht wissen, ob "Faehigkeit" in einem
+   *  Bezeichner oder in einem Satz auf dem Bildschirm steht.
+   *
+   *  S5 des Abgleichs: die Freischaltung wird GEZEIGT, wenn sie passiert -
+   *  ein Augenblick am Ende des Laufs, keine Zeile in einem Menue. Sie steht
+   *  hier neben `sterneVorher`, weil sie dieselbe Aufgabe hat und dieselbe
+   *  Falle: wer sie erst auf dem Ergebnisbildschirm ausrechnet, rechnet
+   *  nach dem Eintragen und bekommt nie ein "neu". */
+  freischaltung: AbilityId | null = null;
   /** Gezielte Faehigkeit, die auf einen Tipp aufs Feld wartet. */
   aiming: AbilityId | null = null;
 
@@ -513,6 +538,17 @@ export class GameState {
     this.damage(e, schaden, null, '#fff', 0, 0);
   }
 
+  /** Einen Lauf beenden, ohne ihn zu spielen - fuer den Rauchtest.
+   *
+   *  `finishRun` ist privat und soll es bleiben: es traegt Bestwert, Sterne
+   *  und Freischaltung ein, und genau deshalb darf es nicht von aussen
+   *  gerufen werden koennen. Der Fortschritt (C18) haengt aber daran, und
+   *  fuenfzehn Wellen zu spielen, nur um zu sehen, ob eine Zeile erscheint,
+   *  waere zwanzig Sekunden fuer eine Zuweisung. */
+  beendenZumPruefen(gewonnen: boolean): void {
+    this.finishRun(gewonnen);
+  }
+
   /** Der Turm, der gerade gezogen wird, und wohin. Beides null, wenn nicht. */
   movingTower: Tower | null = null;
   movePoint: { x: number; y: number } | null = null;
@@ -768,8 +804,24 @@ export class GameState {
 
   // ----------------------------------------------------------- Faehigkeiten
 
+  /** Gibt es diese Faehigkeit schon (C18)?
+   *
+   *  Eine Ableitung, kein Schalter (Regel 6): es gibt keine Stelle, an der
+   *  man das Freischalten vergessen koennte, weil es nirgends gesetzt wird.
+   *  Wer eine Karte gewinnt, hat die naechste beim naechsten Start. */
+  freigeschaltet(id: AbilityId): boolean {
+    return this.karten >= ABILITIES[id].braucht;
+  }
+
+  /** Was noch fehlt, damit es diese Faehigkeit gibt - fuer die Anzeige.
+   *  `0` heisst: sie ist da. */
+  fehlendeKarten(id: AbilityId): number {
+    return Math.max(0, ABILITIES[id].braucht - this.karten);
+  }
+
   ready(id: AbilityId): boolean {
-    return this.phase === 'playing' && this.abilityCd[id] <= 0;
+    return this.freigeschaltet(id)
+      && this.phase === 'playing' && this.abilityCd[id] <= 0;
   }
 
   /** Der Inspektor zumachen - was immer er gerade zeigt.
@@ -920,6 +972,14 @@ export class GameState {
     // messen koennte, wie sauber man durchgekommen ist.
     this.stars = this.endless ? 0 : starsFor(won, this.lives, this.maxLives);
     if (this.stars > 0) recordStars(this.map.id, this.difficulty, this.stars);
+    // Und erst JETZT, nach dem Eintragen: ist eine Karte dazugekommen, gibt
+    // es dafuer genau eine Faehigkeit - die, die diese Zahl verlangt.
+    // Abgeleitet aus `braucht` statt einer Zuordnung Karte -> Faehigkeit,
+    // damit es auch fuer eine vierte Karte stimmt.
+    const nachher = gewonneneKarten();
+    this.freischaltung = nachher > this.karten
+      ? (ABILITY_ORDER.find((id) => ABILITIES[id].braucht === nachher) ?? null)
+      : null;
   }
 
   // ---------------------------------------------------------------- Update
@@ -1781,7 +1841,11 @@ export class GameState {
     seed = newSeed(),
     difficulty: DifficultyId = this.difficulty,
     mapId: string = this.map.id,
-    opts: { endless?: boolean; perks?: PerkEffect } = {},
+    opts: { endless?: boolean; perks?: PerkEffect;
+      /** Nur fuer die Werkzeuge: die Zahl gewonnener Karten setzen, statt
+       *  sie aus der Ablage zu lesen. Ohne das laesst sich C18 nicht
+       *  messen, ohne die Ablage des Messenden zu faelschen. */
+      karten?: number } = {},
   ): void {
     this.seed = seed;
     this.rng.state = seed;
@@ -1804,6 +1868,8 @@ export class GameState {
     this.husks.length = 0;
     this.flashT = 0;
     this.abilityCd = { meteor: 0, freeze: 0, bollwerk: 0, ernte: 0 };
+    this.karten = opts.karten ?? gewonneneKarten();
+    this.freischaltung = null;
     this.spawnsJeBahn = [];
     this.spawnsTrotzSperre = 0;
     this.aiming = null;
@@ -1884,6 +1950,7 @@ export class GameState {
       hitStop: this.hitStop,
       stats: this.stats,
       abilityCd: ABILITY_ORDER.map((id) => [id, this.abilityCd[id]] as [AbilityId, number]),
+      karten: this.karten,
       meteors: this.meteors.map((m) => [m.x, m.y, m.t, m.dur, m.radius, m.damage]) as
         [number, number, number, number, number, number][],
       shots: this.projectiles.map((p) => [
@@ -1952,7 +2019,8 @@ export class GameState {
     for (const [id] of save.enemies) if (!(id in ENEMIES)) return false;
     for (const [, id] of save.pending) if (!(id in ENEMIES)) return false;
 
-    this.reset(save.seed, save.difficulty, save.map, { endless: save.endless });
+    this.reset(save.seed, save.difficulty, save.map,
+      { endless: save.endless, karten: save.karten });
     this.rng.state = save.rng;
     this.gold = save.gold;
     this.lives = save.lives;

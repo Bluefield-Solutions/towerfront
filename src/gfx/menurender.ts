@@ -1,3 +1,4 @@
+import { ABILITIES } from '../data/abilities';
 import { C, WORLD_H, WORLD_W } from '../data/config';
 import { MAPS } from '../data/maps';
 import { DIFFICULTIES, DIFFICULTY_ORDER } from '../data/difficulty';
@@ -436,15 +437,27 @@ function drawResult(
     if (!earned) { star(ctx, WORLD_W / 2 + (i - 1) * 130, y0 + 268, 52, false); }
   }
 
-  // Ein neuer Stern ist die eigentliche Nachricht - er wird benannt.
+  // Was dieser Lauf EINGEBRACHT hat - die eigentliche Nachricht.
+  //
+  // Zwei Zeilen koennen zusammenfallen: ein Sieg kann gleichzeitig einen
+  // Stern und eine Faehigkeit bringen. Deshalb werden sie gesammelt und um
+  // dieselbe Mitte gelegt, statt beide an eine feste Zeile geschrieben - die
+  // erste Fassung haette sie uebereinandergedruckt.
+  const nachricht: string[] = [];
   if (r.stars > r.before) {
-    ctx.font = '700 26px system-ui, sans-serif';
-    ctx.fillStyle = C.gold;
-    ctx.fillText(
+    nachricht.push(
       r.stars - r.before === 1 ? 'Ein neuer Stern' : `${r.stars - r.before} neue Sterne`,
-      WORLD_W / 2, y0 + 372,
     );
   }
+  // S5 des Abgleichs: die Freischaltung wird gezeigt, WENN sie passiert.
+  if (r.freischaltung) {
+    nachricht.push(`Neue Fähigkeit: ${ABILITIES[r.freischaltung].name}`);
+  }
+  ctx.font = '700 26px system-ui, sans-serif';
+  ctx.fillStyle = C.gold;
+  nachricht.forEach((zeile, i) => {
+    ctx.fillText(zeile, WORLD_W / 2, y0 + 372 + (i - (nachricht.length - 1) / 2) * 34);
+  });
 
   // Vier Zahlen, nicht zehn. Was man nicht vergleichen kann, hilft nicht.
   const facts: [string, string][] = [

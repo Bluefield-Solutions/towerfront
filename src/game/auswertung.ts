@@ -19,6 +19,7 @@
  *
  *  Gemessen wird sie in `tools/benchmark.ts` (Kriterium P2) und im
  *  Rauchtest, dort an einer wirklich durchgespielten Partie. */
+import type { AbilityId } from '../data/abilities';
 import type { GameState } from './state';
 
 export interface Auswertung {
@@ -33,6 +34,8 @@ export interface Auswertung {
   stars: number;
   /** Sterne vor diesem Lauf - fuer "Ein neuer Stern". */
   before: number;
+  /** Was dieser Lauf freigeschaltet hat, wenn etwas (C18). */
+  freischaltung: AbilityId | null;
   kills: number;
   built: number;
   damage: number;
@@ -50,6 +53,7 @@ export function auswertung(s: GameState): Auswertung {
     maxLives: s.maxLives,
     stars: s.stars,
     before: s.sterneVorher,
+    freischaltung: s.freischaltung,
     kills: s.stats.kills,
     built: s.stats.towersBuilt,
     damage: Math.round(s.stats.damage),

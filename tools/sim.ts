@@ -101,6 +101,7 @@ const BOTS: Bot[] = [
 
 
 const MEISTER = BOTS[0];
+const NUR_MESSEN = process.argv.slice(2).includes('--faehigkeiten');
 
 /** Bauplaetze nach abgedeckter Wegstrecke bewertet.
  *
@@ -149,11 +150,17 @@ function play(
     /** Ziellogik je Turm, nach Baureihenfolge. Ohne Angabe bleibt es beim
      *  Standard des Spiels. */
     ziel?: (t: Tower, i: number, s: GameState) => Zielwahl;
+    /** Wieviele Karten als gewonnen gelten - entscheidet, welche
+     *  Faehigkeiten es gibt (C18). Ohne Angabe alle: die Balance ist an
+     *  allen vier geeicht, und ein Bot, der sie ploetzlich nicht mehr hat,
+     *  wuerde hier eine Verschiebung melden, die kein Spieler erlebt. */
+    karten?: number;
   } = {},
 ): Result {
   const s = new GameState(mapId);
   s.reset(opts.seed ?? SEEDS[0], difficulty, mapId,
-    { endless: opts.endless, perks: opts.perks ?? NO_PERKS });
+    { endless: opts.endless, perks: opts.perks ?? NO_PERKS,
+      karten: opts.karten ?? MAPS.length });
   const spots = buildSpots(s);
   // Die Abwandlung verschiebt Startreihenfolge und Ruecklage leicht. Damit
   // entstehen mehrere Spielverlaeufe, die alle vernuenftig sind - und der
@@ -285,6 +292,49 @@ const strategies: Record<string, TowerId[]> = {
   'moerserlastig': ['mortar', 'mortar', 'arrow'],
   'gemischt': ['arrow', 'arrow', 'mortar', 'frost', 'prism'],
 };
+
+// --------------------------------------- Was ist eine Faehigkeit wert (C18)?
+//
+// S4 des Abgleichs (`docs/Towerfront-ABGLEICH-FAEHIGKEITEN.md`) verlangt,
+// dass die ERSTE Karte ohne die drei gesperrten vollstaendig ist. Das ist
+// keine Meinung, sondern diese Messung: derselbe Bot, dieselbe Aussaat,
+// dieselben Tuerme - nur die Zahl gewonnener Karten steigt.
+//
+// Und sie ist zugleich die Gegenprobe nach Regel 13: faellt die Zahl mit
+// weniger Faehigkeiten NICHT, dann misst hier nichts eine Faehigkeit.
+if (NUR_MESSEN) {
+  console.log('\nFaehigkeiten nach Fortschritt (C18) - Mittel ueber zwoelf Laeufe\n');
+  const plan: TowerId[] = ['arrow', 'arrow', 'mortar', 'frost', 'prism'];
+  // **Ein einzelner Lauf misst hier nichts.** Der erste Anlauf lief mit
+  // einer Aussaat und einem Bot und kam auf 15, 12, 20, 21 - nicht einmal
+  // steigend. Zwoelf Laeufe je Feld (drei Stile x vier Abwandlungen)
+  // trennen die Wirkung vom Rauschen.
+  console.log('  Karte             1 Faehigk.  2           3           4          Siege');
+  for (const m of MAPS) {
+    const zeile: string[] = [];
+    const siege: string[] = [];
+    for (let k = 0; k <= MAPS.length; k++) {
+      let summe = 0, n = 0, gewonnen = 0;
+      for (const b of BOTS) {
+        for (let v = 0; v < 4; v++) {
+          const r = play(plan, () => 0, b, 'normal', m.id, { karten: k, variant: v });
+          summe += r.won ? r.lives : 0;
+          if (r.won) gewonnen++;
+          n++;
+        }
+      }
+      zeile.push(`${(summe / n).toFixed(1)}`.padEnd(12));
+      siege.push(`${gewonnen}/${n}`);
+    }
+    console.log(`  ${m.name.padEnd(15)} ${zeile.join('')}${siege.join(' ')}`);
+  }
+  console.log('\n  Spalten: wieviele Faehigkeiten verfuegbar waren (1 bis 4).');
+  console.log('  Zahl: mittlerer uebriger Kristall ueber zwoelf Laeufe, eine Niederlage');
+  console.log('  zaehlt als null - so schlaegt "kommt gar nicht durch" auch durch.');
+  console.log('  Messstelle: tools/sim.ts, drei Bot-Stile x vier Abwandlungen, Plan '
+    + `[${plan.join(', ')}], Grad "normal", keine Verbesserungen.`);
+  process.exit(0);
+}
 
 const errors: string[] = [];
 const results = new Map<string, Result>();

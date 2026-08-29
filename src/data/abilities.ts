@@ -18,6 +18,17 @@ export interface AbilityDef {
   slowTime?: number;
   /** Gold, das die Faehigkeit einbringt. */
   gold?: number;
+  /** Wieviele Karten gewonnen sein muessen, damit es sie gibt (C18).
+   *
+   *  Nicht "welche Karte schaltet sie frei": eine Zuordnung waere bei der
+   *  vierten Karte still falsch, und Karte 4 steht als C24 im Verzeichnis.
+   *  Gezaehlt werden die je gewonnenen Karten, ganz gleich welche und auf
+   *  welchem Grad - damit gilt S6 des Abgleichs von selbst.
+   *
+   *  Genau eine Faehigkeit muss hier 0 tragen, sonst faengt der Spieler mit
+   *  leeren Haenden an; und keine darf mehr verlangen, als es Karten gibt.
+   *  Beides prueft `tools/guards.ts`. */
+  braucht: number;
 }
 
 export const ABILITIES: Record<AbilityId, AbilityDef> = {
@@ -26,12 +37,17 @@ export const ABILITIES: Record<AbilityId, AbilityDef> = {
     blurb: 'Ruft einen Brocken auf eine Stelle. Trifft Boden und Luft.',
     kind: 'aimed', cooldown: 40, color: '#F08A3C', key: 'q',
     radius: 130, delay: 0.75, damage: 190,
+    // Der Meteor steht von Anfang an da: die Einweisung fuehrt an ihm
+    // vor, was eine Faehigkeit ueberhaupt ist (`tutorial.ts`), und S4 des
+    // Abgleichs verlangt, dass die erste Karte ohne die anderen drei
+    // vollstaendig ist.
+    braucht: 0,
   },
   freeze: {
     id: 'freeze', name: 'Frostschlag',
     blurb: 'Legt sich über das ganze Feld und bremst alles für drei Sekunden.',
     kind: 'instant', cooldown: 32, color: '#7FE7E0', key: 'w',
-    slow: 0.68, slowTime: 3,
+    slow: 0.68, slowTime: 3, braucht: 1,
   },
   bollwerk: {
     id: 'bollwerk', name: 'Bollwerk',
@@ -67,13 +83,13 @@ export const ABILITIES: Record<AbilityId, AbilityDef> = {
     // Schraube ist nicht, wie lange jemand steht, sondern wie oft man
     // absperren darf. Deshalb bleibt die Dauer bei 3 s wie beim
     // Frostschlag, und dosiert wird ueber den Takt.
-    slow: 1, slowTime: 3,
+    slow: 1, slowTime: 3, braucht: 2,
   },
   ernte: {
     id: 'ernte', name: 'Ernte',
     blurb: 'Bringt Gold statt Schaden. Wer knapp steht, kauft sich Zeit.',
     kind: 'instant', cooldown: 55, color: '#F2C14E', key: 'r',
-    gold: 120,
+    gold: 120, braucht: 3,
   },
 };
 

@@ -506,6 +506,21 @@ html, body {
   border-color: var(--tone);
 }
 .skill-btn:active { transform: scale(0.96); }
+/* **Gesperrt sieht anders aus als "gerade nicht bereit"** (C18).
+   Nicht bereit ist ein Zustand, der von selbst vergeht - blass reicht.
+   Gesperrt vergeht erst nach einer gewonnenen Karte, also bekommt es einen
+   eigenen Rahmen: gestrichelt, entfaerbt, und der Name bleibt lesbar.
+   Ausgeblendet waere die Leiste am Anfang zu drei Vierteln leer, und der
+   Fortschritt haette nichts, worauf er zeigen koennte (S2 des Abgleichs). */
+.skill-btn[data-zu="1"] {
+  opacity: 0.5;
+  border-style: dashed;
+  border-color: var(--edge);
+  filter: grayscale(1);
+  cursor: default;
+}
+.skill-btn[data-zu="1"] .s-cd { color: var(--muted); }
+.skill-btn[data-zu="1"]:active { transform: none; }
 
 @media (max-width: 820px) {
   .skill-btn { min-width: 62px; padding: 6px 8px; }

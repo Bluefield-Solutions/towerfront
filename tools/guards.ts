@@ -916,6 +916,37 @@ for (const id of ABILITY_ORDER) {
 if (new Set(ABILITY_ORDER.map((id) => ABILITIES[id].key)).size !== ABILITY_ORDER.length) {
   fail('Zwei Faehigkeiten teilen sich dasselbe Tastenkuerzel.');
 }
+// **Die Freischaltung muss erreichbar sein** (C18).
+//
+// Drei Fallen, und alle drei sind still: mit leeren Haenden anzufangen
+// (keine mit `braucht: 0`), mehr Karten zu verlangen, als es gibt (die
+// Faehigkeit waere tot Inventar), und zwei Faehigkeiten an dieselbe Zahl zu
+// haengen (dann meldet der Ergebnisbildschirm nur eine von beiden, weil er
+// die erste passende nimmt).
+{
+  const stufen = ABILITY_ORDER.map((id) => ABILITIES[id].braucht);
+  if (!stufen.includes(0)) {
+    fail('Keine Faehigkeit steht von Anfang an bereit - der Spieler faengt mit leeren Haenden an.');
+  }
+  for (const id of ABILITY_ORDER) {
+    const n = ABILITIES[id].braucht;
+    if (!Number.isInteger(n) || n < 0) {
+      fail(`Faehigkeit ${id}: "braucht" muss eine ganze Zahl ab 0 sein, ist ${n}.`);
+    }
+    // `n === MAPS.length` ist erlaubt und beabsichtigt: das ist die
+    // Belohnung fuers Durchspielen, und sie faellt genau dorthin, wo danach
+    // der Endlosmodus und die schwereren Grade warten. Erst darueber hinaus
+    // waere die Faehigkeit totes Inventar.
+    if (n > MAPS.length) {
+      fail(`Faehigkeit ${id} verlangt ${n} gewonnene Karten, es gibt aber nur ${MAPS.length}. `
+        + 'Sie waere nie zu bekommen.');
+    }
+  }
+  if (new Set(stufen).size !== stufen.length) {
+    fail('Zwei Faehigkeiten haengen an derselben Zahl gewonnener Karten - der '
+      + 'Ergebnisbildschirm kann dann nur eine von beiden ansagen.');
+  }
+}
 // Eine Faehigkeit darf eine Welle nicht im Alleingang entscheiden.
 {
   const meteor = ABILITIES.meteor;

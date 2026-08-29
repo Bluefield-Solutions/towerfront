@@ -272,7 +272,7 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
       return;
     }
     if (existing) { s.selectedTower = existing; s.buildAt = null; Sfx.play('tap'); return; }
-    s.selectedTower = null;
+    s.auswahlSchliessen();
 
     // Freier Platz: die Turmwahl oeffnet sich dort, wo getippt wurde - oder,
     // wenn es dort nicht geht, an der naechsten Stelle, an der wenigstens der
@@ -342,7 +342,7 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
 
     if (ev.key === ' ') { ev.preventDefault(); s.startWave(); }
     if (ev.key === 'p' || ev.key === 'P') s.paused = !s.paused;
-    if (ev.key === 'Escape') { s.buildChoice = null; s.selectedTower = null; s.aiming = null; }
+    if (ev.key === 'Escape') { s.auswahlSchliessen(); s.aiming = null; }
     if (ev.key === 'o' || ev.key === 'O') r.toggleOverview();
     for (const id of ABILITY_ORDER) {
       if (ev.key.toLowerCase() === ABILITIES[id].key) s.chooseAbility(id);

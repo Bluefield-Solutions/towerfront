@@ -803,9 +803,9 @@ step('Wellenvorschau zeigt alle Arten', () => {
     state.waveActive = false;
     ui.sync();
     const arten = new Set(state.waves[i].groups.map((g) => g.enemy));
-    const gezeigt = [...liste.querySelectorAll('i')]
-      .filter((e) => !e.classList.contains('next-note')
-        && !e.classList.contains('next-sprung')).length;
+    // Seit v194 ist jeder Eintrag ein `<button>` mit `data-gegner` - der
+    // Erklaersatz bleibt ein `<i>` und faellt damit von selbst heraus.
+    const gezeigt = liste.querySelectorAll('button[data-gegner]').length;
     if (gezeigt !== arten.size) {
       problems.push(`Wellenvorschau W${i + 1}: ${arten.size} Gegnerart(en) in der Welle, `
         + `${gezeigt} in der Vorschau.`);
@@ -834,7 +834,7 @@ step('Wellenvorschau zeigt alle Arten', () => {
     mitSchild += soll.Schild.size ? 1 : 0;
     mitTraeger += soll['Träger'].size ? 1 : 0;
     for (const zeichen of ['Schild', 'Träger'] as const) {
-      const gezeigt = [...liste.querySelectorAll('i')]
+      const gezeigt = [...liste.querySelectorAll('button[data-gegner]')]
         .filter((e) => [...e.querySelectorAll('span.tag')]
           .some((t) => t.textContent === zeichen)).length;
       if (gezeigt !== soll[zeichen].size) {
@@ -1838,6 +1838,81 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   const lost = 20 - state.lives;
   if (state.phase !== 'playing' && leaked < lost) {
     problems.push(`Auswertung: ${leaked} Kristallverlust verbucht, aber ${lost} fehlen.`);
+  }
+}
+
+// D10: der Gegnername in der Wellenvorschau ist ANTIPPBAR.
+//
+// Bis v193 stand er nur im `title` - also im Zeigerhinweis. Auf dem
+// Zielgeraet gibt es keinen Zeiger, dort war er unerreichbar. Geprueft wird
+// deshalb nicht der `title`, sondern was nach einem Tipp im Inspektor steht.
+//
+// Und zweimal gegengeprobt: einmal derselbe Eintrag noch einmal (muss wieder
+// zumachen), einmal ein gewaehlter Turm (muss die Auskunft verdraengen -
+// sonst verdeckte der Gegnerblock den Turm, weil er davor steht).
+{
+  const { ENEMIES } = await import('../src/data/enemies');
+  state.reset(1234, 'normal', 'spiralhain');
+  state.selectedTower = null;
+  state.buildChoice = null;
+  ui.sync();
+  const liste = win.document.getElementById('n-list');
+  const eintraege = [...(liste?.querySelectorAll('button[data-gegner]') ?? [])];
+  if (!eintraege.length) {
+    problems.push('Gegnerauskunft: die Wellenvorschau hat keinen antippbaren Eintrag.');
+  } else {
+    const knopf = eintraege[0] as unknown as { click(): void; dataset: Record<string, string> };
+    const art = knopf.dataset.gegner as keyof typeof ENEMIES;
+    knopf.click();
+    ui.sync();
+    if (state.gegnerInfo !== art) {
+      // Regel 3: kommt der Eingriff nicht an, beweist alles Weitere nichts.
+      problems.push(`Gegnerauskunft: Tipp auf "${art}" setzt den Zustand nicht (${state.gegnerInfo}).`);
+    }
+    const panel = win.document.getElementById('inspector');
+    const text = panel?.textContent ?? '';
+    if (panel?.hasAttribute('hidden')) {
+      problems.push('Gegnerauskunft: der Inspektor bleibt verborgen, obwohl ein Gegner gewaehlt ist.');
+    }
+    const d = ENEMIES[art];
+    if (!text.includes(d.name)) {
+      problems.push(`Gegnerauskunft: der Name "${d.name}" steht nicht im Inspektor.`);
+    }
+    for (const needle of ['Leben', 'Tempo', 'Panzerung', 'Gold']) {
+      if (!text.includes(needle)) problems.push(`Gegnerauskunft: "${needle}" fehlt in den Werten.`);
+    }
+    // Die Ausbauknoepfe gehoeren einem Turm. Bleiben sie stehen, steht der
+    // Kaufknopf des zuletzt gewaehlten Turms unter fremden Werten.
+    if ((win.document.getElementById('i-ups')?.innerHTML ?? '') !== '') {
+      problems.push('Gegnerauskunft: die Ausbauknoepfe des letzten Turms stehen noch da.');
+    }
+    // Gegenprobe 1: noch einmal derselbe Eintrag macht wieder zu.
+    const wieder = [...(liste?.querySelectorAll('button[data-gegner]') ?? [])]
+      .find((b) => (b as unknown as { dataset: Record<string, string> }).dataset.gegner === art);
+    (wieder as unknown as { click(): void } | undefined)?.click();
+    ui.sync();
+    if (state.gegnerInfo !== null) {
+      problems.push('Gegnerauskunft: derselbe Eintrag ein zweites Mal schliesst sie nicht.');
+    }
+    // Gegenprobe 2: ein gewaehlter Turm verdraengt die Auskunft.
+    const { candidateSpots: spotsD } = await import('./spots');
+    state.gold = 999999;
+    const platzD = spotsD(state)[0];
+    if (!platzD) {
+      problems.push('Gegnerauskunft: kein Bauplatz fuer die Gegenprobe gefunden.');
+    } else {
+      state.build(platzD.x, platzD.y, 'arrow');
+      state.gegnerInfo = art;
+      state.selectedTower = state.gebaute[state.gebaute.length - 1] ?? null;
+      ui.sync();
+      if (state.gegnerInfo !== null) {
+        problems.push('Gegnerauskunft: ein gewaehlter Turm raeumt sie nicht weg.');
+      }
+      const nachher = win.document.getElementById('inspector')?.textContent ?? '';
+      if (nachher.includes(ENEMIES[art].name)) {
+        problems.push('Gegnerauskunft: sie verdeckt den gewaehlten Turm.');
+      }
+    }
   }
 }
 

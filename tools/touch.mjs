@@ -82,7 +82,14 @@ function regeln(selektor) {
     `(^|[,};]|\\*/)\\s*${selektor.replace(/\./g, '\\.')}\\s*(,[^{]*)?\\{([^}]*)\\}`, 'g',
   );
   for (const m of css.matchAll(re)) {
-    for (const decl of m[3].split(';')) {
+    // Kommentare INNERHALB des Blocks raus, bevor geteilt wird.
+    //
+    // Sonst klebt der Kommentar an der ersten Angabe: aus
+    // `/* ... */ min-height: 44px` wird ein Schluessel, der `min-height`
+    // heisst und den Kommentar davor traegt - die Angabe verschwindet
+    // lautlos. Genau so las die Zielwahl 26 statt 70 Punkte, und der
+    // Kommentar, der das erklaerte, war die Ursache.
+    for (const decl of m[3].replace(/\/\*[\s\S]*?\*\//g, '').split(';')) {
       const [k, v] = decl.split(':').map((x) => x && x.trim());
       if (k && v) out[k] = v;
     }
@@ -96,17 +103,35 @@ const px = (v) => {
   return m ? Number(m[1]) : null;
 };
 
+/** Was eine `::after`-Auflage ueber den Knopf hinaus an Hoehe zulegt.
+ *
+ *  Ein Knopf darf kleiner AUSSEHEN als er zu treffen ist - eine leere,
+ *  absolut gesetzte Auflage mit negativem `inset` schiebt die Trefferflaeche
+ *  nach aussen, ohne das Layout zu aendern. Ohne diese Zeilen haette die
+ *  Pruefung genau die Loesung nicht gesehen, die sie erzwingt. */
+function auflage(sel) {
+  const r = regeln(`${sel}::after`);
+  if (r.position !== 'absolute') return 0;
+  const teile = r.inset ? r.inset.split(/\s+/).map(px) : [];
+  if (!teile.length) return 0;
+  const oben = teile[0] ?? 0;
+  const unten = teile.length >= 3 ? (teile[2] ?? oben) : oben;
+  // Nur nach AUSSEN zaehlt: ein positives `inset` verkleinert die Auflage,
+  // vergroessert aber nicht den Knopf.
+  return Math.max(0, -oben) + Math.max(0, -unten);
+}
+
 /** Zugesagte Höhe: entweder ausdrücklich, oder Innenabstand + Text. */
 function hoehe(sel) {
   const r = regeln(sel);
   const mh = px(r['min-height']) ?? px(r.height);
-  if (mh) return mh;
+  if (mh) return mh + auflage(sel);
   const pad = r.padding ? r.padding.split(/\s+/).map(px) : [];
   const oben = pad.length ? (pad[0] ?? 0) : 0;
   const unten = pad.length >= 3 ? (pad[2] ?? oben) : oben;
   const schrift = px(r['font-size']) ?? 13;
   // Zeilenhöhe konservativ mit 1,2 angesetzt.
-  return oben + unten + schrift * 1.2;
+  return oben + unten + schrift * 1.2 + auflage(sel);
 }
 
 const KNOEPFE = [
@@ -120,6 +145,11 @@ const KNOEPFE = [
   ['.go', 'Welle starten'],
   ['.primary', 'Hauptknopf'],
   ['.choice', 'Einstellzeile'],
+  // Die beiden hier entstehen erst im Lauf und standen deshalb nie in
+  // dieser Liste - obwohl die Zielwahl seit v137 fuenf Knoepfe hat und die
+  // Wellenvorschau seit v194 acht.
+  ['.insp-ziel .ziel', 'Zielwahl'],
+  ['.next-eintrag', 'Gegner in der Vorschau'],
 ];
 
 console.log('\nIm HTML — zugesagte Höhe laut Stilvorlage:\n');
@@ -136,9 +166,16 @@ for (const [sel, was] of KNOEPFE) {
   }
 }
 
-// Jeder Knopf im Dokument sollte einer der geprüften Klassen angehören -
-// sonst gibt es Bedienelemente, die niemand misst.
-const klassen = [...html.matchAll(/<button[^>]*class="([^"]+)"/g)].map((m) => m[1].split(' ')[0]);
+// Jeder Knopf sollte einer der geprüften Klassen angehören - sonst gibt es
+// Bedienelemente, die niemand misst.
+//
+// **Nicht nur im Dokument.** Bis v193 las diese Zeile allein `index.html`,
+// und die Haelfte aller Knoepfe entsteht in `ui.ts`: Ausbauzweige, die
+// Zielwahl, seit v194 die Wellenvorschau. Von denen war nur gemessen, was
+// zufaellig schon in der Liste stand.
+const quellen = html + readFileSync(join(ROOT, 'src/ui/ui.ts'), 'utf8');
+const klassen = [...quellen.matchAll(/<button[^>]*class=["`]([^"`$]+)/g)]
+  .map((m) => m[1].split(' ')[0]).filter((k) => k && !k.includes('{'));
 const geprueft = new Set(KNOEPFE.map(([s]) => s.split(' ').pop().replace('.', '')));
 for (const k of new Set(klassen)) {
   if (!geprueft.has(k) && k !== 'link') hinweise.push(`Knopfklasse "${k}" wird nicht gemessen.`);

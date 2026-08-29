@@ -403,10 +403,7 @@ export class UI {
     // Einmal setzen, nie wieder anfassen - die Version aendert sich nicht
     // waehrend einer Partie.
     this.vVersion.textContent = VERSION;
-    $('i-close').addEventListener('click', () => {
-      this.s.selectedTower = null;
-      this.s.buildChoice = null;
-    });
+    $('i-close').addEventListener('click', () => { this.s.auswahlSchliessen(); });
     // Die Ausbauknoepfe entstehen je nach Stufe neu - auf Stufe 1 sind es
     // zwei sich ausschliessende Zweige, danach einer.
     this.iUps.addEventListener('click', (ev) => {
@@ -833,6 +830,14 @@ export class UI {
     // ist und mit dem Spielzustand nichts zu tun hat.
     this.syncOptionen();
     const sel = s.selectedTower;
+    // **Der Inspektor zeigt EINS.** Turm, Turm vor dem Kauf oder Gegner -
+    // und weil die Gegnerauskunft im Block vor den beiden anderen steht,
+    // wuerde ein liegengebliebener Gegner den gewaehlten Turm verdecken.
+    //
+    // Abgeleitet und nicht an den Tippstellen gesetzt (Regel 6): wer einen
+    // Turm waehlt, will keinen Gegner mehr sehen, und wer die Welle
+    // startet, hat keine Vorschau mehr, aus der die Auskunft stammt.
+    if (sel || s.buildChoice || !s.canStartWave) s.gegnerInfo = null;
     const sig = [
       s.gold, s.lives, s.waveNumber, s.waveActive, s.speed, s.paused,
       s.buildChoice, s.phase, getSettings().sound,
@@ -858,6 +863,11 @@ export class UI {
       // aus dem Spielzustand kommt, traegt es in diese Zeile ein.
       this.bilanzOffen ? 'b' : '-',
       this.optionenOffen ? 'o' : '-',
+      // Fuenfter Fall derselben Art nach Startknopf, Zielwahl, Bilanzblatt
+      // und Einstellungen: die Gegnerauskunft aendert nichts am Gold und
+      // nichts an der Welle. Ohne diesen Eintrag oeffnet sie sich erst,
+      // wenn zufaellig etwas anderes passiert.
+      s.gegnerInfo ?? '-',
     ].join('|');
 
     this.updateTutorial();
@@ -913,6 +923,37 @@ export class UI {
       b.dataset.poor = s.gold < TOWERS[id].base.cost ? '1' : '0';
     }
 
+    // **Die Gegnerauskunft (D10) - im selben Kasten wie alles andere.**
+    //
+    // Ein eigener Kasten waere eine zweite Formensprache fuer dieselbe Frage
+    // ("was ist das und was kann es"), und er waere die zweite Stelle, an
+    // der die Rollhinweise, die Berührungsflächen und das Streifenmass
+    // gepflegt werden müssten (Regel 15). Der Inspektor hat schon drei
+    // Füllungen: gewählter Turm, Turm vor dem Kauf, und jetzt Gegner.
+    if (s.gegnerInfo) {
+      const d = ENEMIES[s.gegnerInfo];
+      this.insp.hidden = false;
+      this.iName.textContent = `${d.name}${d.boss ? ' · Anführer' : ''}`;
+      const zeilen: [string, string][] = [
+        ['Leben', String(d.hp)],
+        ['Tempo', `${Math.round(d.speed)}`],
+        ['Panzerung', d.armor > 0 ? String(d.armor) : '—'],
+        ['Gold', String(d.bounty)],
+        ['Kristall', `−${d.leak}`],
+      ];
+      if (d.slowResist > 0) zeilen.push(['Bremsschutz', `${Math.round(d.slowResist * 100)} %`]);
+      this.iStats.innerHTML = zeilen.map(([n, w]) => row(n, w)).join('');
+      this.rollhinweis();
+      // Der Konter-Satz steht schon geschrieben und wird auch in der
+      // Einweisung benutzt - hier wird er gelesen, nicht neu erfunden.
+      const rat = konterSatz(s.gegnerInfo);
+      this.iHint.hidden = !rat;
+      this.iHint.textContent = rat ?? '';
+      this.iSell.hidden = true;
+      this.turmteileLeeren();
+      return;
+    }
+
     // Vor dem Kauf zeigen, was der Turm kann. Ohne Werte laesst sich nicht
     // planen - und Planen ist der ganze Reiz des Genres.
     if (!sel && s.buildChoice) {
@@ -924,6 +965,7 @@ export class UI {
       this.iHint.hidden = false;
       this.iHint.textContent = def.blurb;
       this.iSell.hidden = true;
+      this.turmteileLeeren();
       return;
     }
     this.iHint.hidden = true;
@@ -1146,6 +1188,19 @@ export class UI {
   }
 
 
+  /** Ausbauknöpfe und Zielwahl gehören einem Turm. Zeigt der Inspektor
+   *  etwas anderes - einen Turm vor dem Kauf oder einen Gegner -, müssen
+   *  sie weg, sonst stehen die Knöpfe des zuletzt gewählten Turms unter
+   *  fremden Werten. `renderUpgrades` räumt nur auf, wenn es gerufen wird,
+   *  und in beiden Fällen wurde es bisher nicht gerufen. */
+  private turmteileLeeren(): void {
+    this.iUps.innerHTML = '';
+    this.iZiel.innerHTML = '';
+    // Der Schlüssel muss mit, sonst hält `renderZielwahl` die Reihe für
+    // schon gezeichnet und der nächste Turm bekäme gar keine.
+    this.zielKey = '';
+  }
+
   /** Auf Stufe 1 stehen zwei Zweige zur Wahl, die sich ausschliessen. Danach
    *  gibt es nur noch den einen Weg innerhalb des gewaehlten Zweiges. */
   private renderUpgrades(): void {
@@ -1235,10 +1290,35 @@ export class UI {
         // Der Punkt traegt den AKZENT: `body` ist seit v168 fuer alle acht
         // dieselbe Familie, und acht gleiche graue Punkte sagen nichts.
         : `<b style="background:${d.trim}"></b>`;
-      parts.push(`<i title="${d.name}">${symbol}${n}×${mark}</i>`);
+      // **Ein Knopf, kein Absatz** (D10).
+      //
+      // Bis v194 stand der Name nur im `title` - also im Zeigerhinweis. Auf
+      // dem Telefon gibt es keinen Zeiger; dort war er unerreichbar, und das
+      // Telefon ist das Zielgeraet. Der `title` bleibt fuer den
+      // Schreibtisch stehen, er kostet nichts.
+      //
+      // Ein `<button>` und kein `<i>` mit Tipplauscher: damit ist der
+      // Eintrag auch mit der Tastatur erreichbar, ohne dass jemand daran
+      // denken muss (v193).
+      parts.push(`<button type="button" class="next-eintrag" data-gegner="${id}" `
+        + `data-on="${s.gegnerInfo === id ? '1' : '0'}" `
+        + `aria-pressed="${s.gegnerInfo === id}" `
+        + `title="${d.name}">${symbol}${n}×${mark}</button>`);
     }
     if (w.note) parts.push(`<i class="next-note">${w.note}</i>`);
     this.nList.innerHTML = parts.join('');
+    for (const b of this.nList.querySelectorAll<HTMLButtonElement>('button[data-gegner]')) {
+      b.addEventListener('click', () => {
+        const id = b.dataset.gegner as EnemyId;
+        const auf = this.s.gegnerInfo === id;
+        // Erst zumachen, dann aufmachen: sonst raeumte `auswahlSchliessen`
+        // die eben gesetzte Auskunft gleich wieder weg.
+        this.s.auswahlSchliessen();
+        // Noch einmal auf denselben schliesst ihn wieder - sonst gaebe es
+        // keinen Weg zurueck ausser einem Turmtipp.
+        if (!auf) this.s.gegnerInfo = id;
+      });
+    }
   }
 
   /** Gegnerbild als Adresse, einmal je Gegner und Karte gerechnet.

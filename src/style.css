@@ -363,10 +363,47 @@ html, body {
    Telefon. `wrap` schiebt den Satz stattdessen in eine zweite Zeile mit
    voller Breite; gemessen wird beides von `npm run streifen`. */
 .next-list {
-  display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; overflow: hidden;
+  /* **Kein `overflow: hidden`** - das hat die Trefferflaeche abgeschnitten.
+     Die Eintraege holen sich ihre 44 Punkte ueber eine `::after`-Auflage,
+     die ueber den Kasten hinausragt; `hidden` hat sie auf die 20 Punkte des
+     Bildes zurueckgeschnitten. Gemessen im Browser: zugesagt 44, erreichbar
+     20 - die Stilvorlage stimmte, das Ergebnis nicht (Regel 12). Der
+     Umbruch braucht es nicht, die Breite begrenzt `max-width` am Streifen. */
+  display: flex; align-items: center; gap: 26px 10px; flex-wrap: wrap;
   font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums;
 }
-.next-list i { font-style: normal; display: inline-flex; align-items: center; gap: 5px; }
+/* **Der Eintrag ist ein Knopf** (D10).
+   Bis v193 war er ein `<i>` und der Gegnername stand nur im `title`, also im
+   Zeigerhinweis - auf dem Zielgeraet unerreichbar. Als Knopf traegt er die
+   Auskunft und ist nebenbei mit der Tastatur zu erreichen (v193).
+   Das Aussehen bleibt: kein Rahmen, kein Grund, keine eigene Schrift. */
+.next-eintrag {
+  font: inherit; color: inherit; letter-spacing: inherit;
+  background: none; border: 0; padding: 0; margin: 0;
+  position: relative; min-height: 20px;
+  display: inline-flex; align-items: center; gap: 5px;
+  /* Der Streifen ist als Ganzes durchlaessig - er liegt ueber dem Feld.
+     Nur der Knopf faengt den Finger, und nur so breit, wie er ist. */
+  pointer-events: auto; cursor: pointer;
+}
+/* **Die Trefferflaeche waechst, der Eintrag nicht.**
+   Als Innenabstand haette dasselbe den Streifen bei zwei Zeilen von 55 auf
+   103 Punkte getrieben, ueber die Grenze von 86. Eine leere, absolut
+   gesetzte Auflage mit negativem `inset` kostet dagegen kein Layout.
+
+   **Nach oben 18, nach unten 8 - und beides ist gemessen, nicht gewaehlt.**
+   Der Streifen sitzt im Dock unmittelbar ueber der Turmreihe; nach unten
+   sind nur 11 Punkte frei, danach liegt `.tower-btn` obenauf und nimmt den
+   Finger. Symmetrische 13 ergaben deshalb im Browser 43 statt 46. Nach oben
+   ist Feld, dort kostet es nichts. 18 + 20 + 8 = 46.
+
+   Der Zeilenabstand von 26 folgt daraus: die Flaechen zweier Zeilen sollen
+   sich beruehren statt zu ueberlappen (8 + 18 = 26) - sonst nimmt die
+   untere Zeile der oberen die Haelfte weg. */
+.next-eintrag::after { content: ''; position: absolute; inset: -18px -5px -8px; }
+.next-eintrag[data-on="1"] { color: var(--crystal); }
+.next-eintrag[data-on="1"] .next-bild { filter: drop-shadow(0 0 4px var(--crystal)); }
+.next-eintrag:active { transform: scale(0.94); }
 .next-list b { display: inline-block; width: 9px; height: 9px; border-radius: 3px; }
 /* Das Gegnerbild statt des Namens (D20). 20 Punkte sind gross genug, dass
    Koloss und Schleicher sich unterscheiden, und klein genug, dass die Zeile
@@ -696,7 +733,7 @@ html, body {
   .dock { gap: 4px; padding-top: 5px; padding-bottom: calc(5px + var(--sab)); }
   .next { padding: 1px 2px; min-height: 14px; }
   .next-lab { font-size: 8px; }
-  .next-list { font-size: 10.5px; gap: 8px; }
+  .next-list { font-size: 10.5px; gap: 26px 10px; }
   .next-list .next-bild { width: 17px; height: 17px; }
 
   .tower-btn { min-width: 74px; padding: 5px 8px; }

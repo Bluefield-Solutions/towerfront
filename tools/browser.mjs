@@ -317,26 +317,52 @@ if (!start) {
         && r.right > 0 && r.bottom > 0 && r.left < innerWidth && r.top < innerHeight;
       if (!sichtbar) continue;
       const mx = r.left + r.width / 2, my = r.top + r.height / 2;
-      let oben = document.elementFromPoint(mx, my);
-      let eigen = false;
-      while (oben) { if (oben === e) { eigen = true; break; } oben = oben.parentElement; }
+      const meins = (x, y) => {
+        let k = document.elementFromPoint(x, y);
+        while (k) { if (k === e) return true; k = k.parentElement; }
+        return false;
+      };
+      const eigen = meins(mx, my);
+      // **Gemessen wird die ERREICHBARE Flaeche, nicht der Kasten.**
+      //
+      // Ein Knopf darf kleiner aussehen, als er zu treffen ist - eine leere
+      // `::after`-Auflage schiebt die Flaeche nach aussen, ohne das Layout
+      // anzufassen. Die Wellenvorschau lebt davon: 20 Punkte Bild, 46
+      // Punkte Finger. Der Kasten haette sie als "ZU KLEIN" gemeldet.
+      //
+      // Und die Gegenrichtung faengt es auch: `overflow: hidden` am
+      // Elternteil hat genau diese Auflage einmal auf 20 Punkte
+      // zurueckgeschnitten, waehrend die Stilvorlage weiter 46 zusagte.
+      // Aus dem Blatt ist das nicht zu lesen (Regel 12).
+      const reichweite = (dx, dy) => {
+        const ax = dx > 0 ? r.right : dx < 0 ? r.left : mx;
+        const ay = dy > 0 ? r.bottom : dy < 0 ? r.top : my;
+        let n = 0;
+        while (n < mind && meins(ax + dx * (n + 1), ay + dy * (n + 1))) n++;
+        return n;
+      };
+      const eh = eigen ? r.height + reichweite(0, -1) + reichweite(0, 1) : r.height;
+      const ew = eigen ? r.width + reichweite(-1, 0) + reichweite(1, 0) : r.width;
       raus.push({
         name: e.id || e.className,
         text: (e.textContent ?? '').trim().slice(0, 24),
         w: Math.round(r.width), h: Math.round(r.height),
-        klein: Math.min(r.width, r.height) < mind,
+        ew: Math.round(ew), eh: Math.round(eh),
+        klein: Math.min(ew, eh) < mind,
         eigen,
       });
     }
     return raus;
   }, MINDEST);
 
-  console.log(`\nKnöpfe im Spiel (gemessen, nicht zugesagt):`);
+  console.log(`\nKnöpfe im Spiel (gemessen, nicht zugesagt) - Kasten | erreichbar:`);
   for (const k of knoepfe) {
     const marke = k.klein ? ' ZU KLEIN' : k.eigen ? '' : ' VERDECKT';
-    console.log(`  ${(k.name || '?').padEnd(22)} ${String(k.w).padStart(4)}x${String(k.h).padEnd(4)}${marke}`);
+    const gewachsen = k.ew > k.w || k.eh > k.h ? ` | ${k.ew}x${k.eh}` : '';
+    console.log(`  ${(k.name || '?').padEnd(22)} ${String(k.w).padStart(4)}x${String(k.h).padEnd(4)}${gewachsen.padEnd(12)}${marke}`);
     if (k.klein) {
-      fail(`Knopf "${k.name}" ist ${k.w}x${k.h} - die kürzere Seite bleibt unter ${MINDEST} Punkten.`);
+      fail(`Knopf "${k.name}" ist erreichbar ${k.ew}x${k.eh} `
+        + `(Kasten ${k.w}x${k.h}) - die kürzere Seite bleibt unter ${MINDEST} Punkten.`);
     }
     if (!k.eigen) {
       fail(`Knopf "${k.name}" wird in seiner Mitte von etwas anderem verdeckt.`);

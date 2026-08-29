@@ -278,6 +278,18 @@ export class GameState {
     this.hinweis = text ? { x, y, text, bis: this.time + 1.1 } : null;
   }
   selectedTower: Tower | null = null;
+
+  /** Welche Gegnerart im Inspektor erklaert wird (D10).
+   *
+   *  Bis v194 stand der Name eines Gegners in der Wellenvorschau nur im
+   *  `title` - also im Zeigerhinweis. Auf dem Telefon gibt es keinen Zeiger:
+   *  dort war der Name **unerreichbar**, und das Zielgeraet ist das Telefon.
+   *
+   *  Der Zustand steht hier und nicht in der Oberflaeche, weil ihn drei
+   *  Stellen brauchen: die Vorschau setzt ihn, der Inspektor liest ihn, und
+   *  ein Wellenstart raeumt ihn weg. Eine Kopie in der Oberflaeche waere die
+   *  zweite Wahrheit. */
+  gegnerInfo: EnemyId | null = null;
   /** Weltpunkt unter dem Zeiger. */
   hoverPoint: Vec | null = null;
   /** Zelle unter dem gedrueckten Finger. Gebaut wird erst beim Loslassen. */
@@ -758,6 +770,19 @@ export class GameState {
 
   ready(id: AbilityId): boolean {
     return this.phase === 'playing' && this.abilityCd[id] <= 0;
+  }
+
+  /** Der Inspektor zumachen - was immer er gerade zeigt.
+   *
+   *  Er hat drei Fuellungen (gewaehlter Turm, Turm vor dem Kauf, Gegner aus
+   *  der Wellenvorschau) und vier Wege, ihn zu schliessen: das Kreuz, die
+   *  Esc-Taste, ein Tipp ins Leere und der Wellenstart. Ohne diese Stelle
+   *  muesste jeder der vier alle drei Fuellungen kennen - und der vierte,
+   *  der spaeter dazukommt, kennt sie nicht. */
+  auswahlSchliessen(): void {
+    this.selectedTower = null;
+    this.buildChoice = null;
+    this.gegnerInfo = null;
   }
 
   /** Waehlt eine gezielte Faehigkeit an oder loest eine sofortige aus. */

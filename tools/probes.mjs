@@ -98,6 +98,16 @@ const PROBEN = [
     tor: 'beruehrung',
   },
   {
+    // Die Auflage ist der Grund, aus dem ein 20 Punkte hoher Eintrag
+    // trotzdem zu treffen ist. Faellt sie weg, muss die Stilvorlagenpruefung
+    // das sehen - sonst haette sie die Loesung nie gemessen, die sie erlaubt.
+    name: 'Trefferauflage der Vorschau geschrumpft',
+    datei: 'src/style.css',
+    suche: 'inset: -18px -5px -8px;',
+    ersatz: 'inset: -2px -5px;',
+    tor: 'beruehrung',
+  },
+  {
     name: 'Trefferzugabe abgeschaltet',
     datei: 'src/game/state.ts',
     suche: 'const slack = Math.max(10, GameState.tapSlack(scale));',
@@ -341,6 +351,17 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
+    // Zugesagt ist nicht erreichbar: `overflow: hidden` am Elternteil
+    // schneidet die Auflage weg, und die Stilvorlage sagt weiter 46. Genau
+    // so war die erste Fassung von D10 gebaut - `beruehrung` meldete gruen,
+    // im Browser waren es 20 Punkte.
+    name: 'Trefferflaeche vom Elternteil abgeschnitten',
+    datei: 'src/style.css',
+    suche: 'gap: 26px 10px; flex-wrap: wrap;',
+    ersatz: 'gap: 26px 10px; flex-wrap: wrap; overflow: hidden;',
+    tor: 'browsertor',
+  },
+  {
     // v50, woertlich nachgestellt: die Landkarte nimmt keine Tipper mehr an,
     // und man kommt nicht ins Spiel. Damals waren alle vierzehn Tore gruen.
     name: 'Man kommt nicht mehr ins Spiel',
@@ -348,6 +369,24 @@ const PROBEN = [
     regel: /const hit = this\.hotspots\.find\(\(h\) => inside\(h, x, y\)\);/,
     ersatz: 'const hit = undefined;',
     tor: 'browsertor',
+  },
+  {
+    // D10: der Gegnername war bis v193 nur ein `title` - auf dem Zielgeraet
+    // unerreichbar. Faellt der Tipp aus, steht er wieder nirgends.
+    name: 'Gegnerauskunft reagiert nicht auf den Tipp',
+    datei: 'src/ui/ui.ts',
+    suche: 'if (!auf) this.s.gegnerInfo = id;',
+    ersatz: 'void auf;',
+    tor: 'smoke',
+  },
+  {
+    // Der Inspektor zeigt EINS. Ohne die Ableitung bleibt die Gegnerauskunft
+    // stehen und verdeckt den gewaehlten Turm - sie steht im Block davor.
+    name: 'Gegnerauskunft verdeckt den gewaehlten Turm',
+    datei: 'src/ui/ui.ts',
+    suche: 'if (sel || s.buildChoice || !s.canStartWave) s.gegnerInfo = null;',
+    ersatz: 'void 0;',
+    tor: 'smoke',
   },
   {
     // Die Ziellogik muss WIRKEN, nicht nur einstellbar sein. Hier faellt die
@@ -1881,8 +1920,8 @@ const PROBEN = [
     // das Browsertor sah es nicht, weil es nur Welle 1 kennt.
     name: 'Wellenvorschau quetscht den Satz',
     datei: 'src/style.css',
-    regel: /  display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; overflow: hidden;/,
-    ersatz: '  display: flex; align-items: center; gap: 8px 10px; flex-wrap: nowrap; overflow: hidden;',
+    regel: /  display: flex; align-items: center; gap: 26px 10px; flex-wrap: wrap;/,
+    ersatz: '  display: flex; align-items: center; gap: 26px 10px; flex-wrap: nowrap;',
     tor: 'streifentor',
   },
   {

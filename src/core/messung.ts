@@ -58,10 +58,17 @@ function zeichenwerk(): string {
   }
 }
 
-/** Startet die Messung und zeigt sie an. Läuft neben dem Spiel her: gemessen
- *  wird, was das Spiel ohnehin tut, nicht ein eigener Prüfablauf. Ein
- *  eigener Ablauf misst sich selbst. */
-export function messungStarten(): void {
+/** Eine Zeile, die von aussen kommt: Name, Wert, und ob sie warnen soll. */
+export type Zusatzzeile = [string, string, boolean?];
+
+/** Startet die Messung und zeigt sie an.
+ *
+ *  `zusatz` liefert Zeilen, die nur der Hauptteil kennt: laeuft die
+ *  Spielschleife noch, wieviel Bildspeicher liegt herum, ist die Leinwand
+ *  schwarz, welche Ausrichtung gilt. Sie stehen hier und nicht in einer
+ *  zweiten Tafel, weil ein Befund vom Zielgeraet als EIN Foto zurueckkommt -
+ *  und was auf zwei Tafeln steht, kommt halb zurueck. */
+export function messungStarten(zusatz: () => Zusatzzeile[] = () => []): void {
   const tafel = document.createElement('div');
   tafel.id = 'messtafel';
   document.body.appendChild(tafel);
@@ -111,6 +118,10 @@ export function messungStarten(): void {
       + (beobachterLaeuft
         ? zeile('davon als Aufgabe', `${schlimmste} ms`, schlimmste > SOLL_MS)
         : zeile('davon als Aufgabe', 'meldet dieser Browser nicht'))
+      // **Der Zustandsteil.** Er misst nichts, er sagt, was gerade los ist -
+      // und er steht hier, weil diese Tafel das einzige ist, was vom
+      // Zielgeraet zurueckkommt.
+      + zusatz().map(([n, w, warn]) => zeile(n, w, warn)).join('')
       + `<div class="mh"><b>Tippe in eine Karte und spiele eine Welle</b> — im Menü misst`
       + ' diese Tafel das Menü. Sie läuft weiter und rechnet über die letzten'
       + ` ${Math.round(FENSTER / 60)} Sekunden.<br><br>Norm: eine Aufgabe über ${SOLL_MS} ms`

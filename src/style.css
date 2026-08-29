@@ -972,7 +972,10 @@ html, body {
    nicht angetippt. Deshalb auch `pointer-events: none` - sie soll das Spiel
    darunter nicht behindern, das ja gerade gemessen wird. */
 #messtafel {
-  position: fixed; inset: auto 12px 12px auto; z-index: 99;
+  /* Ueber ALLEM, auch ueber dem Hochkant-Hinweis (200).
+     Die Tafel soll gerade dann lesbar sein, wenn etwas anderes den
+     Bildschirm zudeckt - genau das ist der Fall, den sie melden soll. */
+  position: fixed; inset: auto 12px 12px auto; z-index: 300;
   width: min(340px, 82vw); padding: 12px 14px;
   background: rgba(10, 13, 22, 0.92); color: #E8EDF7;
   border: 1px solid rgba(140, 160, 200, 0.35); border-radius: 12px;

@@ -696,8 +696,8 @@ const PROBEN = [
     // D27: das Messgeraet darf im Spiel nicht auftauchen - Regel 6 sinngemaess.
     name: 'Messtafel steht auch ohne Raute im Spiel',
     datei: 'src/main.ts',
-    regel: /if \(messungGewuenscht\(\)\) messungStarten\(\);/,
-    ersatz: 'messungStarten();',
+    regel: /^if \(messungGewuenscht\(\)\) \{$/m,
+    ersatz: 'if (true) {',
     tor: 'browsertor',
   },
   {
@@ -1534,6 +1534,25 @@ const PROBEN = [
     datei: 'src/ui/ui.ts',
     regel: /this\.wunschAussaat = aussaatLesen\(this\.oSeed\.value\);/,
     ersatz: 'this.wunschAussaat = null;',
+    tor: 'smoke',
+  },
+  {
+    // v197: ein einzelnes schlechtes Bild darf die Schleife nicht toeten.
+    // Steht die Bestellung des naechsten Bildes am Ende, ist das Spiel nach
+    // dem ersten Fehler fuer den Rest der Sitzung tot - genau der Befund
+    // vom Zielgeraet ("konnte nichts mehr anklicken").
+    name: 'Schleife stirbt am ersten Fehler',
+    datei: 'src/core/loop.ts',
+    regel: /      this\.raf = requestAnimationFrame\(tick\);\n      let dt/,
+    ersatz: '      let dt',
+    tor: 'smoke',
+  },
+  {
+    // Und sie darf nicht ewig sinnlos weiterrechnen, ohne es zu sagen.
+    name: 'Schleife gibt nie auf',
+    datei: 'src/core/loop.ts',
+    regel: /const AUFGEBEN_NACH = 120;/,
+    ersatz: 'const AUFGEBEN_NACH = 1e9;',
     tor: 'smoke',
   },
   {

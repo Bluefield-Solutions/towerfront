@@ -13,6 +13,7 @@ import { saveGame } from './game/save';
 import { Renderer } from './gfx/renderer';
 import { UI } from './ui/ui';
 import { messungGewuenscht, messungStarten } from './core/messung';
+import { bildspeicherByte } from './gfx/speicher';
 
 // **Die Kostentabelle der Verbesserungen an die Ablage geben - beinahe
 // verlorengegangen.**
@@ -183,6 +184,11 @@ const loop = new Loop(
     if (renderer.menu) { menu.time += 1 / 60; menu.resultAge += 1 / 60; }
     renderer.draw(state);
   },
+  // Gibt die Schleife endgueltig auf, soll der Spieler es erfahren - und
+  // zwar mit dem Lauf im Textblock, damit er nachstellbar ist. Ein
+  // eingefrorenes Bild ohne Wort daneben ist genau der Fall, den v161
+  // schon einmal gekostet hat.
+  (grund) => fehlerMelden(`Die Schleife hat aufgegeben: ${grund}`),
 );
 
 const onResize = () => /** Seit v30 gibt es keine reservierten Baender mehr: das Spielfeld fuellt den
@@ -251,4 +257,58 @@ loop.start();
 //
 // Sie laeuft NEBEN dem Spiel her und misst, was das Spiel ohnehin tut. Ein
 // eigener Pruefablauf wuerde sich selbst messen.
-if (messungGewuenscht()) messungStarten();
+if (messungGewuenscht()) {
+  // **Was die Tafel ausser Zahlen noch sagen muss.**
+  //
+  // Der erste Befund vom Zielgeraet lautete "ich konnte nichts mehr
+  // anklicken, dann war der Bildschirm schwarz" - und aus dieser Runde ist
+  // gelernt, dass hier kein Tor helfen kann. Also sagt die Tafel jetzt
+  // selbst, welcher der Faelle es war. Jede Zeile trennt zwei Ursachen, die
+  // von aussen gleich aussehen.
+  let vorherBilder = -1;
+  messungStarten(() => {
+    const zeilen: [string, string, boolean?][] = [];
+
+    // Steht die Schleife still, waehrend die Tafel weiterzaehlt? Dann ist
+    // nicht das Geraet lahm, sondern das Spiel tot.
+    const steht = loop.bilder === vorherBilder;
+    vorherBilder = loop.bilder;
+    zeilen.push(['Spielschleife',
+      loop.laeuft() ? `${loop.bilder} Bilder${steht ? ' — STEHT' : ''}` : 'AUFGEGEBEN',
+      steht || !loop.laeuft()]);
+    if (loop.letzterFehler) zeilen.push(['Letzter Fehler', loop.letzterFehler, true]);
+
+    // Ist die Leinwand schwarz, oder nur der Bildschirm? Zwei sehr
+    // verschiedene Ursachen - gezeichnet wird nichts mehr, oder gezeichnet
+    // wird und der Browser zeigt es nicht (Regel 11).
+    let hell = 0;
+    try {
+      const ctx = canvas.getContext('2d');
+      for (let i = 0; i < 24 && ctx; i++) {
+        const x = Math.floor(canvas.width * (0.1 + 0.8 * (i % 6) / 5));
+        const y = Math.floor(canvas.height * (0.1 + 0.8 * Math.floor(i / 6) / 3));
+        const d = ctx.getImageData(x, y, 1, 1).data;
+        if (d[0] + d[1] + d[2] > 60) hell++;
+      }
+      zeilen.push(['Leinwand', `${canvas.width}×${canvas.height}, ${hell} von 24 Punkten hell`,
+        hell === 0]);
+    } catch (e) {
+      zeilen.push(['Leinwand', `nicht lesbar: ${e instanceof Error ? e.message : e}`, true]);
+    }
+
+    // Der Hochkant-Hinweis deckt alles zu. Bleibt er nach dem Zurueckdrehen
+    // stehen, ist genau das "nichts mehr anklickbar".
+    const quer = document.getElementById('quer');
+    const querAn = !!quer && getComputedStyle(quer).display !== 'none';
+    zeilen.push(['Ausrichtung',
+      `${window.innerWidth > window.innerHeight ? 'quer' : 'hochkant'}`
+      + `${querAn ? ' · Hinweis LIEGT DRUEBER' : ''}`,
+      querAn && window.innerWidth > window.innerHeight]);
+
+    zeilen.push(['Bildspeicher', `${(bildspeicherByte() / 1048576).toFixed(1)} MB`,
+      bildspeicherByte() > 64 * 1048576]);
+    zeilen.push(['Zustand', `${state.phase}${state.paused ? ' · pausiert' : ''}`
+      + ` · Welle ${state.waveNumber}`]);
+    return zeilen;
+  });
+}

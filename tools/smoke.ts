@@ -2096,6 +2096,70 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// **Ein einziges schlechtes Bild darf die Schleife nicht toeten** (v197).
+//
+// Bis v196 stand `requestAnimationFrame` am ENDE des Bildes. Warf `update`
+// oder `render` ein einziges Mal, wurde nie wieder ein Bild bestellt - die
+// Schleife war fuer den Rest der Sitzung tot. Von aussen sieht das aus wie
+// "das Spiel reagiert nicht mehr", und genau so ist es vom Zielgeraet
+// gemeldet worden. Kein Tor hat je gefragt, ob die Schleife einen Fehler
+// ueberlebt.
+//
+// Geprueft wird in beide Richtungen (Regel 13): ein Aussetzer wird
+// ueberstanden, ein Dauerfehler fuehrt zum Aufgeben MIT Meldung. Ohne die
+// zweite Haelfte waere eine Schleife gruen, die ewig sinnlos weiterrechnet.
+{
+  const { Loop } = await import('../src/core/loop');
+  const warten = (n: number) => new Promise<void>((fertig) => {
+    let i = 0;
+    const takt = () => (++i >= n ? fertig() : (globalThis.requestAnimationFrame(takt), undefined));
+    globalThis.requestAnimationFrame(takt);
+  });
+
+  // 1. Ein einzelner Aussetzer.
+  {
+    let bilder = 0;
+    const l = new Loop(() => { bilder++; if (bilder === 3) throw new Error('einmal'); }, () => {});
+    l.start();
+    await warten(30);
+    l.stop();
+    if (bilder < 10) {
+      problems.push(`Schleife: nach einem einzelnen Fehler nur ${bilder} Bilder - sie ist stehen geblieben.`);
+    }
+    if (l.letzterFehler !== 'einmal') {
+      problems.push(`Schleife: der Fehler wurde nicht gemerkt (${l.letzterFehler}).`);
+    }
+  }
+
+  // 2. Ein Dauerfehler: aufgeben, aber nicht schweigend.
+  {
+    let gemeldet: string | null = null;
+    const l = new Loop(() => { throw new Error('immer'); }, () => {},
+      (grund) => { gemeldet = grund; });
+    l.start();
+    await warten(200);
+    if (l.laeuft()) {
+      problems.push('Schleife: rechnet nach 200 gescheiterten Bildern immer noch weiter.');
+      l.stop();
+    }
+    if (!gemeldet) {
+      problems.push('Schleife: gibt auf, ohne es zu melden - dann steht der Spieler vor einem toten Bild.');
+    } else if (!String(gemeldet).includes('immer')) {
+      problems.push(`Schleife: meldet "${gemeldet}" statt den Grund.`);
+    }
+  }
+
+  // 3. Und im Normalfall zaehlt sie mit - die Messtafel liest den Zaehler,
+  //    um "Geraet lahm" von "Spiel tot" zu unterscheiden.
+  {
+    const l = new Loop(() => {}, () => {});
+    l.start();
+    await warten(20);
+    l.stop();
+    if (l.bilder < 5) problems.push(`Schleife: zaehlt nur ${l.bilder} Bilder statt mitzuzaehlen.`);
+  }
+}
+
 // D12: die Bilanz ist MITTEN im Lauf abrufbar, nicht erst am Ende.
 //
 // Geprueft wird nicht, dass sich ein Knopf druecken laesst, sondern dass das

@@ -78,13 +78,24 @@ export function messungStarten(zusatz: () => Zusatzzeile[] = () => []): void {
 
   // Lange Aufgaben, wo der Browser sie meldet. Safari kennt den Beobachter
   // nicht - dann bleibt die Zeile leer statt falsch.
+  //
+  // **Und "kein Fehler" ist nicht dasselbe wie "keine langen Aufgaben"**
+  // (Regel 5). Die erste Fassung fragte nur, ob `observe` wirft. Safari
+  // wirft nicht - es nimmt die Art `longtask` entgegen und meldet nie
+  // etwas. Auf dem Zielgeraet stand daraufhin "0 ms", und das las sich wie
+  // ein gutes Ergebnis, obwohl gar nicht gemessen wurde. Gefragt wird
+  // deshalb die Liste der unterstuetzten Arten.
   let beobachterLaeuft = false;
   try {
-    const po = new PerformanceObserver((liste) => {
-      for (const e of liste.getEntries()) langeAufgaben.push(Math.round(e.duration));
-    });
-    po.observe({ entryTypes: ['longtask'] });
-    beobachterLaeuft = true;
+    const arten = (PerformanceObserver as unknown as { supportedEntryTypes?: string[] })
+      .supportedEntryTypes;
+    if (arten && arten.includes('longtask')) {
+      const po = new PerformanceObserver((liste) => {
+        for (const e of liste.getEntries()) langeAufgaben.push(Math.round(e.duration));
+      });
+      po.observe({ entryTypes: ['longtask'] });
+      beobachterLaeuft = true;
+    }
   } catch { /* nicht ueberall vorhanden */ }
 
   const start = performance.now();
@@ -94,6 +105,12 @@ export function messungStarten(zusatz: () => Zusatzzeile[] = () => []): void {
    *  lang etwas anderes gemacht; ob der Browser das "long task" nennt, ist
    *  fuer den Spieler ohne Belang. */
   let groessteLuecke = 0;
+  /** Wurde die Seite seit dem letzten Bild verborgen? Dann ist der naechste
+   *  Abstand die Pause und nicht die Bilddauer. */
+  let versteckt = false;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) versteckt = true;
+  });
 
   const zeigen = (): void => {
     const sortiert = [...abstaende].sort((a, b) => a - b);
@@ -122,9 +139,15 @@ export function messungStarten(zusatz: () => Zusatzzeile[] = () => []): void {
       // und er steht hier, weil diese Tafel das einzige ist, was vom
       // Zielgeraet zurueckkommt.
       + zusatz().map(([n, w, warn]) => zeile(n, w, warn)).join('')
-      + `<div class="mh"><b>Tippe in eine Karte und spiele eine Welle</b> — im Menü misst`
-      + ' diese Tafel das Menü. Sie läuft weiter und rechnet über die letzten'
-      + ` ${Math.round(FENSTER / 60)} Sekunden.<br><br>Norm: eine Aufgabe über ${SOLL_MS} ms`
+      // **Zwei Fussteile statt einem.** Der erste sagt, was zu tun ist, und
+      // bleibt immer stehen; der zweite erklaert und faellt auf flachen
+      // Geraeten weg. Auf dem iPhone quer war die Tafel 473 Punkte hoch bei
+      // 390 Punkten Bildschirm - abgeschnitten wurden oben genau die Zeilen,
+      // wegen derer sie existiert (Zeichenwerk, Bildpunkte, Bilddauer).
+      + `<div class="mh mh-tun"><b>Quer halten, in eine Karte tippen, eine Welle`
+      + ' spielen</b> — im Menü misst diese Tafel das Menü.</div>'
+      + `<div class="mh mh-mehr">Sie rechnet über die letzten`
+      + ` ${Math.round(FENSTER / 60)} Sekunden. Norm: eine Aufgabe über ${SOLL_MS} ms`
       + ' blockiert die Eingabe. Diese Tafel gehört abfotografiert — die'
       + ' Entwicklungsmaschine hat keine Grafikkarte und kann diese Zahlen nicht'
       + ' selbst erzeugen.</div>';
@@ -133,6 +156,16 @@ export function messungStarten(zusatz: () => Zusatzzeile[] = () => []): void {
   const takt = (jetzt: number): void => {
     const luecke = jetzt - vorher;
     vorher = jetzt;
+    // **Was im Hintergrund passiert, ist keine Bildluecke.**
+    //
+    // Auf dem Zielgeraet stand hier 158 179 ms - zweieinhalb Minuten. Das
+    // war kein Ruckeln, das war ein gesperrter Bildschirm: `rAF` haelt an,
+    // solange die Seite verborgen ist, und der erste Takt danach traegt die
+    // ganze Pause. Die auffaelligste Zahl der Tafel mass damit, wie lange
+    // das Telefon in der Tasche war (Regel 13).
+    //
+    // Gezaehlt wird deshalb nur, was zwischen zwei SICHTBAREN Bildern liegt.
+    if (versteckt) { versteckt = false; return; }
     // Erst nach dem Aufwaermen zaehlen - siehe AUFWAERM_MS.
     if (jetzt - start >= AUFWAERM_MS) {
       abstaende.push(luecke);

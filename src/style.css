@@ -995,6 +995,22 @@ html, body {
   margin-top: 8px; padding-top: 7px; font-size: 10.5px; color: #8A9AB6;
   border-top: 1px solid rgba(140, 160, 200, 0.2);
 }
+#messtafel .mh-mehr { margin-top: 5px; }
+/* **Auf flachen Geräten schrumpft die Tafel, statt oben aus dem Bild zu
+   laufen.** Gemessen auf 844 × 390: 473 Punkte hoch, 95 davon über dem
+   oberen Rand — abgeschnitten wurden ausgerechnet Zeichenwerk, Bildpunkte
+   und Bilddauer, also alles, wofür sie da ist. Und quer ist die Lage, in
+   der gemessen werden muss: das Spiel läuft nur quer. */
+@media (max-height: 520px) {
+  #messtafel {
+    width: min(300px, 46vw); padding: 8px 10px; font-size: 11.5px; line-height: 1.35;
+  }
+  #messtafel h2 { font-size: 12px; margin-bottom: 3px; }
+  #messtafel .mw { font-size: 9.5px; margin-bottom: 5px; }
+  #messtafel .mz { padding: 0; }
+  #messtafel .mh { margin-top: 5px; padding-top: 5px; font-size: 9.5px; }
+  #messtafel .mh-mehr { display: none; }
+}
 
 /* --- Hochkant-Hinweis.
    Nur auf Geraeten, die man DREHEN kann. Der erste Entwurf schrankte auf
@@ -1006,7 +1022,12 @@ html, body {
 @media (orientation: portrait) and (max-width: 900px) and (pointer: coarse) {
   #quer {
     display: flex; position: fixed; inset: 0; z-index: 200;
-    flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    /* Im oberen Drittel statt in der Mitte: die Messtafel sitzt unten rechts
+       und deckte den Hinweis auf dem Zielgeraet vollstaendig zu - das Foto
+       zeigte eine schwarze Flaeche mit einer Tafel darin. Ein Hinweis, den
+       man nur sieht, wenn nichts anderes offen ist, ist keiner. */
+    flex-direction: column; align-items: center;
+    justify-content: flex-start; padding-top: 14vh; gap: 10px;
     background: #080B18; color: #E8EDF7; text-align: center; padding: 24px;
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   }

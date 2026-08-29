@@ -1537,6 +1537,23 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // v198: die Tafel muss quer ins Bild passen. Gemeldet hat das ein Foto
+    // vom Zielgeraet, kein Tor - abgeschnitten war ihr ganzer Kopf.
+    name: 'Messtafel laeuft oben aus dem Bild',
+    datei: 'src/style.css',
+    suche: '  #messtafel .mh-mehr { display: none; }',
+    ersatz: '  #messtafel .mh-mehr { display: block; }',
+    tor: 'browsertor',
+  },
+  {
+    // Und sie darf keine Null melden, wo der Browser gar nicht misst.
+    name: 'Messtafel behauptet null lange Aufgaben',
+    datei: 'src/core/messung.ts',
+    regel: /if \(arten && arten\.includes\('longtask'\)\) \{/,
+    ersatz: "if (true) {",
+    tor: 'browsertor',
+  },
+  {
     // v197: ein einzelnes schlechtes Bild darf die Schleife nicht toeten.
     // Steht die Bestellung des naechsten Bildes am Ende, ist das Spiel nach
     // dem ersten Fehler fuer den Rest der Sitzung tot - genau der Befund

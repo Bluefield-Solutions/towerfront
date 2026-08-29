@@ -913,7 +913,33 @@ if (streuung < 6) {
       fail('Die Messtafel nennt keine längste Bildlücke über null - auf Safari bliebe '
         + 'sie damit stumm, und genau dort wird gemessen.');
     }
-    console.log(`\nMesstafel (#messung): ${tafel.slice(0, 150)}`);
+    // **Sie muss ins Bild passen** - und zwar QUER, denn quer wird gemessen.
+    //
+    // Auf 844 x 390 war sie 473 Punkte hoch; 95 davon lagen ueber dem oberen
+    // Rand. Abgeschnitten wurde ausgerechnet der Kopf: Zeichenwerk,
+    // Bildpunkte, Bilddauer - alles, wofuer es sie gibt. Gemeldet hat es
+    // nicht dieses Tor, sondern ein Foto vom Zielgeraet.
+    const kasten = await s2.evaluate(() => {
+      const t = document.getElementById('messtafel');
+      if (!t) return null;
+      const r = t.getBoundingClientRect();
+      return { oben: Math.round(r.top), unten: Math.round(r.bottom),
+        hoehe: Math.round(r.height), fenster: window.innerHeight };
+    });
+    if (kasten && (kasten.oben < 0 || kasten.unten > kasten.fenster)) {
+      fail(`Die Messtafel passt nicht ins Bild: ${kasten.hoehe} Punkte hoch, `
+        + `oben ${kasten.oben}, unten ${kasten.unten} bei ${kasten.fenster} Punkten Fenster. `
+        + 'Abgeschnitten wird ihr Kopf - also genau die Zahlen, wegen derer sie da ist.');
+    }
+    // Und sie darf nicht behaupten, es gaebe keine langen Aufgaben, wo der
+    // Browser sie gar nicht meldet (Regel 5).
+    if (/davon als Aufgabe\s*0 ms/.test(tafel)) {
+      fail('Die Messtafel meldet "0 ms" lange Aufgaben. Entweder misst sie wirklich, '
+        + 'dann steht dort eine Zahl - oder der Browser kennt die Art nicht, dann '
+        + 'muss das dastehen statt einer Null.');
+    }
+    console.log(`\nMesstafel (#messung): ${kasten?.hoehe} Punkte hoch bei `
+      + `${kasten?.fenster} — ${tafel.slice(0, 150)}`);
   }
   await ctx2.close();
 }

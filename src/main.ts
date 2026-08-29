@@ -300,10 +300,16 @@ if (messungGewuenscht()) {
     // stehen, ist genau das "nichts mehr anklickbar".
     const quer = document.getElementById('quer');
     const querAn = !!quer && getComputedStyle(quer).display !== 'none';
+    const liegt = window.innerWidth > window.innerHeight;
+    // Der Hinweis GEHOERT hochkant vor das Spiel - das ist kein Befund. Ein
+    // Befund ist er nur, wenn er im Querformat stehen bleibt. Die erste
+    // Fassung schrieb "LIEGT DRUEBER" in beiden Faellen und las sich damit
+    // hochkant wie ein Fehler.
     zeilen.push(['Ausrichtung',
-      `${window.innerWidth > window.innerHeight ? 'quer' : 'hochkant'}`
-      + `${querAn ? ' · Hinweis LIEGT DRUEBER' : ''}`,
-      querAn && window.innerWidth > window.innerHeight]);
+      liegt
+        ? (querAn ? 'quer · Hinweis KLEBT FEST' : 'quer')
+        : (querAn ? 'hochkant · Hinweis steht, richtig so' : 'hochkant · Hinweis FEHLT'),
+      querAn === liegt]);
 
     zeilen.push(['Bildspeicher', `${(bildspeicherByte() / 1048576).toFixed(1)} MB`,
       bildspeicherByte() > 64 * 1048576]);

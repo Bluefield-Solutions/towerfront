@@ -1476,6 +1476,86 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 
   const ids = () => { drawMenu(g, m); return m.hotspots.map((h) => h.id); };
 
+  // --- D8: kommt man mit der TASTATUR ins Spiel?
+  //
+  // Gemessen im Browser vor v193: auf dem Titelschirm waren null von 57
+  // fokussierbaren Elementen sichtbar, und ein Druck auf Tabulator aenderte
+  // null Bildpunkte. Wer keinen Zeiger hat, kam nicht ins Spiel - nicht
+  // umstaendlich, sondern gar nicht.
+  //
+  // Geprueft wird hier und nicht im Browser, weil hier der Zustand sichtbar
+  // ist. Der Browser sieht nur, DASS sich etwas markiert; ob der Weg
+  // irgendwo hinfuehrt, sagt er nicht. Ein Versuch mit blindem "Tabulator,
+  // Enter, Tabulator, Enter" lief im Kreis zwischen Landkarte und
+  // Fortschritt und meldete "kommt nicht rein" - das war die Messung, nicht
+  // die Bedienung.
+  {
+    let gestartet: string | null = null;
+    m.onStart = (mapId) => { gestartet = mapId; };
+    m.tastenId = null;
+    drawMenu(g, m);
+
+    // 1. Jeder Knopf ist erreichbar, und der Rundgang schliesst sich.
+    const rundgang: string[] = [];
+    for (let i = 0; i < m.hotspots.length; i++) {
+      m.tastenSchritt(1);
+      drawMenu(g, m);
+      rundgang.push(m.tastenId ?? '(nichts)');
+    }
+    const erreicht = new Set(rundgang);
+    const alle = new Set(m.hotspots.map((h) => h.id));
+    for (const id of alle) {
+      if (!erreicht.has(id)) {
+        problems.push(`Tastatur: "${id}" ist auf der Landkarte nicht erreichbar - `
+          + `der Rundgang besucht ${erreicht.size} von ${alle.size} Knoepfen.`);
+      }
+    }
+    // Und er darf nicht haengen bleiben: nach so vielen Schritten wie es
+    // Knoepfe gibt, steht man wieder am Anfang.
+    if (new Set(rundgang).size !== rundgang.length) {
+      problems.push(`Tastatur: der Rundgang besucht einen Knopf doppelt, bevor er `
+        + `durch ist (${rundgang.join(' -> ')}).`);
+    }
+
+    // 2. Der Weg ins Spiel: ein Land waehlen, dort "Spielen" ausloesen.
+    //
+    // Gesucht wird der Knopf, nicht seine Nummer - eine abgeschriebene
+    // Schrittzahl waere nach der naechsten Umstellung still falsch (Regel 15).
+    const zu = (ziel: string): boolean => {
+      for (let i = 0; i < 40; i++) {
+        if (m.tastenId === ziel) return true;
+        m.tastenSchritt(1);
+        drawMenu(g, m);
+      }
+      return false;
+    };
+    if (!zu('node:0')) {
+      problems.push('Tastatur: das erste Land ist auf der Landkarte nicht anzusteuern.');
+    } else {
+      m.tastenAusloesen();
+      drawMenu(g, m);
+      const ansicht: string = m.view;
+      if (ansicht !== 'brief') {
+        problems.push(`Tastatur: Enter auf einem Land fuehrt nach "${ansicht}" statt in die Einweisung.`);
+      } else if (!zu('start')) {
+        problems.push('Tastatur: in der Einweisung ist "Spielen" nicht anzusteuern.');
+      } else {
+        m.tastenAusloesen();
+        if (!gestartet) {
+          problems.push('Tastatur: Enter auf "Spielen" startet keine Partie.');
+        }
+      }
+    }
+
+    // 3. Wer nicht getippt hat, sieht auch keine Markierung.
+    m.tastenId = null;
+    drawMenu(g, m);
+    if (m.tastenKnopf()) {
+      problems.push('Tastatur: es ist ein Knopf markiert, ohne dass jemand die Tastatur benutzt hat.');
+    }
+    m.result = null;
+  }
+
   // D5, v172: der Ansichtswechsel blendet ein UND zieht herauf - und die
   // Trefferflaechen muessen dabei mitwandern. Stuenden sie an der Endlage,
   // gaebe es fuer knapp zwei Zehntelsekunden Knoepfe, die man sieht, aber

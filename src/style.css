@@ -516,6 +516,33 @@ html, body {
   [data-coach="1"] { animation: none; outline-color: var(--crystal); }
 }
 
+/* ------------------------------------------------------ Fokus (D8)
+ *
+ * **Bis v193 gab es im ganzen Verzeichnis keinen einzigen `:focus`-Stil.**
+ * Gemessen im Browser: im Spiel sind 14 von 57 Elementen fokussierbar, und
+ * ein Druck auf Tabulator aendert 24 763 Bildpunkte - man sieht also etwas.
+ * Aber es ist der Standardring des Browsers, `outline: rgb(16,16,16) auto
+ * 1px`: ein duenner, fast schwarzer Strich, den Chromium notduerftig
+ * zweifarbig zeichnet, damit er auf irgendeinem Grund traegt. Auf dieser
+ * dunklen Oberflaeche ist das die schlechteste aller Farben.
+ *
+ * `:focus-visible` statt `:focus`: wer mit dem Finger tippt, soll keinen
+ * Rahmen sehen, der ihm nichts sagt. Der Browser entscheidet das - eine
+ * eigene Unterscheidung "kam es von der Tastatur" waere die naechste Stelle
+ * zum Vergessen.
+ *
+ * Zwei Ringe, wie die Markierung im gemalten Menue: ein heller innen, ein
+ * dunkler aussen. Auf dem tuerkisen Wellenknopf traegt der dunkle, auf dem
+ * dunklen Grund der helle. */
+:focus-visible {
+  outline: 3px solid var(--crystal);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgba(6, 10, 22, 0.85);
+  border-radius: 4px;
+}
+/* Der alte Standardring darf nicht daneben stehen bleiben. */
+:focus:not(:focus-visible) { outline: none; }
+
 /* -------------------------------------------------------------- Auswertung */
 
 .screen { overflow: auto; }

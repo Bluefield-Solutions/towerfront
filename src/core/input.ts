@@ -301,6 +301,45 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
 
   window.addEventListener('keydown', (ev) => {
     Sfx.unlock();
+
+    // **Im Menue bedient die Tastatur das Menue** (D8).
+    //
+    // Gemessen vor v193: auf dem Titelschirm waren NULL von 57
+    // fokussierbaren Elementen sichtbar, und ein Druck auf Tabulator
+    // aenderte null Bildpunkte. Wer keinen Zeiger hat, kam nicht ins Spiel -
+    // nicht "umstaendlich", sondern gar nicht.
+    //
+    // Das Menue ist gemalt, nicht HTML (Regel 6), also kann der Browser hier
+    // nichts fokussieren. Gewandert wird deshalb ueber die Trefferflaechen,
+    // die das Zeichnen ohnehin anlegt - keine zweite Liste, die veraltet.
+    //
+    // Und die Spieltasten darunter laufen NICHT mit: `startWave` oder ein
+    // Turmkauf waehrend der Landkarte waere Spielbedienung im Menue.
+    if (r.menu) {
+      const menue = r.menu;
+      if (ev.key === 'Tab' || ev.key === 'ArrowDown' || ev.key === 'ArrowRight') {
+        ev.preventDefault();
+        menue.tastenSchritt(1);
+        return;
+      }
+      if (ev.key === 'ArrowUp' || ev.key === 'ArrowLeft') {
+        ev.preventDefault();
+        menue.tastenSchritt(-1);
+        return;
+      }
+      if (ev.key === 'Enter' || ev.key === ' ') {
+        ev.preventDefault();
+        // Noch nichts gewaehlt: der erste Druck waehlt, statt ins Leere zu
+        // greifen. Sonst muesste man wissen, dass man zuerst Tabulator
+        // druecken muss.
+        if (!menue.tastenKnopf()) menue.tastenSchritt(1);
+        else menue.tastenAusloesen();
+        return;
+      }
+      if (ev.key === 'Escape') { menue.tastenId = null; return; }
+      return;
+    }
+
     if (ev.key === ' ') { ev.preventDefault(); s.startWave(); }
     if (ev.key === 'p' || ev.key === 'P') s.paused = !s.paused;
     if (ev.key === 'Escape') { s.buildChoice = null; s.selectedTower = null; s.aiming = null; }

@@ -43,6 +43,55 @@ export function drawMenu(ctx: CanvasRenderingContext2D, m: Menu): void {
   else if (m.view === 'brief') drawBrief(ctx, m, add);
   else drawProgress(ctx, m, add);
   ctx.restore();
+
+  // **Die Tastaturmarkierung (D8) - gezeichnet, nicht als HTML.**
+  //
+  // Im Menue ist jedes Bedienelement gemalt; ein fokussierbarer HTML-Knopf
+  // waere hier Spielbedienung im Menue und damit Regel 6. Also wird auch
+  // die Markierung gemalt.
+  //
+  // Sie steht NACH dem Ausblenden des Uebergangs und ausserhalb des
+  // verschobenen Blocks: die Trefferflaechen in `m.hotspots` tragen den
+  // Versatz bereits (siehe `add`), ein zweites Verschieben legte den Rahmen
+  // doppelt daneben.
+  //
+  // Zwei Ringe statt eines: ein dunkler aussen, ein heller innen. Ein
+  // einzelner Ring verschwindet je nach Untergrund - auf dem hellen
+  // Kartenknopf der eine, auf dem dunklen Grund der andere. So traegt immer
+  // einer von beiden, dieselbe Ueberlegung wie bei der Zierde in v135.
+  const wahl = m.tastenKnopf();
+  if (wahl) {
+    const r = wahl.round ? wahl.w / 2 + 8 : 10;
+    const x = wahl.x - 6, y = wahl.y - 6, w = wahl.w + 12, h = wahl.h + 12;
+    ctx.save();
+    for (const [farbe, breite] of [[hexA(C.ink, 0.75), 7], [C.crystal, 3]] as const) {
+      ctx.strokeStyle = farbe;
+      ctx.lineWidth = breite;
+      ctx.beginPath();
+      if (wahl.round) ctx.arc(wahl.x + wahl.w / 2, wahl.y + wahl.h / 2, r, 0, Math.PI * 2);
+      else roundRectPfad(ctx, x, y, w, h, r);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+/** Ein abgerundetes Rechteck als Pfad - ohne `roundRect`.
+ *
+ *  `CanvasRenderingContext2D.roundRect` gibt es erst ab Safari 16.4. Das
+ *  Zielgeraet ist ein iPhone, und Regel 11 hat dieses Verzeichnis schon
+ *  einmal ein schwarzes Bild gekostet: hier wird nichts benutzt, was auf
+ *  einem aelteren Safari wirft. */
+function roundRectPfad(
+  ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number,
+): void {
+  const k = Math.min(r, w / 2, h / 2);
+  ctx.moveTo(x + k, y);
+  ctx.arcTo(x + w, y, x + w, y + h, k);
+  ctx.arcTo(x + w, y + h, x, y + h, k);
+  ctx.arcTo(x, y + h, x, y, k);
+  ctx.arcTo(x, y, x + w, y, k);
+  ctx.closePath();
 }
 
 // ------------------------------------------------------------------ Grundbild

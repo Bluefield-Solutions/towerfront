@@ -137,6 +137,62 @@ export class Menu {
     return b.wave > 0 ? `Welle ${b.wave}${b.lives ? `, ${b.lives} Kristall` : ''}` : 'noch nicht gespielt';
   }
 
+  /** Welcher Knopf gerade mit der Tastatur gewählt ist - als **id**, nicht
+   *  als Nummer (D8).
+   *
+   *  `hotspots` wird bei jedem Bild neu gefüllt; eine Nummer zeigte nach
+   *  einem Ansichtswechsel auf etwas anderes. Die id überlebt den Wechsel
+   *  oder verschwindet, und dann fängt die Wahl wieder vorn an - beides ist
+   *  richtig, ein stiller Sprung auf den falschen Knopf wäre es nicht.
+   *
+   *  `null` heißt: niemand hat die Tastatur benutzt. Dann wird auch nichts
+   *  markiert - wer mit dem Finger spielt, soll keinen Rahmen sehen, der
+   *  ihm nichts sagt. */
+  tastenId: string | null = null;
+
+  /** Die Knöpfe in Lesereihenfolge: oben nach unten, in einer Zeile links
+   *  nach rechts. Die Zeilentoleranz ist die halbe Knopfhöhe - ohne sie
+   *  zerfällt eine Reihe gleich hoher Knöpfe in eine Treppe, sobald einer
+   *  zwei Punkte tiefer sitzt. */
+  private inReihenfolge(): Hotspot[] {
+    return [...this.hotspots].sort((a, b) => {
+      const toleranz = Math.max(a.h, b.h) * 0.5;
+      if (Math.abs(a.y - b.y) > toleranz) return a.y - b.y;
+      return a.x - b.x;
+    });
+  }
+
+  /** Einen Schritt weiter (+1) oder zurück (-1). Gibt zurück, ob es etwas
+   *  zu wählen gab. */
+  tastenSchritt(richtung: number): boolean {
+    const liste = this.inReihenfolge();
+    if (!liste.length) { this.tastenId = null; return false; }
+    const jetzt = liste.findIndex((h) => h.id === this.tastenId);
+    // Noch nichts gewählt: der erste Druck nimmt den ersten Knopf, nicht den
+    // zweiten. Sonst überspringt die Tastatur immer genau einen.
+    const naechst = jetzt < 0
+      ? (richtung > 0 ? 0 : liste.length - 1)
+      : (jetzt + richtung + liste.length) % liste.length;
+    this.tastenId = liste[naechst].id;
+    return true;
+  }
+
+  /** Den gewählten Knopf auslösen - über denselben Weg wie ein Tipper.
+   *
+   *  Nicht über eine zweite Fallunterscheidung: `tap` weiß, was jede id
+   *  bedeutet, und eine Kopie davon wäre die nächste Stelle, die veraltet
+   *  (Regel 15). */
+  tastenAusloesen(): boolean {
+    const hit = this.hotspots.find((h) => h.id === this.tastenId);
+    if (!hit) return false;
+    return this.tap(hit.x + hit.w / 2, hit.y + hit.h / 2);
+  }
+
+  /** Der gewählte Knopf, für die Zeichnung. */
+  tastenKnopf(): Hotspot | null {
+    return this.hotspots.find((h) => h.id === this.tastenId) ?? null;
+  }
+
   /** Ein Tipper. Gibt zurück, ob er etwas getroffen hat. */
   tap(x: number, y: number): boolean {
     const hit = this.hotspots.find((h) => inside(h, x, y));

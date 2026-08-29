@@ -1189,6 +1189,46 @@ if (streuung < 6) {
   }
 }
 
+// --- Sieht man, wo die Tastatur steht? (D8)
+//
+// Zwei Fragen, und beide nur hier zu beantworten. Der Rauchtest prueft, dass
+// der WEG durchs Menue funktioniert; ob man die Markierung SIEHT, sagt nur
+// ein gerechnetes Bild.
+//
+// Gemessen vor v193: im Spiel stand der Standardring des Browsers,
+// `outline: rgb(16,16,16) auto 1px` - ein duenner, fast schwarzer Strich auf
+// einer dunklen Oberflaeche. Und im Menue gab es gar nichts: null von 57
+// fokussierbaren Elementen sichtbar, null Bildpunkte Unterschied nach einem
+// Tabulator.
+{
+  const ringe = await seite.evaluate(() => {
+    const treffer = [];
+    for (const regel of [...document.styleSheets].flatMap((b) => {
+      try { return [...b.cssRules]; } catch { return []; }
+    })) {
+      // **Nicht "gibt es eine Regel", sondern "gibt es einen Ring".**
+      //
+      // Der erste Entwurf zaehlte jede Regel mit `:focus-visible` im
+      // Selektor - und die Gegenprobe ging glatt durch, weil die
+      // Aufraeumregel `:focus:not(:focus-visible) { outline: none }` stehen
+      // blieb und mitgezaehlt wurde. Eine Regel, die den Ring ABSCHALTET,
+      // als Beleg dafuer, dass es einen gibt (Regel 5).
+      const umriss = regel.style?.outline ?? '';
+      if (regel.selectorText && regel.selectorText.includes(':focus-visible')
+        && umriss && umriss !== 'none') {
+        treffer.push({ wahl: regel.selectorText, umriss });
+      }
+    }
+    return treffer;
+  });
+  if (!ringe.length) {
+    fail('Es gibt keinen `:focus-visible`-Stil. Dann steht der Standardring des '
+      + 'Browsers - auf dieser dunklen Oberflaeche fast schwarz.');
+  } else {
+    console.log(`Fokusring: ${ringe.length} Regel(n), z. B. "${ringe[0].wahl}" -> ${ringe[0].umriss}`);
+  }
+}
+
 await browser.close();
 
 console.log(`\nGeladen: dist/index.html in Chromium, ${BREIT}x${HOCH} (iPhone quer)`);

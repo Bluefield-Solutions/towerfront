@@ -84,7 +84,7 @@ const ersterTurm = (g) => g.gebaute[0];
 // dass irgendetwas rot wurde. Ein Tor, das weniger prueft als das Werkzeug,
 // das es bewacht, laesst genau die Luecke.
 const TOR = ['menu-karte', 'menu-einweisung', 'menu-fortschritt', 'menu-sieg',
-  'menu-niederlage', 'welle8', 'kristall-riss', 'zier-beruehrung'];
+  'menu-niederlage', 'welle8', 'kristall-riss', 'zier-beruehrung', 'menu-tastatur'];
 const nurTor = process.argv.includes('--tor');
 
 /** Eine Aufnahme: Zustand herstellen, ein paar Bilder laufen lassen, ausgeben.
@@ -271,6 +271,21 @@ takes.push(['menu-einweisung', () => shot('menu-einweisung', 844, 390, (s, r) =>
   r.menu = new Menu();
   r.menu.view = 'brief';
   r.menu.picked = 1;
+  return 20;
+})]);
+
+takes.push(['menu-tastatur', () => shot('menu-tastatur', 844, 390, (s, r) => {
+  // Die Tastaturmarkierung im Menue (D8). Sie wird GEMALT, weil im Menue
+  // alles gemalt ist - ein fokussierbarer HTML-Knopf waere hier
+  // Spielbedienung im Menue (Regel 6).
+  //
+  // Gezeigt wird ein Land, nicht der erste Knopf in Lesereihenfolge: der
+  // waere "Fortschritt" oben rechts, halb am Bildrand, und man saehe nicht,
+  // wie die Markierung auf einer runden Flaeche sitzt.
+  s.reset(1, 'normal', 'spiralhain');
+  r.menu = new Menu();
+  r.menu.view = 'map';
+  r.menu.tastenId = 'node:1';
   return 20;
 })]);
 

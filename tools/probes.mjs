@@ -1375,6 +1375,33 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // v193: der Fokusring ist gestaltet. Ohne ihn steht der Standardring des
+    // Browsers - auf dieser dunklen Oberflaeche fast schwarz.
+    name: 'Kein gestalteter Fokusring',
+    datei: 'src/style.css',
+    regel: /^:focus-visible \{$/m,
+    ersatz: '.nie-fokus {',
+    tor: 'browsertor',
+  },
+  {
+    // v193: die Tastatur wandert im Menue ueber die Trefferflaechen. Bis
+    // dahin waren auf dem Titelschirm NULL von 57 fokussierbaren Elementen
+    // sichtbar - wer keinen Zeiger hat, kam nicht ins Spiel.
+    name: 'Tastaturwahl bleibt am ersten Knopf',
+    datei: 'src/game/menu.ts',
+    regel: /^    this\.tastenId = liste\[naechst\]\.id;$/m,
+    ersatz: '    this.tastenId = liste[0].id;',
+    tor: 'smoke',
+  },
+  {
+    // Und die andere Haelfte: Enter muss ausloesen, nicht nur markieren.
+    name: 'Enter im Menue loest nichts aus',
+    datei: 'src/game/menu.ts',
+    regel: /^    return this\.tap\(hit\.x \+ hit\.w \/ 2, hit\.y \+ hit\.h \/ 2\);$/m,
+    ersatz: '    return false;',
+    tor: 'smoke',
+  },
+  {
     // v192: die Beruehrungsprobe laeuft ueber ALLE Karten. Bis dahin nur
     // ueber die erste - und `kalt` gibt es nur auf der Frostspalte, also
     // war eine von drei Bewegungen ungeprueft.

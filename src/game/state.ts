@@ -138,6 +138,15 @@ export class GameState {
    *  Spielstand mit, sonst haette ein fortgesetzter Lauf andere Regeln als
    *  der begonnene. */
   karten = 0;
+  /** Zaehlt jeden Aufsatz einer Partie hoch - und `fortgesetzt` sagt, ob es
+   *  ein neuer Lauf war oder ein geladener.
+   *
+   *  Die Oberflaeche braucht beides, um die Einfuehrung zu starten, ohne
+   *  dass irgendwer daran denken muss (Regel 6). Vorher hing sie an EINEM
+   *  Knopf, und als der Titelschirm auf die Leinwand zog, lief sie kein
+   *  einziges Mal mehr - siebzehn Tore gruen. */
+  laufNummer = 0;
+  fortgesetzt = false;
   /** Was dieser Lauf freigeschaltet hat, wenn etwas (C18).
    *
    *  Heisst `freischaltung` und nicht `neueFaehigkeit`, weil der
@@ -1870,6 +1879,8 @@ export class GameState {
     this.abilityCd = { meteor: 0, freeze: 0, bollwerk: 0, ernte: 0 };
     this.karten = opts.karten ?? gewonneneKarten();
     this.freischaltung = null;
+    this.laufNummer++;
+    this.fortgesetzt = false;
     this.spawnsJeBahn = [];
     this.spawnsTrotzSperre = 0;
     this.aiming = null;
@@ -2142,6 +2153,11 @@ export class GameState {
     }
     this.rebuildGrid();
     this.phase = 'playing';
+    // Ein geladener Lauf ist kein neuer: die Einfuehrung hat er schon
+    // hinter sich, und sie mitten in Welle neun anzufangen waere Hohn.
+    // `reset` hat das Feld eben auf false gesetzt - hier steht die einzige
+    // Stelle, die es umdreht.
+    this.fortgesetzt = true;
     return true;
   }
 

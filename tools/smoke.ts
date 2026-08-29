@@ -187,8 +187,6 @@ for (const step of TUTORIAL) {
 }
 
 // Eine echte Partie: bauen, ausbauen, Wellen starten, jedes Bild zeichnen.
-// Ueber den Knopf starten statt direkt zuruecksetzen - so laeuft auch die
-// Einfuehrung mit und ihre Positionsrechnung wird ausgefuehrt.
 //
 // **Mit fester Aussaat, und zwar auf dem Weg eines Spielers.**
 //
@@ -211,12 +209,30 @@ for (const step of TUTORIAL) {
 // das Tor meldet gruen. Die Aussaat des Rauchtests muss den Stand also
 // ungesaettigt lassen (Regel 2). Der Block unten prueft das selbst.
 const AUSSAAT = 1234;
+//
+// **Gestartet wird seit v196 wie im Spiel** - `state.reset` mit der Aussaat.
+//
+// Bis v195 stand hier ein Klick auf "Beginnen" des HTML-Titelschirms. Der
+// war seit v43 `display: none` und in keinem Browser mehr zu sehen; nur
+// jsdom laesst `click()` auch auf verborgenen Knoepfen wirken. Der
+// Rauchtest ist also fuenfzig Fassungen lang durch eine Tuer gegangen, die
+// es nicht gab - und hat dabei den einzigen Aufruf der Einfuehrung
+// mitgenommen, den es im ganzen Baum gab.
+//
+// Die Aussaat aus dem Einstellungsfeld (T10) wird trotzdem geprueft: das
+// Feld ist lebendig, und `wunschAussaat` ist der Weg, den `menu.onStart`
+// im Spiel geht.
 {
   const feld = win.document.getElementById('o-seed') as unknown as HTMLInputElement;
   feld.value = String(AUSSAAT);
   feld.dispatchEvent(new win.Event('input', { bubbles: true }));
 }
-(win.document.getElementById('s-action') as unknown as HTMLButtonElement).click();
+if (ui.wunschAussaat !== AUSSAAT) {
+  problems.push(`Die Aussaat aus den Einstellungen kommt als ${ui.wunschAussaat} an, `
+    + `nicht als ${AUSSAAT}. Wer einen Lauf nachstellen will, bekommt ein anderes Spiel.`);
+}
+state.reset(ui.wunschAussaat ?? undefined, getSettings().difficulty, getSettings().map);
+ui.wunschAussaat = null;
 if (state.seed !== AUSSAAT) {
   problems.push(`Die Partie laeuft auf Aussaat ${state.seed} statt ${AUSSAAT}. `
     + 'Damit spielt der Rauchtest jede Runde ein anderes Spiel, und jede Zahl '
@@ -234,6 +250,53 @@ if (state.seed !== AUSSAAT) {
 //
 // Die Sperre selbst wird weiter unten geprueft, mit ihren Gegenproben.
 state.karten = ALLE_KARTEN.length;
+// **Laeuft die Einfuehrung ueberhaupt?** (v196)
+//
+// Bis v195 lief sie kein einziges Mal im ausgelieferten Spiel: ihr einziger
+// Aufruf hing am "Beginnen"-Knopf des HTML-Titelschirms, und der war seit
+// v43 `display: none`. Siebzehn Tore waren gruen - weil keines gefragt hat,
+// ob sie ANFAENGT. Geprueft wurde nur, ob ihre Schritte gut gebaut sind.
+//
+// Sie haengt jetzt an einem neuen Lauf, nicht an einem Knopf. Geprueft wird
+// deshalb genau das, und in beide Richtungen: neuer Lauf zeigt sie, ein
+// geladener nicht.
+{
+  const blase = win.document.getElementById('coach') as HTMLElement;
+  ui.sync();
+  if (blase.hidden) {
+    problems.push('Einfuehrung: nach einem neuen Lauf erscheint keine Blase. '
+      + 'Dann sieht ein neuer Spieler sie nie.');
+  }
+  const ersterSatz = (win.document.getElementById('coach-text')?.textContent ?? '').trim();
+  if (ersterSatz !== TUTORIAL[0].text) {
+    problems.push(`Einfuehrung: die Blase sagt "${ersterSatz}" statt "${TUTORIAL[0].text}".`);
+  }
+  // Gegenprobe: ein FORTGESETZTER Lauf bekommt sie nicht. Ohne diese Haelfte
+  // waere "sie erscheint" auch dann gruen, wenn sie immer erschiene - und
+  // eine Einweisung mitten in Welle neun ist Hohn.
+  //
+  // Am SELBEN Zustand und derselben Oberflaeche: eine zweite `UI` haengt
+  // ihre Behandler ein zweites Mal an dieselben Knoepfe, und der erste
+  // Versuch hat sich damit die Bedienleiste zerlegt.
+  const stand = state.snapshot();
+  if (!state.restore(stand)) {
+    problems.push('Einfuehrung: der Stand fuer die Gegenprobe liess sich nicht laden.');
+  }
+  ui.sync();
+  if (!blase.hidden) {
+    problems.push('Einfuehrung: ein fortgesetzter Lauf zeigt sie trotzdem.');
+  }
+  // Und zurueck auf den Anfang - die Partie unten soll sie mitlaufen lassen.
+  //
+  // `reset` setzt `karten` neu aus der Ablage, also muss die Zeile von oben
+  // HIER noch einmal stehen. Ohne sie spielte die Hauptpartie ohne den
+  // Frostschlag und endete verloren statt gewonnen - gemessen, nicht
+  // vermutet: 19294 gezeichnete Bilder und "won" wurden zu 18389 und "lost".
+  state.reset(AUSSAAT, getSettings().difficulty, getSettings().map);
+  state.karten = ALLE_KARTEN.length;
+  ui.sync();
+}
+
 const spots = candidateSpots(state);
 // Der Sternestand VOR dieser Partie - fuer die Auswertung weiter unten.
 const sterneVorDerPartie = getStars(state.map.id, state.difficulty);
@@ -1706,67 +1769,18 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 // Titelbildschirm: eine Ebene, eine Entscheidung.
 //
 // Vorher standen vierzehn antippbare Elemente gleichzeitig da - zwei Modi,
-// drei Karten, drei Grade, fuenf Verbesserungen, der Startknopf. Wer das
-// erste Mal hinschaut, weiss nicht, wo er anfangen soll.
+
+// **Der HTML-Titelbildschirm ist weg (v196), und mit ihm diese Pruefung.**
 //
-// Die Regel dahinter ist alt und gut belegt: eine Ebene stellt eine Frage.
-// Alles Weitere liegt dahinter, sichtbar durch eine Zeile, die den aktuellen
-// Wert zeigt. Geprueft wird deshalb die *Anzahl* - denn genau die war das
-// Problem, nicht das Aussehen.
-{
-  ui.showScreen('title');
-  const visible = (root: Element | null): number => {
-    if (!root) return 0;
-    let n = 0;
-    for (const b of root.querySelectorAll('button')) {
-      let el: Element | null = b;
-      let hidden = false;
-      while (el && el !== root.parentElement) {
-        if ((el as HTMLElement).hidden) { hidden = true; break; }
-        el = el.parentElement;
-      }
-      if (!hidden) n++;
-    }
-    return n;
-  };
-
-  const card = win.document.getElementById('s-card');
-  const onFirstLevel = visible(card);
-  const MAX_FIRST = 5;
-  if (onFirstLevel > MAX_FIRST) {
-    problems.push(
-      `Titelbildschirm: ${onFirstLevel} antippbare Elemente auf der ersten Ebene - ` +
-      `hoechstens ${MAX_FIRST} sind vorgesehen.`,
-    );
-  }
-
-  // Die tieferen Ebenen muessen erreichbar sein und ihren Inhalt zeigen.
-  for (const [opener, view, inner] of [
-    ['s-choice', 'v-choose', [['s-maps', 3], ['s-grades', 3], ['s-mode', 2]]],
-    ['s-open-progress', 'v-progress', [['s-perks', 5]]],
-  ] as const) {
-    (win.document.getElementById(opener) as HTMLButtonElement)
-      .dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
-    if ((win.document.getElementById(view) as HTMLElement).hidden) {
-      problems.push(`Titelbildschirm: "${view}" laesst sich nicht oeffnen.`);
-    }
-    for (const [id, min] of inner) {
-      const n = win.document.getElementById(id)?.querySelectorAll('button').length ?? 0;
-      if (n < min) problems.push(`Titelbildschirm: "${id}" zeigt ${n} Knoepfe, erwartet ${min}.`);
-    }
-    // Und wieder zurueck - eine Ebene ohne Rueckweg ist eine Sackgasse.
-    const back = [...(win.document.getElementById(view) as HTMLElement)
-      .querySelectorAll('button')].find((b) => b.className === 'back');
-    if (!back) problems.push(`Titelbildschirm: "${view}" hat keinen Rueckweg.`);
-    else {
-      back.dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
-      if (!(win.document.getElementById(view) as HTMLElement).hidden) {
-        problems.push(`Titelbildschirm: "${view}" laesst sich nicht schliessen.`);
-      }
-    }
-  }
-  ui.hideScreen();
-}
+// Sie zaehlte die Knoepfe je Ebene und verlangte hoechstens vier. Das war
+// eine gute Regel fuer eine Flaeche, die es seit v43 nicht mehr gab: das
+// Menue liegt auf der Leinwand, `#screen` war `display: none` ab dem ersten
+// Bild. Geprueft hat sie also die Aufraeumung eines Zimmers, das niemand
+// betreten konnte - und der Rauchtest kam nur hinein, weil `click()` in
+// jsdom auch auf verborgenen Knoepfen wirkt.
+//
+// Was an ihre Stelle tritt, steht im Browsertor: es faehrt das
+// Leinwandmenue mit der Maus und misst, was WIRKLICH sichtbar ist.
 
 // Jeder Turmzustand braucht ein gerendertes Bild - sonst steht ein
 // gezeichneter Turm neben elf gerenderten und faellt sofort auf.
@@ -2881,11 +2895,10 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
-// Endbildschirm und Neustart muessen ebenfalls durchlaufen.
-step('Endbildschirm', () => {
-  ui.showScreen(state.phase === 'won' ? 'won' : 'lost');
-  renderer.draw(state);
-});
+// Der Neustart muss ebenfalls durchlaufen. Der Endbildschirm wird nicht mehr
+// hier gezeichnet: er liegt seit v43 auf der Leinwand, und seit v196 gibt es
+// die HTML-Fassung nicht mehr. Abgenommen wird er als `menu-sieg` in
+// `npm run bildtor`, und das Browsertor faehrt ihn mit der Maus an.
 step('Neustart', () => {
   state.reset();
   for (let i = 0; i < 120; i++) { state.update(DT); renderer.draw(state); ui.sync(); }

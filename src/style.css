@@ -298,31 +298,6 @@ html, body {
   min-height: 44px;
 }
 
-/* -------------------------------------------------------------- Screens */
-
-.screen {
-  position: absolute; inset: 0; display: grid; place-items: center;
-  background: radial-gradient(circle at 50% 45%, rgba(15, 22, 48, 0.86), rgba(6, 8, 18, 0.96));
-  padding: 20px; text-align: center;
-}
-.card { max-width: 460px; }
-.eyebrow {
-  margin: 0 0 10px; font-size: 10px; letter-spacing: 0.28em;
-  text-transform: uppercase; color: var(--crystal);
-}
-.card h1 {
-  margin: 0 0 12px; font-size: clamp(30px, 7vw, 52px); font-weight: 800;
-  letter-spacing: -0.03em; line-height: 0.95;
-}
-.lead { margin: 0 0 22px; font-size: 14px; line-height: 1.55; color: var(--muted); }
-.primary {
-  font-family: var(--ui); font-size: 15px; font-weight: 700; cursor: pointer;
-  color: #06121A; background: var(--crystal); border: none;
-  border-radius: 12px; padding: 15px 34px;
-  box-shadow: 0 8px 30px rgba(127, 231, 224, 0.3);
-}
-.primary:active { transform: scale(0.97); }
-
 /* ------------------------------------------------------------ Querformat
 
    Hier stand bis v122 ein ZWEITER Hochkant-Hinweis (`.rotate`), abgegrenzt
@@ -426,9 +401,6 @@ html, body {
 .go-bonus { font-size: 10px; font-weight: 700; opacity: 0.72; letter-spacing: 0.04em; }
 .go-bonus:empty { display: none; }
 
-.best { margin: -12px 0 20px; font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
-.best:empty { display: none; }
-
 .tower-btn .r {
   font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--muted); margin-top: 1px;
@@ -453,20 +425,6 @@ html, body {
 }
 .perf b { color: var(--crystal); font-weight: 700; }
 .perf b.warn { color: var(--danger); }
-
-.link {
-  display: block; margin: 14px auto 0; padding: 6px 10px; cursor: pointer;
-  background: none; border: none; font-family: var(--ui);
-  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--muted); text-decoration: underline; text-underline-offset: 4px;
-}
-.link:hover { color: var(--text); }
-
-#s-resume { margin-bottom: 10px; }
-#s-resume + .primary {
-  background: transparent; color: var(--muted);
-  border: 1px solid var(--edge); box-shadow: none;
-}
 
 .next-list .tag {
   font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
@@ -545,13 +503,35 @@ html, body {
 .coach-text {
   flex: 1; margin: 0; font-size: 12.5px; line-height: 1.35; color: var(--text);
 }
+/* **Der Knopf steht LINKS, und seine Trefferflaeche reicht nach unten aus
+   der Leiste heraus.** Beides ist gemessen, nicht gewaehlt.
+
+   Rechts oben stehen Weg, Ton, Tempo und Pause; die Auflage deckte dort die
+   Mitte von `b-speed` und `b-pause` zu, und das Browsertor hat es gemeldet.
+   Links stehen Gold, Kristall und Welle - keine Knoepfe, da kostet es
+   nichts. Und nach unten darf sie greifen, weil die Leiste `z-index: 4`
+   traegt und damit ueber der Kopfzeile liegt.
+
+   Die Leiste selbst hoeher zu machen war der Umweg: 46 statt 25 Punkte
+   schoben den Pruefsteg so weit nach unten, dass er die Zielwahl abschnitt
+   (gemessen: Knopf endet bei 364, Steg bei 336). Bei 390 Punkten Hoehe ist
+   kein Platz fuer ein Band, das sich selbst Luft macht. */
 .coach-skip {
   flex: none; pointer-events: auto; cursor: pointer;
+  order: -1; margin-right: 10px;
+  position: relative;
   background: none; border: none; padding: 2px 0;
   font-family: var(--ui); font-size: 10px; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--muted);
   text-decoration: underline; text-underline-offset: 3px;
 }
+/* **16 Punkte hoch, 44 Punkte zu treffen** - dieselbe Auflage wie bei der
+   Wellenvorschau (v194). Als Innenabstand haette dasselbe die Einweisungs-
+   blase von 40 auf 68 Punkte getrieben, und beide Baender zusammen kaemen
+   auf 138 bei einer Grenze von 130 (`npm run streifen`).
+   Der Knopf sass acht Fassungen lang bei 16 Punkten, weil `beruehrung` ihn
+   gar nicht in seiner Liste hatte - er stand nur als Hinweis darunter. */
+.coach-skip::after { content: ''; position: absolute; inset: -5px -14px -26px; }
 
 /* Das gemeinte Bedienelement pulsiert, damit der Satz eine Adresse hat. */
 [data-coach="1"] {
@@ -596,9 +576,6 @@ html, body {
 :focus:not(:focus-visible) { outline: none; }
 
 /* -------------------------------------------------------------- Auswertung */
-
-.screen { overflow: auto; }
-.card { max-width: 520px; width: 100%; }
 
 .stats {
   margin: 0 0 18px; padding: 13px 15px; text-align: left;
@@ -690,50 +667,6 @@ html, body {
   margin: 0; padding: 8px 0; text-align: center;
   font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
 }
-
-/* ------------------------------------------------------ Schwierigkeitsgrade */
-
-.grades { display: flex; gap: 8px; justify-content: center; margin: 0 0 20px; flex-wrap: wrap; }
-.grade {
-  flex: 1 1 130px; max-width: 170px; cursor: pointer; text-align: left;
-  padding: 9px 11px; border-radius: 11px; font-family: var(--ui);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--edge); color: var(--muted);
-}
-.grade[data-on="1"] {
-  border-color: var(--crystal); color: var(--text);
-  background: rgba(127, 231, 224, 0.12);
-}
-.grade b { display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 2px; }
-.grade span { display: block; font-size: 10px; line-height: 1.35; }
-.grade:active { transform: scale(0.97); }
-
-/* ----------------------------------------------------------- Fortschritt */
-
-.stars { font-style: normal; font-size: 11px; color: var(--gold); letter-spacing: 1px; }
-
-.perks {
-  display: flex; gap: 7px; flex-wrap: wrap; justify-content: center;
-  margin: 0 0 18px;
-}
-.perk-head {
-  flex: 1 0 100%; margin: 0 0 4px; text-align: center;
-  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
-}
-.perk-head b { color: var(--gold); font-size: 12px; }
-.perk {
-  flex: 1 1 140px; max-width: 190px; cursor: pointer; text-align: left;
-  padding: 7px 9px; border-radius: 10px; font-family: var(--ui);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--edge); color: var(--muted);
-}
-.perk b { display: block; font-size: 11.5px; font-weight: 700; color: var(--text); }
-.perk span { display: block; font-size: 9.5px; line-height: 1.35; margin: 1px 0 3px; }
-.perk i { font-style: normal; font-size: 10px; font-weight: 700; color: var(--gold); }
-.perk[data-have="1"] { border-color: var(--crystal); opacity: 0.75; }
-.perk[data-have="1"] i { color: var(--crystal); }
-.perk:disabled { cursor: default; }
-.perk:disabled[data-have="0"] { opacity: 0.4; }
 
 /* ------------------------------------------- Kompakt auf flachen Geräten */
 /* Auf dem Handy quer bleiben nach Kopfzeile und Leiste nur rund 230 Punkte
@@ -828,80 +761,11 @@ html, body {
   .next { font-size: 10px; }
 }
 
-/* ------------------------------------------------- Titelbildschirm (v41) */
-/* Drei Ebenen statt einer Wand.
-   Vorher standen vierzehn antippbare Elemente gleichzeitig da: zwei Modi,
-   drei Karten, drei Schwierigkeiten, fünf Verbesserungen, der Startknopf.
-   Das ist kein Gestaltungsproblem, sondern ein Strukturproblem — man kann
-   eine Wand nicht schöner machen, man muss sie aufteilen.
-
-   Ebene 1 stellt eine Frage: spielen oder nicht. Alles Weitere liegt hinter
-   je einer Zeile, die zeigt, was gerade eingestellt ist. */
-
-.view { display: flex; flex-direction: column; }
-
-.card h1 {
-  font-size: 30px; letter-spacing: -0.01em; margin: 2px 0 6px;
-}
-.card .eyebrow {
-  font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
-  color: var(--muted); margin: 0;
-}
-.card .lead {
-  font-size: 12.5px; line-height: 1.5; color: var(--muted);
-  margin: 0 0 16px; max-width: 34em;
-}
-
-/* Der Startknopf ist der einzige große Knopf auf der Ebene. */
-.card .primary {
-  font-size: 15px; font-weight: 700; padding: 13px 20px; border-radius: 12px;
-  margin-bottom: 8px;
-}
-
-/* Eine Einstellzeile: Beschriftung links, aktueller Wert, Pfeil.
-   Das Muster kennt jeder aus den Einstellungen seines Telefons. */
-.choice {
-  display: flex; align-items: center; gap: 10px; width: 100%;
-  padding: 11px 14px; margin-bottom: 6px;
-  border-radius: 11px; cursor: pointer; text-align: left;
-  font-family: var(--ui);
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid var(--edge); color: var(--text);
-  min-height: 46px;
-}
-.choice:active { transform: scale(0.99); }
-.ch-lab { font-size: 12px; font-weight: 600; flex: none; }
-.ch-val {
-  flex: 1; text-align: right; font-size: 11.5px; color: var(--muted);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.ch-arrow { flex: none; font-size: 16px; color: var(--muted); line-height: 1; }
-
-.back {
-  align-self: flex-start; background: none; border: none; cursor: pointer;
-  color: var(--muted); font-family: var(--ui); font-size: 12px;
-  padding: 2px 0 10px;
-}
-.back:active { color: var(--text); }
-
-.sub {
-  font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--muted); margin: 10px 0 6px; font-weight: 700;
-}
-.view:first-child .sub:first-of-type { margin-top: 0; }
-
-.card .best {
-  font-size: 10.5px; color: var(--muted); margin: 10px 0 0; text-align: center;
-}
-
-/* Auf flachen Geräten rollt die Karte, statt aus dem Bild zu laufen. */
-@media (max-height: 480px) {
-  .card { max-height: calc(100% - 24px); overflow-y: auto; }
-  .card h1 { font-size: 24px; }
-  .card .lead { font-size: 11.5px; margin-bottom: 12px; }
-  .card .primary { padding: 11px 18px; font-size: 14px; }
-  .choice { padding: 9px 12px; }
-}
+/* Hier stand bis v196 der HTML-Titelbildschirm (v41): drei Ebenen, Karte,
+   Schwierigkeit, Modus, der Verbesserungsladen und die Auswertung. Er ist
+   seit v43 auf die Leinwand gezogen und war seither `display: none` ab dem
+   ersten Bild - keine seiner Flaechen war je wieder zu sehen. Was er tat,
+   tut jetzt `src/gfx/menurender.ts`. */
 
 /* Pausenmenue — liegt ueber dem Feld, nicht daneben.
    Es erscheint mit der Pause und verschwindet mit ihr; ein eigener Schalter

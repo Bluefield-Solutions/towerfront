@@ -8,18 +8,9 @@ import {
   type TowerId,
 } from '../data/towers';
 import { Sfx } from '../core/audio';
-import {
-  buyPerk, ersterBesuch, ersterGegner, freeStars, getBest, getSettings, getStars, saveSettings,
-  setPerkCost,
-  totalStars,
-} from '../core/storage';
-import { PERKS, PERK_ORDER, type PerkId } from '../data/perks';
+import { ersterBesuch, ersterGegner, getSettings, saveSettings } from '../core/storage';
 import { ZIELWAHL_NAMEN, ZIELWAHL_ORDNUNG, type Tower, type Zielwahl } from '../game/types';
-import { getProgress } from '../core/storage';
-import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../data/difficulty';
-import { MAPS, mapById } from '../data/maps';
 import { spriteCount } from '../gfx/sprites';
-import { clearGame, loadGame } from '../game/save';
 import { TUTORIAL, kartenEinfuehrung, type TutorialStep } from '../game/tutorial';
 import { konterSatz } from '../data/konter';
 import type { GameState } from '../game/state';
@@ -63,6 +54,7 @@ export class UI {
   private oVolW = $<HTMLElement>('o-vol-w');
   private oQual = $<HTMLElement>('o-qual');
   private oBew = $<HTMLElement>('o-bew');
+  private oEinf = $<HTMLElement>('o-einf');
   private pBilanz = $<HTMLButtonElement>('p-bilanz');
   private pWahl = $<HTMLElement>('p-wahl');
   private pBlatt = $<HTMLElement>('p-blatt');
@@ -111,39 +103,17 @@ export class UI {
    *  Turmwahl. */
   private zielKey = '';
   private iSell = $<HTMLButtonElement>('i-sell');
-  private screen = $('screen');
-  private sEyebrow = $('s-eyebrow');
-  private sTitle = $('s-title');
-  private sText = $('s-text');
-  private sBest = $('s-best');
-  private sGrades = $('s-grades');
-  private sMaps = $('s-maps');
-  private sPerks = $('s-perks');
-  private sMode = $('s-mode');
-  private vMain = $('v-main');
-  private vChoose = $('v-choose');
-  private vProgress = $('v-progress');
-  private sChoice = $('s-choice');
-  private sChoiceVal = $('s-choice-val');
-  private sOpenProgress = $('s-open-progress');
-  private sProgressVal = $('s-progress-val');
   private hud = $('hud');
   private dock = $('dock');
   private dockToggle = $('dock-toggle');
   private dockToggleI = $('dock-toggle-i');
-  private sStats = $('s-stats');
-  private sAction = $<HTMLButtonElement>('s-action');
-  private sResume = $<HTMLButtonElement>('s-resume');
-  private sPerf = $<HTMLButtonElement>('s-perf');
   private perfBox = $('perf');
-  private sTut = $<HTMLButtonElement>('s-tut');
   private coach = $('coach');
   private coachText = $('coach-text');
 
   private btns = new Map<TowerId, HTMLButtonElement>();
   private skillBtns = new Map<AbilityId, HTMLButtonElement>();
   private lastSkillSig = '';
-  private endlessWanted = false;
   /** Wird von main gesetzt: zurueck zur Landkarte. */
   openMenu: () => void = () => {};
 
@@ -159,9 +129,10 @@ export class UI {
    *  Jetzt wird sie in jedem Bild aus dem Zustand abgeleitet. Es gibt keine
    *  Stelle mehr, an der man es vergessen kann. */
   istMenuOffen: () => boolean = () => false;
-  private view: (w: 'main' | 'choose' | 'progress') => void = () => {};
-  private lastScreen: 'title' | 'won' | 'lost' = 'title';
   private tutStep = -1;
+  /** Der Lauf, fuer den die Einfuehrung schon entschieden wurde. `0` ist
+   *  kein Lauf - `reset` faengt bei 1 an. */
+  private gesehenerLauf = 0;
   /** Welche Kette gerade laeuft.
    *
    *  Es gibt zwei: die grosse Einfuehrung ins Spiel und der eine Satz je
@@ -245,62 +216,6 @@ export class UI {
       this.dockToggle.setAttribute(
         'aria-label', folded ? 'Leiste einklappen' : 'Leiste ausklappen',
       );
-    });
-
-    // Der Titelbildschirm hat drei Ebenen statt einer Wand aus vierzehn
-    // Knoepfen. Ebene eins stellt genau eine Frage: spielen oder nicht.
-    const showView = (which: 'main' | 'choose' | 'progress') => {
-      this.vMain.hidden = which !== 'main';
-      this.vChoose.hidden = which !== 'choose';
-      this.vProgress.hidden = which !== 'progress';
-      if (which !== 'main') this.renderProgress();
-    };
-    this.view = showView;
-    this.sChoice.addEventListener('click', () => { Sfx.unlock(); Sfx.play('tap'); showView('choose'); });
-    this.sOpenProgress.addEventListener('click', () => {
-      Sfx.unlock(); Sfx.play('tap'); showView('progress');
-    });
-    for (const id of ['s-back-1', 's-back-2']) {
-      $(id).addEventListener('click', () => { Sfx.play('tap'); showView('main'); });
-    }
-
-    setPerkCost((id) => PERKS[id as PerkId]?.cost ?? 0);
-
-    this.sPerks.addEventListener('click', (ev) => {
-      const b = (ev.target as HTMLElement).closest('button');
-      if (!b?.dataset.perk) return;
-      Sfx.unlock();
-      if (buyPerk(b.dataset.perk, PERKS[b.dataset.perk as PerkId].cost)) {
-        Sfx.play('upgrade');
-        this.showScreen('title');
-      }
-    });
-
-    this.sMode.addEventListener('click', (ev) => {
-      const b = (ev.target as HTMLElement).closest('button');
-      if (!b?.dataset.mode) return;
-      Sfx.unlock(); Sfx.play('tap');
-      this.endlessWanted = b.dataset.mode === 'endless';
-      this.showScreen('title');
-    });
-
-    this.sMaps.addEventListener('click', (ev) => {
-      const b = (ev.target as HTMLElement).closest('button');
-      if (!b?.dataset.map) return;
-      Sfx.unlock(); Sfx.play('tap');
-      saveSettings({ map: b.dataset.map });
-      this.s.loadMap(b.dataset.map);
-      this.showScreen('title');
-    });
-
-    // Schwierigkeitsgrad waehlbar, bevor es losgeht.
-    this.sGrades.addEventListener('click', (ev) => {
-      const b = (ev.target as HTMLElement).closest('button');
-      if (!b?.dataset.grade) return;
-      Sfx.unlock(); Sfx.play('tap');
-      saveSettings({ difficulty: b.dataset.grade as DifficultyId });
-      this.renderGrades();
-      this.showScreen('title');
     });
 
     Sfx.setEnabled(getSettings().sound);
@@ -387,6 +302,18 @@ export class UI {
       saveSettings({ bewegung: b as 'voll' | 'reduziert' });
       this.sync();
     });
+    // Der Einfuehrungsschalter. Er stand bis v195 auf dem HTML-Titelschirm,
+    // also auf einer Flaeche, die seit v43 nie wieder sichtbar war - man
+    // konnte die Einfuehrung weder abschalten noch zurueckholen.
+    this.oEinf.addEventListener('click', (e) => {
+      const v = (e.target as HTMLElement).closest<HTMLButtonElement>('.opt-btn')?.dataset.einf;
+      if (!v) return;
+      saveSettings({ tutorial: v === '1' });
+      // Beim Abschalten mitten im Lauf muss die Blase auch weggehen, sonst
+      // steht der Schalter auf "Aus" und die Einweisung laeuft weiter.
+      if (v === '0' && this.tutStep >= 0) { this.tutStep = -1; this.hideCoach(); }
+      this.sync();
+    });
     $<HTMLButtonElement>('p-zurueck').addEventListener('click', () => { this.bilanzOffen = false; });
     $<HTMLButtonElement>('p-restart').addEventListener('click', () => {
       this.s.paused = false;
@@ -417,138 +344,9 @@ export class UI {
     this.iSell.addEventListener('click', () => {
       if (this.s.selectedTower) this.s.sell(this.s.selectedTower);
     });
-    this.sAction.addEventListener('click', () => {
-      Sfx.unlock();
-      if (this.lastScreen !== 'title') { this.openMenu(); return; }
-      // **Auch dieser Weg achtet auf eine von Hand gesetzte Aussaat (T10).**
-      //
-      // Bis v184 stand hier `undefined`, also jedes Mal eine neue
-      // Zufallsaussaat. `wunschAussaat` wurde nur in `menu.onStart`
-      // beachtet - wer sie in den Einstellungen eintrug und dann auf dem
-      // Titelschirm auf "Beginnen" drueckte, bekam trotzdem ein
-      // Zufallsspiel, ohne dass irgendwo stand, dass seine Eingabe
-      // verfallen ist. Zwei Einstiege in dieselbe Partie, und nur einer
-      // hielt sich an die Angabe.
-      //
-      // Gefunden hat es der volle Probenlauf, aber nicht direkt: er meldete
-      // eine blinde Gegenprobe. Der Rauchtest startet ueber genau diesen
-      // Knopf und spielte deshalb JEDE RUNDE EIN ANDERES SPIEL - gemessen
-      // Kristall 28, 48, 48, 45, 47 bei fuenf gleichen Laeufen. Alles, was
-      // danach eine Zahl aus dieser Partie prueft, prueft jedes Mal etwas
-      // anderes.
-      //
-      // Wie in `menu.onStart` gilt sie fuer GENAU DIESE Partie und wird
-      // danach vergessen.
-      const aussaat = this.wunschAussaat ?? undefined;
-      this.wunschAussaat = null;
-      this.s.reset(aussaat, getSettings().difficulty, getSettings().map,
-        { endless: this.endlessWanted });
-      // Die Einfuehrung laeuft nur bei einem neuen Spiel, nie beim Fortsetzen.
-      this.starteEinfuehrung();
-    });
-    this.sPerf.addEventListener('click', () => this.togglePerf());
-    this.sTut.addEventListener('click', () => {
-      const on = !getSettings().tutorial;
-      saveSettings({ tutorial: on });
-      this.sTut.textContent = on
-        ? 'Einführung beim nächsten Spiel zeigen'
-        : 'Einführung ist ausgeschaltet';
-    });
     $('coach-skip').addEventListener('click', () => this.endTutorial());
-    this.sResume.addEventListener('click', () => {
-      Sfx.unlock();
-      const save = loadGame();
-      // Passt der Stand nicht mehr zu den aktuellen Daten, wird er verworfen -
-      // lieber ein neuer Anlauf als eine halb geladene Partie.
-      if (!save || !this.s.restore(save)) { clearGame(); this.sResume.hidden = true; }
-    });
-
-    if (!getSettings().tutorial) this.sTut.textContent = 'Einführung ist ausgeschaltet';
-    if (getSettings().perf) {
-      this.sPerf.textContent = 'Technikanzeige ausschalten';
-      this.perfBox.hidden = false;
-    }
-    this.showScreen('title');
   }
 
-  showScreen(kind: 'title' | 'won' | 'lost'): void {
-    const s = this.s;
-    this.lastScreen = kind;
-    this.screen.hidden = false;
-    this.view('main');
-    const shown = kind === 'title' ? getSettings().difficulty : s.difficulty;
-    const shownMap = kind === 'title' ? getSettings().map : s.map.id;
-    const best = getBest(shownMap, shown);
-    const gradeName = DIFFICULTIES[shown].name;
-    const mapName = mapById(shownMap).name;
-    this.sBest.textContent = best.wave > 0
-      ? `Bisher am weitesten: Welle ${best.wave}${best.lives ? `, ${best.lives} Kristall` : ''}`
-      : '';
-
-    // Karte, Grad und Fortschritt liegen hinter je einer Zeile, die zeigt,
-    // was gerade eingestellt ist - das Muster kennt jeder aus den
-    // Einstellungen seines Telefons.
-    this.sChoice.hidden = kind !== 'title';
-    this.sOpenProgress.hidden = kind !== 'title';
-    if (kind === 'title') {
-      this.renderProgress(); this.renderMaps(); this.renderGrades();
-      this.sChoiceVal.textContent =
-        `${mapName} · ${gradeName}${this.endlessWanted ? ' · Endlos' : ''}`;
-      const free = freeStars();
-      this.sProgressVal.textContent = free > 0
-        ? `${free} Splitter frei`
-        : `${totalStars()} Sterne verdient`;
-    }
-
-    const save = kind === 'title' ? loadGame() : null;
-    if (save) {
-      this.sResume.hidden = false;
-      this.sResume.textContent =
-        `Fortsetzen · ${mapById(save.map).name} · Welle ` +
-        `${Math.min(save.waveIndex + 1, s.totalWaves)}, Kristall ${save.lives}`;
-      this.sAction.textContent = 'Neu beginnen';
-    } else {
-      this.sResume.hidden = true;
-    }
-
-    if (kind === 'title') this.sStats.hidden = true; else this.renderStats();
-
-    if (kind === 'title') {
-      this.sEyebrow.textContent = VERSION;
-      this.sTitle.textContent = 'Towerfront';
-      // Ein Satz, nicht vier. Wer mehr wissen will, erfaehrt es beim Spielen.
-      this.sText.textContent =
-        'Halte die Leere vom Herzkristall fern. Baue Türme neben den Weg und überstehe fünfzehn Wellen.';
-      if (!save) this.sAction.textContent = 'Beginnen';
-    } else if (kind === 'won') {
-      this.sEyebrow.textContent = s.stars > 0
-        ? `Geschafft · ${'★'.repeat(s.stars)}${'☆'.repeat(3 - s.stars)}`
-        : 'Alle Wellen überstanden';
-      this.sTitle.textContent = 'Der Kristall hält';
-      // Die Zahl kommt aus einer Variablen, nicht direkt aus dem Zugriff.
-      //
-      // `gebaute` traegt den Ersatzbuchstaben im NAMEN, und der
-      // Umlautwaechter sieht im ausgelieferten Text nur "Tuerme" - er kann
-      // Code in einer Zeichenkettenschablone nicht von Text unterscheiden.
-      // Ihn dafuer stumpfer zu machen waere der falsche Weg: er faengt
-      // genau die Sorte Fehler, die man selbst nicht sieht.
-      const gebaut = s.gebaute.length;
-      this.sText.textContent =
-        `Fünfzehn Wellen abgewehrt auf ${gradeName}, ${s.lives} von ${s.maxLives} ` +
-        `Kristallpunkten übrig, ${gebaut} Türme im Feld.`;
-      this.sAction.textContent = 'Noch einmal';
-    } else {
-      this.sEyebrow.textContent = s.endless
-        ? `${mapName} · Endlos · Welle ${s.waveNumber}`
-        : `${mapName} · Welle ${s.waveNumber} von ${s.totalWaves}`;
-      this.sTitle.textContent = 'Der Kristall zerbricht';
-      this.sText.textContent =
-        'Die Leere ist durchgekommen. Mehr Türme an den Kurven, früher ausbauen — und den Mörser gegen dichte Gruppen einsetzen.';
-      this.sAction.textContent = 'Neu versuchen';
-    }
-  }
-
-  hideScreen(): void { this.screen.hidden = true; }
 
   /** Die Bedienung ein- und ausblenden.
    *
@@ -591,64 +389,6 @@ export class UI {
       this.s.selectedTower = null;
       this.s.buildChoice = null;
     }
-  }
-
-  private renderMaps(): void {
-    const cur = getSettings().map;
-    const grade = getSettings().difficulty;
-    this.sMaps.innerHTML = MAPS.map((m) => {
-      const lanes = m.lanes.length > 1 ? `${m.lanes.length} Zuwege` : 'ein Zuweg';
-      const st = getStars(m.id, grade);
-      const stars = '★★★'.slice(0, st) + '☆☆☆'.slice(0, 3 - st);
-      return `<button class="grade" data-map="${m.id}" data-on="${m.id === cur ? 1 : 0}">` +
-        `<b>${m.name} <i class="stars">${stars}</i></b>` +
-        `<span>${m.blurb}<br>${lanes}</span></button>`;
-    }).join('');
-  }
-
-  /** Modus und Fortschritt. Sterne sind die Waehrung: sie entstehen aus
-   *  sauberen Laeufen und werden in bleibende Vorteile getauscht. */
-  private renderProgress(): void {
-    this.sMode.innerHTML = [
-      ['kampagne', 'Kampagne', 'Alle Wellen der Karte. Nur hier gibt es Sterne.'],
-      ['endless', 'Endlos', 'Nach der letzten Welle geht es weiter, bis der Kristall faellt.'],
-    ].map(([id, name, blurb]) =>
-      `<button class="grade" data-mode="${id}" ` +
-      `data-on="${(id === 'endless') === this.endlessWanted ? 1 : 0}">` +
-      `<b>${name}</b><span>${blurb}</span></button>`).join('');
-
-    const free = freeStars();
-    const owned = getProgress().perks;
-    const head = `<p class="perk-head">Splitter: <b>${free}</b> frei von ${totalStars()} verdient</p>`;
-    this.sPerks.innerHTML = head + PERK_ORDER.map((id) => {
-      const p = PERKS[id];
-      const have = owned.includes(id);
-      const can = !have && free >= p.cost;
-      return `<button class="perk" data-perk="${id}" data-have="${have ? 1 : 0}"` +
-        `${have || !can ? ' disabled' : ''}>` +
-        `<b>${p.name}</b><span>${p.blurb}</span>` +
-        `<i>${have ? 'gekauft' : `${p.cost} ★`}</i></button>`;
-    }).join('');
-  }
-
-  private renderGrades(): void {
-    const cur = getSettings().difficulty;
-    this.sGrades.innerHTML = DIFFICULTY_ORDER.map((id) => {
-      const d = DIFFICULTIES[id];
-      return `<button class="grade" data-grade="${id}" data-on="${id === cur ? 1 : 0}">` +
-        `<b>${d.name}</b><span>${d.blurb}</span></button>`;
-    }).join('');
-  }
-
-  /** Auswertung nach der Partie. Alle Zahlen wurden waehrend des Spiels
-   *  ohnehin mitgeschrieben - hier werden sie nur lesbar gemacht.
-   *
-   *  Das Blatt selbst entsteht in `bilanzblatt` - dieselbe Fassung, die
-   *  seit v171 auch die Pausenkarte fuellt (Regel 15). */
-  private renderStats(): void {
-    const html = bilanzblatt(this.s);
-    this.sStats.hidden = !html;
-    this.sStats.innerHTML = html;
   }
 
   /** Welche Einfuehrung passt zu dieser Partie?
@@ -777,7 +517,7 @@ export class UI {
     this.tutStep = -1;
     this.hideCoach();
     saveSettings({ tutorial: false });
-    this.sTut.textContent = 'Einführung ist ausgeschaltet';
+    this.syncOptionen();
   }
 
   /** Worauf die Einfuehrung gerade auf dem Spielfeld zeigt. Der Renderer
@@ -793,7 +533,6 @@ export class UI {
   togglePerf(): void {
     const on = !getSettings().perf;
     saveSettings({ perf: on });
-    this.sPerf.textContent = on ? 'Technikanzeige ausschalten' : 'Technikanzeige einschalten';
     this.perfBox.hidden = !on;
   }
 
@@ -870,7 +609,28 @@ export class UI {
       s.gegnerInfo ?? '-',
     ].join('|');
 
+    // **Die Einfuehrung startet sich selbst** - abgeleitet, nicht gerufen.
+    //
+    // Bis v195 hing sie an genau einem Knopf: "Beginnen" auf dem
+    // HTML-Titelschirm. Der ist seit v43 auf die Leinwand gezogen und war
+    // damit nie wieder sichtbar - die Einfuehrung lief also seither KEIN
+    // EINZIGES MAL, und mit ihr nicht der Kartensatz beim ersten Betreten
+    // (B15). Siebzehn Tore waren gruen; gefunden hat es erst das
+    // Beruehrungstor, als es aufhoerte, Knopfklassen zu ueberspringen.
+    //
+    // Deshalb steht sie jetzt dort, wo man sie nicht vergessen kann: an
+    // einem neuen Lauf. `laufNummer` steigt in `reset`, `fortgesetzt` sagt,
+    // ob es ein geladener war. Wer einen neuen Einstieg baut, bekommt die
+    // Einfuehrung mit, ohne daran zu denken (Regel 6).
+    if (this.s.laufNummer !== this.gesehenerLauf) {
+      this.gesehenerLauf = this.s.laufNummer;
+      if (this.s.fortgesetzt) this.tutStep = -1;
+      else this.starteEinfuehrung();
+    }
+
     this.updateTutorial();
+
+
 
     // Abklingzeiten laufen fortlaufend - eigene, gröbere Prüfung.
     // Die Zahl gewonnener Karten steht mit drin: sie aendert sich nie
@@ -1070,6 +830,9 @@ export class UI {
     }
     for (const b of this.oBew.querySelectorAll<HTMLButtonElement>('.opt-btn')) {
       b.dataset.on = b.dataset.b === st.bewegung ? '1' : '0';
+    }
+    for (const b of this.oEinf.querySelectorAll<HTMLButtonElement>('.opt-btn')) {
+      b.dataset.on = (b.dataset.einf === '1') === st.tutorial ? '1' : '0';
     }
   }
 

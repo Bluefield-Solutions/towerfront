@@ -143,13 +143,28 @@ const KNOEPFE = [
   ['.x', 'Prüfsteg schließen'],
   ['.sell', 'Verkaufen'],
   ['.go', 'Welle starten'],
-  ['.primary', 'Hauptknopf'],
-  ['.choice', 'Einstellzeile'],
   // Die beiden hier entstehen erst im Lauf und standen deshalb nie in
   // dieser Liste - obwohl die Zielwahl seit v137 fuenf Knoepfe hat und die
   // Wellenvorschau seit v194 acht.
   ['.insp-ziel .ziel', 'Zielwahl'],
   ['.next-eintrag', 'Gegner in der Vorschau'],
+  // **Und die, die acht Fassungen lang nur als Hinweis dastanden.**
+  //
+  // Ein Hinweis, den man acht Mal untereinander liest, ist keiner mehr - er
+  // ist die Zeile, ueber die man hinwegliest. Gemessen sind sie jetzt,
+  // ausgenommen ist keiner: was der Finger trifft, gehoert in diese Liste.
+  //
+  // Vier der acht standen auf dem HTML-Titelschirm - `.back`, `.grade`,
+  // `.perk`, `.link`, dazu `.primary` und `.choice`, die die Liste schon
+  // hatte. Der Schirm war seit v43 nie wieder sichtbar; das Tor hat also
+  // jahrelang Knoepfe vermessen, die niemand druecken konnte, und die
+  // lebenden uebersprungen. Er ist in v196 entfernt, und mit ihm die
+  // Eintraege.
+  ['.pause-btn', 'Pausenmenue'],
+  ['.opt-btn', 'Einstellung waehlen'],
+  ['.dock-toggle', 'Leiste einklappen'],
+  ['.coach-skip', 'Einweisung ueberspringen'],
+  ['.pick-btn', 'Turm aus der Bauwahl'],
 ];
 
 console.log('\nIm HTML — zugesagte Höhe laut Stilvorlage:\n');

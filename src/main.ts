@@ -1,7 +1,8 @@
 import './style.css';
 import { Loop } from './core/loop';
 import { Menu } from './game/menu';
-import { saveSettings } from './core/storage';
+import { saveSettings, setPerkCost } from './core/storage';
+import { PERKS, type PerkId } from './data/perks';
 import { loadGame } from './game/save';
 import { bindInput } from './core/input';
 import { Sfx } from './core/audio';
@@ -12,6 +13,19 @@ import { saveGame } from './game/save';
 import { Renderer } from './gfx/renderer';
 import { UI } from './ui/ui';
 import { messungGewuenscht, messungStarten } from './core/messung';
+
+// **Die Kostentabelle der Verbesserungen an die Ablage geben - beinahe
+// verlorengegangen.**
+//
+// Sie stand bis v195 im Konstruktor der Oberflaeche, mitten zwischen den
+// Behandlern des HTML-Titelschirms. Als der Schirm wegfiel, wollte sie
+// mitfallen - und `spentStars()` haette dann 0 zurueckgegeben, `freeStars()`
+// den vollen Sternestand: JEDE Verbesserung waere umsonst gewesen, ohne dass
+// irgendetwas rot wird. Der Uebersetzer hat sie als "nie gelesen" gemeldet,
+// und genau das war sie nicht.
+//
+// Sie steht jetzt dort, wo der Laden wirklich ist: neben dem Leinwandmenue.
+setPerkCost((id) => PERKS[id as PerkId]?.cost ?? 0);
 
 const canvas = document.getElementById('view') as HTMLCanvasElement;
 const state = new GameState();
@@ -38,7 +52,6 @@ menu.onStart = (mapId, difficulty, endless) => {
   ui.wunschAussaat = null;
   state.reset(aussaat, difficulty, mapId, { endless });
   renderer.menu = null;
-  ui.hideScreen();
   ui.setSpielansicht(true);
 };
 menu.onOptionen = () => ui.zeigeOptionen();
@@ -46,8 +59,7 @@ menu.onResume = () => {
   const save = loadGame();
   if (save && state.restore(save)) {
     renderer.menu = null;
-    ui.hideScreen();
-    ui.setSpielansicht(true);
+      ui.setSpielansicht(true);
   }
 };
 ui.openMenu = () => {
@@ -58,7 +70,6 @@ ui.openMenu = () => {
     : '';
   menu.view = 'map';
   renderer.menu = menu;
-  ui.hideScreen();
   ui.setSpielansicht(false);
 };
 
@@ -71,7 +82,6 @@ function showResult(): void {
   menu.resultAge = 0;
   menu.view = 'result';
   renderer.menu = menu;
-  ui.hideScreen();
   ui.setSpielansicht(false);
 }
 
@@ -81,7 +91,6 @@ menu.onRetry = () => {
   state.reset(undefined, state.difficulty, r.mapId, { endless: menu.endless });
   menu.result = null;
   renderer.menu = null;
-  ui.hideScreen();
   ui.setSpielansicht(true);
 };
 
@@ -94,7 +103,6 @@ ui.onRestart = () => {
   state.reset(undefined, state.difficulty, state.map.id, { endless: menu.endless });
   menu.result = null;
   renderer.menu = null;
-  ui.hideScreen();
   ui.setSpielansicht(true);
 };
 
@@ -155,9 +163,13 @@ const loop = new Loop(
     autoSave(dt);
     if (state.phase !== lastPhase) {
       lastPhase = state.phase;
-      if (state.phase === 'playing') ui.hideScreen();
-      else if (state.phase === 'title') ui.openMenu();
-      else showResult();
+      // Ein Phasenwechsel fuehrt entweder zurueck auf die Landkarte oder
+      // auf den Ergebnisbildschirm - beide liegen auf der Leinwand. Der
+      // dritte Fall, "es geht wieder los", braucht nichts zu tun: die
+      // Spielansicht leitet `ui.sync()` in jedem Bild aus `istMenuOffen()`
+      // ab (Regel 6).
+      if (state.phase === 'title') ui.openMenu();
+      else if (state.phase !== 'playing') showResult();
     }
     ui.sync();
     ui.perf(fpsAvg);

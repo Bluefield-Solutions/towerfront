@@ -72,9 +72,13 @@ const REQUIRED_IDS = [
   'view', 'v-gold', 'v-lives', 'v-wave', 'b-sound', 'b-speed', 'b-pause',
   'b-wave', 'b-wave-t', 'b-wave-b', 'next', 'n-list', 'build',
   'skills', 'inspector', 'i-name', 'i-stats', 'i-hint', 'i-ups', 'i-sell', 'i-close',
-  'screen', 's-eyebrow', 's-title', 's-text', 's-best', 's-stats', 's-grades', 's-maps', 's-mode', 's-perks', 's-action', 'dock-toggle', 'dock-body',
-  'v-main', 'v-choose', 'v-progress', 's-choice', 's-open-progress',
-  's-resume', 's-perf', 's-tut', 'perf', 'coach', 'coach-text', 'coach-skip',
+  'dock-toggle', 'dock-body', 'perf', 'coach', 'coach-text', 'coach-skip',
+  // Das Einstellungsmenue - die einzige HTML-Flaeche, die im Spiel wirklich
+  // aufgeht. Der Titelschirm stand hier bis v195 mit neunzehn IDs und war
+  // seit v43 `display: none`: der Waechter hat also verlangt, dass eine
+  // Flaeche vollstaendig ist, die niemand betreten konnte.
+  'optionen-menu', 'o-qual', 'o-bew', 'o-einf', 'o-seed', 'o-vol',
+  'pause-menu', 'p-resume', 'p-optionen', 'pick', 'pick-row',
 ];
 for (const id of REQUIRED_IDS) {
   if (!new RegExp(`id=["']${id}["']`).test(html)) problems.push(`Element mit id="${id}" fehlt im HTML.`);

@@ -1526,11 +1526,59 @@ const PROBEN = [
     // gemessen Kristall 28, 48, 48, 45, 47 bei fuenf gleichen Laeufen. Jede
     // Zahl darunter war ein Zufallswert, und Gegenproben an diesem Tor waren
     // mal blind und mal nicht.
-    name: 'Titelknopf ignoriert die gesetzte Aussaat',
+    //
+    // Die Probe zielte bis v195 auf den Titelknopf - und der sass auf einem
+    // Bildschirm, den es im Spiel nicht gab. Sie trifft jetzt die Stelle,
+    // die im Spiel wirklich liest, was im Einstellungsfeld steht.
+    name: 'Die gesetzte Aussaat wird nicht gelesen',
     datei: 'src/ui/ui.ts',
-    regel: /^      const aussaat = this\.wunschAussaat \?\? undefined;$/m,
-    ersatz: '      const aussaat = undefined;',
+    regel: /this\.wunschAussaat = aussaatLesen\(this\.oSeed\.value\);/,
+    ersatz: 'this.wunschAussaat = null;',
     tor: 'smoke',
+  },
+  {
+    // **Die Einfuehrung lief bis v195 kein einziges Mal.** Ihr Aufruf hing
+    // am Titelknopf, und der war seit v43 `display: none`. Siebzehn Tore
+    // gruen. Sie haengt jetzt an einem neuen Lauf.
+    name: 'Die Einfuehrung faengt nie an',
+    datei: 'src/ui/ui.ts',
+    regel: /      else this\.starteEinfuehrung\(\);/,
+    ersatz: '      else this.tutStep = -1;',
+    tor: 'smoke',
+  },
+  {
+    // Und die Gegenrichtung: sie darf einen GELADENEN Lauf nicht einweisen.
+    name: 'Fortgesetzter Lauf bekommt die Einfuehrung',
+    datei: 'src/game/state.ts',
+    regel: /    this\.fortgesetzt = true;/,
+    ersatz: '    this.fortgesetzt = false;',
+    tor: 'smoke',
+  },
+  {
+    // Die Trefferflaeche des Ueberspringen-Knopfs darf die Kopfzeile nicht
+    // zudecken. Steht er rechts, liegt sie ueber Tempo und Pause - und das
+    // sieht keine Stilvorlage, sondern nur das gerechnete Layout.
+    name: 'Ueberspringen deckt die Kopfzeile zu',
+    datei: 'src/style.css',
+    suche: '  order: -1; margin-right: 10px;',
+    ersatz: '  margin-right: 10px;',
+    tor: 'browsertor',
+  },
+  {
+    // Ein Knopf ohne Messung ist rot, nicht mehr nur ein Hinweis.
+    name: 'Knopfklasse steht in keiner Messung',
+    datei: 'index.html',
+    suche: 'class="coach-skip" id="coach-skip"',
+    ersatz: 'class="ueberspringen" id="coach-skip"',
+    tor: 'beruehrung',
+  },
+  {
+    // Der Ueberspringen-Knopf war 16 Punkte hoch, acht Fassungen lang.
+    name: 'Ueberspringen wieder zu klein',
+    datei: 'src/style.css',
+    suche: ".coach-skip::after { content: ''; position: absolute; inset: -5px -14px -26px; }",
+    ersatz: ".coach-skip::after { content: ''; position: absolute; inset: -1px; }",
+    tor: 'beruehrung',
   },
   {
     // T9, v183: beim Kartenwechsel wird geraeumt. Ohne das lagen nach vier

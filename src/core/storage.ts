@@ -31,6 +31,15 @@ export interface Settings {
   map: string;
   /** Endlosmodus vorgewaehlt. */
   endless: boolean;
+  /** Die Messtafel fuer D27 - anschaltbar IM SPIEL, nicht nur ueber die
+   *  Adresse.
+   *
+   *  Sie bleibt eine Einstellung und kein Adressteil, weil sie ueber einen
+   *  Neustart hinweg gelten soll: wer auf dem Telefon misst, laedt zwischen
+   *  zwei Laeufen neu, und ein `#messung` in der Adresse ueberlebt das
+   *  Teilen eines Links nicht. Die Raute schaltet sie weiterhin ein - dann
+   *  aber ohne die Einstellung zu aendern. */
+  messung: boolean;
 }
 
 export interface Best {
@@ -85,6 +94,7 @@ const DEFAULTS: Store = {
     // ihn noch einmal zu fragen waere so, als haette man nicht zugehoert.
     bewegung: systemBewegung(),
     perf: false, tutorial: true, difficulty: 'normal', map: 'spiralhain', endless: false,
+    messung: false,
   },
   best: {},
   progress: { stars: {}, perks: [], seenMaps: [] },

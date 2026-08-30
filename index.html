@@ -57,6 +57,12 @@
       <span class="val" id="v-wave">0/0</span>
     </div>
     <div class="spacer"></div>
+    <!-- Der Messschalter (D27). Er steht hier und nicht in den
+         Einstellungen, weil das Messen auf dem Zielgerät geschieht: dort
+         will man ihn im Spiel umlegen und weiterspielen, nicht durch zwei
+         Ebenen suchen. Wie jeder Knopf der Kopfzeile ist er im Menü
+         unsichtbar - das leitet `ui.sync()` ab, nicht ein Schalter. -->
+    <button class="chip" id="b-mess" aria-label="Messtafel an oder aus">Messung</button>
     <button class="chip" id="b-weg" aria-label="Weg noch einmal zeigen">Weg</button>
     <button class="chip" id="b-sound" aria-label="Ton an oder aus">Ton</button>
     <button class="chip" id="b-speed" aria-label="Spieltempo">1×</button>

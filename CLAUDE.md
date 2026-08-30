@@ -120,10 +120,11 @@ npm run doku        prüft die Dokumente gegen die Wirklichkeit
 npm run beruehrung  prüft, ob alles mit dem Daumen zu treffen ist
 npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen
 npm run kritik      Wertung nach Testerkategorien, Ziel über 90
-#messung (Adresse)  Messtafel auf dem Zielgerät: Zeichenwerk, Bilddauer,
-                    längste Bildlücke. Läuft weiter — erst in eine Karte
-                    tippen, dann ablesen. Die Zahlen, die hier nicht
-                    entstehen können.
+Messschalter        In der Kopfzeile des Spiels: Messung an, und die Tafel
+                    läuft mit. Aufklappen zum Ablesen, Kopieren gibt alles
+                    als Text heraus — ein Foto muss abgetippt werden, und
+                    abgetippte Messwerte sind falsche Messwerte. `#messung`
+                    in der Adresse tut dasselbe für einen Besuch.
 npm run bildprompt  gibt EINEN Bild-Prompt vollstaendig aus - Stil-Block
                     schon eingesetzt, zum Kopieren in einem Stueck. Ohne
                     Suchtext listet es alle. Das Dokument haelt den
@@ -279,7 +280,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v198. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v199. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

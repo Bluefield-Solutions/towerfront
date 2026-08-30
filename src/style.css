@@ -75,6 +75,13 @@ html, body {
   min-height: 44px;
 }
 .chip:active { transform: scale(0.95); }
+/* Der Messschalter zeigt seinen Zustand, statt ihn zu verschweigen. Ein
+   Umschalter, dem man nicht ansieht, ob er an ist, laesst sich nur durch
+   Ausprobieren lesen - und beim Messen ist genau das die Frage. */
+.chip[data-on="1"] {
+  background: rgba(127, 231, 224, 0.16);
+  border-color: var(--crystal); color: #fff;
+}
 
 /* ----------------------------------------------------------------- Dock */
 
@@ -982,6 +989,26 @@ html, body {
   font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
   pointer-events: none; backdrop-filter: blur(6px);
 }
+/* Kopfzeile der Tafel: Aufklappen links, Kopieren rechts.
+   Die Tafel selbst laesst Tipper durch (`pointer-events: none`) - sonst
+   deckte sie beim Messen das halbe Spielfeld ab. Nur diese beiden Knoepfe
+   fangen den Finger. */
+#messtafel .mk {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  margin-bottom: 6px;
+}
+#messtafel .mb {
+  pointer-events: auto; cursor: pointer;
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  color: #E8EDF7; background: rgba(127, 231, 224, 0.14);
+  border: 1px solid rgba(140, 160, 200, 0.4); border-radius: 8px;
+  padding: 7px 10px; min-height: 34px;
+}
+#messtafel .mb:active { transform: scale(0.96); }
+/* Wie in der Wellenvorschau: die Trefferflaeche waechst ueber den Knopf
+   hinaus, ohne die Tafel groesser zu machen. 34 + zweimal 5 sind 44. */
+#messtafel .mb { position: relative; }
+#messtafel .mb::after { content: ''; position: absolute; inset: -5px; }
 #messtafel h2 { margin: 0 0 6px; font-size: 14px; letter-spacing: 0.04em; }
 #messtafel .mw {
   font-size: 10.5px; color: #9FB0CC; margin-bottom: 8px;

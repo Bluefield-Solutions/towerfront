@@ -693,11 +693,13 @@ const PROBEN = [
     tor: 'guards',
   },
   {
-    // D27: das Messgeraet darf im Spiel nicht auftauchen - Regel 6 sinngemaess.
-    name: 'Messtafel steht auch ohne Raute im Spiel',
+    // D27: das Messgeraet darf ungefragt nicht auftauchen - Regel 6
+    // sinngemaess. Seit v199 gibt es zwei Quellen (Schalter und Raute); die
+    // Probe schaltet beide auf "immer an".
+    name: 'Messtafel steht ungefragt im Spiel',
     datei: 'src/main.ts',
-    regel: /^if \(messungGewuenscht\(\)\) \{$/m,
-    ersatz: 'if (true) {',
+    regel: /  const soll = getSettings\(\)\.messung \|\| messungGewuenscht\(\);/,
+    ersatz: '  const soll = true;',
     tor: 'browsertor',
   },
   {
@@ -1534,6 +1536,35 @@ const PROBEN = [
     datei: 'src/ui/ui.ts',
     regel: /this\.wunschAussaat = aussaatLesen\(this\.oSeed\.value\);/,
     ersatz: 'this.wunschAussaat = null;',
+    tor: 'smoke',
+  },
+  {
+    // v199: der Messschalter muss seinen Zustand ZEIGEN. Ohne den Eintrag
+    // in der Signatur setzt er die Einstellung, die Tafel erscheint - und
+    // der Knopf bleibt aus, bis sich zufaellig etwas anderes aendert.
+    // Sechster Fall derselben Familie.
+    name: 'Messschalter zeigt seinen Zustand nicht',
+    datei: 'src/ui/ui.ts',
+    regel: /      getSettings\(\)\.messung,\n/,
+    ersatz: '',
+    tor: 'smoke',
+  },
+  {
+    // Und die Tafel muss sich wieder wegraeumen lassen - sonst bleibt sie
+    // nach dem Ausschalten stehen und deckt das Feld zu.
+    name: 'Messtafel laesst sich nicht abschalten',
+    datei: 'src/core/messung.ts',
+    suche: '  tafel?.remove();',
+    ersatz: '  void 0;',
+    tor: 'smoke',
+  },
+  {
+    // Zweimal anlegen darf keine zweite Tafel geben - der Aufruf steht in
+    // der Bildschleife und kommt deshalb staendig.
+    name: 'Messtafel legt sich doppelt an',
+    datei: 'src/core/messung.ts',
+    suche: '  if (tafel) return;',
+    ersatz: '  if (false) return;',
     tor: 'smoke',
   },
   {

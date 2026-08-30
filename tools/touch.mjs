@@ -165,6 +165,7 @@ const KNOEPFE = [
   ['.dock-toggle', 'Leiste einklappen'],
   ['.coach-skip', 'Einweisung ueberspringen'],
   ['.pick-btn', 'Turm aus der Bauwahl'],
+  ['#messtafel .mb', 'Messtafel: Aufklappen und Kopieren'],
 ];
 
 console.log('\nIm HTML — zugesagte Höhe laut Stilvorlage:\n');
@@ -188,7 +189,12 @@ for (const [sel, was] of KNOEPFE) {
 // und die Haelfte aller Knoepfe entsteht in `ui.ts`: Ausbauzweige, die
 // Zielwahl, seit v194 die Wellenvorschau. Von denen war nur gemessen, was
 // zufaellig schon in der Liste stand.
-const quellen = html + readFileSync(join(ROOT, 'src/ui/ui.ts'), 'utf8');
+// Knoepfe entstehen an drei Stellen: im Dokument, in der Oberflaeche und in
+// der Messtafel. Wer eine vierte aufmacht, traegt sie hier nach - sonst
+// misst sie niemand, und genau das war v196.
+const quellen = html
+  + readFileSync(join(ROOT, 'src/ui/ui.ts'), 'utf8')
+  + readFileSync(join(ROOT, 'src/core/messung.ts'), 'utf8');
 const klassen = [...quellen.matchAll(/<button[^>]*class=["`]([^"`$]+)/g)]
   .map((m) => m[1].split(' ')[0]).filter((k) => k && !k.includes('{'));
 const geprueft = new Set(KNOEPFE.map(([s]) => s.split(' ').pop().replace('.', '')));

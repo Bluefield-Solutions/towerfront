@@ -2096,6 +2096,75 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// Der Messschalter (D27): anschalten IM SPIEL, nicht nur ueber die Adresse.
+//
+// Geprueft wird die Kette, nicht der Knopf: Tipp -> Einstellung -> Anzeige.
+// Und in beide Richtungen (Regel 13) - ein Schalter, der nur einschaltet,
+// ist ein Knopf, kein Schalter.
+{
+  const knopf = win.document.getElementById('b-mess') as unknown as
+    { click(): void; dataset: Record<string, string> };
+  if (!knopf) {
+    problems.push('Messschalter: der Knopf "b-mess" fehlt in der Kopfzeile.');
+  } else {
+    const vorher = getSettings().messung;
+    knopf.click();
+    if (getSettings().messung === vorher) {
+      problems.push('Messschalter: ein Tipp aendert die Einstellung nicht.');
+    }
+    ui.sync();
+    if (knopf.dataset.on !== (getSettings().messung ? '1' : '0')) {
+      problems.push('Messschalter: der Knopf zeigt seinen Zustand nicht - '
+        + `Einstellung ${getSettings().messung}, Knopf "${knopf.dataset.on}".`);
+    }
+    // Gegenrichtung: noch einmal tippen schaltet wieder aus.
+    knopf.click();
+    ui.sync();
+    if (getSettings().messung !== vorher) {
+      problems.push('Messschalter: der zweite Tipp schaltet nicht wieder aus.');
+    }
+    if (knopf.dataset.on !== (vorher ? '1' : '0')) {
+      problems.push('Messschalter: nach dem Ausschalten bleibt der Knopf an.');
+    }
+  }
+}
+
+// Die Messtafel: laesst sie sich anlegen, wieder wegraeumen, und gibt sie
+// ihren Inhalt als Text heraus?
+//
+// Der Text ist der Grund, aus dem es den Kopierknopf gibt: ein Foto muss
+// abgetippt werden, und abgetippte Messwerte sind falsche Messwerte.
+{
+  const { messungStarten, messungAus, messungLaeuft, messungAlsText } =
+    await import('../src/core/messung');
+  if (messungLaeuft()) messungAus();
+  messungStarten(() => [['Probe', 'ja']]);
+  if (!messungLaeuft()) problems.push('Messtafel: laesst sich nicht anlegen.');
+  if (!win.document.getElementById('messtafel')) {
+    problems.push('Messtafel: sie steht nicht im Dokument.');
+  }
+  const text = messungAlsText();
+  for (const noetig of ['Bilddauer Mitte', 'Bildpunkte', 'Probe: ja']) {
+    if (!text.includes(noetig)) {
+      problems.push(`Messtafel: "${noetig}" fehlt im Text zum Kopieren.`);
+    }
+  }
+  // **Zweimal anlegen darf nicht zwei Tafeln geben.** Sie haengt an einer
+  // Einstellung, die jedes Bild abgeleitet wird - ein zweiter Aufruf ist
+  // damit die Regel und nicht die Ausnahme.
+  messungStarten(() => []);
+  if (win.document.querySelectorAll('#messtafel').length !== 1) {
+    problems.push('Messtafel: ein zweiter Aufruf legt eine zweite an.');
+  }
+  messungAus();
+  if (messungLaeuft() || win.document.getElementById('messtafel')) {
+    problems.push('Messtafel: sie laesst sich nicht wieder wegraeumen.');
+  }
+  if (messungAlsText() !== '') {
+    problems.push('Messtafel: nach dem Abschalten steht der alte Text noch bereit.');
+  }
+}
+
 // **Ein einziges schlechtes Bild darf die Schleife nicht toeten** (v197).
 //
 // Bis v196 stand `requestAnimationFrame` am ENDE des Bildes. Warf `update`

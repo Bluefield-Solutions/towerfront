@@ -46,6 +46,40 @@ export function messungGewuenscht(): boolean {
   return typeof location !== 'undefined' && location.hash.toLowerCase() === '#messung';
 }
 
+/** Laeuft die Tafel gerade? */
+export function messungLaeuft(): boolean { return tafel !== null; }
+
+/** Alles, was auf der Tafel steht, als Text - zum Weitergeben.
+ *
+ *  Ein Foto muss abgetippt werden, Text nicht. Und die Zeilen, auf die es
+ *  ankommt, sind Zahlen: abgetippt werden sie falsch. */
+export function messungAlsText(): string { return letzterText; }
+
+let tafel: HTMLElement | null = null;
+let letzterText = '';
+let eingeklappt = false;
+/** Was der Kopierknopf gerade sagt, und bis wann.
+ *
+ *  Die Rueckmeldung muss das Neuzeichnen ueberleben: die Tafel schreibt sich
+ *  alle dreissig Bilder neu, und die erste Fassung setzte "kopiert" direkt
+ *  auf den Knopf - eine halbe Sekunde spaeter war es weg, oft bevor man
+ *  hingesehen hatte. */
+let kopieMeldung = '';
+let kopieBis = 0;
+let laufendeAnimation = 0;
+let abmelden: (() => void) | null = null;
+
+/** Die Tafel schliessen und alles anhalten, was fuer sie laeuft. */
+export function messungAus(): void {
+  if (laufendeAnimation) cancelAnimationFrame(laufendeAnimation);
+  laufendeAnimation = 0;
+  abmelden?.();
+  abmelden = null;
+  tafel?.remove();
+  tafel = null;
+  letzterText = '';
+}
+
 /** Welches Zeichenwerk rechnet hier wirklich? */
 function zeichenwerk(): string {
   try {
@@ -69,9 +103,20 @@ export type Zusatzzeile = [string, string, boolean?];
  *  zweiten Tafel, weil ein Befund vom Zielgeraet als EIN Foto zurueckkommt -
  *  und was auf zwei Tafeln steht, kommt halb zurueck. */
 export function messungStarten(zusatz: () => Zusatzzeile[] = () => []): void {
-  const tafel = document.createElement('div');
+  if (tafel) return;
+  tafel = document.createElement('div');
   tafel.id = 'messtafel';
   document.body.appendChild(tafel);
+  // Die beiden Knoepfe der Tafel wirken ueber die Ereignisblase, damit sie
+  // das Neuschreiben des Inhalts ueberleben - sonst haenge nach dem ersten
+  // Bild kein Behandler mehr an ihnen.
+  const aufTipp = (ev: Event): void => {
+    const knopf = (ev.target as HTMLElement).closest('button');
+    if (!knopf) return;
+    if (knopf.dataset.mess === 'klappe') { eingeklappt = !eingeklappt; zeigen(); }
+    if (knopf.dataset.mess === 'kopie') kopieren(knopf);
+  };
+  tafel.addEventListener('click', aufTipp);
 
   const abstaende: number[] = [];
   const langeAufgaben: number[] = [];
@@ -108,9 +153,11 @@ export function messungStarten(zusatz: () => Zusatzzeile[] = () => []): void {
   /** Wurde die Seite seit dem letzten Bild verborgen? Dann ist der naechste
    *  Abstand die Pause und nicht die Bilddauer. */
   let versteckt = false;
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) versteckt = true;
-  });
+  const aufSichtbarkeit = (): void => { if (document.hidden) versteckt = true; };
+  document.addEventListener('visibilitychange', aufSichtbarkeit);
+  // Beim Abschalten wieder abmelden - sonst haengt nach dem dritten
+  // Ein und Aus derselbe Behandler dreimal am Dokument.
+  abmelden = () => document.removeEventListener('visibilitychange', aufSichtbarkeit);
 
   const zeigen = (): void => {
     const sortiert = [...abstaende].sort((a, b) => a - b);
@@ -120,25 +167,54 @@ export function messungStarten(zusatz: () => Zusatzzeile[] = () => []): void {
     const bilderJeSek = mitte > 0 ? 1000 / mitte : 0;
     const laeuft = performance.now() - start < AUFWAERM_MS;
 
-    const zeile = (name: string, wert: string, warnung = false): string =>
-      `<div class="mz${warnung ? ' warn' : ''}"><span>${name}</span><b>${wert}</b></div>`;
-
-    tafel.innerHTML =
-      `<h2>Messung${laeuft ? ' · wärmt auf' : ''}</h2>`
-      + `<div class="mw">${zeichenwerk()}</div>`
-      + zeile('Bildpunkte', `${Math.round(window.innerWidth)} × ${Math.round(window.innerHeight)}`
-        + ` · ${window.devicePixelRatio || 1}×`)
-      + zeile('Bilddauer Mitte', `${mitte.toFixed(1)} ms  (${bilderJeSek.toFixed(0)}/s)`, mitte > 20)
-      + zeile('Bilddauer p95', `${p95.toFixed(1)} ms`, p95 > 33)
+    // **Die Zeilen entstehen als DATEN, nicht als Markup** - und der Text
+    // zum Weitergeben fällt aus denselben Daten. Zwei Fassungen derselben
+    // Zahl waeren die zweite Wahrheit (Regel 15), und ausgerechnet beim
+    // Abschreiben von Messwerten faellt so etwas niemandem auf.
+    // **Waehrend des Aufwaermens steht ein Strich, keine Null.**
+    //
+    // "0.0 ms (0/s)" liest sich wie ein Befund, ist aber nur "noch nichts
+    // gezaehlt" - und seit die Tafel mitten im Spiel angeschaltet werden
+    // kann, sieht man diese zwei Sekunden jedes Mal.
+    const noch = (wert: string): string => (laeuft ? '—' : wert);
+    const daten: Zusatzzeile[] = [
+      ['Bildpunkte', `${Math.round(window.innerWidth)} × ${Math.round(window.innerHeight)}`
+        + ` · ${window.devicePixelRatio || 1}×`],
+      ['Bilddauer Mitte', noch(`${mitte.toFixed(1)} ms  (${bilderJeSek.toFixed(0)}/s)`),
+        !laeuft && mitte > 20],
+      ['Bilddauer p95', noch(`${p95.toFixed(1)} ms`), !laeuft && p95 > 33],
       // Die tragbare Zahl steht OBEN, die browserabhaengige darunter.
-      + zeile('Längste Bildlücke', `${groessteLuecke.toFixed(0)} ms`, groessteLuecke > SOLL_MS)
-      + (beobachterLaeuft
-        ? zeile('davon als Aufgabe', `${schlimmste} ms`, schlimmste > SOLL_MS)
-        : zeile('davon als Aufgabe', 'meldet dieser Browser nicht'))
+      ['Längste Bildlücke', noch(`${groessteLuecke.toFixed(0)} ms`),
+        !laeuft && groessteLuecke > SOLL_MS],
+      ['davon als Aufgabe', beobachterLaeuft
+        ? noch(`${schlimmste} ms`) : 'meldet dieser Browser nicht',
+      beobachterLaeuft && !laeuft && schlimmste > SOLL_MS],
       // **Der Zustandsteil.** Er misst nichts, er sagt, was gerade los ist -
       // und er steht hier, weil diese Tafel das einzige ist, was vom
       // Zielgeraet zurueckkommt.
-      + zusatz().map(([n, w, warn]) => zeile(n, w, warn)).join('')
+      ...zusatz(),
+    ];
+
+    const werk = zeichenwerk();
+    letzterText = [`Towerfront-Messung ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`,
+      werk, ...daten.map(([n, w]) => `${n}: ${w}`)].join('\n');
+
+    const zeile = ([name, wert, warnung]: Zusatzzeile): string =>
+      `<div class="mz${warnung ? ' warn' : ''}"><span>${name}</span><b>${wert}</b></div>`;
+
+    // Eingeklappt bleibt EINE Zeile stehen: die Bilddauer. Sie ist die
+    // Zahl, wegen derer man die Tafel anmacht - und eingeklappt deckt sie
+    // kein Spielfeld mehr zu.
+    const kopf = `<div class="mk">`
+      + `<button type="button" class="mb" data-mess="klappe" aria-expanded="${!eingeklappt}">`
+      + `${eingeklappt ? '▸' : '▾'} Messung${laeuft ? ' · wärmt auf' : ''}`
+      + `${eingeklappt && !laeuft ? ` · ${bilderJeSek.toFixed(0)}/s` : ''}</button>`
+      + `<button type="button" class="mb" data-mess="kopie">`
+      + `${performance.now() < kopieBis ? kopieMeldung : 'Kopieren'}</button></div>`;
+
+    tafel!.innerHTML = eingeklappt ? kopf : kopf
+      + `<div class="mw">${werk}</div>`
+      + daten.map(zeile).join('')
       // **Zwei Fussteile statt einem.** Der erste sagt, was zu tun ist, und
       // bleibt immer stehen; der zweite erklaert und faellt auf flachen
       // Geraeten weg. Auf dem iPhone quer war die Tafel 473 Punkte hoch bei
@@ -148,9 +224,36 @@ export function messungStarten(zusatz: () => Zusatzzeile[] = () => []): void {
       + ' spielen</b> — im Menü misst diese Tafel das Menü.</div>'
       + `<div class="mh mh-mehr">Sie rechnet über die letzten`
       + ` ${Math.round(FENSTER / 60)} Sekunden. Norm: eine Aufgabe über ${SOLL_MS} ms`
-      + ' blockiert die Eingabe. Diese Tafel gehört abfotografiert — die'
-      + ' Entwicklungsmaschine hat keine Grafikkarte und kann diese Zahlen nicht'
-      + ' selbst erzeugen.</div>';
+      + ' blockiert die Eingabe.</div>';
+  };
+
+  /** Alles in die Zwischenablage. Zwei Wege, weil der bequeme nicht ueberall
+   *  da ist: `navigator.clipboard` braucht eine sichere Verbindung, und ein
+   *  Telefon, das die Datei ueber `file://` oeffnet, hat keine. */
+  const kopieren = (knopf: HTMLElement): void => {
+    const fertig = (wie: string): void => {
+      kopieMeldung = wie;
+      kopieBis = performance.now() + 1600;
+      knopf.textContent = wie;
+    };
+    const alt = (): void => {
+      const feld = document.createElement('textarea');
+      feld.value = letzterText;
+      feld.setAttribute('readonly', '');
+      feld.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+      document.body.appendChild(feld);
+      feld.select();
+      feld.setSelectionRange(0, letzterText.length);
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch { ok = false; }
+      feld.remove();
+      fertig(ok ? 'kopiert' : 'ging nicht');
+    };
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(letzterText).then(() => fertig('kopiert'), alt);
+    } else {
+      alt();
+    }
   };
 
   const takt = (jetzt: number): void => {
@@ -172,11 +275,14 @@ export function messungStarten(zusatz: () => Zusatzzeile[] = () => []): void {
       if (abstaende.length > FENSTER) abstaende.shift();
       if (luecke > groessteLuecke) groessteLuecke = luecke;
     }
-    requestAnimationFrame(takt);
+    laufendeAnimation = requestAnimationFrame(takt);
     // Nicht in jedem Bild neu schreiben - das waere selbst eine Last.
     if (abstaende.length % 30 === 0) zeigen();
   };
   // Das erste Bild wird verworfen: sein Abstand enthaelt alles, was vorher lag.
-  requestAnimationFrame((t) => { vorher = t; requestAnimationFrame(takt); });
+  laufendeAnimation = requestAnimationFrame((t) => {
+    vorher = t;
+    laufendeAnimation = requestAnimationFrame(takt);
+  });
   zeigen();
 }

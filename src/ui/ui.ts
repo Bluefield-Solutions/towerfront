@@ -35,6 +35,7 @@ export class UI {
   private lives = $('v-lives');
   private wave = $('v-wave');
   private bSound = $<HTMLButtonElement>('b-sound');
+  private bMess = $<HTMLButtonElement>('b-mess');
   private bSpeed = $<HTMLButtonElement>('b-speed');
   private bPause = $<HTMLButtonElement>('b-pause');
   private pauseMenu = $<HTMLElement>('pause-menu');
@@ -223,6 +224,14 @@ export class UI {
     // haeufigste Fehler dieser Sorte: die Einstellung steht im Speicher, der
     // Regler zeigt sie an, und gehoert wird trotzdem der Standardwert.
     Sfx.setVolume(getSettings().volume);
+    // Der Messschalter (D27). Er setzt nur die Einstellung; ob die Tafel
+    // dasteht, leitet `main.ts` daraus ab - sonst gaebe es zwei Wahrheiten
+    // darueber, ob gemessen wird (Regel 6).
+    this.bMess.addEventListener('click', () => {
+      Sfx.unlock(); Sfx.play('tap');
+      saveSettings({ messung: !getSettings().messung });
+      this.sync();
+    });
     this.bSound.addEventListener('click', () => {
       Sfx.unlock();
       const on = !getSettings().sound;
@@ -580,6 +589,12 @@ export class UI {
     const sig = [
       s.gold, s.lives, s.waveNumber, s.waveActive, s.speed, s.paused,
       s.buildChoice, s.phase, getSettings().sound,
+      // Sechster Fall derselben Art nach Startknopf, Zielwahl, Bilanzblatt,
+      // Einstellungen und Gegnerauskunft: der Messschalter aendert nichts
+      // am Gold. Ohne diesen Eintrag setzt er die Einstellung, die Tafel
+      // erscheint - und der Knopf selbst bleibt aus, bis sich zufaellig
+      // etwas anderes aendert. Beim Schreiben sofort aufgelaufen.
+      getSettings().messung,
       // buildAt gehoert dazu: aendert sich nur der gewaehlte Bauplatz, muss
       // die Oberflaeche trotzdem neu zeichnen - sonst bleibt die Turmwahl
       // unsichtbar, obwohl der Zustand sie verlangt.
@@ -682,6 +697,7 @@ export class UI {
     this.lives.textContent = String(s.lives);
     this.wave.textContent = s.endless ? `${s.waveNumber} ∞` : `${s.waveNumber}/${s.totalWaves}`;
     this.bSound.textContent = getSettings().sound ? 'Ton' : 'Stumm';
+    this.bMess.dataset.on = getSettings().messung ? '1' : '0';
     this.bSpeed.textContent = `${s.speed}×`;
     this.bPause.textContent = s.paused ? 'Weiter' : 'Pause';
     // Das Pausenmenue haengt am Pausenzustand, nicht an einem eigenen

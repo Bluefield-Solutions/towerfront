@@ -12,7 +12,7 @@ import { auswertung } from './game/auswertung';
 import { saveGame } from './game/save';
 import { Renderer } from './gfx/renderer';
 import { UI } from './ui/ui';
-import { messungGewuenscht, messungStarten } from './core/messung';
+import { messungAus, messungGewuenscht, messungLaeuft, messungStarten } from './core/messung';
 import { bildspeicherByte } from './gfx/speicher';
 
 // **Die Kostentabelle der Verbesserungen an die Ablage geben - beinahe
@@ -173,6 +173,10 @@ const loop = new Loop(
       else if (state.phase !== 'playing') showResult();
     }
     ui.sync();
+    // Jedes Bild abgeleitet, wie die Spielansicht: der Schalter setzt nur
+    // die Einstellung, hier entsteht daraus die Tafel. Der Aufruf kehrt
+    // sofort zurueck, wenn sich nichts geaendert hat.
+    messtafelPflegen();
     ui.perf(fpsAvg);
     renderer.coachHint = ui.coachHint;
     // Die Einfuehrungsleiste schiebt das Feld nach unten und wieder zurueck.
@@ -257,7 +261,19 @@ loop.start();
 //
 // Sie laeuft NEBEN dem Spiel her und misst, was das Spiel ohnehin tut. Ein
 // eigener Pruefablauf wuerde sich selbst messen.
-if (messungGewuenscht()) {
+// **Ob die Tafel dasteht, wird jedes Bild abgeleitet** (Regel 6).
+//
+// Zwei Quellen schalten sie ein: der Schalter in der Kopfzeile (bleibt
+// gespeichert) und `#messung` in der Adresse (gilt fuer diesen Besuch).
+// Beide muenden hier, damit es keine Stelle gibt, an der man das Anlegen
+// oder das Aufraeumen vergessen kann.
+const messtafelPflegen = (): void => {
+  const soll = getSettings().messung || messungGewuenscht();
+  if (soll === messungLaeuft()) return;
+  if (soll) messungAnlegen(); else messungAus();
+};
+
+function messungAnlegen(): void {
   // **Was die Tafel ausser Zahlen noch sagen muss.**
   //
   // Der erste Befund vom Zielgeraet lautete "ich konnte nichts mehr
@@ -318,3 +334,4 @@ if (messungGewuenscht()) {
     return zeilen;
   });
 }
+messtafelPflegen();

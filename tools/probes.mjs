@@ -1408,8 +1408,15 @@ const PROBEN = [
     // gewaehlte Knopf ungewaehlt, bis sich zufaellig das Gold aendert.
     name: 'Einstellungen werden hinter dem Ausstieg abgeleitet',
     datei: 'src/ui/ui.ts',
-    regel: /^    this\.syncOptionen\(\);$/m,
-    ersatz: '    // Ableitung verschoben.',
+    // **Mit dem Nachbarn zusammen gesucht, nicht allein.**
+    //
+    // `syncOptionen()` wird seit v196 an ZWEI Stellen gerufen - die zweite
+    // steht in `endTutorial`. Die Probe griff danach die erste im Text, und
+    // das war die falsche: das Tor blieb gruen, obwohl der Eingriff ankam.
+    // Der volle Probenlauf zu v199 hat es gemeldet, der Musterlauf hatte
+    // es als "2 Treffer, greift den ersten" schon angezeigt.
+    regel: /    this\.syncOptionen\(\);\n    const sel = s\.selectedTower;/,
+    ersatz: '    const sel = s.selectedTower;',
     tor: 'smoke',
   },
   {
@@ -1572,16 +1579,28 @@ const PROBEN = [
     // vom Zielgeraet, kein Tor - abgeschnitten war ihr ganzer Kopf.
     name: 'Messtafel laeuft oben aus dem Bild',
     datei: 'src/style.css',
-    suche: '  #messtafel .mh-mehr { display: none; }',
-    ersatz: '  #messtafel .mh-mehr { display: block; }',
+    // Der Kompaktblock greift gar nicht mehr - dann ist die Tafel 438 statt
+    // 274 Punkte hoch und ihr Kopf liegt ausserhalb des Bildes.
+    //
+    // Die erste Fassung schaltete nur den zweiten Fussteil wieder ein. Das
+    // kam an, reichte aber nicht mehr: seit v199 ist der Text kuerzer, und
+    // die Tafel blieb mit 332 Punkten knapp im Bild. Eine Gegenprobe, deren
+    // Eingriff ankommt und trotzdem nichts ausloest, beweist genauso wenig
+    // wie eine, die gar nicht ankommt (Regel 3).
+    suche: '@media (max-height: 520px) {',
+    ersatz: '@media (max-height: 1px) {',
     tor: 'browsertor',
   },
   {
     // Und sie darf keine Null melden, wo der Browser gar nicht misst.
     name: 'Messtafel behauptet null lange Aufgaben',
     datei: 'src/core/messung.ts',
-    regel: /if \(arten && arten\.includes\('longtask'\)\) \{/,
-    ersatz: "if (true) {",
+    // **Der Beobachter laeuft, sammelt aber nichts** - genau der Fall, den
+    // Safari erzeugt. Die erste Fassung erzwang stattdessen seine
+    // Anmeldung, und die gelingt in Chromium ohnehin: der Eingriff kam an
+    // und aenderte nichts (Regel 3).
+    regel: /for \(const e of liste\.getEntries\(\)\) langeAufgaben\.push\(Math\.round\(e\.duration\)\);/,
+    ersatz: 'void liste;',
     tor: 'browsertor',
   },
   {

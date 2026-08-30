@@ -198,8 +198,23 @@ const quellen = html
 const klassen = [...quellen.matchAll(/<button[^>]*class=["`]([^"`$]+)/g)]
   .map((m) => m[1].split(' ')[0]).filter((k) => k && !k.includes('{'));
 const geprueft = new Set(KNOEPFE.map(([s]) => s.split(' ').pop().replace('.', '')));
+// **Und das ist ein FEHLER, kein Hinweis.**
+//
+// Acht Fassungen lang standen hier acht Hinweise untereinander, und acht
+// Hinweise liest niemand mehr. Als sie in v196 zu Messungen wurden, war
+// einer davon 16 Punkte gross und vier gehoerten zu einem Bildschirm, den
+// es seit v43 nicht mehr gab.
+//
+// **Diese Zeile stand schon in v196 so da - im Baum aber nicht.** Die
+// Aenderung ist zwischen Schreiben und Einchecken verlorengegangen, und
+// gemerkt hat es niemand: der Hinweis sah aus wie vorher, und das Tor
+// blieb gruen. Gefunden hat es der volle Probenlauf zu v199, weil die
+// zugehoerige Gegenprobe nichts mehr bewies (Regel 5).
 for (const k of new Set(klassen)) {
-  if (!geprueft.has(k) && k !== 'link') hinweise.push(`Knopfklasse "${k}" wird nicht gemessen.`);
+  if (!geprueft.has(k)) {
+    probleme.push(`Knopfklasse "${k}" steht in keiner geprueften Auswahl. `
+      + 'Was der Finger trifft, gehoert in KNOEPFE - sonst misst es niemand.');
+  }
 }
 
 for (const h of hinweise) console.log(`\n  Hinweis: ${h}`);

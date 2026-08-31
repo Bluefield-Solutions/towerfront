@@ -1236,7 +1236,13 @@ for (const id of TOWER_ORDER) {
 // Massstab ein zweites Mal hinschreibt, faellt hier auf.
 {
   const werkzeuge = readdirSync(join(ROOT, 'tools'))
-    .filter((f) => /\.(ts|mjs)$/.test(f)
+    // `probes.mjs` ist ausgenommen, und zwar nicht aus Bequemlichkeit: es
+    // HAELT die Gegenprobe zu diesem Waechter, also den Text, nach dem er
+    // sucht. Ohne die Ausnahme faellt er ueber seine eigene Probe - dasselbe
+    // Muster, das der Chromium-Waechter mit einem zusammengesetzten Suchwort
+    // loest. Hier geht das nicht: die Probe muss den Namen woertlich
+    // einbauen, sonst kommt ihr Eingriff nicht an (Regel 3).
+    .filter((f) => /\.(ts|mjs)$/.test(f) && f !== 'probes.mjs'
       && f !== 'anzeigegroesse.mjs' && f !== 'anzeigegroesse.d.mts');
   for (const f of werkzeuge) {
     const quelle = readFileSync(join(ROOT, 'tools', f), 'utf8');

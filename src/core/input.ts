@@ -259,16 +259,27 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
 
     // Trefferzugabe so gross, dass die Flaeche 44 Punkte erreicht.
     const existing = s.towerUnder(c.x, c.y, r.scale);
+    // **Ein Tipp aufs Feld gibt niemals Gold aus** (B2 des
+    // Bedienungs-Abgleichs).
+    //
+    // Bis v201 stand hier `s.build(...)`: wer in der Turmleiste eine Sorte
+    // gewaehlt hatte, baute mit dem naechsten Tipp - sofort, ohne
+    // Zwischenschritt, ohne Zurueck. Auf der Ascheschlucht sind **73 % der
+    // Flaeche nicht bebaubar** und nichts zeigt vorher welche; der Tipp war
+    // damit eine Wette, die Gold kostet.
+    //
+    // Jetzt oeffnet er dieselbe Turmwahl wie ein Tipp auf freies Feld -
+    // nur mit der gewaehlten Sorte schon hervorgehoben. Bezahlt wird auf
+    // einer benannten Flaeche, die ihren Preis traegt. Es kostet keinen
+    // Handgriff mehr als vorher: vorher Leiste + Feld, jetzt Feld + Wahl.
     if (s.buildChoice) {
       if (existing) { s.selectedTower = existing; s.buildChoice = null; Sfx.play('tap'); return; }
       const choice = s.buildChoice;
       const ziel = s.einrasten(choice, c.x, c.y, fingerInWelt(r.scale));
-      if (ziel && s.build(ziel.x, ziel.y, choice)) {
-        // Reicht das Gold nicht mehr fuer den naechsten Turm, Auswahl loesen.
-        if (s.gold < TOWERS[choice].base.cost) s.buildChoice = null;
-      } else {
-        s.bauHinweis(c.x, c.y, s.warumNicht(choice, c.x, c.y));
-      }
+      if (ziel) { s.buildAt = ziel; Sfx.play('tap'); }
+      // Ein Fehlgriff kostet nichts und loescht die Wahl nicht (B4): man
+      // versucht es einfach nebenan.
+      else s.bauHinweis(c.x, c.y, s.warumNicht(choice, c.x, c.y));
       return;
     }
     if (existing) { s.selectedTower = existing; s.buildAt = null; Sfx.play('tap'); return; }

@@ -1546,6 +1546,26 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // v202, B2 des Bedienungs-Abgleichs: ein Tipp aufs Feld darf niemals
+    // Gold ausgeben. Die Probe stellt den alten Weg wieder her - gewaehlte
+    // Turmsorte, ein Tipp, gebaut. Auf der Ascheschlucht sind 73 % der
+    // Flaeche nicht bebaubar, und nichts zeigt vorher welche.
+    name: 'Ein Tipp aufs Feld baut wieder sofort',
+    datei: 'src/core/input.ts',
+    suche: '      if (ziel) { s.buildAt = ziel; Sfx.play(\'tap\'); }',
+    ersatz: '      if (ziel) { s.build(ziel.x, ziel.y, choice); }',
+    tor: 'browsertor',
+  },
+  {
+    // Und die Vorwahl muss in der Turmwahl zu sehen sein, sonst faengt die
+    // Entscheidung nach dem Tipp von vorne an.
+    name: 'Vorgewaehlte Turmsorte nicht hervorgehoben',
+    datei: 'src/ui/ui.ts',
+    suche: "          + `${id === s.buildChoice ? ' data-vor=\"1\"' : ''}`",
+    ersatz: "          + ''",
+    tor: 'browsertor',
+  },
+  {
     // v201: der Inhalt des Pruefstegs muss HINEINPASSEN. Der Boden unter der
     // Werteliste stand absolut (96 Punkte) und gab nicht nach, als die
     // Kopfzeile auf drei Zeilen wuchs: 322 Punkte Inhalt in 288 Punkten

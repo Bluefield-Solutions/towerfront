@@ -26,7 +26,8 @@ export const TUTORIAL: TutorialStep[] = [
   },
   {
     id: 'place',
-    text: 'Jetzt auf eine helle Fläche neben dem Pfad drücken. Gebaut wird erst beim Loslassen.',
+    text: 'Jetzt neben den Weg tippen — dort öffnet sich die Wahl. Gebaut wird erst,'
+      + ' wenn du in der Wahl auf den Turm tippst.',
     target: 'world',
     done: (s) => s.gebaute.length > 0,
   },

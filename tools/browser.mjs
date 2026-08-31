@@ -414,6 +414,52 @@ if (!start) {
     fail('Kein Tipp auf freies Feld oeffnet die Turmwahl - so kommt man nicht zum Bauen.');
   } else {
     console.log(`\nBauwahl geöffnet mit einem Tipp auf ${bauFleck.x},${bauFleck.y}.`);
+
+    // **Ein Tipp aufs Feld darf niemals Gold ausgeben** (B2).
+    //
+    // Bis v201 baute er sofort, sobald in der Turmleiste eine Sorte gewaehlt
+    // war - auf der Ascheschlucht sind 73 % der Flaeche nicht bebaubar, und
+    // nichts zeigt vorher welche. Geprueft wird das Gold, nicht der Code:
+    // Leiste waehlen, aufs Feld tippen, Gold vergleichen.
+    {
+      const goldJetzt = () => seite.evaluate(() =>
+        Number(document.getElementById('v-gold').textContent));
+      await seite.evaluate(() => document.getElementById('i-close')?.click());
+      await seite.evaluate(() => document.getElementById('tb-arrow').click());
+      await seite.waitForTimeout(250);
+      const vorher = await goldJetzt();
+      await seite.mouse.click(bauFleck.x, bauFleck.y);
+      await seite.waitForTimeout(350);
+      const nachher = await goldJetzt();
+      if (nachher !== vorher) {
+        fail(`Ein Tipp aufs Feld hat ${vorher - nachher} Gold ausgegeben. `
+          + 'Mit gewaehlter Turmsorte muss er die Wahl OEFFNEN, nicht bauen - '
+          + 'sonst ist jeder Fehlgriff bezahlt.');
+      }
+      if (await seite.evaluate(() => document.getElementById('pick').hidden)) {
+        fail('Ein Tipp aufs Feld mit gewaehlter Turmsorte oeffnet die Turmwahl nicht.');
+      }
+      // Und die gewaehlte Sorte muss darin hervorgehoben sein, sonst faengt
+      // die Entscheidung von vorne an.
+      if (!(await seite.evaluate(() => !!document.querySelector('.pick-btn[data-vor="1"]')))) {
+        fail('In der Turmwahl ist die vorgewaehlte Sorte nicht hervorgehoben.');
+      }
+      // Bezahlt wird erst auf der benannten Flaeche.
+      const konnte = await seite.evaluate(() => {
+        const b = document.querySelector('.pick-btn:not([disabled])');
+        if (!b) return false;
+        b.click(); return true;
+      });
+      await seite.waitForTimeout(350);
+      if (!konnte) {
+        fail('In der Turmwahl war kein Turm baubar, obwohl der Fleck als bebaubar galt.');
+      } else if ((await goldJetzt()) >= vorher) {
+        fail('Ein Tipp auf die Turmwahl baut nicht - dann fuehrt kein Weg mehr zum Bauen.');
+      }
+      // Zurueck auf Anfang fuer die naechsten Zustaende.
+      await seite.evaluate(() => document.getElementById('i-close')?.click());
+      await seite.waitForTimeout(200);
+    }
     await inZustand('mit offener Bauwahl');
 
     // Bauen, und danach denselben Fleck noch einmal antippen: das oeffnet

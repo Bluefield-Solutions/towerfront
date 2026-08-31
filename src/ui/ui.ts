@@ -944,7 +944,10 @@ export class UI {
     // Die Turmzahl gehoert in den Schluessel: baut jemand nebenan, aendert
     // sich, was hier noch passt - und die Wahl muesste es zeigen. Ohne sie
     // bliebe die Beschriftung von vorhin stehen.
-    const schluessel = `${Math.round(at.x)}|${Math.round(at.y)}|${s.gold}|${s.towers.length}`;
+    // Die Vorwahl gehoert in den Schluessel: wer in der Leiste umwaehlt,
+    // waehrend die Wahl offen steht, soll die Hervorhebung wandern sehen.
+    const schluessel = `${Math.round(at.x)}|${Math.round(at.y)}|${s.gold}|${s.towers.length}`
+      + `|${s.buildChoice ?? '-'}`;
     if (schluessel !== this.pickKey) {
       this.pickKey = schluessel;
       this.pickRow.innerHTML = TOWER_ORDER.map((id) => {
@@ -964,7 +967,12 @@ export class UI {
         const marke = grund !== null
           ? `<span class="pick-nein">${grund}</span>`
           : `<span class="pick-cost">${def.base.cost}</span>`;
+        // **Die in der Leiste gewaehlte Sorte steht hervorgehoben da.**
+        // Seit v202 baut ein Tipp aufs Feld nicht mehr, er oeffnet diese
+        // Wahl - und dann muss sofort zu sehen sein, was man vorhin gewaehlt
+        // hat, sonst faengt die Entscheidung von vorne an.
         return `<button class="pick-btn${grund !== null ? ' eng' : ''}" data-turm="${id}"`
+          + `${id === s.buildChoice ? ' data-vor="1"' : ''}`
           + `${sperre ? ' disabled' : ''}`
           + ` title="${grund !== null ? `Passt hier nicht: ${grund}` : def.name}">`
           + `<span class="pick-name">${def.name}</span>${marke}</button>`;
@@ -997,6 +1005,10 @@ export class UI {
           this.onPick?.(id, ziel.x, ziel.y);
         });
       }
+      // Und beim Oeffnen gleich zeigen, wo die vorgewaehlte Sorte stuende.
+      // Das ist die halbe Antwort auf B3 des Abgleichs: das Bild sagt "hier
+      // ja / hier nein", bevor man bezahlt.
+      if (s.buildChoice) s.vorschau = { id: s.buildChoice, x: at.x, y: at.y };
     }
 
     const p = this.worldToScreen?.(at.x, at.y);

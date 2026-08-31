@@ -134,6 +134,33 @@ export class LanePath {
     return { min: Math.min(...this.half), max: Math.max(...this.half) };
   }
 
+  /** Abstand zum WEGKOERPER: wie weit liegt dieser Punkt neben dem Weg, wenn
+   *  man dessen oertliche Breite schon abzieht? Negativ heisst: auf dem Weg.
+   *
+   *  **Warum das eine eigene Frage ist.** Bis v202 rechnete die Bauregel
+   *  `distanceTo(x, y) < r + Abstand + halfNear(x, y)` - zwei Fragen, die von
+   *  verschiedenen Stellen der Kurve antworten: der Abstand von der naechsten
+   *  STRECKE, die Breite vom naechsten PUNKT. Solange die Breite gleich
+   *  bleibt, faellt das nicht auf. Wo sie sich aendert, ist es eine Regel, die
+   *  sich selbst widerspricht - und vor allem eine, die man nicht zeichnen
+   *  kann, weil ihr Gebiet keine Form hat.
+   *
+   *  Diese Fassung ist EINE Frage: das Minimum ueber alle Abtastpunkte von
+   *  "Abstand minus dortige Breite". Ihr Gebiet ist genau die Vereinigung der
+   *  Kreise um die Abtastpunkte - also zeichenbar, und zwar ohne jede
+   *  Naeherung (Regel 15: die Kante, die man sieht, ist dieselbe Rechnung wie
+   *  die, nach der gebaut wird). Sie ist ausserdem billiger als vorher: ein
+   *  Durchlauf statt zwei. */
+  schlauchAbstand(x: number, y: number): number {
+    let best = Infinity;
+    for (let i = 0; i < this.pts.length; i++) {
+      const dx = this.pts[i].x - x, dy = this.pts[i].y - y;
+      const d = Math.sqrt(dx * dx + dy * dy) - (this.half[i] ?? 42);
+      if (d < best) best = d;
+    }
+    return best;
+  }
+
   /** Halbe Wegbreite an der Stelle, die diesem Punkt am naechsten liegt. */
   halfNear(x: number, y: number): number {
     let best = 0, bestD = Infinity;

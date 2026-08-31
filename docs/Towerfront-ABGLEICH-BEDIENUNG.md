@@ -114,16 +114,25 @@ bekommt deshalb Abstand.
 
 | # | Soll | heute | Abstand |
 |---|---|---|---|
-| B1 | Baufläche vorher sichtbar | **fehlt** — 26,8 bis 53,2 % sind bebaubar, und nichts zeigt welche | ganz |
+| B1 | Baufläche vorher sichtbar | **erledigt in v203** — die verbotene Fläche wird abgedunkelt, die baubare bleibt, wie die Karte gemalt ist. Nicht abgetastet, sondern gezeichnet: Rand, Wegschlauch, Geländekreise und Türme sind ein Pfad, und seine Kante IST die Bauregel — gemessen 0,00 ‰ Abweichung gegen `warumNicht` auf allen drei Karten (`npm run bauflaechetor`) | keiner |
 | B2 | Tipp gibt nie Gold aus | **erledigt in v202** — der Tipp öffnet jetzt dieselbe Turmwahl wie ein Tipp auf freies Feld, mit der gewählten Sorte hervorgehoben. Bezahlt wird auf einer benannten Fläche, die ihren Preis trägt | keiner |
-| B3 | laufendes Ja/Nein | **halb da, in v202 besser** — beim Öffnen der Wahl steht der Geisterturm samt Reichweite im Feld, und was nicht passt, ist mit Grund gesperrt („WEG“) statt mit Preis. Was fehlt, ist das laufende Ja/Nein **während** der Suche | halb |
+| B3 | laufendes Ja/Nein | **erledigt in v203** — die Fläche aus B1 ist genau dieses laufende Ja/Nein: sie steht, solange eine Turmsorte gewählt ist, und ändert sich mit ihr, weil der Platzbedarf in der Kante steckt. Der Mörser braucht sichtbar mehr Boden als der Bogenturm | keiner |
 | B4 | Fehlgriff kostenlos | **erledigt in v202** — er kostet nichts mehr, `bauHinweis` sagt warum, und die Wahl bleibt | keiner |
 | B5 | Abbruch so leicht wie Wahl | **erfüllt** — ein zweiter Tipp auf denselben Turmknopf legt die Wahl zurück. Das gab es schon, es stand nur nirgends | keiner |
 | B6 | Steg getrennt | **erledigt in v201** — Name, Werte, Handlungen getrennt; Verkaufen in der Fusszeile | keiner |
 | B7 | passt hinein | **erledigt in v201** — 286 Punkte Inhalt in 288, mit und ohne aufgeklappte Ziellogik. Das Browsertor misst es | keiner |
 
-**Stand nach v202: einer ganz offen (B1), einer halb (B3), fünf erfüllt.**
+**Stand nach v203: alle sieben erfüllt.**
 Beim ersten Abgleich waren vier ganz offen und zwei halb.
+
+**Und ein Befund, der nicht im Soll stand.** B1 liess sich zuerst gar nicht
+zeichnen: die Bauregel fragte den Abstand von der nächsten Wegstrecke, die
+Wegbreite aber vom nächsten Abtastpunkt — zwei Stellen der Kurve, also ein
+Gebiet ohne Form. Gemessen lag die schönstmögliche Zeichnung davon bis zu
+**30,8 Weltpunkte** neben der Regel. Seit v203 ist die Regel ein Minimum über
+Kreise (`LanePath.schlauchAbstand`), und die gezeigte Kante ist die
+Vereinigung genau dieser Kreise. Die Frage „ist das Bild genau genug" hat
+sich damit nicht verbessert, sondern aufgelöst.
 
 **Beim ersten Abgleich:** vier von sieben ganz offen, zwei halb. Der Nutzer hat mit vier
 Sätzen dieselbe Liste beschrieben, die diese Messung liefert — das ist kein

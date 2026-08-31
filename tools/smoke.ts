@@ -2418,20 +2418,31 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
-// Die Baufeldpunkte bleiben oertlich.
+// Die Baukante wird nicht nachgebaut.
 //
-// Auf der Frostkarte sind 311 Rasterstellen bebaubar. Zeigt man sie alle, liegt
-// eine Tapete ueber der Landschaft - zweimal gemeldet als "passt nicht ins
-// Level", und zweimal habe ich stattdessen an der Farbe gedreht. Die Auskunft
-// wird nur dort gebraucht, wo der Finger ist.
+// Hier stand bis v203 die Pruefung, dass die Bauauskunft nur ein Fenster um
+// den Finger zeigt statt der ganzen Karte - richtig fuer ein Punktraster,
+// gegenstandslos fuer eine Flaeche. Die Bildabnahme misst jetzt, was an ihre
+// Stelle tritt: wie stark abgedunkelt wird, wieviel Zeichnung bleibt und ob
+// die Kante hart ist.
+//
+// Was ein Textblick weiterhin kann, und die Bildabnahme nicht: sehen, ob das
+// Zeichenwerk die Bauregel EIN ZWEITES MAL rechnet. Genau daran ist die alte
+// Fassung gescheitert - die gezeigte Kante lag bis zu 30,8 Weltpunkte neben
+// der Regel, weil beide dieselbe Frage getrennt beantworteten (Regel 15).
+// Wer in `renderer.ts` wieder `PATH_CLEARANCE` oder `halfNear` anfasst, baut
+// sie nach.
 {
   const quelle = readFileSync(new URL('../src/gfx/renderer.ts', import.meta.url), 'utf8');
-  const stelle = quelle.indexOf('drawImage(this.buildFenster');
-  if (stelle < 0) {
-    problems.push('Baufelder: das oertliche Fenster fehlt - die Punkte liegen wieder ueber der ganzen Karte.');
+  if (!/verbotenerBereich\(/.test(quelle)) {
+    problems.push('Baukante: das Zeichenwerk holt die verbotene Flaeche nicht mehr aus '
+      + 'bauflaeche.ts - dann zeigt es etwas anderes an, als die Bauregel sagt.');
   }
-  if (/ctx\.drawImage\(this\.buildMask!, 0, 0\)/.test(quelle)) {
-    problems.push('Baufelder: die volle Maske wird gezeichnet statt des Fensters um den Zeiger.');
+  for (const wort of ['PATH_CLEARANCE', 'halfNear', 'schlauchAbstand']) {
+    if (quelle.includes(wort)) {
+      problems.push(`Baukante: renderer.ts rechnet mit \`${wort}\` - die Bauregel steht `
+        + 'damit an zwei Stellen, und gepflegt wird eine davon.');
+    }
   }
 }
 

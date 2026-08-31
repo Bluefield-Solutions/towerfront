@@ -644,6 +644,12 @@ takes.push(['kristall-riss', () => shot('kristall-riss', 844, 390, (s) => {
 
 takes.push(['r4-bollwerk', () => shot('r4-bollwerk', 844, 390, (s) => {
   s.reset(5, 'normal', 'spiralhain');
+  // Seit C18 haengen drei der vier Faehigkeiten an gewonnenen Karten. Diese
+  // Aufnahme lief seitdem gegen `ready() === false` und ist mit "Bollwerk
+  // liess sich nicht ausloesen" umgefallen - unbemerkt, weil `--tor` sie
+  // nicht faehrt. Ein Bild, das nur der Mensch ansieht, hat kein Tor hinter
+  // sich (Regel 8, andersherum gelesen).
+  s.karten = 3;
   stock(s, 10);
   s.waveIndex = 9;
   s.startWave();
@@ -1202,6 +1208,24 @@ pruefungen.push(async () => {
 // Gemessen wird genau dieser Zustand: eine Turmart ist gewaehlt, kein Finger
 // liegt, kein Zeiger schwebt. Der Unterschied zum Bild ohne Turmwahl ist die
 // Auskunft, die der Spieler bekommt.
+//
+// **Seit v203 wird nicht mehr GEZAEHLT, sondern gewogen.** Bis dahin stand
+// hier "zwischen 2 000 und 45 000 veraenderte Bildpunkte" - eine Frage, die
+// nur zu einem Punktraster passt. Die Baukante deckt jetzt die halbe Karte
+// ab, und das ist kein Fehler, sondern ihr Sinn: verboten wird abgedunkelt,
+// erlaubt bleibt unberuehrt. Eine Flaeche darf gross sein; sie darf nur die
+// Landschaft nicht fressen. Also drei Zahlen statt einer:
+//
+//   * **Abdunklung** - wieviel Helligkeit die verbotene Seite verliert,
+//     anteilig an ihrer eigenen (Regel 2). Zuwenig sieht man nicht, zuviel
+//     ist ein Vorhang.
+//   * **Zeichnung** - wieviel Streuung im abgedunkelten Teil uebrig bleibt,
+//     gemessen gegen dieselbe Flaeche vorher. Ein Schleier waescht die
+//     Struktur weg; ein Filter laesst sie stehen. Genau hier faellt der
+//     Entwurf durch, der vor v122 hier hing.
+//   * **Kante** - wieviele Punkte WEDER unberuehrt NOCH voll abgedunkelt
+//     sind. Bei einer harten Kante ist das nur der Saum der Rasterung; bei
+//     einer weich hochgezogenen Maske ist es alles.
 pruefungen.push(async () => {
   const canvas = createCanvas(844 * 2, 390 * 2);
   Object.defineProperty(canvas, 'clientWidth', { get: () => 844 });
@@ -1230,22 +1254,58 @@ pruefungen.push(async () => {
   const ohne = nimm();
   s.buildChoice = 'arrow';
   const mit = nimm();
-  let anders = 0;
+
+  const hell = (a, i) => (a[i] * 0.299 + a[i + 1] * 0.587 + a[i + 2] * 0.114);
+  const beruehrt = [];
+  let mittendrin = 0, angefasst = 0;
   for (let i = 0; i < ohne.length; i += 4) {
-    if (Math.abs(ohne[i + 1] - mit[i + 1]) > 5 || Math.abs(ohne[i + 2] - mit[i + 2]) > 5) anders++;
+    const v = hell(ohne, i);
+    if (v < 8) continue; // schwarzer Rahmen: dort ist nichts abzudunkeln
+    const anteil = (v - hell(mit, i)) / v;
+    if (anteil < 0.04) continue;
+    angefasst++;
+    beruehrt.push(i);
+    if (anteil < 0.18) mittendrin++;
   }
-  console.log(`  Bauplaetze ohne Finger: ${anders} Bildpunkte Auskunft`);
-  if (anders < 2000) {
-    throw new Error(
-      `nach der Turmwahl aendern sich nur ${anders} Bildpunkte - ohne liegenden `
-      + 'Finger sieht der Spieler nicht, wo er bauen darf.',
-    );
+  if (!angefasst) {
+    throw new Error('nach der Turmwahl aendert sich kein Bildpunkt - ohne liegenden '
+      + 'Finger sieht der Spieler nicht, wo er bauen darf.');
   }
-  // Und die Gegenrichtung: es darf keine Tapete werden. Bei einem vollen
-  // Raster ueber der halben Karte waeren es ueber 60 000.
-  if (anders > 45000) {
-    throw new Error(`die Bauauskunft bedeckt ${anders} Bildpunkte - das ist eine `
-      + 'Tapete ueber der Landschaft, nicht eine Auskunft.');
+
+  // Abdunklung und Zeichnung, beide NUR auf der beruehrten Flaeche - sonst
+  // misst man den unberuehrten Rest mit und bekommt eine Zahl, die mit der
+  // Groesse der Flaeche wandert statt mit ihrer Wirkung.
+  let summeVor = 0, summeNach = 0;
+  for (const i of beruehrt) { summeVor += hell(ohne, i); summeNach += hell(mit, i); }
+  const mittelVor = summeVor / beruehrt.length, mittelNach = summeNach / beruehrt.length;
+  let streuVor = 0, streuNach = 0;
+  for (const i of beruehrt) {
+    streuVor += (hell(ohne, i) - mittelVor) ** 2;
+    streuNach += (hell(mit, i) - mittelNach) ** 2;
+  }
+  const zeichnung = Math.sqrt(streuNach / beruehrt.length) / Math.sqrt(streuVor / beruehrt.length);
+  const abdunklung = 1 - mittelNach / mittelVor;
+  const kante = mittendrin / angefasst;
+
+  console.log(`  Baukante: ${(angefasst / (ohne.length / 4) * 100).toFixed(0)} % der Flaeche, `
+    + `${(abdunklung * 100).toFixed(0)} % dunkler, Zeichnung ${(zeichnung * 100).toFixed(0)} % `
+    + `erhalten, ${(kante * 100).toFixed(1)} % Uebergang`);
+
+  if (abdunklung < 0.15) {
+    throw new Error(`die verbotene Flaeche wird nur um ${(abdunklung * 100).toFixed(0)} % `
+      + 'dunkler - auf dem Telefon sieht man die Baukante nicht.');
+  }
+  if (abdunklung > 0.55) {
+    throw new Error(`die verbotene Flaeche verliert ${(abdunklung * 100).toFixed(0)} % ihrer `
+      + 'Helligkeit - das ist ein Vorhang ueber der Landschaft, keine Auskunft.');
+  }
+  if (zeichnung < 0.55) {
+    throw new Error(`unter der Baukante bleiben nur ${(zeichnung * 100).toFixed(0)} % der `
+      + 'Zeichnung uebrig - die Landschaft verschwindet unter einem Schleier.');
+  }
+  if (kante > 0.08) {
+    throw new Error(`${(kante * 100).toFixed(0)} % der beruehrten Punkte liegen zwischen `
+      + 'unberuehrt und abgedunkelt - die Baukante ist ein Verlauf, keine Kante.');
   }
 });
 

@@ -27,7 +27,7 @@
  * abzieht - der Effekt faellt aus der Differenz heraus. Diese Werkstatt ist
  * fuer alles, was DANACH geschrieben wird.
  */
-import { createCanvas, Image as NativeImage } from '@napi-rs/canvas';
+import { createCanvas, Image as NativeImage, Path2D as NativePath2D } from '@napi-rs/canvas';
 
 let aufgebaut = false;
 let offen = 0;
@@ -62,6 +62,10 @@ function geruest(breite, hoehe, nachLeinwand) {
     },
   };
   globalThis.window = { devicePixelRatio: 2, innerWidth: breite, innerHeight: hoehe };
+  // Pfade sind im Browser global. Die Bauflaeche baut damit ihre verbotene
+  // Flaeche - ohne diese Zeile faellt jedes Werkzeug, das ein Bild mit
+  // gewaehltem Turm zeichnet, mit `Path2D is not defined` um.
+  globalThis.Path2D = NativePath2D;
   globalThis.Image = class extends NativeImage {
     set src(wert) {
       offen++;

@@ -473,11 +473,17 @@ export class GameState {
   ): 'Rand' | 'Weg' | 'Gelände' | 'Turm' | null {
     const r = TOWERS[id].footprint / 2;
     if (x - r < 0 || y - r < 0 || x + r > WORLD_W || y + r > WORLD_H) return 'Rand';
-    // Abstand zur Wegmitte minus der oertlichen halben Breite: an einer
-    // Engstelle darf naeher gebaut werden als an einer breiten Stelle, und
-    // genau das macht Engstellen wertvoll.
+    // Abstand zum Wegkoerper - die oertliche halbe Breite ist darin schon
+    // abgezogen: an einer Engstelle darf naeher gebaut werden als an einer
+    // breiten Stelle, und genau das macht Engstellen wertvoll.
+    //
+    // `schlauchAbstand` und nicht `distanceTo` + `halfNear`: die alte Fassung
+    // fragte Abstand und Breite an verschiedenen Stellen der Kurve und hatte
+    // deshalb ein Gebiet, das sich nicht zeichnen laesst. Die gezeigte
+    // Baukante (`gfx/bauflaeche.ts`) ist die Vereinigung genau dieser Kreise
+    // - Regel und Bild sind seit v203 dieselbe Rechnung.
     for (const lane of this.lanes) {
-      if (lane.distanceTo(x, y) < r + PATH_CLEARANCE + lane.halfNear(x, y)) return 'Weg';
+      if (lane.schlauchAbstand(x, y) < r + PATH_CLEARANCE) return 'Weg';
     }
     for (const g of this.map.rough) {
       if (Math.hypot(g.x - x, g.y - y) < g.r + r) return 'Gelände';

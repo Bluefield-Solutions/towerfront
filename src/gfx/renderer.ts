@@ -26,6 +26,7 @@ import {
 } from './sprites';
 import { getSettings } from '../core/storage';
 import { drawAurora, drawGroundFog, drawWetter, getMoodLayer } from './atmosphere';
+import { verbotenerBereich } from './bauflaeche';
 
 /** Wieviel Zeit ein Bild in den Kartenaufbau stecken darf.
  *
@@ -450,7 +451,7 @@ export class Renderer {
     this.lichtteich(s);
     this.wegvorschau(s, hi);
     this.drawPortal(s, hi);
-    this.drawBuildOverlay(s);
+    this.drawBauflaeche(s);
     this.drawRings(s);
     this.zeichneStand(s, hi);
     this.drawHealthBars(s);
@@ -626,146 +627,57 @@ export class Renderer {
     ctx.globalAlpha = 1;
   }
 
-  /** Die Bauplätze antworten auf die Turmwahl.
+  /** Das Feld antwortet auf die Turmwahl: wo darf dieser Turm stehen?
    *
-   *  Ohne gewaehlte Turmsorte bleibt das Brett ruhig - die Plattformen sind
-   *  nur als Struktur im Untergrund zu ahnen. Erst die Wahl hebt sie hervor:
-   *  gruen, wenn bezahlbar, rot, wenn das Gold fehlt, gedaempft, wenn schon
-   *  besetzt. */
-  /** Das Feld antwortet auf die Turmwahl.
+   *  **Die Geschichte dieser Stelle in einem Absatz.** Zuerst eine Handvoll
+   *  fester Bauplätze. Dann eine grobe Maske, weich hochgezogen - ein grüner
+   *  Schleier über der halben Karte, aus dem man DASS, aber nie WO ablas.
+   *  Dann ein Punktraster alle 48 Weltpunkte, zweifach gesät, mit
+   *  Kontaktschatten und einem Fenster unter dem Finger. Das war hübsch und
+   *  hat die Frage trotzdem nicht beantwortet: gemeldet als *"man sieht nicht
+   *  exakt, wo der Weg endet, das ist nicht pixelgenau"*. Ein Raster KANN das
+   *  nicht - es weiß nur an seinen Stützstellen etwas.
    *
-   *  Gezeigt wird nicht mehr eine Handvoll fester Plaetze, sondern die ganze
-   *  Flaeche, auf der dieser Turm stehen darf - gruen. Weil das von seinem
-   *  Platzbedarf abhaengt, sieht die Flaeche fuer den Moerser anders aus als
-   *  fuer den Bogenturm, und genau das ist die Entscheidung.
+   *  Jetzt wird die Fläche nicht mehr abgetastet, sondern gezeichnet
+   *  (`bauflaeche.ts`). Verboten wird abgedunkelt, erlaubt bleibt, wie die
+   *  Karte gemalt ist. Die Kante zwischen beidem ist keine Darstellung der
+   *  Regel mehr, sie IST die Regel.
    *
-   *  Die Flaeche wird gebacken und nur neu gerechnet, wenn sich Turmsorte
-   *  oder Turmbestand aendern - sonst waeren es zehntausend Pruefungen je Bild.
-   */
-  private buildMask: HTMLCanvasElement | null = null;
-  private buildMaskKey = '';
-  /** Das weite Raster: dieselbe Auskunft, viermal duenner gesaet. */
-  private buildWeit: HTMLCanvasElement | null = null;
-  private buildFenster: HTMLCanvasElement | null = null;
-
-  private drawBuildOverlay(s: GameState): void {
-    if (!s.buildChoice) return;
+   *  Drei Entscheidungen, die dabei zu treffen waren:
+   *
+   *  **Warum die verbotene Seite dunkler und nicht die erlaubte grün.** Grün
+   *  ist eine fremde Farbe auf einer gemalten Karte - genau der Befund, der
+   *  das Neongrün von v122 gekostet hat. Abdunkeln benutzt nur Helligkeit,
+   *  also dieselbe Sprache wie `bakeTerrain`. Und es dreht die Aussage
+   *  richtig herum: der Blick bleibt auf dem Boden, auf dem gebaut wird.
+   *
+   *  **Warum nur während der Wahl.** Die baubare Fläche ist je nach Karte 27
+   *  bis 53 Prozent - ein dauerhafter Schleier läge über der halben Karte,
+   *  und die Bilder sind das Teuerste an diesem Spiel. Kingdom Rush zeigt
+   *  seine Plätze dauerhaft, aber das sind acht Marken, keine Fläche; BTD6
+   *  und PvZ zeigen ihre Hilfe nur während der Wahl.
+   *
+   *  **Warum kein Rot bei fehlendem Gold.** Das stand hier bis v202 und hat
+   *  zwei Dinge in ein Bild gelegt: der Ort ist eine Ortsfrage, das Gold eine
+   *  Kontofrage. Das Gold sagt der Turmknopf (`data-poor`) und die Vorschau
+   *  am Tipppunkt - beide stehen dort, wo man hinsieht. */
+  private drawBauflaeche(s: GameState): void {
+    const wahl = s.movingTower ? s.movingTower.def : s.buildChoice;
+    if (!wahl) return;
     const ctx = this.ctx;
-    const def = TOWERS[s.buildChoice];
-    const affordable = s.gold >= def.base.cost;
-    const key = `${s.map.id}|${s.buildChoice}|${s.towersVersion}|${affordable}`;
+    const ausser = s.movingTower;
 
-    if (this.buildMaskKey !== key) {
-      // Ein Punktraster statt einer Farbfläche.
-      //
-      // Vorher wurde eine Maske im 12-Pixel-Raster erzeugt und dann weich auf
-      // die volle Feldgröße hochgezogen. Daraus wurde ein verwaschener grüner
-      // Schleier über der halben Karte: Man sah, DASS irgendwo gebaut werden
-      // kann, aber nicht WO genau.
-      //
-      // Der erste Punktraster-Versuch löste das, sah aber aufgedruckt aus -
-      // gemeldet als "passt nicht ins Level". Drei Gründe, alle behoben:
-      //
-      //   * **Die Farbe war fremd.** Neongrün #5BE07A kommt in diesem Spiel
-      //     nirgends vor. Jetzt das Kristall-Türkis der Oberfläche.
-      //   * **Die Punkte lagen auf der Karte, nicht darin.** Harte Kreise mit
-      //     scharfer Kante. Jetzt ein weicher Verlauf mit dunklem Ring
-      //     darunter - derselbe Kontaktschatten wie bei Türmen und Gegnern.
-      //   * **Das Raster war mechanisch.** Gleiche Größe überall wie
-      //     Millimeterpapier. Jetzt schwankt der Punkt leicht mit seinem Ort,
-      //     sodass das Muster lebt statt gedruckt zu wirken.
-      const ton = affordable ? C.crystal : C.danger;
-
-      /** Ein Punktraster ueber die ganze Karte, in der gewuenschten Dichte. */
-      const raster = (STEP: number, gross: number): HTMLCanvasElement => {
-        const cv = document.createElement('canvas');
-        cv.width = WORLD_W;
-        cv.height = WORLD_H;
-        const g = cv.getContext('2d')!;
-        for (let wy = STEP / 2; wy < WORLD_H; wy += STEP) {
-          for (let wx = STEP / 2; wx < WORLD_W; wx += STEP) {
-            if (!s.canPlace(s.buildChoice!, wx, wy)) continue;
-            // Eine ruhige Schwankung aus dem Ort selbst - kein Zufall, damit
-            // das Bild bei gleichem Spielstand gleich aussieht.
-            const wellen = Math.sin(wx * 0.021) * Math.cos(wy * 0.019);
-            const r = (4.6 + wellen * 1.1) * gross;
-
-            // Kontaktschatten: der Punkt liegt auf dem Boden.
-            g.fillStyle = hexA(C.ink, 0.30);
-            g.beginPath();
-            g.ellipse(wx, wy + r * 0.5, r * 1.15, r * 0.6, 0, 0, Math.PI * 2);
-            g.fill();
-
-            // Weicher Punkt statt harter Scheibe.
-            const scheibe = g.createRadialGradient(wx, wy, 0, wx, wy, r);
-            scheibe.addColorStop(0, hexA(ton, 0.95));
-            scheibe.addColorStop(0.6, hexA(ton, 0.7));
-            scheibe.addColorStop(1, hexA(ton, 0));
-            g.fillStyle = scheibe;
-            g.beginPath();
-            g.arc(wx, wy, r, 0, Math.PI * 2);
-            g.fill();
-          }
-        }
-        return cv;
-      };
-
-      this.buildMask = raster(48, 1);
-      // Das weite Raster: viermal duenner und kleiner. Es sagt "hier herum
-      // geht es", nicht "genau hier".
-      this.buildWeit = raster(88, 0.92);
-      this.buildMaskKey = key;
-    }
-
-    // Zwei Dichten, und beide haben ihren Grund.
-    //
-    // In v122 hing hier ein volles Raster ueber der ganzen Karte - auf der
-    // Frostspalte **311 Punkte gleichzeitig**, also eine Tapete. Die Antwort
-    // war damals, es nur noch unter dem Finger zu zeigen. Das war die halbe
-    // Loesung und hat eine neue Luecke aufgerissen: `hoverPoint` gibt es nur
-    // fuer Maus und Stift. **Auf dem Telefon sah man ohne liegenden Finger
-    // gar nichts** - man tippte eine Turmart an und stand vor einer leeren
-    // Karte.
-    //
-    // Jetzt sagt das WEITE Raster dauerhaft "hier herum geht es" - viermal
-    // duenner gesaet, kleiner, blasser, rund achtzig Punkte statt
-    // dreihundert. Und wo der Finger liegt, kommt das dichte Raster darueber
-    // und sagt "genau hier". Grobe Auskunft immer, feine auf Nachfrage.
-    const grund = this.buildWeit;
-    if (grund) {
-      ctx.save();
-      ctx.globalAlpha = affordable ? 0.55 : 0.34;
-      ctx.drawImage(grund, 0, 0);
-      ctx.restore();
-    }
-
-    const at = s.pendingPoint ?? s.hoverPoint;
-    if (!at) return;
-
-    const SICHT = 330;
-    const beat = 0.5 + 0.5 * Math.sin(s.crystalPulse * 2.4);
-    if (!this.buildFenster) {
-      this.buildFenster = document.createElement('canvas');
-      this.buildFenster.width = SICHT * 2;
-      this.buildFenster.height = SICHT * 2;
-    }
-    const f = this.buildFenster.getContext('2d')!;
-    f.clearRect(0, 0, SICHT * 2, SICHT * 2);
-    f.drawImage(this.buildMask!, at.x - SICHT, at.y - SICHT, SICHT * 2, SICHT * 2,
-      0, 0, SICHT * 2, SICHT * 2);
-    // Zum Rand hin ausblenden, damit kein Kreis mit Kante entsteht.
-    f.globalCompositeOperation = 'destination-in';
-    const blende = f.createRadialGradient(SICHT, SICHT, SICHT * 0.35, SICHT, SICHT, SICHT);
-    blende.addColorStop(0, 'rgba(0,0,0,1)');
-    blende.addColorStop(0.7, 'rgba(0,0,0,0.55)');
-    blende.addColorStop(1, 'rgba(0,0,0,0)');
-    f.fillStyle = blende;
-    f.fillRect(0, 0, SICHT * 2, SICHT * 2);
-    f.globalCompositeOperation = 'source-over';
-
+    // **Ein Zug, kein zweiter.** Der erste Entwurf legte einen türkisen Saum
+    // auf die baubare Seite: den gewachsenen Bereich hell, den echten dunkel
+    // darüber, die Differenz ist das Band an der Kante. Angesehen war es
+    // schlechter als nichts - der helle Zug liegt ja auch INNEN, unter der
+    // Abdunklung, und hebt die verbotene Fläche wieder an. Was übrig blieb,
+    // war ein Schleier statt einer Kante. Die Kante braucht keine Hilfe: der
+    // Sprung von unberührt auf abgedunkelt IST die Linie, und er sitzt genau
+    // dort, wo die Regel sitzt.
     ctx.save();
-    ctx.globalAlpha = (affordable ? 0.62 : 0.42) + beat * 0.08;
-    ctx.drawImage(this.buildFenster, at.x - SICHT, at.y - SICHT);
+    ctx.fillStyle = hexA(C.ink, 0.38);
+    ctx.fill(verbotenerBereich(s, wahl, { ausser }));
     ctx.restore();
   }
 

@@ -470,7 +470,16 @@ export function goalOf(map: GameMap): Vec {
 }
 
 /** Mindestabstand jedes Turms zum Weg. Naeher darf nichts stehen - sonst
- *  klebt der Turm auf der Strasse und verdeckt die Gegner. */
+ *  klebt der Turm auf der Strasse und verdeckt die Gegner.
+ *
+ *  **Die 30 hat v203 ueberlebt, obwohl der Wegkoerper darunter seine Form
+ *  gewechselt hat.** Nachgemessen ueber alle drei Karten und alle vier
+ *  Turmsorten (Raster 12 Weltpunkte) kostet die neue Form zwischen 0,12 und
+ *  0,41 Prozentpunkte baubarer Flaeche; mit 28 waere sie auf +-0,22
+ *  ausgeglichen gewesen. Beides liegt im Rauschen des Rasters, und der
+ *  Ausgleich hat am Ergebnis der Balance NICHTS geaendert - die haengt an
+ *  einzelnen Turmstellungen, nicht an Zehntelprozenten Flaeche. Eine Zahl zu
+ *  bewegen, die nichts bewegt, ist keine Eichung. */
 export const PATH_CLEARANCE = 30;
 
 /** Bauen wird auf ein feines Raster gefangen. Nicht als Spielregel, sondern

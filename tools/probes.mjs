@@ -899,8 +899,57 @@ const PROBEN = [
     // Turmwahl kann nicht mehr sagen, was nicht passt.
     name: 'Bauverbote nennen keinen Grund mehr',
     datei: 'src/game/state.ts',
-    regel: /      if \(lane\.distanceTo\(x, y\) < r \+ PATH_CLEARANCE \+ lane\.halfNear\(x, y\)\) return 'Weg';/,
-    ersatz: "      if (lane.distanceTo(x, y) < r + PATH_CLEARANCE + lane.halfNear(x, y)) return 'Rand';",
+    regel: /      if \(lane\.schlauchAbstand\(x, y\) < r \+ PATH_CLEARANCE\) return 'Weg';/,
+    ersatz: "      if (lane.schlauchAbstand(x, y) < r + PATH_CLEARANCE) return 'Rand';",
+    tor: 'smoke',
+  },
+  {
+    // **Die Baukante loest sich von der Bauregel.**
+    //
+    // Der Pfad, den der Spieler sieht, waechst um zwoelf Weltpunkte, waehrend
+    // `warumNicht` unveraendert urteilt. Genau der Zustand, den es bis v202
+    // gab, nur groesser: gemessen lagen Bild und Regel damals bis zu 30,8
+    // Weltpunkte auseinander, und kein Tor hat es gemerkt - weil keines die
+    // beiden je gegeneinander gehalten hat.
+    name: 'Die gezeigte Baukante liegt neben der Bauregel',
+    datei: 'src/gfx/bauflaeche.ts',
+    regel: /  const r = TOWERS\[id\]\.footprint \/ 2 \+ wuchs;/,
+    ersatz: '  const r = TOWERS[id].footprint / 2 + wuchs + 12;',
+    tor: 'bauflaechetor',
+  },
+  {
+    // **Die Baukante wird gar nicht mehr gezeichnet.**
+    //
+    // Eine Kante, die stimmt, aber unsichtbar ist, hilft niemandem - und das
+    // Bauflaechentor wuerde sie weiter bezeugen, denn es vergleicht zwei
+    // Rechnungen und sieht das Bild nie. Die Bildabnahme sieht es.
+    name: 'Die Baukante wird nicht mehr gezeigt',
+    datei: 'src/gfx/renderer.ts',
+    regel: /    const wahl = s\.movingTower \? s\.movingTower\.def : s\.buildChoice;/,
+    ersatz: '    const wahl = null as TowerId | null;',
+    tor: 'bildtor',
+  },
+  {
+    // **Das Zeichenwerk malt seine eigene Flaeche.**
+    //
+    // Der Rauchtest sieht im Quelltext nach, ob die gezeigte Kante aus
+    // `bauflaeche.ts` kommt. Tut sie es nicht, zeigt das Bild etwas anderes
+    // an, als die Bauregel sagt - genau der Zustand bis v202, nur diesmal
+    // ohne Ausrede.
+    name: 'Die Baukante kommt nicht mehr aus der Bauregel',
+    datei: 'src/gfx/renderer.ts',
+    regel: /    ctx\.fill\(verbotenerBereich\(s, wahl, \{ ausser \}\)\);/,
+    ersatz: '    ctx.fillRect(0, 0, WORLD_W, WORLD_H);',
+    tor: 'smoke',
+  },
+  {
+    // Und die andere Haelfte derselben Pruefung: die Bauregel ein zweites
+    // Mal im Zeichenwerk. Zwei Fassungen einer Regel sind eine zu viel -
+    // gepflegt wird die eine, gezeigt die andere (Regel 15).
+    name: 'Die Bauregel wird im Zeichenwerk nachgebaut',
+    datei: 'src/gfx/renderer.ts',
+    regel: /    ctx\.fillStyle = hexA\(C\.ink, 0\.38\);/,
+    ersatz: '    ctx.fillStyle = hexA(C.ink, 0.38); // hier stand mal halfNear',
     tor: 'smoke',
   },
   {
@@ -1100,24 +1149,6 @@ const PROBEN = [
     // Restdauer jetzt aus der Wirkungsliste statt aus `slowLeft`.
     regel: /          ctx\.globalAlpha = Math\.min\(1, bremse \* 1\.6\) \* 0\.85;/,
     ersatz: '          ctx.globalAlpha = 0;',
-    tor: 'bildtor',
-  },
-  {
-    // TF-001: ohne das weite Raster sieht man auf dem Telefon nicht, wo man
-    // bauen darf - der Zustand bis v141.
-    name: 'Bauplaetze nur unter dem Finger',
-    datei: 'src/gfx/renderer.ts',
-    regel: /      ctx\.globalAlpha = affordable \? 0\.55 : 0\.34;/,
-    ersatz: '      ctx.globalAlpha = 0;',
-    tor: 'bildtor',
-  },
-  {
-    // Und die Gegenrichtung, die Lehre aus v122: ein volles Raster ueber der
-    // ganzen Karte ist eine Tapete, keine Auskunft.
-    name: 'Bauauskunft wird zur Tapete',
-    datei: 'src/gfx/renderer.ts',
-    regel: /      this\.buildWeit = raster\(88, 0\.92\);/,
-    ersatz: '      this.buildWeit = raster(40, 1.4);',
     tor: 'bildtor',
   },
   {

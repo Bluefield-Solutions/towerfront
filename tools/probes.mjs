@@ -1727,7 +1727,7 @@ const PROBEN = [
   {
     // v198: die Tafel muss quer ins Bild passen. Gemeldet hat das ein Foto
     // vom Zielgeraet, kein Tor - abgeschnitten war ihr ganzer Kopf.
-    name: 'Messtafel laeuft oben aus dem Bild',
+    name: 'Messtafel schneidet ihren Inhalt ab',
     datei: 'src/style.css',
     // Der Kompaktblock greift gar nicht mehr - dann ist die Tafel 438 statt
     // 274 Punkte hoch und ihr Kopf liegt ausserhalb des Bildes.

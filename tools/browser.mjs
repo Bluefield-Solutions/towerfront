@@ -1138,12 +1138,27 @@ if (streuung < 6) {
       if (!t) return null;
       const r = t.getBoundingClientRect();
       return { oben: Math.round(r.top), unten: Math.round(r.bottom),
-        hoehe: Math.round(r.height), fenster: window.innerHeight };
+        hoehe: Math.round(r.height), fenster: window.innerHeight,
+        inhalt: t.scrollHeight, innen: t.clientHeight };
     });
     if (kasten && (kasten.oben < 0 || kasten.unten > kasten.fenster)) {
       fail(`Die Messtafel passt nicht ins Bild: ${kasten.hoehe} Punkte hoch, `
         + `oben ${kasten.oben}, unten ${kasten.unten} bei ${kasten.fenster} Punkten Fenster. `
         + 'Abgeschnitten wird ihr Kopf - also genau die Zahlen, wegen derer sie da ist.');
+    }
+    // **Und die Frage darueber konnte gar nicht mehr rot werden.**
+    //
+    // Die Tafel traegt `max-height: calc(100vh - 72px)` und `overflow:
+    // hidden`, ihre Lage ist mit `inset` festgenagelt. Damit ist "sie ragt
+    // aus dem Bild" seit v198 unmoeglich - die Pruefung darueber bezeugte
+    // etwas, das die Stilvorlage ohnehin garantiert (Regel 5). Was seitdem
+    // WIRKLICH passiert, wenn die Tafel zu hoch wird, ist etwas anderes und
+    // sieht genauso aus: sie schneidet unten ab. Der Kasten ist dann kleiner
+    // als sein Inhalt, und genau danach wird jetzt gefragt.
+    if (kasten && kasten.inhalt > kasten.innen + 1) {
+      fail(`Die Messtafel schneidet ihren Inhalt ab: ${kasten.inhalt} Punkte Inhalt in `
+        + `${kasten.innen} Punkten Kasten (Fenster ${kasten.fenster}). Was unten wegfaellt, `
+        + 'sind die Zeilen, wegen derer sie da ist.');
     }
     // Und sie darf nicht behaupten, es gaebe keine langen Aufgaben, wo der
     // Browser sie gar nicht meldet (Regel 5).

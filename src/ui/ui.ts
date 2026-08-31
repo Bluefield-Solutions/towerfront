@@ -765,8 +765,11 @@ export class UI {
     if (!sel && s.buildChoice) {
       const def = TOWERS[s.buildChoice];
       this.insp.hidden = false;
-      this.iName.textContent = `${def.name} · ${def.role}`;
-      this.iStufe.textContent = '';
+      // Die Rolle steht neben dem Namen, nicht in ihm - sonst wird aus
+      // "Bogenturm · Dauerfeuer" ein "Bogenturm · Dauerf…". Dieselbe
+      // Trennung wie bei der Stufe am gebauten Turm.
+      this.iName.textContent = def.name;
+      this.iStufe.textContent = def.role;
       this.iStats.innerHTML = werteVorKauf(def).map(zeile).join('');
       this.rollhinweis();
       this.iHint.hidden = false;

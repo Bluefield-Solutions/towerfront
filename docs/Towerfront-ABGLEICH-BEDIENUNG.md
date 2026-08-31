@@ -1,6 +1,6 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v201 · 30.08.2026
+Stand: v202 · 30.08.2026
 
 Schritt 0 des Durchgangs, nach `docs/Towerfront-SOLL-UND-BETRIEB.md` Teil 2.
 Ausgelöst durch vier Befunde vom Zielgerät:
@@ -115,14 +115,17 @@ bekommt deshalb Abstand.
 | # | Soll | heute | Abstand |
 |---|---|---|---|
 | B1 | Baufläche vorher sichtbar | **fehlt** — 26,8 bis 53,2 % sind bebaubar, und nichts zeigt welche | ganz |
-| B2 | Tipp gibt nie Gold aus | **verletzt** — mit gesetzter Turmwahl baut ein Tipp sofort | ganz |
-| B3 | laufendes Ja/Nein | **halb da** — `s.vorschau` zeigt einen Geisterturm, aber erst wenn die Turmwahl offen ist und man auf einer ihrer Schaltflächen drückt, nicht beim Suchen | halb |
-| B4 | Fehlgriff kostenlos | **halb da** — `bauHinweis` sagt warum es nicht ging, und die Wahl bleibt. Das ist die gute Hälfte | klein |
-| B5 | Abbruch so leicht wie Wahl | **halb da** — Esc am Schreibtisch, auf dem Telefon nur „woanders hintippen" | halb |
-| B6 | Steg getrennt | **verletzt** — Verkaufen steht in der Namenszeile, und der Name läuft darüber | ganz |
-| B7 | passt hinein | **verletzt** — 322 Punkte Inhalt in 288 Punkten Kasten | ganz |
+| B2 | Tipp gibt nie Gold aus | **erledigt in v202** — der Tipp öffnet jetzt dieselbe Turmwahl wie ein Tipp auf freies Feld, mit der gewählten Sorte hervorgehoben. Bezahlt wird auf einer benannten Fläche, die ihren Preis trägt | keiner |
+| B3 | laufendes Ja/Nein | **halb da, in v202 besser** — beim Öffnen der Wahl steht der Geisterturm samt Reichweite im Feld, und was nicht passt, ist mit Grund gesperrt („WEG“) statt mit Preis. Was fehlt, ist das laufende Ja/Nein **während** der Suche | halb |
+| B4 | Fehlgriff kostenlos | **erledigt in v202** — er kostet nichts mehr, `bauHinweis` sagt warum, und die Wahl bleibt | keiner |
+| B5 | Abbruch so leicht wie Wahl | **erfüllt** — ein zweiter Tipp auf denselben Turmknopf legt die Wahl zurück. Das gab es schon, es stand nur nirgends | keiner |
+| B6 | Steg getrennt | **erledigt in v201** — Name, Werte, Handlungen getrennt; Verkaufen in der Fusszeile | keiner |
+| B7 | passt hinein | **erledigt in v201** — 286 Punkte Inhalt in 288, mit und ohne aufgeklappte Ziellogik. Das Browsertor misst es | keiner |
 
-**Vier von sieben sind ganz offen, zwei halb.** Der Nutzer hat mit vier
+**Stand nach v202: einer ganz offen (B1), einer halb (B3), fünf erfüllt.**
+Beim ersten Abgleich waren vier ganz offen und zwei halb.
+
+**Beim ersten Abgleich:** vier von sieben ganz offen, zwei halb. Der Nutzer hat mit vier
 Sätzen dieselbe Liste beschrieben, die diese Messung liefert — das ist kein
 Zufall, sondern der Beleg, dass die Punkte zusammengehören und nicht
 einzeln gefixt werden sollten.

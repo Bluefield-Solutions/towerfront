@@ -1638,19 +1638,42 @@ const PROBEN = [
     // v200: das Kreuz des Pruefstegs war 21 Punkte BREIT - `min-height`
     // stand da, `min-width` nicht, und das Tor hat nie nach der Breite
     // gefragt. Gemeldet hat es der Nutzer, nicht die Torkette.
+    //
+    // **Die Probe stand bis v203 andersherum da und bewies nichts.** Sie
+    // nahm `min-width` ganz weg - und `beruehrung` liest die Stilvorlage:
+    // ohne Zusage kann es keine Breite rechnen, also gibt es einen Hinweis
+    // und bleibt gruen. Der Fall gehoert deshalb ans Browsertor (die Probe
+    // darunter); hier steht der Fall, den DIESES Tor sehen kann - eine
+    // Zusage, die zu klein ist.
     name: 'Kreuz des Pruefstegs wieder zu schmal',
     datei: 'src/style.css',
     suche: '  min-height: 44px; min-width: 44px;',
-    ersatz: '  min-height: 44px;',
+    ersatz: '  min-height: 44px; min-width: 20px;',
     tor: 'beruehrung',
+  },
+  {
+    // Und die andere Haelfte: gar keine Zusage. Die Stilvorlage sagt dann
+    // nichts, was zu pruefen waere - im Browser ist das Kreuz aber 21 Punkte
+    // breit, und dort wird es gemessen.
+    name: 'Kreuz des Pruefstegs sagt gar keine Breite zu',
+    datei: 'src/style.css',
+    suche: '  min-height: 44px; min-width: 44px;',
+    ersatz: '  min-height: 44px;',
+    tor: 'browsertor',
   },
   {
     // Und die Zielwahl war 43 Punkte breit - die Zahl stand seit v137 als
     // Begruendung im Kommentar und wurde nie neben die Grenze gelegt.
-    name: 'Zielwahl wieder einen Punkt zu schmal',
+    //
+    // **Vier Punkte Abstand reichen als Eingriff nicht mehr.** Sie geben je
+    // Knopf 42,4 Punkte, und die Grenze des Browsertors liegt fuer eine
+    // Reihe gleich breiter Knoepfe bei 40 - der Eingriff kam an und loeste
+    // nichts aus (Regel 3). Zwoelf Punkte druecken auf 36 und damit unter
+    // die Grenze, die das Tor wirklich zieht.
+    name: 'Zielwahl unter das Fingermass gedraengt',
     datei: 'src/style.css',
     suche: '  display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;',
-    ersatz: '  display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;',
+    ersatz: '  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;',
     tor: 'browsertor',
   },
   {
@@ -1714,8 +1737,14 @@ const PROBEN = [
     // die Tafel blieb mit 332 Punkten knapp im Bild. Eine Gegenprobe, deren
     // Eingriff ankommt und trotzdem nichts ausloest, beweist genauso wenig
     // wie eine, die gar nicht ankommt (Regel 3).
-    suche: '@media (max-height: 520px) {',
-    ersatz: '@media (max-height: 1px) {',
+    // **Und der dritte Anlauf, aus demselben Grund wie der zweite.** Den
+    // Kompaktblock ganz abzuschalten macht die Tafel 332 Punkte hoch - sie
+    // passt damit immer noch ins Bild, weil der Text seit v199 kuerzer ist.
+    // Der Eingriff kam an und loeste nichts aus. Gebraucht wird ein Eingriff,
+    // der die Tafel WIRKLICH ueber den Rand schiebt; die Zeilenhoehe tut das
+    // unmittelbar und ist als Tippfehler jederzeit denkbar.
+    regel: /    width: min\(300px, 46vw\); padding: 8px 10px; font-size: 11\.5px; line-height: 1\.35;/,
+    ersatz: '    width: min(300px, 46vw); padding: 8px 10px; font-size: 11.5px; line-height: 4.2;',
     tor: 'browsertor',
   },
   {
@@ -1731,8 +1760,14 @@ const PROBEN = [
     // Anmeldung des Beobachters (gelingt in Chromium ohnehin), die andere
     // brach das Einsammeln - was seit dieser Fassung zum richtigen Satz
     // "keine ueber 50 ms" fuehrt und damit gar kein Fehler mehr ist.
-    regel: /schlimmste > 0 \? `\$\{schlimmste\} ms` : `keine über \$\{SOLL_MS\} ms`/,
-    ersatz: '`${schlimmste} ms`',
+    //
+    // **Auch diese Probe musste in v203 nachgezogen werden.** Sie ersetzte
+    // nur den letzten Zweig - und das Browsertor sieht die Tafel bei
+    // LAUFENDER Messung, wo der Zweig darueber greift und einen Strich
+    // ausgibt. Der Eingriff kam an und war nie zu sehen. Jetzt faellt der
+    // Strich mit weg, und die Null steht genau dort, wo das Tor hinsieht.
+    regel: /        : laeuft \? '—'\n          : schlimmste > 0 \? `\$\{schlimmste\} ms` : `keine über \$\{SOLL_MS\} ms`/,
+    ersatz: '        : `${schlimmste} ms`',
     tor: 'browsertor',
   },
   {
@@ -2041,11 +2076,19 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
-    // Ungleiche Spalten: der schmalste Knopf faellt unter das Fingermass.
+    // Ungleiche Spalten: die Wortlaenge entscheidet, wie leicht ein Modus zu
+    // treffen ist.
+    //
+    // **`1fr` reicht als Eingriff nicht mehr.** Es verteilt den Ueberschuss
+    // gleichmaessig und faellt nur auf, wenn ein Wort lang genug ist, um die
+    // Spalte zu sprengen - solange die fuenf Woerter kurz sind, kommt der
+    // Eingriff an und aendert nichts (Regel 3). `auto` misst jede Spalte an
+    // ihrem Inhalt und macht damit sichtbar, was gemeint ist: "Nah" bekommt
+    // weniger Flaeche als "Hinten", ohne dass es dafuer einen Grund gaebe.
     name: 'Zielknoepfe verschieden breit',
     datei: 'src/ui/ui.ts',
     regel: /      `repeat\(\$\{ZIELWAHL_ORDNUNG\.length\}, minmax\(0, 1fr\)\)`;/,
-    ersatz: '      `repeat(${ZIELWAHL_ORDNUNG.length}, 1fr)`;',
+    ersatz: '      `repeat(${ZIELWAHL_ORDNUNG.length}, auto)`;',
     tor: 'browsertor',
   },
   {

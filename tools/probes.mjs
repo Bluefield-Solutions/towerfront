@@ -1550,10 +1550,16 @@ const PROBEN = [
     // Werteliste stand absolut (96 Punkte) und gab nicht nach, als die
     // Kopfzeile auf drei Zeilen wuchs: 322 Punkte Inhalt in 288 Punkten
     // Kasten, abgeschnitten wurde die Zielwahl (Regel 2).
-    name: 'Boden der Werteliste wieder absolut',
+    // Die erste Fassung setzte den Boden auf die alten 96 Punkte zurueck -
+    // das kam an und loeste nichts mehr aus, seit die Kopfzeile nur noch
+    // eine Zeile hoch ist (Regel 3, eine Ebene hoeher). Sie setzt ihn jetzt
+    // so hoch, dass der Steg sicher ueberlaeuft: geprueft wird, ob das Tor
+    // einen ueberlaufenden Steg ueberhaupt bemerkt - und genau das hat es
+    // bis v201 nicht getan.
+    name: 'Pruefsteg laeuft ueber, ohne dass es auffaellt',
     datei: 'src/style.css',
     suche: '  min-height: 33%;',
-    ersatz: '  min-height: 96px;',
+    ersatz: '  min-height: 200px;',
     tor: 'browsertor',
   },
   {

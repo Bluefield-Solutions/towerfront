@@ -1766,8 +1766,16 @@ const PROBEN = [
     // LAUFENDER Messung, wo der Zweig darueber greift und einen Strich
     // ausgibt. Der Eingriff kam an und war nie zu sehen. Jetzt faellt der
     // Strich mit weg, und die Null steht genau dort, wo das Tor hinsieht.
+    //
+    // **Und der Eingriff darf nicht selbst von einer Messung abhaengen.**
+    // Die Fassung mit `${schlimmste} ms` schlug im gefilterten Lauf an und
+    // im vollen nicht: unter Last findet der Browser wirklich lange
+    // Aufgaben, dann steht dort "84 ms" statt "0 ms", und das Tor hat recht
+    // zu schweigen. Eine Gegenprobe, deren Wirkung an der Auslastung des
+    // Rechners haengt, ist keine. Jetzt steht die Null fest da - genau die
+    // Ausgabe, die es nie geben darf.
     regel: /        : laeuft \? '—'\n          : schlimmste > 0 \? `\$\{schlimmste\} ms` : `keine über \$\{SOLL_MS\} ms`/,
-    ersatz: '        : `${schlimmste} ms`',
+    ersatz: "        : '0 ms'",
     tor: 'browsertor',
   },
   {

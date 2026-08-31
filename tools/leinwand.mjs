@@ -62,10 +62,7 @@ function geruest(breite, hoehe, nachLeinwand) {
     },
   };
   globalThis.window = { devicePixelRatio: 2, innerWidth: breite, innerHeight: hoehe };
-  // Pfade sind im Browser global. Die Bauflaeche baut damit ihre verbotene
-  // Flaeche - ohne diese Zeile faellt jedes Werkzeug, das ein Bild mit
-  // gewaehltem Turm zeichnet, mit `Path2D is not defined` um.
-  globalThis.Path2D = NativePath2D;
+  pfadklasseStellen();
   globalThis.Image = class extends NativeImage {
     set src(wert) {
       offen++;
@@ -77,6 +74,23 @@ function geruest(breite, hoehe, nachLeinwand) {
     }
     get src() { return super.src; }
   };
+}
+
+/** Nur die Pfadklasse stellen.
+ *
+ *  `Path2D` ist im Browser global; in Node ist es das nicht, und jsdom bringt
+ *  es auch nicht mit. Seit v203 baut `gfx/bauflaeche.ts` die verbotene Flaeche
+ *  als Pfad - ohne diese Klasse faellt JEDES Werkzeug um, das ein Bild mit
+ *  gewaehlter Turmsorte zeichnet, mit `Path2D is not defined`.
+ *
+ *  Es steht hier und nicht in den drei jsdom-Werkzeugen, weil drei Attrappen
+ *  drei Fassungen waeren (Regel 15) - und weil eine Attrappe die falsche
+ *  Antwort gaebe: die echte Klasse rechnet, eine leere tut nur so. Wer sie
+ *  ruft, braucht kein Zeichengeruest und stoert auch keines.
+ *
+ *  Mehrfach zu rufen schadet nicht. */
+export function pfadklasseStellen() {
+  globalThis.Path2D = NativePath2D;
 }
 
 /** Das Geruest allein - fuer Werkzeuge, die Bilder brauchen, bevor sie eine

@@ -39,8 +39,18 @@ import type { Tower } from '../game/types';
  * zu behaupten.
  */
 
+/** Rand, Weg und Gelände - haengt nur an Karte und Platzbedarf. */
 const gebacken = new Map<string, Path2D>();
+/** Der fertige Pfad mit den stehenden Tuermen darin.
+ *
+ *  **Warum das auch noch eine Ablage braucht.** Der Pfad hat rund 1500 Boegen
+ *  - je Bahn einen Kreis auf jeden Abtastpunkt. Ihn in jedem Bild neu
+ *  zusammenzusetzen ist zwar viel billiger als eine Maske zu backen, aber es
+ *  ist auch voellig umsonst: er aendert sich nur, wenn ein Turm dazukommt,
+ *  verschwindet oder umzieht. Genau dafuer gibt es `towersVersion`. */
+const fertig = new Map<string, Path2D>();
 let letzteKarte = '';
+let letzterTurmstand = -1;
 
 /** Der Teil, der sich während einer Partie nicht ändert: Rand, Weg, Gelände.
  *  Er hängt nur an Karte und Platzbedarf, also wird er einmal gebaut. */
@@ -87,16 +97,28 @@ export function verbotenerBereich(
   s: GameState, id: TowerId, { wuchs = 0, ausser = null as Tower | null } = {},
 ): Path2D {
   const r = TOWERS[id].footprint / 2 + wuchs;
-  if (letzteKarte !== s.map.id) { gebacken.clear(); letzteKarte = s.map.id; }
-  const schluessel = `${s.map.id}|${r}`;
-  let feste = gebacken.get(schluessel);
-  if (!feste) { feste = statisch(s, r); gebacken.set(schluessel, feste); }
+  if (letzteKarte !== s.map.id) {
+    gebacken.clear(); fertig.clear(); letzteKarte = s.map.id;
+  }
+  if (letzterTurmstand !== s.towersVersion) {
+    fertig.clear(); letzterTurmstand = s.towersVersion;
+  }
+  // Der versetzte Turm gehoert in den Schluessel: er blockiert sich nicht
+  // selbst, und waehrend des Ziehens aendert sich `towersVersion` nicht.
+  const schluessel = `${r}|${ausser ? s.towers.indexOf(ausser) : -1}`;
+  const bereit = fertig.get(schluessel);
+  if (bereit) return bereit;
+
+  const festSchluessel = `${s.map.id}|${r}`;
+  let feste = gebacken.get(festSchluessel);
+  if (!feste) { feste = statisch(s, r); gebacken.set(festSchluessel, feste); }
 
   const p = new Path2D(feste);
   for (const t of s.towers) {
     if (t === ausser) continue;
     kreis(p, t.x, t.y, r + TOWERS[t.def].footprint / 2 + 4);
   }
+  fertig.set(schluessel, p);
   return p;
 }
 
@@ -104,5 +126,7 @@ export function verbotenerBereich(
  *  messen. Im Spiel besorgt das der Kartenwechsel selbst. */
 export function bauflaecheVergessen(): void {
   gebacken.clear();
+  fertig.clear();
   letzteKarte = '';
+  letzterTurmstand = -1;
 }

@@ -155,6 +155,33 @@ async function main() {
     }
   }
 
+  // **Und die Ablage: merkt die Kante, dass ein Turm dazugekommen ist?**
+  //
+  // Der fertige Pfad wird zwischengespeichert und nur bei `towersVersion`
+  // verworfen. Eine Ablage, die zu selten leert, ist die stillste Art, falsch
+  // zu liegen: das Bild sieht richtig aus, nur eben eine Runde zu alt. Also
+  // gefragt: derselbe Fleck vor und nach einem Turm.
+  let ablage = 'nicht geprueft';
+  {
+    const s = new GameState();
+    s.reset(7, 'normal', 'spiralhain');
+    s.gold = 9999;
+    const wuerfelt = wuerfel(5);
+    let punkt = null;
+    for (let i = 0; i < 500 && !punkt; i++) {
+      const x = wuerfelt() * 1920, y = wuerfelt() * 1080;
+      if (s.warumNicht('arrow', x, y) === null) punkt = { x, y };
+    }
+    if (!punkt) throw new Error('Kein freier Fleck auf dem Spiralhain - das kann nicht sein.');
+    const vorher = messleinwand.isPointInPath(verbotenerBereich(s, 'arrow'), punkt.x, punkt.y);
+    // Nullprobe der Nullprobe: ohne Bau muss dieselbe Frage dasselbe sagen.
+    const nochmal = messleinwand.isPointInPath(verbotenerBereich(s, 'arrow'), punkt.x, punkt.y);
+    if (!s.build(punkt.x, punkt.y, 'arrow')) throw new Error('Turm liess sich nicht bauen.');
+    const nachher = messleinwand.isPointInPath(verbotenerBereich(s, 'arrow'), punkt.x, punkt.y);
+    ablage = (!vorher && !nochmal && nachher) ? 'in Ordnung'
+      : `FEHLER (vorher ${vorher}, nochmal ${nochmal}, nachher ${nachher})`;
+  }
+
   console.log(`\nBaukante gegen Bauregel — ${PUNKTE} Punkte je Zeile\n`);
   console.log('Karte           Turm            uneinig    Kantenfehler   Grenze');
   for (const z of zeilen) {
@@ -163,7 +190,8 @@ async function main() {
       + `${z.kante.toFixed(2)} P`.padEnd(15)
       + `${z.grenze.toFixed(2)} P`);
   }
-  console.log(`\nNullprobe (Pfad um 6 Punkte gewachsen): ${nullPromille.toFixed(1)} ‰ uneinig, `
+  console.log(`\nAblage: ein neu gebauter Turm erscheint sofort in der Kante - ${ablage}.`);
+  console.log(`Nullprobe (Pfad um 6 Punkte gewachsen): ${nullPromille.toFixed(1)} ‰ uneinig, `
     + `Kantenfehler bis ${nullKante.toFixed(1)} Weltpunkte.`);
 
   if (!TOR) return;
@@ -178,6 +206,10 @@ async function main() {
       fehler.push(`${z.karte}/${z.turm}: ${z.promille.toFixed(1)} ‰ der Punkte werden `
         + `anders beurteilt als von der Regel (erlaubt ${UNEINIG_PROMILLE}).`);
     }
+  }
+  if (ablage !== 'in Ordnung') {
+    fehler.push(`Die Ablage der Baukante leert nicht: ${ablage}. Ein gebauter Turm `
+      + 'aendert die gezeigte Flaeche erst beim naechsten Anlass.');
   }
   if (nullPromille <= UNEINIG_PROMILLE) {
     fehler.push('Die Nullprobe schlaegt nicht an: ein um sechs Punkte falscher Pfad '

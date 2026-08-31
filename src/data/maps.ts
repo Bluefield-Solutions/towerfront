@@ -351,7 +351,20 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
   // und genau darum ging es in C24.
   tor: { bahn: 1, zu: 8, auf: 8 },
   waves: PLAN_ASCHESCHLUCHT,
-  balance: { hpMul: 1.06, goldMul: 1.05 },
+  // **0,98 statt 1,06 - und das ist kein Nachgeben, sondern das Schliessen
+  // einer Luecke.** Bis v202 endete der beste Bot-Lauf hier bei genau 20 von
+  // 60 Leben. Die zweite Sternschwelle liegt bei 20 (`starsFor`, 33 %). Diese
+  // Karte stand also nicht knapp ueber der Schwelle, sie stand DARAUF - jede
+  // Stoerung, die ein einziges Leben kostet, macht ihren zweiten Stern
+  // unerreichbar. In v203 war es eine Bauregel, die 0,2 Prozentpunkte
+  // Flaeche verschoben hat; beim naechsten Mal ist es etwas anderes.
+  //
+  // Durchprobiert mit `npm run eichen -- --karte ascheschlucht --hp` statt
+  // geraten (Regel 9): 1,06 gibt 18/19/3 Leben und einen Stern, 1,02 gibt
+  // 19/21/5 - wieder ein Leben ueber der Schwelle -, 0,98 gibt 21/27/12.
+  // Sieben Leben Luft, und zugleich der beste Anteil in der letzten Welle
+  // (28 %). Der dritte Stern bleibt mit 40 von 60 weit weg.
+  balance: { hpMul: 0.98, goldMul: 1.05 },
 };
 
 

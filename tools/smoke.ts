@@ -45,6 +45,11 @@ function fakeContext(canvas: unknown): unknown {
 const CanvasProto = win.HTMLCanvasElement.prototype as unknown as Record<string, unknown>;
 CanvasProto.getContext = function getContext(this: unknown) { return fakeContext(this); };
 
+// Pfade rechnet die Werkstatt, nicht die Attrappe: die Baukante ist ein
+// Path2D, und jsdom kennt keines.
+const { pfadklasseStellen } = await import('./leinwand.mjs') as { pfadklasseStellen: () => void };
+pfadklasseStellen();
+
 // jsdom kennt kein Layout: die Leinwand bekommt eine feste Groesse,
 // damit resize() eine echte Skalierung berechnet.
 function sizeCanvas(el: unknown, w: number, h: number): void {

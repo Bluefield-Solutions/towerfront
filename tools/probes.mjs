@@ -918,6 +918,19 @@ const PROBEN = [
     tor: 'bauflaechetor',
   },
   {
+    // **Die Ablage der Baukante leert nicht mehr.**
+    //
+    // Der fertige Pfad wird zwischengespeichert; verworfen wird er, wenn sich
+    // der Turmbestand aendert. Faellt das weg, sieht das Bild richtig aus -
+    // nur eben eine Runde zu alt. Genau die Sorte Fehler, die kein Blick auf
+    // ein Standbild findet.
+    name: 'Die Baukante zeigt einen alten Turmstand',
+    datei: 'src/gfx/bauflaeche.ts',
+    regel: /  if \(letzterTurmstand !== s\.towersVersion\) \{/,
+    ersatz: '  if (false) {',
+    tor: 'bauflaechetor',
+  },
+  {
     // **Die Baukante wird gar nicht mehr gezeichnet.**
     //
     // Eine Kante, die stimmt, aber unsichtbar ist, hilft niemandem - und das

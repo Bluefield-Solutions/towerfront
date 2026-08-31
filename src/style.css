@@ -139,7 +139,14 @@ html, body {
      fuenften Modus waere die Reihe umgebrochen und haette den
      Verkaufen-Knopf aus dem Steg geschoben, ohne dass etwas rot wird
      (Regel 15). Der Wert hier ist nur der Rueckfall. */
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+  /* **Abstand 2 statt 4 - weil 43 Punkte breit zu wenig sind.**
+     Die 43 standen seit v137 als Begruendung im Kommentar unten ("dann
+     bleiben je Knopf 43 Punkte") und wurden nie neben die Grenze von 44
+     gelegt. Zwei Punkte weniger Abstand geben jedem Knopf 44,8 - und dem
+     laengsten Wort ausserdem mehr Platz, nicht weniger.
+     Gemessen hat es erst das Browsertor, als es anfing, den Pruefsteg zu
+     OEFFNEN: vorher hat es diese fuenf Knoepfe nie gesehen. */
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;
   margin: 8px 0; flex: 0 0 auto;
 }
 .insp-ziel .ziel {
@@ -158,6 +165,7 @@ html, body {
   color: #fff;
 }
 .insp-ziel .ziel:active { transform: scale(0.97); }
+
 
 .dock-toggle:active { transform: scale(0.94); }
 
@@ -262,10 +270,15 @@ html, body {
   flex: 0 0 auto; min-height: 44px; padding: 0 10px; border-radius: 10px;
   font-family: var(--ui); font-size: 12px; font-weight: 700; white-space: nowrap;
 }
+/* **44 Punkte HOCH und BREIT.**
+   Das Kreuz war 21 Punkte breit - `min-height` stand da, `min-width` nicht,
+   und `beruehrung` hat nie nach der Breite gefragt. Auf dem Telefon war das
+   Schliessen des Pruefstegs damit Gluecksache; gemeldet hat es der Nutzer,
+   nicht das Tor. */
 .x {
   background: none; border: none; color: var(--muted);
   font-size: 15px; cursor: pointer; padding: 2px 4px;
-  min-height: 44px;
+  min-height: 44px; min-width: 44px;
 }
 .insp-stats {
   margin: 0 0 8px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px;
@@ -982,8 +995,16 @@ html, body {
   /* Ueber ALLEM, auch ueber dem Hochkant-Hinweis (200).
      Die Tafel soll gerade dann lesbar sein, wenn etwas anderes den
      Bildschirm zudeckt - genau das ist der Fall, den sie melden soll. */
-  position: fixed; inset: auto 12px 12px auto; z-index: 300;
+  /* **Oben links, nicht unten rechts.**
+     Unten rechts sitzt "Welle starten" - die Tafel legte sich genau darauf.
+     Die Klicks gingen zwar hindurch (`pointer-events: none`), aber ein
+     Knopf, den man nicht SIEHT, ist keiner. Oben links stehen Gold,
+     Kristall und Welle: Anzeigen, keine Knoepfe.
+     Und sie faengt EINGEKLAPPT an - ausgeklappt deckt sie auf 390 Punkten
+     Hoehe immer irgendetwas zu, und das darf nicht der Normalfall sein. */
+  position: fixed; inset: 60px auto auto 12px; z-index: 300;
   width: min(340px, 82vw); padding: 12px 14px;
+  max-height: calc(100vh - 72px); overflow: hidden;
   background: rgba(10, 13, 22, 0.92); color: #E8EDF7;
   border: 1px solid rgba(140, 160, 200, 0.35); border-radius: 12px;
   font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -1008,7 +1029,7 @@ html, body {
 /* Wie in der Wellenvorschau: die Trefferflaeche waechst ueber den Knopf
    hinaus, ohne die Tafel groesser zu machen. 34 + zweimal 5 sind 44. */
 #messtafel .mb { position: relative; }
-#messtafel .mb::after { content: ''; position: absolute; inset: -5px; }
+#messtafel .mb::after { content: ''; position: absolute; inset: -7px; }
 #messtafel h2 { margin: 0 0 6px; font-size: 14px; letter-spacing: 0.04em; }
 #messtafel .mw {
   font-size: 10.5px; color: #9FB0CC; margin-bottom: 8px;

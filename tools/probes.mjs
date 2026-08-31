@@ -1546,6 +1546,44 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // v200: das Kreuz des Pruefstegs war 21 Punkte BREIT - `min-height`
+    // stand da, `min-width` nicht, und das Tor hat nie nach der Breite
+    // gefragt. Gemeldet hat es der Nutzer, nicht die Torkette.
+    name: 'Kreuz des Pruefstegs wieder zu schmal',
+    datei: 'src/style.css',
+    suche: '  min-height: 44px; min-width: 44px;',
+    ersatz: '  min-height: 44px;',
+    tor: 'beruehrung',
+  },
+  {
+    // Und die Zielwahl war 43 Punkte breit - die Zahl stand seit v137 als
+    // Begruendung im Kommentar und wurde nie neben die Grenze gelegt.
+    name: 'Zielwahl wieder einen Punkt zu schmal',
+    datei: 'src/style.css',
+    suche: '  display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;',
+    ersatz: '  display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;',
+    tor: 'browsertor',
+  },
+  {
+    // Die Messtafel faengt EINGEKLAPPT an. Ausgeklappt deckt sie zu, was
+    // man zum Spielen braucht - der Nutzer meldete "man kann Welle starten
+    // nicht mehr klicken".
+    name: 'Messtafel faengt ausgeklappt an',
+    datei: 'src/core/messung.ts',
+    suche: 'let eingeklappt = true;',
+    ersatz: 'let eingeklappt = false;',
+    tor: 'browsertor',
+  },
+  {
+    // Und das Kreuz muss den Steg wirklich schliessen, nicht nur gross
+    // genug sein.
+    name: 'Kreuz schliesst den Pruefsteg nicht',
+    datei: 'src/ui/ui.ts',
+    suche: "$('i-close').addEventListener('click', () => { this.s.auswahlSchliessen(); });",
+    ersatz: "$('i-close').addEventListener('click', () => { /* nichts */ });",
+    tor: 'browsertor',
+  },
+  {
     // v199: der Messschalter muss seinen Zustand ZEIGEN. Ohne den Eintrag
     // in der Signatur setzt er die Einstellung, die Tafel erscheint - und
     // der Knopf bleibt aus, bis sich zufaellig etwas anderes aendert.

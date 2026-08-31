@@ -57,7 +57,14 @@ export function messungAlsText(): string { return letzterText; }
 
 let tafel: HTMLElement | null = null;
 let letzterText = '';
-let eingeklappt = false;
+// **Eingeklappt ist der Anfangszustand.**
+//
+// Ausgeklappt ist die Tafel je nach Geraet 274 bis 438 Punkte hoch und
+// deckt damit auf jedem Bildschirm etwas zu, das man braucht. Wer sie
+// anschaltet, will messen und weiterspielen; ablesen will er, wenn er
+// hinsieht. Der erste Entwurf fing ausgeklappt an, und das erste, was der
+// Nutzer meldete, war "man kann Welle starten nicht mehr klicken".
+let eingeklappt = true;
 /** Was der Kopierknopf gerade sagt, und bis wann.
  *
  *  Die Rueckmeldung muss das Neuzeichnen ueberleben: die Tafel schreibt sich

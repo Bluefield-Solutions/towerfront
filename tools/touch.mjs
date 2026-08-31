@@ -134,6 +134,30 @@ function hoehe(sel) {
   return oben + unten + schrift * 1.2 + auflage(sel);
 }
 
+/** **Zugesagte Breite - und dass danach nie gefragt wurde, hat der Nutzer
+ *  gemeldet.**
+ *
+ *  Das Kreuz des Pruefstegs trug `min-height: 44px` und war 21 Punkte
+ *  BREIT. Ein Daumen trifft eine Flaeche, keine Zeile; ein Tor, das nur die
+ *  Hoehe misst, sieht die Haelfte des Problems.
+ *
+ *  Gefragt wird nur, wo eine Breite ZUGESAGT ist - `min-width`, `width`
+ *  oder ein waagerechter Innenabstand mit fester Zeichenzahl liesse sich
+ *  nicht ohne Browser rechnen. Wer keine zusagt, bekommt einen Hinweis
+ *  statt eines Fehlers, und das Browsertor misst ihn dann wirklich. */
+function breite(sel) {
+  const r = regeln(sel);
+  const mw = px(r['min-width']) ?? px(r.width);
+  if (mw === null) return null;
+  const a = regeln(`${sel}::after`);
+  if (a.position !== 'absolute') return mw;
+  const teile = a.inset ? a.inset.split(/\s+/).map(px) : [];
+  if (!teile.length) return mw;
+  const rechts = teile.length >= 2 ? (teile[1] ?? 0) : (teile[0] ?? 0);
+  const links = teile.length >= 4 ? (teile[3] ?? rechts) : rechts;
+  return mw + Math.max(0, -rechts) + Math.max(0, -links);
+}
+
 const KNOEPFE = [
   ['.tower-btn', 'Turmsorte wählen'],
   ['.skill-btn', 'Fähigkeit'],
@@ -175,10 +199,17 @@ for (const [sel, was] of KNOEPFE) {
     continue;
   }
   const h = hoehe(sel);
-  const knapp = h < MINDEST;
-  console.log(`  ${was.padEnd(22)} ${sel.padEnd(16)} ${h.toFixed(0).padStart(3)} Punkte${knapp ? '   ZU KLEIN' : ''}`);
-  if (knapp) {
-    probleme.push(`${was} (${sel}): zugesagt ${h.toFixed(0)} Punkte, mindestens ${MINDEST} nötig.`);
+  const b = breite(sel);
+  const knapp = h < MINDEST || (b !== null && b < MINDEST);
+  const bText = b === null ? '  Breite offen' : `× ${b.toFixed(0)}`;
+  console.log(`  ${was.padEnd(22)} ${sel.padEnd(16)} ${h.toFixed(0).padStart(3)} ${bText}`
+    + `${knapp ? '   ZU KLEIN' : ''}`);
+  if (h < MINDEST) {
+    probleme.push(`${was} (${sel}): zugesagt ${h.toFixed(0)} Punkte hoch, mindestens ${MINDEST} nötig.`);
+  }
+  if (b !== null && b < MINDEST) {
+    probleme.push(`${was} (${sel}): zugesagt ${b.toFixed(0)} Punkte breit, mindestens ${MINDEST} nötig. `
+      + 'Ein Daumen trifft eine Flaeche, keine Zeile.');
   }
 }
 

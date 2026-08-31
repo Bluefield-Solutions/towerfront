@@ -306,7 +306,17 @@ if (!start) {
   // Zwei Fragen, nicht eine. Gross genug ist die eine; obenauf zu liegen die
   // andere. `npm run beruehrung` beantwortet die erste aus der Stilvorlage -
   // hier wird beides am gerechneten Layout gemessen.
-  const knoepfe = await seite.evaluate((mind) => {
+  //
+  // **Und zwar in JEDEM Zustand, den man beim Spielen erreicht.**
+  //
+  // Bis v199 lief diese Messung genau einmal: gleich nach dem Betreten,
+  // mit geschlossenem Pruefsteg, ohne Bauwahl, ohne Messtafel. Was in
+  // diesen Zustaenden erscheint, hat sie nie gesehen - und genau dort
+  // sassen die beiden Fehler, die der Nutzer gemeldet hat: das Kreuz des
+  // Stegs war 21 Punkte breit, und die Messtafel lag ueber "Welle
+  // starten". Ein Tor, das nur den Ruhezustand kennt, prueft das Spiel
+  // nicht, sondern sein Standbild.
+  const messeKnoepfe = (scope = null) => seite.evaluate(([mind, scope]) => {
     const raus = [];
     for (const e of document.querySelectorAll('button')) {
       const r = e.getBoundingClientRect();
@@ -350,24 +360,107 @@ if (!start) {
         ew: Math.round(ew), eh: Math.round(eh),
         klein: Math.min(ew, eh) < mind,
         eigen,
+        drin: !!(scope && e.closest(scope)),
       });
     }
     return raus;
-  }, MINDEST);
+  }, [MINDEST, scope]);
 
-  console.log(`\nKnöpfe im Spiel (gemessen, nicht zugesagt) - Kasten | erreichbar:`);
-  for (const k of knoepfe) {
-    const marke = k.klein ? ' ZU KLEIN' : k.eigen ? '' : ' VERDECKT';
-    const gewachsen = k.ew > k.w || k.eh > k.h ? ` | ${k.ew}x${k.eh}` : '';
-    console.log(`  ${(k.name || '?').padEnd(22)} ${String(k.w).padStart(4)}x${String(k.h).padEnd(4)}${gewachsen.padEnd(12)}${marke}`);
-    if (k.klein) {
-      fail(`Knopf "${k.name}" ist erreichbar ${k.ew}x${k.eh} `
-        + `(Kasten ${k.w}x${k.h}) - die kürzere Seite bleibt unter ${MINDEST} Punkten.`);
+  /** Einen Zustand herstellen, messen, und wieder aufraeumen.
+   *
+   *  `nurIn` grenzt die Messung auf eine Flaeche ein. Das ist kein
+   *  Schlupfloch, sondern die Regel fuer eine SPERRENDE Karte: die
+   *  Pausenkarte deckt das Feld absichtlich zu, und dann ist "der Turmknopf
+   *  darunter ist verdeckt" kein Befund, sondern der Sinn der Sache.
+   *  Ueberall sonst gilt: was sichtbar ist, muss zu treffen sein. */
+  const inZustand = async (name, aufbau, abbau, nurIn = null) => {
+    if (aufbau) await aufbau();
+    await seite.waitForTimeout(350);
+    const knoepfe = (await messeKnoepfe(nurIn)).filter((k) => !nurIn || k.drin);
+    console.log(`\nKnöpfe — ${name} (gemessen, nicht zugesagt) - Kasten | erreichbar:`);
+    for (const k of knoepfe) {
+      const marke = k.klein ? ' ZU KLEIN' : k.eigen ? '' : ' VERDECKT';
+      const gewachsen = k.ew > k.w || k.eh > k.h ? ` | ${k.ew}x${k.eh}` : '';
+      console.log(`  ${(k.name || '?').padEnd(22)} ${String(k.w).padStart(4)}x`
+        + `${String(k.h).padEnd(4)}${gewachsen.padEnd(12)}${marke}`);
+      if (k.klein) {
+        fail(`${name}: Knopf "${k.name}" ist erreichbar ${k.ew}x${k.eh} `
+          + `(Kasten ${k.w}x${k.h}) - die kürzere Seite bleibt unter ${MINDEST} Punkten.`);
+      }
+      if (!k.eigen) {
+        fail(`${name}: Knopf "${k.name}" wird in seiner Mitte von etwas anderem verdeckt.`);
+      }
     }
-    if (!k.eigen) {
-      fail(`Knopf "${k.name}" wird in seiner Mitte von etwas anderem verdeckt.`);
+    if (abbau) { await abbau(); await seite.waitForTimeout(250); }
+  };
+
+  await inZustand('im Spiel');
+
+  // **Den echten Bauablauf gehen, nicht einen Zustand herbeireden.**
+  //
+  // Leeres Feld antippen -> Turmwahl -> Turmart druecken -> denselben Fleck
+  // noch einmal antippen. Genau diese Kette hat der Nutzer als "das
+  // Handling ist nicht gut" gemeldet, und genau sie stellt die beiden
+  // Zustaende her, die vorher niemand gemessen hat.
+  let bauFleck = null;
+  for (let y = 70; y < HOCH - 70 && !bauFleck; y += 26) {
+    for (let x = 24; x < BREIT * 0.62 && !bauFleck; x += 26) {
+      await seite.mouse.click(x, y);
+      const auf = await seite.evaluate(() => !document.getElementById('pick').hidden);
+      if (auf) bauFleck = { x, y };
     }
   }
+  if (!bauFleck) {
+    fail('Kein Tipp auf freies Feld oeffnet die Turmwahl - so kommt man nicht zum Bauen.');
+  } else {
+    console.log(`\nBauwahl geöffnet mit einem Tipp auf ${bauFleck.x},${bauFleck.y}.`);
+    await inZustand('mit offener Bauwahl');
+
+    // Bauen, und danach denselben Fleck noch einmal antippen: das oeffnet
+    // den Pruefsteg fuer den eben gesetzten Turm.
+    const gebaut = await seite.evaluate(() => {
+      const b = document.querySelector('#pick-row .pick-btn:not([disabled])');
+      if (!b) return false;
+      b.click();
+      return true;
+    });
+    if (!gebaut) {
+      fail('In der Turmwahl war kein einziger Turm baubar.');
+    } else {
+      await seite.waitForTimeout(400);
+      if (!(await seite.evaluate(() => document.getElementById('pick').hidden))) {
+        fail('Die Turmwahl bleibt nach dem Bauen offen - sie liegt dann ueber dem neuen Turm.');
+      }
+      await seite.mouse.click(bauFleck.x, bauFleck.y);
+      await seite.waitForTimeout(400);
+      if (await seite.evaluate(() => document.getElementById('inspector').hidden)) {
+        fail('Ein Tipp auf den eben gebauten Turm oeffnet den Pruefsteg nicht.');
+      } else {
+        // Hier lebt das Kreuz, und hier lebt die Zielwahl - beides hat die
+        // alte Messung nie gesehen. Das Kreuz war 21 Punkte breit.
+        await inZustand('mit offenem Prüfsteg');
+        // Und es muss den Steg auch wirklich schliessen.
+        await seite.evaluate(() => document.getElementById('i-close').click());
+        await seite.waitForTimeout(300);
+        if (!(await seite.evaluate(() => document.getElementById('inspector').hidden))) {
+          fail('Das Kreuz schliesst den Pruefsteg nicht.');
+        }
+      }
+    }
+  }
+
+  // Mit angeschalteter Messtafel. Sie liegt ueber dem Feld, und der erste
+  // Entwurf legte sie ausgerechnet auf "Welle starten".
+  await inZustand('mit Messtafel',
+    () => seite.evaluate(() => document.getElementById('b-mess').click()),
+    () => seite.evaluate(() => document.getElementById('b-mess').click()));
+
+  // In der Pause. Die Karte sperrt absichtlich - geprueft wird deshalb, was
+  // AUF ihr steht, nicht was sie zudeckt.
+  await inZustand('in der Pause',
+    () => seite.evaluate(() => document.getElementById('b-pause').click()),
+    () => seite.evaluate(() => document.getElementById('p-resume').click()),
+    '#pause-menu');
 }
 
 // --- 5b. Folgt die Anzeige dem Zustand?
@@ -890,11 +983,24 @@ if (streuung < 6) {
     const t = document.getElementById('messtafel');
     return t ? (t.textContent || '').replace(/\s+/g, ' ') : null;
   });
+  // **Erst aufklappen.** Seit v200 faengt die Tafel eingeklappt an - dann
+  // steht dort nur eine Zeile, und die Pruefung darunter suchte Zahlen, die
+  // gar nicht da sein sollten. Aufgeklappt wird ueber ihren eigenen Knopf,
+  // nicht ueber einen Schalter im Code: so ist zugleich gemessen, dass der
+  // Knopf tut, was er soll.
+  await s2.waitForTimeout(400);
+  await s2.evaluate(() => {
+    document.querySelector('#messtafel .mb[data-mess="klappe"]')?.click();
+  });
   let tafel = null;
   for (let i = 0; i < 24; i++) {
     await s2.waitForTimeout(250);
     tafel = await lies();
     if (tafel && /Längste Bildlücke\s*[1-9]\d* ms/.test(tafel)) break;
+  }
+  if (tafel && !/Bilddauer Mitte/.test(tafel)) {
+    fail('Die Messtafel laesst sich ueber ihren Knopf nicht aufklappen - '
+      + `sie zeigt weiter "${tafel.slice(0, 60)}".`);
   }
   if (!tafel) {
     fail('Mit "#messung" erscheint keine Messtafel - das Messgeraet fuer D27 fehlt.');

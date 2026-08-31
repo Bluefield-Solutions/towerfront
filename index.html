@@ -225,7 +225,7 @@
          Autarkie-Tor liest den ausgelieferten Text.) -->
     <div class="insp-head">
       <span class="insp-name" id="i-name">Turm</span>
-      <button class="sell" id="i-sell" hidden>Verkaufen</button>
+      <span class="insp-stufe" id="i-stufe"></span>
       <button class="x" id="i-close" aria-label="Schliessen">&#10005;</button>
     </div>
     <!-- Ausbauen steht vor den Werten: das ist die Handlung, derentwegen
@@ -236,7 +236,23 @@
     <!-- Ziellogik zuletzt: eine Einstellung, die man einmal setzt, steht
          unter den Werten, die man bei jedem Ausbau liest. -->
     <dl class="insp-stats" id="i-stats"></dl>
-    <div class="insp-ziel" id="i-ziel"></div>
+    <div class="insp-ziel" id="i-ziel" hidden></div>
+    <!-- Fusszeile: die Ziellogik hinter einem Schalter, Verkaufen daneben.
+
+         Vorher stand Verkaufen in der NAMENSZEILE und die fünf Zielknöpfe
+         dauerhaft darunter. Gemessen am ausgelieferten Spiel: Inhalt 322
+         Punkte in einem Kasten von 288 — die Zielwahl wurde um 18 Punkte
+         abgeschnitten, und der Name lief über den Verkaufen-Knopf, weil ihm
+         nur 53 Punkte Breite blieben.
+
+         Die Anordnung folgt jetzt dem, was Kingdom Rush, Bloons und PvZ
+         alle drei tun (B6 des Bedienungs-Abgleichs): wer ist das, was kann
+         er, was kann ich tun — in dieser Reihenfolge, und die gefährlichste
+         Handlung nicht neben dem Namen. -->
+    <div class="insp-fuss">
+      <button class="ziel-auf" id="i-ziel-auf">Ziel · Vorn</button>
+      <button class="sell" id="i-sell" hidden>Verkaufen</button>
+    </div>
   </aside>
 
 

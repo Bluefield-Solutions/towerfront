@@ -104,6 +104,11 @@ export class UI {
    *  Turmwahl. */
   private zielKey = '';
   private iSell = $<HTMLButtonElement>('i-sell');
+  private iZielAuf = $<HTMLButtonElement>('i-ziel-auf');
+  private iStufe = $('i-stufe');
+  /** Steht die Ziellogik gerade offen? Sie ist eine Einstellung, die man
+   *  einmal setzt - dauerhaft sichtbar hat sie den Pruefsteg gesprengt. */
+  private zielOffen = false;
   private hud = $('hud');
   private dock = $('dock');
   private dockToggle = $('dock-toggle');
@@ -340,6 +345,11 @@ export class UI {
     // waehrend einer Partie.
     this.vVersion.textContent = VERSION;
     $('i-close').addEventListener('click', () => { this.s.auswahlSchliessen(); });
+    this.iZielAuf.addEventListener('click', () => {
+      Sfx.unlock(); Sfx.play('tap');
+      this.zielOffen = !this.zielOffen;
+      this.lastSig = '';
+    });
     // Die Ausbauknoepfe entstehen je nach Stufe neu - auf Stufe 1 sind es
     // zwei sich ausschliessende Zweige, danach einer.
     this.iUps.addEventListener('click', (ev) => {
@@ -615,6 +625,7 @@ export class UI {
       // Der Knopf tat, was er sollte, der Schalter stand richtig, und die
       // Anzeige folgte trotzdem nicht. Wer hier etwas anzeigt, das nicht
       // aus dem Spielzustand kommt, traegt es in diese Zeile ein.
+      this.zielOffen ? 'z' : '-',
       this.bilanzOffen ? 'b' : '-',
       this.optionenOffen ? 'o' : '-',
       // Fuenfter Fall derselben Art nach Startknopf, Zielwahl, Bilanzblatt
@@ -728,6 +739,7 @@ export class UI {
       const d = ENEMIES[s.gegnerInfo];
       this.insp.hidden = false;
       this.iName.textContent = `${d.name}${d.boss ? ' · Anführer' : ''}`;
+      this.iStufe.textContent = '';
       const zeilen: [string, string][] = [
         ['Leben', String(d.hp)],
         ['Tempo', `${Math.round(d.speed)}`],
@@ -754,6 +766,7 @@ export class UI {
       const def = TOWERS[s.buildChoice];
       this.insp.hidden = false;
       this.iName.textContent = `${def.name} · ${def.role}`;
+      this.iStufe.textContent = '';
       this.iStats.innerHTML = werteVorKauf(def).map(zeile).join('');
       this.rollhinweis();
       this.iHint.hidden = false;
@@ -771,13 +784,30 @@ export class UI {
     if (sel) {
       const def = TOWERS[sel.def];
       this.insp.hidden = false;
-      const branchName = sel.branch === null ? '' : ` · ${def.branches[sel.branch].name}`;
-      this.iName.textContent = `${def.name}${branchName} · Stufe ${sel.level}`;
+      // **Der Zweig ERSETZT den Turmnamen, er haengt sich nicht an.**
+      //
+      // "Bogenturm · Scharfschuetze · Stufe 2" sind drei Angaben in einer
+      // Zeile, und die Zeile ist 178 Punkte breit. Sobald ein Zweig gewaehlt
+      // ist, IST der Zweig der Turm - Kingdom Rush benennt ihn genauso um.
+      // Vorher steht die Sorte da, und die reicht.
+      this.iName.textContent = sel.branch === null
+        ? def.name
+        : def.branches[sel.branch].name;
+      this.iStufe.textContent = `Stufe ${sel.level}`;
       this.iStats.innerHTML = werteAmTurm(def, sel.branch, sel.level, sel.kills)
         .map(zeile).join('');
       this.rollhinweis();
       this.renderUpgrades();
       this.renderZielwahl(sel);
+      // Der Schalter traegt den aktuellen Modus - sonst muesste man ihn
+      // oeffnen, um zu sehen, was eingestellt ist.
+      this.iZielAuf.hidden = false;
+      this.iZielAuf.textContent = `Ziel · ${ZIELWAHL_NAMEN[sel.zielwahl]}`;
+      this.iZielAuf.setAttribute('aria-expanded', String(this.zielOffen));
+      this.iZiel.hidden = !this.zielOffen;
+      // Abgeleitet, nicht gesetzt: die Stilvorlage laesst die Werteliste
+      // nachgeben, solange die Ziellogik Platz braucht.
+      this.insp.dataset.ziel = this.zielOffen ? '1' : '0';
       this.iSell.textContent = `Verkaufen · ${sellValue(def, sel.branch, sel.level)}`;
     } else {
       this.insp.hidden = true;
@@ -993,6 +1023,9 @@ export class UI {
   private turmteileLeeren(): void {
     this.iUps.innerHTML = '';
     this.iZiel.innerHTML = '';
+    this.iZiel.hidden = true;
+    this.iZielAuf.hidden = true;
+    this.insp.dataset.ziel = '0';
     // Der Schlüssel muss mit, sonst hält `renderZielwahl` die Reihe für
     // schon gezeichnet und der nächste Turm bekäme gar keine.
     this.zielKey = '';

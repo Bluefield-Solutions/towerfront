@@ -1546,6 +1546,25 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // v201: der Inhalt des Pruefstegs muss HINEINPASSEN. Der Boden unter der
+    // Werteliste stand absolut (96 Punkte) und gab nicht nach, als die
+    // Kopfzeile auf drei Zeilen wuchs: 322 Punkte Inhalt in 288 Punkten
+    // Kasten, abgeschnitten wurde die Zielwahl (Regel 2).
+    name: 'Boden der Werteliste wieder absolut',
+    datei: 'src/style.css',
+    suche: '  min-height: 33%;',
+    ersatz: '  min-height: 96px;',
+    tor: 'browsertor',
+  },
+  {
+    // Und der Schalter muss die Ziellogik wirklich aufklappen.
+    name: 'Ziellogik klappt nicht auf',
+    datei: 'src/ui/ui.ts',
+    suche: '      this.iZiel.hidden = !this.zielOffen;',
+    ersatz: '      this.iZiel.hidden = true;',
+    tor: 'browsertor',
+  },
+  {
     // v200: das Kreuz des Pruefstegs war 21 Punkte BREIT - `min-height`
     // stand da, `min-width` nicht, und das Tor hat nie nach der Breite
     // gefragt. Gemeldet hat es der Nutzer, nicht die Torkette.
@@ -1633,12 +1652,17 @@ const PROBEN = [
     // Und sie darf keine Null melden, wo der Browser gar nicht misst.
     name: 'Messtafel behauptet null lange Aufgaben',
     datei: 'src/core/messung.ts',
-    // **Der Beobachter laeuft, sammelt aber nichts** - genau der Fall, den
-    // Safari erzeugt. Die erste Fassung erzwang stattdessen seine
-    // Anmeldung, und die gelingt in Chromium ohnehin: der Eingriff kam an
-    // und aenderte nichts (Regel 3).
-    regel: /for \(const e of liste\.getEntries\(\)\) langeAufgaben\.push\(Math\.round\(e\.duration\)\);/,
-    ersatz: 'void liste;',
+    // **Die Null darf nie dastehen** - sie hiesse "noch nicht gemessen",
+    // "nichts gefunden" oder "gar nicht gemessen", und sah in allen drei
+    // Faellen gleich aus. Die Probe stellt die alte, mehrdeutige Fassung
+    // wieder her.
+    //
+    // Zwei Anlaeufe davor waren keine Proben: die eine erzwang die
+    // Anmeldung des Beobachters (gelingt in Chromium ohnehin), die andere
+    // brach das Einsammeln - was seit dieser Fassung zum richtigen Satz
+    // "keine ueber 50 ms" fuehrt und damit gar kein Fehler mehr ist.
+    regel: /schlimmste > 0 \? `\$\{schlimmste\} ms` : `keine über \$\{SOLL_MS\} ms`/,
+    ersatz: '`${schlimmste} ms`',
     tor: 'browsertor',
   },
   {

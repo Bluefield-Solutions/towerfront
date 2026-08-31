@@ -165,7 +165,6 @@ const KNOEPFE = [
   ['.insp-ups .up', 'Ausbauen'],
   ['.chip', 'Tempo und Welle'],
   ['.x', 'Prüfsteg schließen'],
-  ['.sell', 'Verkaufen'],
   ['.go', 'Welle starten'],
   // Die beiden hier entstehen erst im Lauf und standen deshalb nie in
   // dieser Liste - obwohl die Zielwahl seit v137 fuenf Knoepfe hat und die
@@ -190,6 +189,8 @@ const KNOEPFE = [
   ['.coach-skip', 'Einweisung ueberspringen'],
   ['.pick-btn', 'Turm aus der Bauwahl'],
   ['#messtafel .mb', 'Messtafel: Aufklappen und Kopieren'],
+  ['.ziel-auf', 'Ziellogik aufklappen'],
+  ['.insp-fuss .sell', 'Verkaufen'],
 ];
 
 console.log('\nIm HTML — zugesagte Höhe laut Stilvorlage:\n');

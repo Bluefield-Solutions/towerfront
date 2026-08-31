@@ -193,8 +193,15 @@ export function messungStarten(zusatz: () => Zusatzzeile[] = () => []): void {
       // Die tragbare Zahl steht OBEN, die browserabhaengige darunter.
       ['Längste Bildlücke', noch(`${groessteLuecke.toFixed(0)} ms`),
         !laeuft && groessteLuecke > SOLL_MS],
-      ['davon als Aufgabe', beobachterLaeuft
-        ? noch(`${schlimmste} ms`) : 'meldet dieser Browser nicht',
+      // **"0 ms" darf hier nie stehen.**
+      //
+      // Die Null hat drei sehr verschiedene Bedeutungen - noch nicht
+      // gemessen, nichts gefunden, gar nicht gemessen - und sah in allen
+      // drei Faellen gleich aus. Jede bekommt jetzt ihren eigenen Satz.
+      ['davon als Aufgabe', !beobachterLaeuft
+        ? 'meldet dieser Browser nicht'
+        : laeuft ? '—'
+          : schlimmste > 0 ? `${schlimmste} ms` : `keine über ${SOLL_MS} ms`,
       beobachterLaeuft && !laeuft && schlimmste > SOLL_MS],
       // **Der Zustandsteil.** Er misst nichts, er sagt, was gerade los ist -
       // und er steht hier, weil diese Tafel das einzige ist, was vom

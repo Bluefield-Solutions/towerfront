@@ -439,6 +439,55 @@ if (!start) {
         // Hier lebt das Kreuz, und hier lebt die Zielwahl - beides hat die
         // alte Messung nie gesehen. Das Kreuz war 21 Punkte breit.
         await inZustand('mit offenem Prüfsteg');
+
+        // **Passt der Inhalt in den Steg?**
+        //
+        // Gemeldet hat das der Nutzer, nicht die Torkette: 322 Punkte
+        // Inhalt in einem Kasten von 288, abgeschnitten wurde die
+        // Zielwahl-Reihe. Gemessen wird mit und ohne aufgeklappte
+        // Ziellogik - der zweite Fall braucht mehr Platz und war der, in
+        // dem Verkaufen unter die Kante rutschte.
+        for (const [wie, auf] of [['zu', false], ['auf', true]]) {
+          await seite.evaluate((soll) => {
+            const k = document.getElementById('i-ziel-auf');
+            const offen = !document.getElementById('i-ziel').hidden;
+            if (offen !== soll) k?.click();
+          }, auf);
+          await seite.waitForTimeout(300);
+          const passt = await seite.evaluate(() => {
+            const insp = document.getElementById('inspector');
+            const kasten = Math.round(insp.getBoundingClientRect().height);
+            const inhalt = insp.scrollHeight;
+            // Und laeuft irgendein Text ueber seinen eigenen Kasten hinaus?
+            const ueber = [];
+            for (const e of insp.querySelectorAll('span, button, dt, dd, p')) {
+              const cs = getComputedStyle(e);
+              if (cs.overflow !== 'visible' || cs.position === 'absolute') continue;
+              if (e.scrollWidth > e.clientWidth + 1 && e.clientWidth > 0) {
+                ueber.push(`${e.id || e.className}: ${e.scrollWidth} in ${e.clientWidth}`);
+              }
+            }
+            return { kasten, inhalt, ueber };
+          });
+          if (passt.inhalt > passt.kasten + 1) {
+            fail(`Prüfsteg (Ziellogik ${wie}): ${passt.inhalt} Punkte Inhalt in einem Kasten `
+              + `von ${passt.kasten} - unten wird abgeschnitten.`);
+          }
+          if (passt.ueber.length) {
+            fail(`Prüfsteg (Ziellogik ${wie}): Text laeuft ueber seinen Kasten hinaus - `
+              + passt.ueber.join('; '));
+          }
+        }
+        // Zustand zuruecklassen, wie er war: die Pruefungen danach messen
+        // die Werteliste, und die gibt bei offener Ziellogik absichtlich
+        // nach. Eine Pruefung, die den Zustand fuer die naechste veraendert,
+        // misst deren Aufraeumen mit.
+        await seite.evaluate(() => {
+          if (!document.getElementById('i-ziel').hidden) {
+            document.getElementById('i-ziel-auf')?.click();
+          }
+        });
+        await seite.waitForTimeout(300);
         // Und es muss den Steg auch wirklich schliessen.
         await seite.evaluate(() => document.getElementById('i-close').click());
         await seite.waitForTimeout(300);
@@ -652,6 +701,19 @@ if (start) {
     // Bis v145 fiel diese Reihe durch jedes Raster: die Knopfmessung oben
     // kennt die Klassen der Kopfzeile und der Turmleiste, nicht die des
     // Pruefstegs.
+    // Seit v201 stehen sie hinter einem Schalter - erst aufklappen, sonst
+    // misst diese Pruefung fuenf Knoepfe der Groesse null und meldet das
+    // als Befund. Das Aufklappen ueber den Knopf selbst zu machen ist dabei
+    // kein Umweg, sondern eine Messung mit: er muss es koennen.
+    await seite.evaluate(() => {
+      if (document.getElementById('i-ziel')?.hidden) {
+        document.getElementById('i-ziel-auf')?.click();
+      }
+    });
+    await seite.waitForTimeout(300);
+    if (await seite.evaluate(() => document.getElementById('i-ziel').hidden)) {
+      fail('Der Schalter "Ziel" klappt die Ziellogik nicht auf.');
+    }
     const zielKnoepfe = await seite.evaluate(() => [...document.querySelectorAll('.ziel')]
       .map((b) => {
         const r = b.getBoundingClientRect();

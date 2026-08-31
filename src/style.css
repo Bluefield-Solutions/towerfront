@@ -264,12 +264,51 @@ html, body {
   display: flex; align-items: center; gap: 6px;
   margin-bottom: 8px; flex: 0 0 auto;
 }
-.insp-name { font-size: 14px; font-weight: 700; flex: 1 1 auto; min-width: 0; }
-/* Verkaufen sitzt in der Kopfzeile und bleibt trotzdem daumengross. */
-.insp-head .sell {
-  flex: 0 0 auto; min-height: 44px; padding: 0 10px; border-radius: 10px;
-  font-family: var(--ui); font-size: 12px; font-weight: 700; white-space: nowrap;
+/* **Eine Zeile, und was nicht passt, wird abgekuerzt.**
+   Der Name lief bis v201 ueber den Verkaufen-Knopf: er stand in einem Kasten
+   von 53 Punkten Breite, waehrend allein "Scharfschuetze" rund 90 braucht.
+   Ohne Verkaufen daneben bleiben ihm 178 - genug fuer eine Zeile, und was
+   darueber hinausgeht, endet sichtbar mit drei Punkten statt unsichtbar
+   ueber dem Nachbarn. */
+.insp-name {
+  font-size: 14px; font-weight: 700; flex: 1 1 auto; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+
+/* Die Stufe steht neben dem Namen, nicht in ihm.
+   "Scharfschuetze · Stufe 2" braucht rund 190 Punkte, die Zeile hat 178 -
+   es wurde zu "Scharfschuetze · Stuf…". Als eigene, kleine Angabe kostet
+   die Stufe 46 Punkte und der Name behaelt seine volle Breite. */
+.insp-stufe {
+  flex: 0 0 auto; font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted); white-space: nowrap;
+}
+.insp-stufe:empty { display: none; }
+
+/* Die Fusszeile: Ziellogik links, Verkaufen rechts.
+   Beide sind Handlungen, beide gehoeren ans Ende - und die gefaehrlichere
+   traegt die Warnfarbe, die sie schon hatte. */
+.insp-fuss {
+  display: flex; gap: 6px; flex: 0 0 auto; margin-top: 6px;
+}
+.insp-fuss .sell, .ziel-auf {
+  min-width: 0; min-height: 44px; padding: 0 8px; border-radius: 10px;
+  font-family: var(--ui); font-size: 12px; font-weight: 700; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+}
+/* Verkaufen bekommt, was es braucht; die Ziellogik nimmt den Rest.
+   Bei halbe-halbe stand dort "Verkaufen ·…" - und ausgerechnet die ZAHL
+   fehlte, also das Einzige, weswegen man hinsieht. */
+.ziel-auf { flex: 1 1 0; }
+.insp-fuss .sell { flex: 0 1 auto; }
+.ziel-auf {
+  background: rgba(255, 255, 255, 0.05); color: var(--text);
+  border: 1px solid var(--edge);
+}
+.ziel-auf[aria-expanded="true"] {
+  background: rgba(127, 231, 224, 0.16); border-color: var(--crystal); color: #fff;
+}
+.ziel-auf:active, .insp-fuss .sell:active { transform: scale(0.97); }
 /* **44 Punkte HOCH und BREIT.**
    Das Kreuz war 21 Punkte breit - `min-height` stand da, `min-width` nicht,
    und `beruehrung` hat nie nach der Breite gefragt. Auf dem Telefon war das
@@ -288,9 +327,22 @@ html, body {
      Ziellogik und Verkaufen zusammen mehr verlangten, als der Steg hoch ist,
      blieben GEMESSENE VIER Bildpunkte uebrig. Ein Mindestmass ist die
      einzige Angabe, die das verhindert: lieber rollt die Liste, als dass sie
-     verschwindet. */
-  min-height: 96px;
+     verschwindet.
+
+     **Anteilig statt absolut** (Regel 2). Die 96 Punkte standen fest, und
+     als die Kopfzeile auf drei Zeilen wuchs, verlangte der Inhalt 322
+     Punkte in einem Kasten von 288 - abgeschnitten wurde die Zielwahl. Ein
+     Drittel des Stegs gibt nach, wenn ueber ihm etwas waechst, und bleibt
+     bei jeder Bildschirmhoehe dieselbe Zusage. */
+  min-height: 33%;
 }
+/* **Und waehrend die Ziellogik offen steht, gibt sie ganz nach.**
+   Die fuenf Knoepfe brauchen 44 Punkte plus Abstand; ohne diese Zeile
+   rutschte Verkaufen bei geoeffneter Zielwahl auf 324 bis 368 - der Steg
+   endet bei 336. Der Boden ist eine Zusage fuer den Normalfall, kein
+   Naturgesetz: die Ziellogik ist ein Augenblick, die Werte sind der
+   Dauerzustand. */
+.inspector[data-ziel="1"] .insp-stats { min-height: 0; }
 /* Rollhinweis (D24).
    Technisch rollte die Werteliste schon immer, sichtbar war es nicht: auf dem
    iPhone quer endet sie mitten in einer Zeile, und ein halb abgeschnittenes

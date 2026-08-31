@@ -918,6 +918,21 @@ const PROBEN = [
     tor: 'bauflaechetor',
   },
   {
+    // **Ein Werkzeug rechnet die Anzeigegroesse wieder selbst.**
+    //
+    // Dieselbe Falle wie beim Chromium-Pfad, nur stiller: zwei Fassungen
+    // derselben Umrechnung, beide heissen "Dichte", und sie liegen um den
+    // Faktor 2 bis 3 auseinander. Bis v204 war das der Zustand - die
+    // Kandidatenpruefung nahm ab, was das Grafiktor hinterher ablehnte.
+    name: 'Werkzeug rechnet die Anzeigegroesse selbst',
+    datei: 'tools/artaudit.mjs',
+    regel: /  return messen\(await sharp\(buf\)\.ensureAlpha\(\)\.resize\(anzeigePunkte\(weltbreite\)\)\.png\(\)\.toBuffer\(\)\);/,
+    ersatz: '  const ANZEIGE_MASSSTAB = 0.8;\n'
+      + '  return messen(await sharp(buf).ensureAlpha()'
+      + '.resize(Math.round(weltbreite * ANZEIGE_MASSSTAB)).png().toBuffer());',
+    tor: 'guards',
+  },
+  {
     // **Die Knoepfe antworten dem Zeiger nicht mehr.**
     //
     // Der Zustand bis v203, und er hat dreissig Tore ueberlebt: alle messen,

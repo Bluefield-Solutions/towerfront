@@ -1223,6 +1223,32 @@ for (const id of TOWER_ORDER) {
   }
 }
 
+// ------------------------------------- Werkzeuge: eine Anzeigegroesse
+//
+// Dieselbe Geschichte wie beim Browserpfad, nur teurer, weil sie still
+// bleibt: das Grafik-Audit misst die Detaildichte in ANZEIGEGROESSE, die
+// Kandidatenpruefung mass sie bis v204 an einer festen 300er Kante. Beide
+// Zahlen heissen "Dichte", beide stehen neben einer Grenze, und sie liegen
+// um den Faktor 2 bis 3 auseinander. Eine Lieferung konnte die Abnahme
+// bestehen und im Tor durchfallen.
+//
+// Die Umrechnung steht jetzt in `tools/anzeigegroesse.mjs`. Wer den
+// Massstab ein zweites Mal hinschreibt, faellt hier auf.
+{
+  const werkzeuge = readdirSync(join(ROOT, 'tools'))
+    .filter((f) => /\.(ts|mjs)$/.test(f)
+      && f !== 'anzeigegroesse.mjs' && f !== 'anzeigegroesse.d.mts');
+  for (const f of werkzeuge) {
+    const quelle = readFileSync(join(ROOT, 'tools', f), 'utf8');
+    const eigen = /(ANZEIGE_MASSSTAB|TURM_WELT)\s*=/.exec(quelle);
+    if (eigen) {
+      fail(`tools/${f}: setzt "${eigen[1]}" selbst. Die Umrechnung auf Anzeigegroesse `
+        + 'gehoert in tools/anzeigegroesse.mjs - zwei Fassungen davon sind in v204 um '
+        + 'den Faktor 2 bis 3 auseinandergelaufen, und beide hiessen "Dichte".');
+    }
+  }
+}
+
 // ------------------------------------------------------------------ Ausgabe
 
 for (const w of warnings) console.warn(`  Hinweis: ${w}`);

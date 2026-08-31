@@ -15,17 +15,29 @@
  *
  *  Aufruf: npm run probebild -- <ordner>
  *
- *  Messstelle (Regel 12): die Kandidatendatei selbst, auf 300 Punkte
- *  längste Kante gebracht. Das ist NICHT die Anzeigegröße - die Zahlen
- *  sind untereinander vergleichbar, aber nicht mit denen aus
- *  `npm run grafik`, das in Anzeigegröße misst. Verkleinern erhöht die
- *  Dichte. Deshalb steht daneben immer der heutige Bestand, an derselben
- *  Messstelle gerechnet. */
-import { readdirSync, readFileSync, existsSync } from 'node:fs';
+ *  Messstelle (Regel 12): **zwei**, und das ist seit v204 der Punkt.
+ *
+ *  Die erste ist die Kandidatendatei auf 300 Punkte längste Kante - gut, um
+ *  Kandidaten untereinander zu vergleichen, und die Zahl, neben der der
+ *  heutige Bestand steht.
+ *
+ *  Die zweite ist die **Anzeigegröße**: wie gross die Figur im Spiel
+ *  wirklich gezeichnet wird. Nur dort gilt die Grenze, denn nur dort
+ *  entscheidet sich, ob eine Figur ruhig aussieht. Verkleinern ERHÖHT die
+ *  Dichte, und je Figur verschieden stark - gemessen an denselben acht
+ *  Gegnern liegen die beiden Zahlen um den Faktor **2,0 bis 3,2**
+ *  auseinander. Bis v204 stand hier nur die erste, und **ohne jede
+ *  Grenze**: eine Lieferung konnte diese Abnahme bestehen und im Grafiktor
+ *  durchfallen, ohne dass jemand versteht, warum. Genau das ist Befund B1,
+ *  und er ist der Grund, aus dem überhaupt nachbestellt wird. */
+import { readdirSync, readFileSync, existsSync, rmSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { umriss, ueberdeckung } from './silhouette';
+// Die Umrechnung auf Anzeigegroesse steht in einer Datei, aus der auch das
+// Grafik-Audit sie holt. Zwei Fassungen davon waren der Fehler (Regel 15).
+import { anzeigeBreiteFuer, bildTafel } from './anzeigegroesse.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ordner = process.argv[2];
@@ -48,13 +60,55 @@ const SCHWARZ_MAX = 0.02;      // Art Bible, Abschnitt 2
 const LICHT_MAX = 20;          // Art Bible: Ziel unter 20°, Ratsche 67°
 const AEHNLICH_MAX = 0.65;     // heutiger Bestand: Mittel 0,49, schlimmstes Paar 0,62
 const RAND = 6;                // Punkte Luft zum Kachelrand
+/** Detaildichte in Anzeigegroesse - und zwar am ROHBILD, vor dem Packen.
+ *
+ *  **Die Grenze des Grafiktors ist 6, hier steht 3,5, und das ist kein
+ *  Widerspruch, sondern die Messstelle** (Regel 12). Das Tor misst das
+ *  GEPACKTE Bild: 256 Punkte Kante, entrauscht, Schwarz angehoben, Farbe und
+ *  Helligkeit nachgezogen, als WebP kodiert. Ein Kandidat liegt als 1024er
+ *  vor; ihn auf Anzeigegroesse zu rechnen mittelt viel mehr weg.
+ *
+ *  Der Abstand ist gemessen, nicht geschaetzt - dieselben acht Gegner, beide
+ *  Wege: 6,2/10,0 · 7,3/13,6 · 6,7/11,7 · 6,2/10,0 · 8,3/15,1 · 6,9/13,0 ·
+ *  11,0/16,1 · 6,6/11,6. Das Packen hebt die Dichte um den Faktor **1,46 bis
+ *  1,88**, im Mittel 1,72. Sechs geteilt durch 1,72 sind 3,5.
+ *
+ *  Was das bedeutet: unter 3,2 ist ein Kandidat sicher, ueber 3,9 sicher zu
+ *  unruhig, dazwischen entscheidet das Packen. Der heutige Bestand liegt
+ *  hier bei 6,2 bis 11,0 - alle acht faellen durch, und genau deshalb wird
+ *  nachbestellt (Befund B1). */
+const DICHTE_MAX = 3.5;
 
 interface Mass {
   datei: string; breite: number; hoehe: number; N: number;
-  hell: number; dichte: number; schwarz: number;
+  hell: number; dichte: number; dichteAnzeige: number | null; schwarz: number;
   winkel: number; ab: number; staerke: number;
   maske: Uint8Array; x0: number; y0: number; x1: number; y1: number;
   quer: number; laengs: number;
+}
+
+/** Nur die Detaildichte, an einer beliebigen Kantenlaenge gemessen.
+ *
+ *  Dieselbe Rechnung wie in `messen`, aber ohne alles andere - sie wird ein
+ *  zweites Mal gebraucht, naemlich in Anzeigegroesse. Der Nachbarunterschied
+ *  INNERHALB der Figur, mal hundert. */
+async function dichteBei(pfad: string, kante: number): Promise<number> {
+  const { data, info } = await sharp(pfad).resize(kante, kante, { fit: 'inside' })
+    .ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const W = info.width, H = info.height;
+  const l = (i: number): number =>
+    (0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]) / 255;
+  const deckt = (x: number, y: number): boolean => data[((y * W + x) * 4) + 3] / 255 >= 0.5;
+  let d = 0, n = 0;
+  for (let y = 1; y < H - 1; y++) {
+    for (let x = 1; x < W - 1; x++) {
+      if (!deckt(x, y) || !deckt(x + 1, y) || !deckt(x, y + 1)) continue;
+      const i = (y * W + x) * 4;
+      d += Math.abs(l(i) - l(i + 4)) + Math.abs(l(i) - l(((y + 1) * W + x) * 4));
+      n += 2;
+    }
+  }
+  return n ? (d / n) * 100 : 0;
 }
 
 async function messen(pfad: string, datei: string): Promise<Mass | null> {
@@ -107,7 +161,7 @@ async function messen(pfad: string, datei: string): Promise<Mass | null> {
   const winkel = gn ? (Math.atan2(gy / gn, gx / gn) * 180) / Math.PI : 0;
   return {
     datei, breite: x1 - x0 + 1, hoehe: y1 - y0 + 1, N: W,
-    hell: hs / n, dichte: dn ? (d / dn) * 100 : 0, schwarz: schwarz / n,
+    hell: hs / n, dichte: dn ? (d / dn) * 100 : 0, dichteAnzeige: null, schwarz: schwarz / n,
     winkel, ab: winkelAbstand(winkel, SONNE), staerke: gn ? Math.hypot(gx / gn, gy / gn) : 0,
     maske, x0, y0, x1, y1, quer: x1 - x0 + 1, laengs: y1 - y0 + 1,
   };
@@ -129,15 +183,20 @@ if (!dateien.length) { console.error(`Keine Bilder in ${ordner}.`); process.exit
 
 console.log(`PROBEBILD — ${dateien.length} Kandidat(en) aus ${ordner}\n`);
 console.log(`  Sonne laut src/data/config.ts: ${SONNE.toFixed(0)}°\n`);
-console.log('  Datei                         Format      Kasten    Schwarz  Dichte  Licht daneben');
+console.log('  Datei                         Format      Kasten    Schwarz  Dichte  Anzeige  Licht daneben');
 
 const befunde: string[] = [];
+const hinweise: string[] = [];
 const masse: Mass[] = [];
+const tafel = bildTafel();
 for (const f of dateien) {
   const pfad = join(ordner, f);
   const meta = await sharp(pfad).metadata();
   const m = await messen(pfad, f);
   if (!m) { befunde.push(`${f}: kein einziger deckender Punkt.`); continue; }
+  // **Und jetzt dieselbe Zahl an der Stelle, an der sie zaehlt.**
+  const kante = await anzeigeBreiteFuer(f, tafel);
+  m.dichteAnzeige = kante ? await dichteBei(pfad, kante) : null;
   masse.push(m);
 
   const quadrat = meta.width === meta.height;
@@ -145,8 +204,22 @@ for (const f of dateien) {
   console.log(`  ${f.slice(0, 28).padEnd(29)} ${form.padEnd(11)} `
     + `${String(m.quer).padStart(3)}x${String(m.laengs).padEnd(3)} `
     + `${(m.schwarz * 100).toFixed(1).padStart(6)}%  ${m.dichte.toFixed(1).padStart(5)}  `
+    + `${(m.dichteAnzeige === null ? '  —' : m.dichteAnzeige.toFixed(1)).padStart(6)}   `
     + `${m.winkel.toFixed(0).padStart(5)}° ${m.ab.toFixed(0).padStart(4)}°`);
 
+  if (m.dichteAnzeige !== null && m.dichteAnzeige > DICHTE_MAX) {
+    befunde.push(`${f}: Detaildichte ${m.dichteAnzeige.toFixed(1)} in Anzeigegröße `
+      + `(${kante} Punkte am Rohbild), erlaubt sind ${DICHTE_MAX} - gepackt werden `
+      + `daraus rund ${(m.dichteAnzeige * 1.72).toFixed(1)}, und das Grafiktor laesst 6 zu. `
+      + 'Das ist Befund B1 - '
+      + 'die Figur ist zu unruhig gezeichnet. Filtern hilft nicht, es kostet die Form '
+      + '(`npm run entrauschprobe`); es braucht grössere Flächen und weniger Krizel.');
+  }
+  if (m.dichteAnzeige === null) {
+    hinweise.push(`${f}: steht in keiner Vorratsdatei (art/*.json) - ohne Eintrag ist `
+      + 'die Anzeigegröße unbekannt, und eine erfundene wäre schlimmer als keine. '
+      + 'Die Dichtegrenze bleibt für dieses Bild ungeprüft.');
+  }
   if (!meta.hasAlpha) befunde.push(`${f}: kein Alphakanal. Das Spiel braucht echte Freistellung.`);
   if (!quadrat) befunde.push(`${f}: nicht quadratisch (${meta.width}x${meta.height}).`);
   if (m.schwarz > SCHWARZ_MAX) {
@@ -269,8 +342,47 @@ if (masse.length > 1) {
   }
 }
 
-console.log('\n  Messstelle: Kandidatendatei, längste Kante auf 300 Punkte. NICHT die '
-  + 'Anzeigegröße —\n  die Zahlen sind untereinander vergleichbar, nicht mit `npm run grafik`.');
+console.log('\n  Messstellen: Spalte „Dichte" an der Kandidatendatei, längste Kante auf 300 '
+  + 'Punkte —\n  untereinander vergleichbar, nicht mit `npm run grafik`. Spalte „Anzeige" '
+  + 'an der\n  Grösse, mit der die Figur im Spiel gezeichnet wird; NUR dort gilt die '
+  + `Grenze ${DICHTE_MAX}\n  am Rohbild — das Packen hebt sie um den Faktor 1,46 bis 1,88, `
+  + 'und das Grafiktor lässt danach 6 zu.');
+
+// **Die Nullprobe der Dichtemessung** (Regel 13).
+//
+// Sie steht in jedem Lauf und nicht in einer Testdatei, weil eine Grenze,
+// die nichts trennt, genau so aussieht wie eine bestandene Lieferung. Zwei
+// gleich grosse Kacheln: eine glatte Flaeche und dieselbe mit feinem Korn.
+// Faellt die zweite nicht durch, misst die Spalte nichts.
+{
+  const kachel = async (korn: number): Promise<number> => {
+    const N = 96, roh = Buffer.alloc(N * N * 4);
+    for (let i = 0; i < N * N; i++) {
+      // Ein fester Wuerfel: zwei gleiche Laeufe muessen dieselbe Zahl geben.
+      const z = ((i * 1103515245 + 12345) >>> 8) % 1000 / 1000;
+      const v = Math.round(128 + (z - 0.5) * korn);
+      roh[i * 4] = v; roh[i * 4 + 1] = v; roh[i * 4 + 2] = v; roh[i * 4 + 3] = 255;
+    }
+    const datei = join(ROOT, `.probebild-nullprobe-${korn}.png`);
+    await sharp(roh, { raw: { width: N, height: N, channels: 4 } }).png().toFile(datei);
+    const d = await dichteBei(datei, N);
+    rmSync(datei);
+    return d;
+  };
+  const glatt = await kachel(0), koernig = await kachel(120);
+  console.log(`  Nullprobe der Dichte: glatte Kachel ${glatt.toFixed(1)}, `
+    + `koernige ${koernig.toFixed(1)} (Grenze ${DICHTE_MAX}).`);
+  if (!(glatt < DICHTE_MAX && koernig > DICHTE_MAX)) {
+    befunde.push(`Die Dichtemessung trennt nicht: glatte Kachel ${glatt.toFixed(1)}, `
+      + `koernige ${koernig.toFixed(1)}, Grenze ${DICHTE_MAX}. So lange sagt die `
+      + 'Spalte „Anzeige" nichts über die Kandidaten.');
+  }
+}
+
+if (hinweise.length) {
+  console.log('\nHinweise:');
+  for (const h of hinweise) console.log(`  - ${h}`);
+}
 
 if (befunde.length) {
   console.error(`\nPROBEBILD: ${befunde.length} Befund(e)`);

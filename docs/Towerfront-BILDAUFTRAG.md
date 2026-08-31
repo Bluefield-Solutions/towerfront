@@ -63,6 +63,13 @@ lines, hatches, weld seams and vents are allowed; surface grime, rivet
 fields, scratched micro-texture and noise are NOT. The silhouette must read
 at 40 pixels tall.
 
+THE QUIET TEST - apply it to your own image before delivering: scale the
+finished figure down to 48 pixels and look at it. If anything inside the
+silhouette still reads as TEXTURE rather than as a shape, it is too busy.
+Concretely: no more than about eight separate value areas inside the whole
+figure, and none of them filled with pattern. This is the single most common
+reason a delivery is rejected.
+
 TRACKS AND TYRES: draw a tracked vehicle's tracks as TWO CONTINUOUS DARK
 BANDS with only three or four suggested links, never as a fully modelled
 chain of individual track links. At 40 pixels the links are invisible and
@@ -104,7 +111,7 @@ canvas.
 |---|---|---|
 | „single sun, upper left, ~130°" | Das Spiel wirft **jeden** Schatten aus `LICHT` = **−128°**. Heute streuen die Gegner von 1° bis 66° daneben | `npm run grafik`, „Lichtrichtung" |
 | „no rim light" | Das Randlicht **backt das Spiel selbst** (v156). Ein mitgeliefertes wäre doppelt und käme aus der falschen Richtung | `npm run einbettungstor` |
-| „calm surfaces, no noise" | Figuren tragen heute **6,0-mal** so viel Feindetail wie der Untergrund, erlaubt sind 3,0. Filtern hilft nicht — es kostet die Form | `npm run grafik`, Befund B1 |
+| „calm surfaces, no noise" | Figuren tragen heute **5,1-mal** so viel Feindetail wie der Untergrund (12,4 gegen 2,45), erlaubt sind 3,0, im Zielbild sind es 2,1. Filtern hilft nicht — es kostet die Form | `npm run grafik`, Befund B1 · `npm run probebild` misst es seit v205 am Kandidaten |
 | „no pure black" | Reines Schwarz höchstens 2 % der Fläche | `npm run grafik` |
 | „mid-tones" | Figuren-Helligkeit muss im Band **0,33–0,40** liegen, Sättigung **0,35–0,45** | `npm run grafik` |
 | „transparent, no shadow" | Schatten, Sonnenanstrich, Bodenverschattung und Farbklima trägt das Spiel je Karte auf | `npm run einbettungstor` |
@@ -312,6 +319,54 @@ gepackt für alle zusammen.
 > die Straße. Er soll **lang** wirken, nicht breit — bis 240 px in
 > Laufrichtung.
 
+### 5.0 Nachbestellung B1 — **die vier lautesten zuerst** (v205)
+
+Befund B1 ist der einzige Punkt des Grafik-Audits, der ohne neue Bilder
+nicht zu schließen ist. Er lautet in einer Zahl: **die Figuren tragen
+5,1-mal so viel Feindetail wie der Untergrund** (12,4 gegen 2,45). Erlaubt
+sind 3,0, im Zielbild sind es 2,1. Nachbearbeitung hilft nicht — Weichzeichnen
+und Median senken die Zahl und kosten sichtbar Form (`npm run entrauschprobe`).
+
+**Der heutige Bestand, beide Messstellen** (Regel 12): links das Rohbild auf
+Anzeigegröße gerechnet, rechts das gepackte, wie es das Grafiktor sieht. Das
+Packen hebt die Dichte um den gemessenen Faktor 1,46 bis 1,88.
+
+| Datei | roh → Anzeige | gepackt | reines Schwarz (roh) |
+|---|---|---|---|
+| `gegner_span.png` | **11,0** | 16,1 | 1,2 % |
+| `gegner_spaeher.png` | **8,3** | 15,1 | 8,7 % |
+| `enemy_infantry_topdown.png` | **8,1** | 13,4 | 6,0 % |
+| `gegner_gleiter.png` | **7,3** | 13,6 | 1,4 % |
+| `gegner_spalter.png` | 6,9 | 13,0 | 5,7 % |
+| `gegner_koloss.png` | 6,7 | 11,7 | 4,2 % |
+| `gegner_titan.png` | 6,6 | 11,6 | 4,4 % |
+| `gegner_schleicher.png` | 6,2 | 10,0 | 6,6 % |
+
+**Bestellt werden zuerst die oberen vier.** Nicht aus Sparsamkeit, sondern
+weil eine Lieferung von acht, die den Brief verfehlt, achtmal daneben ist:
+vier sind genug, um zu sehen, ob „QUIET TEST" ankommt, und sie sind zugleich
+die, die am weitesten außerhalb liegen. Tragen sie, folgen die übrigen vier
+im selben Stil.
+
+**Abnahme.** Vor dem Packen `npm run probebild -- <ordner>`:
+
+* **Detaildichte höchstens 3,5** am Rohbild in Anzeigegröße. Unter 3,2 ist
+  sicher, über 3,9 sicher zu unruhig; dazwischen entscheidet das Packen.
+  Das Werkzeug führt in jedem Lauf eine Nullprobe mit — eine glatte Kachel
+  misst 0,0, eine körnige 16,4 —, damit die Spalte nicht stillschweigend
+  aufhört zu messen (Regel 13).
+* **Reines Schwarz höchstens 2 %.** Der Packer hebt das Schwarz zwar an, aber
+  was er anhebt, ist vorher Fläche ohne Zeichnung gewesen.
+* **Lichtrichtung höchstens 20° neben −128°**, Silhouetten-Ähnlichkeit unter
+  0,65 gegen jede Figur, die heute schon im Spiel steht.
+* Danach `npx tsx tools/pack-art.mjs` und `npm run grafik`: dort muss die
+  Dichte in Anzeigegröße **unter 6** liegen, Ziel 5,1.
+
+Alles Übrige — Grundform, Rolle, Farbe, Kachelgeometrie — bleibt wie in den
+Abschnitten darunter. Die Nachbestellung ändert **nur** die Ruhe der
+Zeichnung, nicht das Motiv: ein Späher, den man nicht wiedererkennt, wäre
+kein Fortschritt, sondern eine neue Runde.
+
 ### 5.1 `gegner_schleicher.png` — Späh-Drohne am Boden
 
 ```
@@ -474,6 +529,52 @@ transparent canvas, centred, nothing cropped.
 | Umriss gegen `gegner_spaeher.png` | höchstens 0,65 | heute 0,69 — beide sind Radfahrzeuge, die Taille trennt sie |
 | leere Fläche im Deckrechteck | **mindestens 35 %** | heute **14 %** — das vollste Rechteck aller acht Gegner. Der Koloss liegt bei 23 %, alle übrigen zwischen 30 und 52 %. Zwei fast massive Rechtecke *müssen* sich stark überdecken; hier liegt die Ursache, nicht in den Rädern |
 | Breite der Silhouette | 160–180 px | schmaler als der Koloss (200), sonst hilft die Taille nichts |
+
+### 5.6b `gegner_span.png` — die Drohne, in die der Spalter zerfällt
+
+> **Diese Datei hatte bis v205 keinen Auftrag.** Sie ist seit v159 ein
+> eigenes Bild — vorher wurde das des Spalters mitbenutzt —, aber bestellt
+> wurde sie nie: sie entstand als Beiwerk der Lieferung v3. Gemessen ist sie
+> die **lauteste Figur des ganzen Bestands**: Detaildichte 11,0 roh und 16,1
+> gepackt, gegen 6,2 bis 8,3 bei allen anderen. Der Grund liegt auf der Hand,
+> sobald man die Messstelle liest: sie füllt ihre Kachel nur zu 93 × 86 von
+> 300 Punkten, wird also am stärksten von allen verkleinert — und Verkleinern
+> erhöht die Dichte.
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+GRUNDFORM: Kleinstgerät — eine einzelne kleine Form, KEIN Fahrzeug, KEIN
+Geschützrohr, KEINE Räder. Der Span ist das, was aus einem zerlegten
+Trägerfahrzeug herausfällt: eine Wurfdrohne, kein Auto.
+
+SUBJECT: A small disposable attack drone, seen STRICTLY FROM DIRECTLY ABOVE
+(orthographic top-down), facing UP toward the top edge of the image. A flat
+arrowhead-shaped fuselage with two short swept fins, a single small ducted
+rotor recessed into the body, one pale-yellow optic at the tip. It is a
+THROWN object, not a driven one: no wheels, no tracks, no cabin.
+
+Because it is drawn very small in the game, it must be built from FOUR
+shapes at most: fuselage, two fins, one rotor recess. Anything beyond that is
+noise. No panel lines on the fins. No vents.
+
+Dark desaturated gunmetal body, one pale-yellow accent at the tip and along
+the leading edge of the fins.
+
+FRAMING: silhouette about 150 px wide and 190 px tall inside a 256x256
+transparent canvas, centred, nothing cropped. It fills more of its tile than
+today's version — the small figure is the one that suffers most from being
+scaled down.
+```
+
+**Abnahme — die Zahlen für dieses Bild:**
+
+| Größe | Soll | heute |
+|---|---|---|
+| Detaildichte roh in Anzeigegröße | **höchstens 3,5** | **11,0** |
+| leere Fläche im Deckrechteck | 35 bis 55 % | 48 % |
+| Umriss gegen `gegner_gleiter.png` | höchstens 0,65 | beide sind flach und flügelig — hier liegt die Gefahr |
+| reines Schwarz | höchstens 2 % | 1,2 % |
 
 ### 5.7 `gegner_titan.png` — superschwerer Läufer (Boss)
 

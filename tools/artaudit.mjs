@@ -67,6 +67,7 @@ if (gedaechtnis.unveraendert && process.argv.includes('--tor')) {
 //
 // Geruest und Bilderladen kommen aus der gemeinsamen Werkstatt (Regel 15).
 import { geruestStellen, bilderAbwarten } from './leinwand.mjs';
+import { TURM_WELT, anzeigePunkte } from './anzeigegroesse.mjs';
 
 geruestStellen();
 const warten = bilderAbwarten;
@@ -295,16 +296,13 @@ for (const map of MAPS) {
 // in v106 geradegerueckt worden, fuer die Figuren jetzt - derselbe Fehler,
 // zweimal dieselbe Datei.
 //
-// Der Massstab: die Leinwand misst auf dem iPhone quer 1688 x 780
-// Geraetepunkte bei einer Welt von 1920 x 1080. Gemessen im Browsertor,
-// nicht geschaetzt.
-const ANZEIGE_MASSSTAB = 0.8;
-const TURM_WELT = 96 * 1.32 / 0.94;
-
+// Massstab und Turmbreite stehen in `tools/anzeigegroesse.mjs` - EINMAL.
+// Die Kandidatenpruefung `probebild` braucht dieselbe Umrechnung, und zwei
+// Fassungen davon sind bis v204 um den Faktor 2 bis 3 auseinandergelaufen
+// (Regel 15).
 /** Auf Anzeigegroesse bringen, dann messen. */
 async function messenAngezeigt(buf, weltbreite) {
-  const px = Math.max(8, Math.round(weltbreite * ANZEIGE_MASSSTAB));
-  return messen(await sharp(buf).ensureAlpha().resize(px).png().toBuffer());
+  return messen(await sharp(buf).ensureAlpha().resize(anzeigePunkte(weltbreite)).png().toBuffer());
 }
 
 // ------------------------------------------------------------------- Tuerme

@@ -138,7 +138,10 @@ npm run bildprompt  gibt EINEN Bild-Prompt vollstaendig aus - Stil-Block
 npm run probebild   Kandidatenbilder pruefen, BEVOR sie gepackt werden:
                     Format, Alpha, Rand, reines Schwarz, Feindetail,
                     Lichtwinkel - und die Silhouetten-Aehnlichkeit
-                    UNTEREINANDER. Aufruf mit -- <ordner>.
+                    UNTEREINANDER. Aufruf mit -- <ordner>. Die Feindetail-
+                    Grenze gilt in ANZEIGEGROESSE, nicht an der Quelle: die
+                    beiden Zahlen liegen um Faktor 2 bis 3 auseinander, und
+                    bis v204 stand hier die falsche - ohne Grenze.
 npm run rohbilder   welche Rohbilder fehlen und woran das hängt
 npm run turmprobe   EINEN Entwurf messen und neben den heutigen Turm legen
 npm run turmzeichnen  einen Turm konstruieren statt kaufen (Entwurf, nicht im Spiel)
@@ -285,7 +288,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v204. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v205. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

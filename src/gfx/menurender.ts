@@ -13,8 +13,17 @@ import { endlosBesten } from '../core/storage';
  *  keine Schaltfläche geben, die man sieht, aber nicht trifft - der häufigste
  *  Fehler der bisherigen Oberfläche, zuletzt der zweite Zweigknopf, der unter
  *  den Bildschirmrand gerutscht war. */
+/** Worueber der Zeiger steht - waehrend EINES Bildes.
+ *
+ *  Es steht als Modulwert da und nicht als Parameter, weil sonst jede der
+ *  sechs Zeichenroutinen und jeder ihrer Aufrufe ihn durchreichen muesste,
+ *  nur damit ganz unten ein Knopf heller wird. Gesetzt wird er in der ersten
+ *  Zeile von `drawMenu` und nirgends sonst; er ueberlebt kein Bild. */
+let zeiger: string | null = null;
+
 export function drawMenu(ctx: CanvasRenderingContext2D, m: Menu): void {
   m.hotspots = [];
+  zeiger = m.zeiger;
 
   // Der Grund bleibt stehen, der Inhalt wechselt. Beides zugleich zu
   // ueberblenden saehe nach Ladebildschirm aus - der Ort ist ja derselbe,
@@ -186,8 +195,12 @@ function drawMap(
     ctx.stroke();
     ctx.restore();
 
-    ctx.strokeStyle = hexA(C.stone, 0.55);
-    ctx.lineWidth = 3;
+    // Der Ring um den Ort wird heller, wenn der Zeiger darauf steht - das
+    // ist auf der Landkarte die einzige Rueckmeldung, die es geben kann,
+    // denn ein Ort hat keinen Knopfrahmen.
+    const drauf = zeiger === `node:${i}`;
+    ctx.strokeStyle = hexA(C.stone, drauf ? 1 : 0.55);
+    ctx.lineWidth = drauf ? 5 : 3;
     ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
 
     // Sterne über dem Ort - gezeichnet, nicht als Schriftzeichen. Ein
@@ -223,7 +236,7 @@ function drawMap(
   ctx.fillText(`${m.free()} frei`, WORLD_W - 60, py + 4);
   star(ctx, WORLD_W - 60 - ctx.measureText(`${m.free()} frei`).width - 22, py - 5, 13, true);
   ctx.font = '400 19px system-ui, sans-serif';
-  ctx.fillStyle = C.stoneDark;
+  ctx.fillStyle = zeiger === 'progress' ? C.stone : C.stoneDark;
   ctx.fillText('Fortschritt ›', WORLD_W - 60, py + 34);
   ctx.restore();
   add({ id: 'progress', x: px - 60, y: py - 34, w: 250, h: 84 });
@@ -239,7 +252,7 @@ function drawMap(
   ctx.save();
   ctx.textAlign = 'right';
   ctx.font = '400 19px system-ui, sans-serif';
-  ctx.fillStyle = C.stoneDark;
+  ctx.fillStyle = zeiger === 'optionen' ? C.stone : C.stoneDark;
   ctx.fillText('Einstellungen ›', WORLD_W - 60, py + 86);
   ctx.restore();
   // Dieselbe Trefferhoehe wie "Fortschritt" darueber: 48 Weltpunkte waren
@@ -497,12 +510,19 @@ function button(
 ): void {
   ctx.save();
   const k = pressed ? 0.98 : 1;
+  // Der Zeiger hebt den Knopf an, der Druck senkt ihn - zwei verschiedene
+  // Auskuenfte, also zwei verschiedene Bewegungen.
+  const hell = id === zeiger;
   ctx.translate(x + w / 2, y + h / 2);
   ctx.scale(k, k);
   ctx.translate(-w / 2, -h / 2);
-  ctx.fillStyle = filled ? hexA(tone, 0.9) : hexA(tone, 0.1);
+  ctx.fillStyle = filled ? hexA(tone, hell ? 1 : 0.9) : hexA(tone, hell ? 0.22 : 0.1);
   roundRect(ctx, 0, 0, w, h, 14); ctx.fill();
-  if (!filled) { ctx.strokeStyle = hexA(tone, 0.5); ctx.lineWidth = 2; ctx.stroke(); }
+  if (!filled) {
+    ctx.strokeStyle = hexA(tone, hell ? 0.85 : 0.5);
+    ctx.lineWidth = hell ? 2.5 : 2;
+    ctx.stroke();
+  }
   ctx.textAlign = 'center';
   ctx.fillStyle = filled ? '#08131C' : C.stone;
   ctx.font = `700 ${sub ? 26 : 32}px system-ui, sans-serif`;
@@ -523,7 +543,7 @@ function back(
   ctx.save();
   ctx.textAlign = 'left';
   ctx.font = '400 26px system-ui, sans-serif';
-  ctx.fillStyle = pressed ? C.stone : C.stoneDark;
+  ctx.fillStyle = pressed || zeiger === 'back' ? C.stone : C.stoneDark;
   ctx.fillText('‹ Zurück', x, y + 26);
   ctx.restore();
   add({ id: 'back', x: x - 20, y: y - 14, w: 200, h: 66 });

@@ -71,6 +71,15 @@ export class Menu {
   picked = 0;
   /** Bereich unter dem Finger, für die Rückmeldung beim Drücken. */
   pressed: string | null = null;
+
+  /** Worueber der ZEIGER steht - nicht, was gedrueckt ist.
+   *
+   *  Am Schreibtisch gab es bis v204 gar keine Rueckmeldung: kein Knopf
+   *  wurde heller, kein Zeiger wurde zur Hand, und die Landkarte sah aus wie
+   *  ein Bild statt wie eine Bedienung ("es gibt kein MouseOver-Feedback").
+   *  Am Finger gibt es das nicht und soll es nicht geben - deshalb wird es
+   *  nur fuer `pointerType !== 'touch'` gesetzt. */
+  zeiger: string | null = null;
   /** Wird von der Zeichenroutine je Bild neu gefüllt. */
   hotspots: Hotspot[] = [];
   /** Das Ergebnis der zuletzt beendeten Partie.

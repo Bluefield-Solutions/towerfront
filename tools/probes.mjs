@@ -918,6 +918,68 @@ const PROBEN = [
     tor: 'bauflaechetor',
   },
   {
+    // **Die Knoepfe antworten dem Zeiger nicht mehr.**
+    //
+    // Der Zustand bis v203, und er hat dreissig Tore ueberlebt: alle messen,
+    // ob ein Knopf da ist, gross genug und erreichbar - keines, ob er
+    // ANTWORTET. Gemeldet hat es der Nutzer vom Schreibtisch aus.
+    name: 'Knoepfe ohne Rueckmeldung fuer den Zeiger',
+    datei: 'src/style.css',
+    suche: '@media (hover: hover) and (pointer: fine) {',
+    ersatz: '@media (hover: none) and (pointer: coarse) {',
+    tor: 'browsertor',
+  },
+  {
+    // Und die Landkarte: sie ist gezeichnet, bekommt also kein `:hover`
+    // geschenkt und muss selbst antworten.
+    name: 'Landkarte macht den Zeiger nicht zur Hand',
+    datei: 'src/core/input.ts',
+    regel: /      canvas\.style\.cursor = hit \? 'pointer' : '';/,
+    ersatz: "      canvas.style.cursor = '';",
+    tor: 'browsertor',
+  },
+  {
+    // Die Gegenrichtung, und sie ist die eigentliche Aussage: eine Hand
+    // UEBERALL sagt nichts. Ohne diese Probe waere die Pruefung darueber mit
+    // einer Zeile zu erschleichen.
+    name: 'Landkarte zeigt ueberall die Hand',
+    datei: 'src/core/input.ts',
+    regel: /      canvas\.style\.cursor = hit \? 'pointer' : '';/,
+    ersatz: "      canvas.style.cursor = 'pointer';",
+    tor: 'browsertor',
+  },
+  {
+    // **Der Lichtsaum faellt weg.**
+    //
+    // Auf der Frostspalte ist die Strasse selbst dunkel; ein dunkler Strich
+    // darauf ist keiner. Ohne den hellen Zug verschwindet die Kante genau
+    // dort, wo sie am meisten gebraucht wird.
+    name: 'Die Baukante hat keinen Lichtsaum mehr',
+    datei: 'src/gfx/bauflaeche.ts',
+    regel: /export const KANTE = \{ innen: 0\.12, band: 0\.30, licht: 0\.26, breite: 10 \};/,
+    ersatz: 'export const KANTE = { innen: 0.12, band: 0.30, licht: 0, breite: 10 };',
+    tor: 'bildtor',
+  },
+  {
+    // Und der dunkle: dann bleibt nur eine gleichmaessig getoente Flaeche
+    // ohne Kante - genau die Fassung, die es nicht beantwortet hat.
+    name: 'Die Baukante hat keinen dunklen Saum mehr',
+    datei: 'src/gfx/bauflaeche.ts',
+    regel: /export const KANTE = \{ innen: 0\.12, band: 0\.30, licht: 0\.26, breite: 10 \};/,
+    ersatz: 'export const KANTE = { innen: 0.12, band: 0.12, licht: 0.26, breite: 10 };',
+    tor: 'bildtor',
+  },
+  {
+    // Die Gegenrichtung, und sie ist der Befund aus v203: eine Toenung, die
+    // zum Vorhang wird. Auf dem Telefon faellt sie nicht auf, am
+    // Schreibtisch liegt sie ueber zwei Dritteln der Welt.
+    name: 'Die Baukante wird wieder zum Vorhang',
+    datei: 'src/gfx/bauflaeche.ts',
+    regel: /export const KANTE = \{ innen: 0\.12, band: 0\.30, licht: 0\.26, breite: 10 \};/,
+    ersatz: 'export const KANTE = { innen: 0.38, band: 0.38, licht: 0.26, breite: 10 };',
+    tor: 'bildtor',
+  },
+  {
     // **Die Ablage der Baukante leert nicht mehr.**
     //
     // Der fertige Pfad wird zwischengespeichert; verworfen wird er, wenn sich
@@ -951,7 +1013,7 @@ const PROBEN = [
     // ohne Ausrede.
     name: 'Die Baukante kommt nicht mehr aus der Bauregel',
     datei: 'src/gfx/renderer.ts',
-    regel: /    ctx\.fill\(verbotenerBereich\(s, wahl, \{ ausser \}\)\);/,
+    regel: /    ctx\.drawImage\(bauflaechenBild\(s, wahl, ausser\), 0, 0, WORLD_W, WORLD_H\);/,
     ersatz: '    ctx.fillRect(0, 0, WORLD_W, WORLD_H);',
     tor: 'smoke',
   },
@@ -961,8 +1023,8 @@ const PROBEN = [
     // gepflegt wird die eine, gezeigt die andere (Regel 15).
     name: 'Die Bauregel wird im Zeichenwerk nachgebaut',
     datei: 'src/gfx/renderer.ts',
-    regel: /    ctx\.fillStyle = hexA\(C\.ink, 0\.38\);/,
-    ersatz: '    ctx.fillStyle = hexA(C.ink, 0.38); // hier stand mal halfNear',
+    regel: /    const ausser = s\.movingTower;/,
+    ersatz: '    const ausser = s.movingTower; // hier stand mal halfNear',
     tor: 'smoke',
   },
   {

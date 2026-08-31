@@ -1256,57 +1256,62 @@ pruefungen.push(async () => {
   const mit = nimm();
 
   const hell = (a, i) => (a[i] * 0.299 + a[i + 1] * 0.587 + a[i + 2] * 0.114);
+  let angefasst = 0, saum = 0, licht = 0, summeVor = 0, summeNach = 0;
   const beruehrt = [];
-  let mittendrin = 0, angefasst = 0;
   for (let i = 0; i < ohne.length; i += 4) {
     const v = hell(ohne, i);
-    if (v < 8) continue; // schwarzer Rahmen: dort ist nichts abzudunkeln
+    if (v < 8) continue; // schwarzer Rahmen: dort ist nichts zu toenen
     const anteil = (v - hell(mit, i)) / v;
+    if (anteil <= -0.05) { licht++; continue; }
     if (anteil < 0.04) continue;
     angefasst++;
     beruehrt.push(i);
-    if (anteil < 0.18) mittendrin++;
+    if (anteil > 0.25) saum++;
+    summeVor += v; summeNach += hell(mit, i);
   }
   if (!angefasst) {
     throw new Error('nach der Turmwahl aendert sich kein Bildpunkt - ohne liegenden '
       + 'Finger sieht der Spieler nicht, wo er bauen darf.');
   }
-
-  // Abdunklung und Zeichnung, beide NUR auf der beruehrten Flaeche - sonst
-  // misst man den unberuehrten Rest mit und bekommt eine Zahl, die mit der
-  // Groesse der Flaeche wandert statt mit ihrer Wirkung.
-  let summeVor = 0, summeNach = 0;
-  for (const i of beruehrt) { summeVor += hell(ohne, i); summeNach += hell(mit, i); }
-  const mittelVor = summeVor / beruehrt.length, mittelNach = summeNach / beruehrt.length;
+  const gesamt = ohne.length / 4;
+  const toenung = 1 - summeNach / summeVor;
   let streuVor = 0, streuNach = 0;
+  const mVor = summeVor / beruehrt.length, mNach = summeNach / beruehrt.length;
   for (const i of beruehrt) {
-    streuVor += (hell(ohne, i) - mittelVor) ** 2;
-    streuNach += (hell(mit, i) - mittelNach) ** 2;
+    streuVor += (hell(ohne, i) - mVor) ** 2;
+    streuNach += (hell(mit, i) - mNach) ** 2;
   }
   const zeichnung = Math.sqrt(streuNach / beruehrt.length) / Math.sqrt(streuVor / beruehrt.length);
-  const abdunklung = 1 - mittelNach / mittelVor;
-  const kante = mittendrin / angefasst;
 
-  console.log(`  Baukante: ${(angefasst / (ohne.length / 4) * 100).toFixed(0)} % der Flaeche, `
-    + `${(abdunklung * 100).toFixed(0)} % dunkler, Zeichnung ${(zeichnung * 100).toFixed(0)} % `
-    + `erhalten, ${(kante * 100).toFixed(1)} % Uebergang`);
+  // **Die Grenzen kommen aus der Messung, nicht aus dem Gefuehl** - und die
+  // Messung ist die Runde davor: v203 hat die verbotene Flaeche gleichmaessig
+  // um 33 % abgedunkelt. Auf dem Telefon sieht man einen Ausschnitt, dort las
+  // sich das als "Strasse plus Rand"; am Schreibtisch sieht man die ganze
+  // Welt, und 66 bis 73 % davon abgedunkelt sind ein Vorhang. Gemeldet als
+  // "im Browser sieht es nicht gut aus".
+  //
+  // Die Auskunft steckt in der KANTE. Also vier Zahlen statt einer:
+  const grenzen = [
+    ['Toenung der Flaeche', toenung, 0.06, 0.22,
+      'zuwenig und die Flaeche ist nicht zu lesen, zuviel und sie ist ein Vorhang'],
+    ['dunkler Saum', saum / angefasst, 0.04, 0.30,
+      'ohne ihn gibt es keine Kante, mit zuviel davon ist die Flaeche der Saum'],
+    ['Lichtsaum', licht / gesamt, 0.01, 0.15,
+      'ohne ihn verschwindet die Kante auf dunklem Grund - die Frostspalte hat eine dunkle Strasse'],
+    ['erhaltene Zeichnung', zeichnung, 0.75, 1.30,
+      'darunter waescht die Kante die Landschaft weg'],
+  ];
+  for (const [was, wert, unten, oben, warum] of grenzen) {
+    if (wert < unten || wert > oben) {
+      throw new Error(`Baukante, ${was}: ${(wert * 100).toFixed(0)} % liegt ausserhalb `
+        + `von ${(unten * 100).toFixed(0)} bis ${(oben * 100).toFixed(0)} % - ${warum}.`);
+    }
+  }
 
-  if (abdunklung < 0.15) {
-    throw new Error(`die verbotene Flaeche wird nur um ${(abdunklung * 100).toFixed(0)} % `
-      + 'dunkler - auf dem Telefon sieht man die Baukante nicht.');
-  }
-  if (abdunklung > 0.55) {
-    throw new Error(`die verbotene Flaeche verliert ${(abdunklung * 100).toFixed(0)} % ihrer `
-      + 'Helligkeit - das ist ein Vorhang ueber der Landschaft, keine Auskunft.');
-  }
-  if (zeichnung < 0.55) {
-    throw new Error(`unter der Baukante bleiben nur ${(zeichnung * 100).toFixed(0)} % der `
-      + 'Zeichnung uebrig - die Landschaft verschwindet unter einem Schleier.');
-  }
-  if (kante > 0.08) {
-    throw new Error(`${(kante * 100).toFixed(0)} % der beruehrten Punkte liegen zwischen `
-      + 'unberuehrt und abgedunkelt - die Baukante ist ein Verlauf, keine Kante.');
-  }
+  console.log(`  Baukante: Flaeche ${(angefasst / gesamt * 100).toFixed(0)} %, `
+    + `Toenung ${(toenung * 100).toFixed(0)} %, dunkler Saum ${(saum / angefasst * 100).toFixed(0)} % `
+    + `der Flaeche, Lichtsaum ${(licht / gesamt * 100).toFixed(1)} % des Bildes, `
+    + `Zeichnung ${(zeichnung * 100).toFixed(0)} % erhalten`);
 });
 
 // --- Sieht man die Wegvorschau? (TF-014)

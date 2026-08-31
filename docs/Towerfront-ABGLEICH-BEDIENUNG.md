@@ -114,7 +114,7 @@ bekommt deshalb Abstand.
 
 | # | Soll | heute | Abstand |
 |---|---|---|---|
-| B1 | Baufläche vorher sichtbar | **erledigt in v203** — die verbotene Fläche wird abgedunkelt, die baubare bleibt, wie die Karte gemalt ist. Nicht abgetastet, sondern gezeichnet: Rand, Wegschlauch, Geländekreise und Türme sind ein Pfad, und seine Kante IST die Bauregel — gemessen 0,00 ‰ Abweichung gegen `warumNicht` auf allen drei Karten (`npm run bauflaechetor`) | keiner |
+| B1 | Baufläche vorher sichtbar | **erledigt in v203, in v204 neu gezeichnet** — die Kante der verbotenen Fläche trägt einen dunklen Saum innen und einen hellen aussen, die Fläche selbst nur eine schwache Tönung. Die erste Fassung dunkelte sie gleichmäßig um 33 % ab; das las sich auf dem Telefon als „Straße plus Rand" und am Schreibtisch, wo man die **ganze** Welt sieht, als Vorhang über zwei Dritteln der Karte. Nicht abgetastet, sondern gezeichnet: Rand, Wegschlauch, Geländekreise und Türme sind ein Pfad, und seine Kante IST die Bauregel — gemessen 0,00 ‰ Abweichung gegen `warumNicht` auf allen drei Karten (`npm run bauflaechetor`) | keiner |
 | B2 | Tipp gibt nie Gold aus | **erledigt in v202** — der Tipp öffnet jetzt dieselbe Turmwahl wie ein Tipp auf freies Feld, mit der gewählten Sorte hervorgehoben. Bezahlt wird auf einer benannten Fläche, die ihren Preis trägt | keiner |
 | B3 | laufendes Ja/Nein | **erledigt in v203** — die Fläche aus B1 ist genau dieses laufende Ja/Nein: sie steht, solange eine Turmsorte gewählt ist, und ändert sich mit ihr, weil der Platzbedarf in der Kante steckt. Der Mörser braucht sichtbar mehr Boden als der Bogenturm | keiner |
 | B4 | Fehlgriff kostenlos | **erledigt in v202** — er kostet nichts mehr, `bauHinweis` sagt warum, und die Wahl bleibt | keiner |

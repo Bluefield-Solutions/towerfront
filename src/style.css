@@ -1152,3 +1152,46 @@ html, body {
   0%, 45% { transform: rotate(90deg); }
   70%, 100% { transform: rotate(0deg); }
 }
+
+/* --- Rückmeldung für den Zeiger.
+   **Gemeldet am Schreibtisch: „es gibt kein MouseOver-Feedback über den
+   Buttons".** Und das stimmte wörtlich: von allen Bedienelementen hatten
+   genau drei einen `:hover` — die des Pausenmenüs. Alles andere sah unter
+   dem Zeiger aus wie daneben, und ein Knopf, der auf nichts reagiert, sieht
+   aus wie eine Beschriftung.
+
+   Warum es das am Finger nicht gibt: dort verdeckt die Hand, was sie
+   anfasst, und ein „hover" ohne Zeiger heisst in mobilen Browsern
+   „hängengeblieben nach dem Tippen" — der Knopf bleibt hell, bis man
+   woanders hintippt. `@media (hover: hover) and (pointer: fine)` fragt
+   genau das ab, was hier gemeint ist: ein Gerät mit Zeiger.
+
+   Warum Helligkeit und keine eigene Farbe je Knopf: es gibt vierzehn
+   Klassen mit vierzehn Hintergründen, und vierzehn Hover-Farben wären
+   vierzehn Stellen, die veralten (Regel 15). `brightness` wirkt auf jeden
+   Grund gleich und beschreibt genau die Absicht — „dieser hier ist
+   gemeint". */
+@media (hover: hover) and (pointer: fine) {
+  .tower-btn:hover:not(:disabled),
+  .skill-btn:hover:not(:disabled),
+  .chip:hover:not(:disabled),
+  .go:hover:not(:disabled),
+  .x:hover,
+  .branch:hover:not(:disabled),
+  .insp-ups .up:hover:not(:disabled),
+  .insp-ziel .ziel:hover,
+  .insp-fuss .sell:hover,
+  .ziel-auf:hover,
+  .next-eintrag:hover,
+  .opt-btn:hover,
+  .dock-toggle:hover,
+  .coach-skip:hover,
+  .pick-btn:hover:not(:disabled),
+  #messtafel .mb:hover {
+    filter: brightness(1.22);
+  }
+  /* Ein gesperrter Knopf darf NICHT antworten - sonst verspricht die
+     Rückmeldung etwas, das der Tipp nicht hält. */
+  .tower-btn:disabled, .skill-btn:disabled, .pick-btn:disabled,
+  .insp-ups .up:disabled, .go:disabled { cursor: not-allowed; }
+}

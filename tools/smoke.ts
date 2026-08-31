@@ -2439,7 +2439,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 // sie nach.
 {
   const quelle = readFileSync(new URL('../src/gfx/renderer.ts', import.meta.url), 'utf8');
-  if (!/verbotenerBereich\(/.test(quelle)) {
+  if (!/bauflaechenBild\(/.test(quelle)) {
     problems.push('Baukante: das Zeichenwerk holt die verbotene Flaeche nicht mehr aus '
       + 'bauflaeche.ts - dann zeigt es etwas anderes an, als die Bauregel sagt.');
   }

@@ -134,8 +134,35 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
       return;
     }
     if (ev.pointerType !== 'touch') s.hoverPoint = toWorld(ev);
+    // Und die Rueckmeldung fuer den Zeiger: was liegt unter ihm?
+    //
+    // Sie steht hier und nicht in der Zeichenschicht, weil nur die Bedienung
+    // weiss, ob ueberhaupt ein Zeiger im Spiel ist. Ein Finger bekommt sie
+    // nicht - er verdeckt, was er anfasst, und ein Hand-Zeigersymbol gibt es
+    // dort ohnehin nicht.
+    if (ev.pointerType !== 'touch') zeigerPflegen(ev);
   });
-  canvas.addEventListener('pointerleave', () => { s.hoverPoint = null; });
+  canvas.addEventListener('pointerleave', () => {
+    s.hoverPoint = null;
+    if (r.menu) r.menu.zeiger = null;
+    canvas.style.cursor = '';
+  });
+
+  /** Worueber steht der Zeiger - und wird er zur Hand? */
+  function zeigerPflegen(ev: PointerEvent): void {
+    const w = toWorld(ev);
+    if (r.menu) {
+      const hit = r.menu.hotspots.find((h) => insideSpot(h, w.x, w.y));
+      r.menu.zeiger = hit ? hit.id : null;
+      canvas.style.cursor = hit ? 'pointer' : '';
+      return;
+    }
+    // Im Spiel wird die Hand ueber dem, was man anfassen kann: ein Turm, und
+    // beim Bauen jeder Fleck, auf dem der gewaehlte Turm stehen darf.
+    const greifbar = !!s.towerUnder(w.x, w.y, r.scale)
+      || (!!s.buildChoice && s.canPlace(s.buildChoice, w.x, w.y));
+    canvas.style.cursor = greifbar ? 'pointer' : '';
+  }
 
   canvas.addEventListener('pointerdown', (ev) => {
     Sfx.unlock();

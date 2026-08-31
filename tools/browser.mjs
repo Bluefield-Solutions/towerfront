@@ -1370,6 +1370,38 @@ if (streuung < 6) {
       }
     }
 
+    // **Antwortet die Landkarte auf den Zeiger?** (v204)
+    //
+    // Sie ist auf der Leinwand gezeichnet, hat also keine HTML-Knoepfe und
+    // bekommt vom Browser kein `:hover` geschenkt - sie muss selbst
+    // antworten. Abgelesen wird das Zeigersymbol: ueber einem Ort wird es
+    // zur Hand, daneben nicht. Mit Nullprobe, denn eine Hand ueberall waere
+    // genauso gruen und genauso nutzlos (Regel 13).
+    if (name === 'breit') {
+      const zeigerBei = async (x, y) => {
+        await s3.mouse.move(x, y);
+        await s3.waitForTimeout(50);
+        return s3.evaluate(() => document.querySelector('canvas').style.cursor);
+      };
+      let hand = null;
+      for (let y = 40; y < h - 20 && !hand; y += 30) {
+        for (let x = 40; x < w - 20 && !hand; x += 30) {
+          if (await zeigerBei(x, y) === 'pointer') hand = { x, y };
+        }
+      }
+      const leer = await zeigerBei(4, h - 4);
+      if (!hand) {
+        fail('Auf der Landkarte wird der Zeiger nirgends zur Hand - am Schreibtisch '
+          + 'sieht sie damit aus wie ein Bild, nicht wie eine Bedienung.');
+      } else if (leer === 'pointer') {
+        fail('Auf der Landkarte ist der Zeiger UEBERALL eine Hand - dann sagt er nichts.');
+      } else {
+        console.log(`Landkarte: Zeiger wird zur Hand bei ${hand.x},${hand.y}, `
+          + `in der Ecke nicht ("${leer}").`);
+      }
+      await s3.mouse.move(4, h - 4);
+    }
+
     // Und die eigentliche Frage: kommt man rein?
     //
     // NICHT mit einem eigenen Raster. Ein Raster mit 45 Punkten Schritt ist
@@ -1395,6 +1427,46 @@ if (streuung < 6) {
     console.log(`Schreibtisch ${name.padEnd(6)} ${w}x${h}: `
       + `${drin ? 'spielbar' : 'NICHT spielbar'}`
       + `${deckel.length ? `, verdeckt von ${deckel.join(', ')}` : ''}`);
+
+    // **Und antwortet hier ueberhaupt etwas auf den Zeiger?** (v204)
+    //
+    // Gemeldet vom Schreibtisch: "es gibt kein MouseOver-Feedback ueber den
+    // Buttons". Es stimmte woertlich - von vierzehn Knopfklassen hatten drei
+    // ein `:hover`, die des Pausenmenues. Alle dreissig Tore messen, ob ein
+    // Knopf da ist, gross genug und erreichbar; keines, ob er ANTWORTET.
+    //
+    // Diese Frage gehoert hierher und nicht zur Telefonprobe: dort meldet die
+    // Kaskade `pointer: coarse`, und dann soll es keine Rueckmeldung geben -
+    // ein "hover" ohne Zeiger bleibt nach dem Tippen haengen.
+    if (drin && name === 'breit') {
+      const filterVon = (sel) => s3.evaluate((q) => {
+        const el = document.querySelector(q);
+        return el ? getComputedStyle(el).filter : null;
+      }, sel);
+      const stumm = [];
+      for (const sel of ['#tb-arrow', '#b-wave', '#b-pause', '.chip']) {
+        const vorher = await filterVon(sel);
+        if (vorher === null) continue;
+        await s3.hover(sel).catch(() => {});
+        await s3.waitForTimeout(80);
+        const drueber = await filterVon(sel);
+        await s3.mouse.move(w / 2, h / 2);
+        await s3.waitForTimeout(60);
+        const danach = await filterVon(sel);
+        if (drueber === vorher) stumm.push(`${sel} (bleibt "${vorher}")`);
+        else if (danach !== vorher) {
+          fail(`Der Knopf ${sel} bleibt nach dem Verlassen hell ("${danach}") - `
+            + 'eine Rueckmeldung, die haengenbleibt, ist eine Falschaussage.');
+        }
+      }
+      if (stumm.length) {
+        fail(`Diese Knoepfe antworten dem Zeiger nicht: ${stumm.join(', ')}. Am `
+          + 'Schreibtisch sieht ein Knopf ohne Rueckmeldung aus wie eine Beschriftung.');
+      } else {
+        console.log('Zeiger: die Knoepfe antworten und lassen wieder los.');
+      }
+    }
+
     await ctx3.close();
   }
 }

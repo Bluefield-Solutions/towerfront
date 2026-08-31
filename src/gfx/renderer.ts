@@ -26,7 +26,7 @@ import {
 } from './sprites';
 import { getSettings } from '../core/storage';
 import { drawAurora, drawGroundFog, drawWetter, getMoodLayer } from './atmosphere';
-import { verbotenerBereich } from './bauflaeche';
+import { bauflaechenBild } from './bauflaeche';
 
 /** Wieviel Zeit ein Bild in den Kartenaufbau stecken darf.
  *
@@ -675,10 +675,7 @@ export class Renderer {
     // war ein Schleier statt einer Kante. Die Kante braucht keine Hilfe: der
     // Sprung von unberührt auf abgedunkelt IST die Linie, und er sitzt genau
     // dort, wo die Regel sitzt.
-    ctx.save();
-    ctx.fillStyle = hexA(C.ink, 0.38);
-    ctx.fill(verbotenerBereich(s, wahl, { ausser }));
-    ctx.restore();
+    ctx.drawImage(bauflaechenBild(s, wahl, ausser), 0, 0, WORLD_W, WORLD_H);
   }
 
   /** Die Vorschau beim Versetzen.

@@ -339,6 +339,18 @@ html, body {
 .insp-stats {
   margin: 0 0 8px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px;
   overflow-y: auto; min-height: 0; flex: 1 1 auto;
+  /* **Die Zeilen wachsen nicht mit dem Kasten.**
+     Ein Raster verteilt uebrigen Platz auf seine Zeilen: gemessen waren die
+     sechs Wertezeilen auf 1920 x 862 **99 Punkte hoch** statt 15, und weil
+     der Wert oben in seiner Zeile sitzt und die Beschriftung mittig, standen
+     die beiden Texte 44 Punkte auseinander.
+
+     **Diese Zeile war in v206 schon einmal draussen**, weil eine Messung sie
+     fuer wirkungslos erklaerte - und die Messung war falsch: sie verglich die
+     MITTEN von Wert und Beschriftung, und die liegen auch in einer 99 Punkte
+     hohen Zeile aufeinander. Gemeldet hat es die Gegenprobe, die daraufhin
+     nichts mehr bewies. Gemessen wird jetzt die Zeilenhoehe. */
+  align-content: start;
   /* Der Boden, unter den die Werteliste nicht darf.
      Bis v137 stand hier nur `flex: 1 1 auto` - und weil Kopfzeile, Ausbau,
      Ziellogik und Verkaufen zusammen mehr verlangten, als der Steg hoch ist,
@@ -362,15 +374,12 @@ html, body {
 .inspector[data-ziel="1"] .insp-stats { min-height: 0; }
 /* **Und ab hier hoert der Steg auf, wo sein Inhalt aufhoert.**
 
-   Hier stand kurzzeitig auch ein `align-content: start` auf der Werteliste -
-   gegen das Auseinanderziehen der Zeilen. Es ist wieder draussen, und zwar
-   nachgemessen: mit `stretch` melden alle vier gemessenen Zustaende
-   (Gegnerinfo auf dem Telefon, Steg auf 1400x900, 700x850 und 1000x620)
-   denselben Abstand null. Das Auseinanderziehen war ein SYMPTOM der vollen
-   Fensterhoehe; mit einem inhaltshohen Steg gibt es keinen uebrigen Platz
-   mehr zu verteilen, und auf dem Telefon lief die Liste schon immer ueber.
-   Eine Regel, deren Entfernen an keiner Messstelle etwas aendert, ist keine
-   Vorsichtsmassnahme, sondern eine Behauptung (Regel 5).
+   In v206 stand hier, `align-content: start` sei wirkungslos und deshalb
+   entfernt worden - "nachgemessen an vier Messstellen". Die Messung war
+   falsch, und der Satz ist es damit auch gewesen: verglichen wurden die
+   Mitten von Wert und Beschriftung, und die liegen auch in einer 99 Punkte
+   hohen Zeile aufeinander. Die Regel steht wieder in der Werteliste, die
+   Messung fragt jetzt nach der Zeilenhoehe.
 
    Bis v205 spannte er von `top` bis `bottom`, also ueber die ganze Fensterhoehe:
    auf dem iPhone quer sind das 276 Punkte und genau richtig, auf 1920 x 862

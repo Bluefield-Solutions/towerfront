@@ -55,6 +55,13 @@ const BREIT = 844, HOCH = 390;
 // Stilvorlage gelesen, hier gemessen. Zwei Wege zur selben Zahl, und der
 // zweite ist der, der zählt.
 const MINDEST = 44;
+/** Wie hoch eine Wertezeile im Pruefsteg hoechstens sein darf.
+ *
+ *  Gemessen: eine Zeile mit einzeiligem Wert ist 15 Punkte hoch, mit
+ *  umgebrochenem Wert rund 30. Ein Raster, das uebrigen Platz auf seine
+ *  Zeilen verteilt, kommt auf 99. Zweiunddreissig laesst den Umbruch zu und
+ *  faengt das Verteilen. */
+const ZEILE_MAX = 32;
 
 /** Alles, was zur Spielbedienung gehört und im Menü nichts zu suchen hat. */
 // Der Versionsstempel ist keine Bedienung - aber er gehoert zur
@@ -536,18 +543,17 @@ if (!start) {
               const dts = [...document.querySelectorAll('.insp-stats dt')];
               const dds = [...document.querySelectorAll('.insp-stats dd')];
               let schlimm = { was: '', ab: -1 };
-              for (let i = 0; i < Math.min(dts.length, dds.length); i++) {
-                const a = dts[i].getBoundingClientRect(), b = dds[i].getBoundingClientRect();
-                const ab = Math.abs((a.top + a.height / 2) - (b.top + b.height / 2));
-                if (ab > schlimm.ab) schlimm = { was: dts[i].textContent.trim(), ab };
+              for (let i = 0; i < dds.length; i++) {
+                const ab = dds[i].getBoundingClientRect().height;
+                if (ab > schlimm.ab) schlimm = { was: (dts[i] ?? dds[i]).textContent.trim(), ab };
               }
               return schlimm;
             });
-            if (weit.ab > 12) {
-              fail(`Prüfsteg (Ziellogik ${wie}): "${weit.was}" steht `
-                + `${Math.round(weit.ab)} Punkte von seinem Wert entfernt (erlaubt 12). `
-                + 'Ein Raster ohne `align-content` zieht seine Zeilen auseinander, sobald '
-                + 'in der Liste Platz uebrig ist.');
+            if (weit.ab > ZEILE_MAX) {
+              fail(`Prüfsteg (Ziellogik ${wie}): die Wertezeile "${weit.was}" ist `
+                + `${Math.round(weit.ab)} Punkte hoch (erlaubt ${ZEILE_MAX}). Ein Raster ohne `
+                + '`align-content` verteilt uebrigen Platz auf seine Zeilen, sobald in der '
+                + 'Liste Platz uebrig ist.');
             }
           }
           // **Und der Name eigens**, weil ihn die Pruefung darueber nicht
@@ -612,10 +618,9 @@ if (!start) {
       const dts = [...el.querySelectorAll('.insp-stats dt')];
       const dds = [...el.querySelectorAll('.insp-stats dd')];
       let schlimm = { was: '', ab: -1 };
-      for (let i = 0; i < Math.min(dts.length, dds.length); i++) {
-        const a = dts[i].getBoundingClientRect(), b = dds[i].getBoundingClientRect();
-        const ab = Math.abs((a.top + a.height / 2) - (b.top + b.height / 2));
-        if (ab > schlimm.ab) schlimm = { was: dts[i].textContent.trim(), ab };
+      for (let i = 0; i < dds.length; i++) {
+        const ab = dds[i].getBoundingClientRect().height;
+        if (ab > schlimm.ab) schlimm = { was: (dts[i] ?? dds[i]).textContent.trim(), ab };
       }
       const n = el.querySelector('.insp-name');
       return { zeilen: dts.length, schlimm,
@@ -625,12 +630,12 @@ if (!start) {
       fail('Der Gegner aus der Wellenvorschau laesst sich nicht oeffnen - der Zustand '
         + 'mit der kuerzesten Werteliste bleibt damit ungemessen.');
     } else {
-      console.log(`Gegnerinfo: ${gegner.zeilen} Wertezeilen, schlimmster Abstand `
+      console.log(`Gegnerinfo: ${gegner.zeilen} Wertezeilen, hoechste Zeile `
         + `${Math.round(gegner.schlimm.ab)} P (${gegner.schlimm.was}), Name "${gegner.name}"`);
-      if (gegner.schlimm.ab > 12) {
-        fail(`Gegnerinfo: "${gegner.schlimm.was}" steht ${Math.round(gegner.schlimm.ab)} `
-          + 'Punkte von seinem Wert entfernt (erlaubt 12). Bei einer kurzen Liste '
-          + 'verteilt das Raster den uebrigen Platz auf seine Zeilen.');
+      if (gegner.schlimm.ab > ZEILE_MAX) {
+        fail(`Gegnerinfo: die Wertezeile "${gegner.schlimm.was}" ist `
+          + `${Math.round(gegner.schlimm.ab)} Punkte hoch (erlaubt ${ZEILE_MAX}). Bei einer `
+          + 'kurzen Liste verteilt das Raster den uebrigen Platz auf seine Zeilen.');
       }
       if (gegner.ab > 0) {
         fail(`Gegnerinfo: der Gegnername ist abgeschnitten ("${gegner.name}", `
@@ -1593,13 +1598,21 @@ if (streuung < 6) {
         const el = document.getElementById('inspector');
         if (!el || el.hidden) return null;
         const r = el.getBoundingClientRect();
+        // **Gemessen wird die ZEILENHOEHE, nicht der Abstand der Kastenmitten.**
+        //
+        // Die erste Fassung verglich die Mitten von dt und dd - und die
+        // liegen aufeinander, auch wenn die Zeile 99 Punkte hoch ist: das dd
+        // fuellt die Zeile, das dt sitzt mittig, beide Mitten sind die
+        // Zeilenmitte. Sichtbar auseinander stehen die TEXTE, denn der Wert
+        // steht oben in seinem Kasten. Die Gegenprobe hat es gemeldet: der
+        // eingebaute Fehler blieb gruen, obwohl der Steg wieder 786 Punkte
+        // hoch war. Die Zeilenhoehe sagt dasselbe und ist nicht zu ueberlisten.
         const paare = [];
-        const dts = [...el.querySelectorAll('.insp-stats dt')];
         const dds = [...el.querySelectorAll('.insp-stats dd')];
-        for (let i = 0; i < Math.min(dts.length, dds.length); i++) {
-          const a = dts[i].getBoundingClientRect(), b = dds[i].getBoundingClientRect();
-          paare.push({ was: dts[i].textContent.trim(),
-            ab: Math.abs((a.top + a.height / 2) - (b.top + b.height / 2)) });
+        const dts = [...el.querySelectorAll('.insp-stats dt')];
+        for (let i = 0; i < dds.length; i++) {
+          paare.push({ was: (dts[i] ?? dds[i]).textContent.trim(),
+            ab: dds[i].getBoundingClientRect().height });
         }
         // **Wieviel Steg steht unter dem letzten SICHTBAREN Zeichen leer?**
         //
@@ -1630,18 +1643,19 @@ if (streuung < 6) {
           + 'ohne ihn misst dieser Block nichts.');
       } else {
         console.log(`Pruefsteg ${name}: ${steg.hoehe} von ${steg.fensterhoehe} Punkten hoch, `
-          + `${steg.leer} leer, ${steg.zeilen} Wertezeilen, schlimmster Abstand `
-          + `Wert/Beschriftung ${Math.round(steg.schlimmstesPaar.ab)} P `
+          + `${steg.leer} leer, ${steg.zeilen} Wertezeilen, hoechste Zeile `
+          + `${Math.round(steg.schlimmstesPaar.ab)} P `
           + `(${steg.schlimmstesPaar.was}), Name "${steg.nameText}"`);
         if (!steg.zeilen) {
           fail(`Schreibtischprobe ${name}: der Pruefsteg zeigt keine einzige Wertezeile - `
             + 'die Messung darunter unterscheidet dann nichts.');
         }
-        if (steg.schlimmstesPaar.ab > 12) {
-          fail(`Schreibtischprobe ${name}: "${steg.schlimmstesPaar.was}" steht `
-            + `${Math.round(steg.schlimmstesPaar.ab)} Punkte von seinem Wert entfernt `
-            + '(erlaubt 12). Wert und Beschriftung gehoeren sichtbar zusammen; auf einem '
-            + 'hohen Fenster zieht ein Raster ohne `align-content` seine Zeilen auseinander.');
+        if (steg.schlimmstesPaar.ab > ZEILE_MAX) {
+          fail(`Schreibtischprobe ${name}: die Wertezeile "${steg.schlimmstesPaar.was}" ist `
+            + `${Math.round(steg.schlimmstesPaar.ab)} Punkte hoch (erlaubt ${ZEILE_MAX}). `
+            + 'Ein Raster ohne `align-content` verteilt uebrigen Platz auf seine Zeilen; der '
+            + 'Wert steht dann oben in seinem Kasten und die Beschriftung mittig - sichtbar '
+            + 'gehoeren die beiden nicht mehr zusammen.');
         }
         // Der leere Rest gilt nur oberhalb der Schwelle: darunter ist der
         // Steg absichtlich so hoch wie das Fenster.

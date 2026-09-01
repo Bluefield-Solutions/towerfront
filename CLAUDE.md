@@ -69,7 +69,7 @@ schwerer ist der Tag zu finden, an dem es passiert ist.
 ## Befehle
 
 ```
-npm run gate        dreissig Prüfungen. Muss vor jedem Commit grün sein.
+npm run gate        einunddreissig Prüfungen. Muss vor jedem Commit grün sein.
                     Gemessen 264 s vor v154, danach rund 190 - die teuren Tore
                     haben ein Gedaechtnis bekommen (docs/Towerfront-TOR-BILANZ.md).
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
@@ -100,7 +100,11 @@ npm run wegdeckung  misst das BILD gegen die Bahnen: wieviel der Karte ist
                     benutzten Bahn, und wieviel Bebaubares sieht aus wie
                     Strasse. Auf dem Spiralhain sind 54 % der gemalten
                     Strasse Kulisse - daher kommt der Eindruck, man baue
-                    auf den Weg.
+                    auf den Weg. `--tor` prueft am gebackenen Untergrund,
+                    ob die Kulisse sich vom benutzten Weg abhebt - Ratsche
+                    je Karte, weil Weg und Boden auf der Frostspalte
+                    einander ohnehin aehneln (43 Farbschritte) und auf dem
+                    Spiralhain nicht (130).
 npm run bauflaeche  haelt die GEZEIGTE Baukante gegen die Bauregel:
                     `isPointInPath` gegen `warumNicht`, 1200 Punkte je Karte
                     und Turmsorte. `--tor` prueft die Grenzen. Mit Nullprobe,
@@ -157,7 +161,8 @@ npm run kartenwechsel  was ein Kartenaufbau an Bildpunkten kostet
 ```
 
 Die Torkette: `tsc` → `guards` → `doku` → `muster` → `art` → `determinism` → `sim` →
-`konter` → `geschosse` → `muendung` → `gedraenge` → `bahntreue` → `bauflaeche` → `bench` →
+`konter` → `geschosse` → `muendung` → `gedraenge` → `bahntreue` → `bauflaeche` →
+`wegdeckung` → `bench` →
 `bench-draw` → `kartenwechsel` → `grafiktor` → `einbettung` → `zielplatte` → `kristall` → `speicher` → `gelaende` → `lesbarkeit` → `beruehrung` → `streifen` → `bildtor` → `smoke` →
 `build` → `autarkie` → `browser` → `bericht`.
 
@@ -294,7 +299,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v207. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v208. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -315,10 +320,14 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   (man baut auf Kulisse), es gebe zu viel Weg und zu wenig Fläche, und die
   Gegner benutzten nur einen der gezeigten Wege. Die Bauregel ist NICHT die
   Ursache: an einer benutzten Bahn sind nur 1 bis 6 % bebaubar.
-  Vier Wege stehen offen — mehr Bahnen durch das Netz, die Kulisse sichtbar
-  abwerten, neue Kartenbilder mit einer Straße, oder das Bauen auf jeder
-  gemalten Straße verbieten. Das ist eine Entscheidung über die Karten und
-  gehört zum Nutzer, nicht in eine Runde.
+  Vier Wege, und der Nutzer will alle vier in der besten Reihenfolge:
+  **B** die Kulisse sichtbar abwerten (v208, erledigt — sie verblasst zum
+  Gelände hin, gemessen 0,31/0,25/0,69), **A** mehr Bahnen durch das Netz,
+  **C** neue Kartenbilder mit genau den benutzten Straßen, **D** das Bauen
+  auf gemalter Straße verbieten. Die Reihenfolge folgt den Abhängigkeiten:
+  B sofort und ohne Balancefolgen, A entscheidet die Routen, C malt sie,
+  D schliesst ab — erst wenn kein unbenutzter Weg mehr gemalt ist, kostet
+  D keine Fläche mehr.
 - D19 (grafisch): Die drei benannten Teile sind umgesetzt (v104). Was bleibt,
   ist die Plastik im Bild selbst — Befund B1 aus dem Grafik-Audit, und der
   braucht neue Bilder, nicht Code.

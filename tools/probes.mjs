@@ -918,6 +918,42 @@ const PROBEN = [
     tor: 'bauflaechetor',
   },
   {
+    // **Das Werteraster zieht seine Zeilen wieder auseinander.**
+    //
+    // Diese Probe gab es in v206 schon einmal, und sie bewies nichts - nicht
+    // weil die Regel wirkungslos war, sondern weil die MESSUNG es war: sie
+    // verglich die Mitten von Wert und Beschriftung, und die liegen auch in
+    // einer 99 Punkte hohen Zeile aufeinander. Gemessen wird jetzt die
+    // Zeilenhoehe.
+    name: 'Der Pruefsteg zieht seine Wertezeilen auseinander',
+    datei: 'src/style.css',
+    suche: '  align-content: start;',
+    ersatz: '  align-content: stretch;',
+    tor: 'browsertor',
+  },
+  {
+    // **Die Kulisse verblasst nicht mehr.**
+    //
+    // Dann sieht eine Strasse, an der keine Bahn entlanglaeuft, wieder aus
+    // wie die, an der eine entlanglaeuft - und man baut auf etwas, das man
+    // fuer den Weg haelt. Genau das war die Meldung.
+    name: 'Die Kulisse verblasst nicht mehr',
+    datei: 'src/gfx/terrain.ts',
+    regel: /const KULISSE_STAERKE = 0\.60;/,
+    ersatz: 'const KULISSE_STAERKE = 0;',
+    tor: 'wegdeckungtor',
+  },
+  {
+    // Und die Gegenrichtung: verblasst sie ZUVIEL, ist die Zeichnung weg,
+    // fuer die die Kartenbilder bezahlt wurden. Das faengt das Grafiktor,
+    // das den Untergrund gegen sein Band haelt.
+    name: 'Die Kulisse verblasst bis zur Unkenntlichkeit',
+    datei: 'src/gfx/terrain.ts',
+    regel: /const KULISSE_STAERKE = 0\.60;/,
+    ersatz: 'const KULISSE_STAERKE = 1;',
+    tor: 'grafiktor',
+  },
+  {
     // **Der Steg spannt wieder ueber die ganze Fensterhoehe.**
     //
     // 748 von 862 Punkten, die untere Haelfte leer - ein Glasstreifen ueber
@@ -1004,9 +1040,13 @@ const PROBEN = [
     // Kante. Gemeldet als "eine komische Mauer, die durch den Weg geht".
     name: 'Die Baukante bekommt wieder ein Relief',
     datei: 'src/gfx/bauflaeche.ts',
+    // Der dunkle Zug muss NEBEN den hellen, nicht unter ihn: unter ihm waere
+    // er verdeckt und die Probe bewiese nichts. Genau das ist ihr im vollen
+    // Lauf zu v207 passiert.
     regel: /    q\.globalAlpha = KANTE\.innen;\n    q\.drawImage\(maske, 0, 0\);/,
     ersatz: '    q.globalAlpha = KANTE.innen;\n    q.drawImage(maske, 0, 0);\n'
-      + '    q.globalAlpha = 0.45;\n    q.drawImage(ohne(maske, eng), 0, 0);',
+      + '    q.globalAlpha = 0.5;\n'
+      + "    q.drawImage(ohne(versetzt('source-over'), maske), 0, 0);",
     tor: 'bildtor',
   },
   {

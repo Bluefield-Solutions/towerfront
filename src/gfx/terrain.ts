@@ -203,6 +203,7 @@ export function terrainAuftrag(
   }
 
   const kurven = tonwertKurven(g);
+  const kulisse = kulissenMaske(g, lanes);
   let zeile = 0;
   let fertig = false;
 
@@ -219,7 +220,7 @@ export function terrainAuftrag(
         }
         const hoehe = Math.min(BAND_HOEHE, WORLD_H - zeile);
         const band = g.getImageData(0, zeile, WORLD_W, hoehe);
-        tonwertAnwenden(band.data, kurven, zeile, WORLD_W);
+        tonwertAnwenden(band.data, kurven, zeile, WORLD_W, kulisse);
         g.putImageData(band, 0, zeile);
         zeile += hoehe;
         // Mindestens ein Band je Aufruf, sonst kaeme bei einem Budget von
@@ -416,6 +417,7 @@ const PROBE_B = 480, PROBE_H = 270;
  *  ein Math.max/Math.min davor waere doppelte Arbeit. */
 function tonwertAnwenden(
   d: Uint8ClampedArray, k: TonwertKurven, zeile0: number, breite: number,
+  kulisse: Kulisse | null = null,
 ): void {
   const { TA, TWr, TWg, TWb, C: c } = k;
   for (let i = 0, p = 0; i < d.length; i += 4, p++) {
@@ -428,11 +430,151 @@ function tonwertAnwenden(
     // die beiden muessen bitgleich bleiben.
     const x = p % breite, y = zeile0 + ((p / breite) | 0);
     const n = KORN[((x * 73856093) ^ (y * 19349663)) & 255];
-    d[i] = L + TA[r] + n;
-    d[i + 1] = L + TA[gr] + n;
-    d[i + 2] = L + TA[b] + n;
+    let R = L + TA[r] + n, G = L + TA[gr] + n, B = L + TA[b] + n;
+    // **Und die Kulisse verblasst.**
+    //
+    // Eine gemalte Strasse, an der keine Bahn entlangfuehrt, sieht aus wie
+    // die, an der eine entlangfuehrt - und genau das war der Befund: "ich
+    // kann auf eine Strasse bauen, wo die Gegner kommen". Man baute auf
+    // Kulisse. Sie wird deshalb zum Gelaende hin verblendet: derselbe
+    // Verlauf, nur alt und ueberwachsen statt frisch belegt.
+    if (kulisse) {
+      const a = kulisse.wert(x, y) * KULISSE_STAERKE;
+      if (a > 0) {
+        R += (kulisse.grundR - R) * a;
+        G += (kulisse.grundG - G) * a;
+        B += (kulisse.grundB - B) * a;
+      }
+    }
+    d[i] = R;
+    d[i + 1] = G;
+    d[i + 2] = B;
   }
 }
+
+/** Wie stark die unbenutzte Strasse zum Gelaende hin verblendet wird.
+ *
+ *  Durchprobiert und angesehen (Regel 9): bei 0,35 bleibt sie eine Strasse,
+ *  nur etwas matter - der Unterschied traegt nicht ueber die Karte. Bei 0,80
+ *  ist sie weg, und mit ihr die Zeichnung, fuer die die Kartenbilder bezahlt
+ *  wurden. 0,60 laesst die Form stehen und nimmt ihr den frischen Belag. */
+const KULISSE_STAERKE = 0.60;
+
+/** Die Kulissenmaske: wo ist gemalte Strasse, an der KEINE Bahn entlanglaeuft?
+ *
+ *  **Abgeleitet, nicht gemalt** (Regel 6). Sie koennte auch je Karte von Hand
+ *  eingetragen werden - und waere beim naechsten Umleiten einer Bahn still
+ *  falsch. Sie rechnet sich stattdessen aus denselben Bahnen, aus denen auch
+ *  die Bauregel kommt: aendert sich eine Route, aendert sich die Maske mit.
+ *
+ *  Die Strasse wird am Bild erkannt, mit derselben Rechnung wie in
+ *  `npm run bahntreue` und `npm run wegdeckung`: mittlere Farbe unter den
+ *  Bahnen gegen mittlere Farbe der ganzen Karte, Schwelle 0,55 des Abstands.
+ *
+ *  Aufgeloest wird auf 480 x 270, also vier Weltpunkte je Zelle, und beim
+ *  Lesen zwischen den Zellen interpoliert - sonst haette das Verblassen eine
+ *  Treppe, und eine Treppe ist wieder eine Kante. */
+export interface Kulisse {
+  /** Anteil der Karte, der als Kulisse gilt - fuer `npm run wegdeckung`. */
+  anteil: number;
+  wert(x: number, y: number): number;
+  grundR: number; grundG: number; grundB: number;
+}
+
+const KULISSE_N = 480;
+
+export function kulissenMaske(
+  g: CanvasRenderingContext2D, lanes: LanePath[],
+): Kulisse | null {
+  const N = KULISSE_N, H = Math.round(N * WORLD_H / WORLD_W);
+  const klein = document.createElement('canvas');
+  klein.width = N; klein.height = H;
+  const kg = klein.getContext('2d', { willReadFrequently: true })!;
+  kg.drawImage(g.canvas, 0, 0, N, H);
+  const d = kg.getImageData(0, 0, N, H).data;
+  const bei = (x: number, y: number): number => ((y * N + x) * 4);
+
+  // Mittlere Farbe der ganzen Karte - sie dient nur dazu, die Strasse vom
+  // Gelaende zu trennen. Wohin verblendet wird, ist eine andere Frage und
+  // steht weiter unten.
+  let mr = 0, mg = 0, mb = 0;
+  for (let i = 0; i < N * H; i++) { mr += d[i * 4]; mg += d[i * 4 + 1]; mb += d[i * 4 + 2]; }
+  mr /= N * H; mg /= N * H; mb /= N * H;
+
+  // Mittlere Farbe unter den Bahnen.
+  let wr = 0, wg = 0, wb = 0, wn = 0;
+  for (const p of lanes) {
+    for (let t = 0.05; t < 0.95; t += 0.01) {
+      const q = p.at(p.length * t);
+      const x = Math.round(q.x * N / WORLD_W), y = Math.round(q.y * H / WORLD_H);
+      if (x < 0 || y < 0 || x >= N || y >= H) continue;
+      const i = bei(x, y);
+      wr += d[i]; wg += d[i + 1]; wb += d[i + 2]; wn++;
+    }
+  }
+  if (!wn) return null;
+  wr /= wn; wg /= wn; wb /= wn;
+  const schwelle = Math.hypot(wr - mr, wg - mg, wb - mb) * 0.55;
+  // Unterscheidet das Bild ueberhaupt Strasse von Gelaende? Auf einer Karte
+  // ohne sichtbaren Weg waere jede Maske erfunden (Regel 10).
+  if (schwelle < 6) return null;
+
+  const maske = new Float32Array(N * H);
+  // **Verblendet wird zum GELAENDE hin, nicht zum Mittel der Karte.**
+  //
+  // Der Unterschied ist auf der Frostspalte alles: dort ist die Strasse
+  // dunkel und der Schnee hell, das Mittel der Karte liegt dazwischen, und
+  // eine dunkle Strasse dorthin zu ziehen macht sie kaum heller. Das Ziel
+  // ist aber nicht "Durchschnitt", sondern "sieht aus wie Boden" - also der
+  // Mittelwert dessen, was KEINE Strasse ist.
+  let br = 0, bg = 0, bb = 0, bn = 0;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < N; x++) {
+      const i = bei(x, y);
+      if (Math.hypot(d[i] - wr, d[i + 1] - wg, d[i + 2] - wb) < schwelle) continue;
+      br += d[i]; bg += d[i + 1]; bb += d[i + 2]; bn++;
+    }
+  }
+  if (!bn) return null;
+  br /= bn; bg /= bn; bb /= bn;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < N; x++) {
+      const i = bei(x, y);
+      const strasse = Math.hypot(d[i] - wr, d[i + 1] - wg, d[i + 2] - wb) < schwelle;
+      if (!strasse) continue;
+      const wx = (x + 0.5) * WORLD_W / N, wy = (y + 0.5) * WORLD_H / H;
+      let benutzt = false;
+      for (const p of lanes) if (p.schlauchAbstand(wx, wy) < KULISSE_LUFT) { benutzt = true; break; }
+      if (!benutzt) maske[y * N + x] = 1;
+    }
+  }
+
+  let gesetzt = 0;
+  for (let i = 0; i < N * H; i++) if (maske[i]) gesetzt++;
+
+  return {
+    anteil: gesetzt / (N * H),
+    grundR: br, grundG: bg, grundB: bb,
+    wert(x: number, y: number): number {
+      const fx = x * N / WORLD_W - 0.5, fy = y * H / WORLD_H - 0.5;
+      const x0 = Math.max(0, Math.min(N - 1, Math.floor(fx)));
+      const y0 = Math.max(0, Math.min(H - 1, Math.floor(fy)));
+      const x1 = Math.min(N - 1, x0 + 1), y1 = Math.min(H - 1, y0 + 1);
+      const tx = Math.max(0, Math.min(1, fx - x0)), ty = Math.max(0, Math.min(1, fy - y0));
+      const a = maske[y0 * N + x0], b = maske[y0 * N + x1];
+      const c2 = maske[y1 * N + x0], e = maske[y1 * N + x1];
+      return (a + (b - a) * tx) + ((c2 + (e - c2) * tx) - (a + (b - a) * tx)) * ty;
+    },
+  };
+}
+
+/** Wieviel Luft eine Bahn um sich herum als "benutzt" gelten laesst.
+ *
+ *  `schlauchAbstand` zieht die oertliche halbe Wegbreite schon ab, gemessen
+ *  wird also der Abstand zum WEGKOERPER. Die gemalte Strasse ist an manchen
+ *  Stellen breiter als die eingemessene Bahn; vierzig Weltpunkte decken das
+ *  ab, ohne die Kulisse daneben mitzuretten. */
+const KULISSE_LUFT = 40;
 
 /** Wieviel Feinkorn der Boden bekommt, in Helligkeitsstufen.
  *

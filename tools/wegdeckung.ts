@@ -20,13 +20,49 @@
  * Messstelle (Regel 12): Kartenbild auf 480 Punkte Breite, Rasterpunkt in
  * Weltkoordinaten gegen `warumNicht` gehalten, Bahnnaehe 150 Weltpunkte.
  *
- * Aufruf: npm run wegdeckung
+ * Und seit v208 misst es, ob die Kulisse auch WIRKLICH verblasst: auf dem
+ * gebackenen Untergrund wird der Farbabstand zum Gelaende einmal fuer die
+ * benutzte Strasse und einmal fuer die Kulisse gerechnet. Liegen beide gleich
+ * weit weg, sieht man den Unterschied nicht - dann ist das Verblassen eine
+ * Behauptung. Mit `--tor` ist das eine Grenze.
+ *
+ * Aufruf: npm run wegdeckung        Tabelle
+ *         npm run wegdeckung --tor  prueft die Grenze
  */
 import sharp from 'sharp';
+import { geruestStellen, bilderAbwarten } from './leinwand.mjs';
+geruestStellen();
 import { MAPS, lanePaths } from '../src/data/maps';
 import { MAP_BACKGROUNDS } from '../src/gfx/assets/backgrounds';
 import { WORLD_W as WELT_B, WORLD_H as WELT_H } from '../src/data/config';
 import { GameState } from '../src/game/state';
+
+const TOR = process.argv.includes('--tor');
+/** Wie weit die Kulisse dem Gelaende noch fernbleiben darf - als RATSCHE je
+ *  Karte, nicht als eine Zahl fuer alle.
+ *
+ *  Der Grund steht in den Messwerten selbst: auf dem Spiralhain liegt die
+ *  benutzte Strasse 130 Farbschritte vom Gelaende entfernt, auf der
+ *  Frostspalte nur 43 - dort sind Weg und Schnee einander ohnehin aehnlich.
+ *  Ein gemeinsamer Grenzwert wuerde deshalb entweder die Frostspalte
+ *  durchwinken oder den Spiralhain unnoetig festnageln. Was ueberall gilt,
+ *  ist "nicht schlechter als heute", und genau das ist eine Ratsche - dieselbe
+ *  Bauart wie in `bahntreue`.
+ *
+ *  Sie faengt beides: ein abgeschaltetes Verblassen (Verhaeltnis 1,00) und
+ *  ein Kartenbild, dessen Kulisse sich nicht mehr abheben laesst. Wer eine
+ *  Karte neu malt, traegt den neuen Stand hier ein - und sieht dabei, was er
+ *  aufgibt. */
+const RATSCHE: Record<string, number> = {
+  spiralhain: 0.31,
+  ascheschlucht: 0.25,
+  frostspalte: 0.69,
+};
+/** Wieviel Streuung erlaubt ist, bevor "schlechter" gemeldet wird. Das
+ *  Kartenbild wird auf 480 Punkte gerastert; ein Punkt am Strassenrand macht
+ *  rund einen Hundertstel aus. */
+const TOLERANZ = 0.04;
+const abstaende: { karte: string; nah: number; fern: number; verhaeltnis: number }[] = [];
 
 for (const m of MAPS) {
   const d = (MAP_BACKGROUNDS as Record<string, string>)[m.id];
@@ -75,8 +111,68 @@ for (const m of MAPS) {
   console.log(`   davon in Bahnnaehe (150 Weltpunkte): Strasse ${(nahWeg / gesamt * 100).toFixed(1)} %, `
     + `bebaubar UND Strasse UND in Bahnnaehe ${(nahBaubar / gesamt * 100).toFixed(2)} % `
     + `(${(nahBaubar / Math.max(1, nahWeg) * 100).toFixed(0)} % der benutzten Strasse)`);
+  // **Und jetzt am GEBACKENEN Untergrund: verblasst die Kulisse wirklich?**
+  //
+  // Gemessen wird der Farbabstand zum Gelaende, einmal fuer die benutzte
+  // Strasse und einmal fuer die Kulisse. Die Zahl selbst sagt wenig; ihr
+  // VERHAELTNIS sagt alles: eins heisst "kein Unterschied".
+  const { bakeTerrain } = await import('../src/gfx/terrain');
+  const { getBackground } = await import('../src/gfx/backgrounds');
+  getBackground(m.id);
+  await bilderAbwarten();
+  const gebacken = bakeTerrain(m, bahnen, m.palette, getBackground(m.id));
+  const bild = gebacken.getContext('2d')!.getImageData(0, 0, WELT_B, WELT_H).data;
+  let bnR = 0, bnG = 0, bnB = 0, bnN = 0;
+  const merke: { x: number; y: number; nah: boolean }[] = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < N; x++) {
+    const wx = Math.round((x + 0.5) * WELT_B / N), wy = Math.round((y + 0.5) * WELT_H / H);
+    const j = ((Math.min(WELT_H - 1, wy)) * WELT_B + Math.min(WELT_B - 1, wx)) * 4;
+    if (!istWeg(x, y)) { bnR += bild[j]; bnG += bild[j + 1]; bnB += bild[j + 2]; bnN++; continue; }
+    let nah = false;
+    for (const lane of bahnen) if (lane.schlauchAbstand(wx, wy) < 40) { nah = true; break; }
+    merke.push({ x: wx, y: wy, nah });
+  }
+  bnR /= bnN; bnG /= bnN; bnB /= bnN;
+  let dNah = 0, nNah = 0, dFern = 0, nFern = 0;
+  for (const q of merke) {
+    const j = ((Math.min(WELT_H - 1, q.y)) * WELT_B + Math.min(WELT_B - 1, q.x)) * 4;
+    const ab = Math.hypot(bild[j] - bnR, bild[j + 1] - bnG, bild[j + 2] - bnB);
+    if (q.nah) { dNah += ab; nNah++; } else { dFern += ab; nFern++; }
+  }
+  const nah = nNah ? dNah / nNah : 0, fern = nFern ? dFern / nFern : 0;
+  const verhaeltnis = nah > 0 ? fern / nah : 1;
+  abstaende.push({ karte: m.id, nah, fern, verhaeltnis });
+
   const p = (v: number) => `${(v / gesamt * 100).toFixed(1)} %`;
   console.log(`${m.id.padEnd(15)} gemalte Strasse ${p(weg).padStart(7)}   bebaubar ${p(baubar).padStart(7)}`
     + `   davon AUF der Strasse ${(wegBaubar / Math.max(1, baubar) * 100).toFixed(0).padStart(3)} %`
     + `   (${(wegBaubar / Math.max(1, weg) * 100).toFixed(0)} % der Strasse ist bebaubar)`);
+}
+
+console.log('\nVerblassen der Kulisse, gemessen am gebackenen Untergrund');
+console.log('(Farbabstand zum Gelaende; das Verhaeltnis ist die Aussage, 1,00 = kein Unterschied)\n');
+for (const a of abstaende) {
+  console.log(`  ${a.karte.padEnd(15)} benutzte Strasse ${a.nah.toFixed(1).padStart(5)}   `
+    + `Kulisse ${a.fern.toFixed(1).padStart(5)}   Verhaeltnis ${a.verhaeltnis.toFixed(2)}`);
+}
+
+if (TOR) {
+  const fehler: string[] = [];
+  for (const a of abstaende) {
+    const soll = RATSCHE[a.karte];
+    if (soll === undefined) {
+      fehler.push(`${a.karte}: keine Ratsche eingetragen. Gemessen ${a.verhaeltnis.toFixed(2)} - `
+        + 'wer eine Karte hinzufuegt, traegt ihren Stand hier ein.');
+    } else if (a.verhaeltnis > soll + TOLERANZ) {
+      fehler.push(`${a.karte}: die Kulisse hebt sich schlechter ab als bisher - `
+        + `${a.verhaeltnis.toFixed(2)} gegen ${soll.toFixed(2)}. Je naeher an 1,00, desto `
+        + 'weniger sieht man ihr an, dass dort niemand laeuft.');
+    }
+  }
+  if (fehler.length) {
+    console.log('\nFEHLER');
+    for (const f of fehler) console.log(`  ${f}`);
+    process.exit(1);
+  }
+  console.log('\nWEGDECKUNG: die Kulisse hebt sich auf jeder Karte ab (Ratsche gehalten).');
 }

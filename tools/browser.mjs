@@ -523,6 +523,33 @@ if (!start) {
             fail(`Prüfsteg (Ziellogik ${wie}): Text laeuft ueber seinen Kasten hinaus - `
               + passt.ueber.join('; '));
           }
+          // **Stehen Wert und Beschriftung beieinander?**
+          //
+          // Auf dem Telefon ist der Steg fest so hoch wie das Fenster, und
+          // die Werteliste hat einen Boden von einem Drittel - bei einer
+          // kurzen Liste bleibt darin Platz uebrig, und ein Raster verteilt
+          // uebrigen Platz auf seine Zeilen. Genau hier wirkt
+          // `align-content: start`; am Schreibtisch ist der Steg seit v206
+          // inhaltshoch, dort gibt es nichts zu verteilen.
+          {
+            const weit = await seite.evaluate(() => {
+              const dts = [...document.querySelectorAll('.insp-stats dt')];
+              const dds = [...document.querySelectorAll('.insp-stats dd')];
+              let schlimm = { was: '', ab: -1 };
+              for (let i = 0; i < Math.min(dts.length, dds.length); i++) {
+                const a = dts[i].getBoundingClientRect(), b = dds[i].getBoundingClientRect();
+                const ab = Math.abs((a.top + a.height / 2) - (b.top + b.height / 2));
+                if (ab > schlimm.ab) schlimm = { was: dts[i].textContent.trim(), ab };
+              }
+              return schlimm;
+            });
+            if (weit.ab > 12) {
+              fail(`Prüfsteg (Ziellogik ${wie}): "${weit.was}" steht `
+                + `${Math.round(weit.ab)} Punkte von seinem Wert entfernt (erlaubt 12). `
+                + 'Ein Raster ohne `align-content` zieht seine Zeilen auseinander, sobald '
+                + 'in der Liste Platz uebrig ist.');
+            }
+          }
           // **Und der Name eigens**, weil ihn die Pruefung darueber nicht
           // sieht: sie ueberspringt alles mit `overflow: hidden`, und genau
           // das traegt er - er kuerzt sich mit drei Punkten ab, statt seinen
@@ -1515,11 +1542,19 @@ if (streuung < 6) {
           paare.push({ was: dts[i].textContent.trim(),
             ab: Math.abs((a.top + a.height / 2) - (b.top + b.height / 2)) });
         }
-        // Wieviel Steg steht unter dem letzten Kind leer?
+        // **Wieviel Steg steht unter dem letzten SICHTBAREN Zeichen leer?**
+        //
+        // Nicht unter dem letzten Kind: die Werteliste ist ein Flex-Kind mit
+        // `flex: 1 1 auto` und dehnt sich auf die volle Steghoehe, auch wenn
+        // ihre Zeilen oben zusammenstehen. Gemessen an den Kaesten waere der
+        // Steg dann randvoll - und die Gegenprobe hat genau das gezeigt: der
+        // eingebaute Fehler blieb gruen. Gezaehlt werden deshalb die BLAETTER,
+        // also Elemente ohne Kinder, denn nur die tragen Text.
         let unten = r.top;
-        for (const k of el.children) {
+        for (const k of el.querySelectorAll('*')) {
+          if (k.children.length) continue;
           const kr = k.getBoundingClientRect();
-          if (kr.height > 0) unten = Math.max(unten, kr.bottom);
+          if (kr.height > 0 && kr.width > 0) unten = Math.max(unten, kr.bottom);
         }
         const name = el.querySelector('.insp-name');
         return {

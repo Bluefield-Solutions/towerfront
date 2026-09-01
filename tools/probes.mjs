@@ -987,24 +987,26 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
-    // **Der Lichtsaum faellt weg.**
+    // **Die Kante faellt weg.**
     //
-    // Auf der Frostspalte ist die Strasse selbst dunkel; ein dunkler Strich
-    // darauf ist keiner. Ohne den hellen Zug verschwindet die Kante genau
-    // dort, wo sie am meisten gebraucht wird.
-    name: 'Die Baukante hat keinen Lichtsaum mehr',
+    // Uebrig bliebe eine gleichmaessig getoente Flaeche ohne Rand - genau die
+    // Fassung aus v203, die die Frage nicht beantwortet hat.
+    name: 'Die Baukante hat keinen Saum mehr',
     datei: 'src/gfx/bauflaeche.ts',
-    regel: /export const KANTE = \{ innen: 0\.12, band: 0\.30, licht: 0\.26, breite: 10 \};/,
-    ersatz: 'export const KANTE = { innen: 0.12, band: 0.30, licht: 0, breite: 10 };',
+    regel: /export const KANTE = \{ innen: 0\.12, band: 0\.70, breite: 7 \};/,
+    ersatz: 'export const KANTE = { innen: 0.12, band: 0, breite: 7 };',
     tor: 'bildtor',
   },
   {
-    // Und der dunkle: dann bleibt nur eine gleichmaessig getoente Flaeche
-    // ohne Kante - genau die Fassung, die es nicht beantwortet hat.
-    name: 'Die Baukante hat keinen dunklen Saum mehr',
+    // **Die Kante bekommt wieder ein Relief.**
+    //
+    // Der Befund aus v206: hell neben dunkel liest das Auge als gemauerte
+    // Kante. Gemeldet als "eine komische Mauer, die durch den Weg geht".
+    name: 'Die Baukante bekommt wieder ein Relief',
     datei: 'src/gfx/bauflaeche.ts',
-    regel: /export const KANTE = \{ innen: 0\.12, band: 0\.30, licht: 0\.26, breite: 10 \};/,
-    ersatz: 'export const KANTE = { innen: 0.12, band: 0.12, licht: 0.26, breite: 10 };',
+    regel: /    q\.globalAlpha = KANTE\.innen;\n    q\.drawImage\(maske, 0, 0\);/,
+    ersatz: '    q.globalAlpha = KANTE.innen;\n    q.drawImage(maske, 0, 0);\n'
+      + '    q.globalAlpha = 0.45;\n    q.drawImage(ohne(maske, eng), 0, 0);',
     tor: 'bildtor',
   },
   {
@@ -1013,8 +1015,8 @@ const PROBEN = [
     // Schreibtisch liegt sie ueber zwei Dritteln der Welt.
     name: 'Die Baukante wird wieder zum Vorhang',
     datei: 'src/gfx/bauflaeche.ts',
-    regel: /export const KANTE = \{ innen: 0\.12, band: 0\.30, licht: 0\.26, breite: 10 \};/,
-    ersatz: 'export const KANTE = { innen: 0.38, band: 0.38, licht: 0.26, breite: 10 };',
+    regel: /export const KANTE = \{ innen: 0\.12, band: 0\.70, breite: 7 \};/,
+    ersatz: 'export const KANTE = { innen: 0.38, band: 0.70, breite: 7 };',
     tor: 'bildtor',
   },
   {

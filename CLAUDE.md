@@ -95,6 +95,12 @@ npm run bahnfit     zieht die Bahnen auf die gemalte Strasse (schreibt
                     maps.ts). `--umleiten` aendert Routen, nicht nur Lagen.
 npm run bahntreue   prueft am Kartenbild, ob jede Bahn auf der GEMALTEN
                     Strasse laeuft - Ratsche, kein Soll.
+npm run wegdeckung  misst das BILD gegen die Bahnen: wieviel der Karte ist
+                    als Strasse gemalt, wieviel davon liegt an einer
+                    benutzten Bahn, und wieviel Bebaubares sieht aus wie
+                    Strasse. Auf dem Spiralhain sind 54 % der gemalten
+                    Strasse Kulisse - daher kommt der Eindruck, man baue
+                    auf den Weg.
 npm run bauflaeche  haelt die GEZEIGTE Baukante gegen die Bauregel:
                     `isPointInPath` gegen `warumNicht`, 1200 Punkte je Karte
                     und Turmsorte. `--tor` prueft die Grenzen. Mit Nullprobe,
@@ -288,7 +294,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v206. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v207. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -301,6 +307,18 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
 61 Versionen keinem auf.
 
 **Offen:**
+- **D28 — das Bild verspricht ein Wegenetz, das Spiel benutzt einen Weg davon.**
+  Gemessen mit `npm run wegdeckung`: auf dem Spiralhain sind 21,7 % der Karte
+  als Straße gemalt, aber nur 8,2 % liegen an einer benutzten Bahn — **54 %
+  der gemalten Straße ist Kulisse**, und sie ist von der echten nicht zu
+  unterscheiden. Daher kommen gleich drei Meldungen: man baue auf den Weg
+  (man baut auf Kulisse), es gebe zu viel Weg und zu wenig Fläche, und die
+  Gegner benutzten nur einen der gezeigten Wege. Die Bauregel ist NICHT die
+  Ursache: an einer benutzten Bahn sind nur 1 bis 6 % bebaubar.
+  Vier Wege stehen offen — mehr Bahnen durch das Netz, die Kulisse sichtbar
+  abwerten, neue Kartenbilder mit einer Straße, oder das Bauen auf jeder
+  gemalten Straße verbieten. Das ist eine Entscheidung über die Karten und
+  gehört zum Nutzer, nicht in eine Runde.
 - D19 (grafisch): Die drei benannten Teile sind umgesetzt (v104). Was bleibt,
   ist die Plastik im Bild selbst — Befund B1 aus dem Grafik-Audit, und der
   braucht neue Bilder, nicht Code.

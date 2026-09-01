@@ -66,6 +66,7 @@
     "turmzeichnen": "node tools/turmzeichnen.mjs",
     "bildprompt": "tsx tools/bildprompt.ts",
     "bauflaeche": "tsx tools/bauflaeche.mjs",
+    "wegdeckung": "tsx tools/wegdeckung.ts",
     "bauflaechetor": "tsx tools/bauflaeche.mjs --tor"
   },
   "keywords": [],

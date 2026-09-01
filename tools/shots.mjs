@@ -1294,8 +1294,15 @@ pruefungen.push(async () => {
   const grenzen = [
     ['Toenung der Flaeche', toenung, 0.06, 0.22,
       'zuwenig und die Flaeche ist nicht zu lesen, zuviel und sie ist ein Vorhang'],
-    ['dunkler Saum', saum / angefasst, 0.04, 0.30,
-      'ohne ihn gibt es keine Kante, mit zuviel davon ist die Flaeche der Saum'],
+    // **Kein Relief.** Diese Grenze ist die Lehre aus v206: bis dahin lag ein
+    // dunkler Saum innen und ein heller aussen, zusammen zwanzig Punkte
+    // breit - genau der Trick, mit dem man eine erhabene Kante malt. Gemeldet
+    // als "eine komische Mauer, die durch den Weg geht". Was ein Bauwerk
+    // ausmacht, ist nicht die Helligkeit, sondern hell NEBEN dunkel; also
+    // wird der dunkle Zug verboten, nicht bloss der helle vorgeschrieben.
+    // Gemessen lag er vorher bei 10 % der Flaeche, jetzt bei 0.
+    ['dunkles Relief neben der Kante', saum / angefasst, 0, 0.02,
+      'hell neben dunkel liest das Auge als gemauerte Kante, nicht als Markierung'],
     ['Lichtsaum', licht / gesamt, 0.01, 0.15,
       'ohne ihn verschwindet die Kante auf dunklem Grund - die Frostspalte hat eine dunkle Strasse'],
     ['erhaltene Zeichnung', zeichnung, 0.75, 1.30,
@@ -1309,7 +1316,7 @@ pruefungen.push(async () => {
   }
 
   console.log(`  Baukante: Flaeche ${(angefasst / gesamt * 100).toFixed(0)} %, `
-    + `Toenung ${(toenung * 100).toFixed(0)} %, dunkler Saum ${(saum / angefasst * 100).toFixed(0)} % `
+    + `Toenung ${(toenung * 100).toFixed(0)} %, dunkles Relief ${(saum / angefasst * 100).toFixed(0)} % `
     + `der Flaeche, Lichtsaum ${(licht / gesamt * 100).toFixed(1)} % des Bildes, `
     + `Zeichnung ${(zeichnung * 100).toFixed(0)} % erhalten`);
 });

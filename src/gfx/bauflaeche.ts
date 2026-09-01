@@ -47,7 +47,7 @@ import { ablageAnmelden } from './speicher';
  *  schwächerer Zug auf einem um `saumBreite` gewachsenen Bereich. Der Saum
  *  liegt damit als Band auf der BAUBAREN Seite und macht die Kante lesbar,
  *  ohne die ganze Fläche dunkler zu machen. */
-export const KANTE = { innen: 0.12, band: 0.30, licht: 0.26, breite: 10 };
+export const KANTE = { innen: 0.12, band: 0.70, breite: 7 };
 
 /** Auflösung des gebackenen Kantenbildes, als Teiler der Weltmasse.
  *  Zwei heisst 960 x 540 und 2 MB - die Kante wird dadurch um einen halben
@@ -219,7 +219,6 @@ export function bauflaechenBild(
     return cv;
   };
   const eng = versetzt('destination-in');
-  const weit = versetzt('source-over');
 
   /** Die Differenz zweier Masken. */
   const ohne = (gross: HTMLCanvasElement, klein: HTMLCanvasElement): HTMLCanvasElement => {
@@ -233,33 +232,38 @@ export function bauflaechenBild(
 
   const bild = flaeche();
   const g = bild.getContext('2d')!;
-  // **Die dunkle Haelfte** - schwache Toenung auf der ganzen verbotenen
-  // Flaeche, kraeftig im inneren Saum.
+  // **Die Flaeche: nur ein Hauch Ton.** Sie sagt, welche Seite gemeint ist,
+  // mehr nicht - die Auskunft steckt in der Kante.
   {
     const d = flaeche();
     const q = d.getContext('2d')!;
     q.globalAlpha = KANTE.innen;
     q.drawImage(maske, 0, 0);
-    q.globalAlpha = KANTE.band;
-    q.drawImage(ohne(maske, eng), 0, 0);
     q.globalAlpha = 1;
     q.globalCompositeOperation = 'source-in';
     q.fillStyle = C.ink;
     q.fillRect(0, 0, b, h);
     g.drawImage(d, 0, 0);
   }
-  // **Und die helle** - ein Lichtsaum auf der BAUBAREN Seite.
+  // **Die Kante: eine helle Linie, innen an der verbotenen Seite.**
   //
-  // Ohne ihn verschwindet die Kante genau dort, wo sie am meisten gebraucht
-  // wird: auf der Frostspalte ist die Strasse selbst dunkel, ein dunkler
-  // Strich darauf ist keiner. Zwei Toene uebereinander lesen sich auf hellem
-  // wie auf dunklem Grund - dieselbe Bewegung wie beim Kontaktschatten der
-  // Figuren, nur an einer Kante statt an einem Koerper.
+  // Sie hatte bis v206 zwei Toene - dunkel innen, hell aussen, zusammen
+  // zwanzig Punkte breit. Das ist genau der Trick, mit dem man eine erhabene
+  // Kante malt, und entsprechend sah sie aus: gemeldet als "eine komische
+  // Mauer, die durch den Weg geht". Ein Ring um einen Gelaendefleck las sich
+  // als gemauerte Einfassung, quer ueber die Strasse gelegt.
+  //
+  // Was das Bauwerk ausmacht, ist nicht die Helligkeit, sondern das RELIEF:
+  // hell neben dunkel liest das Auge als Kante mit Licht und Schatten. Ein
+  // einzelner heller Zug von sieben Punkten kann das nicht - er ist flach,
+  // duenn und durchscheinend, also eine Markierung. Nachgesehen auf beiden
+  // Karten: auf dem hellen Pflaster des Spiralhains steht er ebenso da wie
+  // auf dem dunklen Weg der Frostspalte, weil er heller ist als beides.
   {
     const l = flaeche();
     const q = l.getContext('2d')!;
-    q.globalAlpha = KANTE.licht;
-    q.drawImage(ohne(weit, maske), 0, 0);
+    q.globalAlpha = KANTE.band;
+    q.drawImage(ohne(maske, eng), 0, 0);
     q.globalAlpha = 1;
     q.globalCompositeOperation = 'source-in';
     q.fillStyle = '#EAF2FF';

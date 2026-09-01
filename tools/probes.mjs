@@ -939,8 +939,8 @@ const PROBEN = [
     // fuer den Weg haelt. Genau das war die Meldung.
     name: 'Die Kulisse verblasst nicht mehr',
     datei: 'src/gfx/terrain.ts',
-    regel: /const KULISSE_STAERKE = 0\.60;/,
-    ersatz: 'const KULISSE_STAERKE = 0;',
+    regel: /export const KULISSE = \{ staerke: 0\.60, luft: 40 \};/,
+    ersatz: 'export const KULISSE = { staerke: 0, luft: 40 };',
     tor: 'wegdeckungtor',
   },
   {
@@ -953,8 +953,8 @@ const PROBEN = [
     // Band. Gemessen werden muss die Streuung, und die misst `wegdeckung`.
     name: 'Die Kulisse verblasst bis zur Unkenntlichkeit',
     datei: 'src/gfx/terrain.ts',
-    regel: /const KULISSE_STAERKE = 0\.60;/,
-    ersatz: 'const KULISSE_STAERKE = 1;',
+    regel: /export const KULISSE = \{ staerke: 0\.60, luft: 40 \};/,
+    ersatz: 'export const KULISSE = { staerke: 1, luft: 40 };',
     tor: 'wegdeckungtor',
   },
   {

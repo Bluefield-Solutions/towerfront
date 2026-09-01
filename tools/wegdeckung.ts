@@ -38,40 +38,43 @@ import { WORLD_W as WELT_B, WORLD_H as WELT_H } from '../src/data/config';
 import { GameState } from '../src/game/state';
 
 const TOR = process.argv.includes('--tor');
-/** Wie weit die Kulisse dem Gelaende noch fernbleiben darf - als RATSCHE je
- *  Karte, nicht als eine Zahl fuer alle.
+/** Wieviel das Verblassen im Mittel bewegen muss, in Farbschritten ueber die
+ *  Karte ausserhalb der Bahnen - als RATSCHE je Karte.
  *
- *  Der Grund steht in den Messwerten selbst: auf dem Spiralhain liegt die
- *  benutzte Strasse 130 Farbschritte vom Gelaende entfernt, auf der
- *  Frostspalte nur 43 - dort sind Weg und Schnee einander ohnehin aehnlich.
- *  Ein gemeinsamer Grenzwert wuerde deshalb entweder die Frostspalte
- *  durchwinken oder den Spiralhain unnoetig festnageln. Was ueberall gilt,
- *  ist "nicht schlechter als heute", und genau das ist eine Ratsche - dieselbe
- *  Bauart wie in `bahntreue`.
+ *  Der Grund steht in den Zahlen: Spiralhain 16,2, Ascheschlucht 14,3,
+ *  **Frostspalte 1,3**. Dort sind Weg und Schnee einander ohnehin aehnlich
+ *  (43 Farbschritte Abstand gegen 130 auf dem Spiralhain), also ist der
+ *  Kulisse kaum etwas zu nehmen. Eine gemeinsame Untergrenze wuerde die
+ *  Frostspalte entweder aussperren oder so tief liegen, dass sie nichts mehr
+ *  faengt. Was ueberall gilt, ist "nicht weniger als heute".
  *
- *  Sie faengt beides: ein abgeschaltetes Verblassen (Verhaeltnis 1,00) und
- *  ein Kartenbild, dessen Kulisse sich nicht mehr abheben laesst. Wer eine
- *  Karte neu malt, traegt den neuen Stand hier ein - und sieht dabei, was er
- *  aufgibt. */
-const RATSCHE: Record<string, number> = {
-  spiralhain: 0.31,
-  ascheschlucht: 0.25,
-  frostspalte: 0.69,
+ *  Die Frostspalte ist damit der Fall, den Schritt B NICHT loest - sie
+ *  braucht Schritt C, ein Kartenbild, dessen Strasse sich vom Boden abhebt. */
+const WIRKUNG: Record<string, number> = {
+  spiralhain: 16.2,
+  ascheschlucht: 14.3,
+  frostspalte: 1.3,
 };
-/** Wieviel Streuung erlaubt ist, bevor "schlechter" gemeldet wird. Das
- *  Kartenbild wird auf 480 Punkte gerastert; ein Punkt am Strassenrand macht
- *  rund einen Hundertstel aus. */
-const TOLERANZ = 0.04;
-/** Wieviel Zeichnung in der Kulisse mindestens stehen bleibt, gemessen an der
- *  Streuung auf der benutzten Strasse.
+/** Wieviel die Ratsche nach unten nachgeben darf. Ein Sechstel: das Backen
+ *  ist bitgleich, die Streuung kommt allein aus dem Raster der Abtastung. */
+const WIRKUNG_LUFT = 0.85;
+/** Und wieviel es auf der BENUTZTEN Bahn bewegen darf: nichts. Ein halber
+ *  Farbschritt ist die Rundung, mehr waere ein Uebergriff - dann verwischte
+ *  das Verblassen genau den Weg, den es hervorheben soll. Das ist zugleich
+ *  die Nullprobe der Messung: waere die Wirkung ueberall gleich, sagte die
+ *  Zahl darueber nichts (Regel 13). */
+const AUF_WEG_MAX = 0.5;
+/** Wieviel Zeichnung in der verblassten Flaeche stehen bleibt, gemessen
+ *  gegen dieselben Bildpunkte OHNE Verblassen.
  *
- *  Heute 0,66 / 0,86 / 0,90. Bei vollem Verblassen (Staerke 1) waere die
- *  Kulisse eine gleichmaessige Flaeche und der Wert nahe null - genau das
- *  soll die Grenze fangen, und genau das hat das Grafiktor NICHT gefangen:
- *  der Mittelwert des Untergrunds bleibt beim Verblenden erhalten, seine
- *  Helligkeit faellt also aus keinem Band. */
-const ZEICHNUNG_MIN = 0.45;
-const abstaende: { karte: string; nah: number; fern: number; verhaeltnis: number;
+ *  Gemessen 0,51 / 0,52 / 0,78 - der Wert folgt der Staerke: wer zu 60 % zu
+ *  einer glatten Farbe hin verblendet, behaelt rund 40 % der Streuung. Bei
+ *  voller Staerke waere die Flaeche einfarbig und der Wert nahe null, und
+ *  genau das soll die Grenze fangen. Die erste Fassung hat es nicht gefangen,
+ *  weil sie die betroffenen Punkte mit ihrer EIGENEN Wegerkennung riet statt
+ *  sie an der Differenz abzulesen. */
+const ZEICHNUNG_MIN = 0.42;
+const abstaende: { karte: string; wirkung: number; aufWeg: number; anteil: number;
   zeichnung: number }[] = [];
 
 for (const m of MAPS) {
@@ -123,59 +126,61 @@ for (const m of MAPS) {
     + `(${(nahBaubar / Math.max(1, nahWeg) * 100).toFixed(0)} % der benutzten Strasse)`);
   // **Und jetzt am GEBACKENEN Untergrund: verblasst die Kulisse wirklich?**
   //
-  // Gemessen wird der Farbabstand zum Gelaende, einmal fuer die benutzte
-  // Strasse und einmal fuer die Kulisse. Die Zahl selbst sagt wenig; ihr
-  // VERHAELTNIS sagt alles: eins heisst "kein Unterschied".
-  const { bakeTerrain } = await import('../src/gfx/terrain');
+  // Gemessen wird gegen einen zweiten Untergrund, der OHNE Verblassen
+  // gebacken ist (Regel 13). Die erste Fassung hat stattdessen geraten,
+  // welche Bildpunkte betroffen sind - sie stufte sie mit ihrer eigenen
+  // Wegerkennung ein, waehrend das Spiel seine benutzt. Die beiden weichen
+  // genug voneinander ab, dass die Gegenprobe nichts mehr bewies: ein voll
+  // verblasstes Bild ging als "in Ordnung" durch.
+  //
+  // Mit zwei Baecken braucht es keine Uebereinstimmung mehr. Die Differenz
+  // sagt selbst, wo verblasst wurde - und sie sagt zugleich, wo NICHT: auf
+  // der benutzten Strasse muss sie null sein.
+  const { bakeTerrain, KULISSE } = await import('../src/gfx/terrain');
   const { getBackground } = await import('../src/gfx/backgrounds');
   getBackground(m.id);
   await bilderAbwarten();
-  const gebacken = bakeTerrain(m, bahnen, m.palette, getBackground(m.id));
-  const bild = gebacken.getContext('2d')!.getImageData(0, 0, WELT_B, WELT_H).data;
-  let bnR = 0, bnG = 0, bnB = 0, bnN = 0;
-  const merke: { x: number; y: number; nah: boolean }[] = [];
-  for (let y = 0; y < H; y++) for (let x = 0; x < N; x++) {
-    const wx = Math.round((x + 0.5) * WELT_B / N), wy = Math.round((y + 0.5) * WELT_H / H);
-    const j = ((Math.min(WELT_H - 1, wy)) * WELT_B + Math.min(WELT_B - 1, wx)) * 4;
-    if (!istWeg(x, y)) { bnR += bild[j]; bnG += bild[j + 1]; bnB += bild[j + 2]; bnN++; continue; }
-    let nah = false;
-    for (const lane of bahnen) if (lane.schlauchAbstand(wx, wy) < 40) { nah = true; break; }
-    merke.push({ x: wx, y: wy, nah });
-  }
-  bnR /= bnN; bnG /= bnN; bnB /= bnN;
-  let dNah = 0, nNah = 0, dFern = 0, nFern = 0;
-  for (const q of merke) {
-    const j = ((Math.min(WELT_H - 1, q.y)) * WELT_B + Math.min(WELT_B - 1, q.x)) * 4;
-    const ab = Math.hypot(bild[j] - bnR, bild[j + 1] - bnG, bild[j + 2] - bnB);
-    if (q.nah) { dNah += ab; nNah++; } else { dFern += ab; nFern++; }
-  }
-  const nah = nNah ? dNah / nNah : 0, fern = nFern ? dFern / nFern : 0;
-  const verhaeltnis = nah > 0 ? fern / nah : 1;
-  // **Und bleibt in der Kulisse noch Zeichnung?**
-  //
-  // Verblassen heisst "alt und ueberwachsen", nicht "weg". Wird zu stark
-  // verblendet, ist die Kulisse eine gleichmaessige Flaeche - und mit ihr ist
-  // die Zeichnung fort, fuer die die Kartenbilder bezahlt wurden. Gemessen
-  // als Streuung der Helligkeit, gegen dieselbe Streuung auf der benutzten
-  // Strasse gehalten.
-  const helligkeit = (j: number): number =>
-    0.299 * bild[j] + 0.587 * bild[j + 1] + 0.114 * bild[j + 2];
-  const streuung = (welche: boolean): number => {
-    const w = merke.filter((q) => q.nah === welche);
-    if (!w.length) return 0;
-    let mm = 0;
-    for (const q of w) mm += helligkeit(((Math.min(WELT_H - 1, q.y)) * WELT_B + Math.min(WELT_B - 1, q.x)) * 4);
-    mm /= w.length;
-    let vv = 0;
-    for (const q of w) {
-      const h2 = helligkeit(((Math.min(WELT_H - 1, q.y)) * WELT_B + Math.min(WELT_B - 1, q.x)) * 4);
-      vv += (h2 - mm) ** 2;
-    }
-    return Math.sqrt(vv / w.length);
+  const bildVon = (staerke: number): Uint8ClampedArray => {
+    const vorher = KULISSE.staerke;
+    KULISSE.staerke = staerke;
+    const cv = bakeTerrain(m, bahnen, m.palette, getBackground(m.id));
+    KULISSE.staerke = vorher;
+    return cv.getContext('2d')!.getImageData(0, 0, WELT_B, WELT_H).data;
   };
-  const zNah = streuung(true), zFern = streuung(false);
-  abstaende.push({ karte: m.id, nah, fern, verhaeltnis,
-    zeichnung: zNah > 0 ? zFern / zNah : 1 });
+  const mit = bildVon(KULISSE.staerke);
+  const ohneVerblassen = bildVon(0);
+
+  let wirkung = 0, wirkungN = 0, aufWeg = 0, aufWegN = 0;
+  let sMit = 0, sOhne = 0, sN = 0, mMit = 0, mOhne = 0;
+  const helligkeit = (d: Uint8ClampedArray, j: number): number =>
+    0.299 * d[j] + 0.587 * d[j + 1] + 0.114 * d[j + 2];
+  const betroffen: number[] = [];
+  for (let y = 0; y < WELT_H; y += 3) for (let x = 0; x < WELT_B; x += 3) {
+    const j = (y * WELT_B + x) * 4;
+    const ab = Math.hypot(mit[j] - ohneVerblassen[j], mit[j + 1] - ohneVerblassen[j + 1],
+      mit[j + 2] - ohneVerblassen[j + 2]);
+    let nah = false;
+    for (const lane of bahnen) if (lane.schlauchAbstand(x, y) < KULISSE.luft) { nah = true; break; }
+    if (nah) { aufWeg += ab; aufWegN++; continue; }
+    wirkung += ab; wirkungN++;
+    if (ab > 6) {
+      betroffen.push(j);
+      mMit += helligkeit(mit, j); mOhne += helligkeit(ohneVerblassen, j); sN++;
+    }
+  }
+  mMit /= Math.max(1, sN); mOhne /= Math.max(1, sN);
+  for (const j of betroffen) {
+    sMit += (helligkeit(mit, j) - mMit) ** 2;
+    sOhne += (helligkeit(ohneVerblassen, j) - mOhne) ** 2;
+  }
+  const zeichnung = sOhne > 0 ? Math.sqrt(sMit / sN) / Math.sqrt(sOhne / sN) : 1;
+  abstaende.push({
+    karte: m.id,
+    wirkung: wirkungN ? wirkung / wirkungN : 0,
+    aufWeg: aufWegN ? aufWeg / aufWegN : 0,
+    anteil: sN / Math.max(1, wirkungN),
+    zeichnung,
+  });
 
   const p = (v: number) => `${(v / gesamt * 100).toFixed(1)} %`;
   console.log(`${m.id.padEnd(15)} gemalte Strasse ${p(weg).padStart(7)}   bebaubar ${p(baubar).padStart(7)}`
@@ -183,30 +188,36 @@ for (const m of MAPS) {
     + `   (${(wegBaubar / Math.max(1, weg) * 100).toFixed(0)} % der Strasse ist bebaubar)`);
 }
 
-console.log('\nVerblassen der Kulisse, gemessen am gebackenen Untergrund');
-console.log('(Farbabstand zum Gelaende; das Verhaeltnis ist die Aussage, 1,00 = kein Unterschied)\n');
+console.log('\nVerblassen der Kulisse - gegen einen Untergrund OHNE Verblassen gerechnet\n');
+console.log('  Karte            Wirkung   auf der Bahn   verblasste Flaeche   Zeichnung');
 for (const a of abstaende) {
-  console.log(`  ${a.karte.padEnd(15)} benutzte Strasse ${a.nah.toFixed(1).padStart(5)}   `
-    + `Kulisse ${a.fern.toFixed(1).padStart(5)}   Verhaeltnis ${a.verhaeltnis.toFixed(2)}`
-    + `   Zeichnung ${a.zeichnung.toFixed(2)}`);
+  console.log(`  ${a.karte.padEnd(15)} ${a.wirkung.toFixed(1).padStart(6)}   `
+    + `${a.aufWeg.toFixed(2).padStart(10)}   ${(a.anteil * 100).toFixed(1).padStart(16)} %   `
+    + `${a.zeichnung.toFixed(2).padStart(8)}`);
 }
 
 if (TOR) {
   const fehler: string[] = [];
   for (const a of abstaende) {
-    const soll = RATSCHE[a.karte];
+    const soll = WIRKUNG[a.karte];
     if (soll === undefined) {
-      fehler.push(`${a.karte}: keine Ratsche eingetragen. Gemessen ${a.verhaeltnis.toFixed(2)} - `
+      fehler.push(`${a.karte}: keine Ratsche eingetragen. Gemessen ${a.wirkung.toFixed(1)} - `
         + 'wer eine Karte hinzufuegt, traegt ihren Stand hier ein.');
-    } else if (a.zeichnung < ZEICHNUNG_MIN) {
-      fehler.push(`${a.karte}: in der Kulisse bleibt nur ${(a.zeichnung * 100).toFixed(0)} % der `
-        + `Zeichnung uebrig (mindestens ${(ZEICHNUNG_MIN * 100).toFixed(0)} %). Verblassen heisst `
-        + '"alt und ueberwachsen", nicht "weg" - eine gleichmaessige Flaeche ist keine Kulisse '
-        + 'mehr, sondern ein Fleck.');
-    } else if (a.verhaeltnis > soll + TOLERANZ) {
-      fehler.push(`${a.karte}: die Kulisse hebt sich schlechter ab als bisher - `
-        + `${a.verhaeltnis.toFixed(2)} gegen ${soll.toFixed(2)}. Je naeher an 1,00, desto `
-        + 'weniger sieht man ihr an, dass dort niemand laeuft.');
+    } else if (a.wirkung < soll * WIRKUNG_LUFT) {
+      fehler.push(`${a.karte}: das Verblassen aendert im Mittel nur ${a.wirkung.toFixed(1)} `
+        + `Farbschritte, bisher waren es ${soll.toFixed(1)}. So lange sieht eine Strasse, an `
+        + 'der niemand laeuft, aus wie die, an der jemand laeuft.');
+    }
+    if (a.aufWeg > AUF_WEG_MAX) {
+      fehler.push(`${a.karte}: das Verblassen greift auf die BENUTZTE Bahn ueber `
+        + `(${a.aufWeg.toFixed(2)} Farbschritte, erlaubt ${AUF_WEG_MAX}). Der Weg, auf dem die `
+        + 'Gegner laufen, muss frisch bleiben - sonst verwischt genau die Auskunft, um die es geht.');
+    }
+    if (a.zeichnung < ZEICHNUNG_MIN) {
+      fehler.push(`${a.karte}: in der verblassten Flaeche bleibt nur `
+        + `${(a.zeichnung * 100).toFixed(0)} % der Zeichnung uebrig (mindestens `
+        + `${(ZEICHNUNG_MIN * 100).toFixed(0)} %). Verblassen heisst "alt und ueberwachsen", `
+        + 'nicht "weg" - eine gleichmaessige Flaeche ist keine Kulisse mehr, sondern ein Fleck.');
     }
   }
   if (fehler.length) {

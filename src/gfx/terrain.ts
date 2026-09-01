@@ -439,7 +439,7 @@ function tonwertAnwenden(
     // Kulisse. Sie wird deshalb zum Gelaende hin verblendet: derselbe
     // Verlauf, nur alt und ueberwachsen statt frisch belegt.
     if (kulisse) {
-      const a = kulisse.wert(x, y) * KULISSE_STAERKE;
+      const a = kulisse.wert(x, y) * KULISSE.staerke;
       if (a > 0) {
         R += (kulisse.grundR - R) * a;
         G += (kulisse.grundG - G) * a;
@@ -452,13 +452,26 @@ function tonwertAnwenden(
   }
 }
 
-/** Wie stark die unbenutzte Strasse zum Gelaende hin verblendet wird.
+/** Wie stark die unbenutzte Strasse zum Gelaende hin verblendet wird - und
+ *  wieviel Luft eine Bahn um sich herum als "benutzt" gelten laesst.
  *
- *  Durchprobiert und angesehen (Regel 9): bei 0,35 bleibt sie eine Strasse,
- *  nur etwas matter - der Unterschied traegt nicht ueber die Karte. Bei 0,80
- *  ist sie weg, und mit ihr die Zeichnung, fuer die die Kartenbilder bezahlt
- *  wurden. 0,60 laesst die Form stehen und nimmt ihr den frischen Belag. */
-const KULISSE_STAERKE = 0.60;
+ *  `staerke` ist durchprobiert und angesehen (Regel 9): bei 0,35 bleibt die
+ *  Kulisse eine Strasse, nur etwas matter - der Unterschied traegt nicht ueber
+ *  die Karte. Bei 0,80 ist sie weg, und mit ihr die Zeichnung, fuer die die
+ *  Kartenbilder bezahlt wurden. 0,60 laesst die Form stehen und nimmt ihr den
+ *  frischen Belag.
+ *
+ *  `luft`: `schlauchAbstand` zieht die oertliche halbe Wegbreite schon ab,
+ *  gemessen wird also der Abstand zum WEGKOERPER. Die gemalte Strasse ist an
+ *  manchen Stellen breiter als die eingemessene Bahn; vierzig Weltpunkte
+ *  decken das ab, ohne die Kulisse daneben mitzuretten.
+ *
+ *  Beide stehen als Feld eines Objekts und nicht als Konstante, damit
+ *  `npm run wegdeckung` zweimal backen kann - einmal mit und einmal ohne.
+ *  Eine Wirkung misst man, indem man sie abschaltet (Regel 13); vorher hat
+ *  das Werkzeug GERATEN, welche Bildpunkte verblasst werden, und die
+ *  Gegenprobe dazu bewies nichts. */
+export const KULISSE = { staerke: 0.60, luft: 40 };
 
 /** Die Kulissenmaske: wo ist gemalte Strasse, an der KEINE Bahn entlanglaeuft?
  *
@@ -544,7 +557,7 @@ export function kulissenMaske(
       if (!strasse) continue;
       const wx = (x + 0.5) * WORLD_W / N, wy = (y + 0.5) * WORLD_H / H;
       let benutzt = false;
-      for (const p of lanes) if (p.schlauchAbstand(wx, wy) < KULISSE_LUFT) { benutzt = true; break; }
+      for (const p of lanes) if (p.schlauchAbstand(wx, wy) < KULISSE.luft) { benutzt = true; break; }
       if (!benutzt) maske[y * N + x] = 1;
     }
   }
@@ -568,13 +581,7 @@ export function kulissenMaske(
   };
 }
 
-/** Wieviel Luft eine Bahn um sich herum als "benutzt" gelten laesst.
- *
- *  `schlauchAbstand` zieht die oertliche halbe Wegbreite schon ab, gemessen
- *  wird also der Abstand zum WEGKOERPER. Die gemalte Strasse ist an manchen
- *  Stellen breiter als die eingemessene Bahn; vierzig Weltpunkte decken das
- *  ab, ohne die Kulisse daneben mitzuretten. */
-const KULISSE_LUFT = 40;
+
 
 /** Wieviel Feinkorn der Boden bekommt, in Helligkeitsstufen.
  *

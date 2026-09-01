@@ -918,18 +918,6 @@ const PROBEN = [
     tor: 'bauflaechetor',
   },
   {
-    // **Das Werteraster zieht seine Zeilen wieder auseinander.**
-    //
-    // Auf dem Telefon faellt es nicht auf, weil die Liste dort ueberlaeuft -
-    // es ist kein Platz zu verteilen. Am Schreibtisch standen Wert und
-    // Beschriftung 44 Punkte auseinander.
-    name: 'Der Pruefsteg zieht seine Wertezeilen auseinander',
-    datei: 'src/style.css',
-    suche: '  align-content: start;',
-    ersatz: '  align-content: stretch;',
-    tor: 'browsertor',
-  },
-  {
     // **Der Steg spannt wieder ueber die ganze Fensterhoehe.**
     //
     // 748 von 862 Punkten, die untere Haelfte leer - ein Glasstreifen ueber

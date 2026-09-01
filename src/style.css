@@ -339,16 +339,6 @@ html, body {
 .insp-stats {
   margin: 0 0 8px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px;
   overflow-y: auto; min-height: 0; flex: 1 1 auto;
-  /* **Die Zeilen wachsen nicht mit dem Fenster.**
-     Ohne diese Zeile verteilt das Raster den uebrigen Platz auf seine Zeilen -
-     auf dem Telefon faellt das nicht auf, weil die Liste dort ohnehin
-     ueberlaeuft. Am Schreibtisch schon: gemessen auf 1920 x 862 waren die
-     sechs Zeilen **99 Punkte hoch** statt 22, und weil der Wert oben in
-     seiner Zeile sitzt und die Beschriftung mittig, standen die beiden
-     **44 Punkte auseinander** - Wert und Bezeichnung gehoerten sichtbar
-     nicht mehr zusammen. Gemeldet als "der Pruefsteg ist am Schreibtisch
-     eine ueberhohe Spalte". */
-  align-content: start;
   /* Der Boden, unter den die Werteliste nicht darf.
      Bis v137 stand hier nur `flex: 1 1 auto` - und weil Kopfzeile, Ausbau,
      Ziellogik und Verkaufen zusammen mehr verlangten, als der Steg hoch ist,
@@ -370,7 +360,17 @@ html, body {
    Naturgesetz: die Ziellogik ist ein Augenblick, die Werte sind der
    Dauerzustand. */
 .inspector[data-ziel="1"] .insp-stats { min-height: 0; }
-/* **Und auf einem hohen Fenster hoert der Steg auf, wo sein Inhalt aufhoert.**
+/* **Und ab hier hoert der Steg auf, wo sein Inhalt aufhoert.**
+
+   Hier stand kurzzeitig auch ein `align-content: start` auf der Werteliste -
+   gegen das Auseinanderziehen der Zeilen. Es ist wieder draussen, und zwar
+   nachgemessen: mit `stretch` melden alle vier gemessenen Zustaende
+   (Gegnerinfo auf dem Telefon, Steg auf 1400x900, 700x850 und 1000x620)
+   denselben Abstand null. Das Auseinanderziehen war ein SYMPTOM der vollen
+   Fensterhoehe; mit einem inhaltshohen Steg gibt es keinen uebrigen Platz
+   mehr zu verteilen, und auf dem Telefon lief die Liste schon immer ueber.
+   Eine Regel, deren Entfernen an keiner Messstelle etwas aendert, ist keine
+   Vorsichtsmassnahme, sondern eine Behauptung (Regel 5).
 
    Bis v205 spannte er von `top` bis `bottom`, also ueber die ganze Fensterhoehe:
    auf dem iPhone quer sind das 276 Punkte und genau richtig, auf 1920 x 862

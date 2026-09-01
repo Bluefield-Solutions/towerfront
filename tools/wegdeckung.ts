@@ -64,16 +64,22 @@ const WIRKUNG_LUFT = 0.85;
  *  die Nullprobe der Messung: waere die Wirkung ueberall gleich, sagte die
  *  Zahl darueber nichts (Regel 13). */
 const AUF_WEG_MAX = 0.5;
-/** Wieviel Zeichnung in der verblassten Flaeche stehen bleibt, gemessen
- *  gegen dieselben Bildpunkte OHNE Verblassen.
+/** Und nach oben: wieviel mehr als heute. Zwei Seiten derselben Ratsche.
  *
- *  Gemessen 0,51 / 0,52 / 0,78 - der Wert folgt der Staerke: wer zu 60 % zu
- *  einer glatten Farbe hin verblendet, behaelt rund 40 % der Streuung. Bei
- *  voller Staerke waere die Flaeche einfarbig und der Wert nahe null, und
- *  genau das soll die Grenze fangen. Die erste Fassung hat es nicht gefangen,
- *  weil sie die betroffenen Punkte mit ihrer EIGENEN Wegerkennung riet statt
- *  sie an der Differenz abzulesen. */
-const ZEICHNUNG_MIN = 0.42;
+ *  **Warum die Obergrenze an der Wirkung haengt und nicht an der Zeichnung.**
+ *  Der naheliegende Weg waere, die uebrige Streuung in der verblassten Flaeche
+ *  zu messen - "verblassen heisst alt, nicht weg". Dreimal versucht, dreimal
+ *  untauglich: die Zahl steigt mit der Staerke, statt zu fallen (gemessen 0,51
+ *  bei Staerke 0,60 und 0,58 bei voller Staerke). Der Grund ist die Auswahl
+ *  selbst - bei staerkerem Verblassen ueberschreiten auch die halb erfassten
+ *  Randpunkte die Schwelle, und die tragen ihre Struktur mit herein. Eine
+ *  Kennzahl, die sich nicht monoton mit dem verhaelt, was sie messen soll,
+ *  ist keine Grenze. Sie wird weiter ausgegeben, weil sie beim Ansehen hilft.
+ *
+ *  Die Wirkung dagegen laeuft sauber mit: 0 bei abgeschaltetem Verblassen,
+ *  16,2 bei 0,60, 27,1 bei voller Staerke. Vierzig Prozent Luft nach oben
+ *  lassen ein neues Kartenbild zu und fangen die volle Staerke. */
+const WIRKUNG_DECKEL = 1.4;
 const abstaende: { karte: string; wirkung: number; aufWeg: number; anteil: number;
   zeichnung: number }[] = [];
 
@@ -213,11 +219,11 @@ if (TOR) {
         + `(${a.aufWeg.toFixed(2)} Farbschritte, erlaubt ${AUF_WEG_MAX}). Der Weg, auf dem die `
         + 'Gegner laufen, muss frisch bleiben - sonst verwischt genau die Auskunft, um die es geht.');
     }
-    if (a.zeichnung < ZEICHNUNG_MIN) {
-      fehler.push(`${a.karte}: in der verblassten Flaeche bleibt nur `
-        + `${(a.zeichnung * 100).toFixed(0)} % der Zeichnung uebrig (mindestens `
-        + `${(ZEICHNUNG_MIN * 100).toFixed(0)} %). Verblassen heisst "alt und ueberwachsen", `
-        + 'nicht "weg" - eine gleichmaessige Flaeche ist keine Kulisse mehr, sondern ein Fleck.');
+    if (soll !== undefined && a.wirkung > soll * WIRKUNG_DECKEL) {
+      fehler.push(`${a.karte}: das Verblassen aendert im Mittel ${a.wirkung.toFixed(1)} `
+        + `Farbschritte, bisher waren es ${soll.toFixed(1)}. Verblassen heisst "alt und `
+        + 'ueberwachsen", nicht "weg" - mit der Farbe geht auch die Zeichnung, fuer die die '
+        + 'Kartenbilder bezahlt wurden.');
     }
   }
   if (fehler.length) {

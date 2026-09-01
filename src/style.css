@@ -252,7 +252,13 @@ html, body {
 .inspector {
   position: absolute; z-index: 3; top: calc(56px + var(--sat)); right: calc(12px + var(--sar));
   bottom: calc(58px + var(--sab));
-  width: 208px; padding: 12px;
+  /* **Eine Breite, nicht drei.** 208 galt als Grundwert, das Telefon bekam
+     seit jeher 250, und in v206 bekam der Schreibtisch ebenfalls 250 - womit
+     die 208 nur noch fuer Fenster zwischen 481 und 639 Punkten Hoehe galten,
+     also fuer das einzige Format, das nie jemand gemessen hat. Dort war der
+     Turmname um einen Punkt abgeschnitten. Jetzt steht die Zahl einmal da
+     (Regel 15). */
+  width: 250px; padding: 12px;
   /* Nur die Werteliste rollt, nicht der ganze Steg - sonst wandern die
      Knoepfe beim Rollen mit aus dem Bild. */
   display: flex; flex-direction: column;
@@ -371,28 +377,23 @@ html, body {
    waren es **748** - ein Glasstreifen ueber 87 Prozent des Bildes, dessen
    untere Haelfte leer stand.
 
-   Die Schwelle ist keine runde Zahl aus dem Nichts: das Zielgeraet ist im
-   Querformat 390 Punkte hoch (das hoechste iPhone quer rund 430), die beiden
-   Schreibtischfenster, die das Browsertor faehrt, 900 und 850. 640 liegt
-   zwischen beiden Gruppen und nahe an keiner.
+   Die Schwelle ist nicht gewaehlt, sondern die vorhandene: 480 Punkte trennt
+   in diesem Blatt seit jeher das flache Geraet vom Rest (`max-height: 480px`,
+   der Kompaktblock). Alles darueber ist ein Fenster, das man ziehen kann, und
+   dort soll der Steg an seinem Inhalt enden. Der erste Entwurf setzte 640 und
+   liess damit ein Band von 481 bis 639 stehen, in dem er weiterhin ueber die
+   ganze Hoehe spannte - ein Format, das niemand misst, ist genau das, in dem
+   der naechste Fehler wohnt: dort war prompt der Turmname abgeschnitten.
 
    `min-height: 33%` wird hier ausdruecklich abgeschaltet und nicht bloss
    ueberschrieben: ein Prozentsatz gegen eine Hoehe, die selbst vom Inhalt
    kommt, ist nicht definiert - und eine Regel, deren Wirkung man nicht
    vorhersagen kann, ist keine. Gebraucht wird sie hier auch nicht: der Steg
    ist so hoch, wie die Liste es verlangt. */
-@media (min-height: 640px) {
+@media (min-height: 481px) {
   .inspector {
     bottom: auto;
     max-height: calc(100% - 56px - var(--sat) - 58px - var(--sab));
-    /* **Und breiter, weil sonst der Name abgeschnitten wird.**
-       Der Steg ist 208 Punkte breit, das Telefon bekommt seit jeher 250. Am
-       Schreibtisch blieben dem Namen damit 41 Punkte neben Rolle und Kreuz -
-       aus "Bogenturm" wurde "Bo…", waehrend rechts daneben "DAUERFEUER" in
-       voller Laenge stand. Dieselbe Falle wie in v201, nur an einem Fenster,
-       das damals niemand gemessen hat. Mit 250 bleiben dem Namen 95, und
-       "Scharfschuetze" braucht 90. */
-    width: 250px;
   }
   .insp-stats { min-height: 0; }
 }
@@ -872,7 +873,7 @@ html, body {
   /* Auf flachen Geräten liegen die Ausbauzweige nebeneinander statt
      untereinander - sonst passen sie nicht auf den Bildschirm. */
   .inspector {
-    width: 250px; padding: 9px;
+    padding: 9px;
     top: calc(48px + var(--sat)); bottom: calc(54px + var(--sab));
   }
   .insp-ups { flex-direction: row; gap: 5px; }

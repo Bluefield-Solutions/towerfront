@@ -590,6 +590,57 @@ if (!start) {
     }
   }
 
+  // **Der Steg mit einer KURZEN Liste - der Gegner aus der Wellenvorschau.**
+  //
+  // Er ist der Zustand, in dem auf dem Telefon Platz uebrig bleibt: fuenf
+  // Zeilen in einem Steg, der so hoch ist wie das Fenster, ohne Ausbau und
+  // ohne Fusszeile. Ein Raster verteilt uebrigen Platz auf seine Zeilen -
+  // gemessen zog es Wert und Beschriftung rund zwanzig Punkte auseinander.
+  // Beim Turm faellt das nicht auf, weil dessen Liste den Steg fuellt; genau
+  // deshalb hat die Gegenprobe zu `align-content` an ihm nichts bewiesen.
+  {
+    const auf = await seite.evaluate(() => {
+      const k = document.querySelector('.next-eintrag');
+      if (!k) return false;
+      k.click();
+      return true;
+    });
+    await seite.waitForTimeout(350);
+    const gegner = auf ? await seite.evaluate(() => {
+      const el = document.getElementById('inspector');
+      if (!el || el.hidden) return null;
+      const dts = [...el.querySelectorAll('.insp-stats dt')];
+      const dds = [...el.querySelectorAll('.insp-stats dd')];
+      let schlimm = { was: '', ab: -1 };
+      for (let i = 0; i < Math.min(dts.length, dds.length); i++) {
+        const a = dts[i].getBoundingClientRect(), b = dds[i].getBoundingClientRect();
+        const ab = Math.abs((a.top + a.height / 2) - (b.top + b.height / 2));
+        if (ab > schlimm.ab) schlimm = { was: dts[i].textContent.trim(), ab };
+      }
+      const n = el.querySelector('.insp-name');
+      return { zeilen: dts.length, schlimm,
+        name: n ? n.textContent.trim() : '', ab: n ? n.scrollWidth - n.clientWidth : 0 };
+    }) : null;
+    if (!gegner || !gegner.zeilen) {
+      fail('Der Gegner aus der Wellenvorschau laesst sich nicht oeffnen - der Zustand '
+        + 'mit der kuerzesten Werteliste bleibt damit ungemessen.');
+    } else {
+      console.log(`Gegnerinfo: ${gegner.zeilen} Wertezeilen, schlimmster Abstand `
+        + `${Math.round(gegner.schlimm.ab)} P (${gegner.schlimm.was}), Name "${gegner.name}"`);
+      if (gegner.schlimm.ab > 12) {
+        fail(`Gegnerinfo: "${gegner.schlimm.was}" steht ${Math.round(gegner.schlimm.ab)} `
+          + 'Punkte von seinem Wert entfernt (erlaubt 12). Bei einer kurzen Liste '
+          + 'verteilt das Raster den uebrigen Platz auf seine Zeilen.');
+      }
+      if (gegner.ab > 0) {
+        fail(`Gegnerinfo: der Gegnername ist abgeschnitten ("${gegner.name}", `
+          + `${Math.round(gegner.ab)} Punkte fehlen).`);
+      }
+    }
+    await seite.evaluate(() => document.getElementById('i-close')?.click());
+    await seite.waitForTimeout(250);
+  }
+
   // Mit angeschalteter Messtafel. Sie liegt ueber dem Feld, und der erste
   // Entwurf legte sie ausgerechnet auf "Welle starten".
   await inZustand('mit Messtafel',
@@ -1336,7 +1387,15 @@ if (streuung < 6) {
 // Schreibtisch laesst sich nicht drehen. Der Hinweis gehoert an Geraete, die
 // man kippt - `pointer: coarse` -, nicht an Fenster, die man zieht.
 {
-  for (const [name, w, h] of [['breit', 1400, 900], ['schmal', 700, 850]]) {
+  // **Drei Fenster, und das dritte ist kein Schmuck.**
+  //
+  // 'flach' liegt mit 620 Punkten Hoehe knapp UNTER der Schwelle, ab der der
+  // Pruefsteg inhaltshoch wird (640). Dort ist er also fest so hoch wie das
+  // Fenster und hat trotzdem Platz uebrig - der einzige Zustand, in dem ein
+  // Raster seine Zeilen auseinanderziehen kann. Auf dem Telefon ist die Liste
+  // dafuer zu lang, am Schreibtisch der Steg zu kurz; ohne dieses Fenster
+  // bewies die Gegenprobe dazu nichts, und genau das hat sie gemeldet.
+  for (const [name, w, h] of [['breit', 1400, 900], ['schmal', 700, 850], ['flach', 1000, 620]]) {
     // Kein `isMobile`, kein `hasTouch`: das ist hier die ganze Frage. So
     // meldet die Kaskade `pointer: fine`, also Maus.
     const ctx3 = await browser.newContext({ viewport: { width: w, height: h } });
@@ -1527,7 +1586,7 @@ if (streuung < 6) {
     // zu verteilen, und die Zahl ist grundlos richtig. Dieselbe Sorte Lücke
     // wie beim MouseOver eine Fassung davor: gemessen wurde ein Zustand, den
     // der Nutzer nicht hat.
-    if (drin && name === 'breit') {
+    if (drin) {
       await s3.click('#tb-arrow').catch(() => {});
       await s3.waitForTimeout(300);
       const steg = await s3.evaluate(() => {
@@ -1567,30 +1626,32 @@ if (streuung < 6) {
         };
       });
       if (!steg) {
-        fail('Schreibtischprobe breit: der Pruefsteg liess sich nicht oeffnen - '
+        fail(`Schreibtischprobe ${name}: der Pruefsteg liess sich nicht oeffnen - `
           + 'ohne ihn misst dieser Block nichts.');
       } else {
-        console.log(`Pruefsteg breit: ${steg.hoehe} von ${steg.fensterhoehe} Punkten hoch, `
+        console.log(`Pruefsteg ${name}: ${steg.hoehe} von ${steg.fensterhoehe} Punkten hoch, `
           + `${steg.leer} leer, ${steg.zeilen} Wertezeilen, schlimmster Abstand `
           + `Wert/Beschriftung ${Math.round(steg.schlimmstesPaar.ab)} P `
           + `(${steg.schlimmstesPaar.was}), Name "${steg.nameText}"`);
         if (!steg.zeilen) {
-          fail('Schreibtischprobe breit: der Pruefsteg zeigt keine einzige Wertezeile - '
+          fail(`Schreibtischprobe ${name}: der Pruefsteg zeigt keine einzige Wertezeile - `
             + 'die Messung darunter unterscheidet dann nichts.');
         }
         if (steg.schlimmstesPaar.ab > 12) {
-          fail(`Schreibtischprobe breit: "${steg.schlimmstesPaar.was}" steht `
+          fail(`Schreibtischprobe ${name}: "${steg.schlimmstesPaar.was}" steht `
             + `${Math.round(steg.schlimmstesPaar.ab)} Punkte von seinem Wert entfernt `
             + '(erlaubt 12). Wert und Beschriftung gehoeren sichtbar zusammen; auf einem '
             + 'hohen Fenster zieht ein Raster ohne `align-content` seine Zeilen auseinander.');
         }
-        if (steg.leer > 60) {
-          fail(`Schreibtischprobe breit: unter dem Inhalt stehen ${steg.leer} Punkte `
+        // Der leere Rest gilt nur oberhalb der Schwelle: darunter ist der
+        // Steg absichtlich so hoch wie das Fenster.
+        if (h >= 481 && steg.leer > 60) {
+          fail(`Schreibtischprobe ${name}: unter dem Inhalt stehen ${steg.leer} Punkte `
             + 'leerer Steg (erlaubt 60). Er soll dort enden, wo sein Inhalt endet, statt '
             + 'als Glasstreifen ueber das halbe Bild zu laufen.');
         }
         if (steg.nameAb > 0) {
-          fail(`Schreibtischprobe breit: der Turmname ist abgeschnitten ("${steg.nameText}", `
+          fail(`Schreibtischprobe ${name}: der Turmname ist abgeschnitten ("${steg.nameText}", `
             + `${steg.nameAb} Punkte fehlen). Am Schreibtisch ist Platz genug - er fehlt nur, `
             + 'weil der Steg dort so schmal ist wie auf dem Telefon.');
         }

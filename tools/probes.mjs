@@ -945,13 +945,17 @@ const PROBEN = [
   },
   {
     // Und die Gegenrichtung: verblasst sie ZUVIEL, ist die Zeichnung weg,
-    // fuer die die Kartenbilder bezahlt wurden. Das faengt das Grafiktor,
-    // das den Untergrund gegen sein Band haelt.
+    // fuer die die Kartenbilder bezahlt wurden.
+    //
+    // Diese Probe stand zuerst am Grafiktor und bewies dort nichts: das
+    // Verblenden zieht zum MITTEL des Gelaendes hin, der Mittelwert des
+    // Untergrunds bleibt also erhalten und seine Helligkeit faellt aus keinem
+    // Band. Gemessen werden muss die Streuung, und die misst `wegdeckung`.
     name: 'Die Kulisse verblasst bis zur Unkenntlichkeit',
     datei: 'src/gfx/terrain.ts',
     regel: /const KULISSE_STAERKE = 0\.60;/,
     ersatz: 'const KULISSE_STAERKE = 1;',
-    tor: 'grafiktor',
+    tor: 'wegdeckungtor',
   },
   {
     // **Der Steg spannt wieder ueber die ganze Fensterhoehe.**

@@ -120,7 +120,7 @@ bekommt deshalb Abstand.
 | B4 | Fehlgriff kostenlos | **erledigt in v202** — er kostet nichts mehr, `bauHinweis` sagt warum, und die Wahl bleibt | keiner |
 | B5 | Abbruch so leicht wie Wahl | **erfüllt** — ein zweiter Tipp auf denselben Turmknopf legt die Wahl zurück. Das gab es schon, es stand nur nirgends | keiner |
 | B6 | Steg getrennt | **erledigt in v201** — Name, Werte, Handlungen getrennt; Verkaufen in der Fusszeile | keiner |
-| B7 | passt hinein | **erledigt in v201** — 286 Punkte Inhalt in 288, mit und ohne aufgeklappte Ziellogik. Das Browsertor misst es | keiner |
+| B7 | passt hinein | **erledigt in v201, in v206 nachgezogen** — 286 Punkte Inhalt in 288, mit und ohne aufgeklappte Ziellogik. Gemessen wurde das bis v205 nur auf 844 × 390; auf einem hohen Fenster war der Steg 748 von 862 Punkten hoch und zog seine Wertezeilen auf 99 Punkte auseinander. Das Browsertor misst ihn jetzt auf beiden Wegen | keiner |
 
 **Stand nach v203: alle sieben erfüllt.**
 Beim ersten Abgleich waren vier ganz offen und zwei halb.

@@ -918,6 +918,41 @@ const PROBEN = [
     tor: 'bauflaechetor',
   },
   {
+    // **Das Werteraster zieht seine Zeilen wieder auseinander.**
+    //
+    // Auf dem Telefon faellt es nicht auf, weil die Liste dort ueberlaeuft -
+    // es ist kein Platz zu verteilen. Am Schreibtisch standen Wert und
+    // Beschriftung 44 Punkte auseinander.
+    name: 'Der Pruefsteg zieht seine Wertezeilen auseinander',
+    datei: 'src/style.css',
+    suche: '  align-content: start;',
+    ersatz: '  align-content: stretch;',
+    tor: 'browsertor',
+  },
+  {
+    // **Der Steg spannt wieder ueber die ganze Fensterhoehe.**
+    //
+    // 748 von 862 Punkten, die untere Haelfte leer - ein Glasstreifen ueber
+    // dem halben Bild.
+    name: 'Der Pruefsteg spannt ueber die ganze Fensterhoehe',
+    datei: 'src/style.css',
+    regel: /    max-height: calc\(100% - 56px - var\(--sat\) - 58px - var\(--sab\)\);/,
+    ersatz: '    bottom: calc(58px + var(--sab));',
+    tor: 'browsertor',
+  },
+  {
+    // **Die Rolle nimmt sich wieder den Platz des Namens.**
+    //
+    // Aus "Bogenturm" wurde "Bo…", waehrend "DAUERFEUER" daneben in voller
+    // Laenge stand. Die Pruefung auf ueberlaufenden Text sieht das NICHT -
+    // sie ueberspringt, was sich selbst abschneidet.
+    name: 'Der Turmname wird von der Rolle verdraengt',
+    datei: 'src/style.css',
+    suche: '  flex: 0 100 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;',
+    ersatz: '  flex: 0 0 auto;',
+    tor: 'browsertor',
+  },
+  {
     // **Ein Werkzeug rechnet die Anzeigegroesse wieder selbst.**
     //
     // Dieselbe Falle wie beim Chromium-Pfad, nur stiller: zwei Fassungen

@@ -523,6 +523,25 @@ if (!start) {
             fail(`Prüfsteg (Ziellogik ${wie}): Text laeuft ueber seinen Kasten hinaus - `
               + passt.ueber.join('; '));
           }
+          // **Und der Name eigens**, weil ihn die Pruefung darueber nicht
+          // sieht: sie ueberspringt alles mit `overflow: hidden`, und genau
+          // das traegt er - er kuerzt sich mit drei Punkten ab, statt seinen
+          // Nachbarn zu ueberschreiben. Sichtbar bleibt er dabei trotzdem
+          // unvollstaendig, und der Name ist das Wort, an dem man den Turm
+          // erkennt. Auf 250 Punkten Steg blieben ihm bis v205 genau 67.
+          {
+            const kurz = await seite.evaluate(() => {
+              const n = document.querySelector('.insp-name');
+              return n && n.scrollWidth > n.clientWidth
+                ? { text: n.textContent.trim(), fehlt: Math.round(n.scrollWidth - n.clientWidth) }
+                : null;
+            });
+            if (kurz) {
+              fail(`Prüfsteg (Ziellogik ${wie}): der Turmname ist abgeschnitten `
+                + `("${kurz.text}", ${kurz.fehlt} Punkte fehlen). Wenn der Kopf eng wird, `
+                + 'muss die Rolle nachgeben, nicht der Name.');
+            }
+          }
         }
         // Zustand zuruecklassen, wie er war: die Pruefungen danach messen
         // die Werteliste, und die gibt bei offener Ziellogik absichtlich
@@ -1464,6 +1483,82 @@ if (streuung < 6) {
           + 'Schreibtisch sieht ein Knopf ohne Rueckmeldung aus wie eine Beschriftung.');
       } else {
         console.log('Zeiger: die Knoepfe antworten und lassen wieder los.');
+      }
+    }
+
+    // **Und wie steht der Pruefsteg auf einem HOHEN Fenster?** (v206)
+    //
+    // Bis v205 spannte er von oben nach unten, also ueber die ganze
+    // Fensterhoehe. Auf dem Telefon quer sind das 276 Punkte und genau
+    // richtig; auf 1920 x 862 waren es **748**, und das Werteraster verteilte
+    // den uebrigen Platz auf seine Zeilen: sechs Zeilen zu 99 Punkten, Wert
+    // oben, Beschriftung mittig, **44 Punkte dazwischen**. Gemeldet als "der
+    // Pruefsteg ist am Schreibtisch eine ueberhohe Spalte".
+    //
+    // Das Browsertor hat es nicht gesehen, weil es den Steg nur auf 844 x 390
+    // gemessen hat - dort passt die Liste ohnehin nicht, es bleibt kein Platz
+    // zu verteilen, und die Zahl ist grundlos richtig. Dieselbe Sorte Lücke
+    // wie beim MouseOver eine Fassung davor: gemessen wurde ein Zustand, den
+    // der Nutzer nicht hat.
+    if (drin && name === 'breit') {
+      await s3.click('#tb-arrow').catch(() => {});
+      await s3.waitForTimeout(300);
+      const steg = await s3.evaluate(() => {
+        const el = document.getElementById('inspector');
+        if (!el || el.hidden) return null;
+        const r = el.getBoundingClientRect();
+        const paare = [];
+        const dts = [...el.querySelectorAll('.insp-stats dt')];
+        const dds = [...el.querySelectorAll('.insp-stats dd')];
+        for (let i = 0; i < Math.min(dts.length, dds.length); i++) {
+          const a = dts[i].getBoundingClientRect(), b = dds[i].getBoundingClientRect();
+          paare.push({ was: dts[i].textContent.trim(),
+            ab: Math.abs((a.top + a.height / 2) - (b.top + b.height / 2)) });
+        }
+        // Wieviel Steg steht unter dem letzten Kind leer?
+        let unten = r.top;
+        for (const k of el.children) {
+          const kr = k.getBoundingClientRect();
+          if (kr.height > 0) unten = Math.max(unten, kr.bottom);
+        }
+        const name = el.querySelector('.insp-name');
+        return {
+          hoehe: Math.round(r.height), fensterhoehe: innerHeight,
+          leer: Math.round(r.bottom - unten),
+          schlimmstesPaar: paare.reduce((m, p) => (p.ab > m.ab ? p : m), { was: '-', ab: 0 }),
+          zeilen: paare.length,
+          nameAb: name ? Math.round(name.scrollWidth - name.clientWidth) : 0,
+          nameText: name ? name.textContent.trim() : '',
+        };
+      });
+      if (!steg) {
+        fail('Schreibtischprobe breit: der Pruefsteg liess sich nicht oeffnen - '
+          + 'ohne ihn misst dieser Block nichts.');
+      } else {
+        console.log(`Pruefsteg breit: ${steg.hoehe} von ${steg.fensterhoehe} Punkten hoch, `
+          + `${steg.leer} leer, ${steg.zeilen} Wertezeilen, schlimmster Abstand `
+          + `Wert/Beschriftung ${Math.round(steg.schlimmstesPaar.ab)} P `
+          + `(${steg.schlimmstesPaar.was}), Name "${steg.nameText}"`);
+        if (!steg.zeilen) {
+          fail('Schreibtischprobe breit: der Pruefsteg zeigt keine einzige Wertezeile - '
+            + 'die Messung darunter unterscheidet dann nichts.');
+        }
+        if (steg.schlimmstesPaar.ab > 12) {
+          fail(`Schreibtischprobe breit: "${steg.schlimmstesPaar.was}" steht `
+            + `${Math.round(steg.schlimmstesPaar.ab)} Punkte von seinem Wert entfernt `
+            + '(erlaubt 12). Wert und Beschriftung gehoeren sichtbar zusammen; auf einem '
+            + 'hohen Fenster zieht ein Raster ohne `align-content` seine Zeilen auseinander.');
+        }
+        if (steg.leer > 60) {
+          fail(`Schreibtischprobe breit: unter dem Inhalt stehen ${steg.leer} Punkte `
+            + 'leerer Steg (erlaubt 60). Er soll dort enden, wo sein Inhalt endet, statt '
+            + 'als Glasstreifen ueber das halbe Bild zu laufen.');
+        }
+        if (steg.nameAb > 0) {
+          fail(`Schreibtischprobe breit: der Turmname ist abgeschnitten ("${steg.nameText}", `
+            + `${steg.nameAb} Punkte fehlen). Am Schreibtisch ist Platz genug - er fehlt nur, `
+            + 'weil der Steg dort so schmal ist wie auf dem Telefon.');
+        }
       }
     }
 

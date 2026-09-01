@@ -279,8 +279,19 @@ html, body {
    "Scharfschuetze · Stufe 2" braucht rund 190 Punkte, die Zeile hat 178 -
    es wurde zu "Scharfschuetze · Stuf…". Als eigene, kleine Angabe kostet
    die Stufe 46 Punkte und der Name behaelt seine volle Breite. */
+/* **Und wenn es eng wird, gibt die ROLLE nach, nicht der Name.**
+   Bis v205 stand hier `flex: 0 0 auto`: die Rolle nahm, was sie brauchte, und
+   was uebrig blieb, bekam der Name. "DAUERFEUER" braucht rund 100 Punkte,
+   der Kopf hat 226, das Kreuz 44 - fuer "Bogenturm" blieben 67, und es
+   wurde zu "Bo…". Gemessen hat es niemand: die Pruefung auf ueberlaufenden
+   Text ueberspringt absichtlich alles, was `overflow: hidden` traegt, und
+   genau das traegt der Name.
+   Ein hoher Schrumpffaktor statt `flex-shrink: 0` am Namen: so bleibt die
+   Rolle sichtbar, solange sie kann, und kuerzt sich selbst, statt den Namen
+   zu verdraengen. */
 .insp-stufe {
-  flex: 0 0 auto; font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  flex: 0 100 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--muted); white-space: nowrap;
 }
 .insp-stufe:empty { display: none; }
@@ -322,6 +333,16 @@ html, body {
 .insp-stats {
   margin: 0 0 8px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px;
   overflow-y: auto; min-height: 0; flex: 1 1 auto;
+  /* **Die Zeilen wachsen nicht mit dem Fenster.**
+     Ohne diese Zeile verteilt das Raster den uebrigen Platz auf seine Zeilen -
+     auf dem Telefon faellt das nicht auf, weil die Liste dort ohnehin
+     ueberlaeuft. Am Schreibtisch schon: gemessen auf 1920 x 862 waren die
+     sechs Zeilen **99 Punkte hoch** statt 22, und weil der Wert oben in
+     seiner Zeile sitzt und die Beschriftung mittig, standen die beiden
+     **44 Punkte auseinander** - Wert und Bezeichnung gehoerten sichtbar
+     nicht mehr zusammen. Gemeldet als "der Pruefsteg ist am Schreibtisch
+     eine ueberhohe Spalte". */
+  align-content: start;
   /* Der Boden, unter den die Werteliste nicht darf.
      Bis v137 stand hier nur `flex: 1 1 auto` - und weil Kopfzeile, Ausbau,
      Ziellogik und Verkaufen zusammen mehr verlangten, als der Steg hoch ist,
@@ -343,6 +364,39 @@ html, body {
    Naturgesetz: die Ziellogik ist ein Augenblick, die Werte sind der
    Dauerzustand. */
 .inspector[data-ziel="1"] .insp-stats { min-height: 0; }
+/* **Und auf einem hohen Fenster hoert der Steg auf, wo sein Inhalt aufhoert.**
+
+   Bis v205 spannte er von `top` bis `bottom`, also ueber die ganze Fensterhoehe:
+   auf dem iPhone quer sind das 276 Punkte und genau richtig, auf 1920 x 862
+   waren es **748** - ein Glasstreifen ueber 87 Prozent des Bildes, dessen
+   untere Haelfte leer stand.
+
+   Die Schwelle ist keine runde Zahl aus dem Nichts: das Zielgeraet ist im
+   Querformat 390 Punkte hoch (das hoechste iPhone quer rund 430), die beiden
+   Schreibtischfenster, die das Browsertor faehrt, 900 und 850. 640 liegt
+   zwischen beiden Gruppen und nahe an keiner.
+
+   `min-height: 33%` wird hier ausdruecklich abgeschaltet und nicht bloss
+   ueberschrieben: ein Prozentsatz gegen eine Hoehe, die selbst vom Inhalt
+   kommt, ist nicht definiert - und eine Regel, deren Wirkung man nicht
+   vorhersagen kann, ist keine. Gebraucht wird sie hier auch nicht: der Steg
+   ist so hoch, wie die Liste es verlangt. */
+@media (min-height: 640px) {
+  .inspector {
+    bottom: auto;
+    max-height: calc(100% - 56px - var(--sat) - 58px - var(--sab));
+    /* **Und breiter, weil sonst der Name abgeschnitten wird.**
+       Der Steg ist 208 Punkte breit, das Telefon bekommt seit jeher 250. Am
+       Schreibtisch blieben dem Namen damit 41 Punkte neben Rolle und Kreuz -
+       aus "Bogenturm" wurde "Bo…", waehrend rechts daneben "DAUERFEUER" in
+       voller Laenge stand. Dieselbe Falle wie in v201, nur an einem Fenster,
+       das damals niemand gemessen hat. Mit 250 bleiben dem Namen 95, und
+       "Scharfschuetze" braucht 90. */
+    width: 250px;
+  }
+  .insp-stats { min-height: 0; }
+}
+
 /* Rollhinweis (D24).
    Technisch rollte die Werteliste schon immer, sichtbar war es nicht: auf dem
    iPhone quer endet sie mitten in einer Zeile, und ein halb abgeschnittenes

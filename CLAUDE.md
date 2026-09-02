@@ -326,7 +326,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v213. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v214. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -401,13 +401,30 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   Damit hängt A am Kartenbild, nicht an den Zahlen — und die Reihenfolge
   ist **C vor A**, nicht umgekehrt.
 
-  **Schritt C ist in v211 bestellt** (`docs/Towerfront-BILDAUFTRAG.md`,
-  Abschnitt 8b): drei Kartenbilder mit genau der Straße, die das Spiel
-  benutzt, samt Referenzblatt aus `npm run wegvorlage` und Abnahmezahlen
-  (Schlauch ≥ 90 %, Rand ≥ 75 %, benutzte Straße ≥ 90 % je Karte). Die
-  Prompts stehen zum Kopieren bereit: `npm run bildprompt -- 8b.1` und so
-  fort. Der alte Abschnitt 8 ist als überholt gekennzeichnet, statt zwei
-  Bestellungen nebeneinander stehen zu lassen (Regel 15).
+  **Schritt C ist in v211 bestellt** (Abschnitt 8b) — und in v214 umgedreht.
+  Das Spiel kann den Weg **selbst zeichnen**; `src/gfx/terrain.ts` hat die
+  Bandzeichnung noch, sie war seit v36 nur abgeschaltet. Dann kann die
+  gemalte Straße gar nicht mehr von der benutzten abweichen, weil es keine
+  gibt: Mitte, Schlauch, Rand und Nutzung stehen **von Bauart auf 100 %**,
+  und D28-D wie D28-E lösen sich mit auf.
+
+  **Gemessen an einer Probe (v214, Spiralhain mit herausgerechneter
+  Straße):** der gezeichnete Weg überzeugt — breites Band mit Randsteinen,
+  auf fotografischem Boden lesbarer als die gemalte Straße. Das gezeichnete
+  **Gelände** überzeugt nicht: flache blaugraue Vektorklumpen mit harter
+  Kante, die neben dem Foto stehen wie aufgeklebt.
+
+  Deshalb ist `pfadImBild` in **`bildBringt: { weg, gelaende }`** aufgeteilt
+  — ein Schalter für beides war eine Vereinfachung zu viel. Alle drei Karten
+  stehen unverändert auf `{ weg: true, gelaende: true }`; umgestellt wird
+  erst, wenn ein Bild ohne Weg da ist.
+
+  **Die Bestellung dafür steht als Abschnitt 8c**: Gelände ohne Weg, mit
+  einer einzigen harten Abnahmezahl — Farbabstand zwischen dem Streifen
+  unter der Bahn und dem Mittel der Karte **höchstens 25 Farbschritte**
+  (heute 85,0 / 79,2 / 33,3). `npm run kartenprobe` misst genau das, sobald
+  eine Karte auf `weg: false` steht. Abschnitt 8b bleibt als Rückfalllinie
+  vollständig stehen.
 
   **Zwei Messfunde nebenbei, beide älter als diese Runde:**
   1. **Die Bahnen sind breiter als die Straße, auf der sie laufen.** Seit

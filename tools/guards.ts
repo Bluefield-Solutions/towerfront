@@ -114,7 +114,7 @@ for (const map of MAPS) {
       // Bildbestellung, nicht in eine Nachbesserung.
       if (detour < 1.8) {
         const text = `${map.id}, Bahn ${i + 1}: Umwegfaktor ${detour.toFixed(2)} - der Weg ist fast eine Gerade.`;
-        if (map.pfadImBild) warn(`${text} Fuer das naechste Bild mehr Windungen bestellen.`);
+        if (map.bildBringt?.weg ?? true) warn(`${text} Fuer das naechste Bild mehr Windungen bestellen.`);
         else fail(text);
       }
       if (turns < 3) {

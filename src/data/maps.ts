@@ -129,12 +129,28 @@ export interface GameMap {
    *  aufgeschriebene Zahl ohne Nachpruefung ist in diesem Verzeichnis schon
    *  vier Runden lang falsch weitergelaufen. */
   ziel?: Vec;
-  /** Bringt das Kartenbild den Weg schon mit?
+  /** Was das Kartenbild schon mitbringt - und was die Engine deshalb NICHT
+   *  mehr zeichnet.
    *
-   *  Dann zeichnet die Engine ihn nicht mehr. Das war der Sinn der Uebung:
-   *  drei Bildsprachen auf einem Bild - weich gezeichneter Untergrund,
-   *  flaechig gezeichneter Weg, gerenderte Figuren - werden zu zweien. */
-  pfadImBild?: boolean;
+   *  Bis v213 stand hier ein einzelnes `pfadImBild`, und es steuerte beides
+   *  auf einmal: Weg und Gelaende. Das war eine Vereinfachung zu viel.
+   *  Gemessen (v214, Probe auf dem Spiralhain) ist naemlich das eine gut und
+   *  das andere nicht:
+   *
+   *   - **Der Weg von der Engine ueberzeugt.** Breites Band mit Randsteinen,
+   *     das der Bahn folgt, weil es aus ihr gerechnet wird. Auf einem
+   *     fotografischen Boden liest er sich besser als die gemalte Strasse -
+   *     und er kann gar nicht woanders liegen als die Bahn.
+   *   - **Das Gelaende von der Engine ueberzeugt nicht.** Flache blaugraue
+   *     Vektorklumpen mit harter Kante, die neben dem Foto stehen wie
+   *     aufgeklebt.
+   *
+   *  Deshalb zwei Schalter. Der Sinn der urspruenglichen Uebung bleibt: aus
+   *  drei Bildsprachen werden zwei - nur wird jetzt je Sache entschieden,
+   *  welche der beiden es ist.
+   *
+   *  Ohne Angabe bringt das Bild beides mit (der Stand aller drei Karten). */
+  bildBringt?: { weg: boolean; gelaende: boolean };
   /** Ein Tor, das einen Zuweg im Takt sperrt (C24).
    *
    *  Der Punkt ist nicht die Sperre, sondern was sie erzwingt: der Druck
@@ -226,7 +242,7 @@ export const MAP_SPIRALHAIN: GameMap = {
     { x: 1069, y: 1004, r: 27, art: 'locker', farbe: '#3a2003' },
     { x: 1433, y: 953, r: 25, art: 'locker', farbe: '#2e1c07' },
   ],
-  pfadImBild: true,
+  bildBringt: { weg: true, gelaende: true },
   hint: { x: 200, y: 200 },
   ziel: { x: 1734, y: 506 },   // gemessen mit `npm run zielplatte`
   waves: PLAN_SPIRALHAIN,
@@ -328,7 +344,7 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
     { x: 1112, y: 812, r: 50, art: 'locker', farbe: '#4a3625' },
     { x: 285, y: 368, r: 36, art: 'hart', farbe: '#65482d' },
   ],
-  pfadImBild: true,
+  bildBringt: { weg: true, gelaende: true },
   hint: { x: 1120, y: 180 },
   ziel: { x: 1747, y: 480 },   // gemessen mit `npm run zielplatte`
   // Das Tor sitzt auf der mittleren Bahn (C24).
@@ -441,7 +457,7 @@ export const MAP_FROSTSPALTE: GameMap = {
     { x: 312, y: 979, r: 32, art: 'kalt', farbe: '#063e62' },
     { x: 1792, y: 387, r: 31, art: 'locker', farbe: '#4b525b' },
   ],
-  pfadImBild: true,
+  bildBringt: { weg: true, gelaende: true },
   hint: { x: 200, y: 200 },
   ziel: { x: 1734, y: 518 },   // gemessen mit `npm run zielplatte`
   waves: PLAN_FROSTSPALTE,

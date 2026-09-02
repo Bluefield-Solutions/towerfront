@@ -96,7 +96,7 @@ export function terrainAuftrag(
   };
 
   // Bringt das Bild den Weg schon mit, wird hier nichts gezeichnet.
-  if (!map.pfadImBild) {
+  if (!(map.bildBringt?.weg ?? true)) {
     for (const p of lanes) { g.fillStyle = 'rgba(6,10,18,0.5)'; ribbon(p, 12); }
     for (const p of lanes) { g.fillStyle = pal.pathEdge; ribbon(p, 0); }
     for (const p of lanes) { g.fillStyle = pal.path; ribbon(p, -9); }
@@ -104,7 +104,7 @@ export function terrainAuftrag(
   }
 
   // Randsteine nur, wo der Weg auch gezeichnet wird.
-  if (!map.pfadImBild) {
+  if (!(map.bildBringt?.weg ?? true)) {
   // Randsteine entlang beider Raender. Sie folgen der wechselnden Breite mit,
   // also verengt sich mit dem Weg auch seine Einfassung.
   for (const p of lanes) {
@@ -132,7 +132,7 @@ export function terrainAuftrag(
   // Felsfelder und Dickicht. Man soll auf einen Blick sehen, *warum* dort
   // nichts hinpasst - nicht, dass es verboten waere.
   // Bringt das Bild sein Gelaende schon mit, wird nichts darueber gemalt.
-  for (const gr of (map.pfadImBild ? [] : map.rough)) {
+  for (const gr of ((map.bildBringt?.gelaende ?? true) ? [] : map.rough)) {
     const n = 9;
     g.save();
     g.translate(gr.x, gr.y);

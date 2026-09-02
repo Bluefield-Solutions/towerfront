@@ -1,6 +1,6 @@
 # Towerfront — Bildauftrag
 
-Stand: v213 · 02.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v214 · 02.09.2026 · **Auftragsdokument für den Bild-Agenten**
 
 Dieses Dokument ist die vollständige Bestellung. Es enthält alles, was zum
 Erzeugen der Bilder nötig ist: Stil, Maße, Blickrichtung, Dateinamen,
@@ -1330,9 +1330,16 @@ vignette, no border.
 
 ## 8b. Nachbestellung D28-C — **drei Kartenbilder mit genau der Straße, die das Spiel benutzt** (v211)
 
-> **Dies ist die wichtigste offene Bestellung.** Sie beantwortet drei
-> Meldungen des Nutzers auf einmal: „die Gegner kommen nur über einen Weg",
-> „ich kann auf die Straße bauen" und „zu viel Weg, zu wenig Fläche".
+> **Zurückgestellt seit v214 — die gültige Bestellung steht in Abschnitt 8c.**
+> Der Grund ist kein Mangel dieses Auftrags, sondern eine Einsicht: das Spiel
+> kann den Weg **selbst zeichnen**, und dann kann er gar nicht woanders
+> liegen als die Bahn. Ein Bild, das keine Straße mitbringt, ist außerdem
+> ungleich leichter zu treffen — es gibt keine Geometrie zu befolgen.
+> Dieser Abschnitt bleibt vollständig stehen: er ist die Rückfalllinie,
+> falls der gezeichnete Weg im Spiel doch nicht überzeugt. Solange
+> `bildBringt.weg` auf `false` steht, gilt 8c.
+
+Der Befund, der 8b ausgelöst hat, gilt unverändert weiter:
 
 **Der Befund, der sie auslöst — alles gemessen, nichts geschätzt:**
 
@@ -1549,6 +1556,168 @@ snow field, never road-coloured.
 CALM: this is a background. Detail density must stay LOW — large soft areas,
 gentle variation, no busy snow texture, no scattered debris. The figures
 that walk on it carry the detail.
+
+No units, no vehicles, no buildings, no towers, no text, no grid, no
+vignette, no border.
+```
+
+---
+
+## 8c. Nachbestellung D28-C, zweiter Anlauf — **Gelände ohne Weg** (v214)
+
+**Die Umkehrung von 8b, und sie ist einfacher.** Das Spiel zeichnet den Weg
+wieder selbst: ein Band mit wechselnder Breite, Randsteinen und Einfassung,
+gerechnet aus der Bahn. Damit kann die gemalte Straße gar nicht mehr von der
+benutzten abweichen — sie existiert nicht.
+
+**Was das für die Abnahme heißt** (alles gemessen, nichts geschätzt):
+
+| Prüfung | mit gemaltem Weg (heute) | mit gezeichnetem Weg |
+|---|---|---|
+| `bahntreue` Mitte | 80,1 – 100 % | **100 % — von Bauart** |
+| `bahntreue` Schlauch | 43,9 – 51,5 % | **100 %** |
+| `bahntreue` Rand | 11,1 – 20,0 % | **100 %** |
+| `wegdeckung` benutzte Straße | 38 / 75 / 70 % | **100 %** |
+
+Und **D28-D** („Bauen auf gemalter Straße verbieten") sowie **D28-E** („der
+Schlauch ist breiter als die Farbe") lösen sich mit auf: es gibt keine gemalte
+Straße mehr, auf der niemand läuft.
+
+### Was das Bild jetzt liefert — und was ausdrücklich nicht
+
+**Nur den Boden.** Kein Weg, kein Pfad, kein Trampelpfad, keine Fahrspur,
+keine gepflasterte Plattform, keine Lichtung in Straßenform. Der Boden läuft
+gleichmäßig über die ganze Fläche.
+
+**Das Gelände dagegen bleibt im Bild.** Der gezeichnete Weg überzeugt, die
+gezeichneten Felsen nicht — gemessen an einer Probe in v214: flache blaugraue
+Vektorklumpen mit harter Kante, die neben dem Foto stehen wie aufgeklebt.
+Fels, Dickicht und Wasser gehören deshalb weiter gemalt, **an genau die
+Stellen, die das Referenzblatt als rote Ringe zeigt** — dort sperrt das Spiel
+das Bauen, und der Spieler muss sehen, warum.
+
+Ein Referenzblatt gehört also weiterhin dazu (`npm run wegvorlage`), aber nur
+noch für **eine** Sache: die roten Ringe. Das cremefarbene Band darauf zeigt
+jetzt, wo **kein** Boden gebraucht wird — dort liegt später der gezeichnete
+Weg, alles darunter wird verdeckt. Es schadet nichts, wenn dort Boden ist.
+
+### Abnahme
+
+| Prüfung | Heute | Gefordert |
+|---|---|---|
+| `npm run kartenprobe` Wegfreiheit | Farbabstand Bahn gegen Karte 85,0 / 79,2 / 33,3 | **≤ 25 Farbschritte** |
+| Seitenverhältnis | 1,778 | 1,778 (16:9), 2400 × 1350 |
+| `npm run gelaendetor` | grün | grün — jeder rote Ring bleibt unwegsam |
+| Helligkeit / Sättigung / Detaildichte | im Band | **0,30–0,36 / 0,45–0,55 / 1,5–3,0** |
+| Reines Schwarz | 0,0 – 0,2 % | höchstens **2 %** |
+
+**Die 25 sind nicht geraten.** Der Farbabstand zwischen dem Streifen unter der
+Bahn und dem Mittel der Karte misst heute 85,0 (Spiralhain), 79,2
+(Ascheschlucht) und 33,3 (Frostspalte) — die letzte ist die schwächste
+gemalte Straße, die das Spiel hat, und sie ist von der Frostebene kaum zu
+unterscheiden. Wer unter 25 liegt, hat dort keine Straße gemalt.
+
+Ablage: `art/roh/untergrund/` · **2400 × 1350 PNG** · Budget 700 KB je Datei.
+
+### 8c.1 `12_laubbreit.png` — Spiralhain, Laubwald **ohne Weg**
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+IGNORE the BACKGROUND and MARGIN lines of the style block: this is a
+full-bleed terrain map, not a cut-out asset. It has no transparency and no
+margin; the terrain runs to all four edges.
+
+SUBJECT: A top-down terrain map, 2400x1350, seen straight from directly
+above — no perspective, no horizon, no sky. Temperate deciduous forest floor
+in late summer: leaf litter, moss, patches of low grass, scattered broadleaf
+canopy, a few fallen trunks.
+
+NO ROAD. NO PATH. This is the single most important instruction in this
+brief, and it is the opposite of what such a map usually wants. Do not paint
+a road, a track, a trail, a worn line, a cleared lane, a paved circle or any
+elongated lighter strip anywhere on the image. The game draws its own road on
+top of this picture, and any painted one would sit next to it and contradict
+it. The ground is continuous from edge to edge.
+
+ROUGH GROUND: at the circles marked on the accompanying reference sheet,
+ground that reads as impassable — boulder fields, dense thickets, a marshy
+hollow. These MUST be in the image; the game no longer draws them. Distinctly
+darker or cooler than the forest floor, with a clear shape, so a player sees
+at a glance why nothing can be built there.
+
+CALM: this is a background. Detail density must stay LOW — large soft areas,
+gentle variation, no busy foliage texture, no small scattered debris. The
+figures that walk on it carry the detail.
+
+No units, no vehicles, no buildings, no towers, no text, no grid, no
+vignette, no border.
+```
+
+### 8c.2 `13_aschebreit.png` — Ascheschlucht, Aschefeld **ohne Weg**
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+IGNORE the BACKGROUND and MARGIN lines of the style block: this is a
+full-bleed terrain map, not a cut-out asset. It has no transparency and no
+margin; the terrain runs to all four edges.
+
+SUBJECT: A top-down terrain map, 2400x1350, seen straight from directly
+above — no perspective, no horizon, no sky. A cooled ash field: grey volcanic
+ash, cracked basalt shelves, a few dull ember fissures glowing faintly deep
+in the cracks.
+
+NO ROAD. NO PATH. This is the single most important instruction in this
+brief, and it is the opposite of what such a map usually wants. Do not paint
+a road, a track, a trail, a worn line, a cleared lane, a paved circle or any
+elongated lighter strip anywhere on the image. The game draws its own road on
+top of this picture, and any painted one would sit next to it and contradict
+it. The ground is continuous from edge to edge.
+
+ROUGH GROUND: at the circles marked on the accompanying reference sheet,
+ground that reads as impassable — basalt outcrops, collapsed crust, an open
+fissure. These MUST be in the image; the game no longer draws them.
+Distinctly darker than the ash field, with a clear shape, so a player sees at
+a glance why nothing can be built there.
+
+CALM: this is a background. Detail density must stay LOW — large soft areas,
+gentle variation, no busy ash texture, no scattered rubble fields. The
+figures that walk on it carry the detail.
+
+No units, no vehicles, no buildings, no towers, no text, no grid, no
+vignette, no border.
+```
+
+### 8c.3 `11_frostbreit.png` — Frostspalte, Frostebene **ohne Weg**
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+IGNORE the BACKGROUND and MARGIN lines of the style block: this is a
+full-bleed terrain map, not a cut-out asset. It has no transparency and no
+margin; the terrain runs to all four edges.
+
+SUBJECT: A top-down terrain map, 2400x1350, seen straight from directly
+above — no perspective, no horizon, no sky. A frozen plain: wind-packed snow
+over blue-grey ice, shallow drifts, sparse frost-killed scrub.
+
+NO ROAD. NO PATH. This is the single most important instruction in this
+brief, and it is the opposite of what such a map usually wants. Do not paint
+a road, a track, a trail, a worn line, a cleared lane, a paved circle or any
+elongated lighter or darker strip anywhere on the image. The game draws its
+own road on top of this picture, and any painted one would sit next to it and
+contradict it. The ground is continuous from edge to edge.
+
+ROUGH GROUND: at the circles marked on the accompanying reference sheet,
+ground that reads as impassable — ice ridges, an open crevasse, deep drifts.
+These MUST be in the image; the game no longer draws them. Distinctly darker
+or cooler than the snow field, with a clear shape, so a player sees at a
+glance why nothing can be built there.
+
+CALM: this is a background. Detail density must stay LOW — large soft areas,
+gentle variation, no busy snow texture, no scattered debris. The figures that
+walk on it carry the detail.
 
 No units, no vehicles, no buildings, no towers, no text, no grid, no
 vignette, no border.

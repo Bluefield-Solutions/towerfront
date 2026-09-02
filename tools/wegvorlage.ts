@@ -102,3 +102,7 @@ for (const m of MAPS) {
 console.log('\n  Das helle Band ist die Strasse, die das Spiel benutzt - dort und nur dort.');
 console.log('  Das gedaempfte Band daneben ist die Bausperre: darf Gelaende sein.');
 console.log('  Blauer Ring: Zielplattform. Rote Ringe: unwegsame Flecken.');
+console.log('\n  **Fuer eine Bestellung nach Abschnitt 8c** (Gelaende OHNE Weg) zaehlen nur');
+console.log('  die roten Ringe: dort muss unwegsames Gelaende gemalt sein, weil das Spiel');
+console.log('  es nicht mehr zeichnet. Das helle Band sagt dann nur, wo spaeter der');
+console.log('  gezeichnete Weg liegt - was darunter steht, wird ohnehin verdeckt.');

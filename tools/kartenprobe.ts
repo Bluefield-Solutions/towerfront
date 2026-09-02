@@ -17,6 +17,14 @@
  *   Nutzung   wieviel der GEMALTEN Strasse an einer Bahn liegt. Der Rest
  *             ist Kulisse, und genau davon hatte der Spiralhain 62 %.
  *
+ * **Und seit v214 den umgekehrten Fall.** Zeichnet das Spiel den Weg selbst
+ * (`bildBringt.weg === false`), sind die vier Zahlen oben sinnlos - die Bahn
+ * liegt dann von Bauart auf ihrer Strasse. Geprueft wird stattdessen die
+ * WEGFREIHEIT: dass im Bild ueberhaupt keine Strasse gemalt ist. Gemessen
+ * als Farbabstand zwischen dem Streifen unter der Bahn und dem Mittel der
+ * Karte. Heute liegt er bei 85,0 / 79,2 / 33,3; ein Bild ohne Weg gehoert
+ * unter 25.
+ *
  * Dazu, was ein Bild sonst noch verletzen kann: Seitenverhaeltnis, reines
  * Schwarz, Helligkeit und Saettigung.
  *
@@ -97,6 +105,26 @@ async function messen(bild: Buffer, kartenId: string): Promise<void> {
     return Math.hypot(c[0] - wr, c[1] - wg, c[2] - wb) < schwelle;
   };
 
+  // **Bringt das Bild gar keinen Weg mit, wird die andere Frage gestellt.**
+  //
+  // Nicht "liegt die Bahn auf der Strasse" - es gibt keine -, sondern "ist
+  // hier wirklich keine". Die Rechnung ist dieselbe wie die, aus der sonst
+  // die Wegfarbe kommt: der Streifen unter der Bahn gegen das Mittel der
+  // Karte. Wo nichts gemalt ist, ist der Abstand klein.
+  if (!(m.bildBringt?.weg ?? true)) {
+    const abstand = spanne * 255;
+    console.log(`    Wegfreiheit: Farbabstand Bahn gegen Karte ${abstand.toFixed(1)}`
+      + ` (erlaubt bis ${grenzen.wegfrei})`
+      + `${abstand <= grenzen.wegfrei ? '' : ' <-- ZU VIEL'}`);
+    if (abstand > grenzen.wegfrei) {
+      fail(`Wegfreiheit ${abstand.toFixed(1)} Farbschritte, erlaubt sind ${grenzen.wegfrei} - `
+        + 'im Bild ist eine Strasse gemalt. Das Spiel zeichnet seine eigene darueber, und '
+        + 'dann stehen zwei nebeneinander.');
+    }
+    schwarzUndBaender(data);
+    return;
+  }
+
   // --- Liegt die Bahn auf der Strasse? Mitte, Schlauch, Rand.
   const LAGEN = [-1, -0.5, 0, 0.5, 1];
   bahnen.forEach((b, i) => {
@@ -167,7 +195,11 @@ async function messen(bild: Buffer, kartenId: string): Promise<void> {
       + 'echten Strasse nicht zu unterscheiden.');
   }
 
-  // --- Und was ein Bild sonst noch verletzen kann.
+  schwarzUndBaender(data);
+}
+
+/** Was ein Bild sonst noch verletzen kann - beide Zweige brauchen es. */
+function schwarzUndBaender(data: Buffer | Uint8Array): void {
   let schwarz = 0, hell = 0, satt = 0;
   for (let i = 0; i < N * H; i++) {
     const r = data[i * 3] / 255, g = data[i * 3 + 1] / 255, b = data[i * 3 + 2] / 255;

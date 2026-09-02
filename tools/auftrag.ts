@@ -107,7 +107,7 @@ export function abschnittstext(beginnt: string): string {
  *  Steigt eine Grenze im Dokument, misst das Werkzeug ab dem naechsten Lauf
  *  danach. Verschwindet die Zeile, bricht es ab, statt eine Zahl zu raten. */
 export function abnahmegrenzen(): {
-  mitte: number; schlauch: number; rand: number; nutzung: number;
+  mitte: number; schlauch: number; rand: number; nutzung: number; wegfrei: number;
 } {
   const hol = (nadel: RegExp, was: string): number => {
     const zeile = zeilen.find((z) => nadel.test(z));
@@ -124,10 +124,24 @@ export function abnahmegrenzen(): {
     }
     return Number(m[1].replace(',', '.')) / 100;
   };
+  // Die Wegfreiheit steht in Farbschritten da, nicht in Prozent - eigene
+  // Rechnung, damit `hol` nicht zwei Einheiten kennen muss.
+  const wegfreiZeile = zeilen.find((z) => /kartenprobe`? Wegfreiheit \|/.test(z));
+  if (!wegfreiZeile) {
+    console.error('AUFTRAG: die Abnahmezeile fuer "Wegfreiheit" fehlt in Abschnitt 8c. '
+      + 'Ohne sie prueft die Kartenprobe nichts.');
+    process.exit(1);
+  }
+  const wf = wegfreiZeile.split('|').slice(-2)[0].match(/(\d+(?:,\d+)?)\s*Farbschritte/);
+  if (!wf) {
+    console.error(`AUFTRAG: in der Zeile fuer "Wegfreiheit" steht keine Zahl: ${wegfreiZeile}`);
+    process.exit(1);
+  }
   return {
     mitte: hol(/bahntreue`? Mitte \|/, 'Mitte'),
     schlauch: hol(/bahntreue`? Schlauch \|/, 'Schlauch'),
     rand: hol(/bahntreue`? Rand \|/, 'Rand'),
     nutzung: hol(/wegdeckung`? benutzte Stra/, 'Nutzung'),
+    wegfrei: Number(wf[1].replace(',', '.')),
   };
 }

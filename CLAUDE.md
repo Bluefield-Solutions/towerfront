@@ -101,7 +101,11 @@ npm run bahnsuche   sucht im gemalten Wegenetz eine Route, die es noch nicht
 npm run bahnfit     zieht die Bahnen auf die gemalte Strasse (schreibt
                     maps.ts). `--umleiten` aendert Routen, nicht nur Lagen.
 npm run bahntreue   prueft am Kartenbild, ob jede Bahn auf der GEMALTEN
-                    Strasse laeuft - Ratsche, kein Soll.
+                    Strasse laeuft - Ratsche, kein Soll. Gemessen wird die
+                    Mittellinie UND der Schlauch (fuenf Querlagen bei -1 bis
+                    +1 mal der halben Bahnbreite). Die Mitte allein sagt es
+                    nicht: der Spiralhain steht dort auf 100 %, sein
+                    Schlauch auf 51 % und dessen Rand auf 15 %.
 npm run wegdeckung  misst das BILD gegen die Bahnen: wieviel der Karte ist
                     als Strasse gemalt, wieviel davon liegt an einer
                     benutzten Bahn, und wieviel Bebaubares sieht aus wie
@@ -306,7 +310,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v209. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v210. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -355,16 +359,42 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
     Sterne, macht die Karte aber so leicht, dass die Ziellogik „hinten"
     wirkungslos wird.
 
-  Damit hängt A am Wellenplan des Spiralhains — und der entsteht bei **C**
-  ohnehin neu. Die Reihenfolge ist also **C vor A**, nicht umgekehrt.
+  **In v210 ist auch der Wellenplan selbst durchprobiert — er trägt es
+  nicht.** Es gibt Einstellungen, die durchkommen (Anzahlen × 0,82,
+  Abstände × 1,20, `hpMul` 0,85, `goldMul` 1,2 und die Standort-Grenze der
+  Ziellogik auf 0,50 statt 0,35): `npm run sim` meldet damit *bestanden*,
+  drei Sterne, Streuung 8–13. Aber es ist eine Nadel, keine Fläche —
+  Abstände × 1,15, × 1,22 und × 1,30 fallen durch, Anzahlen × 0,80 und
+  × 0,84 ebenso, während die heutige Karte ± 2 % Störung unverändert
+  aushält. Zwei weitere Erklärungen wurden geprüft und scheiden aus: **Gold
+  ist nicht der Engpass** (Wellenbonus × 1,3 / 1,5 / 1,8 macht es
+  schlechter, nicht besser), und **Deckung auch nicht** (bebaubare Fläche
+  je 100 Weltpunkte Bahn 1,5 gegen 1,6; die zwölf besten Bauplätze decken
+  73 % der langen gegen 76 % der kurzen Bahn — beides besser als
+  Ascheschlucht 62 % und Frostspalte 40 %). Was bleibt, ist die schiere
+  Länge.
+
+  **Eine längengleiche Umleitung wurde ebenfalls gemessen und verworfen:**
+  über die Westschleife und den mittleren Riegel, 1479 statt 1547
+  Weltpunkte, 100 % auf gemalter Straße, `npm run sim` bestanden **ohne
+  jede Balanceänderung**. Sie verschiebt die benutzte Straße aber nur — die
+  Nutzung bleibt bei 8,3 %. Das beantwortet die Meldung nicht, deshalb
+  nicht ausgeliefert. Der Verlauf steht in `tools/bahnsuche.ts`
+  (`--nach 1141,704`) und ist in einer Minute wiederherzustellen.
+
+  Damit hängt A am Kartenbild, nicht an den Zahlen — und die Reihenfolge
+  ist **C vor A**, nicht umgekehrt.
 
   **Zwei Messfunde nebenbei, beide älter als diese Runde:**
-  1. **Die Bahnen sind breiter als die Straße, auf der sie laufen** — auf
-     98 bis 100 % ihrer Länge. Die gemalte Straße trägt rund 60 Weltpunkte
-     Breite, die Bahnschläuche 80 bis 162. `npm run bahntreue` sieht das
-     nicht: es misst die **Mittellinie**, nicht den Schlauch. Der breiteste
-     Gegner misst 55 — er passt gerade eben auf die Farbe, aber die
-     Bausperre um ihn herum ist doppelt so breit wie das, was man sieht.
+  1. **Die Bahnen sind breiter als die Straße, auf der sie laufen.** Seit
+     v210 misst `npm run bahntreue` das mit: Mittellinie **und** Schlauch
+     über fünf Querlagen. Gemessen liegt der Schlauch auf 44 bis 52 % über
+     gemalter Straße, sein **Rand nur auf 11 bis 20 %** — die Bausperre
+     steht rundherum über der Farbe. Der Spiralhain steht in der Mitte auf
+     100 % und im Schlauch auf 51,5 %; genau diese Lücke konnte die alte
+     Messung nicht sehen. Ratsche je Bahn, kein Soll: solange die Bilder
+     ihre Straßen 60 Weltpunkte breit malen und die Schläuche 80 bis 162
+     messen, kann keine Karte hoch liegen. Das löst Schritt C.
   2. **Die Prüfung „der fünfte Ziel-Modus muss etwas können" läuft nur auf
      `MAPS[0]`** und wäre auf der Ascheschlucht seit Langem rot (fern 61,4
      gegen bester reiner Modus 69,2). Das ist heute so, ohne jede Änderung

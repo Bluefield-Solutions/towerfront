@@ -54,6 +54,7 @@
  *   npx tsx tools/bahnsuche.ts <karte> --von 40,520     sucht von dort zum Ziel
  *   ... --mindest 28                                   engster zugelassener Ast
  *   ... --meiden 6                                     Aufschlag neben alten Bahnen
+ *   ... --nach 1043,787                                Zwischenziel statt Kristall
  *
  * Messstelle (Regel 12): gepacktes Kartenbild auf 480 Punkte Breite.
  */
@@ -210,7 +211,16 @@ if (vonArg < 0) {
 }
 
 const [vx, vy] = process.argv[vonArg + 1].split(',').map(Number);
-const ziel = bahnen[0].pts[bahnen[0].pts.length - 1];
+// Ohne `--nach` ist das Ziel der Kristall. Mit `--nach` ein Punkt mittendrin -
+// dann sucht das Werkzeug nur ein STUECK Umweg und der Rest bleibt, wie er
+// ist. Das ist der Unterschied zwischen "eine andere Karte" und "dieselbe
+// Karte, ein Ast mehr benutzt": die gefundene Route ueber das ganze Netz war
+// anderthalb mal so lang wie die alte Bahn, und daran ist der Wellenplan
+// gescheitert.
+const nachArg = process.argv.indexOf('--nach');
+const ziel = nachArg >= 0
+  ? (([a, b]) => ({ x: a, y: b }))(process.argv[nachArg + 1].split(',').map(Number))
+  : bahnen[0].pts[bahnen[0].pts.length - 1];
 
 /** Die naechste Wegzelle zu einem Weltpunkt. */
 const zelleBei = (wx: number, wy: number): number => {

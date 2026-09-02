@@ -1385,6 +1385,16 @@ const PROBEN = [
     tor: 'bahntreuetor',
   },
   {
+    // D28-E: der Bahnschlauch breiter als die gemalte Strasse. Die
+    // Mittellinie merkt davon NICHTS - genau deshalb gibt es die zweite
+    // Messung. Wer sie wieder herausnimmt, faellt hier durch.
+    name: 'Bahnschlauch breiter als seine Strasse',
+    datei: 'src/core/path.ts',
+    regel: /        this\.half\.push\(w1 \+ \(w2 - w1\) \* ease\);/,
+    ersatz: '        this.half.push((w1 + (w2 - w1) * ease) * 1.6);',
+    tor: 'bahntreuetor',
+  },
+  {
     // TF-014: die Wegvorschau abgeschaltet - man saehe nicht, woher es kommt.
     name: 'Wegvorschau abgeschaltet',
     datei: 'src/gfx/renderer.ts',

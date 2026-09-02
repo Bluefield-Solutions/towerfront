@@ -91,6 +91,13 @@ npm run kristall    misst, ob der Kristall seinen Zustand zeigt: Rissdeckung je
                     gezeichneten Bild. `--tor` prüft die Grenzen. Der
                     Farbabstand taugt hier nicht - der Lichtkranz erschlägt
                     ihn.
+npm run bahnsuche   sucht im gemalten Wegenetz eine Route, die es noch nicht
+                    gibt, und schreibt sie zum Hineinkopieren aus. Ohne
+                    `--von` zeigt es, wo die Strasse den Bildrand beruehrt.
+                    `--mindest` wirft Aeste heraus, die fuer den breitesten
+                    Gegner zu schmal sind - ohne das findet es Routen, die
+                    es nur auf dem Papier gibt (auf dem Spiralhain traegt
+                    die schmalste Stelle acht Weltpunkte).
 npm run bahnfit     zieht die Bahnen auf die gemalte Strasse (schreibt
                     maps.ts). `--umleiten` aendert Routen, nicht nur Lagen.
 npm run bahntreue   prueft am Kartenbild, ob jede Bahn auf der GEMALTEN
@@ -299,7 +306,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v208. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v209. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -324,10 +331,46 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   **B** die Kulisse sichtbar abwerten (v208, erledigt — sie verblasst zum
   Gelände hin, gemessen 0,31/0,25/0,69), **A** mehr Bahnen durch das Netz,
   **C** neue Kartenbilder mit genau den benutzten Straßen, **D** das Bauen
-  auf gemalter Straße verbieten. Die Reihenfolge folgt den Abhängigkeiten:
-  B sofort und ohne Balancefolgen, A entscheidet die Routen, C malt sie,
-  D schliesst ab — erst wenn kein unbenutzter Weg mehr gemalt ist, kostet
-  D keine Fläche mehr.
+  auf gemalter Straße verbieten.
+
+  **Schritt A ist in v209 gemessen und liegt zurück — nicht an der
+  Geometrie, sondern am Wellenplan.** `npm run bahnsuche` sucht die Route
+  aus dem Kartenbild statt sie zu raten, und sie ist da: über die große
+  linke Schleife und den Kamm, 2170 statt 1547 Weltpunkte, **zu 100 % auf
+  der gemalten Straße**, und die Straßennutzung stiege von 38 auf 79 %.
+  Beide Einbauarten scheitern an `npm run sim`:
+
+  * **als zweite Bahn neben der ersten** teilt sie die Verteidigung — die
+    Streuung zwischen drei vernünftigen Bauverläufen steigt von 21–24 auf
+    26–38 Punkte, verboten ab 32. Dann misst die Karte die Baureihenfolge
+    statt des Könnens.
+  * **anstelle der ersten** ist sie ruhig (Streuung 4–15) und nimmt dem
+    Spiralhain den Hinweis „Umwegfaktor 1,13 — fast eine Gerade" (1,8), ist
+    aber anderthalb mal so lang, also steht anderthalb mal so viel
+    gleichzeitig auf dem Feld. Der Ausgleich bräuchte `hpMul` 0,55; der
+    Daten-Wächter lässt 0,85 bis 1,2 zu, und das zu Recht — der
+    Kartenausgleich ist eine Feinschraube, kein Ersatz für einen
+    Wellenplan. Die zwei naheliegenden Ersatzschrauben tragen nicht:
+    Abstände × 1,5 bleibt bei einem Stern, Anzahlen × 0,65 holt drei
+    Sterne, macht die Karte aber so leicht, dass die Ziellogik „hinten"
+    wirkungslos wird.
+
+  Damit hängt A am Wellenplan des Spiralhains — und der entsteht bei **C**
+  ohnehin neu. Die Reihenfolge ist also **C vor A**, nicht umgekehrt.
+
+  **Zwei Messfunde nebenbei, beide älter als diese Runde:**
+  1. **Die Bahnen sind breiter als die Straße, auf der sie laufen** — auf
+     98 bis 100 % ihrer Länge. Die gemalte Straße trägt rund 60 Weltpunkte
+     Breite, die Bahnschläuche 80 bis 162. `npm run bahntreue` sieht das
+     nicht: es misst die **Mittellinie**, nicht den Schlauch. Der breiteste
+     Gegner misst 55 — er passt gerade eben auf die Farbe, aber die
+     Bausperre um ihn herum ist doppelt so breit wie das, was man sieht.
+  2. **Die Prüfung „der fünfte Ziel-Modus muss etwas können" läuft nur auf
+     `MAPS[0]`** und wäre auf der Ascheschlucht seit Langem rot (fern 61,4
+     gegen bester reiner Modus 69,2). Das ist heute so, ohne jede Änderung
+     von mir. Nicht angefasst, weil eine Prüfung, die ich in derselben
+     Runde erweitere, in der meine eigene Änderung an ihr scheitert, kein
+     Beweis mehr wäre.
 - D19 (grafisch): Die drei benannten Teile sind umgesetzt (v104). Was bleibt,
   ist die Plastik im Bild selbst — Befund B1 aus dem Grafik-Audit, und der
   braucht neue Bilder, nicht Code.

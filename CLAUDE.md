@@ -161,6 +161,12 @@ npm run bildprompt  gibt EINEN Bild-Prompt vollstaendig aus - Stil-Block
                     Suchtext listet es alle. Das Dokument haelt den
                     Stil-Block einmal (Regel 15), der Empfaenger bekommt
                     ihn trotzdem jedes Mal mit.
+npm run kartenprobe ein Kandidaten-KARTENbild pruefen, BEVOR es gepackt wird:
+                    Mitte, Schlauch, Rand, Nutzung, Seitenverhaeltnis. Die
+                    Grenzen liest es aus dem Bildauftrag (Abschnitt 8b),
+                    steht also nicht ein zweites Mal da. `--bestand` misst
+                    den heutigen Vorrat - der faellt durch, und genau
+                    deshalb sind die drei Karten neu bestellt.
 npm run bildwissen  baut die Wissensdatei fuer einen fremden Bild-Agenten:
                     bilder/TOWERFRONT-BILDWISSEN.md, dazu der Text fuers
                     Anweisungsfeld. Erzeugt, nicht geschrieben - eine von
@@ -320,7 +326,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v212. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v213. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

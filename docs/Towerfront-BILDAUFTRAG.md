@@ -1,6 +1,6 @@
 # Towerfront — Bildauftrag
 
-Stand: v212 · 02.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v213 · 02.09.2026 · **Auftragsdokument für den Bild-Agenten**
 
 Dieses Dokument ist die vollständige Bestellung. Es enthält alles, was zum
 Erzeugen der Bilder nötig ist: Stil, Maße, Blickrichtung, Dateinamen,
@@ -1371,6 +1371,12 @@ Straße glättet, tut das Richtige — solange er nirgends unter die gezeigte
 Breite geht.
 
 ### Abnahme — was grün sein muss, bevor das Bild eingebaut wird
+
+> **`npm run kartenprobe -- <datei> <kennung>` misst einen Kandidaten,
+> bevor er gepackt wird** — Mitte, Schlauch, Rand und Nutzung in einem Lauf,
+> gegen genau die Zahlen aus der Tabelle unten. Es **liest sie von hier**,
+> sie stehen also nicht zweimal da. `--bestand` misst den heutigen Vorrat:
+> er fällt durch, und das ist der Grund für diese Bestellung.
 
 | Prüfung | Heute | Gefordert |
 |---|---|---|

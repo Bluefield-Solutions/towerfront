@@ -28,6 +28,7 @@
     "bahnsuche": "tsx tools/bahnsuche.ts",
     "wegvorlage": "tsx tools/wegvorlage.ts",
     "bildwissen": "tsx tools/bildwissen.ts",
+    "kartenprobe": "tsx tools/kartenprobe.ts",
     "kartenwechsel": "tsx tools/kartenwechsel.mjs",
     "bildtor": "tsx tools/shots.mjs --tor",
     "doku": "node tools/docs.mjs",

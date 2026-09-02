@@ -96,3 +96,38 @@ export function abschnittstext(beginnt: string): string {
   }
   return zeilen.slice(von, bis).join('\n').trimEnd();
 }
+
+/** Die Abnahmegrenzen fuer Kartenbilder - aus dem Auftragsdokument gelesen.
+ *
+ *  Sie stehen in Abschnitt 8b als Tabelle, weil sie dort hingehoeren: wer
+ *  das Bild bestellt, sieht sie. `tools/kartenprobe.ts` misst dagegen. Wenn
+ *  die Zahl an beiden Stellen staende, wuerde eine davon veralten - und die
+ *  veraltete waere die, nach der abgenommen wird (Regel 15).
+ *
+ *  Steigt eine Grenze im Dokument, misst das Werkzeug ab dem naechsten Lauf
+ *  danach. Verschwindet die Zeile, bricht es ab, statt eine Zahl zu raten. */
+export function abnahmegrenzen(): {
+  mitte: number; schlauch: number; rand: number; nutzung: number;
+} {
+  const hol = (nadel: RegExp, was: string): number => {
+    const zeile = zeilen.find((z) => nadel.test(z));
+    if (!zeile) {
+      console.error(`AUFTRAG: die Abnahmezeile fuer "${was}" fehlt in Abschnitt 8b. `
+        + 'Ohne sie prueft die Kartenprobe nichts.');
+      process.exit(1);
+    }
+    // Die letzte Spalte traegt die Forderung, etwa "**≥ 90 %**".
+    const m = zeile.split('|').slice(-2)[0].match(/(\d+(?:,\d+)?)\s*%/);
+    if (!m) {
+      console.error(`AUFTRAG: in der Zeile fuer "${was}" steht keine Prozentzahl: ${zeile}`);
+      process.exit(1);
+    }
+    return Number(m[1].replace(',', '.')) / 100;
+  };
+  return {
+    mitte: hol(/bahntreue`? Mitte \|/, 'Mitte'),
+    schlauch: hol(/bahntreue`? Schlauch \|/, 'Schlauch'),
+    rand: hol(/bahntreue`? Rand \|/, 'Rand'),
+    nutzung: hol(/wegdeckung`? benutzte Stra/, 'Nutzung'),
+  };
+}

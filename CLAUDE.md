@@ -161,6 +161,11 @@ npm run bildprompt  gibt EINEN Bild-Prompt vollstaendig aus - Stil-Block
                     Suchtext listet es alle. Das Dokument haelt den
                     Stil-Block einmal (Regel 15), der Empfaenger bekommt
                     ihn trotzdem jedes Mal mit.
+npm run bildwissen  baut die Wissensdatei fuer einen fremden Bild-Agenten:
+                    bilder/TOWERFRONT-BILDWISSEN.md, dazu der Text fuers
+                    Anweisungsfeld. Erzeugt, nicht geschrieben - eine von
+                    Hand gepflegte zweite Fassung des Auftragswissens waere
+                    Regel 15 in Reinform. Die Zahlen darin sind gemessen.
 npm run probebild   Kandidatenbilder pruefen, BEVOR sie gepackt werden:
                     Format, Alpha, Rand, reines Schwarz, Feindetail,
                     Lichtwinkel - und die Silhouetten-Aehnlichkeit
@@ -315,7 +320,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v211. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v212. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

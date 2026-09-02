@@ -20,10 +20,9 @@
  *
  *  Messstelle (Regel 12): gepackter Bildvorrat, Deckkraft ueber 60 von 255;
  *  Wegbreiten aus `lanePaths`, in Weltpunkten, ueber die ganze Bahn. */
-import sharp from 'sharp';
-import { ENEMY_ART } from '../src/gfx/assets/enemies';
 import { ENEMIES, type EnemyId } from '../src/data/enemies';
 import { enemyArtWidth } from '../src/gfx/enemyart';
+import { figurbreite } from './figurbreite';
 import { MAPS, lanePaths } from '../src/data/maps';
 
 const TOR = process.argv.includes('--tor');
@@ -31,45 +30,11 @@ let fehler = 0;
 const fail = (m: string): void => { console.error(`  FEHLER: ${m}`); fehler++; };
 const warn = (m: string): void => { console.log(`  Hinweis: ${m}`); };
 
-/** Wie breit ein Gegner WIRKLICH gezeichnet ist, in Weltpunkten.
- *
- *  Zwei Zahlen: die volle Ausdehnung (Stacheln, Fluegel, Waffen) und der
- *  Rumpf als Median der Zeilenbreiten. Die erste entscheidet, ob etwas ueber
- *  den Bordstein ragt; die zweite, wieviel Platz der Koerper wirklich
- *  braucht. */
-async function figur(id: EnemyId): Promise<{ voll: number; rumpf: number } | null> {
-  const d = (ENEMY_ART as Record<string, string>)[id];
-  if (!d) return null;
-  const { data, info } = await sharp(Buffer.from(d.split(',')[1], 'base64'))
-    .ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  const w = info.width, h = info.height;
-  let minX = w, maxX = 0;
-  const zeilen: number[] = [];
-  for (let y = 0; y < h; y++) {
-    let a = w, b = -1;
-    for (let x = 0; x < w; x++) {
-      if (data[(y * w + x) * 4 + 3] > 60) { if (x < a) a = x; if (x > b) b = x; }
-    }
-    if (b >= 0) {
-      if (a < minX) minX = a;
-      if (b > maxX) maxX = b;
-      zeilen.push(b - a + 1);
-    }
-  }
-  if (!zeilen.length) return null;
-  zeilen.sort((p, q) => p - q);
-  const kachel = enemyArtWidth(id);
-  return {
-    voll: ((maxX - minX + 1) / w) * kachel,
-    rumpf: (zeilen[Math.floor(zeilen.length / 2)] / w) * kachel,
-  };
-}
-
 console.log('GEDRAENGE\n');
 
 const figuren = new Map<EnemyId, { voll: number; rumpf: number }>();
 for (const id of Object.keys(ENEMIES) as EnemyId[]) {
-  const f = await figur(id);
+  const f = await figurbreite(id);
   if (!f) { fail(`${id}: kein Bild im Vorrat - dann misst diese Pruefung nichts.`); continue; }
   figuren.set(id, f);
   const kachel = enemyArtWidth(id);

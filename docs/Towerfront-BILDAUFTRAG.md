@@ -1,6 +1,6 @@
 # Towerfront — Bildauftrag
 
-Stand: v211 · 02.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v212 · 02.09.2026 · **Auftragsdokument für den Bild-Agenten**
 
 Dieses Dokument ist die vollständige Bestellung. Es enthält alles, was zum
 Erzeugen der Bilder nötig ist: Stil, Maße, Blickrichtung, Dateinamen,
@@ -41,6 +41,12 @@ ist eine eigene Runde im Code und in `src/data/*.ts`.
 Hand: `npm run bildprompt -- <suchtext>` gibt einen Prompt **vollständig**
 aus, mit eingesetztem Stil-Block, zum Kopieren in einem Stück. Ohne
 Suchtext listet es alle.
+
+> **Für einen Bild-Agenten ausserhalb dieses Verzeichnisses** gibt es
+> `npm run bildwissen`: es baut aus genau diesem Dokument eine eigenständige
+> Wissensdatei (`bilder/TOWERFRONT-BILDWISSEN.md`) samt Text fürs
+> Anweisungsfeld. Sie wird **erzeugt, nicht gepflegt** — wer etwas ändern
+> will, ändert dieses Dokument und lässt sie neu bauen.
 
 > **Warum das Dokument den Block trotzdem nur einmal hält.** Siebzehn
 > Kopien wären siebzehn Fassungen, die auseinanderdriften (Regel 15). Für

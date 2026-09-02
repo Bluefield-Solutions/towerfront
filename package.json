@@ -27,6 +27,7 @@
     "eichen": "node tools/calibrate.mjs",
     "bahnsuche": "tsx tools/bahnsuche.ts",
     "wegvorlage": "tsx tools/wegvorlage.ts",
+    "bildwissen": "tsx tools/bildwissen.ts",
     "kartenwechsel": "tsx tools/kartenwechsel.mjs",
     "bildtor": "tsx tools/shots.mjs --tor",
     "doku": "node tools/docs.mjs",

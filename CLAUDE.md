@@ -151,6 +151,11 @@ Messschalter        In der Kopfzeile des Spiels: Messung an, und die Tafel
                     als Text heraus — ein Foto muss abgetippt werden, und
                     abgetippte Messwerte sind falsche Messwerte. `#messung`
                     in der Adresse tut dasselbe für einen Besuch.
+npm run wegvorlage  Referenzblatt je Karte fuer die Bildbestellung: der
+                    Bahnschlauch in voller Breite ueber die heutige Karte,
+                    dazu Bausperre, Zielplatte und die unwegsamen Flecken.
+                    Ein Prompt beschreibt eine Stimmung, keine Geometrie -
+                    dreimal hat genau das eine falsche Strasse gebracht.
 npm run bildprompt  gibt EINEN Bild-Prompt vollstaendig aus - Stil-Block
                     schon eingesetzt, zum Kopieren in einem Stueck. Ohne
                     Suchtext listet es alle. Das Dokument haelt den
@@ -310,7 +315,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v210. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v211. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -384,6 +389,14 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
 
   Damit hängt A am Kartenbild, nicht an den Zahlen — und die Reihenfolge
   ist **C vor A**, nicht umgekehrt.
+
+  **Schritt C ist in v211 bestellt** (`docs/Towerfront-BILDAUFTRAG.md`,
+  Abschnitt 8b): drei Kartenbilder mit genau der Straße, die das Spiel
+  benutzt, samt Referenzblatt aus `npm run wegvorlage` und Abnahmezahlen
+  (Schlauch ≥ 90 %, Rand ≥ 75 %, benutzte Straße ≥ 90 % je Karte). Die
+  Prompts stehen zum Kopieren bereit: `npm run bildprompt -- 8b.1` und so
+  fort. Der alte Abschnitt 8 ist als überholt gekennzeichnet, statt zwei
+  Bestellungen nebeneinander stehen zu lassen (Regel 15).
 
   **Zwei Messfunde nebenbei, beide älter als diese Runde:**
   1. **Die Bahnen sind breiter als die Straße, auf der sie laufen.** Seit

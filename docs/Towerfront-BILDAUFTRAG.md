@@ -1,6 +1,6 @@
 # Towerfront — Bildauftrag
 
-Stand: v209 · 02.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v211 · 02.09.2026 · **Auftragsdokument für den Bild-Agenten**
 
 Dieses Dokument ist die vollständige Bestellung. Es enthält alles, was zum
 Erzeugen der Bilder nötig ist: Stil, Maße, Blickrichtung, Dateinamen,
@@ -1285,11 +1285,16 @@ transparent, the assembly filling the frame, nothing cropped.
 
 Ablage: `art/roh/untergrund/` · **2400 × 1350 PNG** · Budget 700 KB.
 
-> **Diese drei sind der geringste Änderungsbedarf.** Ein moderner Krieg kann
-> in einem Laubwald stattfinden — die vorhandenen Karten tragen den neuen
-> Stil mit. Neu bestellt werden sie nur, wenn die alten ersetzt werden
-> sollen. Wer sie liefert, hält die Bänder ein: Helligkeit **0,30–0,36**,
-> Sättigung **0,45–0,55**, Detaildichte **1,5–3,0**.
+> **Überholt seit v211 — die gültige Bestellung steht in Abschnitt 8b.**
+> Dieser Abschnitt hier beschrieb den Stilwechsel und sagte über die Straße
+> nur „breit und lesbar". Genau das hat nicht gereicht: gemessen liegen von
+> der gemalten Straße des Spiralhains nur 38 % an einer benutzten Bahn, und
+> vom Bahnschlauch nur 51 % auf gemalter Straße. Ein Prompt beschreibt eine
+> Stimmung, keine Geometrie — 8b legt ein Referenzblatt bei. Der Block hier
+> bleibt als Beleg dafür stehen, was zu wenig war; bestellt wird nach 8b.
+>
+> Die Bänder gelten unverändert: Helligkeit **0,30–0,36**, Sättigung
+> **0,45–0,55**, Detaildichte **1,5–3,0**.
 
 | Datei | Kennung | Was |
 |---|---|---|
@@ -1310,6 +1315,228 @@ distinguishable from an ordinary road junction.
 CALM: this is a background. Detail density must stay LOW — large soft areas,
 gentle variation, no busy foliage texture, no small scattered debris. The
 figures that walk on it carry the detail.
+
+No units, no vehicles, no buildings, no towers, no text, no grid, no
+vignette, no border.
+```
+
+---
+
+## 8b. Nachbestellung D28-C — **drei Kartenbilder mit genau der Straße, die das Spiel benutzt** (v211)
+
+> **Dies ist die wichtigste offene Bestellung.** Sie beantwortet drei
+> Meldungen des Nutzers auf einmal: „die Gegner kommen nur über einen Weg",
+> „ich kann auf die Straße bauen" und „zu viel Weg, zu wenig Fläche".
+
+**Der Befund, der sie auslöst — alles gemessen, nichts geschätzt:**
+
+| Was | Gemessen | Womit |
+|---|---|---|
+| Anteil der gemalten Straße, an dem wirklich eine Bahn läuft | **Spiralhain 38 %**, Ascheschlucht 75 %, Frostspalte 70 % | `npm run wegdeckung` |
+| Anteil des Bahnschlauchs, der auf gemalter Straße liegt | **43,9 – 51,5 %** | `npm run bahntreue` |
+| Anteil des Schlauch**rands**, der auf gemalter Straße liegt | **11,1 – 20,0 %** | `npm run bahntreue` |
+| Breite der gemalten Straße | rund **60 Weltpunkte** | `npm run bahnsuche` |
+| Breite, die die Bahn braucht | **80 bis 162 Weltpunkte** | `npm run wegvorlage` |
+| Breiteste Gegnerfigur | **55 Weltpunkte** | `npm run gedraenge` |
+
+Die gemalte Straße ist also **schmaler als der Weg, auf dem die Gegner
+laufen**, und ein gutes Stück davon führt überhaupt nirgendwohin. Beides ist
+mit Code nicht zu beheben: eine Bahn durch das gemalte Netz zu legen wurde in
+v209 und v210 versucht und scheiterte an der Waage (siehe D28-A im
+Rückstandsverzeichnis).
+
+### Das Referenzblatt gehört zwingend dazu
+
+`npm run wegvorlage` erzeugt je Karte ein Blatt in `bilder/vorlage-<kennung>.png`:
+
+* **helles cremefarbenes Band** — hier muss Straße sein, **und nirgends sonst**.
+  Es ist der Bahnschlauch in voller Breite, nicht eine Skizze davon.
+* **gedämpftes Band daneben** — die 30 Weltpunkte Bausperre. Darf Gelände
+  sein, darf aber nicht wie eine zweite Straße aussehen.
+* **blauer Ring** — dort gehört die gepflasterte Rundplattform hin.
+* **rote Ringe** — unwegsame Flecken; sie müssen im Bild als unwegsam
+  erkennbar bleiben (Fels, Wasser, Glutriss, Schneeverwehung).
+* der abgedunkelte Untergrund darunter ist die **heutige** Karte: das Biom
+  bleibt, die Straße nicht.
+
+**Die Kante des Bandes darf geglättet werden, die Breite nicht.** Das Band ist
+aus Kreisen zusammengesetzt und deshalb leicht wellig; wer es zu einer weichen
+Straße glättet, tut das Richtige — solange er nirgends unter die gezeigte
+Breite geht.
+
+### Abnahme — was grün sein muss, bevor das Bild eingebaut wird
+
+| Prüfung | Heute | Gefordert |
+|---|---|---|
+| `npm run bahntreue` Mitte | 80,1 – 100 % | **≥ 99 %** |
+| `npm run bahntreue` Schlauch | 43,9 – 51,5 % | **≥ 90 %** |
+| `npm run bahntreue` Rand | 11,1 – 20,0 % | **≥ 75 %** |
+| `npm run wegdeckung` benutzte Straße | 38 / 75 / 70 % | **≥ 90 %** je Karte |
+| `npm run zielplatte` | grün | grün — Rundplatte am blauen Ring |
+| `npm run gelaendetor` | grün | grün — jeder rote Ring bleibt unwegsam |
+| Helligkeit / Sättigung / Detaildichte | im Band | **0,30–0,36 / 0,45–0,55 / 1,5–3,0** |
+
+Danach ist **D28-D** fällig (Bauen auf gemalter Straße verbieten). Heute
+kostete das 12 Punkte bebaubare Fläche, nach dieser Lieferung nichts mehr —
+weil dann keine Straße mehr gemalt ist, auf der niemand läuft.
+
+Ablage: `art/roh/untergrund/` · **2400 × 1350 PNG** · Budget 700 KB je Datei.
+
+### 8b.1 `12_laubbreit.png` — Spiralhain, Laubwald
+
+Referenzblatt: `bilder/vorlage-spiralhain.png` · **eine** Bahn, 1547
+Weltpunkte, Straßenbreite 80 bis 162 Weltpunkte.
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+IGNORE the BACKGROUND and MARGIN lines of the style block: this is a
+full-bleed terrain map, not a cut-out asset. It has no transparency and no
+margin; the terrain runs to all four edges.
+
+SUBJECT: A top-down battlefield terrain map, 2400x1350, seen straight from
+directly above — no perspective, no horizon, no sky. Temperate deciduous
+forest floor in late summer: leaf litter, moss, scattered broadleaf canopy,
+a few fallen trunks, low undergrowth.
+
+THE ROAD — this is the part that has been wrong three times, read it twice.
+A reference sheet accompanies this order. The pale cream band on it is the
+road. Paint a road of packed earth and concrete EXACTLY along that band,
+edge to edge, and paint NO OTHER ROAD ANYWHERE on the map. One single
+continuous route, entering at the bottom edge, winding to the paved circle.
+Every other part of the map is forest floor.
+
+The road is WIDE: about one twentieth of the image width at its narrowest,
+wider at the bends. It is the single most readable feature of the image, and
+it must be unmistakably lighter than the forest floor around it — a viewer
+must never have to wonder whether a given patch is road or ground.
+
+Its edges are soft and organic (verge, gravel spill, tyre ruts), not a
+stencil line — but its WIDTH must never fall below what the reference sheet
+shows.
+
+THE PAD: at the end of the road, a wide circular paved platform of the same
+material — concentric stonework, a low kerb, clearly a built staging pad and
+not merely a junction.
+
+ROUGH GROUND: at the marked circles, ground that reads as impassable —
+boulder fields, dense thickets, a marshy hollow. Distinctly darker or
+cooler than the forest floor, never road-coloured.
+
+CALM: this is a background. Detail density must stay LOW — large soft areas,
+gentle variation, no busy foliage texture, no small scattered debris. The
+figures that walk on it carry the detail.
+
+No units, no vehicles, no buildings, no towers, no text, no grid, no
+vignette, no border.
+```
+
+### 8b.2 `13_aschebreit.png` — Ascheschlucht, Aschefeld
+
+Referenzblatt: `bilder/vorlage-ascheschlucht.png` · **drei** Bahnen, 6359
+Weltpunkte zusammen, Straßenbreite 80 bis 142 Weltpunkte. Die drei Bahnen
+laufen aus dem linken Bildrand ein und vereinigen sich vor der Plattform —
+sie gehören als **ein zusammenhängendes Straßennetz** gemalt, nicht als drei
+unverbundene Streifen.
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+IGNORE the BACKGROUND and MARGIN lines of the style block: this is a
+full-bleed terrain map, not a cut-out asset. It has no transparency and no
+margin; the terrain runs to all four edges.
+
+SUBJECT: A top-down battlefield terrain map, 2400x1350, seen straight from
+directly above — no perspective, no horizon, no sky. A cooled ash field:
+grey volcanic ash, cracked basalt shelves, a few dull ember fissures glowing
+faintly deep in the cracks.
+
+THE ROAD — this is the part that has been wrong three times, read it twice.
+A reference sheet accompanies this order. The pale cream band on it is the
+road. Paint a road of packed ash and concrete EXACTLY along that band, edge
+to edge, and paint NO OTHER ROAD ANYWHERE on the map. Three routes enter
+from the left edge, run east across the map and merge into one before the
+paved circle — one connected road network, not three separate stripes.
+Every other part of the map is ash field.
+
+The road is WIDE: about one twentieth of the image width at its narrowest,
+wider where routes merge. It is the single most readable feature of the
+image, and it must be unmistakably lighter than the ash around it — a viewer
+must never have to wonder whether a given patch is road or ground.
+
+Its edges are soft and organic (drifted ash, gravel spill, tyre ruts), not a
+stencil line — but its WIDTH must never fall below what the reference sheet
+shows.
+
+THE PAD: where the routes meet, a wide circular paved platform of the same
+material — concentric stonework, a low kerb, clearly a built staging pad and
+not merely a junction.
+
+ROUGH GROUND: at the marked circles, ground that reads as impassable —
+basalt outcrops, collapsed crust, an open fissure. Distinctly darker than
+the ash field, never road-coloured.
+
+CALM: this is a background. Detail density must stay LOW — large soft areas,
+gentle variation, no busy ash texture, no scattered rubble fields. The
+figures that walk on it carry the detail.
+
+No units, no vehicles, no buildings, no towers, no text, no grid, no
+vignette, no border.
+```
+
+### 8b.3 `11_frostbreit.png` — Frostspalte, Frostebene
+
+Referenzblatt: `bilder/vorlage-frostspalte.png` · **zwei** Bahnen, 5113
+Weltpunkte zusammen, Straßenbreite 80 bis 154 Weltpunkte.
+
+**Diese Karte hat einen zweiten Mangel, den die anderen nicht haben.** Weg und
+Boden liegen farblich nur **43 Farbschritte** auseinander (Spiralhain: 130).
+Deshalb greift dort das Verblassen der Kulisse aus v208 nicht — gemessen
+**1,3 gegen 16,2 Farbschritte** Wirkung. Der neue Boden muss die Straße
+**deutlich** vom Schnee abheben, sonst bleibt diese Karte der Fall, den kein
+Werkzeug retten kann.
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+IGNORE the BACKGROUND and MARGIN lines of the style block: this is a
+full-bleed terrain map, not a cut-out asset. It has no transparency and no
+margin; the terrain runs to all four edges.
+
+SUBJECT: A top-down battlefield terrain map, 2400x1350, seen straight from
+directly above — no perspective, no horizon, no sky. A frozen plain: wind-
+packed snow over blue-grey ice, shallow drifts, a few dark crevasses, sparse
+frost-killed scrub.
+
+THE ROAD — this is the part that has been wrong three times, read it twice.
+A reference sheet accompanies this order. The pale cream band on it is the
+road. Paint a cleared military road of dark scraped gravel and salted
+concrete EXACTLY along that band, edge to edge, and paint NO OTHER ROAD
+ANYWHERE on the map. Two routes, crossing once, running to the paved circle.
+Every other part of the map is snow field.
+
+CONTRAST IS THE POINT ON THIS MAP: the road must be much DARKER than the
+snow around it — ploughed down to grit and gravel, with snow banked at its
+verges. On the previous version road and snow were nearly the same colour
+and the road was invisible. A viewer must never have to wonder whether a
+given patch is road or ground.
+
+The road is WIDE: about one twentieth of the image width at its narrowest,
+wider at the bends and at the crossing. Its edges are soft and organic
+(snow banks, grit spill, tyre ruts), not a stencil line — but its WIDTH must
+never fall below what the reference sheet shows.
+
+THE PAD: at the end of the road, a wide circular paved platform of the same
+scraped material — concentric stonework, a low kerb, clearly a built staging
+pad and not merely a junction.
+
+ROUGH GROUND: at the marked circles, ground that reads as impassable — ice
+ridges, an open crevasse, deep drifts. Distinctly darker or cooler than the
+snow field, never road-coloured.
+
+CALM: this is a background. Detail density must stay LOW — large soft areas,
+gentle variation, no busy snow texture, no scattered debris. The figures
+that walk on it carry the detail.
 
 No units, no vehicles, no buildings, no towers, no text, no grid, no
 vignette, no border.

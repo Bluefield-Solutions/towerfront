@@ -1,6 +1,6 @@
 # Towerfront — Bildauftrag
 
-Stand: v215 · 02.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v216 · 04.09.2026 · **Auftragsdokument für den Bild-Agenten**
 
 Dieses Dokument ist die vollständige Bestellung. Es enthält alles, was zum
 Erzeugen der Bilder nötig ist: Stil, Maße, Blickrichtung, Dateinamen,
@@ -1678,10 +1678,18 @@ canopy, a few fallen trunks.
 
 NO ROAD. NO PATH. This is the single most important instruction in this
 brief, and it is the opposite of what such a map usually wants. Do not paint
-a road, a track, a trail, a worn line, a cleared lane, a paved circle or any
-elongated lighter strip anywhere on the image. The game draws its own road on
-top of this picture, and any painted one would sit next to it and contradict
-it. The ground is continuous from edge to edge.
+a road, a track, a trail, a worn line, a cleared lane or any elongated
+lighter strip anywhere on the image. The game draws its own road on top of
+this picture, and any painted one would sit next to it and contradict it.
+The ground is continuous from edge to edge.
+
+GOAL PLATFORM — the one exception, and it is required: a single round paved
+platform at the position marked by the BLUE ring on the accompanying
+reference sheet, about 260 world points across (roughly one seventh of the
+image width). Fitted stone with a raised kerb and concentric paving inside,
+clearly lighter and clearly man-made against the surrounding ground. It is
+round and isolated: no road, track or paved apron leads to or away from it.
+The player's fortress is placed on it by the game.
 
 ROUGH GROUND: at the circles marked on the accompanying reference sheet,
 ground that reads as impassable — boulder fields, dense thickets, a marshy
@@ -1715,10 +1723,18 @@ in the cracks.
 
 NO ROAD. NO PATH. This is the single most important instruction in this
 brief, and it is the opposite of what such a map usually wants. Do not paint
-a road, a track, a trail, a worn line, a cleared lane, a paved circle or any
-elongated lighter strip anywhere on the image. The game draws its own road on
-top of this picture, and any painted one would sit next to it and contradict
-it. The ground is continuous from edge to edge.
+a road, a track, a trail, a worn line, a cleared lane or any elongated
+lighter strip anywhere on the image. The game draws its own road on top of
+this picture, and any painted one would sit next to it and contradict it.
+The ground is continuous from edge to edge.
+
+GOAL PLATFORM — the one exception, and it is required: a single round paved
+platform at the position marked by the BLUE ring on the accompanying
+reference sheet, about 260 world points across (roughly one seventh of the
+image width). Fitted stone with a raised kerb and concentric paving inside,
+clearly lighter and clearly man-made against the surrounding ground. It is
+round and isolated: no road, track or paved apron leads to or away from it.
+The player's fortress is placed on it by the game.
 
 ROUGH GROUND: at the circles marked on the accompanying reference sheet,
 ground that reads as impassable — basalt outcrops, collapsed crust, an open
@@ -1751,10 +1767,18 @@ over blue-grey ice, shallow drifts, sparse frost-killed scrub.
 
 NO ROAD. NO PATH. This is the single most important instruction in this
 brief, and it is the opposite of what such a map usually wants. Do not paint
-a road, a track, a trail, a worn line, a cleared lane, a paved circle or any
-elongated lighter or darker strip anywhere on the image. The game draws its
-own road on top of this picture, and any painted one would sit next to it and
-contradict it. The ground is continuous from edge to edge.
+a road, a track, a trail, a worn line, a cleared lane or any elongated
+lighter or darker strip anywhere on the image. The game draws its own road on
+top of this picture, and any painted one would sit next to it and contradict
+it. The ground is continuous from edge to edge.
+
+GOAL PLATFORM — the one exception, and it is required: a single round paved
+platform at the position marked by the BLUE ring on the accompanying
+reference sheet, about 260 world points across (roughly one seventh of the
+image width). Fitted stone with a raised kerb and concentric paving inside,
+clearly darker and clearly man-made against the surrounding ground. It is
+round and isolated: no road, track or paved apron leads to or away from it.
+The player's fortress is placed on it by the game.
 
 ROUGH GROUND: at the circles marked on the accompanying reference sheet,
 ground that reads as impassable — ice ridges, an open crevasse, deep drifts.

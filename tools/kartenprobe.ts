@@ -23,7 +23,8 @@
  * WEGFREIHEIT: dass im Bild ueberhaupt keine Strasse gemalt ist. Gemessen
  * als Farbabstand zwischen dem Streifen unter der Bahn und dem Mittel der
  * Karte. Heute liegt er bei 85,0 / 79,2 / 33,3; ein Bild ohne Weg gehoert
- * unter 25.
+ * unter 25. Die Zielplattform bleibt dabei aussen vor - sie ist auch auf
+ * einer Karte ohne Weg bestellt (siehe unten am Zweig).
  *
  * Dazu, was ein Bild sonst noch verletzen kann: Seitenverhaeltnis, reines
  * Schwarz, Helligkeit und Saettigung.
@@ -43,7 +44,7 @@
  */
 import sharp from 'sharp';
 import { readFileSync } from 'node:fs';
-import { MAPS, lanePaths } from '../src/data/maps';
+import { MAPS, lanePaths, goalOf } from '../src/data/maps';
 import { MAP_BACKGROUNDS } from '../src/gfx/assets/backgrounds';
 import { WORLD_W as WELT_B, WORLD_H as WELT_H } from '../src/data/config';
 import { abnahmegrenzen } from './auftrag';
@@ -112,7 +113,32 @@ async function messen(bild: Buffer, kartenId: string): Promise<void> {
   // die Wegfarbe kommt: der Streifen unter der Bahn gegen das Mittel der
   // Karte. Wo nichts gemalt ist, ist der Abstand klein.
   if (!(m.bildBringt?.weg ?? true)) {
-    const abstand = spanne * 255;
+    // **Ohne die Zielplattform gerechnet.** Sie ist auf so einer Karte das
+    // einzige Pflaster, das BESTELLT ist (Abschnitt 8c) - `npm run
+    // zielplatte` sucht sie im Bild, und ohne sie faende es nichts. Sie
+    // gegen die Wegfreiheit zu rechnen hiesse, ein Bild dafuer abzuwerten,
+    // dass es die Bestellung erfuellt.
+    //
+    // Wieviel es ausmacht, haengt am Bild - und die Zahl am heutigen Vorrat
+    // taeuscht (Regel 12): dort ist die ganze Bahn Strasse, also aendert das
+    // Auslassen der Platte den Wert um 0,2 (85,2 statt 85,0). Auf dem
+    // gemeinten Bild - Gelaende ueberall, Pflaster nur auf der Platte -
+    // liegt der Posten hoeher: 4,4 % der Bahnabtastung des Spiralhains
+    // liegen innerhalb von 170 Weltpunkten um das Ziel (Ascheschlucht
+    // 2,2 %, Frostspalte 1,1 %), bei Pflaster vom Kontrast der heutigen
+    // Strasse also rund 4 der erlaubten 25 Farbschritte. Genug, um eine
+    // knappe Lieferung zu Unrecht zu kippen.
+    const ziel = goalOf(m);
+    let ar = 0, ag = 0, ab = 0, an = 0;
+    for (const b of bahnen) for (let t = 0.05; t < 0.95; t += 0.02) {
+      const pt = b.at(b.length * t);
+      if (Math.hypot(pt.x - ziel.x, pt.y - ziel.y) < 170) continue;
+      const x = Math.round(pt.x * N / WELT_B), y = Math.round(pt.y * N / WELT_B);
+      if (x < 0 || y < 0 || x >= N || y >= H) continue;
+      const c = farbe(x, y); ar += c[0]; ag += c[1]; ab += c[2]; an++;
+    }
+    if (!an) { fail('Keine Bahnpunkte ausserhalb der Zielplattform - nichts zu messen.'); return; }
+    const abstand = Math.hypot(ar / an - gr, ag / an - gg, ab / an - gb) * 255;
     console.log(`    Wegfreiheit: Farbabstand Bahn gegen Karte ${abstand.toFixed(1)}`
       + ` (erlaubt bis ${grenzen.wegfrei})`
       + `${abstand <= grenzen.wegfrei ? '' : ' <-- ZU VIEL'}`);

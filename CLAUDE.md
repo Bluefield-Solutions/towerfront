@@ -78,7 +78,10 @@ npm run bildtor     der Querschnitt, den die Torkette prüft
 npm run pack-art    Bildvorrat aus art/roh/ neu einbacken
 npm run eichen      einen Wert durchprobieren, alle Kennzahlen nebeneinander
 npm run einbettung  misst, wie sehr eine Figur zur Karte gehört (--eichen: Raum)
-npm run zielplatte  findet die Zielplattform im Kartenbild und prüft die Zahl
+npm run zielplatte  findet die Zielplattform im Kartenbild und prüft die Zahl.
+                    Seit v216 auch die GÜTE: die Suche gibt immer einen
+                    besten Punkt zurück, auch auf einem Bild ganz ohne
+                    Platte - und der lag bisher ungeprüft neben der Zahl.
 npm run speicher    misst den Bildspeicher ueber vier Kartenbesuche: fremde
                     Eintraege je Ablage und Zuwachs gegen den ersten Besuch.
                     `--tor` prüft die Grenzen. Eine Byte-Zahl allein sieht
@@ -151,11 +154,17 @@ Messschalter        In der Kopfzeile des Spiels: Messung an, und die Tafel
                     als Text heraus — ein Foto muss abgetippt werden, und
                     abgetippte Messwerte sind falsche Messwerte. `#messung`
                     in der Adresse tut dasselbe für einen Besuch.
-npm run wegvorlage  Referenzblatt je Karte fuer die Bildbestellung: der
-                    Bahnschlauch in voller Breite ueber die heutige Karte,
-                    dazu Bausperre, Zielplatte und die unwegsamen Flecken.
-                    Ein Prompt beschreibt eine Stimmung, keine Geometrie -
-                    dreimal hat genau das eine falsche Strasse gebracht.
+npm run wegvorlage  ZWEI Referenzblätter je Karte, weil es zwei
+                    Bestellungen gibt. `vorlage-<id>.png` fuer Abschnitt 8b
+                    (Bild MIT Weg): der Bahnschlauch in voller Breite ueber
+                    die heutige Karte, dazu Bausperre, Zielplatte und die
+                    unwegsamen Flecken. `vorlage-<id>-gelaende.png` fuer
+                    Abschnitt 8c (Gelaende OHNE Weg): flache Biomfarbe statt
+                    Kartenbild, dazu nur die Ringe. Das 8b-Blatt taugt fuer
+                    8c NICHT - wer einem Maler eine Strasse zeigt, bekommt
+                    eine Strasse. Ein Prompt beschreibt eine Stimmung, keine
+                    Geometrie; dreimal hat genau das eine falsche Strasse
+                    gebracht.
 npm run bildprompt  gibt EINEN Bild-Prompt vollstaendig aus - Stil-Block
                     schon eingesetzt, zum Kopieren in einem Stueck. Ohne
                     Suchtext listet es alle. Das Dokument haelt den
@@ -326,7 +335,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v215. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v216. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

@@ -26,6 +26,20 @@
  * daneben, und die Zahl sah aus wie ein Befund ueber das Spiel, war aber
  * einer ueber mich (Regel 3: prueft, ob der Eingriff ankommt).
  *
+ * **Karten ohne gemalte Strasse** (`bildBringt.weg === false`, seit v214
+ * moeglich) haben keine Bahnfarbe - dort liegt Gelaende, und das Mittel aus
+ * den Bahnpunkten waere das Mittel der Karte. Die Spanne faellt gegen null,
+ * die Schwelle mit ihr, und die Suche findet Rauschen. Auf solchen Karten
+ * kommt die Farbreferenz deshalb aus der eingetragenen Platte selbst.
+ *
+ * Das klingt nach einer Katze, die sich in den Schwanz beisst - ist es aber
+ * nicht, und das ist GEMESSEN: verschiebt man die Annahme um 300 Weltpunkte,
+ * faellt die Guete von 0,94 / 0,79 / 0,89 auf 0,15 / 0,21 / 0,00, und die
+ * Suche landet 608 bis 1649 Weltpunkte daneben. Die Farbe stammt von der
+ * Annahme, der Fund nicht. Damit eine leere Guete nicht als Fund durchgeht,
+ * gibt es seit v216 zusaetzlich eine Untergrenze - fuer JEDE Karte, denn
+ * "irgendwo ist das Beste" war bis dahin immer ein Ergebnis.
+ *
  * Aufruf: npm run zielplatte
  */
 import { readFileSync } from 'node:fs';
@@ -82,21 +96,41 @@ for (const k of karten) {
     return [data[i] / 255, data[i + 1] / 255, data[i + 2] / 255];
   };
 
-  // --- Die Wegfarbe aus den Bahnen abtasten.
+  // --- Die Farbreferenz. Woher sie kommt, haengt am Bild.
   const karte = MAPS.find((m) => m.id === k.id);
   if (!karte) { console.log(`── ${k.id}: keine Karte dieses Namens.`); continue; }
   const bahnen = lanePaths(karte);
+  const malt = karte.bildBringt?.weg ?? true;
   let wr = 0, wg = 0, wb = 0, wn = 0;
-  for (const bahn of bahnen) {
-    for (let t = 0.05; t < 0.95; t += 0.02) {
-      const p = bahn.at(bahn.length * t);
-      const x = Math.round(p.x * N / WELT_B), y = Math.round(p.y * N / WELT_B);
-      if (x < 0 || y < 0 || x >= N || y >= H) continue;
+  if (malt) {
+    // Das Bild bringt die Strasse mit: die Platte ist aus demselben Stoff.
+    for (const bahn of bahnen) {
+      for (let t = 0.05; t < 0.95; t += 0.02) {
+        const p = bahn.at(bahn.length * t);
+        const x = Math.round(p.x * N / WELT_B), y = Math.round(p.y * N / WELT_B);
+        if (x < 0 || y < 0 || x >= N || y >= H) continue;
+        const [r, g, b] = farbe(x, y);
+        wr += r; wg += g; wb += b; wn++;
+      }
+    }
+  } else {
+    // Das Spiel zeichnet die Strasse: im Bild ist die Platte das einzige
+    // Pflaster. Referenz aus 100 Weltpunkten um die eingetragene Mitte.
+    if (!karte.ziel) {
+      console.log(`── ${k.id}: keine Zielplattform eingetragen - und ohne gemalte Strasse `
+        + 'gibt es keine zweite Farbreferenz im Bild.');
+      k.ohneReferenz = true;
+      continue;
+    }
+    const zx = karte.ziel.x * N / WELT_B, zy = karte.ziel.y * N / WELT_B;
+    const zr = 100 * N / WELT_B;
+    for (let y = 0; y < H; y++) for (let x = 0; x < N; x++) {
+      if (Math.hypot(x - zx, y - zy) > zr) continue;
       const [r, g, b] = farbe(x, y);
       wr += r; wg += g; wb += b; wn++;
     }
   }
-  if (!wn) { console.log(`── ${k.id}: keine Bahnpunkte abtastbar.`); continue; }
+  if (!wn) { console.log(`── ${k.id}: keine Farbreferenz abtastbar.`); continue; }
   wr /= wn; wg /= wn; wb /= wn;
 
   // Und die Gelaendefarbe: das Mittel ueber alles. Der Abstand zwischen
@@ -135,7 +169,8 @@ for (const k of karten) {
 
   const wx = best.x * WELT_B / N, wy = best.y * WELT_B / N;
   console.log(`── ${k.id}`);
-  console.log(`   Wegfarbe rgb ${(wr*255).toFixed(0)},${(wg*255).toFixed(0)},${(wb*255).toFixed(0)}`
+  console.log(`   ${malt ? 'Wegfarbe (aus den Bahnen)' : 'Pflasterfarbe (aus der Platte)'} `
+    + `rgb ${(wr*255).toFixed(0)},${(wg*255).toFixed(0)},${(wb*255).toFixed(0)}`
     + `  Gelaende rgb ${(gr*255).toFixed(0)},${(gg*255).toFixed(0)},${(gb*255).toFixed(0)}`
     + `  Spanne ${spanne.toFixed(2)}`);
   console.log(`   Platte bei ${wx.toFixed(0)} : ${wy.toFixed(0)} `
@@ -152,12 +187,31 @@ console.log('\nGegen die eingetragene Zielplattform:\n');
  *  Radius der Platte (90 bis 170) - eine Festung, die so weit daneben steht,
  *  steht immer noch drauf. Die Fehler, um die es geht, waren 99 bis 164. */
 const ERLAUBT = 40;
+
+/** Wie deutlich die Platte sich abheben muss.
+ *
+ *  Die Suche gibt IMMER einen besten Punkt zurueck - auch auf einem Bild
+ *  ganz ohne Platte. Bis v215 war das ungeprueft: eine Karte ohne Plattform
+ *  konnte gruen melden, solange der beste Zufallsfleck naeher als 40
+ *  Weltpunkte an der eingetragenen Zahl lag. Genau die Verfallsart aus
+ *  Regel 5.
+ *
+ *  Gemessen liegen die drei Karten bei 0,94 / 0,79 / 0,89; eine um 300
+ *  Weltpunkte verschobene Annahme faellt auf 0,15 / 0,21 / 0,00. Dazwischen
+ *  ist Platz, und 0,50 liegt in der Mitte davon. */
+const GUETE_MINDEST = 0.5;
 const TOR = process.argv.includes('--tor');
 const befunde = [];
 
 for (const k of karten) {
   const karte = MAPS.find((m) => m.id === k.id);
-  if (!karte || !k.platte) continue;
+  if (!karte) continue;
+  if (k.ohneReferenz) {
+    befunde.push(`${k.id}: das Bild bringt keine Strasse mit (bildBringt.weg === false) und `
+      + 'die Karte traegt keine Zielplattform - damit ist im Bild nichts zu finden.');
+    continue;
+  }
+  if (!k.platte) continue;
   if (!karte.ziel) {
     befunde.push(`${k.id}: keine Zielplattform eingetragen, im Bild liegt aber eine `
       + `bei ${k.platte.x}:${k.platte.y} (Guete ${k.platte.guete.toFixed(2)}).`);
@@ -173,6 +227,12 @@ for (const k of karten) {
     befunde.push(`${k.id}: eingetragen ${karte.ziel.x}:${karte.ziel.y}, im Bild aber `
       + `${k.platte.x}:${k.platte.y} - ${d.toFixed(0)} Weltpunkte auseinander `
       + `(erlaubt ${ERLAUBT}). Entweder ist das Kartenbild neu oder die Zahl veraltet.`);
+  }
+  if (k.platte.guete < GUETE_MINDEST) {
+    befunde.push(`${k.id}: die beste Stelle hebt sich kaum ab (Guete `
+      + `${k.platte.guete.toFixed(2)}, verlangt ${GUETE_MINDEST.toFixed(2)}) - im Bild `
+      + 'liegt wahrscheinlich gar keine gepflasterte Rundplattform. Der Abstand oben '
+      + 'sagt dann nichts, weil er zu einem Zufallsfleck gemessen ist.');
   }
 }
 

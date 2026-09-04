@@ -1,6 +1,6 @@
 # Towerfront — Bildauftrag
 
-Stand: v214 · 02.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v215 · 02.09.2026 · **Auftragsdokument für den Bild-Agenten**
 
 Dieses Dokument ist die vollständige Bestellung. Es enthält alles, was zum
 Erzeugen der Bilder nötig ist: Stil, Maße, Blickrichtung, Dateinamen,
@@ -126,6 +126,49 @@ canvas.
 | „no outlines" | Die zweite Probelieferung war cel-shaded mit harter Kontur um jedes Teil und lag bei **14,3 – 25,2 %** reinem Schwarz. Bei 17 bis 40 Bildschirmpunkten wird eine 3-px-Kontur zum halben Gegner | `npm run probebild` |
 | „no black, dark grey" | Erste Lieferung **6,7 – 10,9 %**, zweite **14,3 – 25,2 %**, heutiger Bestand 0,0 % | `npm run probebild` |
 | „5 percent margin" | Alle acht Kandidaten der Probelieferung berührten den Kachelrand | `npm run probebild` |
+
+---
+
+## 1b. Der Ausgabe-Block — für **Kartenbilder**, wörtlich ans Ende jedes Prompts
+
+**Warum eigens.** Der Stil-Block sagt, wie ein Bild aussehen soll; er sagt
+nichts darüber, in welcher Form es ankommen muss. Genau daran ist bisher Zeit
+verlorengegangen: ein Bild im Chatfenster ist kein Bild auf der Platte, und
+was nicht als Datei ankommt, kann nicht gemessen werden.
+
+Er gilt nur für die **Kartenbilder** (Abschnitte 8b und 8c). Figuren und
+Türme haben andere Maße; ihre Angaben stehen in Abschnitt 2 und 3.
+
+```
+OUTPUT AND DELIVERY — read this as carefully as the rest.
+
+FORMAT: PNG. Not JPEG, not WebP — the file is re-encoded later, and JPEG
+artefacts would be baked in twice.
+
+ASPECT RATIO: exactly 16:9. This is a hard requirement and the most common
+reason a delivery is rejected on arrival: the image is stretched onto a 16:9
+field, so 3:2 or 4:3 arrives visibly distorted. 2400 x 1350 pixels is the
+target size; anything from 1920 x 1080 upwards is fine as long as the ratio
+is exactly 16:9. Do not upscale a smaller render to reach the number.
+
+FULL BLEED: the terrain fills the entire canvas. No frame, no border, no
+rounded corners, no matte, no drop shadow around the image, no letterboxing.
+
+NOTHING ADDED: no caption, no title, no watermark, no signature, no scale
+bar, no grid, no compass rose, no legend, no colour-check patch.
+
+FLAT LIGHTING ACROSS THE CANVAS: no vignette, no corner darkening, no
+spotlight in the centre. The corners must be as bright as the middle. The
+game lays its own atmospheric layer over the picture; a baked one would sit
+on top of it twice.
+
+ONE IMAGE PER REQUEST: deliver a single image, not a grid of variants and not
+a sheet with several options. If you want to offer alternatives, produce them
+one after another, each as its own full-size file.
+
+DELIVER IT AS A DOWNLOADABLE FILE at full resolution — not as an inline
+preview, not cropped, not resized to fit a chat window.
+```
 
 ---
 
@@ -1652,6 +1695,8 @@ figures that walk on it carry the detail.
 
 No units, no vehicles, no buildings, no towers, no text, no grid, no
 vignette, no border.
+
+[AUSGABE-BLOCK EINFÜGEN]
 ```
 
 ### 8c.2 `13_aschebreit.png` — Ascheschlucht, Aschefeld **ohne Weg**
@@ -1687,6 +1732,8 @@ figures that walk on it carry the detail.
 
 No units, no vehicles, no buildings, no towers, no text, no grid, no
 vignette, no border.
+
+[AUSGABE-BLOCK EINFÜGEN]
 ```
 
 ### 8c.3 `11_frostbreit.png` — Frostspalte, Frostebene **ohne Weg**
@@ -1721,6 +1768,8 @@ walk on it carry the detail.
 
 No units, no vehicles, no buildings, no towers, no text, no grid, no
 vignette, no border.
+
+[AUSGABE-BLOCK EINFÜGEN]
 ```
 
 ---

@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const DOK = join(ROOT, 'docs/Towerfront-BILDAUFTRAG.md');
 export const PLATZHALTER = '[STYLE-BLOCK EINFÜGEN]';
+export const AUSGABE_PLATZHALTER = '[AUSGABE-BLOCK EINFÜGEN]';
 
 const text = readFileSync(DOK, 'utf8');
 const zeilen = text.split('\n');
@@ -51,6 +52,26 @@ export function stilBlock(): string {
   return b.inhalt;
 }
 
+/** Der Ausgabe-Block fuer Kartenbilder: der erste Block unter Abschnitt 1b.
+ *
+ *  Warum eigens und nicht im Stil-Block: der Stil-Block gilt fuer alle Bilder,
+ *  auch fuer Figuren und Tuerme - und die haben andere Masse. Der Ausgabe-Block
+ *  gilt nur fuer Karten. Zwei Fassungen davon in den drei Kartenauftraegen
+ *  waeren dreimal derselbe Text, von dem zwei veralten (Regel 15). */
+export function ausgabeBlock(): string {
+  const zeile = zeilen.findIndex((z) => z.startsWith('## 1b. Der Ausgabe-Block'));
+  if (zeile < 0) {
+    console.error('AUFTRAG: der Abschnitt "1b. Der Ausgabe-Block" fehlt im Auftragsdokument.');
+    process.exit(1);
+  }
+  const b = blockNach(zeile + 1);
+  if (!b) {
+    console.error('AUFTRAG: unter "1b. Der Ausgabe-Block" steht kein Block.');
+    process.exit(1);
+  }
+  return b.inhalt;
+}
+
 export interface Abschnitt { titel: string; zeile: number; prompt: string }
 
 /** Alle Abschnitte mit einem Prompt, in der Reihenfolge des Dokuments. */
@@ -65,12 +86,19 @@ export function promptAbschnitte(): Abschnitt[] {
   return aus;
 }
 
-/** Den Stil-Block einsetzen - und pruefen, dass er wirklich drin ist. */
-export function einsetzen(prompt: string, stil: string): string {
-  const fertig = prompt.split(PLATZHALTER).join(stil);
-  if (fertig.includes(PLATZHALTER)) {
-    console.error('AUFTRAG: der Platzhalter steht noch im Ergebnis - '
-      + 'der Stil-Block wurde nicht eingesetzt.');
+/** Beide Bloecke einsetzen - und pruefen, dass keiner stehen bleibt.
+ *
+ *  Der Ausgabe-Block ist wahlfrei: nur die Kartenauftraege tragen seinen
+ *  Platzhalter. Wer ihn nicht braucht, merkt nichts davon - wer ihn hat und
+ *  ihn nicht ersetzt bekaeme, faellt hier durch. */
+export function einsetzen(prompt: string, stil: string, ausgabe?: string): string {
+  let fertig = prompt.split(PLATZHALTER).join(stil);
+  if (fertig.includes(AUSGABE_PLATZHALTER)) {
+    fertig = fertig.split(AUSGABE_PLATZHALTER).join(ausgabe ?? ausgabeBlock());
+  }
+  if (fertig.includes(PLATZHALTER) || fertig.includes(AUSGABE_PLATZHALTER)) {
+    console.error('AUFTRAG: ein Platzhalter steht noch im Ergebnis - '
+      + 'ein Block wurde nicht eingesetzt.');
     process.exit(1);
   }
   return fertig;

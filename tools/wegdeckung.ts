@@ -81,7 +81,7 @@ const AUF_WEG_MAX = 0.5;
  *  lassen ein neues Kartenbild zu und fangen die volle Staerke. */
 const WIRKUNG_DECKEL = 1.4;
 const abstaende: { karte: string; wirkung: number; aufWeg: number; anteil: number;
-  zeichnung: number }[] = [];
+  zeichnung: number; wegAbstand: number; zeichnetSelbst: boolean }[] = [];
 
 for (const m of MAPS) {
   const d = (MAP_BACKGROUNDS as Record<string, string>)[m.id];
@@ -180,12 +180,37 @@ for (const m of MAPS) {
     sOhne += (helligkeit(ohneVerblassen, j) - mOhne) ** 2;
   }
   const zeichnung = sOhne > 0 ? Math.sqrt(sMit / sN) / Math.sqrt(sOhne / sN) : 1;
+
+  // **Und wie weit steht der Weg ueberhaupt von seinem Boden ab?**
+  //
+  // Gemessen am gebackenen Untergrund: Mittel im Bahnschlauch gegen Mittel im
+  // Streifen daneben (22 bis 120 Weltpunkte, damit der Schattensaum des
+  // Bandes nicht mitzaehlt). Fuer eine Karte mit GEMALTER Strasse ist das
+  // eine Auskunft; fuer eine, die ihren Weg selbst zeichnet, ist es die
+  // Abnahme - dort ist der Abstand eine Entscheidung, keine Eigenschaft des
+  // Bildes.
+  let sr = 0, sg = 0, sb = 0, sn2 = 0, ur = 0, ug = 0, ub = 0, un = 0;
+  for (let y = 0; y < WELT_H; y += 2) for (let x = 0; x < WELT_B; x += 2) {
+    let drin = false, daneben = false;
+    for (const lane of bahnen) {
+      const sa = lane.schlauchAbstand(x, y);
+      if (sa < -12) drin = true; else if (sa > 22 && sa < 120) daneben = true;
+    }
+    const j = (y * WELT_B + x) * 4;
+    if (drin) { sr += mit[j]; sg += mit[j + 1]; sb += mit[j + 2]; sn2++; }
+    else if (daneben) { ur += mit[j]; ug += mit[j + 1]; ub += mit[j + 2]; un++; }
+  }
+  const wegAbstand = sn2 && un
+    ? Math.hypot(sr / sn2 - ur / un, sg / sn2 - ug / un, sb / sn2 - ub / un) : 0;
+
   abstaende.push({
     karte: m.id,
     wirkung: wirkungN ? wirkung / wirkungN : 0,
     aufWeg: aufWegN ? aufWeg / aufWegN : 0,
     anteil: sN / Math.max(1, wirkungN),
     zeichnung,
+    wegAbstand,
+    zeichnetSelbst: !(m.bildBringt?.weg ?? true),
   });
 
   const p = (v: number) => `${(v / gesamt * 100).toFixed(1)} %`;
@@ -195,12 +220,26 @@ for (const m of MAPS) {
 }
 
 console.log('\nVerblassen der Kulisse - gegen einen Untergrund OHNE Verblassen gerechnet\n');
-console.log('  Karte            Wirkung   auf der Bahn   verblasste Flaeche   Zeichnung');
+console.log('  Karte            Wirkung   auf der Bahn   verblasste Flaeche   Zeichnung'
+  + '   Weg gegen Boden');
 for (const a of abstaende) {
   console.log(`  ${a.karte.padEnd(15)} ${a.wirkung.toFixed(1).padStart(6)}   `
     + `${a.aufWeg.toFixed(2).padStart(10)}   ${(a.anteil * 100).toFixed(1).padStart(16)} %   `
-    + `${a.zeichnung.toFixed(2).padStart(8)}`);
+    + `${a.zeichnung.toFixed(2).padStart(8)}   ${a.wegAbstand.toFixed(1).padStart(15)}`
+    + `${a.zeichnetSelbst ? '  (gezeichnet)' : ''}`);
 }
+
+/** In welchem Band ein SELBST GEZEICHNETER Weg von seinem Boden abstehen darf,
+ *  in Farbschritten am gebackenen Untergrund.
+ *
+ *  Nicht erfunden, sondern von den gemalten Strassen abgelesen: die
+ *  Ascheschlucht liegt bei 75,4, die Frostspalte bei 54,3 - und die
+ *  Frostspalte ist die schwaechste, die das Spiel hat. Das Band laesst nach
+ *  unten etwas Luft (unter 40 verschwindet der Weg im Gelaende) und nach oben
+ *  deutlich weniger, weil genau dort der Fehler lag: die erste gezeichnete
+ *  Fassung stand bei 165, mehr als das Doppelte jeder gemalten Strasse. Das
+ *  ist die Zahl hinter "liegt darauf wie ausgeschnittenes Papier". */
+const WEG_ABSTAND: [number, number] = [40, 90];
 
 if (TOR) {
   const fehler: string[] = [];
@@ -222,6 +261,13 @@ if (TOR) {
     if (karte && !(karte.bildBringt?.weg ?? true)) {
       console.log(`  ${a.karte}: kein gemalter Weg im Bild - Verblassen entfaellt, `
         + 'geprueft wird die Wegfreiheit in `npm run kartenprobe`.');
+      // Stattdessen: sitzt der GEZEICHNETE Weg richtig auf seinem Boden?
+      if (a.wegAbstand < WEG_ABSTAND[0] || a.wegAbstand > WEG_ABSTAND[1]) {
+        fehler.push(`${a.karte}: der gezeichnete Weg steht ${a.wegAbstand.toFixed(1)} `
+          + `Farbschritte von seinem Boden ab, erlaubt sind ${WEG_ABSTAND[0]} bis `
+          + `${WEG_ABSTAND[1]}. Darunter verschwindet er im Gelaende, darueber liegt er `
+          + 'darauf wie ausgeschnittenes Papier - die erste Fassung stand bei 165.');
+      }
       continue;
     }
     const soll = WIRKUNG[a.karte];

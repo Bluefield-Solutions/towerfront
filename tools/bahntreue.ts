@@ -82,6 +82,21 @@ console.log('BAHNTREUE\n');
 for (const m of MAPS) {
   const d = (MAP_BACKGROUNDS as Record<string, string>)[m.id];
   if (!d) { console.log(m.id, 'kein Bild'); continue; }
+  // **Ohne gemalte Strasse gibt es nichts, worauf die Bahn laufen koennte.**
+  //
+  // Dieses Tor fragt: liegt der Bahnschlauch auf der Farbe, die man sieht?
+  // Zeichnet das Spiel den Weg selbst, ist die Antwort von Bauart ja - der
+  // Weg IST die Bahn. Die Frage, die dann bleibt, stellt `npm run
+  // kartenprobe` (ist wirklich keine Strasse gemalt?) und `npm run
+  // wegdeckung` (steht der gezeichnete Weg richtig auf seinem Boden?).
+  //
+  // Ohne diesen Zweig misst das Tor den Farbabstand einer Strasse, die es
+  // nicht gibt, und meldet 2 % statt 100 - eine Zahl ueber sich selbst.
+  if (!(m.bildBringt?.weg ?? true)) {
+    console.log(`  ${m.name.padEnd(15)} zeichnet seinen Weg selbst - Mitte, Schlauch und `
+      + 'Rand sind von Bauart 100 %.');
+    continue;
+  }
   const N = 640, H = Math.round(N * WELT_H / WELT_B);
   const { data } = await sharp(Buffer.from(d.split(',')[1], 'base64'))
     .resize(N, H, { fit: 'fill' }).removeAlpha().raw().toBuffer({ resolveWithObject: true });

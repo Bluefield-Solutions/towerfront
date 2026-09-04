@@ -181,7 +181,10 @@ export interface GameMap {
 
 const MOOS: MapPalette = {
   terrain: '#173D3A', terrainHi: '#215A50', terrainLo: '#102B2B',
-  path: '#C9A86A', pathEdge: '#9C7F49',
+  // Erdton statt Sandton. Auf dem Waldboden vom 04.09.2026 war das alte
+  // #C9A86A um Klassen heller als alles um es herum - ein cremefarbenes Band
+  // auf olivem Gruen. Ein getretener Waldweg ist kaum heller als sein Rand.
+  path: '#5A4B2E', pathEdge: '#3B301D',
   rock: '#2A3348', rockHi: '#3D4A66',
   mood: '#BEE2FF', haze: '#B4D6E2', sonne: '#FFC26A',
   // Spiralhain: Nieselregen. Moos steht nicht ohne Wasser.
@@ -215,21 +218,27 @@ export const MAP_SPIRALHAIN: GameMap = {
   blurb: 'Ein Weg, viel Platz. Der Pfad windet sich um den Kristall.',
   palette: MOOS,
   lanes: [
+    // **Neu gezogen, seit das Spiel den Weg selbst zeichnet.** Vorher folgte
+    // die Bahn der gemalten Strasse - Umwegfaktor 1,11, eine fast gerade
+    // Diagonale, und die obere linke Kartenhaelfte wurde nie betreten. Ohne
+    // gemalte Strasse gibt es nichts mehr, dem zu folgen waere.
+    //
+    // Gewunden statt verlaengert: das Tor rueckt von links unten in die
+    // Mitte des unteren Randes, die Luftlinie faellt von 1400 auf rund 900,
+    // und der Umweg steigt, ohne dass viel mehr Gegner gleichzeitig
+    // unterwegs sind. Genau daran sind v209 und v210 gescheitert - eine
+    // anderthalb mal so lange Bahn verlangte hpMul 0,55 gegen erlaubte 0,85.
+    //
+    // Die Bahn haelt Abstand zu jedem unwegsamen Fleck: ein Weg mitten durch
+    // ein Felsfeld sieht falsch aus, und die Bausperre lag ohnehin darum.
     [
-      { x: 523, y: 1157, w: 40 }, { x: 572, y: 1125, w: 45.2188448601464 }, { x: 616, y: 1095, w: 40 },
-      { x: 635, y: 1077, w: 63 }, { x: 641, y: 1055, w: 75 }, { x: 643, y: 1021, w: 79 },
-      { x: 645, y: 983, w: 81 }, { x: 653, y: 949, w: 72 }, { x: 675, y: 925, w: 65 },
-      { x: 708, y: 910, w: 66 }, { x: 745, y: 903, w: 60 }, { x: 785, y: 896, w: 59 },
-      { x: 819, y: 879, w: 62 }, { x: 841, y: 855, w: 75 }, { x: 866, y: 834, w: 58 },
-      { x: 900, y: 823, w: 59 }, { x: 938, y: 817, w: 59 }, { x: 977, y: 813, w: 59 },
-      { x: 1014, y: 806, w: 59 }, { x: 1043, y: 787, w: 69 }, { x: 1059, y: 758, w: 77 },
-      { x: 1076, y: 730, w: 61 }, { x: 1105, y: 712, w: 55 }, { x: 1141, y: 704, w: 59 },
-      { x: 1181, y: 701, w: 59 }, { x: 1221, y: 697, w: 59 }, { x: 1255, y: 686, w: 54 },
-      { x: 1274, y: 662, w: 63 }, { x: 1286, y: 632, w: 76 }, { x: 1302, y: 600, w: 67 },
-      { x: 1322, y: 569, w: 70 }, { x: 1347, y: 543, w: 64 }, { x: 1381, y: 524, w: 59 },
-      { x: 1416, y: 506, w: 54 }, { x: 1450, y: 485, w: 59 }, { x: 1484, y: 468, w: 62 },
-      { x: 1526, y: 463, w: 63 }, { x: 1585, y: 473, w: 54 }, { x: 1645, y: 488, w: 58 },
-      { x: 1675, y: 493, w: 81 }, { x: 1691, y: 488, w: 81 }, { x: 1704, y: 480, w: 81 },
+      { x: 1230, y: 1160, w: 40 }, { x: 1290, y: 1030, w: 58 },
+      { x: 1420, y: 975, w: 62 }, { x: 1480, y: 890, w: 64 },
+      { x: 1410, y: 790, w: 64 }, { x: 1270, y: 755, w: 62 },
+      { x: 1140, y: 730, w: 60 }, { x: 1060, y: 650, w: 60 },
+      { x: 1130, y: 560, w: 62 }, { x: 1280, y: 505, w: 62 },
+      { x: 1450, y: 465, w: 66 }, { x: 1610, y: 455, w: 70 },
+      { x: 1734, y: 454, w: 76 },
     ],
   ],
   // **Aus dem Bild gelesen, dann angesehen.** `npm run gelaendesuche -- spiralhain`

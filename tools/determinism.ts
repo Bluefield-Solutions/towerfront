@@ -12,6 +12,8 @@
 import { GameState } from '../src/game/state';
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, type TowerId } from '../src/data/towers';
 import { candidateSpots } from './spots';
+import { NO_PERKS } from '../src/data/perks';
+import { MAPS } from '../src/data/maps';
 
 // Der Browser-Speicher fehlt hier - eine Attrappe genuegt, die Sicherung
 // schreibt beim Zuruecksetzen hinein.
@@ -81,7 +83,16 @@ interface Run { prints: string[]; gold: number; lives: number; wave: number; }
 
 function run(frames: number, pauseAt = -1): Run {
   const s = new GameState();
-  s.reset(SEED);
+  // **Ohne Verbesserungen und mit fester Kartenzahl**, wie `npm run sim`.
+  //
+  // Sonst liest `reset` den gespeicherten Fortschritt - und der wandert
+  // zwischen den beiden Laeufen: gewinnt der erste die Karte, schreibt das
+  // Spiel einen Stern, der zweite startet mit anderen Verbesserungen und
+  // laeuft anders. Genau das ist in v217 passiert, als die neu gezogene Bahn
+  // den Lauf erstmals innerhalb der 240 Sekunden gewinnen liess - vorher
+  // endete er nie, also fiel es nie auf. Ein Werkzeug, das seinen eigenen
+  // Nebeneffekt misst, misst nicht mehr das Spiel (Regel 4).
+  s.reset(SEED, 'normal', MAPS[0].id, { perks: NO_PERKS, karten: MAPS.length });
   const spots = candidateSpots(s).slice(0, 40);
   const prints: string[] = [];
   for (let f = 0; f < frames; f++) {

@@ -1,6 +1,6 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v216 · 04.09.2026
+Stand: v217 · 04.09.2026
 
 Die Datei ist **eine** Datei. Jedes Bild steckt als Datenadresse darin und
 wird dabei ein Drittel größer. Ohne Obergrenze wächst sie mit jedem Bild, bis

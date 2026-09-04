@@ -82,6 +82,34 @@ const HELL_MIN = 0.10;
  *  volle Lauf zu v166 hat es gefunden. */
 const KLIMA_MIN = 0.035;
 
+/** **Und dasselbe anteilig, je Karte.**
+ *
+ *  Regel 2, hart gelernt in v217: die Zahl oben ist ABSOLUT, die Sache ist
+ *  anteilig. Als der Spiralhain sein neues Kartenbild bekam, starteten die
+ *  Figuren schon naeher am Boden (Farbabstand 0,09 bis 0,13 statt 0,18 bis
+ *  0,25) - das Klima nahm absolut weniger weg, und die absolute Ratsche
+ *  schlug an, ohne dass die Einbettung schlechter geworden waere.
+ *
+ *  Gemessen, anteilig, ueber alle 14 Einzelobjekte je Karte (v217):
+ *
+ *      Spiralhain    36 %
+ *      Ascheschlucht 33 %
+ *      Frostspalte   26 %
+ *
+ *  **Die drei Zahlen stehen hier, weil ich sie beim ersten Anlauf geraten
+ *  habe.** Aus einem halben Dutzend abgelesener Zeilen wurden 50 / 65 /
+ *  -20 % - und alle drei waren falsch, weil einzelne Zeilen kein Mittel
+ *  sind (Regel 12). Das Tor hat es gemeldet, bevor es jemand geglaubt hat.
+ *
+ *  Ratsche je Karte, kein gemeinsames Soll: die drei liegen dicht
+ *  beieinander, aber sie haengen am Kartenbild, und ein gemeinsames Soll
+ *  wuerde beim naechsten Bild entweder unerreichbar oder bedeutungslos. */
+const KLIMA_ANTEIL = { spiralhain: 0.36, ascheschlucht: 0.33, frostspalte: 0.26 };
+/** Wieviel eine Karte unter ihrer Ratsche liegen darf, bevor es ein Befund
+ *  ist. Fuenf Punkte - Bildrauschen und ein neu gepacktes Bild bewegen die
+ *  Zahl um ein bis zwei. */
+const KLIMA_LUFT = 0.05;
+
 const quelle = (datei, id) => {
   const t = new RegExp(`'${id}': 'data:image/(?:webp|jpeg|png);base64,([^']+)'`)
     .exec(readFileSync(join(ROOT, datei), 'utf8'));
@@ -455,8 +483,31 @@ for (const [name, datei, id, staerke] of FIGUREN) {
     const beste = [...klimaWirkung].sort((a, b) => (b.ohne - b.mit) - (a.ohne - a.mit))[0];
     console.log(`Klimawirkung: der Farbabstand sinkt im Mittel um ${mittel.toFixed(3)} `
       + `(${n} Messungen, am staerksten "${beste.name}" auf ${beste.karte}: `
-      + `${beste.ohne.toFixed(2)} → ${beste.mit.toFixed(2)}). Ratsche ${KLIMA_MIN}.`);
-    if (mittel < KLIMA_MIN) {
+      + `${beste.ohne.toFixed(2)} → ${beste.mit.toFixed(2)}).`);
+
+    // Und jetzt anteilig, je Karte - das ist die Zahl, die urteilt.
+    const karten = [...new Set(klimaWirkung.map((w) => w.karte))];
+    for (const k of karten) {
+      const w = klimaWirkung.filter((q) => q.karte === k);
+      const anteil = w.reduce((a, q) => a + (q.ohne > 0 ? (q.ohne - q.mit) / q.ohne : 0), 0) / w.length;
+      const soll = KLIMA_ANTEIL[k];
+      console.log(`  ${k.padEnd(15)} das Klima nimmt ${(anteil * 100).toFixed(0).padStart(4)} % `
+        + `des Farbabstands weg (${w.length} Messungen)`
+        + (soll === undefined ? '   keine Ratsche eingetragen'
+          : `   Ratsche ${(soll * 100).toFixed(0)} %`)
+        + (soll !== undefined && anteil < soll - KLIMA_LUFT ? '   SCHLECHTER' : ''));
+      if (soll === undefined) {
+        befunde.push(`Klimawirkung ${k}: keine Ratsche eingetragen. Gemessen `
+          + `${(anteil * 100).toFixed(0)} % - wer eine Karte hinzufuegt, traegt ihren Stand ein.`);
+      } else if (anteil < soll - KLIMA_LUFT) {
+        befunde.push(`Klimawirkung ${k}: das Klima nimmt nur noch `
+          + `${(anteil * 100).toFixed(0)} % des Farbabstands weg, bisher `
+          + `${(soll * 100).toFixed(0)} %. Anteilig gemessen, weil ein absolutes Mass `
+          + 'mit jedem helleren Kartenbild faellt, ohne dass die Einbettung schlechter '
+          + 'waere (Regel 2).');
+      }
+    }
+    if (mittel < KLIMA_MIN * 0.4) {
       befunde.push(`Klimawirkung: der Farbabstand sinkt nur um ${mittel.toFixed(3)}, `
         + `die Ratsche steht bei ${KLIMA_MIN}. Das Farbklima traegt nichts mehr bei - `
         + 'dann ist es ein Fuellwort und keine Einbettung.');

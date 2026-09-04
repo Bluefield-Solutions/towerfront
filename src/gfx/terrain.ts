@@ -96,11 +96,41 @@ export function terrainAuftrag(
   };
 
   // Bringt das Bild den Weg schon mit, wird hier nichts gezeichnet.
+  //
+  // **Und wo er gezeichnet wird, deckt er nicht zu.** Die erste Fassung malte
+  // ein volldeckendes cremefarbenes Band mit einem zusaetzlichen hellen
+  // Streifen darueber. Auf der alten, dunklen Karte sah das gut aus; auf dem
+  // hellgruenen Waldboden der Lieferung vom 04.09.2026 lag es darauf wie
+  // ausgeschnittenes Papier - flach, ohne Zeichnung, ohne Bezug zum Grund.
+  //
+  // Jetzt laeuft die Farbe mit Deckung 0,74 ueber das Kartenbild. Damit
+  // kommt die Zeichnung des Bodens durch, der Weg nimmt dessen Farbe an, und
+  // er kann gar nicht mehr neben der Karte stehen - egal welches Bild
+  // spaeter kommt. Der helle Streifen entfaellt: er war es, der das Band zum
+  // Papier machte.
   if (!(map.bildBringt?.weg ?? true)) {
-    for (const p of lanes) { g.fillStyle = 'rgba(6,10,18,0.5)'; ribbon(p, 12); }
-    for (const p of lanes) { g.fillStyle = pal.pathEdge; ribbon(p, 0); }
-    for (const p of lanes) { g.fillStyle = pal.path; ribbon(p, -9); }
-    for (const p of lanes) { g.fillStyle = hexA('#FFF6DC', 0.12); ribbon(p, -22); }
+    for (const p of lanes) { g.fillStyle = 'rgba(6,10,18,0.42)'; ribbon(p, 12); }
+    for (const p of lanes) { g.fillStyle = hexA(pal.pathEdge, 0.8); ribbon(p, 0); }
+    for (const p of lanes) { g.fillStyle = hexA(pal.path, 0.6); ribbon(p, -9); }
+
+    // Fahrspuren und blanke Stellen. Ohne sie bleibt die Flaeche gleichmaessig,
+    // und gleichmaessig ist auf einem fotografischen Grund das Kennzeichen
+    // des Aufgeklebten. Dieselbe Unruhe wie beim Untergrund oben, nur
+    // entlang der Bahn und schwaecher.
+    for (const p of lanes) {
+      for (let t = 0; t < p.length; t += 26) {
+        const q = p.at(t);
+        const quer = (rnd() - 0.5) * 1.5 * q.half;
+        const nx = Math.cos(q.angle + Math.PI / 2), ny = Math.sin(q.angle + Math.PI / 2);
+        const rr = 10 + rnd() * 26;
+        g.fillStyle = rnd() > 0.45 ? hexA(pal.terrainLo, 0.13) : hexA(pal.path, 0.16);
+        g.save();
+        g.translate(q.x + nx * quer, q.y + ny * quer);
+        g.rotate(q.angle);
+        g.beginPath(); g.ellipse(0, 0, rr, rr * 0.34, 0, 0, Math.PI * 2); g.fill();
+        g.restore();
+      }
+    }
   }
 
   // Randsteine nur, wo der Weg auch gezeichnet wird.
@@ -112,14 +142,21 @@ export function terrainAuftrag(
       const e = p.edgesAt(i);
       const ang = Math.atan2(e.ly - e.ry, e.lx - e.rx);
       for (const [cx0, cy0] of [[e.lx, e.ly], [e.rx, e.ry]] as const) {
-        const jx = (rnd() - 0.5) * 5, jy = (rnd() - 0.5) * 5;
+        const jx = (rnd() - 0.5) * 7, jy = (rnd() - 0.5) * 7;
         const cx = cx0 + jx, cy = cy0 + jy;
-        g.fillStyle = 'rgba(0,0,0,0.28)';
-        g.beginPath(); g.ellipse(cx, cy + 2, 7, 4.5, ang, 0, Math.PI * 2); g.fill();
-        g.fillStyle = hexA(pal.pathEdge, 0.95);
-        g.beginPath(); g.ellipse(cx, cy, 7, 4.5, ang, 0, Math.PI * 2); g.fill();
-        g.fillStyle = 'rgba(255,255,255,0.16)';
-        g.beginPath(); g.ellipse(cx, cy - 1.5, 4.5, 2.5, ang, 0, Math.PI * 2); g.fill();
+        // **Jeder Stein anders.** Vorher waren alle gleich gross und gleich
+        // hell - eine Reihe gleicher Bohnen, und die las sich als Zierborte
+        // statt als Einfassung. Groesse und Ton streuen jetzt, und ein
+        // Achtel der Steine faellt ganz aus: eine Einfassung hat Luecken.
+        if (rnd() < 0.12) continue;
+        const rx = 5.5 + rnd() * 3.5, ry = rx * (0.6 + rnd() * 0.12);
+        const ton = 0.62 + rnd() * 0.3;
+        g.fillStyle = 'rgba(0,0,0,0.24)';
+        g.beginPath(); g.ellipse(cx, cy + 2, rx, ry, ang, 0, Math.PI * 2); g.fill();
+        g.fillStyle = hexA(pal.pathEdge, ton);
+        g.beginPath(); g.ellipse(cx, cy, rx, ry, ang, 0, Math.PI * 2); g.fill();
+        g.fillStyle = `rgba(255,255,255,${(0.06 + rnd() * 0.1).toFixed(3)})`;
+        g.beginPath(); g.ellipse(cx, cy - 1.5, rx * 0.62, ry * 0.5, ang, 0, Math.PI * 2); g.fill();
       }
     }
   }

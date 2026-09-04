@@ -958,6 +958,38 @@ const PROBEN = [
     tor: 'wegdeckungtor',
   },
   {
+    // **Der gezeichnete Weg liegt wieder als helles Papier auf dem Boden.**
+    //
+    // Genau der Fehler, den die erste gezeichnete Fassung hatte: ein
+    // cremefarbenes Band auf hellgruenem Waldboden, 165 Farbschritte vom
+    // Grund entfernt - mehr als das Doppelte jeder gemalten Strasse. Mit den
+    // alten Palettenfarben steigt der Abstand auf 267,6 gegen erlaubte 40 bis
+    // 90.
+    //
+    // Ohne diese Probe waere das Band eine Zahl, die niemand mehr bewegt:
+    // die Palette ist Kartendaten, und ein Tor, das nur den heutigen Stand
+    // bestaetigt, faellt still aus, sobald jemand die Farbe anfasst.
+    // **Das Determinismus-Tor liest wieder den gespeicherten Fortschritt.**
+    //
+    // Dann wandert der Nebeneffekt des ersten Laufs in den zweiten: gewinnt
+    // er die Karte, schreibt das Spiel einen Stern, und der zweite startet
+    // mit anderen Verbesserungen. Gefunden in v217, als die neu gezogene
+    // Bahn den Lauf erstmals innerhalb der 240 Sekunden gewinnen liess -
+    // vorher endete er nie, also konnte es nie auffallen.
+    name: 'Determinismus liest den gespeicherten Fortschritt',
+    datei: 'tools/determinism.ts',
+    regel: /  s\.reset\(SEED, 'normal', MAPS\[0\]\.id, \{ perks: NO_PERKS, karten: MAPS\.length \}\);/,
+    ersatz: '  s.reset(SEED);',
+    tor: 'determinism',
+  },
+  {
+    name: 'Gezeichneter Weg wieder cremefarben',
+    datei: 'src/data/maps.ts',
+    regel: /  path: '#5A4B2E', pathEdge: '#3B301D',/,
+    ersatz: "  path: '#EDE3C8', pathEdge: '#C9A86A',",
+    tor: 'wegdeckungtor',
+  },
+  {
     // **Der Steg spannt wieder ueber die ganze Fensterhoehe.**
     //
     // 748 von 862 Punkten, die untere Haelfte leer - ein Glasstreifen ueber

@@ -341,7 +341,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v216. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v217. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -456,35 +456,62 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   (Größe, Abhebung, Streuung — überall Überschneidung); das Werkzeug legt
   deshalb einen Kontaktbogen vor, und der Blick entscheidet (Regel 8).
 
-  **Zwei Tore bleiben rot, und beide sind eine Entscheidung, keine Panne:**
+  **Beide roten Tore sind in v217 geschlossen — und der Spiralhain läuft
+  seit v217 als erste Karte auf `bildBringt: { weg: false, gelaende: true }`.**
 
-  * **`guards`: Umwegfaktor 1,11, verlangt sind 1,8.** Die Regel ist richtig
-    gedacht — solange das Bild die Straße mitbringt, ist der Umweg nicht
-    unsere Entscheidung (Hinweis); zeichnet das Spiel den Weg, ist er es
-    (Abbruch). Nur hält die Schwelle **keine einzige Bahn im Spiel**:
-    Spiralhain 1,11, Ascheschlucht 1,10 / 1,12 / 1,65, Frostspalte 1,35 /
-    1,43. Am Bild ist sie trotzdem im Recht: der Weg läuft als fast gerade
-    Diagonale, die obere linke Kartenhälfte wird nie betreten. Der Weg
-    heraus ist **die Bahn winden, nicht verlängern** — Tor mittiger, Luftlinie
-    von 1400 auf 864, Länge gleich. Dann steigt der Umweg, ohne dass mehr
-    Gegner gleichzeitig laufen, und die Balance bleibt außerhalb der Nadel,
-    an der v209 und v210 gescheitert sind.
-  * **`einbettung`: Klimawirkung 0,028, Ratsche 0,035.** Das ist **Regel 2**
-    in Reinform: die Ratsche ist absolut, die Sache anteilig. Auf der neuen
-    Karte starten die Figuren schon näher am Boden (Farbabstand 0,09 bis 0,13
-    statt 0,18 bis 0,25), also nimmt das Klima absolut weniger weg — anteilig
-    aber **mehr** (55 bis 62 % auf dem Spiralhain). Die Frostspalte zieht das
-    Mittel herunter: dort wirkt das Klima mit −14 bis +15 % fast gar nicht,
-    und genau das hat die absolute Zahl vier Fassungen lang verdeckt.
-    Richtig wäre ein anteiliges Maß mit Ratsche je Karte. Nicht in derselben
-    Runde geändert, in der meine eigene Arbeit an der Prüfung scheitert.
+  * **Der Umwegfaktor.** Die Bahn ist neu gezogen: Tor in die Mitte des
+    unteren Randes, drei Bögen statt einer Diagonale. **Umweg 1,91 gegen
+    verlangte 1,8**, Länge 1652 statt 1555 (+6 %), bebaubare Fläche von 38
+    auf 51 %. Gewunden, nicht verlängert — genau daran sind v209 und v210
+    gescheitert.
 
-  **Und ein Urteil aus v214 ist widerrufen.** Dort stand, der gezeichnete Weg
-  überzeuge auf fotografischem Boden. Gemessen war das an einer Attrappe der
-  **alten, dunklen** Karte; auf hellgrünem Waldboden ist dasselbe cremefarbene
-  Band ein Fremdkörper — flach, ohne Zeichnung, mit Randsteinen wie einer
-  Reihe gleicher Bohnen. Regel 12: die Zahl stimmte, die Messstelle war nicht
-  übertragbar. Der Weg braucht Farbe aus dem Kartenbild statt aus der Palette.
+    **Drei Anläufe, und der Weg dorthin ist die eigentliche Auskunft.** Eine
+    Haarnadel (1830 Weltpunkte) trieb die Streuung zwischen den Bauverläufen
+    auf 28–38, verboten ab 32. Ein breiter Bogen (2139) beruhigte sie auf
+    10/10/7, machte die Karte aber unspielbar — verloren in Welle 14. Erst
+    die Messung sagte, warum: **wieviel der Bahn die zwölf besten Bauplätze
+    zusammen sehen.** Alte Bahn 76 %, Haarnadel 61 %, breiter Bogen 53 % —
+    und die heutige Serpentine **85 %**, mehr als die alte Bahn je hatte.
+    Nicht die Länge entscheidet, sondern ob die Bögen nah genug beieinander
+    liegen, dass ein Turm zwei von ihnen sieht.
+
+  * **Die Klimawirkung** ist jetzt **anteilig** gemessen, mit Ratsche je
+    Karte (36 / 33 / 26 %) statt einer absoluten Zahl über alle drei. Das
+    absolute Maß fiel, weil das neue Kartenbild heller ist und die Figuren
+    näher am Boden starten — die Einbettung war besser geworden, die Zahl
+    schlechter. Regel 2. Die Nullprobe trägt: mit `KLIMA_STAERKE = 0` fallen
+    alle drei Karten auf 0 %.
+
+    **Beim ersten Anlauf habe ich die drei Ratschen geraten** — 50 / 65 /
+    −20 %, abgelesen aus einem halben Dutzend Zeilen statt gemessen über
+    alle 14 Objekte. Alle drei falsch. Das Tor hat es gemeldet.
+
+  **Zwei Tore mussten den Zweig für Karten ohne gemalte Straße nachziehen**,
+  dieselbe Bewegung wie bei `zielplatte` und `kartenprobe` in v216:
+  `wegdeckung` (das Verblassen der Kulisse gibt es ohne Kulisse nicht) und
+  `bahntreue` (ob die Bahn auf der Farbe läuft, ist ohne Farbe keine Frage —
+  es meldete 2 % statt 100). An ihre Stelle tritt in `wegdeckung` eine neue
+  Abnahme: **wie weit der GEZEICHNETE Weg von seinem Boden absteht**,
+  gemessen am gebackenen Untergrund, erlaubt 40 bis 90 Farbschritte. Heute
+  68,5. Die Grenze ist von den gemalten Straßen abgelesen (Ascheschlucht
+  75,4, Frostspalte 54,3), und die erste gezeichnete Fassung stand bei
+  **165** — das ist die Zahl hinter „liegt darauf wie ausgeschnittenes
+  Papier".
+
+  **Ein Fund nebenbei, und er war älter als diese Runde:** `npm run
+  determinism` maß seinen eigenen Nebeneffekt. Es fährt zwei Läufe mit
+  derselben Aussaat; gewinnt der erste die Karte, schreibt das Spiel einen
+  Stern, und der zweite startet mit anderen Verbesserungen. Aufgefallen ist
+  es erst, als die neue Bahn den Lauf erstmals innerhalb der 240 Sekunden
+  gewinnen ließ — vorher endete er nie. Jetzt fährt das Werkzeug ohne
+  Verbesserungen und mit fester Kartenzahl, wie `npm run sim` (Regel 4).
+
+  **Was der Umweg kostet, steht offen im Bild:** die linke Kartenhälfte wird
+  nicht mehr betreten. Solange der Kristall in der Ecke steht, ziehen „Umweg
+  ≥ 1,8" und „die ganze Karte benutzen" gegeneinander — jeder Umweg muss
+  sich dann um die Ecke wickeln. Der Ausweg ist eine Bestellung, kein Code:
+  die Zielplattform im nächsten Kartenbild näher zur Mitte.
+
 
   **Zwei Messfunde nebenbei, beide älter als diese Runde:**
   1. **Die Bahnen sind breiter als die Straße, auf der sie laufen.** Seit

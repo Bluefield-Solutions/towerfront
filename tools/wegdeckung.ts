@@ -205,6 +205,25 @@ for (const a of abstaende) {
 if (TOR) {
   const fehler: string[] = [];
   for (const a of abstaende) {
+    // **Bringt das Bild gar keine Strasse mit, gibt es auch keine Kulisse.**
+    //
+    // Das Verblassen nimmt einer gemalten Strasse die Farbe, an der niemand
+    // laeuft. Zeichnet das Spiel den Weg selbst (`bildBringt.weg === false`),
+    // ist im Bild ueberhaupt keine Strasse - die Wirkung ist dann von Bauart
+    // null, und die Ratsche verlangte etwas, das es nicht mehr geben kann.
+    //
+    // Das ist keine Nachsicht: die Frage, die das Verblassen beantwortet
+    // ("sieht die unbenutzte Strasse aus wie die benutzte?"), stellt sich auf
+    // so einer Karte nicht mehr. Sie wird stattdessen von `npm run
+    // kartenprobe` beantwortet, und zwar schaerfer - dort muss der Farbabstand
+    // zwischen dem Streifen unter der Bahn und dem Mittel der Karte unter 25
+    // Farbschritte liegen, also gar keine Strasse gemalt sein.
+    const karte = MAPS.find((q) => q.id === a.karte);
+    if (karte && !(karte.bildBringt?.weg ?? true)) {
+      console.log(`  ${a.karte}: kein gemalter Weg im Bild - Verblassen entfaellt, `
+        + 'geprueft wird die Wegfreiheit in `npm run kartenprobe`.');
+      continue;
+    }
     const soll = WIRKUNG[a.karte];
     if (soll === undefined) {
       fehler.push(`${a.karte}: keine Ratsche eingetragen. Gemessen ${a.wirkung.toFixed(1)} - `

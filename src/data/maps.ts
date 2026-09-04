@@ -232,19 +232,23 @@ export const MAP_SPIRALHAIN: GameMap = {
       { x: 1675, y: 493, w: 81 }, { x: 1691, y: 488, w: 81 }, { x: 1704, y: 480, w: 81 },
     ],
   ],
+  // **Aus dem Bild gelesen, dann angesehen.** `npm run gelaendesuche -- spiralhain`
+  // schlaegt vor, sein Kontaktbogen zeigt die Vorschlaege - von vierzehn waren
+  // sechs blanke Wiese. Kein Kriterium trennt die beiden (siehe Kopf des
+  // Werkzeugs); der Blick trennt sie in einer Sekunde.
   rough: [
-    { x: 1186, y: 821, r: 165, art: 'locker', farbe: '#5b320e' },
-    { x: 764, y: 125, r: 142, art: 'locker', farbe: '#643c15' },
-    { x: 1565, y: 179, r: 121, art: 'locker', farbe: '#472304' },
-    { x: 247, y: 862, r: 82, art: 'locker', farbe: '#492405' },
-    { x: 1750, y: 356, r: 39, art: 'locker', farbe: '#532704' },
-    { x: 829, y: 896, r: 29, art: 'hart', farbe: '#8a683d' },
-    { x: 1069, y: 1004, r: 27, art: 'locker', farbe: '#3a2003' },
-    { x: 1433, y: 953, r: 25, art: 'locker', farbe: '#2e1c07' },
+    { x: 1485, y: 214, r: 147, art: 'locker', farbe: '#1b1905' },
+    { x: 313, y: 780, r: 134, art: 'locker', farbe: '#1b1b09' },
+    { x: 1302, y: 113, r: 72, art: 'locker', farbe: '#1a1a06' },
+    { x: 650, y: 296, r: 69, art: 'locker', farbe: '#292816' },
+    { x: 778, y: 162, r: 55, art: 'locker', farbe: '#2f2d1e' },
+    { x: 597, y: 184, r: 37, art: 'locker', farbe: '#353326' },
+    { x: 776, y: 362, r: 36, art: 'locker', farbe: '#1b1d06' },
+    { x: 1671, y: 916, r: 32, art: 'locker', farbe: '#2b280f' },
   ],
-  bildBringt: { weg: true, gelaende: true },
+  bildBringt: { weg: false, gelaende: true },
   hint: { x: 200, y: 200 },
-  ziel: { x: 1734, y: 506 },   // gemessen mit `npm run zielplatte`
+  ziel: { x: 1734, y: 454 },   // gemessen mit `npm run zielplatte`
   waves: PLAN_SPIRALHAIN,
   balance: { hpMul: 0.85, goldMul: 1.15 },
 };

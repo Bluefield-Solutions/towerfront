@@ -1133,7 +1133,7 @@ const PROBEN = [
     // zuverlaessig.
     name: 'Zielplattform nicht eingetragen',
     datei: 'src/data/maps.ts',
-    regel: /  ziel: \{ x: 1734, y: 506 \},/,
+    regel: /  ziel: \{ x: 1734, y: 454 \},/,
     ersatz: '  // ziel entfernt',
     tor: 'zielplattentor',
   },
@@ -1141,7 +1141,7 @@ const PROBEN = [
     // Und eine falsche Zahl muss genauso auffallen wie eine fehlende.
     name: 'Zielplattform steht falsch eingetragen',
     datei: 'src/data/maps.ts',
-    regel: /  ziel: \{ x: 1734, y: 506 \},/,
+    regel: /  ziel: \{ x: 1734, y: 454 \},/,
     ersatz: '  ziel: { x: 1500, y: 380 },',
     tor: 'zielplattentor',
   },
@@ -2549,7 +2549,7 @@ const PROBEN = [
     // muss ihn verwerfen.
     name: 'Abdruck verschlaeft eine geaenderte Karte',
     datei: 'src/data/maps.ts',
-    regel: /  ziel: \{ x: 1734, y: 506 \},/,
+    regel: /  ziel: \{ x: 1734, y: 454 \},/,
     ersatz: '  ziel: { x: 1200, y: 506 },',
     tor: 'zielplattentor',
   },

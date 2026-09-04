@@ -142,6 +142,12 @@ npm run muendung    prueft am Bildvorrat, wo das Rohr jedes Turms endet -
 npm run geschosse   misst, wieviel Schaden in der Luft verpufft: Anteil der
                     zielsuchenden Schuesse ohne Wirkung, groesste
                     Richtungsaenderung, Luftfilter. `--tor` prueft die Grenzen.
+npm run gelaendesuche  liest die unwegsamen Flecken AUS dem Kartenbild statt
+                    sie zu setzen - fuer eine Karte, deren Bild das Gelaende
+                    mitbringt. Es entscheidet aber nicht: drei Kriterien, ein
+                    Felsfeld von einem Schattenfleck im Gras zu trennen, sind
+                    gemessen gescheitert. Deshalb legt es einen Kontaktbogen
+                    vor, und der Blick trennt sie (Regel 8).
 npm run gelaende    liest aus dem Kartenbild, woraus jeder unwegsame Fleck
                     besteht (Farbe, hart/kalt/locker) und legt einen
                     Kontaktbogen daneben. `--tor` prüft die Eintragung.
@@ -434,6 +440,51 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   (heute 85,0 / 79,2 / 33,3). `npm run kartenprobe` misst genau das, sobald
   eine Karte auf `weg: false` steht. Abschnitt 8b bleibt als Rückfalllinie
   vollständig stehen.
+
+  **Das erste Bild nach 8c ist da und liegt im Baum — nicht ausgeliefert.**
+  Waldboden ohne Weg, geliefert am 04.09.2026. Gemessen: `kartenprobe`
+  Wegfreiheit **8,7** gegen erlaubte 25 (heutiges Bild 85,0), `zielplatte`
+  findet die Platte bei 1734:454 mit **Güte 0,98** — dem höchsten Wert der
+  drei Karten —, `gelaende`, `sim` (3 Sterne, Streuung 19/25/16), `grafiktor`
+  und 26 weitere Tore grün. Damit ist auch der Zweig für Karten ohne gemalte
+  Straße erstmals an einem echten Bild gefahren.
+
+  Die acht unwegsamen Flecken lagen alle falsch — einer unter der
+  Zielplattform, drei auf blanker Wiese. Dafür gibt es jetzt
+  `npm run gelaendesuche`: es liest sie **aus dem Bild**. Drei Kriterien, ein
+  Felsfeld von einem Schattenfleck zu trennen, sind gemessen gescheitert
+  (Größe, Abhebung, Streuung — überall Überschneidung); das Werkzeug legt
+  deshalb einen Kontaktbogen vor, und der Blick entscheidet (Regel 8).
+
+  **Zwei Tore bleiben rot, und beide sind eine Entscheidung, keine Panne:**
+
+  * **`guards`: Umwegfaktor 1,11, verlangt sind 1,8.** Die Regel ist richtig
+    gedacht — solange das Bild die Straße mitbringt, ist der Umweg nicht
+    unsere Entscheidung (Hinweis); zeichnet das Spiel den Weg, ist er es
+    (Abbruch). Nur hält die Schwelle **keine einzige Bahn im Spiel**:
+    Spiralhain 1,11, Ascheschlucht 1,10 / 1,12 / 1,65, Frostspalte 1,35 /
+    1,43. Am Bild ist sie trotzdem im Recht: der Weg läuft als fast gerade
+    Diagonale, die obere linke Kartenhälfte wird nie betreten. Der Weg
+    heraus ist **die Bahn winden, nicht verlängern** — Tor mittiger, Luftlinie
+    von 1400 auf 864, Länge gleich. Dann steigt der Umweg, ohne dass mehr
+    Gegner gleichzeitig laufen, und die Balance bleibt außerhalb der Nadel,
+    an der v209 und v210 gescheitert sind.
+  * **`einbettung`: Klimawirkung 0,028, Ratsche 0,035.** Das ist **Regel 2**
+    in Reinform: die Ratsche ist absolut, die Sache anteilig. Auf der neuen
+    Karte starten die Figuren schon näher am Boden (Farbabstand 0,09 bis 0,13
+    statt 0,18 bis 0,25), also nimmt das Klima absolut weniger weg — anteilig
+    aber **mehr** (55 bis 62 % auf dem Spiralhain). Die Frostspalte zieht das
+    Mittel herunter: dort wirkt das Klima mit −14 bis +15 % fast gar nicht,
+    und genau das hat die absolute Zahl vier Fassungen lang verdeckt.
+    Richtig wäre ein anteiliges Maß mit Ratsche je Karte. Nicht in derselben
+    Runde geändert, in der meine eigene Arbeit an der Prüfung scheitert.
+
+  **Und ein Urteil aus v214 ist widerrufen.** Dort stand, der gezeichnete Weg
+  überzeuge auf fotografischem Boden. Gemessen war das an einer Attrappe der
+  **alten, dunklen** Karte; auf hellgrünem Waldboden ist dasselbe cremefarbene
+  Band ein Fremdkörper — flach, ohne Zeichnung, mit Randsteinen wie einer
+  Reihe gleicher Bohnen. Regel 12: die Zahl stimmte, die Messstelle war nicht
+  übertragbar. Der Weg braucht Farbe aus dem Kartenbild statt aus der Palette.
 
   **Zwei Messfunde nebenbei, beide älter als diese Runde:**
   1. **Die Bahnen sind breiter als die Straße, auf der sie laufen.** Seit

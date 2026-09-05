@@ -1,0 +1,57 @@
+# Der volle Gegenprobenlauf - nachts, auf dem Runner, nicht in der Sitzung.
+#
+# **Warum er hierher gehoert.** Der Lauf baut nacheinander 249 Fehler ein und
+# prueft, ob das zustaendige Tor sie meldet. Er dauert rund fuenfzig Minuten,
+# und die standen bisher zwischen jeder Runde und der naechsten. Das ist die
+# falsche Stelle: die Arbeit ist wichtig, aber niemand muss dabei zusehen.
+#
+# Der Lauf schreibt bei Erfolg `tools/proben-stand.txt` fort - Fassung und
+# Commit. Die Fassung traegt die Drei-Fassungs-Regel in `npm run muster`, der
+# Commit sagt dem taeglichen Umfangslauf, wogegen er `git diff` rechnet.
+#
+# Der Push mit dem GITHUB_TOKEN loest KEINEN weiteren Plan aus (GitHub
+# unterbindet das gegen Endlosschleifen). Die Auslieferung wird deshalb bei
+# Bedarf von Hand angestossen - `workflow_dispatch` an `deploy.yml`.
+name: Gegenproben (voll)
+
+on:
+  schedule:
+    # 02:15 UTC - nachts in Mitteleuropa, und nicht zur vollen Stunde, weil
+    # GitHub die Zeitpunkte dann staut.
+    - cron: '15 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: proben
+  cancel-in-progress: false
+
+jobs:
+  proben:
+    name: Alle Gegenproben
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Alle Gegenproben
+        run: npm run proben -- --voll
+      - name: Stand fortschreiben
+        run: |
+          if git diff --quiet -- tools/proben-stand.txt; then
+            echo "Stand unveraendert."
+          else
+            git config user.name  "Gegenproben"
+            git config user.email "noreply@anthropic.com"
+            git add tools/proben-stand.txt
+            git commit -m "Probenstand: $(cat tools/proben-stand.txt)"
+            git push
+          fi

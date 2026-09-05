@@ -45,8 +45,8 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 | Wann | Was | Dauer |
 |---|---|---|
 | **jede Runde** | `npm run gate` — enthält den Musterlauf | **rund 2,5 min** |
-| jede Runde | die Gegenproben der Tore, die ich angefasst habe | unter 1 min |
-| **jede dritte Fassung** | `npm run proben` — alle 156, voll | rund 33 min |
+| **jede Runde** | `npm run proben` — nur die betroffenen Proben | **wenige Minuten** |
+| **jede Nacht** | `npm run proben -- --voll` auf dem Runner | rund 50 min, ohne mich |
 | jeder Push auf `master` | die volle Kette auf dem Runner | 3–4 min, ohne mich |
 
 **Die Drei ist erzwungen, nicht aufgeschrieben.** `npm run muster` liest
@@ -54,6 +54,25 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 drei Fassungen zurückliegt — und der Musterlauf steht in der Kette. Eine
 Regel, die nur in einem Dokument steht, wird gebrochen; das hat dieses
 Projekt sechsmal gekostet.
+
+**Seit v221 muss der volle Lauf dafür niemandem die Zeit stehlen.** Er läuft
+nachts auf dem Runner (`.github/workflows/proben.yml`) und schreibt bei
+Erfolg Fassung **und Commit** in `tools/proben-stand.txt`. Der tägliche Lauf
+hier ist ein **Umfangslauf**: er fährt nur die Proben, deren **Zieldatei**
+seit dem letzten vollen Lauf angefasst wurde. Gemessen sind das nach einer
+Runde **11 Proben statt 249**, nach zweien 26.
+
+Das Werkzeug des Tores zählt bewusst nicht mit, obwohl es naheliegt: an
+`tools/smoke.ts` hängen 86 Proben, und eine einzige Zeile darin zöge den Lauf
+von 11 auf 99 Proben und von vier Minuten auf anderthalb Stunden. Wer ein Tor
+anfasst, fährt seine Proben gezielt — `npm run proben smoke` nimmt jeden
+Namen und jedes Tor als Filter.
+
+**Was der Umfangslauf nicht kann**, und das ist der Grund für die Nacht: er
+sagt nichts über die übersprungenen Proben. Eine Probe kann auch verfallen,
+weil sich die **Karte** geändert hat und ihr Fall nicht mehr vorkommt —
+genau das ist in v219 viermal passiert, und keine der vier Zieldateien war
+angefasst.
 
 **Warum nicht öfter und nicht seltener.** Das Tor-Audit
 (`docs/Towerfront-TOR-BILANZ.md`) hat gemessen: der volle Lauf ist **33
@@ -160,7 +179,12 @@ npm run gelaende    liest aus dem Kartenbild, woraus jeder unwegsame Fleck
                     Kontaktbogen daneben. `--tor` prüft die Eintragung.
 npm run doku        prüft die Dokumente gegen die Wirklichkeit
 npm run beruehrung  prüft, ob alles mit dem Daumen zu treffen ist
-npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen
+npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen - im
+                    Standardlauf nur die, deren ZIELDATEI seit dem letzten
+                    vollen Lauf angefasst wurde (nach einer Runde 11 statt
+                    249). Ein Name oder ein Torname als Argument filtert
+                    gezielt. `-- --voll` fährt alle; das dauert rund 50
+                    Minuten und läuft deshalb nachts auf dem Runner.
 npm run kritik      Wertung nach Testerkategorien, Ziel über 90
 Messschalter        In der Kopfzeile des Spiels: Messung an, und die Tafel
                     läuft mit. Aufklappen zum Ablesen, Kopieren gibt alles
@@ -348,7 +372,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v220. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v221. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

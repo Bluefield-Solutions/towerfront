@@ -2690,9 +2690,58 @@ if (dreckig) {
 }
 
 const filter = process.argv.slice(2).filter((a) => !a.startsWith('--'));
-const liste = filter.length
-  ? PROBEN.filter((p) => filter.some((f) => `${p.name} ${p.tor}`.toLowerCase().includes(f.toLowerCase())))
-  : PROBEN;
+const VOLL = process.argv.includes('--voll');
+
+/** **Der Standardlauf faehrt nur die Proben, die etwas zu pruefen haben.**
+ *
+ *  Der volle Lauf dauert rund fuenfzig Minuten. Das ist keine Zahl, die man
+ *  einmal am Tag hinnimmt - sie stand zwischen jeder Runde und der naechsten,
+ *  und der Nutzer hat sie zu Recht abgelehnt. Das Tor-Audit hatte es schon
+ *  gemessen: bei einer Runde mit zwei geaenderten Toren haben 140 von 142
+ *  Proben nichts zu pruefen, was sich geaendert haette.
+ *
+ *  Der Umfang kommt deshalb aus `git diff` gegen den Stand des letzten
+ *  vollen Laufs: eine Probe faehrt mit, wenn ihre ZIELDATEI angefasst wurde.
+ *  Gemessen sind das nach einer Runde 11 Proben statt 249, nach zweien 26.
+ *
+ *  **Das Werkzeug des Tores zaehlt bewusst NICHT mit**, obwohl es naheliegt.
+ *  Gemessen kostet es alles: `tools/smoke.ts` haengen 86 Proben an, und eine
+ *  einzige Zeile darin zoege den Lauf von 11 auf 99 Proben und von vier
+ *  Minuten auf anderthalb Stunden. Wer ein Tor anfasst, faehrt seine Proben
+ *  gezielt - `npm run proben smoke` nimmt jeden Namen und jedes Tor als
+ *  Filter.
+ *
+ *  **Was der Standardlauf NICHT kann**, und das steht hier, damit es niemand
+ *  verwechselt: er sagt nichts ueber die uebersprungenen Proben. Eine Probe
+ *  kann auch verfallen, weil sich die KARTE geaendert hat und ihr Fall nicht
+ *  mehr vorkommt - genau das ist in v219 viermal passiert, und keine der vier
+ *  Zieldateien war angefasst. Dagegen hilft nur der volle Lauf, und der
+ *  laeuft deshalb jede Nacht auf dem Runner
+ *  (`.github/workflows/proben.yml`), nicht hier.
+ */
+const geaenderteDateien = () => {
+  const stand = existsSync(STAND_DATEI) ? readFileSync(STAND_DATEI, 'utf8').trim() : '';
+  const sha = stand.split(/\s+/)[1];
+  if (!sha) return null;   // alter Stand ohne Commit - dann kein Umfang
+  try {
+    return new Set(execSync(`git diff --name-only ${sha}..HEAD`, { cwd: ROOT, encoding: 'utf8' })
+      .split('\n').map((z) => z.trim()).filter(Boolean));
+  } catch { return null; }
+};
+
+let umfangGrund = 'alle';
+let liste = PROBEN;
+if (filter.length) {
+  liste = PROBEN.filter((p) => filter.some((f) => `${p.name} ${p.tor}`.toLowerCase().includes(f.toLowerCase())));
+  umfangGrund = `Filter "${filter.join(' ')}"`;
+} else if (!VOLL && !process.argv.includes('--muster')) {
+  const geaendert = geaenderteDateien();
+  if (geaendert) {
+    liste = PROBEN.filter((p) => geaendert.has(p.datei));
+    umfangGrund = `Zieldatei seit dem letzten vollen Lauf angefasst `
+      + `(${geaendert.size} geaenderte Datei(en), ${PROBEN.length - liste.length} Proben uebersprungen)`;
+  }
+}
 
 // -------------------------------------------------------------- Musterlauf
 //
@@ -2833,7 +2882,7 @@ if (process.argv.includes('--muster')) {
   // gebrochen. Deshalb steht sie hier, wo sie weh tut.
   const jetzt = Number(fassung());
   const damals = existsSync(STAND_DATEI)
-    ? Number(readFileSync(STAND_DATEI, 'utf8').trim().replace(/^v/, '')) : 0;
+    ? Number(readFileSync(STAND_DATEI, 'utf8').trim().split(/\s+/)[0].replace(/^v/, '')) : 0;
   const abstand = jetzt - damals;
   // Waehrend `npm run proben` laeuft, ist diese Forderung gegenstandslos:
   // der Lauf, den sie verlangt, laeuft gerade. Ohne die Ausnahme stehen
@@ -2869,7 +2918,7 @@ const zuruecknehmen = (tor) => {
   if (BAUT.has(tor)) execSync('npm run build', { cwd: ROOT, stdio: 'pipe', env: TOR_UMGEBUNG });
 };
 
-console.log(`Gegenproben: ${liste.length} von ${PROBEN.length}\n`);
+console.log(`Gegenproben: ${liste.length} von ${PROBEN.length} — Umfang: ${umfangGrund}\n`);
 standSelbsttest();
 
 
@@ -2977,7 +3026,13 @@ console.log(`\nPROBEN: alle ${liste.length} Tore schlagen an.`);
 // Den Stand nur bei einem VOLLEN Lauf festhalten. Ein gefilterter Lauf hat
 // die uebrigen Proben nicht angefasst - ihn mitzuzaehlen hiesse, sich den
 // Abstand schoenzurechnen, und genau dafuer ist die Zahl nicht da.
-if (!filter.length) {
-  writeFileSync(STAND_DATEI, `v${fassung()}\n`);
-  console.log(`  Stand festgehalten: v${fassung()} (tools/proben-stand.txt).`);
+if (VOLL && !filter.length) {
+  // Fassung UND Commit: die Fassung traegt die Drei-Fassungs-Regel, der
+  // Commit sagt dem naechsten Standardlauf, wogegen er `git diff` rechnet.
+  const kopf = execSync('git rev-parse HEAD', { cwd: ROOT, encoding: 'utf8' }).trim();
+  writeFileSync(STAND_DATEI, `v${fassung()} ${kopf}\n`);
+  console.log(`  Stand festgehalten: v${fassung()} ${kopf.slice(0, 8)} (tools/proben-stand.txt).`);
+} else if (!filter.length) {
+  console.log('  Stand NICHT fortgeschrieben - das war ein Umfangslauf, kein voller.');
+  console.log('  Der volle Lauf faehrt nachts auf dem Runner, oder hier mit `-- --voll`.');
 }

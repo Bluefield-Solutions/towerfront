@@ -232,13 +232,21 @@ export const MAP_SPIRALHAIN: GameMap = {
     // Die Bahn haelt Abstand zu jedem unwegsamen Fleck: ein Weg mitten durch
     // ein Felsfeld sieht falsch aus, und die Bausperre lag ohnehin darum.
     [
-      { x: 1230, y: 1160, w: 40 }, { x: 1290, y: 1030, w: 58 },
-      { x: 1420, y: 975, w: 62 }, { x: 1480, y: 890, w: 64 },
-      { x: 1410, y: 790, w: 64 }, { x: 1270, y: 755, w: 62 },
-      { x: 1140, y: 730, w: 60 }, { x: 1060, y: 650, w: 60 },
-      { x: 1130, y: 560, w: 62 }, { x: 1280, y: 505, w: 62 },
-      { x: 1450, y: 465, w: 66 }, { x: 1610, y: 455, w: 70 },
-      { x: 1734, y: 454, w: 76 },
+      { x: 620, y: 1160, w: 38 }, { x: 620, y: 1020, w: 44 },
+      { x: 622, y: 860, w: 48 }, { x: 626, y: 700, w: 50 },
+      { x: 638, y: 566, w: 48 }, { x: 686, y: 486, w: 44 },
+      { x: 790, y: 466, w: 44 }, { x: 890, y: 512, w: 46 },
+      { x: 916, y: 650, w: 50 }, { x: 920, y: 810, w: 50 },
+      { x: 926, y: 950, w: 48 }, { x: 986, y: 1032, w: 44 },
+      { x: 1096, y: 1050, w: 44 }, { x: 1196, y: 996, w: 46 },
+      { x: 1216, y: 856, w: 50 }, { x: 1220, y: 700, w: 50 },
+      { x: 1230, y: 562, w: 48 }, { x: 1284, y: 484, w: 44 },
+      { x: 1390, y: 466, w: 44 }, { x: 1492, y: 520, w: 46 },
+      { x: 1512, y: 660, w: 50 }, { x: 1518, y: 806, w: 52 },
+      { x: 1548, y: 934, w: 52 }, { x: 1640, y: 1004, w: 52 },
+      { x: 1742, y: 962, w: 54 }, { x: 1784, y: 836, w: 56 },
+      { x: 1790, y: 700, w: 58 }, { x: 1778, y: 566, w: 62 },
+      { x: 1734, y: 454, w: 68 },
     ],
   ],
   // **Aus dem Bild gelesen, dann angesehen.** `npm run gelaendesuche -- spiralhain`
@@ -259,7 +267,7 @@ export const MAP_SPIRALHAIN: GameMap = {
   hint: { x: 200, y: 200 },
   ziel: { x: 1734, y: 454 },   // gemessen mit `npm run zielplatte`
   waves: PLAN_SPIRALHAIN,
-  balance: { hpMul: 0.85, goldMul: 1.15 },
+  balance: { hpMul: 1.2, goldMul: 0.85 },
 };
 
 

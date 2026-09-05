@@ -596,22 +596,42 @@ const mixedPlan = mixedPlanBase;
   // Der Abstand, ab dem ein Turm als "weit vom Kristall" gilt. Anteilig an
   // der laengsten Bahn, nicht absolut (Regel 2): eine feste Zahl waere bei
   // der naechsten Karte still bedeutungslos.
-  // 0,35 der Bahnlaenge - anteilig und nicht absolut (Regel 2). Der Wert ist
-  // nicht getroffen, sondern aus dem Verlauf gewaehlt: durchprobiert wurden
-  // 0,25 / 0,30 / 0,35 / 0,42 / 0,50 / 0,60 / 0,70 und gemessen 86,9 / 88,3 /
-  // 88,3 / 85,0 / 88,3 / 82,5 / 81,9. Von 0,25 bis 0,50 liegt ein Plateau
-  // ueber dem besten reinen Modus; der Einbruch bei 0,42 ist ein einzelner
-  // Bauplatz, der dort die Seite wechselt. 0,35 liegt in der Mitte des
-  // Plateaus und nicht auf seiner Kante.
-  const weit = lanePaths(MAPS[0])[0].length * 0.35;
-  const fernHinten = messe((t, _i, st) =>
-    (Math.hypot(st.goal.x - t.x, st.goal.y - t.y) > weit ? 'hinten' : 'vorn'));
-  const nahHinten = messe((t, _i, st) =>
-    (Math.hypot(st.goal.x - t.x, st.goal.y - t.y) <= weit ? 'hinten' : 'vorn'));
+  // **Wo auf der BAHN steht der Turm - nicht, wie weit er Luftlinie vom
+  // Kristall weg ist.**
+  //
+  // Bis v218 stand hier `Math.hypot(Ziel - Turm) > Bahnlaenge * 0,35`: eine
+  // Luftlinie gegen eine Weglaenge, zwei Einheiten in einem Vergleich
+  // (Regel 12). Solange die Bahnen fast gerade waren, fiel das nicht auf -
+  // Laenge und Luftlinie lagen um 10 bis 40 % auseinander. Auf der neu
+  // gezogenen Spiralhain-Bahn (3631 lang, Luftlinie 1294) wurde die Grenze
+  // 1271 Weltpunkte gross, und die ist weiter, als der Kristall von der
+  // hintersten Ecke der Karte entfernt ist: JEDER Turm galt als "nah", die
+  // Aufteilung war keine mehr, und die Kennzahl stimmte auf die dritte
+  // Stelle mit dem reinen Modus ueberein.
+  //
+  // Richtig ist die Frage, die der Modus stellt: bewacht dieser Turm das
+  // vordere Stueck der Bahn oder das letzte? Gemessen wird deshalb die
+  // Stelle auf der Bahn, an der er am naechsten steht - als Anteil der
+  // Laenge, damit die Zahl fuer jede Karte dasselbe bedeutet.
+  const bahn = lanePaths(MAPS[0])[0];
+  /** Ab welchem Anteil der Bahn ein Turm zum hinteren Feld gehoert. */
+  const HINTEN_AB = 0.65;
+  const anteil = (t: { x: number; y: number }): number => {
+    let beste = 0, dm = Infinity;
+    for (let u = 0; u <= bahn.length; u += 10) {
+      const q = bahn.at(u);
+      const d = Math.hypot(q.x - t.x, q.y - t.y);
+      if (d < dm) { dm = d; beste = u; }
+    }
+    return beste / bahn.length;
+  };
+  const fernHinten = messe((t) => (anteil(t) < HINTEN_AB ? 'hinten' : 'vorn'));
+  const nahHinten = messe((t) => (anteil(t) >= HINTEN_AB ? 'hinten' : 'vorn'));
   const bestesReines = Math.max(...ZIELWAHL_ORDNUNG.map((z) => rein[z]));
   console.log('  rein: ' + ZIELWAHL_ORDNUNG.map((z) => `${z} ${rein[z].toFixed(0)}`).join('  '));
-  console.log(`  nach Standort (Grenze ${weit.toFixed(0)} Weltpunkte zum Kristall): `
-    + `fern=hinten ${fernHinten.toFixed(0)}   nah=hinten ${nahHinten.toFixed(0)}`);
+  console.log(`  nach Standort (Grenze bei ${(HINTEN_AB * 100).toFixed(0)} % der Bahn): `
+    + `vorderes Feld=hinten ${fernHinten.toFixed(0)}   hinteres Feld=hinten `
+    + `${nahHinten.toFixed(0)}`);
   if (fernHinten <= bestesReines) {
     errors.push(`Ziellogik "hinten" ist wirkungslos: nach Standort aufgeteilt `
       + `${fernHinten.toFixed(1)} Punkte, bester reiner Modus ${bestesReines.toFixed(1)}. `

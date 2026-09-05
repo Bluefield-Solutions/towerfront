@@ -348,7 +348,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v218. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v219. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -549,8 +549,29 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   passten nicht mehr in `max-width: 58vw`, und zwei Zeilen kosten 46 von 390
   Punkten Bildhöhe. Jetzt 72vw, mit Gegenprobe.
 
-  **Was der Umweg kostet, steht offen im Bild:** die linke Kartenhälfte wird
-  nicht mehr betreten. Solange der Kristall in der Ecke steht, ziehen „Umweg
+  **In v219 greift die Bahn bis an den linken Rand.** Das Tor sitzt jetzt am
+  linken Bildrand statt unten in der Mitte, die Bahn läuft am unteren Rand
+  entlang und dann in die vier Säulen. Gemessen mit der neuen Zeile in
+  `npm run bahnentwurf`:
+
+  | | v218 | v219 |
+  |---|---|---|
+  | Karte näher als 300 Weltpunkte an einer Bahn | 68 % | **74 %** (Ascheschlucht 82, Frostspalte 81) |
+  | Länge | 3631 | 3942 |
+  | Wegvielfachheit | 1,87 | 1,94 |
+  | baubare Punkte | 170 | **203** |
+  | Punkte, die zwei Wege sehen | 16 | 19 |
+
+  **Weiter nach links geht es nicht ohne ein neues Bild.** Die obere linke
+  Ecke ist Felsfeld und Dickicht — die Flecken kommen aus dem Kartenbild,
+  nicht aus den Daten, und eine Bahn mitten hindurch wäre falsch. 74 % ist,
+  was dieses Bild hergibt.
+
+  Ausgeglichen wurde die längere Bahn allein über `hpMul` 1,0 → 1,1; der
+  Wellenplan blieb unangetastet.
+
+  **Was der Umweg kostet, steht offen im Bild:** die obere linke Kartenecke
+  wird nicht betreten. Solange der Kristall in der Ecke steht, ziehen „Umweg
   ≥ 1,8" und „die ganze Karte benutzen" gegeneinander — jeder Umweg muss
   sich dann um die Ecke wickeln. Der Ausweg ist eine Bestellung, kein Code:
   die Zielplattform im nächsten Kartenbild näher zur Mitte.

@@ -1423,10 +1423,17 @@ const PROBEN = [
   {
     // TF-042: eine Bahn wieder von der Strasse ziehen. Die Ratsche muss das
     // sehen - sonst haelt sie nichts fest.
+    // **Auf der Ascheschlucht, nicht mehr auf dem Spiralhain.**
+    //
+    // Seit v217 zeichnet der Spiralhain seinen Weg selbst - dort gibt es
+    // keine gemalte Strasse mehr, von der eine Bahn rutschen koennte, und
+    // `bahntreue` ueberspringt ihn zu Recht. Die Probe haette also nichts
+    // mehr bewiesen; sie steht jetzt auf der naechsten Karte, die noch eine
+    // gemalte Strasse hat.
     name: 'Eine Bahn rutscht von der Strasse',
     datei: 'src/data/maps.ts',
-    regel: /(export const MAP_SPIRALHAIN[\s\S]{0,4000}?lanes: \[\n    \[\n)/,
-    ersatz: '$1      { x: 900, y: 200 }, { x: 1100, y: 240 },\n',
+    regel: /(export const MAP_ASCHESCHLUCHT[\s\S]{0,6000}?lanes: \[\n    \[\n)/,
+    ersatz: '$1      { x: 900, y: 200, w: 50 }, { x: 1100, y: 240, w: 50 },\n',
     tor: 'bahntreuetor',
   },
   {

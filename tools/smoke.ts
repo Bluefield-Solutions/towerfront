@@ -2545,6 +2545,20 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
     // Lautesten machen).
     const gemessen = state.gebaute;
     for (const t of gemessen) t.zielwahl = wahl;
+    // **Gemessen an einer Welle mit ZWEI Gegnerarten, nicht an der ersten.**
+    //
+    // "schwach" und "stark" unterscheiden sich am Lebensstand in Prozent. In
+    // Welle 1 laufen sieben gleiche Kriecher, alle mit demselben Hoechstwert
+    // und unter gleichmaessigem Feuer - der Lebensstand streut kaum, und die
+    // beiden Modi landen auf demselben Mittelwert. Auf der kurzen Bahn ging
+    // das gerade noch aus (52 gegen 51); auf der langen Serpentine, wo sich
+    // die Reichweiten stark ueberlappen, gar nicht mehr.
+    //
+    // Welle 6 bringt Spalter und Laeufer zusammen: verschiedene
+    // Hoechstwerte, verschiedene Geschwindigkeiten, echte Streuung. Derselbe
+    // Gedanke wie im Absatz darueber - der Messplatz muss das Gesuchte zum
+    // Lautesten machen (Regel 13), und der alte tat es nicht mehr.
+    state.waveIndex = 5;
     state.startWave();
     let summe = 0, weg = 0, n = 0;
     for (let i = 0; i < 60 * 60 && state.phase === 'playing'; i++) {

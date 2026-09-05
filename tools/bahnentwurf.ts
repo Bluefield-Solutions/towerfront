@@ -101,6 +101,18 @@ for (const m of MAPS) {
   anteilAus /= beste.length;
   const union = vereint.size * 10;
 
+  // **Und wieviel der KARTE liegt ueberhaupt an einer Bahn?**
+  //
+  // Eine Bahn kann lang, gewunden und gut zu decken sein und trotzdem eine
+  // halbe Karte unbenutzt lassen - dann ist die andere Haelfte Kulisse, auf
+  // der niemand baut. Gemessen in Rastern von 20 Weltpunkten, naeher als 300
+  // an einer Bahn (rund die Reichweite eines frischen Turms plus Bauabstand).
+  let nah = 0, raster = 0;
+  for (let y = 20; y < 1080; y += 20) for (let x = 20; x < 1920; x += 20) {
+    raster++;
+    for (const p of bahnen) if (p.distanceTo(x, y) < 300) { nah++; break; }
+  }
+
   // **Und was das ganze Feld hergibt, nicht nur die zwoelf besten.**
   //
   // Die zwoelf sind die Wahl des Bots, und der baut in der Reihenfolge der
@@ -135,6 +147,8 @@ for (const m of MAPS) {
     + `je Platz, bester Platz ${bestesVielfach.toFixed(2)}`);
   console.log(`    Voll ausgebaut sieht ein Platz im Mittel `
     + `${(anteilAus * 100).toFixed(0)} % der ganzen Bahn`);
+  console.log(`    ${(nah / raster * 100).toFixed(0)} % der Karte liegen naeher als 300 `
+    + 'Weltpunkte an einer Bahn (Ascheschlucht 82, Frostspalte 81)');
   console.log(`    Ueber ALLE ${alle.length} baubaren Punkte: ${zwei} sehen zwei Wege `
     + `(>= 1,6 Durchgaenge), ${drei} sehen drei (>= 2,4), bester ${bestesFeld.toFixed(2)}`);
   console.log('    Die fuenf staerksten Doppelstellen: '

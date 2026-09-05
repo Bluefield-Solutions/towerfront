@@ -1,6 +1,6 @@
 # Towerfront — Rückstandsverzeichnis
 
-Stand: v219 · 05.09.2026
+Stand: v220 · 05.09.2026
 
 Das gewichtete Delta gegen die Genre-Referenzen steht in `Towerfront-BENCHMARK.md` und läuft mit `npm run bericht` in jedem Lauf mit.
 

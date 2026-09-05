@@ -16,7 +16,6 @@
  *  Aussaat. Keine Grafik beteiligt - die Zahl ist maschinenunabhaengig.  */
 import { GameState } from '../src/game/state';
 import { TOWERS } from '../src/data/towers';
-import { ENEMIES } from '../src/data/enemies';
 import { candidateSpots } from './spots';
 
 const DT = 1 / 60;
@@ -107,62 +106,96 @@ console.log(`Groesste Richtungsaenderung eines Schusses: ${grad.toFixed(0)} Grad
 //
 // Zielsuchende Geschosse kommen heute nur vom Bogenturm, und der trifft Luft.
 // Der Zweig `if (!p.luft && ...flying) continue` liefe also nie - und was nie
-// laeuft, ist kein Beweis (Regel 5). Statt ihn wegzulassen und den naechsten
-// bodengebundenen Schuetzen hineinlaufen zu lassen, wird er hier
-// durchgespielt: dem Bogenturm wird die Luftfaehigkeit genommen, dann darf
-// kein Flieger mehr Schaden nehmen. Ohne den Filter nimmt er welchen, sobald
-// ein Bodenziel im Flug stirbt und ein Gleiter im Kegel steht.
+// laeuft, ist kein Beweis (Regel 5). Er wird deshalb GESTELLT: dem Bogenturm
+// wird die Luftfaehigkeit genommen, ein Bodengegner und ein Gleiter stehen
+// dicht beieinander in Reichweite, und der Bodengegner faellt, waehrend der
+// Schuss unterwegs ist. Genau dann sucht das Geschoss ein Ersatzziel - und
+// darf den Gleiter nicht nehmen.
+//
+// **Die erste Fassung liess dafuer eine ganze Welle laufen und zaehlte, ob
+// zufaellig ein Flieger Schaden nimmt.** Sie hat jahrelang funktioniert und
+// in v219 aufgehoert, ohne rot zu werden: der volle Probenlauf meldete, dass
+// die Gegenprobe "Ersatzziel nimmt auch Flieger" nichts mehr beweist. Auf der
+// neuen, langen Bahn kommt der Fall in keiner Welle mehr vor - gemessen an
+// den Wellen 7, 14 und 15, alle drei mit ausgebautem Fehler und alle drei
+// bei null Treffern. Ein Aufbau, der auf einen Zufall wartet, hoert leise
+// auf zu pruefen, sobald die Karte sich aendert (Regel 13).
 {
   const merk = TOWERS.arrow.hitsAir;
-  TOWERS.arrow.hitsAir = false;
-  // Und die Zielunit mit, sonst misst der Block sie statt des Filters.
-  //
-  // Sie steht seit v165 von Anfang an im Feld, trifft Luftziele und schiesst
-  // genau dort, wo die Gleiter ankommen. Gezaehlt wird hier aber JEDER
-  // Lebensverlust eines Fliegers - der Block hat beim ersten Lauf nach v165
-  // drei Treffer gemeldet, und keiner davon kam vom geprueften Schuetzen
-  // (Regel 13: wer eine Wirkung misst, schaltet alles andere ab, das
-  // dieselbe Spur hinterlaesst).
   const merkCore = TOWERS.core.hitsAir;
+  TOWERS.arrow.hitsAir = false;
   TOWERS.core.hitsAir = false;
-  let getroffen = 0;
-  const flieger = new Set<object>();
+  let fliegerSchaden = 0;
+  let gestellt = false;
   try {
-    const s = aufbauen(SAATEN[0]);
-    // Welle 13 traegt Gleiter neben Bodenvolk. Welle 8 hatte ich zuerst
-    // genommen und dort NULL Flieger gefunden - die Messung war leer und
-    // die Null kein Beweis (Regel 3). Deshalb zaehlt der Block die Flieger
-    // jetzt selbst und schlaegt an, wenn keiner da ist.
-    s.waveIndex = 12;
-    s.startWave();
-    const voll = new Map<object, number>();
-    for (let i = 0; i < 60 * 90; i++) {
+    const s = new GameState();
+    s.reset(1, 'normal', 'spiralhain');
+    s.gold = 999999;
+    // Ein Turm, dicht an der Bahn - mehr braucht der Fall nicht.
+    const sp = candidateSpots(s)[0];
+    if (!s.build(sp.x, sp.y, 'arrow')) throw new Error('Luftfilter: kein Turm setzbar.');
+    const turm = s.towers[0];
+    // Die Stelle der Bahn, die dem Turm am naechsten liegt - dort stellen
+    // wir beide Gegner hin.
+    const bahn = s.lanes[0];
+    let beste = 0, dm = Infinity;
+    for (let t = 0; t <= bahn.length; t += 5) {
+      const q = bahn.at(t);
+      const d = Math.hypot(q.x - turm.x, q.y - turm.y);
+      if (d < dm) { dm = d; beste = t; }
+    }
+    const boden = s.spawnZumPruefen('brute', 0);
+    const flieger = s.spawnZumPruefen('flyer', 0);
+    if (!boden || !flieger) throw new Error('Luftfilter: Gegner nicht setzbar.');
+    boden.travelled = beste;
+    s.update(DT);   // damit der Bodengegner seine Lage aus `travelled` bekommt
+    // **Der Gleiter wird ueber x/y gesetzt, nicht ueber `travelled`.**
+    //
+    // Flieger folgen keiner Bahn: sie ziehen die Luftlinie zum Kristall, und
+    // ihr `travelled` wird daraus RUECKGERECHNET. Ein gesetztes `travelled`
+    // wird im naechsten Bild ueberschrieben - die erste Fassung dieses
+    // Aufbaus tat genau das und stellte den Gleiter nie dorthin, wo er
+    // gebraucht wurde.
+    //
+    // Er muss VOR dem Geschoss stehen, nicht daneben: das Ersatzziel wird in
+    // einem Kegel von 40 Grad um die Flugrichtung gesucht.
+    const rx = boden.x - turm.x, ry = boden.y - turm.y;
+    const rl = Math.hypot(rx, ry) || 1;
+    flieger.x = boden.x + (rx / rl) * 60;
+    flieger.y = boden.y + (ry / rl) * 60;
+    const vollFlieger = flieger.hp;
+    for (let i = 0; i < 60 * 12; i++) {
       s.update(DT);
-      for (const e of s.enemies) {
-        if (!ENEMIES[e.def].flying) continue;
-        flieger.add(e);
-        const alt = voll.get(e);
-        if (alt === undefined) { voll.set(e, e.hp); continue; }
-        if (e.hp < alt) { getroffen++; voll.set(e, e.hp); }
+      // Sobald ein Schuss unterwegs ist, faellt sein Ziel: genau der Fall,
+      // um den es geht.
+      if (!gestellt && s.projectiles.length && boden.hp > 0) {
+        boden.hp = 0; gestellt = true;
       }
-      if (!s.enemies.length && !s.waveActive) break;
+      if (flieger.hp < vollFlieger) fliegerSchaden++;
+      // Der Gleiter soll stehen bleiben, nicht davonfliegen - sonst ist er
+      // aus dem Suchraum, bevor der Fall eintritt.
+      flieger.x = boden.x + (rx / rl) * 60;
+      flieger.y = boden.y + (ry / rl) * 60;
+      if (gestellt && !s.projectiles.length) break;
     }
   } finally {
     TOWERS.arrow.hitsAir = merk;
     TOWERS.core.hitsAir = merkCore;
   }
-  console.log(`Luftfilter: ein Schuetze ohne Luftziel trifft ${getroffen}x einen Flieger ` +
-    `(Soll 0, ${flieger.size} Flieger auf dem Feld).`);
-  if (TOR && getroffen > 0) {
-    console.error(`FEHLER: der Luftfilter im Ersatzziel greift nicht.`);
-    process.exit(1);
+  console.log(`Luftfilter: Schuss verliert sein Ziel${gestellt ? '' : ' (NICHT gestellt!)'}, `
+    + `Gleiter nimmt ${fliegerSchaden > 0 ? 'Schaden' : 'keinen Schaden'} (Soll: keinen).`);
+  if (!gestellt) {
+    console.error('FEHLER: der Fall wurde gar nicht gestellt - kein Schuss war unterwegs, '
+      + 'als das Ziel fiel. Dann sagt die Null nichts (Regel 3).');
+    if (TOR) process.exit(1);
   }
-  // Ohne Flieger misst der Block nichts - dann ist die Null kein Beweis.
-  if (TOR && flieger.size === 0) {
-    console.error(`FEHLER: in dieser Welle fliegt niemand, die Messung ist leer.`);
+  if (TOR && fliegerSchaden > 0) {
+    console.error('FEHLER: der Luftfilter im Ersatzziel greift nicht - ein Schuetze ohne '
+      + 'Luftziel hat einen Gleiter getroffen.');
     process.exit(1);
   }
 }
+
 
 if (TOR) {
   let fehler = 0;

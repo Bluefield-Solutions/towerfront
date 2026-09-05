@@ -348,7 +348,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v219. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v220. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -359,6 +359,39 @@ Die Zahl hinter „Stand" muss zu `VERSION` in `src/data/config.ts` passen —
 Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
 „Version vNN" kennt der Wächter nicht, also fiel der Rückstand von
 61 Versionen keinem auf.
+
+**Was der volle Probenlauf zu v219 gefunden hat — und es waren nicht die
+Tore, sondern vier Messplätze.** Von 249 Gegenproben bewiesen vier nichts
+mehr; alle vier sind daran gescheitert, dass die **Karte** sich geändert hat,
+und keine davon wäre je rot geworden.
+
+* **„Schild kommt in keiner Welle vor"** — der Rauchtest verlangte nur, dass
+  irgendwo im Plan ein Schild steht. Seit die letzten beiden Wellen welche
+  tragen, darf der **einführende** Schild aus Welle 9 verschwinden, ohne dass
+  etwas anschlägt. Geprüft wird jetzt, was das Verzeichnis ohnehin behauptet:
+  der erste Schild steht in der **ersten Hälfte** des Plans.
+* **„Determinismus liest den gespeicherten Fortschritt"** — die Probe aus
+  v218 kam nicht mehr an, weil der Lauf mit der langen Bahn innerhalb von 240
+  Sekunden gar nicht mehr endet (Welle 10 von 15). Ohne Ergebnis wird nichts
+  in den Fortschritt geschrieben, und der Fehler bleibt folgenlos. Horizont
+  jetzt 600 Sekunden — gemessen endet die Partie nach 521.
+* **„Zielmodus hinten nützt nichts"** — die neue Wellenprüfung aus v218 zählt
+  geteilte Siege mit. Macht man „hinten" zu einer Kopie von „vorn", gewinnen
+  beide dieselben Wellen, und die Prüfung ist zufrieden. Neu daneben: **zwei
+  Modi mit gleichem Verlust je Welle auf allen Karten sind ein Modus mit zwei
+  Namen** — 45 Zahlen treffen nicht versehentlich aufeinander.
+* **„Ersatzziel nimmt auch Flieger"** — der Aufbau ließ eine ganze Welle
+  laufen und wartete darauf, dass zufällig ein Gleiter neben einem sterbenden
+  Bodenziel steht. Auf der neuen Bahn kommt das in **keiner** Welle mehr vor
+  (gemessen an 7, 14 und 15, alle drei mit eingebautem Fehler, alle drei
+  null). Der Fall wird jetzt **gestellt** statt abgewartet — und dabei kam
+  heraus, dass Flieger gar keiner Bahn folgen: ihr `travelled` wird aus der
+  Luftlinie zurückgerechnet, ein gesetztes wird im nächsten Bild
+  überschrieben.
+
+**Die gemeinsame Form:** ein Messplatz, der auf einen Zufall wartet, hört
+leise auf zu prüfen, sobald sich die Umgebung ändert. Drei der vier warteten
+auf etwas, einer zählte zu großzügig.
 
 **Offen:**
 - **D28 — das Bild verspricht ein Wegenetz, das Spiel benutzt einen Weg davon.**

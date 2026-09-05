@@ -1,6 +1,6 @@
 # Towerfront — Art Bible
 
-Stand: v219 · 05.09.2026
+Stand: v220 · 05.09.2026
 
 **Dieses Dokument ist verbindlich.** Wer ein Bild bestellt, malt oder einbaut,
 richtet sich danach. Es ist die einzige Stelle, an der die Festlegungen

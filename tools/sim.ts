@@ -626,12 +626,17 @@ const mixedPlan = mixedPlanBase;
   const geteilt: Record<string, number> = {};
   for (const z of ZIELWAHL_ORDNUNG) { siege[z] = 0; geteilt[z] = 0; }
   let entschieden = 0;
+  /** Der ganze Verlust-Verlauf je Modus, ueber alle Karten aneinandergehaengt -
+   *  der Fingerabdruck, an dem zwei gleiche Modi auffallen. */
+  const verlauf: Record<string, string> = {};
+  for (const z of ZIELWAHL_ORDNUNG) verlauf[z] = '';
   for (const mm of MAPS) {
     const proModus: Record<string, number[]> = {};
     for (const z of ZIELWAHL_ORDNUNG) {
       proModus[z] = play(mixedPlanBase, () => 0, MEISTER, 'normal', mm.id,
         { ziel: () => z }).leakByWave;
     }
+    for (const z of ZIELWAHL_ORDNUNG) verlauf[z] += `|${proModus[z].join(',')}`;
     const wellen = Math.max(...ZIELWAHL_ORDNUNG.map((z) => proModus[z].length));
     const zeile: string[] = [];
     for (let w = 0; w < wellen; w++) {
@@ -644,6 +649,25 @@ const mixedPlan = mixedPlanBase;
       else for (const z of beste) geteilt[z]++;
     }
     console.log(`  ${mm.id.padEnd(15)} ${zeile.join('  ') || 'keine Welle trennt die Modi'}`);
+  }
+  // **Und keine zwei Modi duerfen denselben Verlauf haben.**
+  //
+  // Der volle Probenlauf zu v219 hat gemeldet, dass die Gegenprobe
+  // "Zielmodus hinten wirkt wie vorn" nichts mehr beweist: macht man
+  // "hinten" zu einer Kopie von "vorn", gewinnen beide in denselben Wellen -
+  // geteilt, aber eben gewonnen, und die Pruefung oben ist zufrieden.
+  //
+  // Zwei Modi mit gleichem Verlust je Welle auf ALLEN Karten sind ein Modus
+  // mit zwei Namen. Bei 15 Wellen und drei Karten ist das kein Zufall
+  // mehr - 45 Zahlen treffen nicht versehentlich aufeinander.
+  for (let i = 0; i < ZIELWAHL_ORDNUNG.length; i++) {
+    for (let j = i + 1; j < ZIELWAHL_ORDNUNG.length; j++) {
+      const a = ZIELWAHL_ORDNUNG[i], b = ZIELWAHL_ORDNUNG[j];
+      if (verlauf[a] === verlauf[b]) {
+        errors.push(`Ziellogik: "${a}" und "${b}" hinterlassen auf allen Karten `
+          + 'denselben Verlust je Welle - das sind zwei Namen fuer denselben Modus.');
+      }
+    }
   }
   console.log(`  Alleinsiege: ${ZIELWAHL_ORDNUNG.map((z) => `${z} ${siege[z]}`).join('  ')}`
     + `   (${entschieden} Wellen trennen ueberhaupt)`);

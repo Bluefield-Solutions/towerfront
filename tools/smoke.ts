@@ -914,6 +914,8 @@ step('Wellenvorschau zeigt alle Arten', () => {
   // dasteht, bezeugt nichts. Ohne die Gegenrichtung wuerde ein fest
   // eingebautes `Schild` durchgehen.
   let mitSchild = 0, mitTraeger = 0;
+  /** Die frueheste Welle mit einem Schild - siehe die Pruefung unten. */
+  let ersterSchild = -1;
   for (let i = 0; i < state.waves.length; i++) {
     state.waveIndex = i;
     state.waveActive = false;
@@ -923,6 +925,7 @@ step('Wellenvorschau zeigt alle Arten', () => {
       if (g.shield) soll.Schild.add(g.enemy);
       if (g.traeger) soll['Träger'].add(g.enemy);
     }
+    if (soll.Schild.size && ersterSchild < 0) ersterSchild = i;
     mitSchild += soll.Schild.size ? 1 : 0;
     mitTraeger += soll['Träger'].size ? 1 : 0;
     for (const zeichen of ['Schild', 'Träger'] as const) {
@@ -962,6 +965,23 @@ step('Wellenvorschau zeigt alle Arten', () => {
   if (!mitSchild || !mitTraeger) {
     problems.push(`Wellenvorschau: der Schritt prueft "Schild" an ${mitSchild} und `
       + `"Träger" an ${mitTraeger} Wellen - bei null prueft er nichts (Regel 5).`);
+  }
+  // **Und der Schild muss frueh kommen, nicht irgendwann.**
+  //
+  // "Mindestens einmal im Plan" war zu wenig, und der volle Probenlauf zu
+  // v219 hat es gemeldet: seit die letzten beiden Wellen des Spiralhains
+  // Schilde tragen, bleibt der Rauchtest gruen, wenn man den EINFUEHRENDEN
+  // Schild aus Welle 9 herausnimmt - es sind ja noch zwei da. Die Probe
+  // bewies damit nichts mehr.
+  //
+  // Geprueft wird jetzt, was das Verzeichnis ohnehin behauptet: der Schild
+  // steht in der ersten Haelfte des Plans, "frueh genug, dass man ihn kennt,
+  // bevor es eng wird". Ein Schild, der zum ersten Mal in Welle 14 auftaucht,
+  // ist keine Lehrstunde mehr, sondern ein Hinterhalt.
+  if (ersterSchild >= 0 && ersterSchild >= state.waves.length / 2) {
+    problems.push(`Wellenvorschau: der erste Schild steht in Welle ${ersterSchild + 1} `
+      + `von ${state.waves.length} - er gehoert in die erste Haelfte, sonst lernt ihn `
+      + 'niemand kennen, bevor er entscheidet.');
   }
   state.restore(vorher);
   ui.sync();

@@ -111,7 +111,20 @@ function run(frames: number, pauseAt = -1): Run {
   return { prints, gold: s.gold, lives: s.lives, wave: s.waveNumber };
 }
 
-const FRAMES = 60 * 240;
+// **Wie lange der Lauf mitfaehrt.**
+//
+// 240 Sekunden reichten, solange eine Partie darin endete. Seit die
+// Spiralhain-Bahn 3942 Weltpunkte lang ist, steht der Lauf nach 240 Sekunden
+// erst bei Welle 10 - er endet nie, und damit wird nie ein Stern
+// geschrieben. Das klingt harmlos, macht aber die Gegenprobe zur
+// Fortschritts-Isolierung blind: sie baut den Fehler ein, und weil kein
+// Ergebnis mehr anfaellt, aendert sich nichts. Gemeldet vom vollen
+// Probenlauf zu v219.
+//
+// Gemessen endet die Partie jetzt nach 521 Sekunden (gewonnen, Kristall 55).
+// 600 lassen Luft, ohne dass der Lauf traege wird - er ist ungezeichnet und
+// kostet damit Sekunden, keine Minuten.
+const FRAMES = 60 * 600;
 const errors: string[] = [];
 
 const a = run(FRAMES);

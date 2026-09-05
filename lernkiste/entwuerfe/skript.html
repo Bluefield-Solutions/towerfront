@@ -1,0 +1,161 @@
+<script id="geo-daten" type="application/json">__DATEN__</script>
+<script>
+const D = JSON.parse(document.getElementById('geo-daten').textContent);
+const FL = ['--f1','--f2','--f3','--f4','--f5','--f6','--f7'];
+const VIER = ['--f1','--f3','--f5','--f6'];   // vier Farbtoene aus demselben Ring
+
+/* ---------- Umschalter ------------------------------------------------- */
+function gruppe(attr, wirkung){
+  const b=[...document.querySelectorAll(`[data-${attr}]`)];
+  b.forEach(x=>x.addEventListener('click',()=>{
+    b.forEach(y=>y.setAttribute('aria-pressed',String(y===x)));
+    wirkung(x.dataset[attr]);
+  }));
+}
+gruppe('schrift', v=>{
+  document.documentElement.style.setProperty('--ui-schrift', `"${v}"`);
+  document.documentElement.style.setProperty('--ui-probe', `"${v}"`);
+});
+gruppe('abend', v=>document.documentElement.setAttribute('data-abend', v));
+document.documentElement.style.setProperty('--ui-schrift','"Plus Jakarta Sans"');
+document.documentElement.style.setProperty('--ui-probe','"Plus Jakarta Sans"');
+
+/* ---------- Farbstreifen ----------------------------------------------- */
+const H=[25,75,130,175,230,285,330];
+for (const id of ['s-ok','s-ok-g']) {
+  const el=document.getElementById(id); if(!el) continue;
+  el.innerHTML=H.map(h=>`<div style="background:oklch(0.88 0.055 ${h})">${h}</div>`).join('');
+}
+
+/* ---------- Symbole (kein Emoji, ein Raster, eine Strichstaerke) -------- */
+const ICON = {
+  zurueck:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg>',
+  mikro:'<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg>',
+  stern:(f)=>`<svg width="26" height="26" viewBox="-14 -14 28 28"><path d="M0 -12 L3.7 -4 L12 -2.8 L6 3.2 L7.4 12 L0 7.8 L-7.4 12 L-6 3.2 L-12 -2.8 L-3.7 -4 Z" fill="${f}" stroke="var(--app-tinte)" stroke-width="1.4" stroke-linejoin="round"/></svg>`,
+};
+const sterne = (n)=>`<div class="sterne">${[0,1,2].map(i=>ICON.stern(i<n?'oklch(.80 .14 85)':'oklch(.93 .01 250)')).join('')}</div>`;
+const kopfleiste = (n)=>`<div class="kopfleiste">
+  <button class="zurueck">${ICON.zurueck}<span>Zurück</span></button>${sterne(n)}</div>`;
+
+/* ---------- Karten ------------------------------------------------------ */
+function weltkarte(zielId){
+  const p = D.kontinente.map((k,i)=>{
+    const ziel = k.id===zielId;
+    const f = ziel ? `oklch(.80 .12 ${H[i]})` : `var(${FL[i]})`;
+    return (ziel?`<path d="${k.pfad}" transform="translate(0,3)" fill="var(--tiefe-farbe)"/>`:'')
+      + `<path d="${k.pfad}" fill="${f}"/>`;
+  }).join('');
+  return `<svg viewBox="${D.vbK}" style="width:100%;height:100%" aria-hidden="true">
+    <g>${p}</g>
+    <g fill="none" stroke="var(--app-tinte)" stroke-opacity=".55" stroke-width="1.2"
+       vector-effect="non-scaling-stroke">${D.kontinente.map(k=>`<path d="${k.pfad}"/>`).join('')}</g>
+  </svg>`;
+}
+function deutschlandkarte(zielId){
+  const fl = D.deutschland.map(b=>{
+    const ziel = b.id===zielId;
+    const f = ziel ? 'oklch(.80 .12 250)' : `var(${VIER[b.farbe]})`;
+    return (ziel?`<path d="${b.pfad}" fill-rule="evenodd" transform="translate(0,4)" fill="var(--tiefe-farbe)"/>`:'')
+      + `<path d="${b.pfad}" fill-rule="evenodd" fill="${f}"/>`;
+  }).join('');
+  return `<svg viewBox="${D.vbD}" style="width:100%;height:100%" aria-hidden="true">
+    <g>${fl}</g>
+    <g fill="none" stroke="var(--app-tinte)" stroke-opacity=".5" stroke-width="1.2"
+       vector-effect="non-scaling-stroke">${D.deutschland.map(b=>`<path d="${b.pfad}" fill-rule="evenodd"/>`).join('')}</g>
+  </svg>`;
+}
+
+/* ---------- Entwurf 1 --------------------------------------------------- */
+document.getElementById('schirm-1').innerHTML = `
+  ${kopfleiste(2)}
+  <div style="display:flex;gap:var(--r6);padding:0 var(--r6) var(--r4);height:318px">
+    <div style="flex:1;min-width:0;display:flex;align-items:center">${weltkarte('europa')}</div>
+    <div style="width:250px;display:flex;flex-direction:column;gap:var(--r3);justify-content:center">
+      <div class="etikett gehoben">Europa</div>
+      <div class="etikett">Afrika</div>
+      <div class="etikett">Australien</div>
+      <div class="etikett">Südamerika</div>
+    </div>
+    <div style="display:flex;align-items:center"><button class="mikro">${ICON.mikro}</button></div>
+  </div>`;
+
+/* ---------- Entwurf 2 --------------------------------------------------- */
+document.getElementById('schirm-2').innerHTML = `
+  ${kopfleiste(1)}
+  <div style="display:flex;gap:var(--r12);padding:0 var(--r12) var(--r8);height:730px;align-items:center;justify-content:center">
+    <div style="flex:none;width:470px;height:100%;display:flex;align-items:center">${deutschlandkarte('DE-HE')}</div>
+    <div style="flex:1;min-width:0;max-width:560px;display:flex;flex-direction:column;gap:var(--r4);justify-content:center">
+      <div class="frage" style="font-size:var(--s2)">Wie heißt dieses Bundesland?</div>
+      <div class="feld">Hessen<span class="karett"></span></div>
+      <div style="display:flex;gap:var(--r3);align-items:center">
+        <span style="font-family:var(--f-ui);font-size:var(--s0);font-weight:700;color:var(--app-gut)">Richtig!</span>
+        <span class="tipp">3 von 8</span>
+      </div>
+      <div style="height:1px;background:var(--app-linie)"></div>
+      <div class="frage" style="font-size:var(--s1);color:var(--app-tinte2)">Und die Hauptstadt?</div>
+      <div class="feld" style="border-color:var(--app-linie);color:var(--app-tinte3)">Frankfurt<span class="karett"></span></div>
+      <div style="background:var(--gut-h);border-radius:var(--rund-karte);padding:var(--r4) var(--r6);
+                  font-family:var(--f-ui);font-size:var(--s0);line-height:1.45;color:var(--auf-flaeche)">
+        <strong>Fast!</strong> Frankfurt ist die größte Stadt in Hessen —
+        aber die Hauptstadt ist eine andere.
+      </div>
+    </div>
+  </div>`;
+
+/* ---------- Entwurf 3: der Belohnungsmoment ----------------------------- */
+const eu = D.kontinente.find(k=>k.id==='europa');
+document.getElementById('schirm-3').innerHTML = `
+  ${kopfleiste(3)}
+  <div style="display:flex;gap:var(--r6);padding:0 var(--r6) var(--r4);height:318px;align-items:center">
+    <div style="flex:1;min-width:0;height:100%;display:flex;align-items:center">
+      <svg viewBox="${D.vbK}" style="width:100%;height:100%" aria-hidden="true">
+        <defs><clipPath id="wasch"><circle id="waschKreis" cx="470" cy="150" r="620"
+          style="transform-box:fill-box;transform-origin:center"/></clipPath></defs>
+        ${D.kontinente.map((k,i)=>`<path d="${k.pfad}" fill="var(${FL[i]})" opacity=".38"/>`).join('')}
+        <path id="euFuell" d="${eu.pfad}" fill="oklch(.80 .12 230)" clip-path="url(#wasch)"/>
+        <path id="euKontur" d="${eu.pfad}" fill="none" stroke="var(--app-tinte)" stroke-width="2"
+              vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div style="width:270px;display:flex;flex-direction:column;gap:var(--r4);align-items:center">
+      <div id="sternchen" style="opacity:0">${ICON.stern('oklch(.80 .14 85)').replace('width="26" height="26"','width="88" height="88"')}</div>
+      <div style="font-family:var(--f-lesen);font-size:var(--s3);font-weight:700;color:var(--auf-flaeche)">Europa</div>
+      <div class="tipp" style="font-size:var(--s0)">Richtig!</div>
+    </div>
+  </div>`;
+
+const kontur=document.getElementById('euKontur'), kreis=document.getElementById('waschKreis'),
+      stern=document.getElementById('sternchen');
+const L=kontur.getTotalLength();
+kontur.style.strokeDasharray=L;
+const ruhig = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function spielen(){
+  if(ruhig){ kontur.style.strokeDashoffset=0; kreis.style.transform='scale(1)'; stern.style.opacity=1; return; }
+  kontur.style.strokeDashoffset=L; kreis.style.transform='scale(0)'; stern.style.opacity=0;
+  kontur.animate([{strokeDashoffset:L},{strokeDashoffset:0}],
+    {duration:400,easing:'cubic-bezier(.2,0,0,1)',fill:'forwards'});
+  kreis.animate([{transform:'scale(0)'},{transform:'scale(1)'}],
+    {duration:400,delay:380,easing:'cubic-bezier(.2,0,0,1)',fill:'forwards'});
+  stern.animate([{opacity:0,transform:'scale(.2)'},{opacity:1,transform:'scale(1)'}],
+    {duration:260,delay:660,easing:'cubic-bezier(.34,1.56,.64,1)',fill:'forwards'});
+}
+document.getElementById('abspielen').addEventListener('click',spielen);
+
+/* ---------- Geraeterahmen massstabsgerecht einpassen -------------------- */
+function passen(){
+  document.querySelectorAll('.geraet').forEach(g=>{
+    const b=+g.dataset.breite, h=+g.dataset.hoehe;
+    const z=g.clientWidth/b;
+    const s=g.querySelector('.schirm');
+    s.style.width=b+'px'; s.style.height=h+'px'; s.style.transform=`scale(${z})`;
+    g.style.height=(h*z)+'px';
+  });
+}
+passen(); addEventListener('resize',passen);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(passen);
+
+if('IntersectionObserver' in window){
+  const io=new IntersectionObserver(e=>{ if(e[0].isIntersecting){ spielen(); io.disconnect(); } },{threshold:.4});
+  io.observe(document.getElementById('schirm-3'));
+} else spielen();
+</script>

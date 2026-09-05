@@ -996,6 +996,20 @@ const PROBEN = [
     tor: 'streifentor',
   },
   {
+    // **"Gefahr" nimmt wieder den Dicksten statt den Traeger.**
+    //
+    // Der Modus hiess bis v223 "Voll" und war gemessen der schwaechste von
+    // fuenfen - auf allen vier Karten letzter Platz, kein Alleinsieg in der
+    // Wellenpruefung. Seit er den Schildtraeger vorzieht, hat er eine
+    // Aufgabe, die kein anderer erfuellt. Ohne den Zuschlag ist er wieder
+    // eine Wahl ohne Folgen, und der Rauchtest muss das sehen.
+    name: 'Gefahr ignoriert den Schildtraeger',
+    datei: 'src/game/state.ts',
+    regel: /^const GEFAHR_TRAEGER = 800;$/m,
+    ersatz: 'const GEFAHR_TRAEGER = 0;',
+    tor: 'smoke',
+  },
+  {
     name: 'Gezeichneter Weg wieder cremefarben',
     datei: 'src/data/maps.ts',
     regel: /  path: '#5A4B2E', pathEdge: '#3B301D',/,

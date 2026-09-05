@@ -97,7 +97,10 @@ export type Zielwahl = 'vorn' | 'hinten' | 'stark' | 'nah' | 'schwach';
 export const ZIELWAHL_NAMEN: Record<Zielwahl, string> = {
   vorn: 'Vorn',
   hinten: 'Hinten',
-  stark: 'Voll',
+  // "Gefahr" und nicht mehr "Voll": der Modus nimmt seit v223 nicht den
+  // Gegner mit den meisten Lebenspunkten, sondern den gefaehrlichsten - und
+  // der gefaehrlichste ist der Schildtraeger, auch wenn er duenn ist.
+  stark: 'Gefahr',
   nah: 'Nah',
   schwach: 'Wund',
 };

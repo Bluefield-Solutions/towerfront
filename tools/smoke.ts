@@ -2608,6 +2608,47 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
       `Weltpunkten an, "vorn" nach ${strecken.vorn.toFixed(0)} - hinten muesste darunter liegen.`,
     );
   }
+  // **Und "Gefahr" muss den Schildtraeger nehmen, auch neben einem Titanen.**
+  //
+  // Das ist die Aufgabe, die der Modus seit v223 hat, und sie ist die
+  // einzige, die kein anderer erfuellt: der Traeger ist weder der vorderste
+  // noch der naechste noch der wundeste, und seine 52 Lebenspunkte sind
+  // unauffaellig - aber solange er lebt, laedt er die Schilde des ganzen
+  // Pulks nach (G5).
+  //
+  // Gestellt statt abgewartet: ein Turm, ein Titan mit 682 Lebenspunkten und
+  // ein Traeger, beide in Reichweite. Ohne den Zuschlag nimmt der Modus den
+  // Titanen - das ist die Gegenprobe.
+  {
+    state.reset(777, 'normal', 'farnkessel');
+    state.gold = 99999;
+    const sp = candidateSpots(state)[0];
+    if (!state.build(sp.x, sp.y, 'arrow')) throw new Error('Gefahr: kein Turm setzbar.');
+    const turm = ersterTurm(state);
+    turm.zielwahl = 'stark';
+    const bahn = state.lanes[0];
+    let beste = 0, dm = Infinity;
+    for (let t = 0; t <= bahn.length; t += 5) {
+      const q = bahn.at(t);
+      const d = Math.hypot(q.x - turm.x, q.y - turm.y);
+      if (d < dm) { dm = d; beste = t; }
+    }
+    const titan = state.spawnZumPruefen('titan', 0);
+    const traeger = state.spawnZumPruefen('infantry', 2, 2);
+    if (!titan || !traeger) throw new Error('Gefahr: Gegner nicht setzbar.');
+    titan.travelled = beste;
+    traeger.travelled = beste - 30;
+    state.update(1 / 60);
+    const ziel = turm.target;
+    if (!ziel) {
+      problems.push('Ziellogik "Gefahr": der Turm hat gar kein Ziel gefasst - dann sagt '
+        + 'die Pruefung nichts (Regel 3).');
+    } else if (ziel !== traeger) {
+      problems.push(`Ziellogik "Gefahr" nimmt "${ziel.def}" statt den `
+        + 'Schildtraeger. Der Traeger haelt den ganzen Pulk am Leben - ihn stehen zu '
+        + 'lassen ist der teuerste Fehler, den die Ziellogik machen kann.');
+    }
+  }
   // Und die Einstellung muss den Spielstand ueberleben.
   {
     state.reset(999, 'normal', 'spiralhain');

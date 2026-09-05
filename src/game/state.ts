@@ -53,6 +53,28 @@ function emptyStats(): RunStats {
  *  nicht abschreiben muss - eine abgeschriebene Zahl veraltet (Regel 15). */
 export const ZIER_AUFHELLUNG = 0.45;
 
+/** Wieviel ein Schildtraeger im Modus "Gefahr" zaehlt, zusaetzlich zu seinen
+ *  eigenen Lebenspunkten.
+ *
+ *  **Warum es diesen Zuschlag gibt.** Der Modus hiess bis v223 "Voll" und
+ *  nahm schlicht den Gegner mit den meisten Lebenspunkten. Gemessen war er
+ *  damit der schwaechste von fuenfen: auf allen vier Karten der letzte Platz,
+ *  und in der Wellenpruefung von `npm run sim` kein einziger Alleinsieg. Das
+ *  ist auch einleuchtend - der Dickste stirbt ohnehin nicht am einzelnen
+ *  Schuss, waehrend nebenan die Duennen durchlaufen.
+ *
+ *  Ein Schildtraeger ist etwas anderes: er laedt die Schilde seiner Nachbarn
+ *  nach, solange er lebt (G5). Wer ihn stehen laesst, kommt gegen den Pulk
+ *  nicht an, gleich wieviel Schaden er auffaehrt - und genau diese
+ *  Entscheidung trifft kein anderer Modus. Er ist weder der vorderste noch
+ *  der naechste noch der wundeste, und seine Lebenspunkte sind
+ *  unauffaellig.
+ *
+ *  800 ist gemessen, nicht gewaehlt: der Leerentitan hat 682 Lebenspunkte,
+ *  und der Traeger muss auch neben ihm gewaehlt werden. Darunter faellt er
+ *  in der Bosswelle des Farnkessels wieder hinten runter. */
+const GEFAHR_TRAEGER = 800;
+
 /** Suchraum fuer ein Ersatzziel (TF-007), in Weltpunkten. Etwa eine halbe
  *  Turmreichweite - weit genug, damit der Nachbar im Pulk erreicht wird,
  *  zu kurz, um quer ueber die Karte zu greifen. */
@@ -1506,7 +1528,7 @@ export class GameState {
       // steht die Vergleichslogik einmal da und nicht viermal.
       const wert = wahl === 'vorn' ? e.travelled
         : wahl === 'hinten' ? -e.travelled
-          : wahl === 'stark' ? e.hp
+          : wahl === 'stark' ? e.hp + (e.traeger > 0 ? GEFAHR_TRAEGER : 0)
             : wahl === 'schwach' ? -e.hp
               : -d2;
       if (!best || wert > bestWert) { best = e; bestWert = wert; }

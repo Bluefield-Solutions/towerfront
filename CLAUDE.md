@@ -372,7 +372,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v222. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v223. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -451,6 +451,26 @@ Nebenbei fiel ein Widerspruch zwischen zwei Haushalten auf: die
 Gruppenbudgets summierten sich mit dem vierten Untergrund auf 1105 KB, erlaubt
 sind 1104. Das Untergrund-Budget stand auf 330 KB, während vier gepackte
 Bilder zusammen 162 wiegen — jetzt 250.
+
+**Der fünfte Zielmodus hat in v223 eine Aufgabe bekommen.** „Voll" nahm den
+Gegner mit den meisten Lebenspunkten und war damit gemessen der schwächste
+von fünfen — auf allen vier Karten letzter Platz, in der Wellenprüfung von
+`npm run sim` **kein einziger Alleinsieg**. Das ist auch einleuchtend: der
+Dickste stirbt ohnehin nicht am einzelnen Schuss, während nebenan die Dünnen
+durchlaufen.
+
+Er heißt jetzt **„Gefahr"** und zieht den **Schildträger** vor: 800 Punkte
+Zuschlag auf seine Lebenspunkte, gemessen gegen die 682 des Leerentitanen.
+Der Träger ist weder der vorderste noch der nächste noch der wundeste, seine
+52 Lebenspunkte sind unauffällig — aber solange er lebt, lädt er die Schilde
+des ganzen Pulks nach. Diese Entscheidung trifft kein anderer Modus.
+
+Gemessen danach: **jeder der fünf Modi liegt irgendwo allein vorn** (vorn 4,
+nah 3, schwach 3, stark 1, hinten 1 über 17 Wellen, die die Modi überhaupt
+trennen). Geprüft wird es aber nicht an dieser Statistik, sondern am
+Verhalten: ein Turm, ein Titan, ein Träger, beide in Reichweite — der Turm
+muss den Träger nehmen. Mit Zuschlag 0 nimmt er den Titanen, und der
+Rauchtest sagt es.
 
 **Offen:**
 - **D28 — das Bild verspricht ein Wegenetz, das Spiel benutzt einen Weg davon.**

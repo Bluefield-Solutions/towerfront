@@ -2689,6 +2689,12 @@ if (dreckig) {
   process.exit(1);
 }
 
+/** Wo der letzte VOLLE Probenlauf stattgefunden hat.
+ *
+ *  Eingecheckt, nicht im Abdruck-Lager: der Abstand zum vollen Lauf ist eine
+ *  Eigenschaft des Projekts, nicht dieses Rechners. */
+const STAND_DATEI = join(ROOT, 'tools/proben-stand.txt');
+
 const filter = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const VOLL = process.argv.includes('--voll');
 
@@ -2760,11 +2766,6 @@ if (filter.length) {
 // Der Musterlauf ersetzt den vollen Lauf NICHT. Er sagt nur: jede Probe hat
 // noch einen Gegenstand. Ob das Tor ihn auch meldet, sagt allein der volle
 // Lauf - deshalb steht er weiter vor jeder Auslieferung.
-/** Wo der letzte VOLLE Probenlauf stattgefunden hat.
- *
- *  Eingecheckt, nicht im Abdruck-Lager: der Abstand zum vollen Lauf ist eine
- *  Eigenschaft des Projekts, nicht dieses Rechners. */
-const STAND_DATEI = join(ROOT, 'tools/proben-stand.txt');
 const fassung = () => (readFileSync(join(ROOT, 'src/data/config.ts'), 'utf8')
   .match(/VERSION = 'v(\d+)'/)?.[1] ?? '0');
 /** Wieviele Fassungen der volle Lauf zurueckliegen darf.

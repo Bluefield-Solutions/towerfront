@@ -819,6 +819,18 @@ html, body {
   .next-lab { font-size: 8px; }
   .next-list { font-size: 10.5px; gap: 26px 10px; }
   .next-list .next-bild { width: 17px; height: 17px; }
+  /* **Auf dem flachen Geraet werden die Marken schmal.**
+   *
+   * Die Vorschau steht in einer Zeile; bricht sie um, ist sie 116 statt 70
+   * Punkte hoch, und `npm run streifen` schlaegt an. Genau das ist in v218
+   * passiert, als die letzten beiden Wellen des Spiralhains Schilde bekamen:
+   * eine dritte Marke in derselben Welle, und die Zeile riss.
+   *
+   * Der Text bleibt vollstaendig - er wird nur eng gesetzt. Ihn zu kuerzen
+   * ("S" statt "Schild") waere die naheliegende Loesung und die schlechtere:
+   * auf dem Telefon gibt es keinen Zeigerhinweis, in dem das Wort
+   * nachzulesen waere. */
+  .next-list .tag { font-size: 8.5px; letter-spacing: 0; padding: 1px 3px; }
 
   .tower-btn { min-width: 74px; padding: 5px 8px; }
   .tower-btn .n { font-size: 11px; }
@@ -865,7 +877,18 @@ html, body {
   background: rgba(9, 14, 30, 0.44);
   border: 1px solid var(--edge);
   -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-  max-width: 58vw;
+  /* **Wie breit die Vorschau werden darf.**
+   *
+   * 58vw stammt aus der Zeit, als eine Welle drei Gegnerarten zeigte. Mit
+   * fuenf Arten und vier Marken (Luft, zerfaellt, zweimal Schild) bricht die
+   * Zeile um, und die Vorschau ist 116 statt 70 Punkte hoch - `npm run
+   * streifen` misst genau das und schlaegt bei 86 an.
+   *
+   * 72vw statt 58: die Vorschau steht oben links, rechts daneben stehen nur
+   * die Faehigkeiten. Sie bleibt eine Zeile, und das ist der Punkt - zwei
+   * Zeilen nehmen dem Brett 46 Punkte, und auf 390 Punkten Hoehe ist das
+   * ein Achtel des Feldes. */
+  max-width: 72vw;
 }
 
 .tower-btn, .skill-btn {

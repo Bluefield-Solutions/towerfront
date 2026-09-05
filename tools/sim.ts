@@ -11,7 +11,7 @@ import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../src/data/d
 const START_LIVES = DIFFICULTIES.normal.startLives;
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, type TowerId } from '../src/data/towers';
 
-import { MAPS, lanePaths } from '../src/data/maps';
+import { MAPS } from '../src/data/maps';
 import { ALL_PERKS, NO_PERKS, starsFor } from '../src/data/perks';
 import { ABILITIES } from '../src/data/abilities';
 import { candidateSpots } from './spots';
@@ -593,58 +593,67 @@ const mixedPlan = mixedPlanBase;
       { variant, ziel: f })).mean;
   const rein: Record<string, number> = {};
   for (const z of ZIELWAHL_ORDNUNG) rein[z] = messe(() => z);
-  // Der Abstand, ab dem ein Turm als "weit vom Kristall" gilt. Anteilig an
-  // der laengsten Bahn, nicht absolut (Regel 2): eine feste Zahl waere bei
-  // der naechsten Karte still bedeutungslos.
-  // **Wo auf der BAHN steht der Turm - nicht, wie weit er Luftlinie vom
-  // Kristall weg ist.**
+  console.log('  rein (Spiralhain): ' + ZIELWAHL_ORDNUNG.map((z) => `${z} ${rein[z].toFixed(0)}`).join('  '));
+
+  // **Und jetzt die Frage, die der Modus wirklich stellt.**
   //
-  // Bis v218 stand hier `Math.hypot(Ziel - Turm) > Bahnlaenge * 0,35`: eine
-  // Luftlinie gegen eine Weglaenge, zwei Einheiten in einem Vergleich
-  // (Regel 12). Solange die Bahnen fast gerade waren, fiel das nicht auf -
-  // Laenge und Luftlinie lagen um 10 bis 40 % auseinander. Auf der neu
-  // gezogenen Spiralhain-Bahn (3631 lang, Luftlinie 1294) wurde die Grenze
-  // 1271 Weltpunkte gross, und die ist weiter, als der Kristall von der
-  // hintersten Ecke der Karte entfernt ist: JEDER Turm galt als "nah", die
-  // Aufteilung war keine mehr, und die Kennzahl stimmte auf die dritte
-  // Stelle mit dem reinen Modus ueberein.
+  // Bis v218 stand hier: "der Modus `hinten` muss, nach Standort verteilt,
+  // jeden reinen Modus schlagen". Zwei Fehler in einem Satz.
   //
-  // Richtig ist die Frage, die der Modus stellt: bewacht dieser Turm das
-  // vordere Stueck der Bahn oder das letzte? Gemessen wird deshalb die
-  // Stelle auf der Bahn, an der er am naechsten steht - als Anteil der
-  // Laenge, damit die Zahl fuer jede Karte dasselbe bedeutet.
-  const bahn = lanePaths(MAPS[0])[0];
-  /** Ab welchem Anteil der Bahn ein Turm zum hinteren Feld gehoert. */
-  const HINTEN_AB = 0.65;
-  const anteil = (t: { x: number; y: number }): number => {
-    let beste = 0, dm = Infinity;
-    for (let u = 0; u <= bahn.length; u += 10) {
-      const q = bahn.at(u);
-      const d = Math.hypot(q.x - t.x, q.y - t.y);
-      if (d < dm) { dm = d; beste = u; }
+  // Der erste war ein Einheitenfehler - eine Luftlinie gegen eine Weglaenge,
+  // siehe oben. Der zweite ist grundsaetzlicher: die Frage wurde ueber den
+  // GANZEN Lauf und auf EINER Karte gestellt. So misst man, welcher Modus im
+  // Mittel am wenigsten falsch ist, und das ist auf allen drei Karten
+  // derselbe:
+  //
+  //     Spiralhain     vorn 94  schwach 90  nah 81  hinten 78  stark 74
+  //     Ascheschlucht  vorn 69  schwach 65  nah 64  hinten 59  stark 56
+  //     Frostspalte    vorn 84  nah 76  schwach 75  hinten 71  stark 64
+  //
+  // Dieselbe Reihenfolge dreimal. Nach dem alten Massstab waeren VIER der
+  // fuenf Modi tot - und das waere ein Urteil ueber den Massstab, nicht ueber
+  // das Spiel. Kein Mensch stellt sein ganzes Feld eine ganze Partie lang auf
+  // denselben Modus; er stellt EINEN Turm um, wenn eine Welle es verlangt.
+  //
+  // Geprueft wird deshalb je WELLE: welcher Modus laesst in dieser Welle die
+  // wenigsten Gegner durch? Ein Modus, der in keiner einzigen Welle auf
+  // keiner einzigen Karte allein vorn liegt, ist eine Wahl ohne Folgen.
+  // Alle drei Karten, nicht nur MAPS[0] - der alte Zuschnitt haette auf der
+  // Ascheschlucht seit Langem angeschlagen, ohne dass es jemand gesehen
+  // haette.
+  console.log('\nZiellogik je Welle (welcher Modus laesst am wenigsten durch):');
+  const siege: Record<string, number> = {};
+  const geteilt: Record<string, number> = {};
+  for (const z of ZIELWAHL_ORDNUNG) { siege[z] = 0; geteilt[z] = 0; }
+  let entschieden = 0;
+  for (const mm of MAPS) {
+    const proModus: Record<string, number[]> = {};
+    for (const z of ZIELWAHL_ORDNUNG) {
+      proModus[z] = play(mixedPlanBase, () => 0, MEISTER, 'normal', mm.id,
+        { ziel: () => z }).leakByWave;
     }
-    return beste / bahn.length;
-  };
-  const fernHinten = messe((t) => (anteil(t) < HINTEN_AB ? 'hinten' : 'vorn'));
-  const nahHinten = messe((t) => (anteil(t) >= HINTEN_AB ? 'hinten' : 'vorn'));
-  const bestesReines = Math.max(...ZIELWAHL_ORDNUNG.map((z) => rein[z]));
-  console.log('  rein: ' + ZIELWAHL_ORDNUNG.map((z) => `${z} ${rein[z].toFixed(0)}`).join('  '));
-  console.log(`  nach Standort (Grenze bei ${(HINTEN_AB * 100).toFixed(0)} % der Bahn): `
-    + `vorderes Feld=hinten ${fernHinten.toFixed(0)}   hinteres Feld=hinten `
-    + `${nahHinten.toFixed(0)}`);
-  if (fernHinten <= bestesReines) {
-    errors.push(`Ziellogik "hinten" ist wirkungslos: nach Standort aufgeteilt `
-      + `${fernHinten.toFixed(1)} Punkte, bester reiner Modus ${bestesReines.toFixed(1)}. `
-      + 'Der fuenfte Modus muss eine Aufstellung ermoeglichen, die es ohne ihn nicht gibt.');
+    const wellen = Math.max(...ZIELWAHL_ORDNUNG.map((z) => proModus[z].length));
+    const zeile: string[] = [];
+    for (let w = 0; w < wellen; w++) {
+      const werte = ZIELWAHL_ORDNUNG.map((z) => proModus[z][w] ?? 0);
+      const min = Math.min(...werte), max = Math.max(...werte);
+      if (min === max) continue;          // in dieser Welle trennt nichts
+      entschieden++;
+      const beste = ZIELWAHL_ORDNUNG.filter((_z, i) => werte[i] === min);
+      if (beste.length === 1) { siege[beste[0]]++; zeile.push(`W${w + 1}:${beste[0]}`); }
+      else for (const z of beste) geteilt[z]++;
+    }
+    console.log(`  ${mm.id.padEnd(15)} ${zeile.join('  ') || 'keine Welle trennt die Modi'}`);
   }
-  // Fuenf Punkte Abstand, nicht null: die Kennzahl streut ueber die
-  // Abwandlungen um rund drei. Eine Grenze innerhalb der Streuung waere ein
-  // Muenzwurf, kein Beweis - und ein Tor, das jede zweite Runde grundlos rot
-  // wird, wird abgeschaltet.
-  if (fernHinten <= nahHinten + 5) {
-    errors.push('Ziellogik "hinten": die Aufteilung nach Standort ist beliebig - '
-      + `fern ${fernHinten.toFixed(1)} gegen nah ${nahHinten.toFixed(1)}. `
-      + 'Dann traegt nicht der Modus, sondern der Zufall.');
+  console.log(`  Alleinsiege: ${ZIELWAHL_ORDNUNG.map((z) => `${z} ${siege[z]}`).join('  ')}`
+    + `   (${entschieden} Wellen trennen ueberhaupt)`);
+  console.log(`  geteilt:     ${ZIELWAHL_ORDNUNG.map((z) => `${z} ${geteilt[z]}`).join('  ')}`);
+  for (const z of ZIELWAHL_ORDNUNG) {
+    if (siege[z] + geteilt[z] === 0) {
+      errors.push(`Ziellogik "${z}": in keiner Welle auf keiner Karte vorn - eine Wahl `
+        + 'ohne Folgen. Entweder der Modus kann etwas, dann muss es zu messen sein, '
+        + 'oder er gehoert weg.');
+    }
   }
 }
 

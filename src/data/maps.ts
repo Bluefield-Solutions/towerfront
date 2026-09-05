@@ -267,7 +267,7 @@ export const MAP_SPIRALHAIN: GameMap = {
   hint: { x: 200, y: 200 },
   ziel: { x: 1734, y: 454 },   // gemessen mit `npm run zielplatte`
   waves: PLAN_SPIRALHAIN,
-  balance: { hpMul: 1.2, goldMul: 0.85 },
+  balance: { hpMul: 1.0, goldMul: 0.9 },
 };
 
 

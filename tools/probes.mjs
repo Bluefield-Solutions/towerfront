@@ -983,6 +983,19 @@ const PROBEN = [
     tor: 'determinism',
   },
   {
+    // **Die Wellenvorschau wieder auf 58vw.**
+    //
+    // Bei fuenf Gegnerarten und vier Marken bricht die Zeile dann um, und die
+    // Vorschau ist 116 statt 70 Punkte hoch - ein Achtel des Feldes auf dem
+    // Telefon. Ohne diese Probe waere die Breite eine Zahl, die niemand mehr
+    // bewegt, und der naechste Wellenplan wuerde still zwei Zeilen erzeugen.
+    name: 'Wellenvorschau wieder zu schmal',
+    datei: 'src/style.css',
+    regel: /^  max-width: 72vw;$/m,
+    ersatz: '  max-width: 58vw;',
+    tor: 'streifentor',
+  },
+  {
     name: 'Gezeichneter Weg wieder cremefarben',
     datei: 'src/data/maps.ts',
     regel: /  path: '#5A4B2E', pathEdge: '#3B301D',/,
@@ -2087,7 +2100,7 @@ const PROBEN = [
     // Sternepruefung darunter um.
     name: 'Durchlauf laesst seinen Fortschritt stehen',
     datei: 'tools/smoke.ts',
-    regel: /^  fortschritt\.stars = sterneVorher;$/m,
+    regel: /^  Object\.assign\(fortschritt, JSON\.parse\(abdruckVorher\)\);$/m,
     ersatz: '  // Fortschritt nicht zurueckgestellt.',
     tor: 'smoke',
   },

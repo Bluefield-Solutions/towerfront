@@ -1169,7 +1169,29 @@ pruefungen.push(async () => {
   };
   const e = s.spawnZumPruefen('brute', 0, 0);
   if (!e) throw new Error('Bremsanzeige: kein Gegner setzbar.');
-  e.travelled = s.lanes[0].length * 0.45;
+  // **Den Gegner dorthin setzen, wo die Kamera hinsieht - nicht auf 45 % der
+  // Bahn.**
+  //
+  // Der feste Anteil war eine Wette darauf, dass die Bahn dort durch den
+  // sichtbaren Ausschnitt laeuft. Bei 1555 Weltpunkten stimmte sie; auf der
+  // neu gezogenen Bahn (3631, vier Saeulen) liegt 45 % ausserhalb des
+  // Fensters, die Figur wurde gar nicht gezeichnet, und die Messung meldete
+  // NULL geaenderte Bildpunkte - "man sieht der Figur die Bremse nicht an",
+  // obwohl gar keine Figur da war. Regel 3: erst pruefen, ob der Eingriff
+  // ueberhaupt ankommt.
+  //
+  // Jetzt wird die Stelle auf der Bahn gesucht, die der Bildmitte am
+  // naechsten liegt. Das haelt fuer jede Bahn, die es noch geben wird.
+  {
+    const mitte = r.screenToWorld(844 / 2, 390 / 2);
+    let bestes = 0, dm = Infinity;
+    for (let t = 0; t <= s.lanes[0].length; t += 10) {
+      const q = s.lanes[0].at(t);
+      const d = Math.hypot(q.x - mitte.x, q.y - mitte.y);
+      if (d < dm) { dm = d; bestes = t; }
+    }
+    e.travelled = bestes;
+  }
   s.update(1 / 60);
   const frei = nimm();
   // Ueber die ECHTE Regel bremsen, nicht ueber die Felder.

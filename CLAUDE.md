@@ -142,6 +142,13 @@ npm run muendung    prueft am Bildvorrat, wo das Rohr jedes Turms endet -
 npm run geschosse   misst, wieviel Schaden in der Luft verpufft: Anteil der
                     zielsuchenden Schuesse ohne Wirkung, groesste
                     Richtungsaenderung, Luftfilter. `--tor` prueft die Grenzen.
+npm run bahnentwurf was eine Bahn taugt, BEVOR die Simulation eine Minute
+                    rechnet: Deckung durch die zwoelf besten Bauplaetze und
+                    die WEGVIELFACHHEIT - gedeckte Bahnlaenge geteilt durch
+                    zwei Reichweiten. 1,0 ist ein gerades Stueck, 2,0 sind
+                    zwei Wege. In v217 haben drei Entwuerfe je einen
+                    sim-Lauf gekostet, ohne dass die Meldung die Ursache
+                    nannte; sie stand in diesen zwei Zahlen.
 npm run gelaendesuche  liest die unwegsamen Flecken AUS dem Kartenbild statt
                     sie zu setzen - fuer eine Karte, deren Bild das Gelaende
                     mitbringt. Es entscheidet aber nicht: drei Kriterien, ein
@@ -341,7 +348,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v217. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
+Stand: v218. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
 Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -505,6 +512,42 @@ Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
   es erst, als die neue Bahn den Lauf erstmals innerhalb der 240 Sekunden
   gewinnen ließ — vorher endete er nie. Jetzt fährt das Werkzeug ohne
   Verbesserungen und mit fester Kartenzahl, wie `npm run sim` (Regel 4).
+
+  **In v218 ist die Bahn ein zweites Mal gezogen — auf Wunsch deutlich
+  länger, mit Stellen für Türme, die zwei Wege treffen.** Vier Säulen im
+  Abstand von 300 Weltpunkten, verbunden durch Kehren:
+
+  | | v217 | v218 |
+  |---|---|---|
+  | Länge | 1652 | **3631** Weltpunkte |
+  | Umweg | 1,91 | 2,75 |
+  | Deckung durch die zwölf besten Plätze | 85 % | 73 % |
+  | Wegvielfachheit je Platz | 1,25 | **1,87** (bester 2,02) |
+  | Punkte, die zwei Wege sehen | 0 von 148 | **16 von 170** |
+
+  Der Abstand von 300 ist gemessen, nicht gewählt: bei 268 waren die
+  Korridore breit genug für die Reichweite, aber zu schmal zum **Bauen** —
+  `canPlace` lehnte bei 126 Weltpunkten ab und ließ bei 132 zu. Dafür gibt es
+  jetzt `npm run bahnentwurf`.
+
+  **Die Karte ist damit sehr stark für den Verteidiger, und das hat vier
+  Prüfungen gegeneinander gestellt.** Sechs Anläufe, alle gemessen: Anzahlen
+  ×1,1 bricht die Eröffnung (C18 verlangt, dass die erste Karte mit einer
+  Fähigkeit zu gewinnen ist), späte Wellen ×1,6 macht den Spiralhain der
+  Ascheschlucht zu ähnlich (Abstand 0,23, nötig 0,25), nur die leichten
+  Gruppen zu verstärken lässt den Meister verlustfrei durch, mehr Luft
+  erschlägt die Eröffnung.
+
+  **Was trägt, sind Schilde**, und zwar aus drei Gründen: sie sind die eigene
+  Erfindung dieser Karte (Welle 9), sie bestrafen genau die vielen kleinen
+  Treffer, die die neue Geometrie erlaubt, und sie sind für den
+  Karten-Abstandswächter **unsichtbar** — der wiegt Gegnerarten nach `Anzahl ×
+  Leben`, und ein Schild ändert daran nichts. Schild 7, 8 und 10 kommen alle
+  durch: eine Fläche, keine Nadel.
+
+  Dabei ist die Wellenvorschau umgebrochen — fünf Gegnerarten und vier Marken
+  passten nicht mehr in `max-width: 58vw`, und zwei Zeilen kosten 46 von 390
+  Punkten Bildhöhe. Jetzt 72vw, mit Gegenprobe.
 
   **Was der Umweg kostet, steht offen im Bild:** die linke Kartenhälfte wird
   nicht mehr betreten. Solange der Kristall in der Ecke steht, ziehen „Umweg

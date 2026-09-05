@@ -1,6 +1,6 @@
 # Towerfront — Bildauftrag
 
-Stand: v217 · 04.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v218 · 05.09.2026 · **Auftragsdokument für den Bild-Agenten**
 
 Dieses Dokument ist die vollständige Bestellung. Es enthält alles, was zum
 Erzeugen der Bilder nötig ist: Stil, Maße, Blickrichtung, Dateinamen,

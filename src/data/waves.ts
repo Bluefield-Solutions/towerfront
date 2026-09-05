@@ -148,17 +148,17 @@ export const PLAN_SPIRALHAIN: Wave[] = [
     { enemy: 'runner', count: 16, gap: 0.3, delay: 0 },
     { enemy: 'splitter', count: 6, gap: 1.2, delay: 5 },
     { enemy: 'flyer', count: 6, gap: 0.8, delay: 10 } ] },
-  { bonus: 365, note: 'Alles gleichzeitig', groups: [
+  { bonus: 365, note: 'Alles gleichzeitig — und die Schnellen tragen Schilde', groups: [
     { enemy: 'brute', count: 5, gap: 1.4, delay: 0 },
-    { enemy: 'runner', count: 10, gap: 0.32, delay: 3 },
+    { enemy: 'runner', count: 20, gap: 0.32, delay: 3, shield: 8 },
     { enemy: 'splitter', count: 5, gap: 1.3, delay: 7 },
-    { enemy: 'flyer', count: 5, gap: 0.9, delay: 11 } ] },
-  { bonus: 1197, note: 'Zwei Titanen und der ganze Rest', groups: [
+    { enemy: 'flyer', count: 10, gap: 0.9, delay: 11, shield: 8 } ] },
+  { bonus: 1197, note: 'Zwei Titanen, und alles Schnelle hinter Schilden', groups: [
     { enemy: 'titan', count: 1, gap: 9, delay: 0 },
     { enemy: 'brute', count: 2, gap: 1.6, delay: 4 },
     { enemy: 'splitter', count: 3, gap: 1.1, delay: 8 },
-    { enemy: 'flyer', count: 3, gap: 0.8, delay: 12 },
-    { enemy: 'runner', count: 6, gap: 0.3, delay: 16 } ] },
+    { enemy: 'flyer', count: 6, gap: 0.8, delay: 12, shield: 8 },
+    { enemy: 'runner', count: 12, gap: 0.3, delay: 16, shield: 8 } ] },
 ];
 
 /** Ascheschlucht: frueh vereinte Zuwege und der laengste Weg im Spiel -

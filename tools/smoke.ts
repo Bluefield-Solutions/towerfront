@@ -685,8 +685,20 @@ step('Jede Karte und der Endlosmodus durchspielen', () => {
       + 'Hauptpartie schon auf dem hoechsten Sternestand, und dort kann '
       + 'nichts mehr steigen.');
   }
-  fortschritt.stars = sterneVorher;
-  fortschritt.perks = perksVorher;
+  // **Alles zurueckstellen, nicht zwei benannte Felder.**
+  //
+  // Bis v218 standen hier nur `stars` und `perks` - die beiden, die beim
+  // Schreiben dieses Blocks bekannt waren. Sobald der Durchlauf die erste
+  // Karte GEWINNT, schreibt das Spiel aber auch Bestwerte, und die blieben
+  // stehen. Aufgefallen ist es, als die neu gezogene Bahn den Durchlauf
+  // erstmals gewinnen liess; vorher verlor er, und dann gab es nichts
+  // einzutragen.
+  //
+  // Der Abdruck unten hat es gefangen, weil er ueber den GANZEN Stand geht.
+  // Genau dafuer steht er da - und die Lehre ist, auch beim Zurueckstellen
+  // den ganzen Stand zu nehmen statt einer Liste, die veraltet.
+  Object.assign(fortschritt, JSON.parse(abdruckVorher));
+  void sterneVorher; void perksVorher;
   if (JSON.stringify(fortschritt) !== abdruckVorher) {
     throw new Error('Der Durchlauf hat den Fortschritt veraendert und nicht '
       + 'zurueckgestellt. Alles, was danach Sterne, Verbesserungen oder '

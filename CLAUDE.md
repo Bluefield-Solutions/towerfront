@@ -372,8 +372,8 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v221. Feld 1920 × 1080 (16:9). Drei Karten (Spiralhain, Ascheschlucht,
-Frostspalte), vier Türme mit je zwei Zweigen und sechs Stufen, vier
+Stand: v222. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
 gewichtet 100 %.
@@ -416,6 +416,41 @@ und keine davon wäre je rot geworden.
 **Die gemeinsame Form:** ein Messplatz, der auf einen Zufall wartet, hört
 leise auf zu prüfen, sobald sich die Umgebung ändert. Drei der vier warteten
 auf etwas, einer zählte zu großzügig.
+
+**Der Farnkessel (v222) ist die vierte Karte — und sie hat kein neues Bild
+gekostet.** Dasselbe Waldboden-Foto, **gespiegelt und kühler gebacken**:
+Zielplattform links, unwegsame Flecken auf der anderen Seite, eigene Bahnen.
+`npm run pack-art` kann seit v222 spiegeln (`spiegeln: true` im Bildvorrat).
+Die Vorbilder machen es genauso — Kingdom Rush baut eine ganze Welt aus einem
+Kachelsatz.
+
+**Zwei Bahnen, die sich vereinen**, und die Karte ist damit die dichteste,
+die das Spiel hat:
+
+| | Spiralhain | **Farnkessel** |
+|---|---|---|
+| Wegvielfachheit je Platz | 1,94 | **3,06** (bester 3,49) |
+| Punkte, die zwei Wege sehen | 19 | **30** |
+| Punkte, die **drei** sehen | 0 | **12** |
+| Länge | 3942 | 2730 + 2468 |
+
+**Zwei Regeln des Wächters haben den ersten Entwurf umgeworfen, und beide zu
+Recht:** eine lange und eine kurze Bahn (2730/1645) sind keine Gabelung,
+sondern eine Abkürzung — höchstens 30 % Unterschied erlaubt —, und zwei
+Bahnen müssen sich irgendwo treffen, nicht nur denselben Kristall haben. Die
+zweite Bahn ist deshalb länger und teilt sich mit der ersten die letzten 600
+Weltpunkte.
+
+Ihr Wellenplan trägt **Infanterie und Gleiter** statt Schleicher und Läufer,
+und ab Welle 10 den **Schildträger** — das ist es, was sie vom Spiralhain
+trennt (der Wächter misst den Abstand an „Anzahl × Leben" je Gegnerart). Der
+Luftanteil musste dabei von 24,8 auf 15,6 % herunter: mehr als das Doppelte
+der dünnsten Karte macht den Nachteil des Mörsers ungleich teuer.
+
+Nebenbei fiel ein Widerspruch zwischen zwei Haushalten auf: die
+Gruppenbudgets summierten sich mit dem vierten Untergrund auf 1105 KB, erlaubt
+sind 1104. Das Untergrund-Budget stand auf 330 KB, während vier gepackte
+Bilder zusammen 162 wiegen — jetzt 250.
 
 **Offen:**
 - **D28 — das Bild verspricht ein Wegenetz, das Spiel benutzt einen Weg davon.**

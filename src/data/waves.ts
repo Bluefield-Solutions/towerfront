@@ -282,3 +282,65 @@ export const PLAN_FROSTSPALTE: Wave[] = [
     { enemy: 'splitter', count: 3, gap: 1.4, delay: 10 } ] },
 ];
 
+/** Farnkessel: zwei ungleiche Wege, und die Karte, auf der die INFANTERIE das
+ *  Rueckgrat ist.
+ *
+ *  Die drei anderen Plaene sind ueber Schleicher und Laeufer gebaut, die
+ *  Ascheschlucht dazu ueber Masse und Panzerung. Hier tragen Infanterie und
+ *  Gleiter - langsam und zaeh statt schnell und viel -, und ab Welle 10
+ *  kommt der Schildtraeger dazu: er laedt die Schilde seiner Nachbarn nach,
+ *  solange er lebt. Wer ihn stehen laesst, kommt gegen den Pulk nicht an,
+ *  gleich wieviel Schaden er auffaehrt.
+ *
+ *  Das ist zugleich, was die Karte vom Spiralhain trennt - der
+ *  Daten-Waechter misst den Abstand der Plaene an "Anzahl x Leben" je
+ *  Gegnerart und verlangt 0,25. */
+export const PLAN_FARNKESSEL: Wave[] = [
+  { bonus: 96, note: 'Zwei Wege', groups: [
+    { enemy: 'crawler', count: 5, gap: 1.1, delay: 0 } ] },
+  { bonus: 112, groups: [
+    { enemy: 'infantry', count: 5, gap: 1.0, delay: 0 } ] },
+  { bonus: 124, note: 'Infanterie in Reihe', groups: [
+    { enemy: 'infantry', count: 8, gap: 0.9, delay: 0 },
+    { enemy: 'crawler', count: 5, gap: 0.8, delay: 6 } ] },
+  { bonus: 148, note: 'Erste Gleiter', groups: [
+    { enemy: 'infantry', count: 7, gap: 0.9, delay: 0 },
+    { enemy: 'flyer', count: 3, gap: 1.2, delay: 4 } ] },
+  { bonus: 186, groups: [
+    { enemy: 'infantry', count: 10, gap: 0.8, delay: 0 },
+    { enemy: 'runner', count: 6, gap: 0.6, delay: 6 } ] },
+  { bonus: 232, note: 'Erster Koloss', groups: [
+    { enemy: 'brute', count: 2, gap: 2.8, delay: 0 },
+    { enemy: 'infantry', count: 9, gap: 0.8, delay: 4 } ] },
+  { bonus: 248, groups: [
+    { enemy: 'flyer', count: 5, gap: 1.0, delay: 0 },
+    { enemy: 'infantry', count: 8, gap: 0.9, delay: 5 } ] },
+  { bonus: 268, note: 'Schilde', groups: [
+    { enemy: 'infantry', count: 8, gap: 1.0, delay: 0, shield: 2 },
+    { enemy: 'crawler', count: 10, gap: 0.6, delay: 4 } ] },
+  { bonus: 292, groups: [
+    { enemy: 'infantry', count: 11, gap: 0.8, delay: 0 },
+    { enemy: 'flyer', count: 4, gap: 1.0, delay: 5 },
+    { enemy: 'brute', count: 2, gap: 2.6, delay: 10 } ] },
+  { bonus: 318, note: 'Der Schildträger — erst ihn, dann den Rest', groups: [
+    { enemy: 'infantry', count: 6, gap: 1.0, delay: 0, shield: 2, traeger: 2 },
+    { enemy: 'infantry', count: 9, gap: 0.8, delay: 5 } ] },
+  { bonus: 340, groups: [
+    { enemy: 'flyer', count: 6, gap: 0.9, delay: 0 },
+    { enemy: 'infantry', count: 10, gap: 0.8, delay: 6 } ] },
+  { bonus: 362, groups: [
+    { enemy: 'brute', count: 4, gap: 2.2, delay: 0 },
+    { enemy: 'infantry', count: 12, gap: 0.7, delay: 4 },
+    { enemy: 'crawler', count: 12, gap: 0.5, delay: 9 } ] },
+  { bonus: 388, note: 'Zwei Träger', groups: [
+    { enemy: 'infantry', count: 8, gap: 0.9, delay: 0, shield: 3, traeger: 3 },
+    { enemy: 'flyer', count: 4, gap: 1.0, delay: 5 } ] },
+  { bonus: 420, note: 'Alles zugleich', groups: [
+    { enemy: 'brute', count: 5, gap: 1.6, delay: 0 },
+    { enemy: 'infantry', count: 14, gap: 0.7, delay: 3 },
+    { enemy: 'flyer', count: 6, gap: 0.9, delay: 8 } ] },
+  { bonus: 1180, note: 'Ein Titan und die ganze Kompanie', groups: [
+    { enemy: 'titan', count: 1, gap: 9, delay: 0 },
+    { enemy: 'infantry', count: 14, gap: 0.7, delay: 4, shield: 3, traeger: 3 },
+    { enemy: 'flyer', count: 5, gap: 0.9, delay: 10 } ] },
+];

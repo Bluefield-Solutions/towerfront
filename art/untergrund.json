@@ -1,10 +1,10 @@
 {
-  "comment": "Untergrundbilder der Karten. Auf Tageslicht gebracht (siehe Grafik-Audit 5.3): helle Bilder komprimieren schlechter als dunkle, deshalb wurde das Budget von 520 auf 700 KB angehoben - bewusst, es kostet rund 90 KB in der ausgelieferten Datei. Zielgroesse 2400x1350 = 16:9, passend zum Feld seit v36; vorher stand hier 2000x1100 aus der Rasterzeit.",
+  "comment": "Untergrundbilder der Karten. Auf Tageslicht gebracht (siehe Grafik-Audit 5.3): helle Bilder komprimieren schlechter als dunkle, deshalb wurde das Budget von 520 auf 700 KB angehoben - bewusst, es kostet rund 90 KB in der ausgelieferten Datei. Zielgroesse 2400x1350 = 16:9, passend zum Feld seit v36; vorher stand hier 2000x1100 aus der Rasterzeit. Budget seit v222 auf 250 KB: vier gepackte Untergruende wiegen zusammen 162 KB, und die alten 330 sprengten mit der vierten Karte den Gesamthaushalt der Datei um ein Kilobyte - zwei Haushalte, die einander widersprachen.",
   "source": "roh/untergrund",
   "output": "backgrounds.ts",
   "exportName": "MAP_BACKGROUNDS",
   "mode": "background",
-  "budgetKb": 330,
+  "budgetKb": 250,
   "defaults": {
     "width": 2400,
     "height": 1350,
@@ -37,6 +37,15 @@
       "waerme": 0.12,
       "farbe": 1.6,
       "weich": 1.7
+    },
+    "farnkessel": {
+      "file": "12_laubbreit.png",
+      "comment": "Vierte Karte aus demselben Waldboden, gespiegelt und kuehler gebacken: Zielplattform links, Flecken auf der anderen Seite, eigene Bahnen. Ein Bild, zwei Orte - die Vorbilder bauen ganze Welten aus einem Kachelsatz.",
+      "spiegeln": true,
+      "helligkeit": 0.55,
+      "waerme": -0.18,
+      "farbe": 0.72,
+      "weich": 1.6
     }
   }
 }

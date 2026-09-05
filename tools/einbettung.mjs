@@ -95,6 +95,7 @@ const KLIMA_MIN = 0.035;
  *      Spiralhain    36 %
  *      Ascheschlucht 33 %
  *      Frostspalte   26 %
+ *      Farnkessel    31 %   (v222)
  *
  *  **Die drei Zahlen stehen hier, weil ich sie beim ersten Anlauf geraten
  *  habe.** Aus einem halben Dutzend abgelesener Zeilen wurden 50 / 65 /
@@ -104,7 +105,7 @@ const KLIMA_MIN = 0.035;
  *  Ratsche je Karte, kein gemeinsames Soll: die drei liegen dicht
  *  beieinander, aber sie haengen am Kartenbild, und ein gemeinsames Soll
  *  wuerde beim naechsten Bild entweder unerreichbar oder bedeutungslos. */
-const KLIMA_ANTEIL = { spiralhain: 0.36, ascheschlucht: 0.33, frostspalte: 0.26 };
+const KLIMA_ANTEIL = { spiralhain: 0.36, ascheschlucht: 0.33, frostspalte: 0.26, farnkessel: 0.31 };
 /** Wieviel eine Karte unter ihrer Ratsche liegen darf, bevor es ein Befund
  *  ist. Fuenf Punkte - Bildrauschen und ein neu gepacktes Bild bewegen die
  *  Zahl um ein bis zwei. */

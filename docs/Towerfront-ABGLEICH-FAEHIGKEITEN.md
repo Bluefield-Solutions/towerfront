@@ -1,6 +1,6 @@
 # Referenzabgleich — Fähigkeiten freischalten (C18)
 
-Stand: v221 · 05.09.2026
+Stand: v222 · 05.09.2026
 
 Schritt 0 des Durchgangs, nach `docs/Towerfront-SOLL-UND-BETRIEB.md` Teil 2.
 Er stand aus: C18 steht seit v40 im Rückstandsverzeichnis, und das Soll war

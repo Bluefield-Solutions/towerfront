@@ -1,7 +1,7 @@
 import type { Vec } from '../core/math';
 import { LanePath, type PathPoint } from '../core/path';
 import {
-  PLAN_SPIRALHAIN, PLAN_ASCHESCHLUCHT, PLAN_FROSTSPALTE, type Wave,
+  PLAN_SPIRALHAIN, PLAN_ASCHESCHLUCHT, PLAN_FROSTSPALTE, PLAN_FARNKESSEL, type Wave,
 } from './waves';
 
 /** Was ueber einer Karte vom Himmel kommt (D2).
@@ -189,6 +189,18 @@ const MOOS: MapPalette = {
   mood: '#BEE2FF', haze: '#B4D6E2', sonne: '#FFC26A',
   // Spiralhain: Nieselregen. Moos steht nicht ohne Wasser.
   wetter: 'regen', wetterTon: '#CFE6F2',
+};
+
+/** Farnkessel: derselbe Wald, aber im Schatten - kuehler und dunkler.
+ *  Der Weg ist derselbe Erdton wie auf dem Spiralhain, nur eine Spur
+ *  grauer, weil der Boden unter ihm kaelter gebacken ist. */
+const FARN: MapPalette = {
+  terrain: '#16332F', terrainHi: '#1D4A44', terrainLo: '#0E2523',
+  path: '#4F4A36', pathEdge: '#332F22',
+  rock: '#26303F', rockHi: '#38455C',
+  mood: '#BCDBE8', haze: '#A9C6D2', sonne: '#E8C48A',
+  // Auch hier Regen - es ist derselbe Wald, nur eine Senke tiefer.
+  wetter: 'regen', wetterTon: '#C6DCE8',
 };
 
 const LAUB: MapPalette = {
@@ -487,7 +499,75 @@ export const MAP_FROSTSPALTE: GameMap = {
 };
 
 
-export const MAPS: GameMap[] = [MAP_SPIRALHAIN, MAP_ASCHESCHLUCHT, MAP_FROSTSPALTE];
+/** Karte 4 "Farnkessel": derselbe Waldboden, gespiegelt und kuehler gebacken.
+ *
+ *  **Ein Bild, zwei Orte.** Ein Kartenbild kostet eine Bestellung und einen
+ *  Tag Wartezeit; ein vorhandenes ein zweites Mal zu benutzen ist deshalb
+ *  nicht Sparsamkeit, sondern der Unterschied zwischen drei und vier Karten.
+ *  Gespiegelt liegt die Zielplattform links, die unwegsamen Flecken liegen
+ *  anders, und jede Bahn muss neu gedacht werden - was gleich bleibt, ist das
+ *  Biom. Die Vorbilder machen es genauso: Kingdom Rush baut eine ganze Welt
+ *  aus einem Kachelsatz.
+ *
+ *  Zwei Bahnen, und sie sind absichtlich ungleich: eine lange, gewundene und
+ *  eine kurze, direkte. Wer beide gleich behandelt, verliert an der kurzen. */
+export const MAP_FARNKESSEL: GameMap = {
+  id: 'farnkessel',
+  name: 'Farnkessel',
+  blurb: 'Zwei Wege, einer kurz. Der Kessel liegt im Schatten.',
+  palette: FARN,
+  lanes: [
+    // Die lange: von unten rechts durch den ganzen Kessel, drei Saeulen im
+    // Abstand von 350 - dazwischen steht ein Turm und sieht beide Seiten.
+    [
+      { x: 1500, y: 1160, w: 44 }, { x: 1440, y: 1020, w: 48 },
+      { x: 1420, y: 870, w: 50 }, { x: 1416, y: 720, w: 50 },
+      { x: 1430, y: 600, w: 48 }, { x: 1370, y: 530, w: 44 },
+      { x: 1260, y: 520, w: 44 }, { x: 1150, y: 575, w: 46 },
+      { x: 1090, y: 700, w: 50 }, { x: 1086, y: 860, w: 50 },
+      { x: 1090, y: 1000, w: 48 }, { x: 1020, y: 1062, w: 44 },
+      { x: 910, y: 1062, w: 44 }, { x: 820, y: 990, w: 46 },
+      { x: 770, y: 860, w: 50 }, { x: 766, y: 710, w: 50 },
+      { x: 780, y: 590, w: 48 }, { x: 700, y: 520, w: 44 },
+      { x: 570, y: 520, w: 46 }, { x: 440, y: 540, w: 48 },
+      { x: 310, y: 510, w: 52 }, { x: 186, y: 454, w: 60 },
+    ],
+    // Die zweite: von unten links durch den Kessel, und ab dem Farnriegel
+    // laufen beide dieselbe Strecke. Eine Gabelung, keine zwei Strassen -
+    // der Waechter verlangt beides: hoechstens 30 % Laengenunterschied und
+    // ein gemeinsames Stueck.
+    [
+      { x: 700, y: 1160, w: 44 }, { x: 720, y: 1020, w: 46 },
+      { x: 640, y: 910, w: 48 }, { x: 500, y: 880, w: 48 },
+      { x: 380, y: 935, w: 48 }, { x: 285, y: 845, w: 48 },
+      { x: 290, y: 705, w: 50 }, { x: 340, y: 585, w: 48 },
+      { x: 460, y: 530, w: 46 }, { x: 590, y: 570, w: 46 },
+      { x: 660, y: 690, w: 48 }, { x: 780, y: 730, w: 48 },
+      { x: 880, y: 660, w: 46 }, { x: 850, y: 560, w: 44 },
+      { x: 780, y: 590, w: 48 }, { x: 700, y: 520, w: 44 },
+      { x: 570, y: 520, w: 46 }, { x: 440, y: 540, w: 48 },
+      { x: 310, y: 510, w: 52 }, { x: 186, y: 454, w: 60 },
+    ],
+  ],
+  rough: [
+    { x: 435, y: 214, r: 147, art: 'locker', farbe: '#171604' },
+    { x: 1607, y: 780, r: 134, art: 'locker', farbe: '#181708' },
+    { x: 618, y: 113, r: 72, art: 'locker', farbe: '#171605' },
+    { x: 1270, y: 296, r: 69, art: 'locker', farbe: '#232314' },
+    { x: 1142, y: 162, r: 55, art: 'locker', farbe: '#28281b' },
+    { x: 1323, y: 184, r: 37, art: 'locker', farbe: '#2e2e23' },
+    { x: 1144, y: 362, r: 36, art: 'locker', farbe: '#171a05' },
+    { x: 249, y: 916, r: 32, art: 'locker', farbe: '#26240f' },
+  ],
+  bildBringt: { weg: false, gelaende: true },
+  hint: { x: 1700, y: 200 },
+  ziel: { x: 186, y: 454 },   // gemessen mit `npm run zielplatte`
+  waves: PLAN_FARNKESSEL,
+  balance: { hpMul: 1.0, goldMul: 1.0 },
+};
+
+export const MAPS: GameMap[] = [MAP_SPIRALHAIN, MAP_ASCHESCHLUCHT, MAP_FROSTSPALTE,
+  MAP_FARNKESSEL];
 
 export function mapById(id: string): GameMap {
   return MAPS.find((m) => m.id === id) ?? MAP_SPIRALHAIN;

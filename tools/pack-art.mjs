@@ -152,6 +152,20 @@ async function processBackground(srcPath, spec) {
     bild = bild.linear([1 + w * 0.18, 1 + w * 0.05, 1 - w * 0.12], [0, 0, 0]);
   }
 
+  // **Gespiegelt, wenn zwei Karten sich ein Bild teilen.**
+  //
+  // Ein Kartenbild kostet eine Bestellung und einen Tag Wartezeit. Ein
+  // vorhandenes ein zweites Mal zu benutzen ist deshalb keine Sparsamkeit,
+  // sondern der Unterschied zwischen drei und vier Karten - und gespiegelt
+  // liegt die Zielplattform auf der anderen Seite, die unwegsamen Flecken
+  // ebenso, und jede Bahn muss neu gedacht werden. Was gleich bleibt, ist
+  // das Biom; das ist auch bei den Vorbildern so (Kingdom Rush baut eine
+  // ganze Welt aus einem Kachelsatz).
+  //
+  // Zusammen mit einer anderen Toenung liest es sich als anderer Ort. Ob es
+  // das WIRKLICH tut, sagt kein Schalter, sondern der Blick (Regel 8).
+  if (spec.spiegeln) bild = bild.flop();
+
   const buffer = await bild
     .webp({ quality: spec.quality ?? 60, effort: 6 })
     .toBuffer();

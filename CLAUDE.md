@@ -60,7 +60,7 @@ nachts auf dem Runner (`.github/workflows/proben.yml`) und schreibt bei
 Erfolg Fassung **und Commit** in `tools/proben-stand.txt`. Der tägliche Lauf
 hier ist ein **Umfangslauf**: er fährt nur die Proben, deren **Zieldatei**
 seit dem letzten vollen Lauf angefasst wurde. Gemessen sind das nach einer
-Runde **11 Proben statt 249**, nach zweien 26.
+Runde **11 Proben statt 253**, nach zweien 26.
 
 Das Werkzeug des Tores zählt bewusst nicht mit, obwohl es naheliegt: an
 `tools/smoke.ts` hängen 86 Proben, und eine einzige Zeile darin zöge den Lauf
@@ -145,7 +145,7 @@ npm run bauflaeche  haelt die GEZEIGTE Baukante gegen die Bauregel:
                     Punkte verschobener Pfad muss durchfallen.
 npm run konter      prueft, ob jede Gegnerart, an der etwas zu kontern ist,
                     es auch sagt - und ob es nicht ALLE tun.
-npm run muster      prueft in 0,4 s, ob jede der 156 Gegenproben noch einen
+npm run muster      prueft in 0,4 s, ob jede der 253 Gegenproben noch einen
                     Gegenstand hat - ohne ein Tor zu fahren. Ersetzt den
                     vollen Probenlauf nicht, faengt aber seine haeufigste
                     Verfallsart - und schlaegt an, wenn der volle Lauf mehr
@@ -177,12 +177,16 @@ npm run gelaendesuche  liest die unwegsamen Flecken AUS dem Kartenbild statt
 npm run gelaende    liest aus dem Kartenbild, woraus jeder unwegsame Fleck
                     besteht (Farbe, hart/kalt/locker) und legt einen
                     Kontaktbogen daneben. `--tor` prüft die Eintragung.
-npm run doku        prüft die Dokumente gegen die Wirklichkeit
+npm run doku        prüft die Dokumente gegen die Wirklichkeit - seit v224 auch,
+                    ob ein als OFFEN gefuehrter Rueckstandspunkt noch offen IST.
+                    Jede offene Zeile traegt eine Schliessbedingung, und die
+                    wird gefahren. Drei Punkte standen offen da, waehrend sie
+                    seit v217, v218 und v222 zugefallen waren.
 npm run beruehrung  prüft, ob alles mit dem Daumen zu treffen ist
 npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen - im
                     Standardlauf nur die, deren ZIELDATEI seit dem letzten
                     vollen Lauf angefasst wurde (nach einer Runde 11 statt
-                    249). Ein Name oder ein Torname als Argument filtert
+                    253). Ein Name oder ein Torname als Argument filtert
                     gezielt. `-- --voll` fährt alle; das dauert rund 50
                     Minuten und läuft deshalb nachts auf dem Runner.
 npm run kritik      Wertung nach Testerkategorien, Ziel über 90
@@ -372,7 +376,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v223. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v224. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -383,6 +387,32 @@ Die Zahl hinter „Stand" muss zu `VERSION` in `src/data/config.ts` passen —
 Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
 „Version vNN" kennt der Wächter nicht, also fiel der Rückstand von
 61 Versionen keinem auf.
+
+**Das Rückstandsverzeichnis wird seit v224 gefahren, nicht geglaubt.** Drei
+Punkte standen als offen darin, während sie längst zugefallen waren: **C24**
+(„die vierte Karte fehlt") seit v222, **D28-F** („die Prüfung läuft nur auf
+`MAPS[0]`") seit v218, **D28-A** („mehr Bahnen durch das gemalte Netz") seit
+v217. Dreimal derselbe Fehler, und S124 hat ihn schon einmal aufgeschrieben —
+ein geschlossener Punkt, den kein Tor hält, kann still wieder aufgehen, und
+ein offener kann still zufallen.
+
+Jede offene Zeile trägt jetzt eine **Schließbedingung**, und `npm run doku`
+wertet sie aus: ist sie erfüllt, ist der Punkt zugefallen und die Zeile lügt.
+Fünf Formen, drei mechanische (`text … >= n`, `text … == 0`,
+`liste … >= n`) und zwei, die es ehrlich ausschließen — `blick:` für das, was
+nur das Auge sieht (Regel 8), `nutzer:` für das, was nur auf einem echten
+Telefon zu messen ist. Beide brauchen eine Begründung.
+
+**Was das Tor hält, ist gemessen — und es ist weniger, als es aussieht.** Die
+Bedingung läuft zusätzlich gegen zwei gestellte Texte, einen der sie erfüllen
+muss und einen der sie brechen muss; das fängt `>= 0`, eine unbekannte Form,
+eine fehlende Datei und einen unbekannten Listennamen (alle vier einzeln
+nachgefahren). Es fängt **nicht** die zu hohe Schwelle: `text … "Heiler" >= 99`
+läuft gemessen durch, der Punkt bliebe still für immer offen. Kein billiges
+Verfahren trennt „hoch" von „absurd" — deshalb steht es hier, statt als
+Sicherheit verkauft zu werden (S129).
+
+Nebenbei endete die Erledigt-Tabelle bei **v215**; acht Fassungen fehlten.
 
 **Was der volle Probenlauf zu v219 gefunden hat — und es waren nicht die
 Tore, sondern vier Messplätze.** Von 249 Gegenproben bewiesen vier nichts
@@ -486,6 +516,14 @@ Rauchtest sagt es.
   Gelände hin, gemessen 0,31/0,25/0,69), **A** mehr Bahnen durch das Netz,
   **C** neue Kartenbilder mit genau den benutzten Straßen, **D** das Bauen
   auf gemalter Straße verbieten.
+
+  **A ist seit v217 gegenstandslos und stand bis v224 trotzdem offen da.**
+  Es hieß „mehr Bahnen durch das GEMALTE Netz des Spiralhains" — und der
+  Spiralhain hat seit v217 kein gemaltes Netz mehr, er zeichnet seinen Weg
+  selbst. Was A wollte, ist auf dem anderen Weg gekommen: Serpentine (v217),
+  vier Säulen (v218), linker Rand (v219), und im Farnkessel zwei Bahnen, die
+  sich vereinen (v222). Offen bleiben C, D und E — alle drei nur noch für
+  Ascheschlucht und Frostspalte.
 
   **Schritt A ist in v209 gemessen und liegt zurück — nicht an der
   Geometrie, sondern am Wellenplan.** `npm run bahnsuche` sucht die Route

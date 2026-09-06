@@ -267,6 +267,168 @@ for (const [name, text] of alle) {
   if (regeln.length < 5) fail('CLAUDE.md: weniger als fünf eiserne Regeln - da fehlt etwas.');
 }
 
+// --- 6. Ein offener Punkt muss seine Schliessbedingung mitfuehren - und die
+//        Bedingung wird gefahren, nicht geglaubt.
+//
+// **Zweimal derselbe Fehler, und S124 hat ihn schon einmal aufgeschrieben.**
+// C24 ("die vierte Karte fehlt, sie braucht ein Untergrundbild") stand noch
+// offen, als der Farnkessel seit v222 im Spiel war. D28-F ("die Pruefung des
+// fuenften Zielmodus laeuft nur auf MAPS[0]") stand noch offen, seit v218
+// alle Karten prueft. D28-A ("mehr Bahnen durch das GEMALTE Netz des
+// Spiralhains") stand noch offen, seit der Spiralhain in v217 auf
+// `weg: false` steht und gar kein gemaltes Netz mehr hat.
+//
+// Dreimal habe ich das Verzeichnis gelesen und ihm geglaubt. Der Waechter
+// prueft Befehle, Torzahl und Begriffe - aber nie, ob ein als offen
+// gefuehrter Punkt noch offen IST.
+//
+// Jede offene Zeile traegt jetzt eine Schliessbedingung in einer von fuenf
+// Formen:
+//
+//     text <pfad> "<wort>" >= <n>     zu, sobald das Wort n-mal dasteht
+//     text <pfad> "<wort>" == 0       zu, sobald das Wort verschwunden ist
+//     liste <pfad> <NAME> >= <n>      zu, sobald die Liste n Eintraege hat
+//     blick: <grund>                  kein Tor kann das sehen (Regel 8)
+//     nutzer: <grund>                 nur der Nutzer kann es entscheiden
+//
+// **Die mechanischen drei werden zweimal ausgewertet.** Einmal gegen die
+// Wirklichkeit: ist sie dort ERFUELLT, ist der Punkt still zugefallen und die
+// Zeile luegt. Einmal gegen zwei gestellte Texte - einen, der sie erfuellen
+// MUSS, und einen, der sie brechen MUSS. Eine Bedingung, die auf beiden
+// dasselbe sagt, prueft nichts.
+//
+// **Was dieser zweite Lauf haelt, ist gemessen - und es ist weniger, als es
+// aussieht.** Er schlaegt an bei `>= 0` (immer wahr, der plausible Vertipper
+// fuer `>= 1`), bei einer Form, die der Waechter nicht kennt, bei einer
+// Datei, die es nicht gibt, und bei einem Listennamen, den es nicht gibt -
+// alle vier einzeln nachgefahren.
+//
+// **Er haelt NICHT die zu hohe Schwelle.** `text ... "Heiler" >= 99` laeuft
+// gemessen durch: die Bedingung ist erfuellbar, nur nicht in diesem
+// Jahrhundert, und kein billiges Verfahren trennt "hoch" von "absurd". Der
+// Punkt bliebe still fuer immer offen. Gegattert wird, was man halten kann;
+// berichtet, was man nicht halten kann (S129) - und diese Zeile ist der
+// Bericht. Wer eine Schwelle ueber 1 schreibt, schreibt daneben, woher sie
+// kommt.
+{
+  const backlog = alle.find(([n]) => n === 'Towerfront-BACKLOG.md');
+  if (!backlog) {
+    fail('Towerfront-BACKLOG.md fehlt - dann prueft hier nichts mehr.');
+  } else {
+    /** Quelltext einer Datei, oder null. Als Funktion, damit die gestellten
+     *  Texte durch dieselbe Auswertung laufen wie die echten Dateien. */
+    const ausDatei = (pfad) => {
+      try { return lies(pfad); } catch { return null; }
+    };
+    /** Wieviele Eintraege hat das Array, das <NAME> zugewiesen bekommt? */
+    const listenLaenge = (inhalt, name) => {
+      const m = inhalt.match(new RegExp(`${name}[^=\\n]*=\\s*\\[([^\\]]*)\\]`));
+      if (!m) return null;
+      return m[1].split(',').map((s) => s.trim()).filter(Boolean).length;
+    };
+    /**
+     * Eine Bedingung auswerten. `quelle(pfad)` liefert den Text - bei der
+     * echten Auswertung aus der Datei, bei der Nullprobe der gestellte Text.
+     * Rueckgabe: { erfuellt } oder { fehler }.
+     */
+    const werte = (bed, quelle) => {
+      let m;
+      if ((m = bed.match(/^text (\S+) "([^"]+)" (>=|==) (\d+)$/))) {
+        const [, pfad, wort, op, n] = m;
+        const inhalt = quelle(pfad);
+        if (inhalt === null) return { fehler: `die Datei ${pfad} gibt es nicht` };
+        const anzahl = inhalt.split(wort).length - 1;
+        return { erfuellt: op === '>=' ? anzahl >= Number(n) : anzahl === Number(n) };
+      }
+      if ((m = bed.match(/^liste (\S+) ([A-Za-z_][A-Za-z0-9_]*) >= (\d+)$/))) {
+        const [, pfad, name, n] = m;
+        const inhalt = quelle(pfad);
+        if (inhalt === null) return { fehler: `die Datei ${pfad} gibt es nicht` };
+        const laenge = listenLaenge(inhalt, name);
+        if (laenge === null) return { fehler: `die Liste ${name} steht nicht in ${pfad}` };
+        return { erfuellt: laenge >= Number(n) };
+      }
+      return { fehler: `die Form "${bed}" kennt der Waechter nicht` };
+    };
+    /**
+     * Die zwei gestellten Texte zu einer Bedingung: einer, der sie erfuellen
+     * muss, und einer, der sie brechen muss. `null`, wenn die Form keine
+     * mechanische ist.
+     */
+    const gestellt = (bed) => {
+      let m;
+      if ((m = bed.match(/^text \S+ "([^"]+)" (>=|==) (\d+)$/))) {
+        const [, wort, op, n] = m;
+        // Der Trenner darf das Wort nicht selbst enthalten, sonst zaehlt die
+        // Auswertung mehr Treffer als gesetzt wurden.
+        return op === '>='
+          ? { ja: Array(Number(n)).fill(wort).join('\n'), nein: '' }
+          : { ja: '', nein: wort };
+      }
+      if ((m = bed.match(/^liste \S+ ([A-Za-z_][A-Za-z0-9_]*) >= (\d+)$/))) {
+        const [, name, n] = m;
+        const bau = (k) => `export const ${name} = [${Array(k).fill("'x'").join(', ')}];`;
+        return { ja: bau(Number(n)), nein: bau(0) };
+      }
+      return null;
+    };
+
+    // Nur die Abschnitte, die "Offen" heissen. Die Fundtabellen darunter
+    // fuehren absichtlich vergangene Staende.
+    const bloecke = backlog[1].split(/^## /m).filter((b) => b.startsWith('Offen'));
+    if (bloecke.length === 0) {
+      fail('Towerfront-BACKLOG.md: kein Abschnitt "Offen" gefunden - die Form hat '
+        + 'sich geaendert, und dann prueft hier nichts mehr.');
+    }
+    let gepruefte = 0;
+    for (const block of bloecke) {
+      for (const z of block.matchAll(/^\| ([A-Z]+\d+(?:-[A-Z])?) \| (.+?) \|[^|]*\|[^|]*\|\s*$/gm)) {
+        const [, id, inhalt] = z;
+        gepruefte++;
+        const b = inhalt.match(/\*\*Schliesst, wenn:\*\* `([^`]+)`/);
+        if (!b) {
+          fail(`Backlog ${id}: keine Schliessbedingung. Ohne sie kann niemand `
+            + 'pruefen, ob der Punkt noch offen ist - und genau so sind C24, D28-A '
+            + 'und D28-F stehen geblieben.');
+          continue;
+        }
+        const bed = b[1];
+        const weich = bed.match(/^(blick|nutzer): (.+)$/);
+        if (weich) {
+          if (weich[2].trim().length < 20) {
+            fail(`Backlog ${id}: "${weich[1]}" ohne Begruendung. Wer ein Tor `
+              + 'ausschliesst, sagt warum.');
+          }
+          continue;
+        }
+        // Gegen die Wirklichkeit.
+        const echt = werte(bed, ausDatei);
+        if (echt.fehler) {
+          fail(`Backlog ${id}: die Bedingung laesst sich nicht auswerten - ${echt.fehler}.`);
+          continue;
+        }
+        if (echt.erfuellt) {
+          fail(`Backlog ${id}: die Schliessbedingung \`${bed}\` ist ERFUELLT - der `
+            + 'Punkt ist zugefallen, steht aber offen. Ins Erledigte umtragen.');
+        }
+        // Und gegen die zwei gestellten Texte (Regel 5 und 13).
+        const g = gestellt(bed);
+        const ja = werte(bed, () => g.ja);
+        const nein = werte(bed, () => g.nein);
+        if (!ja.erfuellt || nein.erfuellt) {
+          fail(`Backlog ${id}: die Bedingung \`${bed}\` besteht ihre eigene `
+            + 'Nullprobe nicht - sie kann nicht eintreten oder nicht ausbleiben. '
+            + 'Eine Bedingung, die immer dasselbe sagt, prueft nichts.');
+        }
+      }
+    }
+    if (gepruefte === 0) {
+      fail('Towerfront-BACKLOG.md: kein einziger offener Punkt erkannt - die '
+        + 'Tabellenform hat sich geaendert, und dann prueft hier nichts mehr.');
+    }
+  }
+}
+
 for (const h of hinweise) console.log(`  Hinweis: ${h}`);
 if (probleme.length) {
   console.error(`DOKU-WAECHTER: ${probleme.length} Fehler`);

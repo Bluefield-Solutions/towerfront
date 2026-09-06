@@ -321,6 +321,44 @@ const PROBEN = [
     meldetNicht: 'verwendet "Kachelraster" im gültigen Teil',
   },
   {
+    // **Die drei Proben zu Abschnitt 6, und sie haengen zusammen.**
+    //
+    // C24, D28-A und D28-F standen als offen im Verzeichnis, waehrend sie in
+    // Wahrheit seit v222, v217 und v218 zugefallen waren. Der Waechter prueft
+    // jetzt jede offene Zeile gegen ihre Schliessbedingung - und diese Probe
+    // stellt genau den Fall her: der Bannturm ist da, C3 steht weiter offen.
+    name: 'Zugefallener Punkt steht weiter offen',
+    datei: 'src/data/towers.ts',
+    suche: "name: 'Bogenturm'",
+    ersatz: "name: 'Bannturm'",
+    tor: 'doku',
+    meldet: 'ist ERFUELLT',
+  },
+  {
+    // Und die Zeile ohne Bedingung - die Form, in der die drei Punkte
+    // tatsaechlich stehen geblieben sind. Ohne diese Probe waere die
+    // Pflichtangabe eine Bitte.
+    name: 'Offener Punkt ohne Schliessbedingung',
+    datei: 'docs/Towerfront-BACKLOG.md',
+    regel: / · \*\*Schliesst, wenn:\*\* `liste src\/data\/difficulty\.ts DIFFICULTY_ORDER >= 4`/,
+    ersatz: '',
+    tor: 'doku',
+    meldet: 'keine Schliessbedingung',
+  },
+  {
+    // **Die Gegenprobe, und ohne sie waeren die beiden darueber wertlos.**
+    // Ein Waechter, der jede offene Zeile meldet, besteht sie auch - genau
+    // die Falle, die bei "Kachelraster" schon einmal aufgeschrieben ist.
+    // Hier wird die Bedingung durch eine andere, ebenso UNerfuellte ersetzt:
+    // der Punkt bleibt zu Recht offen, und das Tor muss schweigen.
+    name: 'Offener Punkt bleibt zu Recht offen',
+    datei: 'docs/Towerfront-BACKLOG.md',
+    suche: '`text src/data/enemies.ts "Heiler" >= 1`',
+    ersatz: '`text src/data/enemies.ts "Wunderheiler" >= 1`',
+    tor: 'doku',
+    meldetNicht: 'Backlog C6',
+  },
+  {
     // Neu mit der Hoehe: der Waechter deckelt sie bei 1,25. Ohne Probe waere
     // das eine Grenze, von der niemand weiss, ob sie greift - und eine
     // Grenze, die nicht greift, ist eine Erlaubnis.

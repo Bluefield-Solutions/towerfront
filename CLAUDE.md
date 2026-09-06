@@ -398,7 +398,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v228. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v229. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -435,6 +435,23 @@ Verfahren trennt „hoch" von „absurd" — deshalb steht es hier, statt als
 Sicherheit verkauft zu werden (S129).
 
 Nebenbei endete die Erledigt-Tabelle bei **v215**; acht Fassungen fehlten.
+
+**Und v228 hat prompt ein Werkzeug gebrochen, ohne dass die Torkette es
+merkte (v229).** Die Abnahmegrenzen stehen nur im Bildauftrag (Regel 15);
+`tools/auftrag.ts` liest die **letzte** Tabellenspalte, und ich habe die
+Forderung beim Umbau nach vorn gestellt. `npm run kartenprobe` brach ab —
+aufgefallen ist es erst, als ein Kandidat zu messen war, eine Runde später.
+
+Der Grund ist einfach: **`kartenprobe` steht gar nicht in der Torkette.** Es
+prüft einen Kandidaten, nicht den Bestand, also läuft es nur, wenn jemand ein
+Bild vorlegt. Ein Werkzeug, dessen Eingang niemand prüft, ist im Ernstfall
+kaputt — und der Ernstfall ist genau der Tag, an dem ein Bild ankommt.
+
+`npm run guards` liest die Grenzen jetzt bei jedem Lauf mit und nennt sie als
+Hinweis. Gegenprobe nachgetragen — und der **erste Entwurf der Gegenprobe
+bewies nichts**: er setzte ein Zeichen um und ließ die Zahl lesbar, das Tor
+schwieg zu Recht (Regel 3). Sie verschiebt jetzt die Spalte, also genau den
+Fehler.
 
 **Die Bestellung 8c für Ascheschlucht und Frostspalte liegt vor (v228) — und
 das Vorbereiten hat einen Fehler in den Karten gefunden, den kein Tor hielt.**

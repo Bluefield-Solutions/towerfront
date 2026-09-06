@@ -1646,14 +1646,20 @@ Weg, alles darunter wird verdeckt. Es schadet nichts, wenn dort Boden ist.
 
 ### Abnahme
 
-| Prüfung | Bestellt | Heute gemalt | Nach 8c erreicht |
+**Die letzte Spalte ist die, nach der abgenommen wird** — `tools/auftrag.ts`
+liest sie und `npm run kartenprobe` misst dagegen. Wer die Tabelle umsortiert,
+bricht die Abnahme; das ist in v228 einmal passiert und blieb unbemerkt, weil
+`kartenprobe` nicht in der Torkette steht. Seit v229 ruft `npm run guards` das
+Lesen mit auf.
+
+| Prüfung | Heute gemalt | Nach 8c erreicht | Gefordert |
 |---|---|---|---|
-| `npm run kartenprobe` Wegfreiheit | **≤ 25 Farbschritte** | 79,9 (Asche) · 33,6 (Frost) | **3,0** (Spiralhain) · **2,1** (Farnkessel) |
-| `npm run zielplatte` Güte | **≥ 0,50** | — | **0,98** (Spiralhain) |
-| Seitenverhältnis | 1,778 (16:9), 2400 × 1350 | 1,778 | 1,778 |
-| `npm run gelaendetor` | grün — jeder Fleck bleibt unwegsam | grün | grün |
-| Helligkeit / Sättigung / Detaildichte | 0,30–0,36 / 0,45–0,55 / 1,5–3,0 | im Band | im Band |
-| Reines Schwarz | höchstens **2 %** | 0,0 % | 0,0 % |
+| `npm run kartenprobe` Wegfreiheit | 79,9 (Asche) · 33,6 (Frost) | **3,0** (Spiralhain) · **2,1** (Farnkessel) | **≤ 25 Farbschritte** |
+| `npm run zielplatte` Güte | — | **0,98** (Spiralhain) | **≥ 0,50** |
+| Seitenverhältnis | 1,778 | 1,778 | **1,778 (16:9), 2400 × 1350** |
+| `npm run gelaendetor` | grün | grün | **grün — jeder Fleck bleibt unwegsam** |
+| Helligkeit / Sättigung / Detaildichte | im Band | im Band | **0,30–0,36 / 0,45–0,55 / 1,5–3,0** |
+| Reines Schwarz | 0,0 % | 0,0 % | höchstens **2 %** |
 
 **Die 25 sind nicht geraten**, und die Spalten daneben sind gemessen, nicht
 geschätzt (06.09.2026). Der Farbabstand zwischen dem Streifen unter der Bahn

@@ -67,6 +67,31 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    // **Die Abnahmegrenzen stehen nur im Bildauftrag** (Regel 15), und
+    // `npm run kartenprobe` misst dagegen. Nur steht `kartenprobe` NICHT in
+    // der Torkette - es prueft einen Kandidaten, nicht den Bestand.
+    //
+    // In v228 habe ich die Abnahmetabelle in Abschnitt 8c umsortiert und
+    // damit den Leser gebrochen: die Forderung stand danach in der zweiten
+    // statt in der letzten Spalte. Die Torkette blieb gruen. Aufgefallen ist
+    // es erst, als ein Kandidat zu messen war - eine Runde spaeter.
+    //
+    // Ein Werkzeug, dessen Eingang niemand prueft, ist im Ernstfall kaputt.
+    name: 'Abnahmegrenzen im Bildauftrag unlesbar',
+    datei: 'docs/Towerfront-BILDAUFTRAG.md',
+    // **Nachgestellt wird der Fehler selbst**, nicht ein anderer: die
+    // Forderung wandert von der letzten in die zweite Spalte. Der erste
+    // Entwurf setzte stattdessen ein Zeichen um und liess die Zahl lesbar -
+    // das Tor schwieg zu Recht, und die Probe bewies nichts (Regel 3).
+    //
+    // An der Form statt an der Zahl: die Grenze darf sich aendern, ohne dass
+    // die Probe veraltet.
+    regel: /(\| `npm run kartenprobe` Wegfreiheit \| )(.*?)\| (\*\*≤ \d+ Farbschritte\*\*) \|/,
+    ersatz: '$1$3 | $2|',
+    tor: 'guards',
+    meldet: 'steht keine Zahl',
+  },
+  {
     // **Gefunden beim Vorbereiten der Bildbestellung 8c (v228), und zwar mit
     // dem Auge**: das Referenzblatt zeigte einen roten Ring auf dem blauen.
     // Nachgemessen lagen drei unwegsame Flecken IN der Zielplattform, einer

@@ -12,6 +12,7 @@ const NORMAL = DIFFICULTIES.normal;
 const START_GOLD = NORMAL.startGold;
 const START_LIVES = NORMAL.startLives;
 import { MAPS, goalOf, lanePaths } from '../src/data/maps';
+import { abnahmegrenzen } from './auftrag';
 import { GameState } from '../src/game/state';
 import { projektilform } from '../src/gfx/renderer';
 import type { Tower } from '../src/game/types';
@@ -33,6 +34,24 @@ const warn = (m: string) => warnings.push(m);
 const isHex = (s: string) => /^#[0-9A-Fa-f]{6}$/.test(s);
 
 // ------------------------------------------------------------------ Karten
+
+// **Die Abnahmegrenzen muessen aus dem Bildauftrag lesbar sein.**
+//
+// Sie stehen nur dort (Regel 15), und `npm run kartenprobe` misst dagegen.
+// Nur steht `kartenprobe` NICHT in der Torkette - es prueft einen Kandidaten,
+// nicht den Bestand. In v228 habe ich die Abnahmetabelle in Abschnitt 8c
+// umsortiert und damit den Leser gebrochen; die Torkette blieb gruen, und
+// aufgefallen ist es erst, als ein Kandidat zu messen war.
+//
+// Ein Werkzeug, dessen Eingang niemand prueft, ist im Ernstfall kaputt.
+// Deshalb wird das Lesen hier mitgefahren - es kostet nichts und faellt
+// sofort auf.
+{
+  const g = abnahmegrenzen();
+  warn(`Abnahmegrenzen aus dem Bildauftrag: Mitte ${(g.mitte * 100).toFixed(0)} %, `
+    + `Schlauch ${(g.schlauch * 100).toFixed(0)} %, Rand ${(g.rand * 100).toFixed(0)} %, `
+    + `Nutzung ${(g.nutzung * 100).toFixed(0)} %, Wegfreiheit ${g.wegfrei} Farbschritte.`);
+}
 
 for (const map of MAPS) {
   if (!map.name || !map.blurb) fail(`${map.id}: Name oder Beschreibung fehlt.`);

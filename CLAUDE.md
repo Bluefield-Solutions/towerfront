@@ -398,7 +398,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v227. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v228. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -435,6 +435,36 @@ Verfahren trennt „hoch" von „absurd" — deshalb steht es hier, statt als
 Sicherheit verkauft zu werden (S129).
 
 Nebenbei endete die Erledigt-Tabelle bei **v215**; acht Fassungen fehlten.
+
+**Die Bestellung 8c für Ascheschlucht und Frostspalte liegt vor (v228) — und
+das Vorbereiten hat einen Fehler in den Karten gefunden, den kein Tor hielt.**
+Das Referenzblatt aus `npm run wegvorlage` zeigte einen **roten Ring auf dem
+blauen**: unwegsames Gelände auf der Zielplattform. Nachgemessen lagen drei
+Flecken darin — auf der Frostspalte einer **58 Weltpunkte** vom Mittelpunkt,
+also mitten darauf, dazu einer 18 hinein, auf der Ascheschlucht einer 47.
+
+Zwei Schäden auf einmal: im Spiel sperrt es das Bauen genau dort, wo man den
+Kristall verteidigt, und in der Bestellung wäre es in das nächste Kartenbild
+gewandert — der Maler malt Fels auf den roten Ring. **Die vorige Lieferung
+hatte genau das** (v216, einer von acht Flecken unter der Platte); dass es in
+den DATEN stand, ist erst jetzt aufgefallen.
+
+Die drei sind gerichtet (`npm run sim` bestanden, Streuung 7/2/3), und ein
+Wächter hält es: kein Fleck darf in die Platte ragen, 130 Weltpunkte Radius,
+kein Zuschlag — ein Fleck *daneben* ist eine Entwurfsentscheidung, nur
+*hinein* darf keiner. Nachgemessen waren die zwei Karten, deren Flecken aus
+dem **Bild** gelesen sind (`npm run gelaendesuche`), sauber; die zwei von
+Hand gesetzten nicht.
+
+**Gefunden hat es der Blick, nicht die Messung** — Regel 8, und diesmal
+andersherum als sonst: das Tor kam danach.
+
+**Und ein Tor hat den Umzug sofort erwischt.** Der verschobene Fleck stand
+weiter als „locker" mit seiner alten Farbe eingetragen; an der neuen Stelle
+ist im Bild Eis. `npm run gelaendetor` meldete es in demselben Lauf —
+0,244 Farbabstand gegen erlaubte 0,06. **Eine Lage verschieben und die
+Beschreibung mitnehmen heißt, die Beschreibung zu erfinden**; Art und Farbe
+sind jetzt aus dem Bild gelesen (`kalt`, `#113d5f`).
 
 **Der Nachtlauf hat seit v227 einen Weg zurück ins Tor.** Bis dahin landete
 sein Befund nur im Protokoll auf dem Runner. Das ist keine Sorge, sondern die

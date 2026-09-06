@@ -42,6 +42,40 @@ for (const map of MAPS) {
   const goal = goalOf(map);
   const profile: string[] = [];
 
+  // **Kein unwegsamer Fleck darf in die Zielplattform ragen.**
+  //
+  // Gefunden beim Vorbereiten der Bildbestellung 8c (v228): das
+  // Referenzblatt zeigte einen roten Ring auf dem blauen. Nachgemessen lag
+  // auf der Frostspalte ein Fleck 58 Weltpunkte vom Zielmittelpunkt - also
+  // MITTEN auf der Platte -, dazu einer 18 Weltpunkte darin, und auf der
+  // Ascheschlucht einer 47 darin.
+  //
+  // Zwei Schaeden auf einmal. Im Spiel sperrt es das Bauen genau dort, wo
+  // man den Kristall verteidigen will. Und in der Bestellung waere es in
+  // das naechste Kartenbild gewandert: `npm run wegvorlage` zeichnet die
+  // Flecken als rote Ringe, der Maler malt Fels darauf, und dann liegt Fels
+  // auf der Plattform. Die vorige Lieferung hatte genau das (v216, einer
+  // von acht Flecken unter der Platte) - dass es in den DATEN stand, ist
+  // erst jetzt aufgefallen.
+  //
+  // Die Grenze ist die Platte selbst, nicht mehr: 260 Weltpunkte
+  // Durchmesser, also 130 Radius. Kein Zuschlag, weil ein Fleck DANEBEN
+  // eine legitime Entwurfsentscheidung ist - nur HINEIN darf keiner.
+  //
+  // Nachgemessen: die zwei Karten, deren Flecken aus dem Bild gelesen sind
+  // (`npm run gelaendesuche`), waren sauber; die zwei von Hand gesetzten
+  // nicht.
+  const PLATTE_R = 130;
+  for (const r of map.rough) {
+    const lueck = Math.hypot(r.x - goal.x, r.y - goal.y) - r.r;
+    if (lueck < PLATTE_R) {
+      fail(`${map.id}: ein unwegsamer Fleck bei ${r.x}:${r.y} (r ${r.r}) ragt `
+        + `${(PLATTE_R - lueck).toFixed(0)} Weltpunkte in die Zielplattform. Dort `
+        + 'sperrt er das Bauen am Kristall - und das Referenzblatt traegt ihn in '
+        + 'das naechste Kartenbild.');
+    }
+  }
+
   for (let i = 0; i < map.lanes.length; i++) {
     const lane = map.lanes[i];
     const path = paths[i];

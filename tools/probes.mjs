@@ -67,6 +67,23 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    // **Gefunden beim Vorbereiten der Bildbestellung 8c (v228), und zwar mit
+    // dem Auge**: das Referenzblatt zeigte einen roten Ring auf dem blauen.
+    // Nachgemessen lagen drei unwegsame Flecken IN der Zielplattform, einer
+    // davon 58 Weltpunkte vom Mittelpunkt. Er sperrt das Bauen am Kristall -
+    // und `npm run wegvorlage` haette ihn als roten Ring in das naechste
+    // Kartenbild getragen.
+    name: 'Unwegsamer Fleck auf der Zielplattform',
+    datei: 'src/data/maps.ts',
+    // Als Regel, nicht als feste Lage: der erste Fleck der ersten Karte wird
+    // auf ihren Zielpunkt geschoben. Feste Koordinaten veralten mit jeder
+    // neuen Karte, und eine Probe, die daran haengt, veraltet lautlos.
+    regel: /(rough: \[\n\s*)\{ x: \d+, y: \d+/,
+    ersatz: '$1{ x: 1734, y: 454',
+    tor: 'guards',
+    meldet: 'ragt',
+  },
+  {
     name: 'Bauplatz mitten auf dem Weg',
     datei: 'src/data/maps.ts',
     suche: 'export const PATH_CLEARANCE = 30;',

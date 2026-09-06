@@ -1646,19 +1646,55 @@ Weg, alles darunter wird verdeckt. Es schadet nichts, wenn dort Boden ist.
 
 ### Abnahme
 
-| Prüfung | Heute | Gefordert |
-|---|---|---|
-| `npm run kartenprobe` Wegfreiheit | Farbabstand Bahn gegen Karte 85,0 / 79,2 / 33,3 | **≤ 25 Farbschritte** |
-| Seitenverhältnis | 1,778 | 1,778 (16:9), 2400 × 1350 |
-| `npm run gelaendetor` | grün | grün — jeder rote Ring bleibt unwegsam |
-| Helligkeit / Sättigung / Detaildichte | im Band | **0,30–0,36 / 0,45–0,55 / 1,5–3,0** |
-| Reines Schwarz | 0,0 – 0,2 % | höchstens **2 %** |
+| Prüfung | Bestellt | Heute gemalt | Nach 8c erreicht |
+|---|---|---|---|
+| `npm run kartenprobe` Wegfreiheit | **≤ 25 Farbschritte** | 79,9 (Asche) · 33,6 (Frost) | **3,0** (Spiralhain) · **2,1** (Farnkessel) |
+| `npm run zielplatte` Güte | **≥ 0,50** | — | **0,98** (Spiralhain) |
+| Seitenverhältnis | 1,778 (16:9), 2400 × 1350 | 1,778 | 1,778 |
+| `npm run gelaendetor` | grün — jeder Fleck bleibt unwegsam | grün | grün |
+| Helligkeit / Sättigung / Detaildichte | 0,30–0,36 / 0,45–0,55 / 1,5–3,0 | im Band | im Band |
+| Reines Schwarz | höchstens **2 %** | 0,0 % | 0,0 % |
 
-**Die 25 sind nicht geraten.** Der Farbabstand zwischen dem Streifen unter der
-Bahn und dem Mittel der Karte misst heute 85,0 (Spiralhain), 79,2
-(Ascheschlucht) und 33,3 (Frostspalte) — die letzte ist die schwächste
-gemalte Straße, die das Spiel hat, und sie ist von der Frostebene kaum zu
-unterscheiden. Wer unter 25 liegt, hat dort keine Straße gemalt.
+**Die 25 sind nicht geraten**, und die Spalten daneben sind gemessen, nicht
+geschätzt (06.09.2026). Der Farbabstand zwischen dem Streifen unter der Bahn
+und dem Mittel der Karte misst an den heutigen, *gemalten* Straßen **79,9**
+(Ascheschlucht) und **33,6** (Frostspalte) — die zweite ist die schwächste
+gemalte Straße, die das Spiel hat, und schon sie liegt über der Grenze.
+
+**Und die Grenze ist großzügig.** Die zwei Bilder, die nach 8c geliefert
+wurden, kommen auf **3,0** und **2,1**. Wer wirklich keine Straße malt, landet
+bei rund 3, nicht bei 24. Die 25 sind die Reißleine, nicht das Ziel.
+
+### Was die erste Lieferung nach 8c gelehrt hat (v216)
+
+Ein Bild nach diesem Auftrag ist geliefert und eingebaut (Spiralhain,
+04.09.2026). Drei Dinge daran gehören in die nächste Bestellung:
+
+1. **Die unwegsamen Flecken lagen alle acht falsch** — einer davon *unter der
+   Zielplattform*, drei auf blanker Wiese. Das Spiel liest sie seit v216 mit
+   `npm run gelaendesuche` aus dem Bild statt sie zu setzen, ihre genaue Lage
+   darf sich also verschieben. **Was nicht verhandelbar ist:** im Umkreis von
+   260 Weltpunkten um die Zielplattform darf keiner liegen, und jeder muss
+   auch ohne Vorlage als unpassierbar zu erkennen sein. Ein Schattenfleck im
+   Gras genügt nicht — drei Kriterien, ihn von einem Felsfeld zu trennen,
+   sind gemessen gescheitert.
+2. **Die Zielplattform muss der Sucher finden**, nicht nur das Auge.
+   `npm run zielplatte` bewertet den gefundenen Punkt seit v216 mit einer
+   Güte; die gelieferte kam auf 0,98, verlangt sind 0,50. Was sie so gut
+   macht: erhabener Steinkranz, konzentrische Pflasterung, klar heller als
+   der Boden ringsum. Eine blasse Scheibe reicht nicht.
+3. **Die „NO ROAD"-Anweisung hat funktioniert**, und zwar deutlich (3,0 gegen
+   erlaubte 25). Sie bleibt deshalb wörtlich stehen.
+
+**Die Zielplattform bleibt, wo sie ist** — und das ist gemessen entschieden,
+nicht durchgewinkt. Auf allen vier Karten liegt sie rund 780 Weltpunkte von
+der Mitte und rund 180 vom nächsten Rand entfernt, und in v219 hat genau das
+den Spiralhain gekostet: „Umweg ≥ 1,8" und „die ganze Karte benutzen" ziehen
+gegeneinander, wenn sich jeder Umweg um eine Ecke wickeln muss. Nachgemessen
+mit `npm run bahnentwurf` gilt das für diese beiden aber **nicht**:
+Ascheschlucht **82 %** und Frostspalte **81 %** der Karte liegen näher als 300
+Weltpunkte an einer Bahn, gegen 74 % beim Spiralhain. Eine Umbestellung ohne
+Befund wäre eine Vermutung, und die kosten hier regelmäßig eine Runde.
 
 Ablage: `art/roh/untergrund/` · **2400 × 1350 PNG** · Budget 700 KB je Datei.
 
@@ -1734,13 +1770,19 @@ reference sheet, about 260 world points across (roughly one seventh of the
 image width). Fitted stone with a raised kerb and concentric paving inside,
 clearly lighter and clearly man-made against the surrounding ground. It is
 round and isolated: no road, track or paved apron leads to or away from it.
-The player's fortress is placed on it by the game.
+The player's fortress is placed on it by the game. A software check locates
+this platform in the delivered image and scores how clearly it stands out; a
+faint disc fails it. Raised kerb, concentric rings, unmistakable edge.
 
 ROUGH GROUND: at the circles marked on the accompanying reference sheet,
 ground that reads as impassable — basalt outcrops, collapsed crust, an open
 fissure. These MUST be in the image; the game no longer draws them.
 Distinctly darker than the ash field, with a clear shape, so a player sees at
-a glance why nothing can be built there.
+a glance why nothing can be built there. Each one must read as impassable ON
+ITS OWN, without the reference sheet: a darker patch of ash is not enough, it
+needs relief and a hard silhouette. And NONE of them may touch the goal
+platform or come within one platform-width of it — in the previous delivery
+one sat directly under it.
 
 CALM: this is a background. Detail density must stay LOW — large soft areas,
 gentle variation, no busy ash texture, no scattered rubble fields. The
@@ -1778,13 +1820,19 @@ reference sheet, about 260 world points across (roughly one seventh of the
 image width). Fitted stone with a raised kerb and concentric paving inside,
 clearly darker and clearly man-made against the surrounding ground. It is
 round and isolated: no road, track or paved apron leads to or away from it.
-The player's fortress is placed on it by the game.
+The player's fortress is placed on it by the game. A software check locates
+this platform in the delivered image and scores how clearly it stands out; a
+faint disc fails it. Raised kerb, concentric rings, unmistakable edge.
 
 ROUGH GROUND: at the circles marked on the accompanying reference sheet,
 ground that reads as impassable — ice ridges, an open crevasse, deep drifts.
 These MUST be in the image; the game no longer draws them. Distinctly darker
 or cooler than the snow field, with a clear shape, so a player sees at a
-glance why nothing can be built there.
+glance why nothing can be built there. Each one must read as impassable ON ITS
+OWN, without the reference sheet: a bluish patch of snow is not enough, it
+needs relief and a hard silhouette. And NONE of them may touch the goal
+platform or come within one platform-width of it — in the previous delivery
+one sat directly under it.
 
 CALM: this is a background. Detail density must stay LOW — large soft areas,
 gentle variation, no busy snow texture, no scattered debris. The figures that

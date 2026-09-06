@@ -368,7 +368,9 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
   rough: [
     { x: 1681, y: 874, r: 128, art: 'locker', farbe: '#362519' },
     { x: 957, y: 135, r: 106, art: 'locker', farbe: '#473526' },
-    { x: 1737, y: 293, r: 104, art: 'locker', farbe: '#32251a' },
+    // Lag bis v228 mit 47 Weltpunkten IN der Zielplattform - nach oben auf das
+    // dunkle Feld geschoben, das das Bild dort ohnehin zeigt. Luecke jetzt 170.
+    { x: 1700, y: 210, r: 104, art: 'locker', farbe: '#32251a' },
     { x: 1172, y: 993, r: 83, art: 'locker', farbe: '#392618' },
     { x: 1705, y: 30, r: 74, art: 'locker', farbe: '#292018' },
     { x: 926, y: 950, r: 56, art: 'hart', farbe: '#7c5939' },
@@ -486,10 +488,18 @@ export const MAP_FROSTSPALTE: GameMap = {
     { x: 924, y: 254, r: 52, art: 'hart', farbe: '#5e5b59' },
     { x: 1845, y: 822, r: 40, art: 'locker', farbe: '#3b4455' },
     { x: 1012, y: 950, r: 37, art: 'locker', farbe: '#585655' },
-    { x: 1770, y: 472, r: 34, art: 'locker', farbe: '#2d323a' },
     { x: 194, y: 915, r: 33, art: 'kalt', farbe: '#0e283f' },
     { x: 312, y: 979, r: 32, art: 'kalt', farbe: '#063e62' },
-    { x: 1792, y: 387, r: 31, art: 'locker', farbe: '#4b525b' },
+    // Lag bis v228 mit 18 Weltpunkten in der Zielplattform. Ein dritter, noch
+    // naeher (1770:472, mitten auf der Platte), ist ersatzlos entfallen - im
+    // Bild ist dort nichts, worauf er sich stuetzen koennte.
+    //
+    // Art und Farbe sind NICHT mitgewandert, sondern neu aus dem Bild
+    // gelesen: `npm run gelaendetor` hat den Umzug sofort gemeldet ("locker"
+    // eingetragen, "kalt" im Bild, 0,244 Farbabstand gegen erlaubte 0,06).
+    // Eine Lage verschieben und die Beschreibung mitnehmen heisst, die
+    // Beschreibung zu erfinden.
+    { x: 1840, y: 320, r: 31, art: 'kalt', farbe: '#113d5f' },
   ],
   bildBringt: { weg: true, gelaende: true },
   hint: { x: 200, y: 200 },

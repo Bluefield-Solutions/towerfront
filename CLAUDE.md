@@ -454,7 +454,7 @@ Mustererkennung: stand sie dahinter, meldete die Gegenprobe die falsche
 Ursache, weil der Eingriff die `sauber`-Zeile überschreibt, auf die drei
 Proben ihr Muster stützen.
 
-**Drei Fälle, drei Gegenproben** (261 statt 258): ein Befund meldet, ein
+**Drei Fälle, drei Gegenproben** (258 statt 255): ein Befund meldet, ein
 sauberer Lauf mit anderem Datum schweigt, und eine **leere** Datei meldet —
 die galt im ersten Entwurf als sauber, und `: > tools/proben-befund.txt` hätte
 die Prüfung still abgeschaltet. Die *fehlende* Datei ist im Code behandelt und

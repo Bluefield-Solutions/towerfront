@@ -1020,6 +1020,12 @@ Rauchtest sagt es.
   Prompt, der nur im Gespräch steht, ist beim nächsten Mal weg. Dazu die
   Abnahmezahlen und, wo es hilft, ein Referenzblatt aus dem ausgelieferten
   Vorrat.
+- **Alles, was an den Bild-Agenten zurückgeht, kommt als fertiger Block zum
+  Kopieren** — nie als Fließtext, aus dem der Nutzer sich die Antwort
+  zusammensuchen muss. Das gilt für Rückfragen, Nachbesserungen und
+  Abnahmebefunde genauso wie für den Prompt selbst. Der Block ist in sich
+  verständlich: er wiederholt, worauf er antwortet, nennt die Zahlen und sagt,
+  was unverändert gilt. Der Empfänger sieht diese Unterhaltung nicht.
 - Die fertige Datei erreichbar — hier über Pages, nicht als Anhang.
 - Getestet wird auf dem iPhone quer. Das ist das **Zielgerät** — dort wird
   geurteilt, ob es gut ist.

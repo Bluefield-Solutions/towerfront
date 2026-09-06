@@ -349,6 +349,46 @@ const PROBEN = [
     meldet: 'keine Schliessbedingung',
   },
   {
+    // **Der Nachtlauf braucht einen Weg zurueck ins Tor.** Bis v226 landete
+    // sein Befund nur im Protokoll auf dem Runner. In der Sitzung zu v226 ist
+    // er dreimal gefahren, zweimal rot, und beide Befunde habe ich nur
+    // gefunden, weil ich nachgesehen habe.
+    name: 'Nachtlauf-Befund wird verschwiegen',
+    datei: 'tools/proben-befund.txt',
+    regel: /^sauber .*$/m,
+    ersatz: 'BEFUND: eine Probe beweist nichts mehr.',
+    tor: 'muster',
+    meldet: 'hat einen Befund hinterlassen',
+  },
+  {
+    // Und die Gegenrichtung: ein sauberer Lauf mit anderem Datum und anderem
+    // Commit muss SCHWEIGEN. Ohne sie besteht die Probe darueber auch ein
+    // Tor, das bei jedem Inhalt anschlaegt - und dann waere die Torkette
+    // dauerrot und die Zeile in zwei Runden abgeschaltet.
+    name: 'Sauberer Nachtlauf schweigt',
+    datei: 'tools/proben-befund.txt',
+    regel: /^sauber .*$/m,
+    ersatz: 'sauber 2099-01-01 deadbeef',
+    tor: 'muster',
+    meldetNicht: 'hat einen Befund hinterlassen',
+  },
+  {
+    // **Die leere Datei ist der dritte Fall, und er war die Luecke.** Der
+    // erste Entwurf gab bei leerer UND bei fehlender Datei "kein Befund"
+    // zurueck - ein `: > tools/proben-befund.txt` haette die Pruefung still
+    // abgeschaltet, und still abschaltbar ist so gut wie nicht vorhanden.
+    //
+    // Die FEHLENDE Datei laesst sich mit diesem Mittel nicht stellen (der
+    // Ersatz schreibt, er loescht nicht). Sie ist im Code behandelt und von
+    // Hand nachgefahren; eine Gegenprobe hat sie nicht.
+    name: 'Leere Befund-Datei gilt als sauber',
+    datei: 'tools/proben-befund.txt',
+    regel: /^sauber .*$/m,
+    ersatz: '',
+    tor: 'muster',
+    meldet: 'hat einen Befund hinterlassen',
+  },
+  {
     // **Die Fundtabelle, eine Ebene unter Abschnitt 6.** Vier ihrer Zeilen
     // trugen einen Rueckstand vor, den es nicht gab - S151 seit v126, S112
     // seit v114, S84 seit S91, und S23 verwies auf ein T13, das in keinem
@@ -2797,6 +2837,50 @@ if (dreckig) {
  *  Eigenschaft des Projekts, nicht dieses Rechners. */
 const STAND_DATEI = join(ROOT, 'tools/proben-stand.txt');
 
+/** **Was der letzte volle Lauf gefunden hat - eingecheckt, nicht im Protokoll.**
+ *
+ *  Der volle Lauf faehrt seit v221 nachts auf dem Runner. Das hat die
+ *  fuenfzig Minuten aus jeder Runde genommen und dafuer eine neue Luecke
+ *  aufgemacht: **sein Befund landet in einem Protokoll, das niemand liest.**
+ *
+ *  Gemessen an dieser Sitzung ist das keine Sorge, sondern die Erfahrung. Der
+ *  Lauf ist dreimal gefahren, zweimal rot - einmal eine Probe, die auf zwei
+ *  Rechnern Verschiedenes bewies, einmal ein Hinweis, den ich selbst
+ *  hineingeschrieben hatte. Beide Male habe ich es nur gefunden, weil ich ins
+ *  Protokoll gesehen habe. Wer das nicht tut, arbeitet weiter, waehrend eine
+ *  Probe nichts mehr beweist.
+ *
+ *  Der Umweg ueber den Stand faengt es erst spaet und mit der falschen
+ *  Begruendung: ein roter Lauf schreibt den Stand nicht fort, also schlaegt
+ *  die Drei-Fassungs-Regel irgendwann an und sagt "fahr den vollen Lauf" -
+ *  den man gefahren IST. Drei Fassungen zu spaet und am Thema vorbei.
+ *
+ *  Deshalb schreibt der Runner seinen Befund in diese Datei und checkt sie
+ *  ein. Der Musterlauf liest sie bei JEDEM Lauf, also in jeder Torkette. Eine
+ *  Zeile, die mit `sauber` beginnt, heisst: nichts gefunden. */
+const BEFUND_DATEI = join(ROOT, 'tools/proben-befund.txt');
+
+/** Der offene Befund, oder null.
+ *
+ *  **Eine fehlende Datei ist ein Befund, kein Freispruch.** Der erste Entwurf
+ *  gab hier `null` zurueck - dann haette ein `rm tools/proben-befund.txt` die
+ *  ganze Pruefung still abgeschaltet, und still abschaltbar ist so gut wie
+ *  nicht vorhanden. Nachgefahren: die Datei geloescht, und der Musterlauf
+ *  meldete nichts. */
+const befundOffen = () => {
+  if (!existsSync(BEFUND_DATEI)) {
+    return 'Die Befund-Datei fehlt. Der Runner schreibt sie nach jedem vollen Lauf; '
+      + 'ohne sie ist nicht zu unterscheiden, ob nichts gefunden wurde oder ob '
+      + 'niemand nachgesehen hat.';
+  }
+  const t = readFileSync(BEFUND_DATEI, 'utf8').trim();
+  // Leer ist genauso wenig ein Freispruch wie fehlend - der erste Entwurf
+  // liess beides durch.
+  if (!t) return 'Die Befund-Datei ist leer. Nur eine Zeile, die mit "sauber" beginnt, '
+    + 'heisst "nichts gefunden".';
+  return t.startsWith('sauber') ? null : t;
+};
+
 const filter = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const VOLL = process.argv.includes('--voll');
 
@@ -3040,8 +3124,38 @@ const TOR_UMGEBUNG = { ...process.env, PROBENLAUF: '1' };
 
 if (process.argv.includes('--muster')) {
   console.log(`Musterlauf: ${liste.length} Regel(n), kein Tor wird gefahren.\n`);
+  // **Und was der letzte volle Lauf gefunden hat - vor allem anderen.**
+  //
+  // Die Reihenfolge ist gemessen, nicht gewaehlt. Stand sie hinter der
+  // Mustererkennung, meldete die Gegenprobe dazu die FALSCHE Ursache: der
+  // Eingriff ueberschreibt die `sauber`-Zeile, auf die drei Proben ihr Muster
+  // stuetzen, also schlug zuerst "kein Gegenstand mehr" an. Ein Befund des
+  // vollen Laufs ist ausserdem die dringendere Nachricht.
+  //
+  // Nicht unter `PROBENLAUF` ausgenommen, anders als die Standregel weiter unten:
+  // dort gibt es einen Ringschluss (der Lauf, den die Regel verlangt, laeuft
+  // gerade), hier nicht. Ein Befund bleibt ein Befund, auch waehrend ein
+  // neuer Lauf faehrt - und die Gegenprobe dazu braucht genau das.
+  const befund = befundOffen();
+  if (befund) {
+    console.error('\nMUSTERLAUF: der letzte volle Probenlauf hat einen Befund '
+      + 'hinterlassen - eine Probe beweist nichts mehr.');
+    for (const z of befund.split('\n')) console.error(`  ${z}`);
+    console.error('  Entweder die Probe richten oder sie streichen. Danach den vollen');
+    console.error('  Lauf erneut fahren; er schreibt die Datei wieder auf "sauber".');
+    console.error(`  (${BEFUND_DATEI.replace(ROOT + '/', '')})`);
+    process.exit(1);
+  }
+
   const stumm = [], mehrdeutig = [];
   for (const p of liste) {
+    // Eine fehlende Zieldatei ist ein Befund wie jeder andere. Vorher starb
+    // der Musterlauf hier mit einem Stapelabzug, und ein Stapelabzug sagt
+    // nicht, WELCHE Probe ihren Gegenstand verloren hat.
+    if (!existsSync(join(ROOT, p.datei))) {
+      stumm.push(`${p.name}: die Zieldatei ${p.datei} gibt es nicht.`);
+      continue;
+    }
     const vorher = readFileSync(join(ROOT, p.datei), 'utf8');
     const treffer = p.regel
       ? (vorher.match(new RegExp(p.regel.source, p.regel.flags.includes('g')

@@ -42,16 +42,59 @@ jobs:
       - run: npm ci
       - name: Chromium
         run: npx playwright install --with-deps chromium
+      # `continue-on-error`, damit der Befund auch nach einem roten Lauf noch
+      # geschrieben und eingecheckt wird. Rot bleibt der Lauf trotzdem - der
+      # letzte Schritt reicht das Ergebnis durch.
+      #
+      # Das Protokoll liegt unter /tmp und nicht im Baum: `npm run proben`
+      # verweigert den Dienst bei schmutzigem Baum, und `git status
+      # --porcelain` zaehlt auch unverfolgte Dateien mit.
       - name: Alle Gegenproben
-        run: npm run proben -- --voll
-      - name: Stand fortschreiben
+        id: lauf
+        continue-on-error: true
+        run: npm run proben -- --voll 2>&1 | tee /tmp/proben-lauf.log
+      # **Der Befund muss einen Weg zurueck ins Tor finden.**
+      #
+      # Bis v226 landete er nur hier im Protokoll. Dreimal ist der Lauf
+      # gefahren, zweimal rot, und beide Befunde habe ich nur gefunden, weil
+      # ich nachgesehen habe. Jetzt steht er eingecheckt in
+      # `tools/proben-befund.txt`, und `npm run muster` liest ihn in jeder
+      # Torkette.
+      - name: Befund festhalten
+        if: always()
         run: |
-          if git diff --quiet -- tools/proben-stand.txt; then
-            echo "Stand unveraendert."
+          kurz="${GITHUB_SHA:0:8}"
+          if grep -q "beweisen nichts" /tmp/proben-lauf.log 2>/dev/null; then
+            {
+              echo "BEFUND vom $(date -u +%Y-%m-%dT%H:%MZ) auf $kurz:"
+              sed -n '/beweisen nichts/,$p' /tmp/proben-lauf.log | head -20
+            } > tools/proben-befund.txt
+          elif [ "${{ steps.lauf.outcome }}" = "failure" ]; then
+            # Rot, aber ohne die uebliche Zeile - abgebrochen, abgestuerzt oder
+            # zeitlich abgelaufen. Auch das ist ein Befund; ihn als "sauber" zu
+            # schreiben waere die schlimmere Haelfte.
+            {
+              echo "BEFUND vom $(date -u +%Y-%m-%dT%H:%MZ) auf $kurz:"
+              echo "Der volle Lauf ist rot geendet, ohne eine Probenmeldung zu"
+              echo "hinterlassen - abgebrochen, abgestuerzt oder zeitlich abgelaufen."
+              tail -12 /tmp/proben-lauf.log 2>/dev/null || echo "(kein Protokoll)"
+            } > tools/proben-befund.txt
+          else
+            echo "sauber $(date -u +%Y-%m-%d) $kurz" > tools/proben-befund.txt
+          fi
+          if git diff --quiet -- tools/proben-stand.txt tools/proben-befund.txt; then
+            echo "Stand und Befund unveraendert."
           else
             git config user.name  "Gegenproben"
             git config user.email "noreply@anthropic.com"
-            git add tools/proben-stand.txt
-            git commit -m "Probenstand: $(cat tools/proben-stand.txt)"
+            git add tools/proben-stand.txt tools/proben-befund.txt
+            git commit -m "Probenlauf: $(head -1 tools/proben-befund.txt)"
             git push
           fi
+      # Der Lauf ist rot, wenn die Proben rot waren - erst hier, damit der
+      # Befund vorher seinen Weg in den Baum gefunden hat.
+      - name: Ergebnis durchreichen
+        if: steps.lauf.outcome == 'failure'
+        run: |
+          echo "Der volle Probenlauf ist rot. Der Befund steht in tools/proben-befund.txt."
+          exit 1

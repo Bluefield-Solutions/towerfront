@@ -159,11 +159,14 @@ npm run bauflaeche  haelt die GEZEIGTE Baukante gegen die Bauregel:
                     Punkte verschobener Pfad muss durchfallen.
 npm run konter      prueft, ob jede Gegnerart, an der etwas zu kontern ist,
                     es auch sagt - und ob es nicht ALLE tun.
-npm run muster      prueft in 0,4 s, ob jede der 253 Gegenproben noch einen
+npm run muster      prueft in 0,4 s, ob jede der 258 Gegenproben noch einen
                     Gegenstand hat - ohne ein Tor zu fahren. Ersetzt den
                     vollen Probenlauf nicht, faengt aber seine haeufigste
                     Verfallsart - und schlaegt an, wenn der volle Lauf mehr
-                    als drei Fassungen zurueckliegt.
+                    als drei Fassungen zurueckliegt. Seit v227 liest er
+                    ausserdem `tools/proben-befund.txt`: was der Nachtlauf
+                    gefunden hat, macht die Torkette rot, statt im Protokoll
+                    des Runners zu bleiben.
 npm run streifen    misst beide Baender ueber dem Feld: die Wellenvorschau in
                     JEDER Welle und die Einweisungsblase beim laengsten Satz.
                     Echtes Markup, echte Stilvorlage - das Browsertor sieht
@@ -395,7 +398,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v226. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v227. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -432,6 +435,35 @@ Verfahren trennt „hoch" von „absurd" — deshalb steht es hier, statt als
 Sicherheit verkauft zu werden (S129).
 
 Nebenbei endete die Erledigt-Tabelle bei **v215**; acht Fassungen fehlten.
+
+**Der Nachtlauf hat seit v227 einen Weg zurück ins Tor.** Bis dahin landete
+sein Befund nur im Protokoll auf dem Runner. Das ist keine Sorge, sondern die
+Erfahrung dieser Sitzung: der Lauf ist dreimal gefahren, **zweimal rot**, und
+beide Befunde habe ich nur gefunden, weil ich nachgesehen habe.
+
+Der Umweg über den Stand fängt es erst spät und mit der falschen Begründung —
+ein roter Lauf schreibt den Stand nicht fort, also schlägt die
+Drei-Fassungs-Regel irgendwann an und verlangt den vollen Lauf, den man
+gefahren *ist*.
+
+Jetzt schreibt der Runner seinen Befund nach `tools/proben-befund.txt` und
+checkt ihn ein — auch nach einem roten Lauf (`continue-on-error`, das
+Ergebnis wird im letzten Schritt durchgereicht). `npm run muster` liest die
+Datei bei jedem Lauf, also in **jeder Torkette**, und zwar **vor** der
+Mustererkennung: stand sie dahinter, meldete die Gegenprobe die falsche
+Ursache, weil der Eingriff die `sauber`-Zeile überschreibt, auf die drei
+Proben ihr Muster stützen.
+
+**Drei Fälle, drei Gegenproben** (261 statt 258): ein Befund meldet, ein
+sauberer Lauf mit anderem Datum schweigt, und eine **leere** Datei meldet —
+die galt im ersten Entwurf als sauber, und `: > tools/proben-befund.txt` hätte
+die Prüfung still abgeschaltet. Die *fehlende* Datei ist im Code behandelt und
+von Hand nachgefahren; stellen lässt sie sich mit diesem Mittel nicht (der
+Ersatz schreibt, er löscht nicht), und das steht an der Zeile.
+
+Nebenbei starb `npm run muster` bisher mit einem Stapelabzug, wenn die
+Zieldatei einer Probe fehlte — ein Stapelabzug sagt nicht, welche Probe ihren
+Gegenstand verloren hat. Jetzt nennt er sie.
 
 **Der volle Lauf zu v225 hat eine Probe gefunden, die auf zwei Rechnern
 Verschiedenes beweist.** „Werkstatt wartet nicht auf die Bilder" nahm

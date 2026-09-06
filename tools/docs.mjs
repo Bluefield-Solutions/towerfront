@@ -310,6 +310,9 @@ for (const [name, text] of alle) {
 // berichtet, was man nicht halten kann (S129) - und diese Zeile ist der
 // Bericht. Wer eine Schwelle ueber 1 schreibt, schreibt daneben, woher sie
 // kommt.
+/** Die Kennungen, die gerade in einer "Offen"-Tabelle stehen. Abschnitt 7
+ *  braucht sie ein zweites Mal - einmal gelesen, nicht zweimal (Regel 15). */
+const offeneIds = new Set();
 {
   const backlog = alle.find(([n]) => n === 'Towerfront-BACKLOG.md');
   if (!backlog) {
@@ -384,6 +387,7 @@ for (const [name, text] of alle) {
     for (const block of bloecke) {
       for (const z of block.matchAll(/^\| ([A-Z]+\d+(?:-[A-Z])?) \| (.+?) \|[^|]*\|[^|]*\|\s*$/gm)) {
         const [, id, inhalt] = z;
+        offeneIds.add(id);
         gepruefte++;
         const b = inhalt.match(/\*\*Schliesst, wenn:\*\* `([^`]+)`/);
         if (!b) {
@@ -426,6 +430,67 @@ for (const [name, text] of alle) {
       fail('Towerfront-BACKLOG.md: kein einziger offener Punkt erkannt - die '
         + 'Tabellenform hat sich geaendert, und dann prueft hier nichts mehr.');
     }
+  }
+}
+
+// --- 7. Auch die Fundtabelle darf keinen Rueckstand behaupten, den es nicht
+//        gibt.
+//
+// Abschnitt 6 haelt die "Offen"-Tabellen. Darunter steht die Fundtabelle -
+// 150 Lehren, absichtlich ein Gedaechtnis und kein Arbeitsvorrat. Nur trugen
+// vier ihrer Zeilen einen RUECKSTAND vor, und alle vier waren falsch:
+//
+//   S151  "**Offen**, weil die Bahnlaenge an der Balance haengt"
+//         Der Zielpunkt ist seit v126 die Plattenmitte, die Balance in v131
+//         nachgezogen. `src/data/maps.ts` sagt es selbst.
+//   S112  "Offen als D26"       D26 ist seit v114 als Fehlannahme geschlossen.
+//   S84   "Offen als D22"       D22 ist geschlossen, S91 haelt es fest.
+//   S23   "Offen: ... (siehe T13)"   T13 gibt es in keinem Dokument.
+//
+// Ein Rueckstand, der nur in der Fundtabelle steht, hat keine
+// Schliessbedingung, steht in keiner Uebersicht und faellt niemandem auf -
+// die Luecke, die Abschnitt 6 gerade geschlossen hat, nur eine Tabelle
+// tiefer.
+//
+// Geprueft wird deshalb: eine Fundzeile darf Offenheit nur behaupten, indem
+// sie einen Punkt NENNT, den es in einer "Offen"-Tabelle gibt. Sonst gehoert
+// der Punkt dorthin - mit Schliessbedingung - oder die Zeile ist veraltet.
+//
+// **Die Erkennung ist absichtlich eng.** "Offen" gross und am Satzanfang
+// oder fett; kleingeschriebenes "offen" mitten im Satz nicht. Sonst faengt
+// sich die Pruefung Saetze wie S121 ein ("dorthin bringen, wo die Frage
+// offen ist"), und ein Waechter, der bei richtiger Prosa anschlaegt, wird
+// ueberlesen - dieselbe Lehre wie beim Kachelraster in Abschnitt 3.
+{
+  const backlog = alle.find(([n]) => n === 'Towerfront-BACKLOG.md');
+  if (backlog) {
+    let geprueft = 0;
+    for (const z of backlog[1].split('\n')) {
+      const kopf = z.match(/^\| (S\d+) \|/);
+      if (!kopf) continue;
+      const behauptung = z.match(/(?:^|[.·|]\s|\*\*)Offen\b(?: als ([A-Z]+\d+(?:-[A-Z])?))?/);
+      if (!behauptung) continue;
+      geprueft++;
+      const id = behauptung[1];
+      if (!id) {
+        fail(`Fund ${kopf[1]}: behauptet Offenheit, ohne einen Punkt zu nennen. Ein `
+          + 'Rueckstand, der nur in der Fundtabelle steht, hat keine Schliessbedingung '
+          + 'und faellt niemandem auf. Entweder in eine "Offen"-Tabelle - oder die '
+          + 'Zeile ist veraltet.');
+      } else if (!offeneIds.has(id)) {
+        fail(`Fund ${kopf[1]}: nennt "${id}" als offen - der Punkt steht in keiner `
+          + '"Offen"-Tabelle. Entweder ist er zugefallen und die Zeile luegt, oder er '
+          + 'fehlt in der Uebersicht.');
+      }
+    }
+    // Eine Pruefung, die nie etwas ansieht, ist keine (Regel 5). Sie darf hier
+    // aber auf null fallen - dann ist die Fundtabelle sauber. Gemeldet wird
+    // nur der Fall, dass es die Tabelle gar nicht mehr gibt.
+    if (!/^\| S\d+ \|/m.test(backlog[1])) {
+      fail('Towerfront-BACKLOG.md: keine Fundzeile gefunden - die Form hat sich '
+        + 'geaendert, und dann prueft hier nichts mehr.');
+    }
+    void geprueft;
   }
 }
 

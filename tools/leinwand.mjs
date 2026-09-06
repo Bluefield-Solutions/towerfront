@@ -133,6 +133,26 @@ export async function zeichenwerkstatt({
   for (const k of Object.keys(OBJECT_ART)) getObjectArt(k);
   getBackground(zustand.map.id);
   zeichner.resize();
+  // **Dieser Aufruf hat seit v226 KEINE Gegenprobe, und das steht hier, statt
+  // still zu bleiben.**
+  //
+  // Bis v225 gab es eine: sie nahm die Zeile heraus und erwartete, dass das
+  // Kristalltor rot wird. Auf diesem Rechner tat es das - 87 898 Punkte
+  // Unterschied, die Zahl von v190. Im vollen Lauf zu v225 auf dem Runner tat
+  // es das NICHT, und zwar zu Recht: `tools/kristall.mjs` wartet schon vor der
+  // Werkstatt einmal, also ist hier nichts mehr offen. Ob das zweite Warten
+  // etwas aendert, entschied damit die Geschwindigkeit der Maschine.
+  //
+  // Eine Probe, die auf einem Rechner beweist und auf dem anderen nicht, ist
+  // keine - und schlimmer als keine, weil ein Lauf ohne Befund wie ein Beweis
+  // aussieht. Gemessen: `kristall.mjs` ist heute der EINZIGE Benutzer der
+  // Werkstatt, und es wartet vorher. Fuer den naechsten, der das nicht tut,
+  // ist diese Zeile richtig - beweisen laesst sie sich erst dann.
+  //
+  // Die FUNKTION ist weiterhin gegengeprobt, und deterministisch: bricht man
+  // `bilderAbwarten` selbst, meldet das Kristalltor "kein Bild der
+  // Ringstation im Vorrat" - hier wie auf dem Runner. Nachgefahren mit dem
+  // ganzen Ausbau und mit einem Abzaehlfehler (`offen > 1`), beide Male rot.
   await bilderAbwarten();
   zeichner.kartenaufbauAbschliessen?.(zustand);
 

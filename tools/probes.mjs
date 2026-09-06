@@ -349,6 +349,31 @@ const PROBEN = [
     meldet: 'keine Schliessbedingung',
   },
   {
+    // **Die Fundtabelle, eine Ebene unter Abschnitt 6.** Vier ihrer Zeilen
+    // trugen einen Rueckstand vor, den es nicht gab - S151 seit v126, S112
+    // seit v114, S84 seit S91, und S23 verwies auf ein T13, das in keinem
+    // Dokument steht. Ein Rueckstand, der nur hier steht, hat keine
+    // Schliessbedingung und faellt niemandem auf.
+    name: 'Fundzeile nennt einen Punkt, den es nicht gibt',
+    datei: 'docs/Towerfront-BACKLOG.md',
+    regel: /^\| S121 \| /m,
+    ersatz: '| S121 | Offen als D99. ',
+    tor: 'doku',
+    meldet: 'steht in keiner "Offen"-Tabelle',
+  },
+  {
+    // Und die Gegenrichtung, ohne die die Probe darueber nichts beweist: ein
+    // GUELTIGER Verweis muss durchgehen. Sonst besteht die Pruefung auch ein
+    // Tor, das jedes grosse "Offen" in der Fundtabelle meldet - und dann
+    // waere die Tabelle als Gedaechtnis unbrauchbar.
+    name: 'Fundzeile darf auf einen offenen Punkt verweisen',
+    datei: 'docs/Towerfront-BACKLOG.md',
+    regel: /^\| S121 \| /m,
+    ersatz: '| S121 | Offen als D27. ',
+    tor: 'doku',
+    meldetNicht: 'Fund S121',
+  },
+  {
     // **Die Gegenprobe, und ohne sie waeren die beiden darueber wertlos.**
     // Ein Waechter, der jede offene Zeile meldet, besteht sie auch - genau
     // die Falle, die bei "Kachelraster" schon einmal aufgeschrieben ist.
@@ -1815,11 +1840,22 @@ const PROBEN = [
     // Leinwand zum Messen herausgibt. Ohne das sind zwei Bilder desselben
     // Zustands an 87 898 Punkten verschieden - und jede Messung, die zwei
     // Bilder vergleicht, misst dann das Nachladen statt der Sache.
+    // **Bis v225 griff diese Probe am zweiten Aufruf an - und das war ein
+    // Wettlauf.** Sie nahm `await bilderAbwarten()` aus `zeichenwerkstatt`
+    // heraus; hier wurde das Kristalltor rot, im vollen Lauf auf dem Runner
+    // nicht. `kristall.mjs` wartet schon VOR der Werkstatt, also ist dort
+    // nichts mehr offen, und ob die zweite Zeile etwas aendert, entscheidet
+    // die Maschine. Der Kasten an der Zeile selbst haelt es fest.
+    //
+    // Gegriffen wird jetzt an der FUNKTION. Dann trifft es den ERSTEN
+    // Aufruf, und der ist tragend: das Bild der Ringstation ist nicht
+    // geladen, wenn gemessen wird. Deterministisch, hier wie dort.
     name: 'Werkstatt wartet nicht auf die Bilder',
     datei: 'tools/leinwand.mjs',
-    regel: /^  await bilderAbwarten\(\);$/m,
-    ersatz: '  // nicht auf Bilder gewartet',
+    regel: /^  for \(let i = 0; i < 400 && offen > 0; i\+\+\) await new Promise\(\(r\) => setTimeout\(r, 5\)\);$/m,
+    ersatz: '  // nicht gewartet',
     tor: 'kristalltor',
+    meldet: 'kein Bild der Ringstation im Vorrat',
   },
   {
     // v187: die Leuchtscheiben haengen nicht mehr am Halbmesser. Bis dahin

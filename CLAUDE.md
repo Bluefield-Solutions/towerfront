@@ -195,7 +195,10 @@ npm run doku        prüft die Dokumente gegen die Wirklichkeit - seit v224 auch
                     ob ein als OFFEN gefuehrter Rueckstandspunkt noch offen IST.
                     Jede offene Zeile traegt eine Schliessbedingung, und die
                     wird gefahren. Drei Punkte standen offen da, waehrend sie
-                    seit v217, v218 und v222 zugefallen waren.
+                    seit v217, v218 und v222 zugefallen waren. Seit v226 gilt
+                    dasselbe eine Tabelle tiefer: eine FUNDZEILE darf Offenheit
+                    nur behaupten, indem sie einen Punkt nennt, den es in einer
+                    Offen-Tabelle gibt. Vier taten es nicht.
 npm run beruehrung  prüft, ob alles mit dem Daumen zu treffen ist
 npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen - im
                     Standardlauf nur die, deren ZIELDATEI oder `haengtAn`
@@ -392,7 +395,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v225. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v226. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -429,6 +432,55 @@ Verfahren trennt „hoch" von „absurd" — deshalb steht es hier, statt als
 Sicherheit verkauft zu werden (S129).
 
 Nebenbei endete die Erledigt-Tabelle bei **v215**; acht Fassungen fehlten.
+
+**Der volle Lauf zu v225 hat eine Probe gefunden, die auf zwei Rechnern
+Verschiedenes beweist.** „Werkstatt wartet nicht auf die Bilder" nahm
+`await bilderAbwarten()` aus `zeichenwerkstatt` heraus und erwartete, dass das
+Kristalltor rot wird. Hier tat es das — 87 898 Punkte Unterschied, die Zahl
+aus v190. **Auf dem Runner nicht**, und zwar zu Recht: `tools/kristall.mjs`
+wartet schon **vor** der Werkstatt einmal, also ist dort nichts mehr offen.
+Ob die zweite Zeile etwas ändert, entschied damit die Geschwindigkeit der
+Maschine.
+
+Eine Probe, die auf einem Rechner beweist und auf dem anderen nicht, ist keine
+— und schlimmer als keine, weil ein Lauf ohne Befund wie ein Beweis aussieht.
+Sie greift jetzt an der **Funktion** statt am zweiten Aufruf; dann trifft es
+den ersten, und der ist tragend: das Kristalltor meldet „kein Bild der
+Ringstation im Vorrat", hier wie dort. Nachgefahren mit dem ganzen Ausbau und
+mit einem Abzählfehler (`offen > 1`), beide Male rot.
+
+**Der zweite Aufruf hat damit keine Gegenprobe mehr, und das steht als Kasten
+an der Zeile.** Gemessen ist `kristall.mjs` heute der einzige Benutzer der
+Werkstatt, und es wartet vorher — für den nächsten, der das nicht tut, ist die
+Zeile richtig, beweisen lässt sie sich erst dann. Ein Selbsttest an der
+Funktion wurde gebaut und wieder **verworfen**: er war in diesem Tor
+unerreichbar, weil jeder Bruch schon am ersten Aufruf stirbt. Eine Prüfung,
+die nie anschlägt, ist keine (Regel 5).
+
+**Und eine Tabelle tiefer stand dasselbe noch einmal (v226).** Unter den
+„Offen"-Tabellen liegt die Fundtabelle — 150 Lehren, absichtlich ein
+Gedächtnis und kein Arbeitsvorrat. Vier ihrer Zeilen trugen trotzdem einen
+Rückstand vor, und alle vier waren falsch:
+
+| Zeile | behauptete | Wirklichkeit |
+|---|---|---|
+| **S151** | „**Offen**, weil die Bahnlänge an der Balance hängt" | seit **v126/v131** zu — `goalOf` gibt die Plattenmitte zurück, `maps.ts` sagt es selbst |
+| **S112** | „Offen als D26" | D26 seit **v114** als Fehlannahme geschlossen (S113) |
+| **S84** | „Offen als D22" | D22 geschlossen, S91 hält es fest |
+| **S23** | „Offen: … (siehe T13)" | **T13 gibt es in keinem Dokument** |
+
+Ein Rückstand, der nur in der Fundtabelle steht, hat keine Schließbedingung,
+steht in keiner Übersicht und fällt niemandem auf — genau die Lücke, die v224
+eine Ebene höher geschlossen hat.
+
+**Die Erkennung ist absichtlich eng:** „Offen" groß und am Satzanfang oder
+fett, kleingeschriebenes „offen" mitten im Satz nicht. Sonst fängt sie Sätze
+wie S121 ein („dorthin bringen, wo die Frage offen ist"), und ein Wächter, der
+bei richtiger Prosa anschlägt, wird überlesen — dieselbe Lehre, die
+Abschnitt 3 des Wächters für die veralteten Begriffe schon aufgeschrieben
+hat. Vier Nullproben nachgefahren: unbekannte Kennung meldet,
+Behauptung ohne Kennung meldet, **gültiger Verweis schweigt**, kleines
+„offen" schweigt.
 
 **Was der volle Probenlauf zu v219 gefunden hat — und es waren nicht die
 Tore, sondern vier Messplätze.** Von 249 Gegenproben bewiesen vier nichts

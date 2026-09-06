@@ -59,8 +59,8 @@ Projekt sechsmal gekostet.
 nachts auf dem Runner (`.github/workflows/proben.yml`) und schreibt bei
 Erfolg Fassung **und Commit** in `tools/proben-stand.txt`. Der tägliche Lauf
 hier ist ein **Umfangslauf**: er fährt nur die Proben, deren **Zieldatei**
-seit dem letzten vollen Lauf angefasst wurde. Gemessen sind das nach einer
-Runde **11 Proben statt 253**, nach zweien 26.
+seit dem letzten vollen Lauf angefasst wurde — oder deren `haengtAn` (v225).
+Gemessen sind das nach einer Runde **11 Proben statt 253**, nach zweien 26.
 
 Das Werkzeug des Tores zählt bewusst nicht mit, obwohl es naheliegt: an
 `tools/smoke.ts` hängen 86 Proben, und eine einzige Zeile darin zöge den Lauf
@@ -68,11 +68,25 @@ von 11 auf 99 Proben und von vier Minuten auf anderthalb Stunden. Wer ein Tor
 anfasst, fährt seine Proben gezielt — `npm run proben smoke` nimmt jeden
 Namen und jedes Tor als Filter.
 
-**Was der Umfangslauf nicht kann**, und das ist der Grund für die Nacht: er
-sagt nichts über die übersprungenen Proben. Eine Probe kann auch verfallen,
-weil sich die **Karte** geändert hat und ihr Fall nicht mehr vorkommt —
-genau das ist in v219 viermal passiert, und keine der vier Zieldateien war
-angefasst.
+**Was der Umfangslauf nicht kann**, und das ist der Grund für die Nacht: eine
+Probe kann auch verfallen, weil sich die **Karte** geändert hat und ihr Fall
+nicht mehr vorkommt — genau das ist in v219 viermal passiert, und keine der
+vier Zieldateien war angefasst.
+
+**Seit v225 verschweigt er es wenigstens nicht mehr.** Er nennt die Zahl der
+übersprungenen Proben, ihre Verteilung auf die Tore und den letzten vollen
+Lauf — und wenn sich eine **Weltdatei** geändert hat (Karten, Wellen, Gegner,
+Türme, Fähigkeiten, Grade), sagt er das eigens. Vorher stand am Ende „alle 11
+Tore schlagen an", und das las sich wie ein Freispruch für 253.
+
+Dazu ein Feld, das die Lücke wirklich schließt, wo man sie kennt:
+**`haengtAn`** sagt, wovon der FALL einer Probe abhängt — `datei` sagt nur,
+wo sie eingreift. Vier Proben tragen es, jede beim Lesen belegt. **Meine
+erste Vermutung war gemessen falsch:** ich hielt die betroffenen für die mit
+Zieldatei in `tools/`, tatsächlich lag nur eine der vier v219-Proben dort,
+die anderen drei in `src/data/waves.ts` und `src/game/state.ts`. Gekostet hat
+es in dieser Runde **zwei zusätzliche Proben** (80 statt 78) — die anderen
+zwei wären ohnehin mitgefahren.
 
 **Warum nicht öfter und nicht seltener.** Das Tor-Audit
 (`docs/Towerfront-TOR-BILANZ.md`) hat gemessen: der volle Lauf ist **33
@@ -184,9 +198,11 @@ npm run doku        prüft die Dokumente gegen die Wirklichkeit - seit v224 auch
                     seit v217, v218 und v222 zugefallen waren.
 npm run beruehrung  prüft, ob alles mit dem Daumen zu treffen ist
 npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen - im
-                    Standardlauf nur die, deren ZIELDATEI seit dem letzten
-                    vollen Lauf angefasst wurde (nach einer Runde 11 statt
-                    253). Ein Name oder ein Torname als Argument filtert
+                    Standardlauf nur die, deren ZIELDATEI oder `haengtAn`
+                    seit dem letzten vollen Lauf angefasst wurde (nach einer
+                    Runde 11 statt 253). Er sagt seit v225 auch, was er NICHT
+                    geprüft hat - und eigens, wenn sich eine Weltdatei
+                    geändert hat. Ein Name oder ein Torname als Argument filtert
                     gezielt. `-- --voll` fährt alle; das dauert rund 50
                     Minuten und läuft deshalb nachts auf dem Runner.
 npm run kritik      Wertung nach Testerkategorien, Ziel über 90
@@ -376,7 +392,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v224. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v225. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

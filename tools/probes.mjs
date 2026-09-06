@@ -329,6 +329,9 @@ const PROBEN = [
     // stellt genau den Fall her: der Bannturm ist da, C3 steht weiter offen.
     name: 'Zugefallener Punkt steht weiter offen',
     datei: 'src/data/towers.ts',
+    // Der Eingriff greift in towers.ts, der Fall steht im Verzeichnis: die
+    // Probe faellt, sobald C3 eine andere Schliessbedingung bekommt.
+    haengtAn: ['docs/Towerfront-BACKLOG.md'],
     suche: "name: 'Bogenturm'",
     ersatz: "name: 'Bannturm'",
     tor: 'doku',
@@ -1016,6 +1019,10 @@ const PROBEN = [
     // vorher endete er nie, also konnte es nie auffallen.
     name: 'Determinismus liest den gespeicherten Fortschritt',
     datei: 'tools/determinism.ts',
+    // Der Fall braucht eine Partie, die im Horizont ENDET - sonst wird nichts
+    // in den Fortschritt geschrieben und der eingebaute Fehler bleibt
+    // folgenlos. Das haengt an der Bahnlaenge, nicht an diesem Werkzeug.
+    haengtAn: ['src/data/maps.ts'],
     regel: /  s\.reset\(SEED, 'normal', MAPS\[0\]\.id, \{ perks: NO_PERKS, karten: MAPS\.length \}\);/,
     ersatz: '  s.reset(SEED);',
     tor: 'determinism',
@@ -1796,6 +1803,9 @@ const PROBEN = [
     // war eine von drei Bewegungen ungeprueft.
     name: 'Beruehrung prueft nur eine Karte',
     datei: 'tools/smoke.ts',
+    // Der Fall braucht Karten, die sich in der Bedienbarkeit UNTERSCHEIDEN.
+    // Waeren sie gleich, aendert das Beschneiden auf die erste nichts.
+    haengtAn: ['src/data/maps.ts'],
     regel: /^  for \(const karte of ALLE_KARTEN\) \{$/m,
     ersatz: '  for (const karte of ALLE_KARTEN.slice(0, 1)) {',
     tor: 'smoke',
@@ -2322,6 +2332,10 @@ const PROBEN = [
     // TF-032: "hinten" tut dasselbe wie "vorn" - eine Wahl ohne Folgen.
     name: 'Zielmodus hinten wirkt wie vorn',
     datei: 'src/game/state.ts',
+    // Der Fall braucht eine Welle, in der sich "vorn" und "hinten" ueberhaupt
+    // trennen. In v219 hat die lange Serpentine genau das gekostet: Welle 1
+    // trennte nichts mehr, und die Probe bewies still nichts.
+    haengtAn: ['src/data/maps.ts', 'src/data/waves.ts'],
     regel: /        : wahl === 'hinten' \? -e\.travelled/,
     ersatz: "        : wahl === 'hinten' ? e.travelled",
     tor: 'smoke',
@@ -2787,19 +2801,124 @@ const geaenderteDateien = () => {
   } catch { return null; }
 };
 
+/** **Woraus die Welt besteht.**
+ *
+ *  Karten, Wellen, Gegner, Tuerme, Faehigkeiten, Grade. Aendert sich eine
+ *  dieser Dateien, kann eine Probe ihren Fall verlieren, OHNE dass ihre
+ *  Zieldatei angefasst wurde - der Umfangslauf sieht davon nichts. Genau das
+ *  ist in v219 viermal passiert.
+ *
+ *  Die Liste dient zwei Dingen: dem Bericht ueber die uebersprungenen Proben
+ *  und der Pruefung von `haengtAn` (dort darf nur stehen, was es gibt). */
+const WELTDATEIEN = [
+  'src/data/maps.ts', 'src/data/waves.ts', 'src/data/enemies.ts',
+  'src/data/towers.ts', 'src/data/abilities.ts', 'src/data/difficulty.ts',
+];
+
+/** **Faehrt diese Probe mit?**
+ *
+ *  Als eigene Funktion, damit sie sich pruefen laesst, ohne einen Lauf zu
+ *  starten - dieselbe Antwort wie bei `standAbstandFehler`. Der Umfang war
+ *  bis v224 vier Zeilen mitten im Ablauf, und ein Umfang, den niemand
+ *  nachrechnen kann, ist eine Behauptung.
+ *
+ *  **`haengtAn` ist der Zusatz aus v225.** `datei` sagt, WO die Probe
+ *  eingreift; `haengtAn` sagt, WOVON ihr Fall abhaengt. Die vier Proben, die
+ *  in v219 ihren Gegenstand verloren haben, hatten ihre Zieldatei in
+ *  `src/data/waves.ts`, `src/game/state.ts` (zweimal) und
+ *  `tools/determinism.ts` - keine davon war angefasst, geaendert hatte sich
+ *  `src/data/maps.ts`. Meine erste Vermutung, es haenge an Proben mit
+ *  Zieldatei in `tools/`, war gemessen falsch: nur eine der vier lag dort. */
+const imUmfang = (p, geaendert) => geaendert.has(p.datei)
+  || (p.haengtAn ?? []).some((f) => geaendert.has(f));
+
+/** Die Umfangsregel selbst pruefen, in beide Richtungen und bei jedem Lauf.
+ *
+ *  Eine Regel, die nur die eine Richtung kennt, besteht auch eine, die immer
+ *  ja sagt. Deshalb drei gestellte Faelle: Zieldatei getroffen (muss mit),
+ *  nur `haengtAn` getroffen (muss mit - das ist die ganze Neuerung), nichts
+ *  getroffen (darf NICHT mit). */
+const umfangSelbsttest = () => {
+  const g = new Set(['src/data/maps.ts']);
+  const ueber = imUmfang({ datei: 'src/data/maps.ts' }, g);
+  const haengt = imUmfang({ datei: 'src/game/state.ts', haengtAn: ['src/data/maps.ts'] }, g);
+  const fremd = imUmfang({ datei: 'src/game/state.ts' }, g);
+  if (!ueber || !haengt || fremd) {
+    console.error('PROBEN: der Selbsttest der Umfangsregel ist gescheitert - '
+      + `Zieldatei ${ueber ? 'faehrt mit' : 'faehrt NICHT mit'}, `
+      + `haengtAn ${haengt ? 'faehrt mit' : 'faehrt NICHT mit'}, `
+      + `unbeteiligt ${fremd ? 'faehrt MIT' : 'bleibt draussen'}.`);
+    process.exit(1);
+  }
+  // Und `haengtAn` selbst darf nicht verrotten: was dort steht, muss es
+  // geben, und es darf nicht die Zieldatei wiederholen - das waere Zierrat,
+  // der beim Lesen wie eine Angabe aussieht.
+  let fehler = 0;
+  for (const p of PROBEN) {
+    for (const f of p.haengtAn ?? []) {
+      if (!existsSync(join(ROOT, f))) {
+        console.error(`PROBEN: "${p.name}" haengt an "${f}" - die Datei gibt es nicht.`);
+        fehler++;
+      }
+      if (f === p.datei) {
+        console.error(`PROBEN: "${p.name}" haengt an seiner eigenen Zieldatei "${f}".`);
+        fehler++;
+      }
+    }
+  }
+  if (fehler) process.exit(1);
+  const mit = PROBEN.filter((p) => p.haengtAn?.length).length;
+  console.log('  Selbsttest: die Umfangsregel nimmt Zieldatei und haengtAn, laesst '
+    + `Unbeteiligtes draussen. ${mit} Probe(n) mit haengtAn.`);
+};
+
 let umfangGrund = 'alle';
 let liste = PROBEN;
+/** Was der Lauf NICHT geprueft hat - und woran das liegt. */
+let uebersprungen = [];
+let weltGeaendert = [];
 if (filter.length) {
   liste = PROBEN.filter((p) => filter.some((f) => `${p.name} ${p.tor}`.toLowerCase().includes(f.toLowerCase())));
   umfangGrund = `Filter "${filter.join(' ')}"`;
 } else if (!VOLL && !process.argv.includes('--muster')) {
   const geaendert = geaenderteDateien();
   if (geaendert) {
-    liste = PROBEN.filter((p) => geaendert.has(p.datei));
-    umfangGrund = `Zieldatei seit dem letzten vollen Lauf angefasst `
-      + `(${geaendert.size} geaenderte Datei(en), ${PROBEN.length - liste.length} Proben uebersprungen)`;
+    liste = PROBEN.filter((p) => imUmfang(p, geaendert));
+    uebersprungen = PROBEN.filter((p) => !imUmfang(p, geaendert));
+    weltGeaendert = WELTDATEIEN.filter((f) => geaendert.has(f));
+    umfangGrund = `Zieldatei oder haengtAn seit dem letzten vollen Lauf angefasst `
+      + `(${geaendert.size} geaenderte Datei(en), ${uebersprungen.length} Proben uebersprungen)`;
   }
 }
+
+/** **Was der Lauf nicht geprueft hat, sagt er selbst.**
+ *
+ *  Bis v224 stand am Ende "alle 11 Tore schlagen an" - und das las sich wie
+ *  ein Freispruch fuer 253. Die 242 uebersprungenen kamen in keiner Zeile
+ *  vor. Ein Lauf, der seine Luecke verschweigt, ist schlimmer als einer, der
+ *  sie nennt: man glaubt ihm mehr, als er hergibt.
+ *
+ *  Die Weltzeile ist der wichtigere Teil. Sie steht nur da, wenn sich eine
+ *  Weltdatei geaendert hat - und dann ist sie die Aufforderung, den vollen
+ *  Lauf nicht bis zur dritten Fassung zu schieben. */
+const umfangBericht = () => {
+  if (!uebersprungen.length) return;
+  const jeTor = {};
+  for (const p of uebersprungen) jeTor[p.tor] = (jeTor[p.tor] ?? 0) + 1;
+  const stand = existsSync(STAND_DATEI) ? readFileSync(STAND_DATEI, 'utf8').trim() : '?';
+  console.log(`  NICHT geprueft: ${uebersprungen.length} von ${PROBEN.length} Proben. `
+    + `Letzter voller Lauf: ${stand.split(/\s+/)[0]}.`);
+  console.log('    ' + Object.entries(jeTor).sort((a, b) => b[1] - a[1])
+    .map(([t, n]) => `${t} ${n}`).join('  '));
+  if (weltGeaendert.length) {
+    console.log(`  ACHTUNG: die WELT hat sich seither geaendert - ${weltGeaendert.join(', ')}.`);
+    console.log('    Eine Probe kann ihren Fall auch dadurch verlieren, ohne dass ihre');
+    console.log('    Zieldatei angefasst wurde. In v219 ist das viermal passiert, und keine');
+    console.log('    der vier waere je rot geworden. Wer den Fall kennt, traegt `haengtAn`');
+    console.log('    nach; sonst faengt es erst der volle Lauf (naechtlich, oder `-- --voll`).');
+  }
+  console.log('');
+};
 
 // -------------------------------------------------------------- Musterlauf
 //
@@ -2973,6 +3092,8 @@ const zuruecknehmen = (tor) => {
 
 console.log(`Gegenproben: ${liste.length} von ${PROBEN.length} — Umfang: ${umfangGrund}\n`);
 standSelbsttest();
+umfangSelbsttest();
+umfangBericht();
 
 
 // --- Zuerst: sind die betroffenen Tore ueberhaupt GRUEN?

@@ -1,6 +1,6 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v223 · 05.09.2026
+Stand: v230 · 06.09.2026
 
 Die Datei ist **eine** Datei. Jedes Bild steckt als Datenadresse darin und
 wird dabei ein Drittel größer. Ohne Obergrenze wächst sie mit jedem Bild, bis
@@ -42,24 +42,36 @@ leicht verwechselt.
 
 ## Was heute drinsteckt
 
-Gemessen an `dist/index.html` (v185):
+Gemessen an `dist/index.html` (v230, 06.09.2026):
 
 | Teil | eingebettet | Anteil |
 |---|---|---|
-| Bildvorrat (43 WebP) | **1186 KB** | 79 % |
-| Startbildschirm-Symbol und zehn Startbilder (11 PNG) | 108 KB | 7 % |
-| Code, HTML, Stilvorlage | 212 KB | 14 % |
-| **gesamt** | **1506 KB** | von 1600 erlaubt |
+| Bildvorrat (44 WebP) | **909 KB** | 57 % |
+| alles übrige — Startbilder, Code, HTML, Stilvorlage | 683 KB | 43 % |
+| **gesamt** | **1592 KB** | von **1800** erlaubt |
 
-Der Bildvorrat als Rohbytes, also vor der Datenadresse:
+Die 909 sagt `npm run pack-art -- --force`, die 1592 `ls` auf
+`dist/index.html`; die 683 sind die **Differenz**, nicht eine eigene Messung.
+Die alte Fassung dieser Tabelle spaltete sie in „Startbilder 108" und „Code
+212" auf — zusammen 320, was zur Gesamtzahl nicht mehr passte. Eine Zeile,
+die man nicht misst, schreibt man als Differenz hin oder gar nicht.
 
-| Gruppe | roh | Budget (v186) |
-|---|---|---|
-| Türme (18 Bilder) | 302 KB | 445 |
-| Untergründe (3) | 324 KB | 330 |
-| Objekte (14) | 192 KB | 250 |
-| Gegner (8) | 71 KB | 80 |
-| **Summe** | **889 KB** | **1105 von 1110 erlaubt** |
+Der Bildvorrat als Rohbytes, also vor der Datenadresse — die Zahlen sagt
+`npm run pack-art -- --force` selbst, sie sind hier nicht nachgerechnet:
+
+| Gruppe | roh | eingebettet | Budget |
+|---|---|---|---|
+| Türme (18 Bilder) | 302 KB | 404 | 445 |
+| **Untergründe (4)** | **162 KB** | 217 | **250** |
+| Objekte (14) | 144 KB | 193 | 250 |
+| Gegner (8) | 71 KB | 95 | 80 |
+| **Summe** | **679 KB** | **909** | **1025** |
+
+**Diese Tabelle stand bis v230 auf dem Stand von v185** und behauptete drei
+Untergründe bei einem Budget von 330, während es seit v222 vier bei 250 sind,
+dazu „1506 KB von 1600 erlaubt", während die Grenze seit v187 bei 1800 liegt
+und die Datei 1592 wiegt. Gefunden, weil der Doku-Wächter den Rückstand des
+Dokuments meldete — nicht, weil jemand die Zahlen nachgesehen hätte.
 
 ## Zwei Haushalte, die einander widersprachen
 

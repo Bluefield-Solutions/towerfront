@@ -1,6 +1,6 @@
 # Towerfront — Bildauftrag
 
-Stand: v223 · 05.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v230 · 06.09.2026 · **Auftragsdokument für den Bild-Agenten**
 
 Dieses Dokument ist die vollständige Bestellung. Es enthält alles, was zum
 Erzeugen der Bilder nötig ist: Stil, Maße, Blickrichtung, Dateinamen,
@@ -1749,6 +1749,53 @@ vignette, no border.
 [AUSGABE-BLOCK EINFÜGEN]
 ```
 
+### Was der zweite Kandidat gelehrt hat (v230, Ascheschlucht)
+
+Ein Kandidat für die Ascheschlucht ist eingebaut, gebacken, gemessen und
+wieder ausgebaut worden (06.09.2026). **Er ist inhaltlich näher dran als
+erwartet**, und drei Vermutungen von mir waren gemessen falsch:
+
+| Prüfung | Kandidat | Gefordert | |
+|---|---|---|---|
+| Wegfreiheit | **17,0** | ≤ 25 | bestanden, aber siehe unten |
+| Lage der Zielplattform | Welt 1729:454 | 40 Weltpunkte um 1747:480 | **31 daneben** — getroffen |
+| Plattform gegen Umgebung | 70 Farbschritte | deutlich | getroffen |
+| Detaildichte | **2,25** | 1,5–3,0 | getroffen — *ruhiger* als das heutige Bild (2,84) |
+| Helligkeit | 0,30 | 0,30–0,36 | getroffen |
+| Reines Schwarz | 0,1 % | ≤ 2 % | getroffen |
+| **Auflösung** | **1672 × 941** | **2400 × 1350** | **durchgefallen** — 70 % der Breite |
+| `zielplatte` Güte | **0,44** | ≥ 0,50 | durchgefallen — siehe unten |
+
+**Ich hielt das Bild für zu unruhig. Es ist ruhiger als das, was heute im
+Spiel steht** (2,25 gegen 2,84). Regel 8 in die andere Richtung: der Blick
+irrt auch.
+
+Vier Dinge gehen daraus in den Auftrag:
+
+1. **Die Auflösung muss in den Prompt selbst.** Sie stand nur im
+   Ausgabe-Block am Ende, und der Kandidat kam mit 70 % der Breite. Der
+   Packer bäckt auf 2400 — er würde hochrechnen.
+2. **Waagerechte Bänder lesen sich wie ein Weg.** Die 17,0 kommen nicht von
+   einer gemalten Straße, sondern von helleren Aschebändern, die quer durch
+   die Bildmitte laufen — also in Laufrichtung. Die zwei ausgelieferten
+   8c-Bilder stehen bei 3,0 und 2,1. Verlangt wird jetzt ausdrücklich
+   **richtungslose, fleckige Variation**: nichts, was von Rand zu Rand
+   durchläuft.
+3. **Unwegsames Gelände NUR an den markierten Kreisen.** Der Kandidat hat
+   deutlich mehr Fels- und Glutnester als das Blatt Kreise (elf), und
+   mehrere liegen dort, wo die Bahn verläuft. Im Spiel läuft der Gegner
+   darüber und man darf darauf bauen — das Bild lügt dann. Loser Schotter
+   ohne Höhe ist erlaubt, alles mit Schattenwurf oder Glut nicht.
+4. **Die Plattform braucht einen eigenen Farbton, nicht nur mehr
+   Helligkeit.** `npm run zielplatte` sucht mit einer Farbschwelle; auf
+   grauem Aschefeld fällt heller Schotter in dieselbe Schwelle wie graues
+   Pflaster, und dann hebt sich nichts mehr ab (Güte 0,44 gegen 0,50). Auf
+   dem braunen Waldboden ging es (0,98). **Das ist zuerst eine Schwäche des
+   Werkzeugs** — es sollte den erhabenen Kranz suchen statt eine Farbe, und
+   das steht als eigener Punkt an. Bis dahin hilft dem Bild wie dem Sucher
+   dasselbe: heller **Sandstein statt Grau**, dazu eine dunkle Fuge rings um
+   den Kranz.
+
 ### 8c.2 `13_aschebreit.png` — Ascheschlucht, Aschefeld **ohne Weg**
 
 ```
@@ -1757,6 +1804,11 @@ vignette, no border.
 IGNORE the BACKGROUND and MARGIN lines of the style block: this is a
 full-bleed terrain map, not a cut-out asset. It has no transparency and no
 margin; the terrain runs to all four edges.
+
+SIZE — check this before you start and again before you deliver: the image
+must be exactly 2400 x 1350 pixels. Not 1600, not 1920, not "roughly 16:9".
+A candidate came back at 1672 x 941 and had to be rejected: the game bakes at
+2400 wide and would have to upscale.
 
 SUBJECT: A top-down terrain map, 2400x1350, seen straight from directly
 above — no perspective, no horizon, no sky. A cooled ash field: grey volcanic
@@ -1770,25 +1822,46 @@ lighter strip anywhere on the image. The game draws its own road on top of
 this picture, and any painted one would sit next to it and contradict it.
 The ground is continuous from edge to edge.
 
+NO DIRECTIONAL BANDING either, and this is the part that was missed. The
+variation in the ground must be PATCHY and without direction — blotches, not
+currents. Nothing may run from one edge towards the other: no flow lines, no
+sweeping lighter bands, no wind streaks, no drift patterns sharing a common
+axis. A candidate had no painted road at all and still failed this, because
+pale bands ran horizontally through the middle of the image and read as a
+route. Squint at your own image: if you can trace any elongated lighter or
+darker shape for more than about a fifth of the image width, remove it.
+
 GOAL PLATFORM — the one exception, and it is required: a single round paved
 platform at the position marked by the BLUE ring on the accompanying
 reference sheet, about 260 world points across (roughly one seventh of the
-image width). Fitted stone with a raised kerb and concentric paving inside,
-clearly lighter and clearly man-made against the surrounding ground. It is
-round and isolated: no road, track or paved apron leads to or away from it.
-The player's fortress is placed on it by the game. A software check locates
-this platform in the delivered image and scores how clearly it stands out; a
-faint disc fails it. Raised kerb, concentric rings, unmistakable edge.
+image width). Fitted stone with a raised kerb, a dark shadowed joint all the
+way round it, and concentric paving inside. It is round and isolated: no
+road, track or paved apron leads to or away from it. The player's fortress is
+placed on it by the game.
 
-ROUGH GROUND: at the circles marked on the accompanying reference sheet,
-ground that reads as impassable — basalt outcrops, collapsed crust, an open
-fissure. These MUST be in the image; the game no longer draws them.
-Distinctly darker than the ash field, with a clear shape, so a player sees at
-a glance why nothing can be built there. Each one must read as impassable ON
-ITS OWN, without the reference sheet: a darker patch of ash is not enough, it
-needs relief and a hard silhouette. And NONE of them may touch the goal
-platform or come within one platform-width of it — in the previous delivery
-one sat directly under it.
+The platform must differ from the ground in HUE, not only in brightness:
+warm pale sandstone against the cold grey ash. A software check locates it in
+the delivered image and scores how clearly it stands out — it compares COLOUR, so a paler
+version of the ground fails even when a human eye sees the platform at once.
+A candidate used grey stone on grey ash and scored 0.44 where 0.50 is
+required.
+
+ROUGH GROUND: at the circles marked on the accompanying reference sheet, and
+only there, ground that reads as impassable — basalt outcrops, collapsed crust,
+an open fissure. These MUST be in the image; the game no longer draws them. Each one must read as impassable ON ITS
+OWN, without the reference sheet: a darker patch of ash is not enough, it
+needs relief and a hard silhouette. And none of them may touch the goal platform or come
+within one platform-width of it — in an earlier delivery one sat directly
+under it.
+
+NOTHING ELSE MAY LOOK IMPASSABLE, and this is new. Outside the marked circles
+the ground must read as walkable and buildable everywhere: the game lets the
+player build there and walks enemies across it, so a rock nest painted
+off-circle makes the picture lie. Flat gravel, cracks, colour variation and
+scorch marks are welcome anywhere. Anything with height, a cast shadow or
+glowing lava belongs ONLY inside a marked circle. A candidate had roughly
+twice as many rock nests as the sheet has circles, several of them right
+where the route runs.
 
 CALM: this is a background. Detail density must stay LOW — large soft areas,
 gentle variation, no busy ash texture, no scattered rubble fields. The
@@ -1809,6 +1882,11 @@ IGNORE the BACKGROUND and MARGIN lines of the style block: this is a
 full-bleed terrain map, not a cut-out asset. It has no transparency and no
 margin; the terrain runs to all four edges.
 
+SIZE — check this before you start and again before you deliver: the image
+must be exactly 2400 x 1350 pixels. Not 1600, not 1920, not "roughly 16:9".
+A candidate came back at 1672 x 941 and had to be rejected: the game bakes at
+2400 wide and would have to upscale.
+
 SUBJECT: A top-down terrain map, 2400x1350, seen straight from directly
 above — no perspective, no horizon, no sky. A frozen plain: wind-packed snow
 over blue-grey ice, shallow drifts, sparse frost-killed scrub.
@@ -1820,25 +1898,46 @@ lighter or darker strip anywhere on the image. The game draws its own road on
 top of this picture, and any painted one would sit next to it and contradict
 it. The ground is continuous from edge to edge.
 
+NO DIRECTIONAL BANDING either, and this is the part that was missed. The
+variation in the ground must be PATCHY and without direction — blotches, not
+currents. Nothing may run from one edge towards the other: no flow lines, no
+sweeping lighter bands, no wind streaks, no drift patterns sharing a common
+axis. A candidate had no painted road at all and still failed this, because
+pale bands ran horizontally through the middle of the image and read as a
+route. Squint at your own image: if you can trace any elongated lighter or
+darker shape for more than about a fifth of the image width, remove it.
+
 GOAL PLATFORM — the one exception, and it is required: a single round paved
 platform at the position marked by the BLUE ring on the accompanying
 reference sheet, about 260 world points across (roughly one seventh of the
-image width). Fitted stone with a raised kerb and concentric paving inside,
-clearly darker and clearly man-made against the surrounding ground. It is
-round and isolated: no road, track or paved apron leads to or away from it.
-The player's fortress is placed on it by the game. A software check locates
-this platform in the delivered image and scores how clearly it stands out; a
-faint disc fails it. Raised kerb, concentric rings, unmistakable edge.
+image width). Fitted stone with a raised kerb, a dark shadowed joint all the
+way round it, and concentric paving inside. It is round and isolated: no
+road, track or paved apron leads to or away from it. The player's fortress is
+placed on it by the game.
 
-ROUGH GROUND: at the circles marked on the accompanying reference sheet,
-ground that reads as impassable — ice ridges, an open crevasse, deep drifts.
-These MUST be in the image; the game no longer draws them. Distinctly darker
-or cooler than the snow field, with a clear shape, so a player sees at a
-glance why nothing can be built there. Each one must read as impassable ON ITS
+The platform must differ from the ground in HUE, not only in brightness:
+warm brown-grey stone against the blue-white snow. A software check locates it
+in the delivered image and scores how clearly it stands out — it compares COLOUR, so a paler
+version of the ground fails even when a human eye sees the platform at once.
+A candidate used grey stone on grey ash and scored 0.44 where 0.50 is
+required.
+
+ROUGH GROUND: at the circles marked on the accompanying reference sheet, and
+only there, ground that reads as impassable — ice ridges, an open crevasse,
+deep drifts. These MUST be in the image; the game no longer draws them. Each one must read as impassable ON ITS
 OWN, without the reference sheet: a bluish patch of snow is not enough, it
-needs relief and a hard silhouette. And NONE of them may touch the goal
-platform or come within one platform-width of it — in the previous delivery
-one sat directly under it.
+needs relief and a hard silhouette. And none of them may touch the goal platform or come
+within one platform-width of it — in an earlier delivery one sat directly
+under it.
+
+NOTHING ELSE MAY LOOK IMPASSABLE, and this is new. Outside the marked circles
+the ground must read as walkable and buildable everywhere: the game lets the
+player build there and walks enemies across it, so a rock nest painted
+off-circle makes the picture lie. Flat gravel, cracks, colour variation and
+scorch marks are welcome anywhere. Anything with height, a cast shadow or
+glowing lava belongs ONLY inside a marked circle. A candidate had roughly
+twice as many rock nests as the sheet has circles, several of them right
+where the route runs.
 
 CALM: this is a background. Detail density must stay LOW — large soft areas,
 gentle variation, no busy snow texture, no scattered debris. The figures that

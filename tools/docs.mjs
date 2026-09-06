@@ -60,8 +60,42 @@ const zahlwort = {
   10: 'zehn', 11: 'elf', 12: 'zwölf', 13: 'dreizehn', 14: 'vierzehn', 15: 'fünfzehn',
   16: 'sechzehn', 17: 'siebzehn', 18: 'achtzehn', 19: 'neunzehn', 20: 'zwanzig',
   21: 'einundzwanzig', 22: 'zweiundzwanzig', 23: 'dreiundzwanzig',
-  24: 'vierundzwanzig', 25: 'fünfundzwanzig',
+  24: 'vierundzwanzig', 25: 'fünfundzwanzig', 26: 'sechsundzwanzig',
+  27: 'siebenundzwanzig', 28: 'achtundzwanzig', 29: 'neunundzwanzig',
+  30: 'dreissig', 31: 'einunddreissig', 32: 'zweiunddreissig',
+  33: 'dreiunddreissig', 34: 'vierunddreissig', 35: 'fünfunddreissig',
+  36: 'sechsunddreissig', 37: 'siebenunddreissig', 38: 'achtunddreissig',
+  39: 'neununddreissig', 40: 'vierzig',
 };
+// **Die Tabelle endete bis v230 bei fünfundzwanzig - und die Kette hatte 31
+// Schritte.** Damit war die Prüfung dort blind, wo das Projekt steht:
+// `Towerfront-KONZEPT-und-PIPELINE.md` behauptete "neunundzwanzig Prüfungen,
+// rund 90 Sekunden", und niemand wurde rot. Gefunden erst, als der Rückstand
+// dieses Dokuments die Standregel auslöste.
+//
+// Eine Prüfung, deren Wertebereich hinter dem Gegenstand zurückbleibt, sieht
+// aus wie eine Prüfung. Der Bereich reicht jetzt bis vierzig; wer die
+// vierzigste Prüfung einbaut, trägt hier nach - und `npm run proben` erwischt
+// ihn, weil die Gegenprobe die heutige Zahl in Worten setzt.
+// **Und die Tabelle muss die Kette ueberhaupt abdecken.**
+//
+// Genau daran ist die Pruefung bis v230 vorbeigelaufen: sie kannte drei bis
+// fuenfundzwanzig, die Kette hatte einunddreissig Schritte, und
+// `Towerfront-KONZEPT-und-PIPELINE.md` behauptete sieben Fassungen lang
+// "neunundzwanzig Pruefungen". Niemand wurde rot.
+//
+// Eine Pruefung, deren Wertebereich hinter ihrem Gegenstand zurueckbleibt,
+// sieht aus wie eine Pruefung. Deshalb faellt sie jetzt selbst auf, wenn die
+// Kette aus dem Bereich herauswaechst - das ist billiger als ein Tor, das
+// beim einundvierzigsten Schritt still verstummt.
+if (!zahlwort[torSchritte]) {
+  fail(`CLAUDE.md/Doku: die Kette hat ${torSchritte} abbrechende Schritte, aber `
+    + `die Zahlwort-Tabelle in tools/docs.mjs kennt ${torSchritte} nicht `
+    + `(sie reicht von ${Math.min(...Object.keys(zahlwort).map(Number))} bis `
+    + `${Math.max(...Object.keys(zahlwort).map(Number))}). Solange die Zahl dort `
+    + 'fehlt, prueft die Torzahl nichts - kein Dokument kann sie falsch schreiben.');
+}
+
 for (const [name, text] of alle) {
   // Nur der gültige Teil. Im Fundregister steht absichtlich, wieviele Tore es
   // *damals* gab - das ist der Sinn eines Registers.

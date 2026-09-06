@@ -67,6 +67,23 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    // **Der Waechter war blind, wo das Projekt steht.** Seine Zahlwort-Tabelle
+    // kannte drei bis fuenfundzwanzig, die Kette hat einunddreissig Schritte -
+    // also konnte kein Dokument die Torzahl mehr falsch schreiben, ohne dass
+    // es durchging. `Towerfront-KONZEPT-und-PIPELINE.md` behauptete sieben
+    // Fassungen lang "neunundzwanzig Pruefungen".
+    //
+    // Eine Pruefung, deren Wertebereich hinter ihrem Gegenstand zurueckbleibt,
+    // sieht aus wie eine Pruefung. Diese Probe nimmt der Tabelle die Zahl der
+    // heutigen Kette - als Regel, damit sie mit jedem neuen Tor mitwandert.
+    name: 'Zahlwort-Tabelle kuerzer als die Torkette',
+    datei: 'tools/docs.mjs',
+    regel: /(  30: 'dreissig', )31: 'einunddreissig', /,
+    ersatz: '$1',
+    tor: 'doku',
+    meldet: 'Zahlwort-Tabelle in tools/docs.mjs kennt',
+  },
+  {
     // **Die Abnahmegrenzen stehen nur im Bildauftrag** (Regel 15), und
     // `npm run kartenprobe` misst dagegen. Nur steht `kartenprobe` NICHT in
     // der Torkette - es prueft einen Kandidaten, nicht den Bestand.

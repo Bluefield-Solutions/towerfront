@@ -398,7 +398,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v229. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v230. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -435,6 +435,48 @@ Verfahren trennt „hoch" von „absurd" — deshalb steht es hier, statt als
 Sicherheit verkauft zu werden (S129).
 
 Nebenbei endete die Erledigt-Tabelle bei **v215**; acht Fassungen fehlten.
+
+**Und der Doku-Wächter war blind, wo das Projekt steht (v230).** Seine
+Zahlwort-Tabelle kannte drei bis fünfundzwanzig — die Kette hat
+**einunddreissig** Schritte. Also konnte kein Dokument die Torzahl mehr falsch
+schreiben, ohne durchzugehen: `Towerfront-KONZEPT-und-PIPELINE.md` behauptete
+sieben Fassungen lang „29 Prüfungen, rund 90 Sekunden".
+
+Gefunden hat es nicht die Torzahl-Prüfung, sondern die **Standregel** — das
+Dokument lag sieben Fassungen zurück und wurde deshalb rot. Der Bereich reicht
+jetzt bis vierzig, und der Wächter meldet selbst, wenn die Kette aus ihm
+herauswächst: eine Prüfung, deren Wertebereich hinter ihrem Gegenstand
+zurückbleibt, sieht aus wie eine Prüfung.
+
+Beim Nachziehen der sieben zurückliegenden Dokumente kam der nächste Fund:
+**`Towerfront-GROESSENHAUSHALT.md` stand auf v185.** Es führte drei
+Untergründe bei einem Budget von 330, während es seit v222 vier bei 250 sind,
+und „1506 KB von 1600 erlaubt", während die Grenze seit v187 bei 1800 liegt
+und die Datei **1592** wiegt. Die Tabelle nennt jetzt den Befehl, aus dem ihre
+Zahlen kommen (`npm run pack-art -- --force`), und die eine Zeile, die nicht
+gemessen ist, steht als **Differenz** da statt als Messung.
+
+**Der erste Kandidat für die Ascheschlucht ist gemessen (v230) — eingebaut,
+gebacken, geprüft, wieder ausgebaut.** Er ist inhaltlich näher dran als
+erwartet: Wegfreiheit 17,0 (erlaubt 25), Zielplattform 31 Weltpunkte neben
+der Bestellung (erlaubt 40), Detaildichte **2,25** — und damit **ruhiger als
+das Bild, das heute im Spiel steht** (2,84). Ich hielt es für zu unruhig;
+Regel 8 irrt in beide Richtungen.
+
+Durchgefallen ist er an der **Auflösung** (1672 × 941 statt 2400 × 1350) und
+an der **Güte der Zielplattform** (0,44 gegen 0,50). Die Güte ist zuerst eine
+Schwäche des Werkzeugs: `zielplatte` sucht mit einer Farbschwelle, und auf
+grauem Aschefeld fällt heller Schotter in dieselbe Schwelle wie graues
+Pflaster. Auf dem braunen Waldboden ging es (0,98). Der Sucher sollte den
+erhabenen Kranz suchen statt eine Farbe — das steht als eigener Punkt an.
+
+Vier Dinge gehen daraus in den Auftrag: die **Maße in den Prompt selbst**
+statt nur in den Ausgabe-Block; **richtungslose, fleckige Variation** (die
+17,0 kommen von waagerechten Aschebändern in Laufrichtung, nicht von einer
+gemalten Straße); **unwegsames Gelände nur an den markierten Kreisen** (der
+Kandidat hatte rund doppelt so viele Felsnester wie das Blatt Kreise, mehrere
+auf der Bahn — im Spiel läuft der Gegner darüber, das Bild lügt dann); und
+eine **Plattform mit eigenem Farbton** statt nur mehr Helligkeit.
 
 **Und v228 hat prompt ein Werkzeug gebrochen, ohne dass die Torkette es
 merkte (v229).** Die Abnahmegrenzen stehen nur im Bildauftrag (Regel 15);

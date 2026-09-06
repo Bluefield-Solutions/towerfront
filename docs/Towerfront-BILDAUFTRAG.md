@@ -1749,6 +1749,30 @@ vignette, no border.
 [AUSGABE-BLOCK EINFÜGEN]
 ```
 
+### Ein Auftrag darf nicht fordern, was sein eigenes Blatt bestreitet (v230)
+
+Der Maler hat den ersten Entwurf dieser Bestellung **zurückgefragt**, und zu
+Recht: der Prompt verlangte, dass kein unwegsamer Fleck der Zielplattform
+näher als eine Plattformbreite kommt — das Referenzblatt zeigt aber Kreise,
+die deutlich näher liegen.
+
+Nachgemessen ist die engste Lücke zur Plattformkante **40 Weltpunkte**
+(Ascheschlucht) und **64** (Frostspalte); sechs Kreise über beide Karten
+liegen unter der geforderten Plattformbreite. Der Auftrag war falsch, nicht
+das Blatt.
+
+**Woher der Fehler kam:** der Wächter in `npm run guards` verlangt, dass kein
+Fleck **in** die Platte ragt — 130 Weltpunkte Radius, kein Zuschlag. Beim
+Schreiben des Prompts habe ich daraus „eine Plattformbreite Abstand" gemacht,
+also eine viel strengere Forderung, die die Daten nie erfüllt haben. **Eine
+Zahl im Auftrag muss dieselbe sein wie die im Tor**, sonst widerspricht die
+Bestellung ihrer eigenen Anlage.
+
+Der Prompt sagt jetzt, was gilt: die Kreise sind verbindlich, das Gelände
+bleibt **innerhalb** seines Kreises, und über die Plattformkante darf nichts.
+Die enge Lage ist ausdrücklich als gemessen und gewollt benannt, damit sie
+nicht beim nächsten Mal wieder als Fehler zurückkommt.
+
 ### Was der zweite Kandidat gelehrt hat (v230, Ascheschlucht)
 
 Ein Kandidat für die Ascheschlucht ist eingebaut, gebacken, gemessen und
@@ -1847,12 +1871,18 @@ A candidate used grey stone on grey ash and scored 0.44 where 0.50 is
 required.
 
 ROUGH GROUND: at the circles marked on the accompanying reference sheet, and
-only there, ground that reads as impassable — basalt outcrops, collapsed crust,
-an open fissure. These MUST be in the image; the game no longer draws them. Each one must read as impassable ON ITS
-OWN, without the reference sheet: a darker patch of ash is not enough, it
-needs relief and a hard silhouette. And none of them may touch the goal platform or come
-within one platform-width of it — in an earlier delivery one sat directly
-under it.
+only there, ground that reads as impassable — basalt outcrops, collapsed
+crust, an open fissure. These MUST be in the image; the game no longer draws
+them. Each one must read as impassable ON ITS OWN, without the reference
+sheet: a darker patch of ash is not enough, it needs relief and a hard silhouette.
+
+THE CIRCLES ARE BINDING, and where one sits close to the platform that is
+deliberate: the nearest circle clears the platform's kerb by about 40 world
+points, and it has been measured. Do not move it, do not shrink it, do not
+leave it out. What matters is that the rough ground stays INSIDE its circle
+and never spills over the kerb — an earlier delivery had one sitting directly
+on the platform. Where a circle is this close, keep the visual weight of the
+rock towards the far side of it, so the kerb stays clean.
 
 NOTHING ELSE MAY LOOK IMPASSABLE, and this is new. Outside the marked circles
 the ground must read as walkable and buildable everywhere: the game lets the
@@ -1924,11 +1954,17 @@ required.
 
 ROUGH GROUND: at the circles marked on the accompanying reference sheet, and
 only there, ground that reads as impassable — ice ridges, an open crevasse,
-deep drifts. These MUST be in the image; the game no longer draws them. Each one must read as impassable ON ITS
-OWN, without the reference sheet: a bluish patch of snow is not enough, it
-needs relief and a hard silhouette. And none of them may touch the goal platform or come
-within one platform-width of it — in an earlier delivery one sat directly
-under it.
+deep drifts. These MUST be in the image; the game no longer draws them. Each
+one must read as impassable ON ITS OWN, without the reference sheet: a bluish
+patch of snow is not enough, it needs relief and a hard silhouette.
+
+THE CIRCLES ARE BINDING, and where one sits close to the platform that is
+deliberate: the nearest circle clears the platform's kerb by about 64 world
+points, and it has been measured. Do not move it, do not shrink it, do not
+leave it out. What matters is that the rough ground stays INSIDE its circle
+and never spills over the kerb — an earlier delivery had one sitting directly
+on the platform. Where a circle is this close, keep the visual weight of the
+rock towards the far side of it, so the kerb stays clean.
 
 NOTHING ELSE MAY LOOK IMPASSABLE, and this is new. Outside the marked circles
 the ground must read as walkable and buildable everywhere: the game lets the

@@ -398,7 +398,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v230. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v231. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -455,6 +455,51 @@ und „1506 KB von 1600 erlaubt", während die Grenze seit v187 bei 1800 liegt
 und die Datei **1592** wiegt. Die Tabelle nennt jetzt den Befehl, aus dem ihre
 Zahlen kommen (`npm run pack-art -- --force`), und die eine Zeile, die nicht
 gemessen ist, steht als **Differenz** da statt als Messung.
+
+**Das Ascheschlucht-Bild ist angenommen (v231) — eingebaut ist es noch nicht.**
+Der zweite Kandidat hält jede Abnahmezahl, und die drei Anpassungen aus v230
+haben gemessen gewirkt:
+
+| | Kandidat 1 | **Kandidat 2** | Gefordert |
+|---|---|---|---|
+| Wegfreiheit | 17,0 | **1,3** (gebacken) | ≤ 25 |
+| `zielplatte` Güte | 0,44 | **0,96** | ≥ 0,50 |
+| Lage der Plattform | 31 daneben | **24** | ≤ 40 |
+| Detaildichte | 2,25 | **1,86** | 1,5–3,0 |
+| Fels an den 11 Kreisen | — | **11 von 11** | alle |
+| Fels außerhalb | rund doppelt so viele | **keiner** | keiner |
+
+**Den Sucher hat der Farbton repariert, nicht das Werkzeug.** Warmer Sandstein
+statt Grau auf grauer Asche bringt die Güte von 0,44 auf 0,96 — der Umbau des
+Suchers, der als eigener Punkt anstand, ist damit vorerst nicht nötig. Er
+bleibt trotzdem richtig: die Schwäche ist gemessen und kommt bei der nächsten
+grauen Karte wieder.
+
+**Die Auflösung wird nicht mehr abgelehnt.** Zwei Kandidaten kamen mit exakt
+1672 × 941; die Bildfunktion lässt die Größe nicht einstellen. Alle
+Abnahmezahlen sind am GEBACKENEN Bild gemessen, also nach dem Hochrechnen auf
+2400 — ein Bild an seiner Quellauflösung abzulehnen, das durch den Bau geht
+und dort besteht, hiesse die Messstelle gegen die Vermutung zu tauschen
+(Regel 12). Gefordert bleibt 2400 × 1350, wenn das Werkzeug es kann, sonst
+das größtmögliche 16:9. Nicht verhandelbar ist die Form.
+
+Die elf unwegsamen Flecken lagen **alle richtig** — Farbe und Art sind aus dem
+neuen Bild gelesen (drei von „hart" auf „locker", weil das Aschefeld jetzt
+grau statt braun ist). `npm run sim` bestanden, Streuung 7/2/3.
+
+**Warum es trotzdem noch nicht im Spiel ist.** Der Umschalter auf
+`weg: false` aktiviert eine Forderung, die vorher nur ein Hinweis war: bei
+gezeichnetem Weg ist der Umweg **unsere** Entscheidung, also verlangt
+`npm run guards` einen Umwegfaktor von 1,8. Die drei Bahnen der Ascheschlucht
+stehen bei **1,10 / 1,12 / 1,65** — sie sind an einer gemalten Straße
+entlanggezogen, die es im neuen Bild nicht mehr gibt.
+
+Das ist dieselbe Arbeit, die den Spiralhain drei Anläufe gekostet hat (v217:
+Haarnadel zu unruhig, breiter Bogen unspielbar, erst die Serpentine trug) —
+und hier sind es drei Bahnen statt einer. Sie bekommt eine eigene Runde.
+
+Das Bild liegt solange auf dem Zweig `bildeingang`, weil `art/roh/` nicht in
+Git steht und dieser Rechner vergänglich ist.
 
 **Der erste Kandidat für die Ascheschlucht ist gemessen (v230) — eingebaut,
 gebacken, geprüft, wieder ausgebaut.** Er ist inhaltlich näher dran als

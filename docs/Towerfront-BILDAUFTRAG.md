@@ -1749,6 +1749,23 @@ vignette, no border.
 [AUSGABE-BLOCK EINFÜGEN]
 ```
 
+### Die Auflösung ist keine Ablehnung mehr wert (v231)
+
+Zwei Kandidaten kamen mit **exakt** 1672 × 941. Die Bildfunktion des Malers
+lässt die Größe nicht gezielt einstellen — das ist eine Werkzeuggrenze, keine
+Nachlässigkeit.
+
+**Entscheidend ist, dass alle Abnahmezahlen am GEBACKENEN Bild gemessen sind,
+also nach dem Hochrechnen auf 2400.** Der zweite Kandidat hält sie mit
+Abstand: Wegfreiheit 1,3 (erlaubt 25), Zielplattform-Güte 0,96 (verlangt
+0,50), Detaildichte 1,86 im Band 1,5–3,0. Ein Bild, das durch den Bau geht
+und dort besteht, an seiner Quellauflösung abzulehnen hiesse, die Messstelle
+gegen die Vermutung zu tauschen (Regel 12).
+
+Der Auftrag verlangt deshalb 2400 × 1350, **wenn das Werkzeug es kann**, und
+sonst das größtmögliche 16:9. Nicht verhandelbar bleibt die FORM: ein 3:2-
+oder 4:3-Bild kommt sichtbar verzerrt an.
+
 ### Ein Auftrag darf nicht fordern, was sein eigenes Blatt bestreitet (v230)
 
 Der Maler hat den ersten Entwurf dieser Bestellung **zurückgefragt**, und zu
@@ -1787,7 +1804,7 @@ erwartet**, und drei Vermutungen von mir waren gemessen falsch:
 | Detaildichte | **2,25** | 1,5–3,0 | getroffen — *ruhiger* als das heutige Bild (2,84) |
 | Helligkeit | 0,30 | 0,30–0,36 | getroffen |
 | Reines Schwarz | 0,1 % | ≤ 2 % | getroffen |
-| **Auflösung** | **1672 × 941** | **2400 × 1350** | **durchgefallen** — 70 % der Breite |
+| **Auflösung** | **1672 × 941** | 2400 × 1350, sonst größtmögliches 16:9 | **angenommen** — siehe unten |
 | `zielplatte` Güte | **0,44** | ≥ 0,50 | durchgefallen — siehe unten |
 
 **Ich hielt das Bild für zu unruhig. Es ist ruhiger als das, was heute im
@@ -1829,10 +1846,12 @@ IGNORE the BACKGROUND and MARGIN lines of the style block: this is a
 full-bleed terrain map, not a cut-out asset. It has no transparency and no
 margin; the terrain runs to all four edges.
 
-SIZE — check this before you start and again before you deliver: the image
-must be exactly 2400 x 1350 pixels. Not 1600, not 1920, not "roughly 16:9".
-A candidate came back at 1672 x 941 and had to be rejected: the game bakes at
-2400 wide and would have to upscale.
+SIZE: 2400 x 1350 pixels is what the game bakes to, so deliver that if your
+tool lets you set it. If it does not, deliver the largest 16:9 image it can
+produce and say so — 1672 x 941 has been measured all the way through the
+bake and passes every acceptance number, so it is accepted rather than
+rejected. What is NOT negotiable is the 16:9 shape: a 3:2 or 4:3 image
+arrives visibly stretched.
 
 SUBJECT: A top-down terrain map, 2400x1350, seen straight from directly
 above — no perspective, no horizon, no sky. A cooled ash field: grey volcanic
@@ -1912,10 +1931,12 @@ IGNORE the BACKGROUND and MARGIN lines of the style block: this is a
 full-bleed terrain map, not a cut-out asset. It has no transparency and no
 margin; the terrain runs to all four edges.
 
-SIZE — check this before you start and again before you deliver: the image
-must be exactly 2400 x 1350 pixels. Not 1600, not 1920, not "roughly 16:9".
-A candidate came back at 1672 x 941 and had to be rejected: the game bakes at
-2400 wide and would have to upscale.
+SIZE: 2400 x 1350 pixels is what the game bakes to, so deliver that if your
+tool lets you set it. If it does not, deliver the largest 16:9 image it can
+produce and say so — 1672 x 941 has been measured all the way through the
+bake and passes every acceptance number, so it is accepted rather than
+rejected. What is NOT negotiable is the 16:9 shape: a 3:2 or 4:3 image
+arrives visibly stretched.
 
 SUBJECT: A top-down terrain map, 2400x1350, seen straight from directly
 above — no perspective, no horizon, no sky. A frozen plain: wind-packed snow

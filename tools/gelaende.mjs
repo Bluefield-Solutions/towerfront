@@ -53,11 +53,30 @@ const N = 480;
  *  liegen bei +0,08 bis +0,19, alles andere unter +0,05. Die Schwelle sitzt
  *  in der Luecke. */
 const HART_AB = 0.06;
-/** Und wieviel blauer fuer kalt - dieselbe Ueberlegung: die eisigen Flecke
- *  der Frostspalte liegen bei +0,075 bis +0,21, der naechste darunter bei
- *  +0,056 (und der liegt auf der Ascheschlucht, also auf einer warmen Karte,
- *  wo blauer nicht Eis heisst, sondern Schatten). */
-const KALT_AB = 0.07;
+/** Und wieviel blauer fuer kalt.
+ *
+ *  **Die 0,07 waren falsch gesetzt, und v234 hat es gemessen.** Sie
+ *  stammten aus einer Zeit mit einem anderen Frostbild; am heutigen liegen
+ *  ALLE ZEHN Flecken der Frostspalte zwischen +0,052 und +0,114 - eine
+ *  gleichartige Gruppe ohne jede Luecke, und die Schwelle schnitt sie
+ *  mitten durch. Vier Eisflaechen hiessen deshalb "locker" wie loses
+ *  Geroell, waehrend ihre Nachbarn "kalt" hiessen; auf dem Kontaktbogen ist
+ *  es dasselbe Eis.
+ *
+ *  Die Luecke liegt woanders: der naechste Wert auf einer KALTEN Karte ist
+ *  +0,011 (Ascheschlucht - `mBlau` steht dort mit 0,002 knapp im Positiven).
+ *  Zwischen 0,011 und 0,052 ist Platz, und 0,03 liegt darin.
+ *
+ *  Auf warmen Karten greift die Regel ohnehin nicht: der Farnkessel hat
+ *  Flecken bis +0,078, aber `mBlau` ist dort -0,121, und blauer heisst dann
+ *  Schatten statt Eis. */
+const KALT_AB = 0.03;
+/** Ab welchem Anteil der Kartenbuntheit ein Fleck als hart gilt.
+ *
+ *  Gemessen ueber alle 37 Kreise: Dickicht 0,39 bis 0,71, Fels und Eis 1,35
+ *  bis 2,14. Die Luecke ist 0,64 breit - die breiteste, die dieses Werkzeug
+ *  je hatte -, und 1,0 liegt darin. */
+const BUNT_AB = 1.0;
 /** Wie weit die eingetragene Farbe vom gemessenen Mittel abweichen darf.
  *  0,06 im Einheitswuerfel ist rund ein Sechzehntel der laengsten Diagonale -
  *  eine andere Textur faellt darueber, ein neu gepacktes Bild nicht. */
@@ -72,6 +91,20 @@ for (const m of readFileSync(join(ROOT, 'src/gfx/assets/backgrounds.ts'), 'utf8'
 const { MAPS } = await import('../src/data/maps.ts');
 
 const blauAnteil = (r, g, b) => b - (r + g) / 2;
+
+/** Buntheit im CIELAB-Raum, dieselbe Rechnung wie in `npm run grafiktor`.
+ *
+ *  Nicht die HSV-Saettigung: die kennt die Helligkeit nicht, und ein dunkles
+ *  Braun kommt dort auf 0,60, ohne bunt zu wirken. */
+const chroma = (r, g, b) => {
+  const f = (v) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+  const R = f(r), G = f(g), B = f(b);
+  const k = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+  const X = k((0.4124 * R + 0.3576 * G + 0.1805 * B) / 0.95047);
+  const Y = k(0.2126 * R + 0.7152 * G + 0.0722 * B);
+  const Z = k((0.0193 * R + 0.1192 * G + 0.9505 * B) / 1.08883);
+  return Math.hypot(500 * (X - Y), 200 * (Y - Z));
+};
 const hex = (r, g, b) => '#' + [r, g, b]
   .map((v) => Math.max(0, Math.min(255, Math.round(v * 255))).toString(16).padStart(2, '0')).join('');
 const ausHex = (s) => [1, 3, 5].map((i) => parseInt(s.slice(i, i + 2), 16) / 255);
@@ -81,9 +114,6 @@ console.log(`Gemessen am gepackten Untergrundbild, verkleinert auf ${N} Punkte`)
 console.log('Breite, Kreisinneres bis 0,8 r, alles anteilig zum Mittel der Karte.\n');
 
 const befunde = [];
-/** Was das Tor NICHT entscheiden kann - `hart` gegen `locker`. Es zaehlt sie
- *  auf, statt sie zu ueberstimmen oder zu verschweigen (D29). */
-const ungeprueft = [];
 const bloecke = [];
 let gezaehlt = 0;
 const artenGesehen = new Set();
@@ -101,31 +131,63 @@ for (const k of karten) {
   mr /= N * H * 255; mg /= N * H * 255; mb /= N * H * 255;
   const mBlau = blauAnteil(mr, mg, mb);
   const mHell = (mr + mg + mb) / 3;
+  let mChroma = 0;
+  for (let i = 0; i < N * H; i++) {
+    mChroma += chroma(data[i * 3] / 255, data[i * 3 + 1] / 255, data[i * 3 + 2] / 255);
+  }
+  mChroma /= N * H;
 
   console.log(`── ${k.id}   Karte im Mittel: hell ${mHell.toFixed(3)}  blau ${mBlau.toFixed(3)}`
     + `${mBlau > 0 ? '  (kalte Karte)' : ''}`);
   console.log('   ' + 'Kreis'.padEnd(18) + 'Δhell'.padStart(8) + 'Δblau'.padStart(8)
-    + '  Farbe    Art');
+    + 'Buntheit'.padStart(10) + '  Farbe    Art');
 
   const zeilen = [];
   for (const gr of karte.rough) {
     const cx = gr.x * N / WELT_B, cy = gr.y * N / WELT_B, rr = gr.r * N / WELT_B * 0.8;
-    let sr = 0, sg = 0, sb = 0, n = 0;
+    let sr = 0, sg = 0, sb = 0, sc = 0, n = 0;
     for (let y = Math.floor(cy - rr); y <= cy + rr; y++) {
       for (let x = Math.floor(cx - rr); x <= cx + rr; x++) {
         if (x < 0 || y < 0 || x >= N || y >= H) continue;
         if (Math.hypot(x - cx, y - cy) > rr) continue;
         const i = (y * N + x) * 3;
-        sr += data[i] / 255; sg += data[i + 1] / 255; sb += data[i + 2] / 255; n++;
+        sr += data[i] / 255; sg += data[i + 1] / 255; sb += data[i + 2] / 255;
+        sc += chroma(data[i] / 255, data[i + 1] / 255, data[i + 2] / 255); n++;
       }
     }
     if (!n) { befunde.push(`${k.id} ${gr.x}:${gr.y}: liegt ausserhalb des Bildes.`); continue; }
-    sr /= n; sg /= n; sb /= n;
+    sr /= n; sg /= n; sb /= n; sc /= n;
     const dH = (sr + sg + sb) / 3 - mHell;
     const dB = blauAnteil(sr, sg, sb) - mBlau;
     // Kalt geht vor hart: Eis ist hell UND blau, und das Blaue ist die
     // Nachricht. Sonst waere jedes Schneefeld "hartes Pflaster".
-    const art = (dB > KALT_AB && mBlau > 0) ? 'kalt' : dH > HART_AB ? 'hart' : 'locker';
+    // **Buntheit im Verhaeltnis zur Karte - das Merkmal, das v234 gefunden hat.**
+    //
+    // Bis v233 hiess die Regel "heller als seine Karte, also Stein". Auf dem
+    // Aschebild sind alle elf Flecken Felsnester mit Glutrissen und alle elf
+    // DUNKLER als ihr Untergrund; die Regel sah sie nicht, und damit kam die
+    // Gelaendeart `hart` im ganzen Spiel nicht mehr vor.
+    //
+    // Zwei Ersatzmerkmale sind gemessen und gescheitert (Kantendichte, absoluter
+    // Helligkeitsabstand - Ueberschneidung ueber den ganzen Bereich). Die
+    // BUNTHEIT trennt: ueber alle 37 Kreise liegen die sechzehn Dickichtflecken
+    // des Spiralhains und des Farnkessels bei 0,39 bis 0,71 des Kartenmittels,
+    // die einundzwanzig Fels- und Eisflecken bei 1,35 bis 2,14. Eine Luecke von
+    // 0,64 ohne eine einzige Ueberschneidung; 1,0 liegt darin.
+    //
+    // Anteilig, nicht absolut (Regel 2): die vier Karten stehen bei 24,1 / 11,7
+    // / 14,6 / 22,4 mittlerer Buntheit, ein fester Abstand waere auf der
+    // grauen Ascheschlucht etwas anderes als auf dem gruenen Spiralhain.
+    //
+    // **Was sie NICHT trennt, und das steht hier, statt entdeckt zu werden:**
+    // einen GRAUEN Felsen auf einer BUNTEN Karte. Die drei blassen Findlinge im
+    // Moos des Spiralhains (Kreise 650:296, 778:162, 597:184) liegen bei 0,55
+    // bis 0,71 und damit unter der Schwelle - sie sind Stein und heissen
+    // `locker`. Die Helligkeitsregel faengt sie auch nicht (Δhell -0,017 bis
+    // +0,030 gegen verlangte +0,06). Das ist der Rest von D29.
+    const buntVerhaeltnis = sc / Math.max(1e-6, mChroma);
+    const art = (dB > KALT_AB && mBlau > 0) ? 'kalt'
+      : (dH > HART_AB || buntVerhaeltnis >= BUNT_AB) ? 'hart' : 'locker';
     const farbe = hex(sr, sg, sb);
     gezaehlt++;
     artenGesehen.add(art);
@@ -134,6 +196,7 @@ for (const k of karten) {
 
     console.log('   ' + `${gr.x}:${gr.y} r${gr.r}`.padEnd(18)
       + dH.toFixed(3).padStart(8) + dB.toFixed(3).padStart(8)
+      + `${buntVerhaeltnis.toFixed(2)}x`.padStart(10)
       + `  ${farbe}  ${art}`);
 
     // --- Gegen das Eingetragene.
@@ -142,37 +205,21 @@ for (const k of karten) {
         + `Gemessen wurde "${art}" mit ${farbe}.`);
       continue;
     }
-    // **Was dieses Tor entscheiden kann, und was nicht (v233).**
+    // **Seit v234 entscheidet das Tor wieder beide Fragen - weil es beide
+    // messen kann.**
     //
-    // `kalt` ist am Bild messbar und wird beidseitig gehalten: blauer als
-    // seine Karte, auf einer kalten Karte. Die Zahlen liegen weit
-    // auseinander (+0,075 bis +0,21 gegen +0,056 als naechstem darunter).
-    //
-    // **`hart` gegen `locker` ist es nicht.** Die Regel lautete "heller als
-    // seine Karte, also Stein"; auf dem neuen Aschebild sind alle elf Flecke
-    // sichtbar Felsnester mit Glutrissen und alle elf DUNKLER als ihr
-    // Untergrund (Δhell -0,068 bis -0,091). Die Regel kann harten Fels also
-    // gar nicht sehen, sobald er auf hellem Grund liegt - und weil sie ihn
-    // ueberstimmte, kam die Gelaendeart `hart` im ganzen Spiel nicht mehr
-    // vor. Gemeldet hat es der Rauchtest, nicht diese Zeile.
-    //
-    // **Ein zweites Merkmal ist gemessen und gescheitert:** die
-    // Kantendichte (Sobel im Kreis gegen das Kartenmittel) trennt nicht -
-    // Ascheschlucht 2,08 bis 3,56 mal, Spiralhain 1,04 bis 2,92, Farnkessel
-    // 0,99 bis 2,98. Ueberschneidung ueber den ganzen Bereich, dieselbe
-    // Antwort wie bei den drei Kriterien in v216.
-    //
-    // Deshalb entscheidet hier der BLICK und nicht die Schwelle (Regel 8),
-    // und das Tor sagt das, statt es zu ueberstimmen. Es haelt weiter, was
-    // es halten kann: die Farbe und `kalt`. Steht als D29 im Verzeichnis.
-    const kaltGemessen = art === 'kalt';
-    const kaltEingetragen = gr.art === 'kalt';
-    if (kaltGemessen !== kaltEingetragen) {
+    // In v233 stand hier eine Ausnahme: `hart` gegen `locker` sei am Bild
+    // nicht entscheidbar, also entscheide der Blick und das Tor sage es nur.
+    // Das war richtig fuer die Regel, die es damals hatte (Helligkeit), und
+    // fuer die zwei Ersatzmerkmale, die gemessen gescheitert sind
+    // (Kantendichte, absoluter Abstand). Es war nicht richtig fuer die
+    // Frage: die BUNTHEIT trennt, mit einer Luecke von 0,64 ueber alle 37
+    // Kreise. Eine Ausnahme, die man einmal einraeumt, bleibt sonst stehen,
+    // bis niemand mehr weiss, dass sie eine war.
+    if (gr.art !== art) {
       befunde.push(`${k.id} ${gr.x}:${gr.y}: eingetragen "${gr.art}", im Bild aber `
-        + `"${art}" (Δhell ${dH.toFixed(3)}, Δblau ${dB.toFixed(3)}). `
-        + 'Bei `kalt` entscheidet die Messung, nicht der Eintrag.');
-    } else if (gr.art !== art) {
-      ungeprueft.push(`${k.id} ${gr.x}:${gr.y}: eingetragen "${gr.art}", gemessen "${art}"`);
+        + `"${art}" (Δhell ${dH.toFixed(3)}, Δblau ${dB.toFixed(3)}, `
+        + `Buntheit ${buntVerhaeltnis.toFixed(2)}x).`);
     }
     const [er, eg, eb] = ausHex(gr.farbe);
     const d = Math.hypot(er - sr, eg - sg, eb - sb);
@@ -237,26 +284,11 @@ if (!TOR) {
   console.log('');
 }
 
-// **Was das Tor nicht entscheidet, verschweigt es nicht.**
-//
-// Ein Tor, das eine Luecke still uebergeht, sieht aus wie ein Tor ohne
-// Luecke - dieselbe Lehre wie beim Umfangslauf in v225.
-if (ungeprueft.length) {
-  console.log(`  NICHT geprueft: ${ungeprueft.length} Eintragung(en) - `
-    + '`hart` gegen `locker` ist am Bild nicht entscheidbar (D29).');
-  for (const u of ungeprueft) console.log(`    ${u}`);
-  console.log('    Die Helligkeitsregel sieht harten Fels nicht, wenn er DUNKLER ist als');
-  console.log('    seine Karte; die Kantendichte trennt gemessen ebensowenig (Ascheschlucht');
-  console.log('    2,08-3,56 mal, Spiralhain 1,04-2,92, Farnkessel 0,99-2,98). Hier');
-  console.log('    entscheidet der Blick (Regel 8), und der Kontaktbogen oben zeigt ihn.');
-}
-
 if (befunde.length) {
   console.error(`GELAENDE: ${befunde.length} Befund(e)`);
   for (const b of befunde) console.error(`  - ${b}`);
   if (TOR) process.exit(1);
 } else {
   console.log(`GELAENDE: ${gezaehlt} Kreise, ${artenGesehen.size} Arten, `
-    + `Farbe und \`kalt\` passen zum Bild`
-    + (ungeprueft.length ? `; ${ungeprueft.length} mal hart/locker ungeprueft (D29).` : '.'));
+    + 'jede Eintragung passt zum Bild.');
 }

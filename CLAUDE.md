@@ -398,7 +398,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v234. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v235. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -455,6 +455,61 @@ und „1506 KB von 1600 erlaubt", während die Grenze seit v187 bei 1800 liegt
 und die Datei **1592** wiegt. Die Tabelle nennt jetzt den Befehl, aus dem ihre
 Zahlen kommen (`npm run pack-art -- --force`), und die eine Zeile, die nicht
 gemessen ist, steht als **Differenz** da statt als Messung.
+
+**D29 und D31 sind in v235 zu, und beide auf dieselbe Art: eine Messung kam
+an die richtige Stelle.**
+
+**D29 — die Buntheit trennt Fels von Geröll.** Die alte Regel hieß „heller als
+seine Karte, also Stein" und konnte dunklen Fels auf hellem Aschefeld nicht
+sehen. Zwei Ersatzmerkmale waren gemessen gescheitert; die **Buntheit im
+Verhältnis zur Karte** trennt über alle 37 Kreise ohne eine einzige
+Überschneidung:
+
+| | Buntheit gegen das Kartenmittel |
+|---|---|
+| Dickicht (Spiralhain, Farnkessel) | 0,39 – 0,71 |
+| **Lücke** | **0,64 breit** |
+| Fels und Eis (Ascheschlucht, Frostspalte) | 1,35 – 2,14 |
+
+Nebenbei stand die **Kälteschwelle** falsch: alle zehn Flecken der Frostspalte
+liegen zwischen Δblau 0,052 und 0,114 — die Schwelle 0,07 schnitt eine
+gleichartige Gruppe mitten durch, und vier Eisflächen hießen deshalb „locker"
+wie loses Geröll. Die Lücke liegt bei 0,011 bis 0,052; die Schwelle steht
+jetzt auf 0,03. Damit entscheidet das Tor wieder beide Fragen, und die
+Ausnahme aus v233 ist zurückgenommen — eine Ausnahme, die man einmal
+einräumt, bleibt sonst stehen, bis niemand mehr weiß, dass sie eine war.
+
+**D31 — der Weg wurde vor dem Tonwertabgleich gezeichnet.** Die Kurve wurde an
+einer Leinwand geeicht, die das Band schon enthielt, und danach auf das Band
+angewandt, obwohl es gar nicht aus dem Foto stammt. Aus `#787367`
+(rgb 120,115,103) wurde im Bild rgb **137,114,67**.
+
+**Meine Begründung aus v233 war dabei falsch, und die Messung hat es gesagt.**
+Ich hatte den Bodennebel verdächtigt und aus zwei Bildpunkten einer Aufnahme
+geschlossen. Gemessen verschiebt die Luftschicht die Zahl um **0,5
+Farbschritte** — sie liegt großflächig über Weg *und* Boden und kann eine
+Differenz zwischen beiden gar nicht erzeugen. Die Messstelle war nicht das
+Problem. Die **Größe** war es: der euklidische Abstand mischt Helligkeit und
+Ton, alle vier Karten lagen bei 55–73, und nur eine hatte einen falschen Ton.
+
+| | Abstand | Wärme (rot−blau) |
+|---|---|---|
+| Spiralhain | 53,6 | −25 |
+| Ascheschlucht **vorher** | 73,1 | **+72** |
+| Ascheschlucht **jetzt** | 57,0 | **+19** |
+| Frostspalte | 60,9 | +4 |
+| Farnkessel | 55,0 | −30 |
+
+Der Weg läuft jetzt nach dem Abgleich, alle vier Wegfarben sind neu
+durchprobiert — Waldwege dunkler, Asche- und Schneepfade heller. Die **Wärme
+ist eine Abnahme geworden** (höchstens 35), gemessen am Bild.
+
+**Und `wegdeckungtor` hat dabei seine Kulissen-Ratsche verloren.** Der volle
+Probenlauf meldete zwei Gegenproben, die nichts mehr beweisen — sie drehen am
+Verblassen einer gemalten Straße, die es seit v233 nirgends mehr gibt.
+Dieselbe Bewegung wie D30. Das Tor sagt es jetzt, statt eine grüne Zeile über
+vier ungeprüfte Karten zu schreiben; an ihre Stelle treten zwei Gegenproben
+auf das, was es wirklich hält.
 
 **`zielplatte` sucht seit v234 den Kranz statt einer Farbe — und trägt seine
 Nullprobe selbst.** Auf dem Rand einer Kreisscheibe zeigt der

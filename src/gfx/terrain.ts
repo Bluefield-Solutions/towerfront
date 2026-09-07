@@ -108,7 +108,24 @@ export function terrainAuftrag(
   // er kann gar nicht mehr neben der Karte stehen - egal welches Bild
   // spaeter kommt. Der helle Streifen entfaellt: er war es, der das Band zum
   // Papier machte.
-  if (!(map.bildBringt?.weg ?? true)) {
+  /** Der gezeichnete Weg. **Laeuft seit v234 NACH dem Tonwertabgleich.**
+   *
+   *  Vorher stand er davor, und das kostete zweimal: die Kurve wurde an
+   *  einer Leinwand geeicht, die das Band schon enthielt - der Weg
+   *  verfaelschte also seine eigene Korrektur -, und sie wurde danach auf
+   *  ihn angewandt, obwohl er gar nicht aus dem Foto stammt. Ein Weg ist
+   *  in der Zielfarbwelt gemalt; er braucht keinen Abgleich dorthin.
+   *
+   *  **Gemessen, was das ausmachte:** auf der Ascheschlucht steht
+   *  `palette.path` auf #787367, also rgb 120,115,103 - im gebackenen Bild
+   *  kam der Weg auf rgb 137,114,67 heraus. Sechsunddreissig Punkte Blau
+   *  weniger, und damit war er das einzige Wegband des Spiels mit einem
+   *  anderen FARBTON als sein Boden (waermer um 72, die anderen drei bei
+   *  -23, -15 und +1). Der Grund ist die Kurve: sie ist am Foto geeicht,
+   *  und je heller das Band gegen das Foto steht, desto weiter liegt es
+   *  ausserhalb des angepassten Bereichs. */
+  const wegZeichnen = (): void => {
+    if (map.bildBringt?.weg ?? true) return;
     for (const p of lanes) { g.fillStyle = 'rgba(6,10,18,0.42)'; ribbon(p, 12); }
     for (const p of lanes) { g.fillStyle = hexA(pal.pathEdge, 0.8); ribbon(p, 0); }
     for (const p of lanes) { g.fillStyle = hexA(pal.path, 0.6); ribbon(p, -9); }
@@ -160,8 +177,7 @@ export function terrainAuftrag(
       }
     }
   }
-
-  }
+  };
 
   // --- Unwegsames Gelaende.
   //
@@ -221,6 +237,7 @@ export function terrainAuftrag(
 
   /** Rand und Abdunkelung. Kostet gemessen unter einer Millisekunde. */
   const abschliessen = (): void => {
+    wegZeichnen();
     const vg = g.createRadialGradient(
       WORLD_W / 2, WORLD_H / 2, Math.min(WORLD_W, WORLD_H) * 0.3,
       WORLD_W / 2, WORLD_H / 2, Math.max(WORLD_W, WORLD_H) * 0.72,

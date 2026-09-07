@@ -179,12 +179,25 @@ export interface GameMap {
 }
 
 
+  // **Alle vier Wegfarben sind in v234 neu gesetzt, und der Grund ist eine
+  //   Reihenfolge.** Bis dahin wurde das Wegband VOR dem Tonwertabgleich
+  //   gezeichnet: die Kurve wurde an einer Leinwand geeicht, die das Band
+  //   schon enthielt, und danach auf das Band angewandt, obwohl es gar nicht
+  //   aus dem Foto stammt. Die Wegfarben waren damit gegen die Kurve geeicht
+  //   statt gegen den Boden - aus #787367 (rgb 120,115,103) wurde im Bild
+  //   rgb 137,114,67.
+  //
+  //   Seit der Weg NACH dem Abgleich laeuft (`src/gfx/terrain.ts`), bedeutet
+  //   die Farbe, was dasteht - und alle vier standen danach bei 18 bis 30
+  //   Farbschritten vom Boden statt bei 40 bis 90. Durchprobiert je Karte in
+  //   ihrer eigenen Richtung (Waldwege dunkler, Asche- und Schneepfade
+  //   heller), Ziel rund 55.
 const MOOS: MapPalette = {
   terrain: '#173D3A', terrainHi: '#215A50', terrainLo: '#102B2B',
   // Erdton statt Sandton. Auf dem Waldboden vom 04.09.2026 war das alte
   // #C9A86A um Klassen heller als alles um es herum - ein cremefarbenes Band
   // auf olivem Gruen. Ein getretener Waldweg ist kaum heller als sein Rand.
-  path: '#5A4B2E', pathEdge: '#3B301D',
+  path: '#3F3420', pathEdge: '#292214',
   rock: '#2A3348', rockHi: '#3D4A66',
   mood: '#BEE2FF', haze: '#B4D6E2', sonne: '#FFC26A',
   // Spiralhain: Nieselregen. Moos steht nicht ohne Wasser.
@@ -196,7 +209,7 @@ const MOOS: MapPalette = {
  *  grauer, weil der Boden unter ihm kaelter gebacken ist. */
 const FARN: MapPalette = {
   terrain: '#16332F', terrainHi: '#1D4A44', terrainLo: '#0E2523',
-  path: '#4F4A36', pathEdge: '#332F22',
+  path: '#363225', pathEdge: '#232017',
   rock: '#26303F', rockHi: '#38455C',
   mood: '#BCDBE8', haze: '#A9C6D2', sonne: '#E8C48A',
   // Auch hier Regen - es ist derselbe Wald, nur eine Senke tiefer.
@@ -211,7 +224,7 @@ const LAUB: MapPalette = {
   //   Aschegrund rgb 75,74,75 sind das gemessen 170,0 Farbschritte, erlaubt
   //   sind 40 bis 90. Ein getretener Pfad im Aschefeld ist ein wenig heller
   //   als die Asche, nicht ein Sandband darauf.
-  path: '#787367', pathEdge: '#58544C',
+  path: '#969081', pathEdge: '#6E695F',
   rock: '#39332A', rockHi: '#5C5242',
   mood: '#FFD9A8', haze: '#B8A882', sonne: '#FFB661',
   // Ascheschlucht: Aschefall, warm und langsam. Der Name ist das Wetter.
@@ -225,7 +238,7 @@ const FROST: MapPalette = {
   //   gegen den gebackenen Boden rgb 84,101,118 sind das 236 Farbschritte,
   //   gemessen 224,8 im Bild. Erlaubt sind 40 bis 90: darunter verschwindet
   //   er im Gelaende, darueber liegt er darauf wie ausgeschnittenes Papier.
-  path: '#5E7080', pathEdge: '#46545F',
+  path: '#7A92A6', pathEdge: '#5B6D7C',
   rock: '#2C3E5B', rockHi: '#44608A',
   mood: '#D6ECFF', haze: '#CFE6F5', sonne: '#FFD9A0',
   // Frostspalte: Schneetreiben, seitlich verweht.
@@ -493,10 +506,10 @@ export const MAP_FROSTSPALTE: GameMap = {
     { x: 828, y: 808, r: 112, art: 'kalt', farbe: '#1e405c' },
     { x: 494, y: 243, r: 83, art: 'kalt', farbe: '#1b405c' },
     { x: 924, y: 254, r: 52, art: 'kalt', farbe: '#1e3f5a' },
-    { x: 1824, y: 788, r: 40, art: 'locker', farbe: '#1b3b53' },
+    { x: 1824, y: 788, r: 40, art: 'kalt', farbe: '#1b3b53' },
     { x: 992, y: 896, r: 37, art: 'kalt', farbe: '#183953' },
-    { x: 184, y: 864, r: 33, art: 'locker', farbe: '#1a374e' },
-    { x: 288, y: 936, r: 32, art: 'locker', farbe: '#1e3c54' },
+    { x: 184, y: 864, r: 33, art: 'kalt', farbe: '#1a374e' },
+    { x: 288, y: 936, r: 32, art: 'kalt', farbe: '#1e3c54' },
     // Lag bis v228 mit 18 Weltpunkten in der Zielplattform. Ein dritter, noch
     // naeher (1770:472, mitten auf der Platte), ist ersatzlos entfallen - im
     // Bild ist dort nichts, worauf er sich stuetzen koennte.
@@ -506,7 +519,7 @@ export const MAP_FROSTSPALTE: GameMap = {
     // eingetragen, "kalt" im Bild, 0,244 Farbabstand gegen erlaubte 0,06).
     // Eine Lage verschieben und die Beschreibung mitnehmen heisst, die
     // Beschreibung zu erfinden.
-    { x: 1840, y: 320, r: 31, art: 'locker', farbe: '#18374e' },
+    { x: 1840, y: 320, r: 31, art: 'kalt', farbe: '#18374e' },
   ],
   bildBringt: { weg: false, gelaende: true },
   hint: { x: 200, y: 200 },

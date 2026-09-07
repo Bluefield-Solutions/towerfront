@@ -81,7 +81,8 @@ const AUF_WEG_MAX = 0.5;
  *  lassen ein neues Kartenbild zu und fangen die volle Staerke. */
 const WIRKUNG_DECKEL = 1.4;
 const abstaende: { karte: string; wirkung: number; aufWeg: number; anteil: number;
-  zeichnung: number; wegAbstand: number; zeichnetSelbst: boolean }[] = [];
+  zeichnung: number; wegAbstand: number; wegAbstandBild: number; wegWaerme: number;
+  zeichnetSelbst: boolean }[] = [];
 
 for (const m of MAPS) {
   const d = (MAP_BACKGROUNDS as Record<string, string>)[m.id];
@@ -156,6 +157,30 @@ for (const m of MAPS) {
   const mit = bildVon(KULISSE.staerke);
   const ohneVerblassen = bildVon(0);
 
+  // **Und dasselbe noch einmal an dem, was der Spieler WIRKLICH sieht (v234).**
+  //
+  // Der gebackene Untergrund ist nicht das Bild: darueber liegen Bodennebel
+  // und Wetter, beide in Weltkoordinaten und beide je Karte eingefaerbt
+  // (`palette.haze`, `palette.wetterTon`). Auf der Ascheschlucht ist der
+  // Nebelton `#B8A882`, ein warmer Sandton - der Weg steht dort im Bild
+  // deutlich waermer da als im Backen.
+  //
+  // Gemessen wird ueber VIER Zeitpunkte. Der Nebel besteht aus vier bis acht
+  // grossen Scheiben, die ueber die Karte ziehen; ein einzelnes Bild misst,
+  // wo sie gerade stehen, nicht wie die Karte aussieht. Genau daran bin ich
+  // in v233 haengengeblieben: zwei Bildpunkte aus einer Aufnahme, und die
+  // Schlussfolgerung "der Weg ist ein Sandband" stand auf Nebeldeckung
+  // statt auf Wegfarbe (Regel 12).
+  const { drawGroundFog, drawWetter } = await import('../src/gfx/atmosphere');
+  const mitLuft: Uint8ClampedArray[] = [];
+  for (const t of [0, 7, 13, 21]) {
+    const cv = bakeTerrain(m, bahnen, m.palette, getBackground(m.id));
+    const g2 = cv.getContext('2d')!;
+    drawGroundFog(g2, t, false, m.palette.haze, m.id);
+    drawWetter(g2, t, false, m.palette.wetter, m.palette.wetterTon);
+    mitLuft.push(g2.getImageData(0, 0, WELT_B, WELT_H).data);
+  }
+
   let wirkung = 0, wirkungN = 0, aufWeg = 0, aufWegN = 0;
   let sMit = 0, sOhne = 0, sN = 0, mMit = 0, mOhne = 0;
   const helligkeit = (d: Uint8ClampedArray, j: number): number =>
@@ -203,6 +228,41 @@ for (const m of MAPS) {
   const wegAbstand = sn2 && un
     ? Math.hypot(sr / sn2 - ur / un, sg / sn2 - ug / un, sb / sn2 - ub / un) : 0;
 
+  // Dieselben Masken, dieselbe Rechnung - nur am Bild MIT Luftschichten,
+  // gemittelt ueber die vier Zeitpunkte.
+  let summe = 0, warmSumme = 0;
+  for (const bild of mitLuft) {
+    let br = 0, bg2 = 0, bb = 0, bn = 0, dr = 0, dg = 0, db = 0, dn = 0;
+    for (let y = 0; y < WELT_H; y += 2) for (let x = 0; x < WELT_B; x += 2) {
+      let drin = false, daneben = false;
+      for (const lane of bahnen) {
+        const sa = lane.schlauchAbstand(x, y);
+        if (sa < -12) drin = true; else if (sa > 22 && sa < 120) daneben = true;
+      }
+      const j = (y * WELT_B + x) * 4;
+      if (drin) { br += bild[j]; bg2 += bild[j + 1]; bb += bild[j + 2]; bn++; }
+      else if (daneben) { dr += bild[j]; dg += bild[j + 1]; db += bild[j + 2]; dn++; }
+    }
+    summe += bn && dn
+      ? Math.hypot(br / bn - dr / dn, bg2 / bn - dg / dn, bb / bn - db / dn) : 0;
+    // **Und der FARBTON, nicht nur der Abstand (v234).**
+    //
+    // Der euklidische Abstand mischt Helligkeit und Ton. Ein Weg, der nur
+    // heller ist als sein Boden, und einer, der eine ganz andere Farbe hat,
+    // kommen bei derselben Zahl heraus - gemessen lagen alle vier Karten
+    // zwischen 55 und 73, waehrend nur eine von ihnen einen Weg mit einem
+    // anderen Ton hatte: die Ascheschlucht stand bei +72 Waerme gegen -23,
+    // -15 und +1 der anderen. Ein Sandband auf grauer Asche, und die
+    // Abnahme sah es nicht.
+    //
+    // Waerme ist rot minus blau, einmal fuer den Weg und einmal fuer den
+    // Boden; die Differenz ist die Zahl.
+    warmSumme += bn && dn
+      ? (br / bn - bb / bn) - (dr / dn - db / dn) : 0;
+  }
+  const wegAbstandBild = summe / mitLuft.length;
+  const wegWaerme = warmSumme / mitLuft.length;
+
   abstaende.push({
     karte: m.id,
     wirkung: wirkungN ? wirkung / wirkungN : 0,
@@ -210,6 +270,8 @@ for (const m of MAPS) {
     anteil: sN / Math.max(1, wirkungN),
     zeichnung,
     wegAbstand,
+    wegAbstandBild,
+    wegWaerme,
     zeichnetSelbst: !(m.bildBringt?.weg ?? true),
   });
 
@@ -221,11 +283,12 @@ for (const m of MAPS) {
 
 console.log('\nVerblassen der Kulisse - gegen einen Untergrund OHNE Verblassen gerechnet\n');
 console.log('  Karte            Wirkung   auf der Bahn   verblasste Flaeche   Zeichnung'
-  + '   Weg gegen Boden');
+  + '   Weg/Boden gebacken   im Bild   Waerme');
 for (const a of abstaende) {
   console.log(`  ${a.karte.padEnd(15)} ${a.wirkung.toFixed(1).padStart(6)}   `
     + `${a.aufWeg.toFixed(2).padStart(10)}   ${(a.anteil * 100).toFixed(1).padStart(16)} %   `
-    + `${a.zeichnung.toFixed(2).padStart(8)}   ${a.wegAbstand.toFixed(1).padStart(15)}`
+    + `${a.zeichnung.toFixed(2).padStart(8)}   ${a.wegAbstand.toFixed(1).padStart(18)}`
+    + `   ${a.wegAbstandBild.toFixed(1).padStart(7)}   ${a.wegWaerme.toFixed(0).padStart(5)}`
     + `${a.zeichnetSelbst ? '  (gezeichnet)' : ''}`);
 }
 
@@ -241,8 +304,35 @@ for (const a of abstaende) {
  *  ist die Zahl hinter "liegt darauf wie ausgeschnittenes Papier". */
 const WEG_ABSTAND: [number, number] = [40, 90];
 
+/** Wie weit der Weg im FARBTON von seinem Boden abweichen darf.
+ *
+ *  **Der Abstand oben sieht das nicht, und das ist der Fund von v234.** Er
+ *  ist euklidisch und mischt damit Helligkeit und Ton: ein Weg, der nur
+ *  heller ist als sein Boden, und einer, der eine ganz andere Farbe hat,
+ *  kommen bei derselben Zahl heraus. Gemessen lagen alle vier Karten
+ *  zwischen 55 und 73 - waehrend nur EINE einen Weg mit anderem Ton hatte,
+ *  die Ascheschlucht mit +72 Waerme gegen -23, -15 und +1 der uebrigen. Ein
+ *  Sandband auf grauer Asche, und die Abnahme meldete gruen.
+ *
+ *  Waerme ist rot minus blau, fuer den Weg und fuer den Boden; die Differenz
+ *  ist die Zahl. Nach dem Umbau (der Weg laeuft jetzt NACH dem
+ *  Tonwertabgleich) stehen die vier bei -30, -25, +4 und +19. Die 35 lassen
+ *  ein Sechstel Luft ueber den groessten und sperren den alten Fall.
+ *
+ *  Gemessen am BILD, nicht am Backen (Regel 12) - auch wenn beides heute
+ *  fast dasselbe sagt: der Nebel liegt grossflaechig ueber Weg und Boden und
+ *  verschiebt die Differenz um weniger als einen Farbschritt. Genau das
+ *  wusste ich vorher nicht, und in v233 habe ich deshalb aus zwei
+ *  Bildpunkten einer Aufnahme den falschen Schluss gezogen. */
+const WEG_WAERME_MAX = 35;
+
 if (TOR) {
   const fehler: string[] = [];
+  /** Wieviele Karten ihren Weg selbst zeichnen - und damit an der neuen
+   *  Abnahme haengen statt an der Kulissen-Ratsche. Steht die Zahl auf
+   *  allen vier, hat die Ratsche keinen Gegenstand mehr, und dann darf der
+   *  Schlusssatz sie nicht behaupten (Regel 5, wie `bahntreue` in v233). */
+  let gezeichnet = 0;
   for (const a of abstaende) {
     // **Bringt das Bild gar keine Strasse mit, gibt es auch keine Kulisse.**
     //
@@ -261,12 +351,21 @@ if (TOR) {
     if (karte && !(karte.bildBringt?.weg ?? true)) {
       console.log(`  ${a.karte}: kein gemalter Weg im Bild - Verblassen entfaellt, `
         + 'geprueft wird die Wegfreiheit in `npm run kartenprobe`.');
-      // Stattdessen: sitzt der GEZEICHNETE Weg richtig auf seinem Boden?
-      if (a.wegAbstand < WEG_ABSTAND[0] || a.wegAbstand > WEG_ABSTAND[1]) {
-        fehler.push(`${a.karte}: der gezeichnete Weg steht ${a.wegAbstand.toFixed(1)} `
+      // Stattdessen zwei Fragen an den GEZEICHNETEN Weg - gemessen am BILD,
+      // also nach Nebel und Wetter (Regel 12).
+      gezeichnet++;
+      if (a.wegAbstandBild < WEG_ABSTAND[0] || a.wegAbstandBild > WEG_ABSTAND[1]) {
+        fehler.push(`${a.karte}: der gezeichnete Weg steht ${a.wegAbstandBild.toFixed(1)} `
           + `Farbschritte von seinem Boden ab, erlaubt sind ${WEG_ABSTAND[0]} bis `
           + `${WEG_ABSTAND[1]}. Darunter verschwindet er im Gelaende, darueber liegt er `
           + 'darauf wie ausgeschnittenes Papier - die erste Fassung stand bei 165.');
+      }
+      if (Math.abs(a.wegWaerme) > WEG_WAERME_MAX) {
+        fehler.push(`${a.karte}: der gezeichnete Weg ist um ${a.wegWaerme.toFixed(0)} `
+          + `Punkte waermer oder kaelter als sein Boden, erlaubt sind ${WEG_WAERME_MAX}. `
+          + 'Dann hat er einen anderen FARBTON als der Grund, auf dem er liegt - ein '
+          + 'Sandband auf grauer Asche. Der Abstand oben sieht das nicht, weil er '
+          + 'Helligkeit und Ton mischt.');
       }
       continue;
     }
@@ -296,5 +395,14 @@ if (TOR) {
     for (const f of fehler) console.log(`  ${f}`);
     process.exit(1);
   }
-  console.log('\nWEGDECKUNG: die Kulisse hebt sich auf jeder Karte ab (Ratsche gehalten).');
+  if (gezeichnet === abstaende.length) {
+    console.log(`\nWEGDECKUNG: alle ${gezeichnet} Karten zeichnen ihren Weg selbst - die `
+      + 'Kulissen-Ratsche hat keinen Gegenstand mehr.');
+    console.log('  Geprueft wurde stattdessen, was den gezeichneten Weg traegt: Abstand vom '
+      + `Boden ${WEG_ABSTAND[0]} bis ${WEG_ABSTAND[1]} und Farbton hoechstens `
+      + `${WEG_WAERME_MAX} auseinander, beides am BILD.`);
+  } else {
+    console.log('\nWEGDECKUNG: die Kulisse hebt sich auf jeder gemalten Karte ab '
+      + `(Ratsche gehalten), ${gezeichnet} zeichnen ihren Weg selbst.`);
+  }
 }

@@ -1103,32 +1103,6 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
-    // **Die Kulisse verblasst nicht mehr.**
-    //
-    // Dann sieht eine Strasse, an der keine Bahn entlanglaeuft, wieder aus
-    // wie die, an der eine entlanglaeuft - und man baut auf etwas, das man
-    // fuer den Weg haelt. Genau das war die Meldung.
-    name: 'Die Kulisse verblasst nicht mehr',
-    datei: 'src/gfx/terrain.ts',
-    regel: /export const KULISSE = \{ staerke: 0\.60, luft: 40 \};/,
-    ersatz: 'export const KULISSE = { staerke: 0, luft: 40 };',
-    tor: 'wegdeckungtor',
-  },
-  {
-    // Und die Gegenrichtung: verblasst sie ZUVIEL, ist die Zeichnung weg,
-    // fuer die die Kartenbilder bezahlt wurden.
-    //
-    // Diese Probe stand zuerst am Grafiktor und bewies dort nichts: das
-    // Verblenden zieht zum MITTEL des Gelaendes hin, der Mittelwert des
-    // Untergrunds bleibt also erhalten und seine Helligkeit faellt aus keinem
-    // Band. Gemessen werden muss die Streuung, und die misst `wegdeckung`.
-    name: 'Die Kulisse verblasst bis zur Unkenntlichkeit',
-    datei: 'src/gfx/terrain.ts',
-    regel: /export const KULISSE = \{ staerke: 0\.60, luft: 40 \};/,
-    ersatz: 'export const KULISSE = { staerke: 1, luft: 40 };',
-    tor: 'wegdeckungtor',
-  },
-  {
     // **Der gezeichnete Weg liegt wieder als helles Papier auf dem Boden.**
     //
     // Genau der Fehler, den die erste gezeichnete Fassung hatte: ein
@@ -1185,9 +1159,12 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // Die Wegfarbe des Spiralhains steht seit v234 auf #3F3420 (vorher
+    // #5A4B2E) - der Weg laeuft jetzt NACH dem Tonwertabgleich, und die
+    // alten Farben waren gegen die Kurve geeicht statt gegen den Boden.
     name: 'Gezeichneter Weg wieder cremefarben',
     datei: 'src/data/maps.ts',
-    regel: /  path: '#5A4B2E', pathEdge: '#3B301D',/,
+    regel: /  path: '#3F3420', pathEdge: '#292214',/,
     ersatz: "  path: '#EDE3C8', pathEdge: '#C9A86A',",
     tor: 'wegdeckungtor',
   },
@@ -1481,6 +1458,29 @@ const PROBEN = [
     // nicht entscheidbar (D29). Was es beidseitig haelt, ist `kalt`: blauer
     // als seine Karte, auf einer kalten Karte. Eine Probe auf hart/locker
     // wuerde seit v233 schweigen und saehe aus wie ein bestandenes Tor.
+    // v234: die BUNTHEIT ist das Merkmal, das `hart` von `locker` trennt -
+    // ueber alle 37 Kreise Dickicht 0,39 bis 0,71 des Kartenmittels, Fels
+    // und Eis 1,35 bis 2,14. Ohne sie bleibt die alte Helligkeitsregel, und
+    // die sieht dunklen Fels auf hellem Aschefeld nicht: elf Eintragungen
+    // fallen durch.
+    name: 'Gelaende erkennt Fels nur an der Helligkeit',
+    datei: 'tools/gelaende.mjs',
+    regel: /: \(dH > HART_AB \|\| buntVerhaeltnis >= BUNT_AB\) \? 'hart' : 'locker';/,
+    ersatz: ": (dH > HART_AB) ? 'hart' : 'locker';",
+    tor: 'gelaendetor',
+  },
+  {
+    // v234: die Kaelteschwelle stand auf 0,07 und schnitt damit eine
+    // gleichartige Gruppe mitten durch - alle zehn Flecken der Frostspalte
+    // liegen zwischen 0,052 und 0,114. Die Luecke liegt bei 0,011 bis
+    // 0,052, also gehoert die Schwelle dorthin.
+    name: 'Kaelteschwelle schneidet das Eis mitten durch',
+    datei: 'tools/gelaende.mjs',
+    regel: /^const KALT_AB = 0\.03;$/m,
+    ersatz: 'const KALT_AB = 0.07;',
+    tor: 'gelaendetor',
+  },
+  {
     name: 'Gelaendeart falsch eingetragen',
     datei: 'src/data/maps.ts',
     regel: /art: 'kalt'/,
@@ -1632,6 +1632,37 @@ const PROBEN = [
     regel: /  z-index: 2; pointer-events: none;/,
     ersatz: '  z-index: 2; pointer-events: auto;',
     tor: 'browsertor',
+  },
+  {
+    // **Die zwei alten Gegenproben fuer `wegdeckungtor` sind in v234
+    // entfallen** - sie drehten am Verblassen der Kulisse, und seit v233
+    // malt keine Karte mehr eine Strasse, von der Kulisse uebrig bleiben
+    // koennte. Der volle Lauf hat beide gemeldet; dieselbe Bewegung wie bei
+    // `bahntreuetor` (D30).
+    //
+    // An ihre Stelle tritt, was das Tor jetzt wirklich haelt: der FARBTON
+    // des gezeichneten Weges gegen seinen Boden. Der Eingriff nimmt die
+    // Wegfarbe der Ascheschlucht auf den Stand vor v234 zurueck - damals
+    // stand sie im Bild auf rgb 137,114,67 gegen einen Boden von 78,75,79,
+    // also 72 Punkte waermer bei erlaubten 35. Der euklidische Abstand sah
+    // das nicht; er lag mit 73,1 mitten im Band.
+    name: 'Wegfarbe hat wieder einen anderen Farbton als ihr Boden',
+    datei: 'src/data/maps.ts',
+    regel: /path: '#969081', pathEdge: '#6E695F',/,
+    ersatz: "path: '#D8B070', pathEdge: '#A88848',",
+    tor: 'wegdeckungtor',
+  },
+  {
+    // Und die Reihenfolge selbst: zeichnet der Weg wieder VOR dem
+    // Tonwertabgleich, wird die Kurve an einer Leinwand geeicht, die das
+    // Band schon enthaelt, und danach auf das Band angewandt. Gemessen
+    // sprangen alle vier Karten dabei von 53 bis 61 Farbschritten auf 55
+    // bis 73 - und die Ascheschlucht von 19 Waerme auf 72.
+    name: 'Weg wird wieder vor dem Tonwertabgleich gezeichnet',
+    datei: 'src/gfx/terrain.ts',
+    regel: /^    wegZeichnen\(\);$/m,
+    ersatz: '    void wegZeichnen;',
+    tor: 'wegdeckungtor',
   },
   // ---------------------------------------------------------------------
   // **`bahntreuetor` hat seit v233 KEINE Gegenprobe, und das steht hier

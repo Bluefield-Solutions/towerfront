@@ -1242,7 +1242,15 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 // liegen. Damit wird das Verschieben zur eigentlichen Fehlerquelle: ein
 // falsch begrenzter Ausschnitt zeigt schwarze Flaechen neben dem Feld.
 {
-  for (const [w, h] of [[844, 390], [1440, 780], [2200, 500], [390, 844]] as const) {
+  // **1400 x 900 ist seit v236 dabei, und es ist der gemeldete Fall.**
+  //
+  // Die vier alten Groessen sind entweder breiter als 16:9 (dann schneidet
+  // `coverScale` oben und unten ab) oder hochkant. Ein Notebook ist WENIGER
+  // breit als 16:9 - 16:10, 3:2 -, und genau dort schnitt die alte Grenze
+  // links und rechts ab. Eine Pruefung, die den Fall nicht kennt, findet ihn
+  // nicht: sie stand vier Fassungen lang gruen daneben.
+  for (const [w, h] of [[844, 390], [1440, 780], [2200, 500], [390, 844],
+    [1400, 900], [1512, 982]] as const) {
     sizeCanvas(canvas, w, h);
     renderer.resize();
 
@@ -1292,25 +1300,39 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
       problems.push(`Kamera bei ${w}x${h}: Zoom nicht begrenzt.`);
     }
 
-    // Und von Hand ganz herausziehen darf ebenfalls keinen Rand zeigen.
+    // **Und von Hand ganz herausziehen muss das GANZE Feld zeigen (v236).**
     //
-    // Vorher prueften wir nur das Umschalten - dabei wird ein fester Wert
-    // gesetzt, und der war richtig. Der gemeldete Fehler entstand beim
-    // Herausziehen mit zwei Fingern, wo die Grenze greift. Eine Pruefung, die
-    // nur den bequemen Weg geht, findet den Fehler nicht.
+    // Hier stand bis v235 das Gegenteil: herausziehen durfte keinen Rand
+    // zeigen, die Grenze war `coverScale`. Das ist fuer den Startzustand
+    // richtig und war fuer die Grenze falsch - das Feld ist 16:9, ein
+    // Notebook-Fenster ist fast immer hoeher, und dann schneidet `cover`
+    // links und rechts ab. Gemessen auf 1400 x 900 rund 240 Weltpunkte, ein
+    // Achtel der Karte, und man kam nicht heran.
+    //
+    // Jetzt gilt beides nebeneinander: die UEBERSICHT (oben geprueft) fuellt
+    // den Bildschirm, wer weiter herauszieht sieht alles und nimmt den
+    // Sternenrand in Kauf. Geprueft wird deshalb, dass der sichtbare
+    // Ausschnitt das Feld ENTHAELT, nicht dass er darin liegt.
     renderer.zoomAt(0.05, w / 2, h / 2);
     const wtl = renderer.screenToWorld(0, 0);
     const wbr = renderer.screenToWorld(w, h);
-    if (wtl.x < -0.5 || wtl.y < -0.5 || wbr.x > WORLD_W + 0.5 || wbr.y > WORLD_H + 0.5) {
+    if (wtl.x > 0.5 || wtl.y > 0.5 || wbr.x < WORLD_W - 0.5 || wbr.y < WORLD_H - 0.5) {
       problems.push(
-        `Kamera bei ${w}x${h}: von Hand herausgezogen liegt ein Rand im Bild ` +
-        `(${wtl.x.toFixed(0)}/${wtl.y.toFixed(0)} bis ${wbr.x.toFixed(0)}/${wbr.y.toFixed(0)}).`,
+        `Kamera bei ${w}x${h}: ganz herausgezogen ist das Feld NICHT vollstaendig zu sehen ` +
+        `(${wtl.x.toFixed(0)}/${wtl.y.toFixed(0)} bis ${wbr.x.toFixed(0)}/${wbr.y.toFixed(0)}, ` +
+        `Feld 0/0 bis ${WORLD_W}/${WORLD_H}) - dieser Teil der Karte ist unerreichbar.`,
       );
+    }
+    // Und nicht weiter als noetig: sonst schrumpft das Feld zur Briefmarke.
+    const fit = Math.min(w / WORLD_W, h / WORLD_H);
+    if (renderer.scale < fit - 1e-6) {
+      problems.push(`Kamera bei ${w}x${h}: laesst sich unter die Einpassung herausziehen `
+        + `(${renderer.scale.toFixed(3)} gegen ${fit.toFixed(3)}).`);
     }
     // Fuer die naechste Bildschirmgroesse wieder auf den Startzustand -
     // sonst schleppt der vorige Durchgang seinen Zoom mit, und die Pruefung
     // des Startmassstabs schlaegt beim Nachfolger an.
-    renderer.zoomAt(0.01, w / 2, h / 2);
+    renderer.zoomAt(cover / renderer.scale, w / 2, h / 2);
   }
   sizeCanvas(canvas, 844, 390);
   renderer.resize();

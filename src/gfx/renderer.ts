@@ -224,15 +224,26 @@ export class Renderer {
    *  - `fitScale`  - alles ist sichtbar, es bleiben Raender
    *  - `coverScale`- der Bildschirm ist gefuellt, es wird beschnitten
    *
-   *  **`coverScale` ist die Untergrenze, nicht `fitScale`.** Solange das Feld
-   *  ein gezeichnetes Brett war, waren Raender daneben vertretbar. Seit die
-   *  Karte ein Bild ist, sind sie es nicht: wer herauszog, sah schwarze
-   *  Balken um das Bild, und weil die Himmelsschicht sich dabei je Bild neu
-   *  aufbaute, flackerte es dazu. Gemeldet aus dem Spiel, und zu Recht.
+   *  **Der Startwert ist `coverScale`, die Untergrenze seit v236 aber
+   *  `fitScale`.**
    *
-   *  Der Startwert ist `coverScale`. Herausziehen endet dort; wer Genaues
-   *  braucht, zieht hinein. Verschieben ist immer so begrenzt, dass kein Rand
-   *  des Feldes ins Bild rutscht. */
+   *  Bis dahin war `coverScale` beides. Das Feld ist 16:9; ein
+   *  Notebook-Fenster ist fast immer HOEHER als das (16:10, 3:2). Dann ist
+   *  `coverScale` die Hoehe, und links und rechts wird abgeschnitten -
+   *  gemessen auf 1400 x 900 rund 240 Weltpunkte, also ein Achtel der Karte,
+   *  und man kam nicht heran: weiter herauszuziehen war gesperrt. Gemeldet
+   *  aus dem Spiel.
+   *
+   *  Die Sperre stammte aus der Zeit, als Herausziehen schwarze Balken
+   *  zeigte und die Himmelsschicht dabei je Bild neu aufbaute, also
+   *  flackerte. Beides gilt nicht mehr: der Himmel wird seit Langem
+   *  zwischengespeichert (`this.sky`, neu nur bei `resize`), und er liegt
+   *  ohnehin unter allem - herausgezogen sieht man den Sternengrund der
+   *  Landkarte um das Feld, keine schwarzen Balken.
+   *
+   *  Verschieben ist weiterhin so begrenzt, dass kein Rand des Feldes ins
+   *  Bild rutscht; ist das Feld in einer Richtung kleiner als der
+   *  Bildschirm, steht es dort mittig. */
   private zoom = 1;
   private camX = WORLD_W / 2;
   private camY = WORLD_H / 2;
@@ -246,7 +257,7 @@ export class Renderer {
    *  konnte den Fehler nicht nachstellen, weil die jeweils andere Stelle ihn
    *  gleich wieder ausbuegelte. Eine Regel an zwei Stellen ist eine Regel,
    *  die man nicht pruefen kann. */
-  private get minZoom(): number { return this.coverScale; }
+  private get minZoom(): number { return this.fitScale; }
   private get maxZoom(): number { return this.coverScale * 3; }
 
   resize(): void {

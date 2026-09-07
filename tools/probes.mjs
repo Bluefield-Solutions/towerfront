@@ -237,10 +237,20 @@ const PROBEN = [
     tor: 'doku',
   },
   {
-    name: 'Uebersicht zeigt schwarze Raender',
+    // **Umgedreht in v236.** Bis dahin hiess die Forderung "herausziehen darf
+    // keinen Rand zeigen", und die Grenze war `coverScale`. Das ist fuer den
+    // STARTZUSTAND richtig - und war fuer die GRENZE falsch: das Feld ist
+    // 16:9, ein Notebook-Fenster ist fast immer hoeher, und dann schneidet
+    // `cover` links und rechts ab. Auf 1400 x 900 sind das rund 240
+    // Weltpunkte, ein Achtel der Karte, und man kam nicht heran.
+    //
+    // Die Uebersicht (`toggleOverview`) steht weiterhin auf `coverScale`;
+    // nur wer von Hand weiter herauszieht, sieht alles und nimmt den
+    // Sternengrund am Rand in Kauf.
+    name: 'Herausziehen zeigt nicht mehr das ganze Feld',
     datei: 'src/gfx/renderer.ts',
-    regel: /private get minZoom\(\): number \{ return this\.coverScale; \}/,
-    ersatz: 'private get minZoom(): number { return this.fitScale; }',
+    regel: /private get minZoom\(\): number \{ return this\.fitScale; \}/,
+    ersatz: 'private get minZoom(): number { return this.coverScale; }',
     tor: 'smoke',
   },
   {

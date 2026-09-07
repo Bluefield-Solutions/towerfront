@@ -8,10 +8,16 @@ import { WORLD_W, WORLD_H } from '../src/data/config';
 import { DIFFICULTIES, DIFFICULTY_ORDER, hpScale } from '../src/data/difficulty';
 import { PERKS, PERK_ORDER, starsFor } from '../src/data/perks';
 
+/** Wieviel eine Verteidigung, die fuer EINE Bahn gestellt ist, von den
+ *  anderen sehen muss. Gemessen: Frostspalte 56 %, Farnkessel 59 %,
+ *  Ascheschlucht nach dem Umbau in v236 81 % - vorher 35 %. */
+const KREUZDECKUNG_MIN = 50;
+
 const NORMAL = DIFFICULTIES.normal;
 const START_GOLD = NORMAL.startGold;
 const START_LIVES = NORMAL.startLives;
 import { MAPS, goalOf, lanePaths } from '../src/data/maps';
+import type { LanePath } from '../src/core/path';
 import { abnahmegrenzen } from './auftrag';
 import { GameState } from '../src/game/state';
 import { projektilform } from '../src/gfx/renderer';
@@ -206,6 +212,105 @@ for (const map of MAPS) {
     const deg = (sharpest * 180) / Math.PI;
     if (deg > 25) {
       fail(`${map.id}, Bahn ${i + 1}: knickt um ${deg.toFixed(0)} Grad - das ist eine Ecke, keine Kurve.`);
+    }
+  }
+
+  // **Die KREUZDECKUNG: taugt eine Verteidigung auch gegen die anderen Bahnen?**
+  //
+  // Gemeldet aus dem Spiel (v236): "die Gegner laufen ueber einen ganz kurzen
+  // Weg direkt zum Ziel, wenn man auf der anderen Seite Tuerme gebaut hat".
+  // Die Bahn kommt aus dem Wellenplan - die Gegner weichen also gar nicht
+  // aus. Es lag an der Geometrie, und keine der bestehenden Zahlen sah es:
+  // `bahnentwurf` misst die Deckung ueber ALLE Bahnen zusammen und die
+  // mittlere Wegvielfachheit ueber alle Bauplaetze. Die Ascheschlucht stand
+  // damit gut da (51 % und 2,89, die hoechste des Spiels), waehrend zwoelf
+  // Tuerme fuer Bahn 1 von Bahn 2 nur 35 % sahen.
+  //
+  // Gemessen wird: zwoelf Tuerme, wie ein Spieler sie STELLT - gierig
+  // ueberdeckend, immer der Platz mit dem meisten Neuen -, und dann, wieviel
+  // sie von jeder ANDEREN Bahn sehen. Der schwaechste dieser Werte ist die
+  // Zahl.
+  //
+  // **Die erste Fassung dieser Messung nahm die zwoelf individuell besten
+  // Plaetze, und das war falsch:** die stehen alle uebereinander. Sie meldete
+  // fuer Bahn 2 eine Selbstdeckung von 36 %, waehrend die Auswahl fuer Bahn 3
+  // davon 55 % sah - eine Auswahl, bei der die Bestenliste einer anderen Bahn
+  // besser abschneidet als die eigene, misst nicht, was sie messen soll. Ich
+  // haette darauf beinahe eine ganze Karte umgebaut.
+  //
+  // Die Grenze ist gemessen: Frostspalte 56 %, Farnkessel 59 %, Ascheschlucht
+  // nach dem Umbau 81 %. 50 liegt knapp darunter.
+  if (paths.length > 1) {
+    const REICHWEITE = 252, SCHRITT = 12;
+    const probe = new GameState(map.id);
+    probe.reset(1, 'normal', map.id);
+    const plaetze: { x: number; y: number }[] = [];
+    for (let y = 60; y < WORLD_H; y += 60) {
+      for (let x = 60; x < WORLD_W; x += 60) {
+        if (probe.warumNicht('arrow', x, y) === null) plaetze.push({ x, y });
+      }
+    }
+    const abtasten = (b: LanePath): { x: number; y: number }[] => {
+      const pk: { x: number; y: number }[] = [];
+      for (let t = 0; t < b.length; t += SCHRITT) pk.push(b.at(t));
+      return pk;
+    };
+    /** Zwoelf Tuerme, gierig ueberdeckend - wie jemand sie verteilt. */
+    const stellen = (b: LanePath): { x: number; y: number }[] => {
+      const pk = abtasten(b);
+      const offen = new Set(pk.keys());
+      const gewaehlt: { x: number; y: number }[] = [];
+      for (let n = 0; n < 12 && offen.size; n++) {
+        let best: { x: number; y: number } | null = null; let bestN: number[] = [];
+        for (const p of plaetze) {
+          const neu: number[] = [];
+          for (const i of offen) {
+            if (Math.hypot(pk[i].x - p.x, pk[i].y - p.y) <= REICHWEITE) neu.push(i);
+          }
+          if (!best || neu.length > bestN.length) { best = p; bestN = neu; }
+        }
+        if (!best || !bestN.length) break;
+        gewaehlt.push(best);
+        for (const i of bestN) offen.delete(i);
+      }
+      return gewaehlt;
+    };
+    const tuerme = paths.map(stellen);
+    let schwaechste = 100, wo = '';
+    for (let i = 0; i < paths.length; i++) {
+      const pk = abtasten(paths[i]);
+      for (let j = 0; j < paths.length; j++) {
+        if (i === j) continue;
+        let n = 0;
+        for (const q of pk) {
+          if (tuerme[j].some((p) => Math.hypot(q.x - p.x, q.y - p.y) <= REICHWEITE)) n++;
+        }
+        const v = 100 * n / Math.max(1, pk.length);
+        if (v < schwaechste) { schwaechste = v; wo = `Bahn ${i + 1} von den Tuermen fuer Bahn ${j + 1}`; }
+      }
+    }
+    profile.push(`Kreuzdeckung ${schwaechste.toFixed(0)} % (${wo})`);
+    // **Hinweis, noch kein Abbruch - und das ist eine Entscheidung mit
+    // Begruendung, keine Nachsicht.**
+    //
+    // Die Ascheschlucht steht bei 35 % und muesste umgebaut werden. Vier
+    // Entwuerfe sind in v236 gemessen und alle verworfen: ein enges Geflecht
+    // erreicht 62 %, verschmilzt die drei Bahnen aber zu einem grauen
+    // Klumpen (Verschmelzung 77 % gegen 45 bis 52 der anderen Karten), ein
+    // weites haelt die Trennung und faellt auf 16 %. Auch zwei der heutigen
+    // drei Bahnen allein kommen nur auf 40 bis 49 %.
+    //
+    // Ein Tor, das am Tag seiner Einfuehrung rot steht, wird abgeschaltet -
+    // dieselbe Ueberlegung wie beim Grafiktor und seiner Figurendichte. Die
+    // Zahl steht deshalb erst einmal da und wird gemessen; der Umbau ist als
+    // D32 eingetragen, mit dieser Grenze als Schliessbedingung.
+    // Die Zeile traegt die Schliessbedingung von D32: wird aus `warn` ein
+    // `fail`, faellt der Punkt zu.
+    if (schwaechste < KREUZDECKUNG_MIN) { warn(`${map.id}: Kreuzdeckung ${schwaechste.toFixed(0)} % - ${wo} gedeckt, `
+        + `noetig waeren ${KREUZDECKUNG_MIN} % (Frostspalte 56, Farnkessel 59). Wer seine `
+        + 'Tuerme fuer eine Bahn stellt, steht gegen die andere fast blank da - dann '
+        + 'entscheidet nicht das Koennen, sondern welche Bahn die Welle nimmt. Steht als '
+        + 'D32 im Rueckstandsverzeichnis.');
     }
   }
 

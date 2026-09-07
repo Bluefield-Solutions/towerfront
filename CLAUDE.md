@@ -398,7 +398,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v235. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v236. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -455,6 +455,57 @@ und „1506 KB von 1600 erlaubt", während die Grenze seit v187 bei 1800 liegt
 und die Datei **1592** wiegt. Die Tabelle nennt jetzt den Befehl, aus dem ihre
 Zahlen kommen (`npm run pack-art -- --force`), und die eine Zeile, die nicht
 gemessen ist, steht als **Differenz** da statt als Messung.
+
+**Auf dem Notebook ließ sich nicht weit genug herauszoomen (v236).** Die
+Untergrenze war `coverScale` — „Bildschirm gefüllt". Das Feld ist 16:9, ein
+Notebook-Fenster ist fast immer höher (16:10, 3:2), und dann schneidet `cover`
+links und rechts ab: auf 1400 × 900 rund **240 Weltpunkte**, ein Achtel der
+Karte, und weiter herausziehen war gesperrt. Die Sperre stammte aus der Zeit,
+als Herausziehen schwarze Balken zeigte und der Himmel dabei je Bild neu
+aufgebaut wurde — beides gilt seit Langem nicht mehr, der Himmel ist
+zwischengespeichert und liegt ohnehin unter allem. Start und Übersicht bleiben
+bei `coverScale`; nur wer von Hand weiter herauszieht, sieht alles.
+
+**Der Rauchtest prüfte bis dahin das Gegenteil — an vier Fenstern, unter denen
+der gemeldete Fall nicht war.** Alle vier sind breiter als 16:9 oder hochkant;
+das Notebook-Format fehlte, und deshalb stand die Prüfung vier Fassungen lang
+grün daneben. Jetzt sind 1400 × 900 und 1512 × 982 dabei.
+
+**Die Kreuzdeckung ist eine Zahl, die dem Spiel gefehlt hat.** Gemeldet wurde:
+„die Gegner laufen über einen ganz kurzen Weg direkt zum Ziel, wenn man auf
+der anderen Seite Türme gebaut hat." Nachgesehen: die Bahn kommt aus dem
+**Wellenplan**, die Gegner weichen also gar nicht aus — und sie werden
+**reihum** auf die Bahnen verteilt, jede Welle nimmt alle drei. Wer für eine
+baut, sieht zwei Drittel jeder Welle fast ungehindert durch.
+
+Gemessen wird jetzt: zwölf Türme, gierig überdeckend für **eine** Bahn
+gestellt — wieviel sehen sie von den anderen?
+
+| Karte | schwächste Kreuzdeckung |
+|---|---|
+| **Ascheschlucht** | **35 %** |
+| Frostspalte | 56 % |
+| Farnkessel | 59 % |
+
+**Keine der bisherigen Zahlen sah das.** `bahnentwurf` misst die Vereinigung
+über alle Bahnen (51 %) und die mittlere Wegvielfachheit über alle Bauplätze
+(2,89 — die höchste des Spiels). Beide standen für die Ascheschlucht gut da.
+
+**Und die erste Fassung der neuen Messung war selbst falsch — sie hätte mich
+eine Karte gekostet.** Sie nahm die zwölf *individuell besten* Plätze, und die
+stehen alle übereinander: sie meldete für Bahn 2 eine Selbstdeckung von 36 %,
+während die Auswahl für Bahn 3 davon 55 % sah. Eine Auswahl, bei der die
+Bestenliste einer anderen Bahn besser abschneidet als die eigene, misst nicht,
+was sie messen soll. Jetzt wird gierig überdeckt — wie jemand, der seine Türme
+verteilt.
+
+**Der Umbau steht als D32 aus, und vier Entwürfe sind dafür gemessen und
+verworfen.** Ein enges Geflecht erreicht 62 %, verschmilzt die drei Bahnen
+aber zu einem grauen Klumpen (Verschmelzung 77 % gegen 45–52 der anderen
+Karten — angesehen, Regel 8); ein weites hält die Trennung und fällt auf 16 %;
+zwei der heutigen drei Bahnen allein kommen auf 40–49 %. Die zwei Forderungen
+ziehen direkt gegeneinander, und nach drei Schleifen ist nicht die Ausführung
+das Problem, sondern das Ziel.
 
 **D29 und D31 sind in v235 zu, und beide auf dieselbe Art: eine Messung kam
 an die richtige Stelle.**

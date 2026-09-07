@@ -523,6 +523,24 @@ in einem Lauf, der wirklich packt, und den gibt es auf dem Runner nicht.
 Nebenbei senkt das neue Aschebild die ausgelieferte Datei von 1541 auf
 **1419 KB** (Grenze 1800).
 
+**Der Zielpunkt stand in jeder Bahn ein zweites Mal — Regel 15, und die
+Gegenprobe hat es gefunden.** Seit v131 setzt `lanePaths` den letzten
+Kontrollpunkt auf `map.ziel`: die Rohdaten beschreiben den *Verlauf*, wo alles
+endet, steht einmal. Schreibt jemand den Zielpunkt trotzdem in die Bahn, läuft
+die Ableitung leer — sie ersetzt einen Wert durch sich selbst, und wer später
+`map.ziel` verschiebt, verschiebt die Bahnen **nicht** mit.
+
+Genau das stand da: **alle acht Bahnen aller vier Karten** trugen den
+Zielpunkt doppelt. Bis v232 hielt eine einzige Karte die Probe am Leben — die
+alte Ascheschlucht, deren Bahnen bei 1656:532 endeten. Mit ihren neuen Bahnen
+war auch die letzte weg, und die Probe „Die Bahnen enden wieder neben der
+Platte" schwieg.
+
+Jede Bahn endet jetzt auf einem **Anfahrtspunkt** 60 Weltpunkte vor dem Ziel,
+und ein Wächter hält es: der letzte Rohpunkt darf nicht der Zielpunkt sein.
+Nachgefahren mit dem Ausbau der Ableitung — acht Fehler statt Schweigen. `sim`
+danach unverändert bestanden (Streuung 7/2/3).
+
 **Und der Blick hat gegen eine grüne Zahl recht behalten — D31.** `wegdeckung`
 meldet für den gezeichneten Weg 73,1 Farbschritte gegen seinen Boden, mitten
 im Band 40–90. Im **gerenderten** Bild steht er aber auf rgb 131,116,66 gegen

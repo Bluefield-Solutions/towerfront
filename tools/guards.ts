@@ -116,6 +116,28 @@ for (const map of MAPS) {
     if (Math.hypot(end.x - goal.x, end.y - goal.y) > 1) {
       fail(`${map.id}, Bahn ${i + 1}: endet nicht am Herzkristall.`);
     }
+
+    // **Der Zielpunkt darf nicht ZWEIMAL dastehen (v233, Regel 15).**
+    //
+    // Seit v131 setzt `lanePaths` den letzten Kontrollpunkt auf `map.ziel` -
+    // die Rohdaten beschreiben den VERLAUF, wo alles endet, steht einmal.
+    // Schreibt jemand den Zielpunkt trotzdem in die Bahn, laeuft die
+    // Ableitung leer: sie ersetzt einen Wert durch sich selbst, und wer
+    // spaeter `map.ziel` verschiebt, verschiebt die Bahnen NICHT mit.
+    //
+    // Aufgefallen ist es, weil die Gegenprobe "Die Bahnen enden wieder neben
+    // der Platte" schwieg: sie nimmt die Ableitung heraus, und wenn die
+    // Rohdaten schon am Ziel enden, aendert das nichts. Bis v232 hielt eine
+    // einzige Karte sie am Leben - die alte Ascheschlucht, deren Bahnen bei
+    // 1656:532 endeten. Mit ihren neuen Bahnen trugen alle acht Bahnen aller
+    // vier Karten den Zielpunkt doppelt, und die Probe war still.
+    const roh = map.lanes[i][map.lanes[i].length - 1];
+    if (roh.x === goal.x && roh.y === goal.y) {
+      fail(`${map.id}, Bahn ${i + 1}: der letzte Rohpunkt IST der Zielpunkt `
+        + `(${goal.x}:${goal.y}). Er steht damit zweimal da - einmal in der Bahn und `
+        + 'einmal in `map.ziel` - und `lanePaths` ersetzt ihn durch sich selbst. '
+        + 'Ein Anfahrtspunkt gehoert dorthin, nicht das Ziel.');
+    }
     if (path.length < 900) {
       warn(`${map.id}, Bahn ${i + 1}: mit ${Math.round(path.length)} Pixeln sehr kurz.`);
     }

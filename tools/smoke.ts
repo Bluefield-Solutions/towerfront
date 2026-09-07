@@ -1905,6 +1905,54 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// T6: verbucht wird, was WIRKLICH verloren geht - und der Fall wird GESTELLT.
+//
+// **Die Prüfung oben hat ihn bis v232 abgewartet, und damit verloren.** Sie
+// vergleicht nach jedem Durchlauf die verbuchte Summe mit dem, was am
+// Kristall fehlt; auseinander gehen die beiden nur, wenn ein Gegner mit
+// mehr Durchschlag ankommt, als der Kristall noch Punkte hat. Das setzt
+// voraus, dass eine Karte ihren Kristall überhaupt auf null bringt.
+//
+// Bis v231 tat das genau eine: die Frostspalte. Seit ihre Bahnen gewunden
+// statt gerade sind (v232), gewinnt der Durchlauf sie mit 9 von 60 Punkten,
+// und damit gibt es auf keiner der vier Karten mehr einen Überlauf. Der
+// volle Probenlauf hat es gemeldet - die Gegenprobe „Kristallverlust wird
+// zu hoch verbucht" nimmt die Deckelung heraus, und die Prüfung schwieg.
+//
+// Dieselbe Form wie die vier Funde aus v219: ein Messplatz, der auf einen
+// Zufall wartet, hört leise auf zu prüfen, sobald sich die Karte ändert.
+// Deshalb steht der Fall jetzt da, statt zu kommen - ein Kristall mit einem
+// Punkt Rest und ein Koloss mit drei.
+{
+  const probe = new GameState();
+  probe.reset();
+  probe.lives = 1;
+  const vorher = probe.stats.leaksByWave.reduce((a, b) => a + (b ?? 0), 0);
+  const e = probe.spawnZumPruefen('brute', 0);
+  if (!e) {
+    problems.push('Kristallbilanz: der Koloss liess sich nicht stellen - die Probe misst nichts.');
+  } else {
+    // Ans Ende der Bahn setzen und einen Schritt rechnen lassen: dann
+    // durchlaeuft er `leak()`, ohne dass eine Welle gespielt werden muss.
+    e.travelled = 1e9;
+    probe.update(1 / 60);
+    if (!e.leaked) {
+      problems.push('Kristallbilanz: der Koloss ist nicht durchgekommen - der Fall ist nicht gestellt.');
+    } else {
+      const verbucht = probe.stats.leaksByWave.reduce((a, b) => a + (b ?? 0), 0) - vorher;
+      if (probe.lives < 0) {
+        problems.push(`Kristallbilanz: der Kristall steht auf ${probe.lives} - unter null.`);
+      }
+      if (verbucht !== 1) {
+        problems.push(
+          `Kristallbilanz: ein Koloss (3 Durchschlag) auf einen Kristall mit 1 Punkt Rest `
+          + `verbucht ${verbucht} statt 1. Die Bilanz meldet mehr, als das Spiel verliert.`,
+        );
+      }
+    }
+  }
+}
+
 // D10: der Gegnername in der Wellenvorschau ist ANTIPPBAR.
 //
 // Bis v193 stand er nur im `title` - also im Zeigerhinweis. Auf dem

@@ -1879,6 +1879,19 @@ const PROBEN = [
     // wird bei null abgeschnitten; ein Gegner mit drei Punkten Durchschlag
     // auf einen Kristall mit einem Punkt Rest kostete bis dahin trotzdem
     // drei in der Bilanz. Gefunden hat es der Durchlauf ueber jede Karte.
+    //
+    // **Und der Durchlauf hat sie in v232 verloren.** Er vergleicht nur die
+    // Summen; auseinander gehen die nur, wenn eine Karte ihren Kristall auf
+    // null bringt. Bis v231 tat das genau eine - die Frostspalte -, und seit
+    // ihre Bahnen gewunden statt gerade sind, gewinnt der Durchlauf sie mit
+    // 9 von 60. Damit gab es auf keiner Karte mehr einen Ueberlauf, und
+    // diese Probe schwieg, ohne dass sich am geprueften Code etwas geaendert
+    // haette. Genau die Form der vier v219-Funde: ein Messplatz, der auf
+    // einen Zufall wartet.
+    //
+    // `tools/smoke.ts` STELLT den Fall jetzt - Kristall auf 1, ein Koloss
+    // mit 3 Durchschlag ans Bahnende. Damit haengt die Probe wieder nur an
+    // ihrer Zieldatei und braucht kein `haengtAn`.
     name: 'Kristallverlust wird zu hoch verbucht',
     datei: 'src/game/state.ts',
     regel: /^    const wirklich = Math\.min\(def\.leak, Math\.max\(0, this\.lives\)\);$/m,

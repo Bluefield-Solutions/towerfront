@@ -508,6 +508,30 @@ sind am **gebackenen** Boden abgelesen, nicht am Rohbild, und die Backhelligkeit
 war ja gerade gefallen. Wer am Backen dreht, liest die Flecken danach neu —
 das steht jetzt als Kasten an der Liste.
 
+**Der volle Probenlauf hat danach eine Probe gefunden, die nichts mehr
+beweist — und die Ursache war diese Runde.** Von 261 Gegenproben schwieg
+eine: „Kristallverlust wird zu hoch verbucht" nimmt die Deckelung
+`Math.min(def.leak, Math.max(0, lives))` heraus, und der Rauchtest blieb grün.
+
+Der Rauchtest verglich nur **Summen** — verbuchter Verlust gegen das, was am
+Kristall fehlt. Auseinander gehen die beiden nur, wenn ein Gegner mit mehr
+Durchschlag ankommt, als der Kristall noch Punkte hat, und das setzt voraus,
+dass eine Karte ihren Kristall überhaupt auf null bringt. Bis v231 tat das
+genau eine: **die Frostspalte**. Seit ihre Bahnen gewunden statt gerade sind,
+gewinnt der Durchlauf sie mit 9 von 60 — und damit gibt es auf keiner der
+vier Karten mehr einen Überlauf.
+
+Dieselbe Form wie die vier Funde aus v219: **ein Messplatz, der auf einen
+Zufall wartet, hört leise auf zu prüfen, sobald sich die Karte ändert.** Der
+Fall wird jetzt **gestellt** statt abgewartet — Kristall auf 1, ein Koloss mit
+3 Durchschlag ans Bahnende, ein Bild gerechnet. Nachgefahren mit dem Eingriff:
+„verbucht 3 statt 1". Die alte Summenprüfung bleibt daneben stehen, sie prüft
+etwas anderes; sie ist nur nicht mehr der Beweis.
+
+**Gemeldet hat es der Umfangslauf im selben Zug** — er nennt seit v225 eigens,
+wenn sich eine Weltdatei geändert hat, und `src/data/maps.ts` stand darin.
+Ohne diese Zeile hätte ich den vollen Lauf gar nicht erst gefahren.
+
 **Das Ascheschlucht-Bild ist angenommen (v231) — eingebaut ist es noch nicht.**
 Der zweite Kandidat hält jede Abnahmezahl, und die drei Anpassungen aus v230
 haben gemessen gewirkt:

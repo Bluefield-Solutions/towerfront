@@ -398,7 +398,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v231. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v232. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -455,6 +455,58 @@ und „1506 KB von 1600 erlaubt", während die Grenze seit v187 bei 1800 liegt
 und die Datei **1592** wiegt. Die Tabelle nennt jetzt den Befehl, aus dem ihre
 Zahlen kommen (`npm run pack-art -- --force`), und die eine Zeile, die nicht
 gemessen ist, steht als **Differenz** da statt als Messung.
+
+**Die Frostspalte steht seit v232 im Spiel — als zweite Karte ohne gemalte
+Straße** (`bildBringt: { weg: false, gelaende: true }`). Das Bild aus der
+8c-Bestellung ist gebacken, die Kreise sind nachgezogen, beide Bahnen sind neu
+gezogen.
+
+| | vorher | **v232** | verlangt |
+|---|---|---|---|
+| Umweg Bahn 1 | 1,35 | **1,89** | ≥ 1,8 |
+| Umweg Bahn 2 | 1,43 | **2,44** | ≥ 1,8 |
+| Wegfreiheit (`kartenprobe`) | — | **5,1** | ≤ 25 |
+| Bahn durch einen Fleck | 44 Weltpunkte hinein | **28 daneben** | daneben |
+| Weg gegen Boden | 224,8 | **55,7** | 40–90 |
+
+**Gewunden statt verlängert, zum dritten Mal.** Beide Tore sind an den unteren
+Rand gerückt, näher ans Ziel: die Luftlinie fällt von 1813 und 1864 auf 1468
+und 921, und der Umweg steigt, ohne dass mehr Gegner gleichzeitig unterwegs
+sind. Genau daran sind v209 und v210 gescheitert — eine anderthalb mal so
+lange Bahn verlangte dort `hpMul` 0,55 gegen erlaubte 0,85. Der Farnkessel
+besteht aus demselben Grund (Luftlinie 1492 und 873).
+
+**Drei Zahlen, die man am Bild nicht sieht, hingen an der Backhelligkeit — und
+zwei davon zogen gegeneinander.** Der alte Wert 0,52 war für ein dunkles
+Frostnetz geeicht; das neue Bild ist heller Schnee, und der gebackene Boden
+lag auf 0,396 gegen das Band 0,30 bis 0,36. Elf Figuren verschwanden darauf.
+
+Durchprobiert von 0,36 bis 0,40 (`--force` und dann beide Tore, je Wert):
+
+| helligkeit | gebackener Boden | Kristall-Abstand | Weg gegen Boden |
+|---|---|---|---|
+| 0,36 | 0,30 | **0,12** | — |
+| **0,37** | **0,31** | **0,11** | **55,7** |
+| 0,38 | 0,30 | 0,11 | — |
+| 0,39 | 0,31 | 0,0996 → Befund | 49,5 |
+| 0,40 | 0,30 | 0,09 → Befund | 45,9 |
+
+**Der Boden bewegt sich über die ganze Spanne um 0,01, der Kristall um 0,03.**
+Damit ist die Backhelligkeit für das eine Maß kein Hebel und für das andere
+einer — und das „im Band" bei 0,39 gegen „zu niedrig" bei 0,38 und 0,40 ist
+eine Wackelei in der dritten Stelle, keine Wirkung. Eine Runde lang habe ich
+versucht, beide Zahlen mit diesem einen Wert zu treffen; das war die Suche
+nach einer Nadel, wo eine Fläche zu haben war. 0,37 hält den Kristall mit
+Abstand.
+
+**Zwei Tore haben danach nachgezogen, und beide hatten recht.** Die
+Zielplattform sitzt im neuen Bild woanders — `npm run zielplatte` findet sie
+mit Güte 0,98 bei 1683:467, eingetragen waren 1734:518, **72 Weltpunkte**
+auseinander bei erlaubten 40. Und **alle zehn** unwegsamen Flecken trugen
+plötzlich die falsche Farbe (0,12 bis 0,16 auseinander, erlaubt 0,06): sie
+sind am **gebackenen** Boden abgelesen, nicht am Rohbild, und die Backhelligkeit
+war ja gerade gefallen. Wer am Backen dreht, liest die Flecken danach neu —
+das steht jetzt als Kasten an der Liste.
 
 **Das Ascheschlucht-Bild ist angenommen (v231) — eingebaut ist es noch nicht.**
 Der zweite Kandidat hält jede Abnahmezahl, und die drei Anpassungen aus v230

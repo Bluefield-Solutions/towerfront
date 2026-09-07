@@ -214,7 +214,12 @@ const LAUB: MapPalette = {
 
 const FROST: MapPalette = {
   terrain: '#22364F', terrainHi: '#33557A', terrainLo: '#16233A',
-  path: '#E4EEF6', pathEdge: '#A6BACD',
+  // **Weg und Boden muessen zueinander passen, seit die Karte ihren Weg
+  //   selbst zeichnet (v232).** Vorher war der Weg fast weiss (#E4EEF6) -
+  //   gegen den gebackenen Boden rgb 84,101,118 sind das 236 Farbschritte,
+  //   gemessen 224,8 im Bild. Erlaubt sind 40 bis 90: darunter verschwindet
+  //   er im Gelaende, darueber liegt er darauf wie ausgeschnittenes Papier.
+  path: '#5E7080', pathEdge: '#46545F',
   rock: '#2C3E5B', rockHi: '#44608A',
   mood: '#D6ECFF', haze: '#CFE6F5', sonne: '#FFD9A0',
   // Frostspalte: Schneetreiben, seitlich verweht.
@@ -429,67 +434,59 @@ export const MAP_FROSTSPALTE: GameMap = {
   blurb: 'Späte Vereinigung, wenig Platz. Jede Stellung muss sitzen.',
   palette: FROST,
   lanes: [
+    // **Neu gezogen, seit die Karte ihren Weg selbst zeichnet (v232).** Die
+    // alten Bahnen folgten der gemalten Strasse - Umweg 1,35 und 1,43, und
+    // Bahn 1 lief sogar durch einen unwegsamen Fleck hindurch (44 Weltpunkte
+    // hinein). Ohne gemalte Strasse gibt es nichts mehr, dem zu folgen waere.
+    //
+    // **Gewunden statt verlaengert**, die Lehre aus v217 und v209/v210: beide
+    // Tore ruecken an den unteren Rand, nahe an das Ziel. Die Luftlinie faellt
+    // von 1813 und 1864 auf rund 1490 und 920 - der Umweg steigt damit, ohne
+    // dass mehr Gegner gleichzeitig unterwegs sind. Eine anderthalb mal so
+    // lange Bahn verlangte in v210 `hpMul` 0,55 gegen erlaubte 0,85.
+    //
+    // Vorbild ist der Farnkessel: er besteht nicht, weil seine Bahnen laenger
+    // sind, sondern weil seine Tore naeher liegen (Luftlinie 1492 und 873).
     [
-      { x: 4, y: -24, w: 40 }, { x: 4, y: 16, w: 40 }, { x: 5, y: 56, w: 40 },
-      { x: 5, y: 96, w: 40 }, { x: 6, y: 136, w: 40 }, { x: 7, y: 176, w: 40 },
-      { x: 9, y: 218, w: 40 }, { x: 10, y: 260, w: 40 }, { x: 9, y: 297, w: 52.54326695753372 },
-      { x: 11, y: 335, w: 68.56264222147934 }, { x: 20, y: 372, w: 54.51195494386141 }, { x: 39, y: 408, w: 40 },
-      { x: 64, y: 440, w: 40 }, { x: 93, y: 463, w: 40 }, { x: 126, y: 479, w: 40 },
-      { x: 161, y: 484, w: 43 }, { x: 197, y: 478, w: 43 }, { x: 233, y: 464, w: 40 },
-      { x: 268, y: 449, w: 40 }, { x: 303, y: 438, w: 40 }, { x: 340, y: 428, w: 42 },
-      { x: 369, y: 409, w: 50 }, { x: 391, y: 383, w: 40 }, { x: 418, y: 362, w: 40 },
-      { x: 446, y: 339, w: 40 }, { x: 472, y: 312, w: 40 }, { x: 499, y: 286, w: 40 },
-      { x: 532, y: 270, w: 40 }, { x: 568, y: 267, w: 40 }, { x: 601, y: 278, w: 40 },
-      { x: 632, y: 299, w: 40 }, { x: 665, y: 313, w: 42 }, { x: 702, y: 320, w: 40 },
-      { x: 741, y: 323, w: 42 }, { x: 781, y: 324, w: 40 }, { x: 821, y: 328, w: 40 },
-      { x: 855, y: 341, w: 40 }, { x: 878, y: 368, w: 40 }, { x: 892, y: 410, w: 49 },
-      { x: 899, y: 450, w: 43 }, { x: 907, y: 469, w: 65 }, { x: 923, y: 482, w: 65 },
-      { x: 948, y: 501, w: 56 }, { x: 978, y: 526, w: 40 }, { x: 1010, y: 545, w: 44 },
-      { x: 1046, y: 555, w: 47 }, { x: 1084, y: 562, w: 43 }, { x: 1119, y: 575, w: 53 },
-      { x: 1149, y: 593, w: 59 }, { x: 1186, y: 605, w: 40 }, { x: 1233, y: 607, w: 42 },
-      { x: 1272, y: 599, w: 43 }, { x: 1289, y: 581, w: 67 }, { x: 1293, y: 553, w: 59 },
-      { x: 1299, y: 527, w: 55 }, { x: 1323, y: 511, w: 40 }, { x: 1364, y: 498, w: 41 },
-      { x: 1407, y: 489, w: 40 }, { x: 1449, y: 485, w: 56 }, { x: 1488, y: 486, w: 57 },
-      { x: 1531, y: 492, w: 50 }, { x: 1581, y: 501, w: 40 }, { x: 1621, y: 510, w: 40 },
-      { x: 1642, y: 520, w: 55 }, { x: 1656, y: 532, w: 45 },
+      { x: 400, y: 1180, w: 40 }, { x: 392, y: 1030, w: 44 },
+      { x: 352, y: 900, w: 48 }, { x: 300, y: 770, w: 52 },
+      { x: 286, y: 620, w: 56 }, { x: 340, y: 490, w: 52 },
+      { x: 452, y: 400, w: 44 }, { x: 592, y: 356, w: 40 },
+      { x: 730, y: 352, w: 40 }, { x: 862, y: 396, w: 44 },
+      { x: 972, y: 470, w: 48 }, { x: 1052, y: 574, w: 52 },
+      { x: 1080, y: 704, w: 56 }, { x: 1008, y: 806, w: 48 },
+      { x: 1092, y: 884, w: 40 }, { x: 1232, y: 922, w: 44 },
+      { x: 1372, y: 900, w: 48 }, { x: 1482, y: 832, w: 52 },
+      { x: 1570, y: 730, w: 56 }, { x: 1626, y: 636, w: 48 },
+      { x: 1664, y: 546, w: 40 }, { x: 1683, y: 467, w: 40 },
     ],
     [
-      { x: -44, y: 1076, w: 40 }, { x: -4, y: 1075, w: 40 }, { x: 36, y: 1075, w: 40 },
-      { x: 76, y: 1074, w: 40 }, { x: 116, y: 1074, w: 40 }, { x: 156, y: 1073, w: 40 },
-      { x: 196, y: 1072, w: 40 }, { x: 236, y: 1072, w: 40 }, { x: 276, y: 1071, w: 40 },
-      { x: 316, y: 1070, w: 40 }, { x: 356, y: 1068, w: 40 }, { x: 396, y: 1066, w: 40 },
-      { x: 436, y: 1064, w: 40 }, { x: 477, y: 1062, w: 40 }, { x: 517, y: 1059, w: 40 },
-      { x: 555, y: 1057, w: 41.32174097032708 }, { x: 590, y: 1056, w: 40 }, { x: 624, y: 1045, w: 46.39524631937918 },
-      { x: 658, y: 1023, w: 42.96976192897657 }, { x: 686, y: 994, w: 40 }, { x: 699, y: 965, w: 45 },
-      { x: 698, y: 937, w: 42 }, { x: 685, y: 901, w: 40 }, { x: 665, y: 867, w: 50 },
-      { x: 646, y: 836, w: 68 }, { x: 622, y: 811, w: 57 }, { x: 589, y: 797, w: 50 },
-      { x: 555, y: 787, w: 56 }, { x: 527, y: 772, w: 58 }, { x: 503, y: 746, w: 40 },
-      { x: 473, y: 713, w: 40 }, { x: 445, y: 686, w: 50 }, { x: 430, y: 661, w: 61 },
-      { x: 431, y: 630, w: 45 }, { x: 450, y: 598, w: 45 }, { x: 483, y: 581, w: 43 },
-      { x: 521, y: 575, w: 44 }, { x: 560, y: 573, w: 42 }, { x: 600, y: 571, w: 43 },
-      { x: 639, y: 565, w: 45 }, { x: 674, y: 550, w: 63 }, { x: 705, y: 527, w: 43 },
-      { x: 739, y: 508, w: 42 }, { x: 779, y: 501, w: 44 }, { x: 826, y: 499, w: 40 },
-      { x: 865, y: 494, w: 52 }, { x: 883, y: 489, w: 70 }, { x: 898, y: 487, w: 77 },
-      { x: 923, y: 498, w: 56 }, { x: 960, y: 521, w: 43 }, { x: 996, y: 540, w: 43 },
-      { x: 1034, y: 553, w: 49 }, { x: 1073, y: 559, w: 42 }, { x: 1109, y: 569, w: 47 },
-      { x: 1140, y: 586, w: 60 }, { x: 1173, y: 601, w: 46 }, { x: 1211, y: 608, w: 40 },
-      { x: 1246, y: 605, w: 40 }, { x: 1277, y: 590, w: 62 }, { x: 1290, y: 563, w: 59 },
-      { x: 1298, y: 535, w: 58 }, { x: 1322, y: 514, w: 44 }, { x: 1361, y: 502, w: 40 },
-      { x: 1398, y: 496, w: 42 }, { x: 1436, y: 491, w: 49 }, { x: 1474, y: 490, w: 53 },
-      { x: 1510, y: 490, w: 55 }, { x: 1546, y: 494, w: 40 }, { x: 1589, y: 503, w: 40 },
-      { x: 1629, y: 517, w: 51 }, { x: 1656, y: 532, w: 45 },
+      { x: 1100, y: 1180, w: 40 }, { x: 1128, y: 1020, w: 44 },
+      { x: 1234, y: 908, w: 48 }, { x: 1348, y: 826, w: 52 },
+      { x: 1408, y: 698, w: 56 }, { x: 1364, y: 574, w: 52 },
+      { x: 1238, y: 512, w: 44 }, { x: 1102, y: 528, w: 40 },
+      { x: 1008, y: 620, w: 44 }, { x: 984, y: 736, w: 48 },
+      { x: 1044, y: 830, w: 52 }, { x: 1170, y: 858, w: 56 },
+      { x: 1310, y: 862, w: 48 }, { x: 1444, y: 824, w: 44 },
+      { x: 1540, y: 764, w: 48 }, { x: 1570, y: 730, w: 56 },
+      { x: 1626, y: 636, w: 48 }, { x: 1664, y: 546, w: 40 },
+      { x: 1683, y: 467, w: 40 },
     ],
   ],
+  // **Die Farben stehen am GEBACKENEN Boden, nicht am Rohbild (v232).** Als
+  // die Backhelligkeit von 0,52 auf 0,37 fiel, wanderten alle zehn
+  // Eintragungen um 0,12 bis 0,16 davon - `npm run gelaendetor` meldete zehn
+  // von zehn. Wer am Backen dreht, liest die Flecken danach neu.
   rough: [
-    { x: 1582, y: 981, r: 134, art: 'kalt', farbe: '#283d52' },
-    { x: 1647, y: 195, r: 133, art: 'kalt', farbe: '#1b354d' },
-    { x: 828, y: 808, r: 112, art: 'locker', farbe: '#454444' },
-    { x: 494, y: 243, r: 83, art: 'kalt', farbe: '#243f50' },
-    { x: 924, y: 254, r: 52, art: 'hart', farbe: '#5e5b59' },
-    { x: 1845, y: 822, r: 40, art: 'locker', farbe: '#3b4455' },
-    { x: 1012, y: 950, r: 37, art: 'locker', farbe: '#585655' },
-    { x: 194, y: 915, r: 33, art: 'kalt', farbe: '#0e283f' },
-    { x: 312, y: 979, r: 32, art: 'kalt', farbe: '#063e62' },
+    { x: 1582, y: 981, r: 134, art: 'kalt', farbe: '#0f3759' },
+    { x: 1647, y: 195, r: 133, art: 'kalt', farbe: '#113b5a' },
+    { x: 828, y: 808, r: 112, art: 'kalt', farbe: '#1e405c' },
+    { x: 494, y: 243, r: 83, art: 'kalt', farbe: '#1b405c' },
+    { x: 924, y: 254, r: 52, art: 'kalt', farbe: '#1e3f5a' },
+    { x: 1824, y: 788, r: 40, art: 'locker', farbe: '#1b3b53' },
+    { x: 992, y: 896, r: 37, art: 'kalt', farbe: '#183953' },
+    { x: 184, y: 864, r: 33, art: 'locker', farbe: '#1a374e' },
+    { x: 288, y: 936, r: 32, art: 'locker', farbe: '#1e3c54' },
     // Lag bis v228 mit 18 Weltpunkten in der Zielplattform. Ein dritter, noch
     // naeher (1770:472, mitten auf der Platte), ist ersatzlos entfallen - im
     // Bild ist dort nichts, worauf er sich stuetzen koennte.
@@ -499,11 +496,15 @@ export const MAP_FROSTSPALTE: GameMap = {
     // eingetragen, "kalt" im Bild, 0,244 Farbabstand gegen erlaubte 0,06).
     // Eine Lage verschieben und die Beschreibung mitnehmen heisst, die
     // Beschreibung zu erfinden.
-    { x: 1840, y: 320, r: 31, art: 'kalt', farbe: '#113d5f' },
+    { x: 1840, y: 320, r: 31, art: 'locker', farbe: '#18374e' },
   ],
-  bildBringt: { weg: true, gelaende: true },
+  bildBringt: { weg: false, gelaende: true },
   hint: { x: 200, y: 200 },
-  ziel: { x: 1734, y: 518 },   // gemessen mit `npm run zielplatte`
+  // Das neue Bild setzt die Platte woanders hin: `npm run zielplatte` findet
+  // sie mit Guete 0,98 bei 1683:467, eingetragen waren 1734:518 - 72
+  // Weltpunkte auseinander, erlaubt sind 40. Beide Bahnschwaenze sind
+  // mitgezogen, damit sie weiter auf der Platte enden.
+  ziel: { x: 1683, y: 467 },   // gemessen mit `npm run zielplatte`
   waves: PLAN_FROSTSPALTE,
   balance: { hpMul: 1.1, goldMul: 1.02 },
 };

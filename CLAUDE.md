@@ -398,7 +398,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v233. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v234. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -455,6 +455,37 @@ und „1506 KB von 1600 erlaubt", während die Grenze seit v187 bei 1800 liegt
 und die Datei **1592** wiegt. Die Tabelle nennt jetzt den Befehl, aus dem ihre
 Zahlen kommen (`npm run pack-art -- --force`), und die eine Zeile, die nicht
 gemessen ist, steht als **Differenz** da statt als Messung.
+
+**`zielplatte` sucht seit v234 den Kranz statt einer Farbe — und trägt seine
+Nullprobe selbst.** Auf dem Rand einer Kreisscheibe zeigt der
+Helligkeitsverlauf **radial** nach außen; Fels und Glutrisse haben ebenso
+starke Kanten, aber zufällig gerichtete. Gemessen wird deshalb nicht „wieviel
+Kante", sondern „wieviel davon zeigt vom Mittelpunkt weg".
+
+Damit fällt die Farbreferenz ersatzlos weg, und mit ihr zwei Schwächen, die
+vier Fassungen lang bekannt waren: die **Trennschärfe** (auf grauer Asche fiel
+heller Schotter in dieselbe Schwelle wie graues Pflaster, Güte 0,44 in v230 —
+repariert wurde das damals, indem man dem Werkzeug ein leichteres Bild gab)
+und ein **Kreis** (ohne gemalte Straße nahm der Sucher seine Farbreferenz aus
+der *eingetragenen* Platte und suchte dann die Platte; seit v233 galt das für
+alle vier Karten).
+
+| | Farbe (bis v233) | **Kranz (v234)** |
+|---|---|---|
+| Fund daneben | 0–24 | **6–13** |
+| Güte auf den vier Karten | 0,44–1,00 | **0,98–1,00** |
+| Güte ohne Platte | — | **0,77–0,83** |
+| Braucht eine Annahme | ja | **nein** |
+
+**Die eingebaute Nullprobe ist der eigentliche Fortschritt, und sie war nötig,
+nicht schmückend.** Nimmt man die Richtungsprüfung heraus, bleibt das Tor auf
+den ausgelieferten Karten **grün**: die Platte ist dort auch die stärkste
+Kante, der Fund bleibt richtig, und die Rundheit steht eben auf 1,00 statt
+0,98. Eine Gegenprobe kann das nicht fangen — ihr fehlt das Bild ohne Platte.
+Also stellt das Tor es sich selbst her: es deckt die Platte mit einem Stück
+Boden derselben Karte zu und verlangt, dass die Rundheit dort **unter** die
+Schwelle fällt. Mit dem Eingriff steht sie auf 1,00, und es meldet vier
+Befunde statt zu schweigen.
 
 **Seit v233 malt keine Karte mehr eine Straße.** Die Ascheschlucht ist die
 letzte umgestellte; damit sind **D28-C und D28-E zugefallen**, gemeldet vom
@@ -673,11 +704,11 @@ haben gemessen gewirkt:
 | Fels an den 11 Kreisen | — | **11 von 11** | alle |
 | Fels außerhalb | rund doppelt so viele | **keiner** | keiner |
 
-**Den Sucher hat der Farbton repariert, nicht das Werkzeug.** Warmer Sandstein
-statt Grau auf grauer Asche bringt die Güte von 0,44 auf 0,96 — der Umbau des
-Suchers, der als eigener Punkt anstand, ist damit vorerst nicht nötig. Er
-bleibt trotzdem richtig: die Schwäche ist gemessen und kommt bei der nächsten
-grauen Karte wieder.
+**Den Sucher hat damals der Farbton repariert, nicht das Werkzeug.** Warmer
+Sandstein statt Grau auf grauer Asche brachte die Güte von 0,44 auf 0,96 — das
+Werkzeug wurde repariert, indem man ihm ein leichteres Bild gab. Die Schwäche
+blieb und wäre bei der nächsten grauen Karte wiedergekommen; **v234 hat sie
+behoben**, siehe oben.
 
 **Die Auflösung wird nicht mehr abgelehnt.** Zwei Kandidaten kamen mit exakt
 1672 × 941; die Bildfunktion lässt die Größe nicht einstellen. Alle
@@ -717,7 +748,7 @@ an der **Güte der Zielplattform** (0,44 gegen 0,50). Die Güte ist zuerst eine
 Schwäche des Werkzeugs: `zielplatte` sucht mit einer Farbschwelle, und auf
 grauem Aschefeld fällt heller Schotter in dieselbe Schwelle wie graues
 Pflaster. Auf dem braunen Waldboden ging es (0,98). Der Sucher sollte den
-erhabenen Kranz suchen statt eine Farbe — das steht als eigener Punkt an.
+erhabenen Kranz suchen statt eine Farbe — **in v234 umgebaut**.
 
 Vier Dinge gehen daraus in den Auftrag: die **Maße in den Prompt selbst**
 statt nur in den Ausgabe-Block; **richtungslose, fleckige Variation** (die

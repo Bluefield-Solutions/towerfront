@@ -1373,6 +1373,24 @@ const PROBEN = [
   },
   {
     // Und eine falsche Zahl muss genauso auffallen wie eine fehlende.
+    // v234: die Rundheit ist der Kern des neuen Suchers - der Anteil des
+    // Kantenverlaufs, der RADIAL zeigt. Ohne ihn zaehlt nur noch, wie stark
+    // die Kante ist, und das kann jeder Felsbrocken.
+    //
+    // **Dass dieser Eingriff ueberhaupt zu fangen ist, ist der Grund fuer
+    // die eingebaute Nullprobe.** Ohne sie blieb das Tor gruen: auf allen
+    // vier ausgelieferten Karten ist die Platte auch die staerkste Kante,
+    // der Fund bleibt also richtig, und die Rundheit steht dann eben auf
+    // 1,00 statt 0,98 (nachgefahren, Ausgang 0). Erst das zugedeckte Bild
+    // macht den Unterschied sichtbar - dort springt sie ebenfalls auf 1,00,
+    // und genau das meldet das Tor.
+    name: 'Zielplatte misst die Kante statt den Kranz',
+    datei: 'tools/zielplatte.mjs',
+    regel: /bestR = Math\.abs\(gx\[i\] \* cx \+ gy\[i\] \* sy\);/,
+    ersatz: 'bestR = gm[i];',
+    tor: 'zielplattentor',
+  },
+  {
     name: 'Zielplattform steht falsch eingetragen',
     datei: 'src/data/maps.ts',
     regel: /  ziel: \{ x: 1734, y: 454 \},/,

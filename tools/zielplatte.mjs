@@ -13,32 +13,39 @@
  * naechsten `pack-art` still falsch - dieselbe Familie wie die veraltete
  * Zahl, die hier schon vier Runden weiterlief.
  *
- * Verfahren: die Platte ist aus WEGMATERIAL, gross und rund. Fuer jeden
- * Mittelpunkt auf einem groben Raster wird gezaehlt, wieviel Wegmaterial
- * INNEN liegt und wieviel im Ring DRUM HERUM. Ein Weg ist innen Weg und
- * aussen auch; eine Platte ist innen Weg und aussen Gelaende. Genau diese
- * Differenz ist die Punktzahl.
+ * Verfahren seit v234: gesucht wird der KRANZ, nicht die Farbe.
  *
- * Die Wegfarbe wird aus den BAHNEN der Karte abgetastet, nicht angenommen.
- * Der erste Entwurf setzte "Weg = hell" - das stimmt fuer Spiralhain und
- * Ascheschlucht und ist auf der Frostspalte genau falsch herum: dort sind die
- * Wege dunkel auf hellem Schnee. Er fand die Platte deshalb 990 Weltpunkte
- * daneben, und die Zahl sah aus wie ein Befund ueber das Spiel, war aber
- * einer ueber mich (Regel 3: prueft, ob der Eingriff ankommt).
+ * Auf dem Rand einer Kreisscheibe zeigt der Helligkeitsverlauf RADIAL nach
+ * aussen. Fels, Glutrisse und Gestruepp haben ebenso starke Kanten, aber
+ * zufaellig gerichtete. Gemessen wird deshalb nicht "wieviel Kante", sondern
+ * "wieviel davon zeigt vom Mittelpunkt weg". Das ist ein Kreisdetektor.
  *
- * **Karten ohne gemalte Strasse** (`bildBringt.weg === false`, seit v214
- * moeglich) haben keine Bahnfarbe - dort liegt Gelaende, und das Mittel aus
- * den Bahnpunkten waere das Mittel der Karte. Die Spanne faellt gegen null,
- * die Schwelle mit ihr, und die Suche findet Rauschen. Auf solchen Karten
- * kommt die Farbreferenz deshalb aus der eingetragenen Platte selbst.
+ * **Damit faellt die Farbreferenz ersatzlos weg - und mit ihr zwei
+ * Schwaechen, die vier Fassungen lang bekannt waren.**
  *
- * Das klingt nach einer Katze, die sich in den Schwanz beisst - ist es aber
- * nicht, und das ist GEMESSEN: verschiebt man die Annahme um 300 Weltpunkte,
- * faellt die Guete von 0,94 / 0,79 / 0,89 auf 0,15 / 0,21 / 0,00, und die
- * Suche landet 608 bis 1649 Weltpunkte daneben. Die Farbe stammt von der
- * Annahme, der Fund nicht. Damit eine leere Guete nicht als Fund durchgeht,
- * gibt es seit v216 zusaetzlich eine Untergrenze - fuer JEDE Karte, denn
- * "irgendwo ist das Beste" war bis dahin immer ein Ergebnis.
+ * Die erste war die Trennschaerfe. Der alte Sucher verglich Farben gegen eine
+ * Schwelle: die Platte ist aus Wegmaterial, also innen Weg und aussen
+ * Gelaende. Auf grauer Asche faellt heller Schotter in dieselbe Schwelle wie
+ * graues Pflaster, und die Guete brach auf 0,44 ein (v230). Erst ein
+ * waermerer Farbton im naechsten Kartenbild brachte sie auf 0,96 - das
+ * Werkzeug war repariert worden, indem man ihm ein leichteres Bild gab.
+ *
+ * Die zweite war ein Kreis: auf Karten OHNE gemalte Strasse (`bildBringt.weg
+ * === false`) gibt es keine Bahnfarbe, also nahm der Sucher seine Referenz
+ * aus der EINGETRAGENEN Platte - und suchte dann die Platte. Das war
+ * abgesichert (eine um 300 Weltpunkte verschobene Annahme liess die Guete von
+ * 0,94/0,79/0,89 auf 0,15/0,21/0,00 fallen), aber es blieb eine Suche, die
+ * ihre Antwort zur Haelfte mitbrachte. Seit v233 stehen alle vier Karten auf
+ * `weg: false`, es galt also fuer jede.
+ *
+ * Der Kranz braucht nichts davon. Gemessen findet er alle vier Platten auf
+ * 12 bis 18 Weltpunkte genau, mit einer Rundheit von 0,98 bis 1,00.
+ *
+ * **Die Nullprobe trennt breiter als je zuvor (Regel 13).** Deckt man die
+ * Platte mit einem Stueck Boden derselben Karte zu, faellt die Rundheit auf
+ * 0,79 bis 0,82 und der beste Punkt springt 300 bis 1500 Weltpunkte weg. Die
+ * Luecke zwischen 0,82 und 0,98 ist die Schwelle; die alte Farbguete streute
+ * ueber 0,44 bis 1,00 und hatte keine.
  *
  * Aufruf: npm run zielplatte
  */
@@ -96,86 +103,127 @@ for (const k of karten) {
     return [data[i] / 255, data[i + 1] / 255, data[i + 2] / 255];
   };
 
-  // --- Die Farbreferenz. Woher sie kommt, haengt am Bild.
   const karte = MAPS.find((m) => m.id === k.id);
   if (!karte) { console.log(`── ${k.id}: keine Karte dieses Namens.`); continue; }
-  const bahnen = lanePaths(karte);
-  const malt = karte.bildBringt?.weg ?? true;
-  let wr = 0, wg = 0, wb = 0, wn = 0;
-  if (malt) {
-    // Das Bild bringt die Strasse mit: die Platte ist aus demselben Stoff.
-    for (const bahn of bahnen) {
-      for (let t = 0.05; t < 0.95; t += 0.02) {
-        const p = bahn.at(bahn.length * t);
-        const x = Math.round(p.x * N / WELT_B), y = Math.round(p.y * N / WELT_B);
-        if (x < 0 || y < 0 || x >= N || y >= H) continue;
-        const [r, g, b] = farbe(x, y);
-        wr += r; wg += g; wb += b; wn++;
-      }
-    }
-  } else {
-    // Das Spiel zeichnet die Strasse: im Bild ist die Platte das einzige
-    // Pflaster. Referenz aus 100 Weltpunkten um die eingetragene Mitte.
-    if (!karte.ziel) {
-      console.log(`── ${k.id}: keine Zielplattform eingetragen - und ohne gemalte Strasse `
-        + 'gibt es keine zweite Farbreferenz im Bild.');
-      k.ohneReferenz = true;
-      continue;
-    }
-    const zx = karte.ziel.x * N / WELT_B, zy = karte.ziel.y * N / WELT_B;
-    const zr = 100 * N / WELT_B;
-    for (let y = 0; y < H; y++) for (let x = 0; x < N; x++) {
-      if (Math.hypot(x - zx, y - zy) > zr) continue;
-      const [r, g, b] = farbe(x, y);
-      wr += r; wg += g; wb += b; wn++;
+
+  const suche = (data) => {
+  // --- Der Verlauf: Betrag und Richtung, einmal fuer das ganze Bild.
+  const L = (x, y) => {
+    const i = (y * N + x) * 3;
+    return (0.30 * data[i] + 0.59 * data[i + 1] + 0.11 * data[i + 2]) / 255;
+  };
+  const gx = new Float32Array(N * H), gy = new Float32Array(N * H), gm = new Float32Array(N * H);
+  for (let y = 1; y < H - 1; y++) {
+    for (let x = 1; x < N - 1; x++) {
+      const a1 = L(x - 1, y - 1) + 2 * L(x - 1, y) + L(x - 1, y + 1)
+        - L(x + 1, y - 1) - 2 * L(x + 1, y) - L(x + 1, y + 1);
+      const b1 = L(x - 1, y - 1) + 2 * L(x, y - 1) + L(x + 1, y - 1)
+        - L(x - 1, y + 1) - 2 * L(x, y + 1) - L(x + 1, y + 1);
+      const i = y * N + x;
+      gx[i] = -a1; gy[i] = -b1; gm[i] = Math.hypot(a1, b1);
     }
   }
-  if (!wn) { console.log(`── ${k.id}: keine Farbreferenz abtastbar.`); continue; }
-  wr /= wn; wg /= wn; wb /= wn;
 
-  // Und die Gelaendefarbe: das Mittel ueber alles. Der Abstand zwischen
-  // beiden setzt die Schwelle - je Karte, aus der Karte.
-  let gr = 0, gg = 0, gb = 0;
-  for (let i = 0; i < N * H; i++) { gr += data[i * 3] / 255; gg += data[i * 3 + 1] / 255; gb += data[i * 3 + 2] / 255; }
-  gr /= N * H; gg /= N * H; gb /= N * H;
-  const spanne = Math.hypot(wr - gr, wg - gg, wb - gb);
-  const schwelle = spanne * 0.55;
-
-  const istWeg = (x, y) => {
-    if (x < 0 || y < 0 || x >= N || y >= H) return 0;
-    const [r, g, b] = farbe(x, y);
-    return Math.hypot(r - wr, g - wg, b - wb) < schwelle ? 1 : 0;
+  /** Wie rund ist die Kante auf dem Kreis um (x,y) mit Radius r?
+   *
+   *  Fuer 96 Winkel wird die staerkste Kante in einem schmalen Band um den
+   *  Radius gesucht und gefragt, wieviel ihres Verlaufs RADIAL zeigt. Der
+   *  Anteil ist die Rundheit: 1,0 heisst, jede Kante auf dem Ring steht
+   *  senkrecht auf ihm - das kann nur ein Kreis. */
+  const ring = (x, y, r) => {
+    let radial = 0, stark = 0, n = 0;
+    for (let a = 0; a < 96; a++) {
+      const w = a / 96 * Math.PI * 2, cx = Math.cos(w), sy = Math.sin(w);
+      let bestM = 0, bestR = 0;
+      for (let d = -1.5; d <= 1.5; d += 0.75) {
+        const px = Math.round(x + cx * (r + d)), py = Math.round(y + sy * (r + d));
+        if (px < 1 || py < 1 || px >= N - 1 || py >= H - 1) continue;
+        const i = py * N + px;
+        if (gm[i] > bestM) { bestM = gm[i]; bestR = Math.abs(gx[i] * cx + gy[i] * sy); }
+      }
+      if (bestM > 0) { stark += bestM; radial += bestR; n++; }
+    }
+    if (n < 80) return null;
+    return { rundheit: radial / Math.max(1e-6, stark), staerke: stark / n };
   };
 
+  // Grobe Suche ueber Lage und Radius, dann eine feine um den Fund herum.
+  // Ohne die feine kostet allein das Raster 13 Weltpunkte Genauigkeit, und
+  // die gingen von den 40 ab, die die Eintragung danebenliegen darf.
   let best = null;
-  // Die Platte ist gross: zwischen 90 und 170 Weltpunkten Radius.
-  for (let rw = 90; rw <= 170; rw += 10) {
+  const messen = (x, y, rw) => {
+    const w = ring(x, y, rw * N / WELT_B);
+    if (!w) return;
+    const punkte = w.rundheit * w.staerke;
+    if (!best || punkte > best.punkte) best = { punkte, x, y, rw, ...w };
+  };
+  for (let rw = 90; rw <= 170; rw += 8) {
     const r = rw * N / WELT_B;
-    for (let y = Math.ceil(r * 1.4); y < H - r * 1.4; y += 2) {
-      for (let x = Math.ceil(r * 1.4); x < N - r * 1.4; x += 2) {
-        let innen = 0, innenN = 0, ring = 0, ringN = 0;
-        for (let dy = -Math.ceil(r * 1.4); dy <= r * 1.4; dy++) {
-          for (let dx = -Math.ceil(r * 1.4); dx <= r * 1.4; dx++) {
-            const d = Math.hypot(dx, dy);
-            if (d <= r * 0.8) { innen += istWeg(x + dx, y + dy); innenN++; }
-            else if (d >= r * 1.12 && d <= r * 1.4) { ring += istWeg(x + dx, y + dy); ringN++; }
-          }
-        }
-        const punkte = innen / innenN - ring / ringN;
-        if (!best || punkte > best.punkte) best = { punkte, x, y, r, rw };
+    for (let y = Math.ceil(r) + 1; y < H - r - 1; y += 2) {
+      for (let x = Math.ceil(r) + 1; x < N - r - 1; x += 2) messen(x, y, rw);
+    }
+  }
+  if (!best) return null;
+  {
+    const g = { ...best };
+    for (let rw = g.rw - 8; rw <= g.rw + 8; rw += 2) {
+      for (let y = g.y - 3; y <= g.y + 3; y++) {
+        for (let x = g.x - 3; x <= g.x + 3; x++) messen(x, y, rw);
       }
     }
+  }
+  return best;
+  };
+
+  const best = suche(data);
+  if (!best) { console.log(`── ${k.id}: kein Kranz messbar.`); continue; }
+
+  // **Die Nullprobe laeuft MIT, sie steht nicht daneben (Regel 13).**
+  //
+  // Die Rundheit trennt nur gegen ein Bild OHNE Platte - auf den
+  // ausgelieferten Karten ist die Platte auch die staerkste Kante, also
+  // findet der Sucher sie selbst dann, wenn man ihm die Richtungspruefung
+  // ganz herausnimmt. Nachgefahren: mit `bestR = gm[i]` steht die Rundheit
+  // auf 1,00, der Fund bleibt richtig, und das Tor meldet gruen. Eine
+  // Gegenprobe kann das also nicht fangen - ihr fehlt das Bild ohne Platte.
+  //
+  // Deshalb stellt das Tor es sich selbst her: die Platte wird mit einem
+  // Stueck Boden DERSELBEN Karte zugedeckt, und auf diesem Bild muss die
+  // Rundheit unter die Schwelle fallen. Tut sie es nicht, misst die Zahl
+  // nicht, was sie zu messen behauptet - und dann ist der Fund daneben
+  // wertlos, so richtig er auch aussieht.
+  let nullprobe = null;
+  if (karte.ziel) {
+    const W = N, HH = H;
+    const cx = Math.round(karte.ziel.x * N / WELT_B), cy = Math.round(karte.ziel.y * N / WELT_B);
+    const R = Math.round(200 * N / WELT_B);
+    // Der Flicken kommt von drei Radien seitlich - weit genug weg von der
+    // Platte, nah genug, dass es derselbe Boden ist.
+    const qx = Math.max(0, Math.min(W - 2 * R, cx > W / 2 ? cx - 3 * R : cx + 3 * R));
+    const qy = Math.max(0, Math.min(HH - 2 * R, cy - R));
+    const zu = Buffer.from(data);
+    for (let dy = 0; dy < 2 * R; dy++) {
+      for (let dx = 0; dx < 2 * R; dx++) {
+        const zx = cx - R + dx, zy = cy - R + dy;
+        if (zx < 0 || zy < 0 || zx >= W || zy >= HH) continue;
+        const von = ((qy + dy) * W + (qx + dx)) * 3, nach = (zy * W + zx) * 3;
+        zu[nach] = data[von]; zu[nach + 1] = data[von + 1]; zu[nach + 2] = data[von + 2];
+      }
+    }
+    nullprobe = suche(zu);
   }
 
   const wx = best.x * WELT_B / N, wy = best.y * WELT_B / N;
   console.log(`── ${k.id}`);
-  console.log(`   ${malt ? 'Wegfarbe (aus den Bahnen)' : 'Pflasterfarbe (aus der Platte)'} `
-    + `rgb ${(wr*255).toFixed(0)},${(wg*255).toFixed(0)},${(wb*255).toFixed(0)}`
-    + `  Gelaende rgb ${(gr*255).toFixed(0)},${(gg*255).toFixed(0)},${(gb*255).toFixed(0)}`
-    + `  Spanne ${spanne.toFixed(2)}`);
   console.log(`   Platte bei ${wx.toFixed(0)} : ${wy.toFixed(0)} `
-    + `(Radius ${best.rw}, Guete ${best.punkte.toFixed(2)})`);
-  k.platte = { x: Math.round(wx), y: Math.round(wy), r: best.rw, guete: best.punkte };
+    + `(Radius ${best.rw}, Rundheit ${best.rundheit.toFixed(2)}, `
+    + `Kantenstaerke ${best.staerke.toFixed(3)})`);
+  if (nullprobe) {
+    console.log(`   Nullprobe (Platte zugedeckt): Rundheit ${nullprobe.rundheit.toFixed(2)} `
+      + `bei ${(nullprobe.x * WELT_B / N).toFixed(0)}:${(nullprobe.y * WELT_B / N).toFixed(0)}`);
+  }
+  k.platte = { x: Math.round(wx), y: Math.round(wy), r: best.rw, guete: best.rundheit,
+    null: nullprobe ? nullprobe.rundheit : null };
 }
 
 // --- Und stimmt die eingetragene Zahl noch mit dem Bild ueberein?
@@ -188,7 +236,7 @@ console.log('\nGegen die eingetragene Zielplattform:\n');
  *  steht immer noch drauf. Die Fehler, um die es geht, waren 99 bis 164. */
 const ERLAUBT = 40;
 
-/** Wie deutlich die Platte sich abheben muss.
+/** Wie rund die Kante sein muss, damit sie ein Kranz ist.
  *
  *  Die Suche gibt IMMER einen besten Punkt zurueck - auch auf einem Bild
  *  ganz ohne Platte. Bis v215 war das ungeprueft: eine Karte ohne Plattform
@@ -196,21 +244,23 @@ const ERLAUBT = 40;
  *  Weltpunkte an der eingetragenen Zahl lag. Genau die Verfallsart aus
  *  Regel 5.
  *
- *  Gemessen liegen die drei Karten bei 0,94 / 0,79 / 0,89; eine um 300
- *  Weltpunkte verschobene Annahme faellt auf 0,15 / 0,21 / 0,00. Dazwischen
- *  ist Platz, und 0,50 liegt in der Mitte davon. */
-const GUETE_MINDEST = 0.5;
+ *  **Seit v234 ist die Zahl die Rundheit, und sie trennt breiter als die
+ *  alte Farbguete.** Gemessen liegen die vier Karten bei 0,98 bis 1,00.
+ *  Deckt man die Platte mit einem Stueck Boden derselben Karte zu, faellt
+ *  der beste Wert im ganzen Bild auf 0,79 bis 0,82 - und der Fund springt
+ *  300 bis 1500 Weltpunkte weg. Zwischen 0,82 und 0,98 ist eine Luecke von
+ *  sechzehn Hundertsteln; 0,90 liegt in ihrer Mitte.
+ *
+ *  Die alte Farbguete streute ueber 0,44 bis 1,00 und hatte keine solche
+ *  Luecke - ihre Schwelle von 0,50 lag deshalb dicht am schlechtesten
+ *  echten Fund. */
+const GUETE_MINDEST = 0.90;
 const TOR = process.argv.includes('--tor');
 const befunde = [];
 
 for (const k of karten) {
   const karte = MAPS.find((m) => m.id === k.id);
   if (!karte) continue;
-  if (k.ohneReferenz) {
-    befunde.push(`${k.id}: das Bild bringt keine Strasse mit (bildBringt.weg === false) und `
-      + 'die Karte traegt keine Zielplattform - damit ist im Bild nichts zu finden.');
-    continue;
-  }
   if (!k.platte) continue;
   if (!karte.ziel) {
     befunde.push(`${k.id}: keine Zielplattform eingetragen, im Bild liegt aber eine `
@@ -228,10 +278,28 @@ for (const k of karten) {
       + `${k.platte.x}:${k.platte.y} - ${d.toFixed(0)} Weltpunkte auseinander `
       + `(erlaubt ${ERLAUBT}). Entweder ist das Kartenbild neu oder die Zahl veraltet.`);
   }
+  // **Die Nullprobe ist eine Bedingung, keine Zeile.**
+  //
+  // Ist sie nicht erfuellt, hat die Rundheit oben nichts bewiesen: sie waere
+  // dann eine Zahl, die auch ohne Platte hoch steht. Der Fund kann trotzdem
+  // richtig sein - nur belegt ihn dann nichts.
+  if (k.platte.null === null) {
+    befunde.push(`${k.id}: keine Nullprobe moeglich (keine Zielplattform eingetragen) - `
+      + 'die Rundheit oben ist damit unbelegt.');
+  } else if (k.platte.null >= GUETE_MINDEST) {
+    befunde.push(`${k.id}: die Nullprobe steht bei ${k.platte.null.toFixed(2)} und damit `
+      + `ueber der Schwelle ${GUETE_MINDEST.toFixed(2)} - mit ZUGEDECKTER Platte findet der `
+      + 'Sucher etwas ebenso Rundes. Dann misst die Rundheit nicht die Platte, sondern '
+      + 'irgendeine Kante, und der Fund oben ist unbelegt (Regel 13).');
+  } else if (k.platte.guete - k.platte.null < 0.10) {
+    befunde.push(`${k.id}: zwischen Fund (${k.platte.guete.toFixed(2)}) und Nullprobe `
+      + `(${k.platte.null.toFixed(2)}) liegen nur ${(k.platte.guete - k.platte.null).toFixed(2)} - `
+      + 'zu wenig, um eine Schwelle dazwischenzulegen. Gemessen sind sonst 0,15 bis 0,21.');
+  }
   if (k.platte.guete < GUETE_MINDEST) {
-    befunde.push(`${k.id}: die beste Stelle hebt sich kaum ab (Guete `
+    befunde.push(`${k.id}: die beste Kante ist nicht rund (Rundheit `
       + `${k.platte.guete.toFixed(2)}, verlangt ${GUETE_MINDEST.toFixed(2)}) - im Bild `
-      + 'liegt wahrscheinlich gar keine gepflasterte Rundplattform. Der Abstand oben '
+      + 'liegt wahrscheinlich gar keine Rundplattform mit Steinkranz. Der Abstand oben '
       + 'sagt dann nichts, weil er zu einem Zufallsfleck gemessen ist.');
   }
 }

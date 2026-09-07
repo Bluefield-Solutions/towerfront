@@ -93,9 +93,25 @@ const KLIMA_MIN = 0.035;
  *  Gemessen, anteilig, ueber alle 14 Einzelobjekte je Karte (v217):
  *
  *      Spiralhain    36 %
- *      Ascheschlucht 33 %
+ *      Ascheschlucht 17 %   (v233, vorher 33)
  *      Frostspalte   26 %
  *      Farnkessel    31 %   (v222)
+ *
+ *  **Die 17 sind nicht schlechter geworden, die Karte ist farbloser.** Das
+ *  Klima waescht die Figur zur Kartenfarbe hin; eine fast graue Karte hat
+ *  wenig, womit sie waschen koennte. Ueber alle vier Karten haengt der
+ *  Anteil an der Buntheit des Untergrunds (Chroma aus `npm run grafiktor`),
+ *  und zwar der Reihe nach:
+ *
+ *      Ascheschlucht  Chroma 11,7  ->  17 %
+ *      Frostspalte           14,6  ->  27 %
+ *      Farnkessel            22,4  ->  31 %
+ *      Spiralhain            24,1  ->  36 %
+ *
+ *  Das alte Aschebild war braun (Chroma 16,0), das neue aus der
+ *  8c-Bestellung ist neutralgraue Asche. Regel 2: die Ratsche gehoert an
+ *  die Karte, nicht an einen gemeinsamen Wert - sonst haette dieses Bild
+ *  die Zahl still bedeutungslos gemacht.
  *
  *  **Die drei Zahlen stehen hier, weil ich sie beim ersten Anlauf geraten
  *  habe.** Aus einem halben Dutzend abgelesener Zeilen wurden 50 / 65 /
@@ -105,7 +121,7 @@ const KLIMA_MIN = 0.035;
  *  Ratsche je Karte, kein gemeinsames Soll: die drei liegen dicht
  *  beieinander, aber sie haengen am Kartenbild, und ein gemeinsames Soll
  *  wuerde beim naechsten Bild entweder unerreichbar oder bedeutungslos. */
-const KLIMA_ANTEIL = { spiralhain: 0.36, ascheschlucht: 0.33, frostspalte: 0.26, farnkessel: 0.31 };
+const KLIMA_ANTEIL = { spiralhain: 0.36, ascheschlucht: 0.17, frostspalte: 0.26, farnkessel: 0.31 };
 /** Wieviel eine Karte unter ihrer Ratsche liegen darf, bevor es ein Befund
  *  ist. Fuenf Punkte - Bildrauschen und ein neu gepacktes Bild bewegen die
  *  Zahl um ein bis zwei. */

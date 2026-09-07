@@ -59,7 +59,13 @@ const PROBEN = [
     // Der zweite Stuetzpunkt der ersten Bahn wird weit nach unten gezogen.
     // Als Regel, nicht als fester Wert: Wegkoordinaten aendern sich mit jeder
     // neuen Karte, und eine Probe, die daran haengt, veraltet lautlos.
-    regel: /(lanes: \[\n\s*\[\n\s*\{[^}]*\}, \{ x: \d+, y: )(\d+)/,
+    // **Kommentarzeilen ueberspringen (v233).** Bis dahin stand hier
+    // `lanes: \[\n\s*\[\n` - und `\s*` faengt Leerraum, nicht Text. Seit
+    // v232/v233 traegt jeder Bahnblock einen Kommentar zwischen `lanes: [`
+    // und der ersten Bahn, und damit traf die Regel auf KEINER der vier
+    // Karten mehr. Gemeldet hat es `npm run muster` in demselben Lauf, in
+    // dem der Kommentar dazukam.
+    regel: /(lanes: \[\n(?:\s*\/\/[^\n]*\n)*\s*\[\n\s*\{[^}]*\}, \{ x: \d+, y: )(\d+)/,
     // Nicht 950: bei Karten, deren erste Bahn ohnehin unten verlaeuft, waere
     // das kaum eine Aenderung. Null zieht den Punkt zuverlaessig an den
     // oberen Rand und erzeugt damit den scharfen Knick, den die Probe braucht.
@@ -1451,6 +1457,12 @@ const PROBEN = [
   {
     // Die Gelaendeart eines Kreises passt nicht mehr zum Bild - so, wie sie
     // nach einem neuen Kartenbild oder einem verschobenen Kreis dastuende.
+    //
+    // **Der Eingriff trifft `kalt`, und das ist seit v233 der Punkt.** Das
+    // Tor entscheidet `hart` gegen `locker` nicht mehr - am Bild ist es
+    // nicht entscheidbar (D29). Was es beidseitig haelt, ist `kalt`: blauer
+    // als seine Karte, auf einer kalten Karte. Eine Probe auf hart/locker
+    // wuerde seit v233 schweigen und saehe aus wie ein bestandenes Tor.
     name: 'Gelaendeart falsch eingetragen',
     datei: 'src/data/maps.ts',
     regel: /art: 'kalt'/,
@@ -1603,32 +1615,35 @@ const PROBEN = [
     ersatz: '  z-index: 2; pointer-events: auto;',
     tor: 'browsertor',
   },
-  {
-    // TF-042: eine Bahn wieder von der Strasse ziehen. Die Ratsche muss das
-    // sehen - sonst haelt sie nichts fest.
-    // **Auf der Ascheschlucht, nicht mehr auf dem Spiralhain.**
-    //
-    // Seit v217 zeichnet der Spiralhain seinen Weg selbst - dort gibt es
-    // keine gemalte Strasse mehr, von der eine Bahn rutschen koennte, und
-    // `bahntreue` ueberspringt ihn zu Recht. Die Probe haette also nichts
-    // mehr bewiesen; sie steht jetzt auf der naechsten Karte, die noch eine
-    // gemalte Strasse hat.
-    name: 'Eine Bahn rutscht von der Strasse',
-    datei: 'src/data/maps.ts',
-    regel: /(export const MAP_ASCHESCHLUCHT[\s\S]{0,6000}?lanes: \[\n    \[\n)/,
-    ersatz: '$1      { x: 900, y: 200, w: 50 }, { x: 1100, y: 240, w: 50 },\n',
-    tor: 'bahntreuetor',
-  },
-  {
-    // D28-E: der Bahnschlauch breiter als die gemalte Strasse. Die
-    // Mittellinie merkt davon NICHTS - genau deshalb gibt es die zweite
-    // Messung. Wer sie wieder herausnimmt, faellt hier durch.
-    name: 'Bahnschlauch breiter als seine Strasse',
-    datei: 'src/core/path.ts',
-    regel: /        this\.half\.push\(w1 \+ \(w2 - w1\) \* ease\);/,
-    ersatz: '        this.half.push((w1 + (w2 - w1) * ease) * 1.6);',
-    tor: 'bahntreuetor',
-  },
+  // ---------------------------------------------------------------------
+  // **`bahntreuetor` hat seit v233 KEINE Gegenprobe, und das steht hier
+  // statt einer erfundenen.**
+  //
+  // Es fragt, ob eine Bahn auf der GEMALTEN Strasse laeuft. Mit der
+  // Ascheschlucht ist die letzte Karte auf `weg: false` gegangen - im ganzen
+  // Spiel gibt es keine gemalte Strasse mehr. Beide bisherigen Proben ("Eine
+  // Bahn rutscht von der Strasse", "Bahnschlauch breiter als seine Strasse")
+  // haben damit ihren Gegenstand verloren; `npm run muster` hat die erste in
+  // demselben Lauf gemeldet.
+  //
+  // **Drei Ersatzproben sind gebaut und alle drei verworfen**, jede aus
+  // demselben Grund - sie liessen das Tor gruen:
+  //
+  //   1. Bahn von der Strasse ziehen: es gibt keine Strasse.
+  //   2. Die "gegenstandslos"-Meldung herausnehmen: dann behauptet das Tor
+  //      wieder einen Beweis, aber es bricht nicht ab - der Ausgang bleibt 0.
+  //   3. Eine Karte wieder auf `weg: true` setzen: nachgefahren, Ausgang 0.
+  //      Das Tor ist eine RATSCHE - es schlaegt nur an, wenn eine Bahn
+  //      schlechter wird als ihr Grundwert, und eine Karte ohne Grundwert
+  //      hat nichts, wogegen sie fallen koennte.
+  //
+  // Damit ist `bahntreuetor` derzeit ein Tor, das nicht rot werden KANN.
+  // Es bleibt in der Kette, weil `bildBringt.weg` je Karte gilt und die
+  // naechste Karte ihn wieder umlegen kann - aber es beweist bis dahin
+  // nichts, und es sagt das inzwischen selbst ("BAHNTREUE: gegenstandslos").
+  // Als D30 im Rueckstandsverzeichnis: sobald wieder eine Karte eine Strasse
+  // malt, gehoert die Probe zurueck.
+  // ---------------------------------------------------------------------
   {
     // TF-014: die Wegvorschau abgeschaltet - man saehe nicht, woher es kommt.
     name: 'Wegvorschau abgeschaltet',
@@ -2848,6 +2863,41 @@ const PROBEN = [
     datei: 'tools/pack-art.mjs',
     regel: /^        rows\.push\(\{ key, buffer: alt, uebernommen: true \}\);$/m,
     ersatz: '        void alt;',
+    tor: 'art',
+  },
+  {
+    // v233: das Budget wird an dem gemessen, was AUSGELIEFERT wird - nicht
+    // am Packlauf. Vorher hing die Pruefung an drei Bedingungen, die fast
+    // nie zutreffen: Rohbilder da, Abdruck geaendert, jeder Eintrag neu
+    // gepackt. Auf dem Runner gibt es `art/roh` gar nicht, dort lief sie
+    // NIE. Eingecheckt stand die Gruppe "untergrund" dabei auf 346 KB
+    // gegen ein Budget von 250, und keines der einunddreissig Tore sagte
+    // ein Wort.
+    //
+    // **Der Eingriff setzt die Grenze auf 1 KB, und das ist mit Absicht
+    // genau dieses Feld:** `budgetKb` steht bewusst NICHT im Abdruck
+    // (siehe `fingerprint`), eine Aenderung daran loest also keinen
+    // Packlauf aus. Damit kann nur die neue Messung am ausgelieferten
+    // Buendel anschlagen - die alte Summe entsteht beim Packen und kaeme
+    // hier gar nicht erst zustande. Ein Eingriff, den nur die gepruefte
+    // Sache sehen kann (Regel 13).
+    // **Die zweite Reparatur derselben Runde hat KEINE Gegenprobe, und das
+    // steht hier statt einer erfundenen.** `total` zaehlt beim Packen jetzt
+    // auch die uebernommenen Eintraege - das wirkt nur in einem Lauf, der
+    // wirklich packt, also mit Rohbildern und geaendertem Abdruck. `art/roh/`
+    // liegt nicht in Git, auf dem Runner gibt es die Lage nie, und ein
+    // Eingriff, der dort folgenlos bleibt, saehe aus wie ein bestandenes Tor
+    // (dieselbe Falle wie "Werkstatt wartet nicht auf die Bilder" in v225,
+    // die auf zwei Rechnern Verschiedenes bewies).
+    //
+    // Tragend ist ohnehin die Messung hier: sie braucht keinen Packlauf. Die
+    // Summe beim Packen ist der Bericht, nicht der Beweis. Von Hand
+    // nachgefahren (v233): mit `total += 0` meldet der Packlauf 0 KB statt
+    // 260.
+    name: 'Budget der Buendel wird nicht mehr geprueft',
+    datei: 'art/untergrund.json',
+    regel: /^ "budgetKb": 300,$/m,
+    ersatz: ' "budgetKb": 1,',
     tor: 'art',
   },
   {

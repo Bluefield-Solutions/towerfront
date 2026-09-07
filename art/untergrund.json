@@ -1,10 +1,10 @@
 {
- "comment": "Untergrundbilder der Karten. Auf Tageslicht gebracht (siehe Grafik-Audit 5.3): helle Bilder komprimieren schlechter als dunkle, deshalb wurde das Budget von 520 auf 700 KB angehoben - bewusst, es kostet rund 90 KB in der ausgelieferten Datei. Zielgroesse 2400x1350 = 16:9, passend zum Feld seit v36; vorher stand hier 2000x1100 aus der Rasterzeit. Budget seit v222 auf 250 KB: vier gepackte Untergruende wiegen zusammen 162 KB, und die alten 330 sprengten mit der vierten Karte den Gesamthaushalt der Datei um ein Kilobyte - zwei Haushalte, die einander widersprachen.",
+ "comment": "Untergrundbilder der Karten. Auf Tageslicht gebracht (siehe Grafik-Audit 5.3): helle Bilder komprimieren schlechter als dunkle, deshalb wurde das Budget von 520 auf 700 KB angehoben - bewusst, es kostet rund 90 KB in der ausgelieferten Datei. Zielgroesse 2400x1350 = 16:9, passend zum Feld seit v36; vorher stand hier 2000x1100 aus der Rasterzeit. Budget seit v233 auf 300 KB, und die Vorgeschichte gehoert dazu: v222 setzte 250 mit der Begruendung 'vier gepackte Untergruende wiegen zusammen 162 KB'. Diese 162 waren FALSCH gemessen - `total` zaehlte nur die neu gepackten Eintraege, nicht die uebernommenen, und das ausgelieferte Buendel wog in Wirklichkeit 346 KB. Ueber dem Budget also, ohne dass eine der einunddreissig Pruefungen ein Wort sagte: die Budgetpruefung lief nur beim Packen, und gepackt wird selten. Gemessen sind die vier Untergruende heute 260 KB (87/39/59/75); die 300 lassen vierzig Kilobyte Luft fuer den Austausch eines Bildes. Der Gesamthaushalt der Datei traegt es: die Grenze steht bei 1800 KB.",
  "source": "roh/untergrund",
  "output": "backgrounds.ts",
  "exportName": "MAP_BACKGROUNDS",
  "mode": "background",
- "budgetKb": 250,
+ "budgetKb": 300,
  "defaults": {
   "width": 2400,
   "height": 1350,
@@ -25,7 +25,7 @@
   "ascheschlucht": {
    "file": "13_aschebreit.png",
    "comment": "Aschefeld mit breiten Wegen und Glutrissen.",
-   "helligkeit": 0.78,
+   "helligkeit": 0.70,
    "waerme": 0.0,
    "farbe": 0.85,
    "weich": 1.5

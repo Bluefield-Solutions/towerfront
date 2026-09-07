@@ -1,6 +1,6 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v230 · 06.09.2026
+Stand: v233 · 07.09.2026
 
 Die Datei ist **eine** Datei. Jedes Bild steckt als Datenadresse darin und
 wird dabei ein Drittel größer. Ohne Obergrenze wächst sie mit jedem Bild, bis
@@ -42,16 +42,20 @@ leicht verwechselt.
 
 ## Was heute drinsteckt
 
-Gemessen an `dist/index.html` (v230, 06.09.2026):
+Gemessen an `dist/index.html` (v233, 07.09.2026):
 
 | Teil | eingebettet | Anteil |
 |---|---|---|
-| Bildvorrat (44 WebP) | **909 KB** | 57 % |
-| alles übrige — Startbilder, Code, HTML, Stilvorlage | 683 KB | 43 % |
-| **gesamt** | **1592 KB** | von **1800** erlaubt |
+| Bildvorrat (44 WebP) | **1094 KB** | 77 % |
+| Startbilder (11 PNG/JPEG) | 108 KB | 8 % |
+| alles übrige — Code, HTML, Stilvorlage | 217 KB | 15 % |
+| **gesamt** | **1419 KB** | von **1800** erlaubt |
 
-Die 909 sagt `npm run pack-art -- --force`, die 1592 `ls` auf
-`dist/index.html`; die 683 sind die **Differenz**, nicht eine eigene Messung.
+Alle vier Zahlen sind an `dist/index.html` selbst gemessen, indem jede
+`data:`-Adresse darin gezählt wird — nur die letzte Zeile ist die
+**Differenz**. Vorher stand hier „Bildvorrat 909 KB", und das war die
+Rohsumme aus dem Packwerkzeug mal 1,34, also eine Rechnung über eine falsche
+Zahl. Die 1419 sagt `ls`.
 Die alte Fassung dieser Tabelle spaltete sie in „Startbilder 108" und „Code
 212" auf — zusammen 320, was zur Gesamtzahl nicht mehr passte. Eine Zeile,
 die man nicht misst, schreibt man als Differenz hin oder gar nicht.
@@ -59,19 +63,31 @@ die man nicht misst, schreibt man als Differenz hin oder gar nicht.
 Der Bildvorrat als Rohbytes, also vor der Datenadresse — die Zahlen sagt
 `npm run pack-art -- --force` selbst, sie sind hier nicht nachgerechnet:
 
-| Gruppe | roh | eingebettet | Budget |
-|---|---|---|---|
-| Türme (18 Bilder) | 302 KB | 404 | 445 |
-| **Untergründe (4)** | **162 KB** | 217 | **250** |
-| Objekte (14) | 144 KB | 193 | 250 |
-| Gegner (8) | 71 KB | 95 | 80 |
-| **Summe** | **679 KB** | **909** | **1025** |
+| Gruppe | roh | Budget |
+|---|---|---|
+| Türme (18 Bilder) | 302 KB | 445 |
+| **Untergründe (4)** | **260 KB** | **300** |
+| Objekte (14) | 192 KB | 250 |
+| Gegner (8) | 71 KB | 80 |
+| **Summe** | **825 KB** | **1075** |
 
-**Diese Tabelle stand bis v230 auf dem Stand von v185** und behauptete drei
-Untergründe bei einem Budget von 330, während es seit v222 vier bei 250 sind,
-dazu „1506 KB von 1600 erlaubt", während die Grenze seit v187 bei 1800 liegt
-und die Datei 1592 wiegt. Gefunden, weil der Doku-Wächter den Rückstand des
-Dokuments meldete — nicht, weil jemand die Zahlen nachgesehen hätte.
+**Diese Tabelle stand bis v230 auf dem Stand von v185**, und bis v233 waren
+zwei ihrer vier Zeilen trotzdem falsch: Untergründe „162" statt 260, Objekte
+„144" statt 192. Nicht abgeschrieben — **falsch gemessen**. Die Summe im
+Packwerkzeug zählte nur die NEU gepackten Einträge; wer ein Bild nachliefert
+und die anderen übernimmt, bekam die Größe der Nachlieferung als Größe der
+Gruppe. Das Untergrund-Budget von 250 war auf genau dieser 162 geeicht,
+während die Gruppe **346 KB** wog.
+
+Beides ist in v233 repariert: die übernommenen Einträge zählen mit, und die
+Größe wird zusätzlich am **ausgelieferten Bündel** gemessen — an
+`src/gfx/assets/*.ts`, bei jedem Lauf, ohne Rohbilder und ohne Packlauf.
+Vorher lief die Budgetprüfung nur beim Packen, auf dem Runner also nie.
+
+Die Spalte „eingebettet" ist ersatzlos entfallen. Sie war keine Messung,
+sondern die Rohzahl mal 1,34 — und weil die Rohzahl falsch war, sah eine
+Rechnung wie eine zweite Bestätigung aus (Regel 15: was zweimal dasteht,
+veraltet einmal; hier war es dieselbe Zahl in zwei Kleidern).
 
 ## Zwei Haushalte, die einander widersprachen
 

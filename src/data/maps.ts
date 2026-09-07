@@ -205,7 +205,13 @@ const FARN: MapPalette = {
 
 const LAUB: MapPalette = {
   terrain: '#2E2A1E', terrainHi: '#4A4228', terrainLo: '#1B1810',
-  path: '#CBB48A', pathEdge: '#8E7A52',
+  // **Weg und Boden muessen zueinander passen, seit die Karte ihren Weg
+  //   selbst zeichnet (v233)** - dieselbe Rechnung wie bei FROST in v232.
+  //   Vorher war der Weg cremefarbener Sand (#CBB48A); gegen den gebackenen
+  //   Aschegrund rgb 75,74,75 sind das gemessen 170,0 Farbschritte, erlaubt
+  //   sind 40 bis 90. Ein getretener Pfad im Aschefeld ist ein wenig heller
+  //   als die Asche, nicht ein Sandband darauf.
+  path: '#787367', pathEdge: '#58544C',
   rock: '#39332A', rockHi: '#5C5242',
   mood: '#FFD9A8', haze: '#B8A882', sonne: '#FFB661',
   // Ascheschlucht: Aschefall, warm und langsam. Der Name ist das Wetter.
@@ -308,86 +314,90 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
   blurb: 'Der Boden glüht noch. Die Zuwege münden früh ineinander — danach zählt jede Stellung doppelt.',
   palette: LAUB,
   lanes: [
+    // **Neu gezogen, seit die Karte ihren Weg selbst zeichnet (v233).** Die
+    // alten drei Bahnen folgten der gemalten Strasse des vorigen Bildes -
+    // Umweg 1,10 / 1,12 / 1,65 gegen verlangte 1,8, und zwei von ihnen liefen
+    // durch einen unwegsamen Fleck hindurch (4 und 39 Weltpunkte hinein).
+    //
+    // **Gewunden statt verlaengert**, zum vierten Mal (v217, v219, v232): die
+    // drei Tore liegen NAHE am Ziel statt weit weg. Luftlinien 1256 / 862 /
+    // 1050 gegen vorher 1807 / 1827 / 1409 - der Umweg steigt damit auf
+    // 2,00 / 2,51 / 2,29, ohne dass die Bahnen laenger werden als vorher
+    // (2510 / 2165 / 2401 gegen 1986 / 2044 / 2329).
+    //
+    // **Die Laengen muessen zusammenpassen, die Luftlinien nicht.** Der
+    // Waechter erlaubt hoechstens 30 % Unterschied zwischen den Bahnen, sonst
+    // ist die kuerzeste eine Abkuerzung; hier stehen sie auf 1,16. Genau
+    // deshalb windet sich die kurze zweite Bahn am staerksten: sie hat den
+    // kuerzesten Weg zum Ziel und muss ihn selbst lang machen.
+    //
+    // Die letzten sechs Punkte teilen sich alle drei - das ist die Gabelung,
+    // die der Waechter verlangt (256 gemeinsame Punkte, noetig sind 10).
     [
-      { x: -41, y: 216, w: 40 }, { x: 0, y: 234, w: 40 }, { x: 36, y: 249, w: 40 },
-      { x: 68, y: 264, w: 40.39182566712974 }, { x: 109, y: 283, w: 44.166780658275115 }, { x: 147, y: 302, w: 40 },
-      { x: 177, y: 319, w: 53 }, { x: 210, y: 332, w: 53 }, { x: 249, y: 338, w: 48 },
-      { x: 289, y: 335, w: 45 }, { x: 323, y: 321, w: 57 }, { x: 355, y: 304, w: 57 },
-      { x: 391, y: 293, w: 51 }, { x: 428, y: 285, w: 51 }, { x: 459, y: 268, w: 55 },
-      { x: 480, y: 240, w: 63 }, { x: 498, y: 209, w: 51 }, { x: 524, y: 186, w: 46 },
-      { x: 559, y: 176, w: 50 }, { x: 597, y: 174, w: 45 }, { x: 633, y: 184, w: 43 },
-      { x: 660, y: 205, w: 53 }, { x: 687, y: 226, w: 52 }, { x: 722, y: 240, w: 48 },
-      { x: 756, y: 253, w: 44 }, { x: 782, y: 275, w: 58 }, { x: 803, y: 302, w: 54 },
-      { x: 831, y: 322, w: 50 }, { x: 866, y: 331, w: 52 }, { x: 904, y: 335, w: 51 },
-      { x: 941, y: 343, w: 71 }, { x: 976, y: 360, w: 60 }, { x: 1010, y: 378, w: 58 },
-      { x: 1046, y: 389, w: 53 }, { x: 1082, y: 388, w: 56 }, { x: 1116, y: 375, w: 56 },
-      { x: 1150, y: 358, w: 57 }, { x: 1186, y: 346, w: 50 }, { x: 1225, y: 340, w: 50 },
-      { x: 1265, y: 338, w: 50 }, { x: 1308, y: 339, w: 50 }, { x: 1345, y: 348, w: 45 },
-      { x: 1369, y: 370, w: 59 }, { x: 1393, y: 399, w: 57 }, { x: 1426, y: 421, w: 52 },
-      { x: 1464, y: 433, w: 57 }, { x: 1500, y: 446, w: 55 }, { x: 1532, y: 462, w: 61 },
-      { x: 1564, y: 475, w: 51 }, { x: 1596, y: 480, w: 53 },
+      { x: 700, y: 1180, w: 40 }, { x: 620, y: 1050, w: 44 }, { x: 520, y: 950, w: 48 },
+      { x: 400, y: 870, w: 52 }, { x: 320, y: 760, w: 56 }, { x: 330, y: 640, w: 52 },
+      { x: 420, y: 540, w: 44 }, { x: 550, y: 500, w: 40 }, { x: 690, y: 520, w: 44 },
+      { x: 800, y: 600, w: 48 }, { x: 860, y: 710, w: 52 }, { x: 930, y: 800, w: 56 },
+      { x: 1045, y: 890, w: 48 }, { x: 1180, y: 858, w: 44 }, { x: 1230, y: 700, w: 40 },
+      { x: 1330, y: 660, w: 44 }, { x: 1430, y: 610, w: 48 }, { x: 1530, y: 560, w: 56 },
+      { x: 1640, y: 508, w: 44 }, { x: 1734, y: 467, w: 40 },
     ],
     [
-      { x: -28, y: 912, w: 40 }, { x: 0, y: 884, w: 40 }, { x: 29, y: 856, w: 40 },
-      { x: 57, y: 828, w: 40 }, { x: 85, y: 799, w: 40 }, { x: 116, y: 768, w: 40.6641589347107 },
-      { x: 154, y: 731, w: 45.06343850020563 }, { x: 187, y: 695, w: 40 }, { x: 201, y: 668, w: 54 },
-      { x: 211, y: 642, w: 59 }, { x: 230, y: 618, w: 56 }, { x: 262, y: 601, w: 50 },
-      { x: 296, y: 587, w: 58 }, { x: 325, y: 567, w: 51 }, { x: 352, y: 544, w: 54 },
-      { x: 387, y: 527, w: 54 }, { x: 425, y: 519, w: 54 }, { x: 464, y: 512, w: 55 },
-      { x: 501, y: 500, w: 49 }, { x: 530, y: 480, w: 52 }, { x: 557, y: 460, w: 48 },
-      { x: 592, y: 442, w: 50 }, { x: 630, y: 435, w: 54 }, { x: 668, y: 438, w: 49 },
-      { x: 699, y: 452, w: 56 }, { x: 720, y: 476, w: 61 }, { x: 744, y: 498, w: 60 },
-      { x: 777, y: 510, w: 52 }, { x: 814, y: 514, w: 55 }, { x: 853, y: 515, w: 54 },
-      { x: 892, y: 515, w: 56 }, { x: 931, y: 520, w: 56 }, { x: 964, y: 534, w: 52 },
-      { x: 992, y: 555, w: 53 }, { x: 1025, y: 572, w: 47 }, { x: 1062, y: 577, w: 60 },
-      { x: 1100, y: 572, w: 57 }, { x: 1132, y: 556, w: 63 }, { x: 1161, y: 536, w: 60 },
-      { x: 1195, y: 524, w: 55 }, { x: 1230, y: 528, w: 62 }, { x: 1264, y: 543, w: 68 },
-      { x: 1299, y: 561, w: 64 }, { x: 1333, y: 572, w: 56 }, { x: 1366, y: 571, w: 59 },
-      { x: 1404, y: 567, w: 52 }, { x: 1444, y: 561, w: 52 }, { x: 1481, y: 549, w: 54 },
-      { x: 1514, y: 529, w: 59 }, { x: 1545, y: 508, w: 56 }, { x: 1574, y: 492, w: 55 },
-      { x: 1596, y: 480, w: 53 },
+      { x: 1250, y: 1180, w: 40 }, { x: 1300, y: 1050, w: 44 }, { x: 1380, y: 950, w: 48 },
+      { x: 1440, y: 830, w: 52 }, { x: 1420, y: 700, w: 56 }, { x: 1330, y: 610, w: 52 },
+      { x: 1200, y: 580, w: 44 }, { x: 1070, y: 620, w: 40 }, { x: 1000, y: 730, w: 44 },
+      { x: 1010, y: 850, w: 48 }, { x: 1085, y: 880, w: 52 }, { x: 1235, y: 870, w: 56 },
+      { x: 1230, y: 700, w: 40 }, { x: 1330, y: 660, w: 44 }, { x: 1430, y: 610, w: 48 },
+      { x: 1530, y: 560, w: 56 }, { x: 1640, y: 508, w: 44 }, { x: 1734, y: 467, w: 40 },
     ],
     [
-      { x: 488, y: 1113, w: 40 }, { x: 482, y: 1073, w: 40 }, { x: 477, y: 1034, w: 40 },
-      { x: 471, y: 994, w: 40 }, { x: 465, y: 955, w: 40 }, { x: 457, y: 913, w: 40 },
-      { x: 440, y: 865, w: 40 }, { x: 421, y: 819, w: 40 }, { x: 416, y: 786, w: 40 },
-      { x: 419, y: 757, w: 43 }, { x: 424, y: 724, w: 40 }, { x: 424, y: 681, w: 40 },
-      { x: 421, y: 637, w: 40.31678558515597 }, { x: 416, y: 586, w: 41.39016988535005 }, { x: 411, y: 541, w: 43.15073880471253 },
-      { x: 408, y: 518, w: 46 }, { x: 405, y: 488, w: 40 }, { x: 403, y: 444, w: 50.109023868042186 },
-      { x: 402, y: 399, w: 50.9914914680364 }, { x: 402, y: 352, w: 50.48059234885746 }, { x: 410, y: 312, w: 40 },
-      { x: 431, y: 292, w: 48 }, { x: 458, y: 274, w: 55 }, { x: 479, y: 246, w: 62 },
-      { x: 497, y: 213, w: 55 }, { x: 522, y: 188, w: 44 }, { x: 556, y: 175, w: 50 },
-      { x: 592, y: 172, w: 47 }, { x: 627, y: 180, w: 42 }, { x: 656, y: 201, w: 55 },
-      { x: 683, y: 224, w: 54 }, { x: 716, y: 238, w: 48 }, { x: 751, y: 250, w: 42 },
-      { x: 778, y: 270, w: 57 }, { x: 797, y: 297, w: 55 }, { x: 822, y: 319, w: 51 },
-      { x: 858, y: 330, w: 51 }, { x: 897, y: 334, w: 51 }, { x: 936, y: 341, w: 65 },
-      { x: 971, y: 357, w: 59 }, { x: 1004, y: 375, w: 56 }, { x: 1039, y: 388, w: 57 },
-      { x: 1075, y: 389, w: 56 }, { x: 1109, y: 378, w: 56 }, { x: 1143, y: 361, w: 58 },
-      { x: 1179, y: 347, w: 54 }, { x: 1217, y: 340, w: 50 }, { x: 1256, y: 337, w: 50 },
-      { x: 1296, y: 336, w: 50 }, { x: 1333, y: 342, w: 46 }, { x: 1362, y: 363, w: 55 },
-      { x: 1387, y: 393, w: 57 }, { x: 1419, y: 418, w: 51 }, { x: 1457, y: 433, w: 55 },
-      { x: 1494, y: 446, w: 52 }, { x: 1527, y: 462, w: 65 }, { x: 1560, y: 475, w: 54 },
-      { x: 1596, y: 480, w: 53 },
+      { x: 850, y: -100, w: 40 }, { x: 810, y: 30, w: 44 }, { x: 730, y: 130, w: 48 },
+      { x: 600, y: 180, w: 52 }, { x: 470, y: 160, w: 56 }, { x: 380, y: 250, w: 52 },
+      { x: 390, y: 380, w: 44 }, { x: 470, y: 470, w: 40 }, { x: 600, y: 500, w: 44 },
+      { x: 730, y: 470, w: 48 }, { x: 840, y: 400, w: 52 }, { x: 960, y: 420, w: 56 },
+      { x: 1060, y: 500, w: 48 }, { x: 1140, y: 610, w: 44 }, { x: 1230, y: 700, w: 40 },
+      { x: 1330, y: 660, w: 44 }, { x: 1430, y: 610, w: 48 }, { x: 1530, y: 560, w: 56 },
+      { x: 1640, y: 508, w: 44 }, { x: 1734, y: 467, w: 40 },
     ],
   ],
   rough: [
-    { x: 1681, y: 874, r: 128, art: 'locker', farbe: '#362519' },
-    { x: 957, y: 135, r: 106, art: 'locker', farbe: '#473526' },
-    // Lag bis v228 mit 47 Weltpunkten IN der Zielplattform - nach oben auf das
-    // dunkle Feld geschoben, das das Bild dort ohnehin zeigt. Luecke jetzt 170.
-    { x: 1700, y: 210, r: 104, art: 'locker', farbe: '#32251a' },
-    { x: 1172, y: 993, r: 83, art: 'locker', farbe: '#392618' },
-    { x: 1705, y: 30, r: 74, art: 'locker', farbe: '#292018' },
-    { x: 926, y: 950, r: 56, art: 'hart', farbe: '#7c5939' },
-    { x: 141, y: 362, r: 54, art: 'locker', farbe: '#35281d' },
-    { x: 652, y: 324, r: 53, art: 'locker', farbe: '#423021' },
-    { x: 209, y: 621, r: 52, art: 'hart', farbe: '#775638' },
-    { x: 1112, y: 812, r: 50, art: 'locker', farbe: '#4a3625' },
-    { x: 285, y: 368, r: 36, art: 'hart', farbe: '#65482d' },
+    // **Farbe und Art sind am GEBACKENEN Boden gelesen, nicht am Rohbild
+    // (v233)** - dieselbe Lehre wie bei der Frostspalte in v232: als die
+    // Backhelligkeit von 0,78 auf 0,70 fiel, wanderten alle elf Eintragungen
+    // mit. Wer am Backen dreht, liest die Flecken danach neu.
+    //
+    // **Alle elf stehen auf "hart", und das kann das Werkzeug nicht messen.**
+    // Im Bild sind es harte Felsnester mit Glutrissen - angesehen, nicht
+    // vermutet (Regel 8). Die Helligkeitsregel des Werkzeugs lautet "heller
+    // als seine Karte, also Stein"; auf hellem Aschefeld liegt dunkler Fels
+    // aber UNTER dem Mittel (Δhell -0,068 bis -0,091), und damit kann sie
+    // ihn nicht sehen.
+    //
+    // Ein zweites Merkmal ist gemessen und gescheitert: die Kantendichte
+    // trennt nicht (Ascheschlucht 2,08 bis 3,56 mal das Kartenmittel,
+    // Spiralhain 1,04 bis 2,92, Farnkessel 0,99 bis 2,98). Deshalb
+    // entscheidet hier der Blick, und `npm run gelaendetor` sagt das, statt
+    // ihn zu ueberstimmen - es haelt weiter die Farbe und `kalt`. Steht als
+    // D29 im Verzeichnis.
+    //
+    // Waeren sie als "locker" eingetragen, kaeme die Gelaendeart `hart` im
+    // ganzen Spiel nicht mehr vor: die Ascheschlucht traegt die einzigen
+    // harten Flecke. Der Rauchtest hat genau das gemeldet.
+    { x: 1681, y: 874, r: 128, art: 'hart', farbe: '#2c2d30' },
+    { x: 957, y: 135, r: 106, art: 'hart', farbe: '#2d2e31' },
+    { x: 1700, y: 210, r: 104, art: 'hart', farbe: '#2c2c2f' },
+    { x: 1172, y: 993, r: 83, art: 'hart', farbe: '#2b2b2e' },
+    { x: 1705, y: 30, r: 74, art: 'hart', farbe: '#313134' },
+    { x: 926, y: 950, r: 56, art: 'hart', farbe: '#303033' },
+    { x: 141, y: 362, r: 54, art: 'hart', farbe: '#2f2e30' },
+    { x: 652, y: 324, r: 53, art: 'hart', farbe: '#313033' },
+    { x: 209, y: 621, r: 52, art: 'hart', farbe: '#2d2d30' },
+    { x: 1112, y: 812, r: 50, art: 'hart', farbe: '#2d2d2f' },
+    { x: 285, y: 368, r: 36, art: 'hart', farbe: '#302f31' },
   ],
-  bildBringt: { weg: true, gelaende: true },
+  bildBringt: { weg: false, gelaende: true },
   hint: { x: 1120, y: 180 },
-  ziel: { x: 1747, y: 480 },   // gemessen mit `npm run zielplatte`
+  ziel: { x: 1734, y: 467 },   // gemessen mit `npm run zielplatte`
   // Das Tor sitzt auf der mittleren Bahn (C24).
   //
   // Acht Sekunden zu, acht auf - symmetrisch, damit der Takt ablesbar ist,

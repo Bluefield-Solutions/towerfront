@@ -81,6 +81,9 @@ console.log(`Gemessen am gepackten Untergrundbild, verkleinert auf ${N} Punkte`)
 console.log('Breite, Kreisinneres bis 0,8 r, alles anteilig zum Mittel der Karte.\n');
 
 const befunde = [];
+/** Was das Tor NICHT entscheiden kann - `hart` gegen `locker`. Es zaehlt sie
+ *  auf, statt sie zu ueberstimmen oder zu verschweigen (D29). */
+const ungeprueft = [];
 const bloecke = [];
 let gezaehlt = 0;
 const artenGesehen = new Set();
@@ -139,9 +142,37 @@ for (const k of karten) {
         + `Gemessen wurde "${art}" mit ${farbe}.`);
       continue;
     }
-    if (gr.art !== art) {
+    // **Was dieses Tor entscheiden kann, und was nicht (v233).**
+    //
+    // `kalt` ist am Bild messbar und wird beidseitig gehalten: blauer als
+    // seine Karte, auf einer kalten Karte. Die Zahlen liegen weit
+    // auseinander (+0,075 bis +0,21 gegen +0,056 als naechstem darunter).
+    //
+    // **`hart` gegen `locker` ist es nicht.** Die Regel lautete "heller als
+    // seine Karte, also Stein"; auf dem neuen Aschebild sind alle elf Flecke
+    // sichtbar Felsnester mit Glutrissen und alle elf DUNKLER als ihr
+    // Untergrund (Δhell -0,068 bis -0,091). Die Regel kann harten Fels also
+    // gar nicht sehen, sobald er auf hellem Grund liegt - und weil sie ihn
+    // ueberstimmte, kam die Gelaendeart `hart` im ganzen Spiel nicht mehr
+    // vor. Gemeldet hat es der Rauchtest, nicht diese Zeile.
+    //
+    // **Ein zweites Merkmal ist gemessen und gescheitert:** die
+    // Kantendichte (Sobel im Kreis gegen das Kartenmittel) trennt nicht -
+    // Ascheschlucht 2,08 bis 3,56 mal, Spiralhain 1,04 bis 2,92, Farnkessel
+    // 0,99 bis 2,98. Ueberschneidung ueber den ganzen Bereich, dieselbe
+    // Antwort wie bei den drei Kriterien in v216.
+    //
+    // Deshalb entscheidet hier der BLICK und nicht die Schwelle (Regel 8),
+    // und das Tor sagt das, statt es zu ueberstimmen. Es haelt weiter, was
+    // es halten kann: die Farbe und `kalt`. Steht als D29 im Verzeichnis.
+    const kaltGemessen = art === 'kalt';
+    const kaltEingetragen = gr.art === 'kalt';
+    if (kaltGemessen !== kaltEingetragen) {
       befunde.push(`${k.id} ${gr.x}:${gr.y}: eingetragen "${gr.art}", im Bild aber `
-        + `"${art}" (Δhell ${dH.toFixed(3)}, Δblau ${dB.toFixed(3)}).`);
+        + `"${art}" (Δhell ${dH.toFixed(3)}, Δblau ${dB.toFixed(3)}). `
+        + 'Bei `kalt` entscheidet die Messung, nicht der Eintrag.');
+    } else if (gr.art !== art) {
+      ungeprueft.push(`${k.id} ${gr.x}:${gr.y}: eingetragen "${gr.art}", gemessen "${art}"`);
     }
     const [er, eg, eb] = ausHex(gr.farbe);
     const d = Math.hypot(er - sr, eg - sg, eb - sb);
@@ -206,11 +237,26 @@ if (!TOR) {
   console.log('');
 }
 
+// **Was das Tor nicht entscheidet, verschweigt es nicht.**
+//
+// Ein Tor, das eine Luecke still uebergeht, sieht aus wie ein Tor ohne
+// Luecke - dieselbe Lehre wie beim Umfangslauf in v225.
+if (ungeprueft.length) {
+  console.log(`  NICHT geprueft: ${ungeprueft.length} Eintragung(en) - `
+    + '`hart` gegen `locker` ist am Bild nicht entscheidbar (D29).');
+  for (const u of ungeprueft) console.log(`    ${u}`);
+  console.log('    Die Helligkeitsregel sieht harten Fels nicht, wenn er DUNKLER ist als');
+  console.log('    seine Karte; die Kantendichte trennt gemessen ebensowenig (Ascheschlucht');
+  console.log('    2,08-3,56 mal, Spiralhain 1,04-2,92, Farnkessel 0,99-2,98). Hier');
+  console.log('    entscheidet der Blick (Regel 8), und der Kontaktbogen oben zeigt ihn.');
+}
+
 if (befunde.length) {
   console.error(`GELAENDE: ${befunde.length} Befund(e)`);
   for (const b of befunde) console.error(`  - ${b}`);
   if (TOR) process.exit(1);
 } else {
   console.log(`GELAENDE: ${gezaehlt} Kreise, ${artenGesehen.size} Arten, `
-    + 'jede Eintragung passt zum Bild.');
+    + `Farbe und \`kalt\` passen zum Bild`
+    + (ungeprueft.length ? `; ${ungeprueft.length} mal hart/locker ungeprueft (D29).` : '.'));
 }

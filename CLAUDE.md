@@ -398,7 +398,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v232. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v233. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -455,6 +455,116 @@ und „1506 KB von 1600 erlaubt", während die Grenze seit v187 bei 1800 liegt
 und die Datei **1592** wiegt. Die Tabelle nennt jetzt den Befehl, aus dem ihre
 Zahlen kommen (`npm run pack-art -- --force`), und die eine Zeile, die nicht
 gemessen ist, steht als **Differenz** da statt als Messung.
+
+**Seit v233 malt keine Karte mehr eine Straße.** Die Ascheschlucht ist die
+letzte umgestellte; damit sind **D28-C und D28-E zugefallen**, gemeldet vom
+Doku-Wächter, nicht von mir.
+
+| | vorher | **v233** | verlangt |
+|---|---|---|---|
+| Umweg Bahn 1 / 2 / 3 | 1,10 / 1,12 / 1,65 | **2,00 / 2,51 / 2,29** | ≥ 1,8 |
+| Weg gegen Boden | 170,0 | **65,0** | 40–90 |
+| Wegfreiheit | — | **1,3** | ≤ 25 |
+| Bahn in einem Fleck | zwei (4 und 39 hinein) | **keine** (26/21/61 daneben) | daneben |
+
+**Gewunden statt verlängert, zum vierten Mal** — und hier kommt eine Regel
+dazu, die es vorher nicht gab: der Wächter erlaubt höchstens 30 % Unterschied
+zwischen den Bahnlängen. Damit muss sich die **kürzeste** am stärksten winden,
+weil sie den kurzen Weg zum Ziel hat und ihn selbst lang machen muss. Die drei
+Luftlinien fallen von 1807 / 1827 / 1409 auf 1256 / 862 / 1050, die Längen
+bleiben bei 2510 / 2165 / 2401 (Spreizung 1,16).
+
+**Die Deckungszahl aus v217 trägt als Prozentwert nicht.** `bahnentwurf`
+meldet für die neue Karte 51 % gegen die Linie von 70 — die Zahl, hinter der
+in v217 „unspielbar" stand. In **Weltpunkten** decken die zwölf besten Plätze
+aber 3580, und damit genau so viel wie überall sonst:
+
+| Karte | zwölf beste Plätze | Bahnstrecke | Anteil |
+|---|---|---|---|
+| Spiralhain | 3180 | 3942 | 81 % |
+| Frostspalte | 3810 | 4984 | 76 % |
+| Farnkessel | 3600 | 5198 | 69 % |
+| **Ascheschlucht** | **3580** | **7076** | **51 %** |
+
+Zwölf Türme sehen überall dieselbe absolute Strecke — ungefähr zwölf mal ihre
+Reichweite. Der Anteil sagt deshalb mehr über die Länge der Bahn als über die
+Deckung, und die 70-%-Linie aus v217 ist an einer **einbahnigen** Karte
+gemessen. `npm run sim` bestätigt es: bestanden, Streuung 7/2/3, die drei
+Bauverläufe auf 38/39/38 — gleichmäßiger als jede andere Karte.
+
+**Und die Runde hat einen Haushaltsfehler gefunden, den seit v222 niemand
+sehen konnte.** Die Gruppe „untergrund" wog eingecheckt **346 KB** gegen ein
+Budget von 250, und keine der einunddreissig Prüfungen sagte ein Wort. Zwei
+Ursachen, beide in derselben Zeile Gedankenlosigkeit:
+
+* **`total` zählte beim Packen nur die NEU gepackten Einträge.** In einer
+  normalen Runde ist ein Bild neu und der Rest wird übernommen — die Summe war
+  also um genau die übernommenen zu klein. Sie meldete 222 KB, wo 346 standen.
+  Über der Zeile steht seit v157 ein Absatz, der genau diese Klasse beschreibt
+  („repariert wurde der Fall, der eingetreten war, nicht die Klasse"); eine
+  Zeile tiefer ist sie noch einmal passiert.
+* **Die Budgetprüfung lief überhaupt nur beim Packen.** Sie hängt an drei
+  Bedingungen, die fast nie zutreffen: Rohbilder da, Abdruck geändert, jeder
+  Eintrag neu gepackt. `art/roh/` liegt nicht in Git — auf dem Runner lief sie
+  damit **nie**.
+
+Gemessen wird jetzt das **ausgelieferte Bündel**, bei jedem Lauf, ohne
+Rohbilder: die Größe steht in `src/gfx/assets/*.ts` und ist ohne Packlauf zu
+lesen (Regel 12 — die Zahl trägt ihre Messstelle mit). Das Budget von 250 war
+selbst auf einer Zahl aus der kaputten Summe geeicht („vier gepackte
+Untergründe wiegen 162 KB") und steht jetzt auf **300** über gemessenen 260.
+
+Die Gegenprobe dazu trifft absichtlich `budgetKb` in der JSON: dieses Feld
+steht bewusst **nicht** im Abdruck, eine Änderung daran löst also keinen
+Packlauf aus — nur die neue Messung kann anschlagen (Regel 13). Die zweite
+Reparatur hat **keine** Gegenprobe, und das steht an der Zeile: sie wirkt nur
+in einem Lauf, der wirklich packt, und den gibt es auf dem Runner nicht.
+
+Nebenbei senkt das neue Aschebild die ausgelieferte Datei von 1541 auf
+**1419 KB** (Grenze 1800).
+
+**Und der Blick hat gegen eine grüne Zahl recht behalten — D31.** `wegdeckung`
+meldet für den gezeichneten Weg 73,1 Farbschritte gegen seinen Boden, mitten
+im Band 40–90. Im **gerenderten** Bild steht er aber auf rgb 131,116,66 gegen
+einen Boden von 102,97,90: heller *und* deutlich wärmer, und damit liest er
+sich als Sandband auf grauer Asche. Die Zahl misst den **gebackenen**
+Untergrund, gesehen wird das Bild danach — und dazwischen liegt die
+Aschefall-Stimmung der Karte (`wetterTon: #E8C79A`). Die Frostspalte hat eine
+kühle (`#EFF7FF`) und sieht deshalb stimmig aus.
+
+**Zwei Auswege sind durchprobiert und beide schlechter:** ein dunklerer Weg
+(`#5E5B55`) fällt mit 37,6 unter das Band, ein kühlerer (`#6A6970`) macht ihn
+im Bild violett (114,104,133). Der Fehler liegt also nicht in der Wegfarbe,
+sondern in der Messstelle — Regel 12, und diesmal hat sie eine grüne Zahl
+gedeckt statt eine rote erklärt. Bewiesen ist der Zusammenhang mit einer
+Nullprobe: mit `path: #FF00FF` sind 255 873 Bildpunkte magenta, das Band ist
+also wirklich `pal.path` und nicht das Kartenbild.
+
+**Ein Tor hat dabei seinen Gegenstand verloren, und das ist als D30 notiert.**
+`bahntreuetor` fragt, ob eine Bahn auf der **gemalten** Straße läuft — die es
+jetzt nirgends mehr gibt. Beide Gegenproben sind entfallen; **drei
+Ersatzproben sind gebaut und alle drei verworfen**, weil sie das Tor grün
+ließen: die Straße fehlt, das Herausnehmen der Meldung bricht den Lauf nicht
+ab, und eine Karte wieder auf `weg: true` zu setzen bleibt folgenlos — das Tor
+ist eine **Ratsche**, und eine Karte ohne Grundwert hat nichts, wogegen sie
+fallen könnte (nachgefahren, Ausgang 0). Es bleibt in der Kette, weil der
+Schalter je Karte gilt, sagt aber seitdem selbst „gegenstandslos" statt einer
+grünen Zeile über vier Karten.
+
+**`npm run muster` hat in derselben Runde zwei Proben gefangen, die ins Leere
+zeigten.** Die neuen Bahnkommentare stehen zwischen `lanes: [` und der ersten
+Bahn, und `\s*` fängt Leerraum, nicht Text: die Probe „Weg knickt scharf ab"
+traf damit auf **keiner** der vier Karten mehr — obwohl sie eigens als Regel
+statt als feste Koordinate geschrieben war, damit sie nicht veraltet. Sie
+veraltete an einer Kommentarzeile.
+
+**Neu offen als D29: die Gelände-Erkennung sieht harten Fels nicht, wenn er
+dunkler ist als seine Karte.** Alle elf Flecken der Ascheschlucht sind im Bild
+Felsnester mit Glutrissen — und alle elf messen `locker`, weil die Regel
+„heller als seine Karte, also Stein" ein Plus verlangt und dunkler Fels auf
+hellem Aschefeld ein Minus liefert (−0,068 bis −0,091). Eingetragen ist das
+Gemessene, sonst wird das Tor rot; die Karte behauptet damit Geröll, wo Fels
+steht.
 
 **Die Frostspalte steht seit v232 im Spiel — als zweite Karte ohne gemalte
 Straße** (`bildBringt: { weg: false, gelaende: true }`). Das Bild aus der

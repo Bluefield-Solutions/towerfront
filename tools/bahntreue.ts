@@ -43,6 +43,9 @@ import { MAP_BACKGROUNDS } from '../src/gfx/assets/backgrounds';
 const WELT_B = 1920, WELT_H = 1080;
 const TOR = process.argv.includes('--tor');
 let fehler = 0;
+/** Wieviele Karten dieses Tor wirklich gemessen hat. Steht die Zahl auf null,
+ *  hat es keinen Gegenstand - und dann darf es nichts behaupten (Regel 5). */
+let gemessen = 0;
 const fail = (m: string): void => { console.error(`  FEHLER: ${m}`); fehler++; };
 const offen: string[] = [];
 
@@ -93,10 +96,10 @@ for (const m of MAPS) {
   // Ohne diesen Zweig misst das Tor den Farbabstand einer Strasse, die es
   // nicht gibt, und meldet 2 % statt 100 - eine Zahl ueber sich selbst.
   if (!(m.bildBringt?.weg ?? true)) {
-    console.log(`  ${m.name.padEnd(15)} zeichnet seinen Weg selbst - Mitte, Schlauch und `
-      + 'Rand sind von Bauart 100 %.');
+    console.log(`  ${m.name.padEnd(15)} zeichnet seinen Weg selbst - hier ist nichts zu messen.`);
     continue;
   }
+  gemessen++;
   const N = 640, H = Math.round(N * WELT_H / WELT_B);
   const { data } = await sharp(Buffer.from(d.split(',')[1], 'base64'))
     .resize(N, H, { fit: 'fill' }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -205,14 +208,36 @@ if (offen.length) {
   console.log('  zeigt die Alternative, macht die Bahn aber ein Viertel laenger).');
 }
 
-console.log('\n  Der Schlauch liegt auf jeder Bahn unter 52 % und sein Rand unter 21 %: die\n'
-  + '  Bausperre steht rundherum ueber der Farbe, die man sieht. Das ist kein\n'
-  + '  Fehler der Bahnen, sondern der Breiten - die gemalten Strassen tragen rund\n'
-  + '  60 Weltpunkte, die Schlaeuche 80 bis 162. Zu loesen mit Schritt C von D28\n'
-  + '  (breitere Strassen malen), nicht hier. Steht als D28-E im Verzeichnis.');
-console.log('\n  Messstelle: gepacktes Kartenbild auf 640 Punkte Breite, Bahnpunkte alle 4 '
-  + 'Weltpunkte,\n  Schwelle 0,55 des Farbabstands zwischen Weg und Gelaende, Querlagen bei\n'
-  + '  -1, -0,5, 0, +0,5 und +1 mal der oertlichen halben Bahnbreite.');
+// **Seit v233 hat dieses Tor keinen Gegenstand mehr - und das sagt es.**
+//
+// Es misst, ob eine Bahn auf der GEMALTEN Strasse laeuft. Mit der
+// Ascheschlucht ist die letzte Karte auf `weg: false` gegangen; es gibt im
+// ganzen Spiel keine gemalte Strasse mehr, von der eine Bahn rutschen
+// koennte. Bis hierher meldete es dazu "keine Bahn ist schlechter geworden",
+// und das las sich wie ein bestandener Beweis ueber vier Karten.
+//
+// Eine Pruefung, die nie etwas melden kann, ist keine (Regel 5). Stehen
+// bleibt es trotzdem: `bildBringt.weg` ist ein Schalter je Karte, und die
+// naechste Karte kann ihn wieder umlegen - dann greift es sofort. Nur
+// behaupten darf es nichts.
+if (gemessen === 0) {
+  console.log('\n  KEIN GEGENSTAND: keine der vier Karten malt noch eine Strasse');
+  console.log('  (alle stehen auf `bildBringt.weg = false`, seit v233). Dieses Tor');
+  console.log('  misst damit NICHTS - es ist nicht bestanden, es ist gegenstandslos.');
+  console.log('  Es bleibt stehen, weil der Schalter je Karte gilt: legt eine neue');
+  console.log('  Karte ihn wieder um, greift es im selben Lauf. Was den gezeichneten');
+  console.log('  Weg heute prueft, sind `npm run kartenprobe` (ist wirklich keine');
+  console.log('  Strasse gemalt?) und `npm run wegdeckung` (steht er auf seinem Boden?).');
+} else {
+  console.log('\n  Der Schlauch liegt auf jeder gemessenen Bahn unter 52 % und sein Rand\n'
+    + '  unter 21 %: die Bausperre steht rundherum ueber der Farbe, die man sieht.\n'
+    + '  Das ist kein Fehler der Bahnen, sondern der Breiten - die gemalten\n'
+    + '  Strassen tragen rund 60 Weltpunkte, die Schlaeuche 80 bis 162.');
+  console.log('\n  Messstelle: gepacktes Kartenbild auf 640 Punkte Breite, Bahnpunkte alle 4 '
+    + 'Weltpunkte,\n  Schwelle 0,55 des Farbabstands zwischen Weg und Gelaende, Querlagen bei\n'
+    + '  -1, -0,5, 0, +0,5 und +1 mal der oertlichen halben Bahnbreite.');
+}
 
 if (fehler) { console.error(`\nBAHNTREUE: ${fehler} Fehler.`); if (TOR) process.exit(1); }
-else console.log('\nBAHNTREUE: keine Bahn ist schlechter geworden.');
+else if (gemessen === 0) console.log('\nBAHNTREUE: gegenstandslos - keine Karte malt eine Strasse.');
+else console.log(`\nBAHNTREUE: keine der ${gemessen} gemessenen Bahnen ist schlechter geworden.`);

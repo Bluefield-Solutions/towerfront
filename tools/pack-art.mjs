@@ -468,6 +468,17 @@ async function packGroup(name, umgebung = {}) {
       if (alt) {
         uebersprungen.push(key);
         rows.push({ key, buffer: alt, uebernommen: true });
+        // **Auch ein uebernommener Eintrag wiegt etwas (v233).**
+        //
+        // Bis dahin stand `total += ...` nur im Zweig, der neu packt. Die
+        // Summe beschrieb damit den PACKLAUF, nicht das Buendel - und weil
+        // in einer normalen Runde ein bis zwei Bilder neu sind und der Rest
+        // uebernommen wird, war sie um genau die uebernommenen zu klein.
+        // Gemessen: die Gruppe "untergrund" meldete 222 KB und wog 346.
+        //
+        // Es ist dieselbe Klasse, die drei Absaetze weiter oben schon
+        // beschrieben steht - der Fall wurde repariert, die Klasse nicht.
+        total += alt.length;
         continue;
       }
       problems.push(`${key}: Datei ${file} fehlt, und es gibt keine gepackte Fassung.`);
@@ -624,6 +635,35 @@ const groups = only.length
   ? only
   : readdirSync(ART).filter((f) => f.endsWith('.json')).map((f) => f.replace('.json', ''));
 
+/** **Wieviel wiegt das AUSGELIEFERTE Buendel?**
+ *
+ *  Gemessen an `src/gfx/assets/<gruppe>.ts`, nicht am Packlauf - und das ist
+ *  der ganze Punkt (Regel 12). Die alte Summe entstand beim Packen und war
+ *  damit an drei Bedingungen geknuepft, die fast nie zutreffen: es muessen
+ *  Rohbilder da sein, der Abdruck muss sich geaendert haben, und jeder
+ *  Eintrag muss neu gepackt worden sein. Auf dem Runner gibt es `art/roh`
+ *  gar nicht, also lief die Budgetpruefung dort NIE - und hier lief sie nur,
+ *  wenn jemand von Hand neu packte.
+ *
+ *  Aufgefallen ist es in v233: die Gruppe "untergrund" stand eingecheckt bei
+ *  **346 KB** gegen ein Budget von 250, und keine der einunddreissig
+ *  Pruefungen sagte ein Wort. Das Budget selbst war auf einer Zahl aus
+ *  derselben kaputten Summe geeicht ("vier gepackte Bilder wiegen 162").
+ *
+ *  Diese Messung braucht kein Rohbild und keinen Packlauf. Sie liest, was
+ *  ausgeliefert wird. */
+const gebuendelteGroesse = (gruppe) => {
+  const spec = JSON.parse(readFileSync(join(ART, `${gruppe}.json`), 'utf8'));
+  const ziel = join(OUT, spec.output ?? '');
+  if (!spec.output || !existsSync(ziel)) return null;
+  const text = readFileSync(ziel, 'utf8');
+  let bytes = 0, n = 0;
+  for (const m of text.matchAll(/'data:image\/(?:webp|jpeg|png);base64,([^']+)'/g)) {
+    bytes += Buffer.from(m[1], 'base64').length; n++;
+  }
+  return { bytes, n, budget: (spec.budgetKb ?? 400) * 1024 };
+};
+
 await selbsttest();
 
 let allProblems = [];
@@ -631,6 +671,24 @@ for (const g of groups) {
   console.log(`\nGruppe "${g}":`);
   allProblems = allProblems.concat(await packGroup(g));
 }
+
+// **Das Budget wird IMMER geprueft, an dem, was ausgeliefert wird.**
+console.log('\nGroesse der ausgelieferten Buendel:');
+let summe = 0, gesamtBudget = 0;
+for (const g of groups) {
+  const w = gebuendelteGroesse(g);
+  if (!w) { console.log(`  ${g.padEnd(14)} kein Buendel`); continue; }
+  summe += w.bytes; gesamtBudget += w.budget;
+  const kb = w.bytes / 1024, bkb = w.budget / 1024;
+  console.log(`  ${g.padEnd(14)} ${kb.toFixed(0).padStart(4)} KB von ${bkb.toFixed(0)} KB `
+    + `ueber ${w.n} Eintraege${w.bytes > w.budget ? '   UEBER DEM BUDGET' : ''}`);
+  if (w.bytes > w.budget) {
+    allProblems.push(`Gruppe "${g}": das ausgelieferte Buendel wiegt `
+      + `${kb.toFixed(0)} KB, erlaubt sind ${bkb.toFixed(0)} KB.`);
+  }
+}
+console.log(`  ${'zusammen'.padEnd(14)} ${(summe / 1024).toFixed(0).padStart(4)} KB `
+  + `von ${(gesamtBudget / 1024).toFixed(0)} KB`);
 
 if (allProblems.length) {
   console.error(`\nBILDWERKZEUG: ${allProblems.length} Problem(e)`);

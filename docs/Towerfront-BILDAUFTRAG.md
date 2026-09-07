@@ -1749,6 +1749,26 @@ vignette, no border.
 [AUSGABE-BLOCK EINFÜGEN]
 ```
 
+### Kleine Kreise brauchen Genauigkeit (v232)
+
+Der Frostspalten-Entwurf hat vier von zehn Kreisen leer gelassen — und zwar
+**nicht**, weil das Eis fehlte, sondern weil es danebenlag: die vier kleinen
+(Radius 32 bis 40) sind gemalt, aber **17 bis 21 Weltpunkte zu weit vom
+Kreisrand**. Bei den vier grossen hat es gestimmt; die lagen 11 bis 68
+Weltpunkte neben ihrer Mitte und damit sicher innerhalb.
+
+Der Unterschied ist der Radius, nicht die Sorgfalt: ein grosser Kreis
+verzeiht 60 Weltpunkte, ein kleiner keine 20. Der Prompt sagt das jetzt
+eigens — unter etwa 50 Weltpunkten Radius muss das Hindernis **im** Kreis
+sitzen, nicht in seiner Nähe.
+
+**Gerichtet wird das auf unserer Seite, nicht per Nachbestellung.** Jede
+Erzeugung ist ein frisches Bild, kein Nachbessern: ein neuer Entwurf tauschte
+sieben bestandene Zahlen gegen ein Glücksspiel. Vier Kreise um rund 50
+Weltpunkte zu verschieben ist dagegen bestimmt — und es ist ohnehin die
+Richtung, in die dieses Projekt seit v216 arbeitet: das Bild lesen
+(`npm run gelaendesuche`), nicht dem Bild vorschreiben.
+
 ### Die Auflösung ist keine Ablehnung mehr wert (v231)
 
 Zwei Kandidaten kamen mit **exakt** 1672 × 941. Die Bildfunktion des Malers
@@ -1895,6 +1915,13 @@ crust, an open fissure. These MUST be in the image; the game no longer draws
 them. Each one must read as impassable ON ITS OWN, without the reference
 sheet: a darker patch of ash is not enough, it needs relief and a hard silhouette.
 
+SMALL CIRCLES NEED PRECISION. For a circle under about 50 world points of
+radius, the obstacle must sit INSIDE it — near is not good enough. In an
+earlier delivery the four large formations landed on their circles, but four
+small ones were painted 17 to 21 world points beyond the circle's edge, and
+at that size the circle then reads as empty. The large ones may sit anywhere
+within their circle; the small ones have no room to spare.
+
 THE CIRCLES ARE BINDING, and where one sits close to the platform that is
 deliberate: the nearest circle clears the platform's kerb by about 40 world
 points, and it has been measured. Do not move it, do not shrink it, do not
@@ -1978,6 +2005,13 @@ only there, ground that reads as impassable — ice ridges, an open crevasse,
 deep drifts. These MUST be in the image; the game no longer draws them. Each
 one must read as impassable ON ITS OWN, without the reference sheet: a bluish
 patch of snow is not enough, it needs relief and a hard silhouette.
+
+SMALL CIRCLES NEED PRECISION. For a circle under about 50 world points of
+radius, the obstacle must sit INSIDE it — near is not good enough. In an
+earlier delivery the four large formations landed on their circles, but four
+small ones were painted 17 to 21 world points beyond the circle's edge, and
+at that size the circle then reads as empty. The large ones may sit anywhere
+within their circle; the small ones have no room to spare.
 
 THE CIRCLES ARE BINDING, and where one sits close to the platform that is
 deliberate: the nearest circle clears the platform's kerb by about 64 world

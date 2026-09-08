@@ -311,10 +311,16 @@ const PROBEN = [
   {
     // Ein Zahlwort im Kartentext, das der Karte widerspricht - genau der
     // Zustand bis v138 ("Zwei Zuwege" bei drei Bahnen).
+    //
+    // **Der Eingriff sagt seit v237 DREI.** Vorher stand hier "Zwei Zuwege",
+    // und das war ein Widerspruch, solange die Ascheschlucht drei Bahnen
+    // hatte. Seit sie zwei hat, ist der Satz richtig - und die Probe schwieg
+    // zu Recht. Gemeldet hat es der Umfangslauf in derselben Runde, in der
+    // die Karte umgebaut wurde.
     name: 'Kartentext widerspricht der Karte',
     datei: 'src/data/maps.ts',
     regel: /blurb: 'Der Boden glüht noch\./,
-    ersatz: "blurb: 'Zwei Zuwege münden früh ineinander.",
+    ersatz: "blurb: 'Drei Zuwege münden früh ineinander.",
     tor: 'guards',
   },
   {

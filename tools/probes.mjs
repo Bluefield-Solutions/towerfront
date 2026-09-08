@@ -1271,6 +1271,32 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
+    // **Die letzte Welle wird schwaecher als die staerkste.**
+    //
+    // Gemessen bringt das Finale des Spiralhains 76 % der Spitze - schon
+    // heute liegt der Hoehepunkt in der Mitte, und die Ratsche haelt bei
+    // 74 %. Faellt der Titan aus der letzten Welle, sind es rund 30, und der
+    // Lauf endet mit einer Enttaeuschung. Bis v239 hat das kein Tor gesehen.
+    name: 'Finale schwaecher als die Spitze',
+    datei: 'src/data/waves.ts',
+    regel: /    \{ enemy: 'titan', count: 1, gap: 9, delay: 0 \},\n    \{ enemy: 'brute', count: 2, gap: 1\.6, delay: 4 \},/,
+    ersatz: "    { enemy: 'brute', count: 1, gap: 1.6, delay: 4 },",
+    tor: 'guards',
+  },
+  {
+    // **Eine Welle in der Mitte bricht ein.**
+    //
+    // Ein zusaetzlicher Rueckfall ueber die Ratsche hinaus: der Spiralhain
+    // hat drei, erlaubt sind drei. Wellen NACH einem Boss zaehlen nicht mit -
+    // nach einem Titanen darf es leichter werden -, deshalb greift die Probe
+    // eine Welle ohne Boss davor.
+    name: 'Druckkurve bekommt einen Einbruch',
+    datei: 'src/data/waves.ts',
+    regel: /  \{ bonus: 211, note: 'Erste Gleiter', groups: \[\n    \{ enemy: 'crawler', count: 29/,
+    ersatz: "  { bonus: 211, note: 'Erste Gleiter', groups: [\n    { enemy: 'crawler', count: 4",
+    tor: 'guards',
+  },
+  {
     // **Die Turmleiste wird wieder breit.**
     //
     // Dann passen die acht Knoepfe nicht mehr in eine Reihe, das Band waechst

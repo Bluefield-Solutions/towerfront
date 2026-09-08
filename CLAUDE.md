@@ -147,6 +147,27 @@ npm run bahnbau     Bahnen aus einer BESCHREIBUNG erzeugen, messen und
                     Wegwerfskripten gemessen; in v236 rechnete die Werkbank
                     anders als der Waechter (81 % gegen 62 %), weil sie die
                     Bauplaetze aus der KARTE nahm statt aus dem Entwurf.
+npm run wellenbau   Wellenplaene aus einer BESCHREIBUNG erzeugen, messen und
+                    eintragen. Der Entwurf steht als Daten in
+                    `entwurf/wellen.json` (Form und Hoehe der Kurve, wer wann
+                    zum ersten Mal kommt, Luftanteil, ab wann Schilde),
+                    gerechnet wird in `tools/wellenmass.ts` - derselben
+                    Datei, aus der `npm run guards` seine Zahlen nimmt.
+                    `--schreiben` traegt ein. Die Form trifft es auf Anhieb
+                    (null Rueckfaelle, Finale gleich Spitze); die HOEHE ist
+                    noch nicht gegen `npm run sim` geeicht - der erste
+                    Entwurf verlor in Welle 14.
+npm run baukarte    wieviel einer Karte ueberhaupt einen Turm annimmt, und
+                    WO. Gefragt wird `warumNicht` ueber ein Raster von vier
+                    Weltpunkten, dazu ein Bild je Karte. Gemessen sind rund
+                    30 % baubar, und die groesste zusammenhaengende Insel
+                    haelt 65 bis 82 % davon - die Flaeche ist gut gebaut,
+                    sie war nur unsichtbar.
+npm run uxaudit     nimmt das GEBAUTE Spiel in den Zustaenden auf, die man
+                    beim Spielen wirklich erreicht, und misst die Belegung
+                    des Bildschirms mit `elementFromPoint` statt ueber
+                    Umrisskaesten - die lassen sich durch Verschachteln
+                    kleinrechnen. `--tor` prueft die Grenzen.
 npm run bahnfit     zieht die Bahnen auf die gemalte Strasse (schreibt
                     maps.ts). `--umleiten` aendert Routen, nicht nur Lagen.
 npm run bahntreue   prueft am Kartenbild, ob jede Bahn auf der GEMALTEN
@@ -411,7 +432,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v239. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v240. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

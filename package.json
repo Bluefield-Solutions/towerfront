@@ -78,7 +78,8 @@
     "bauflaechetor": "tsx tools/bauflaeche.mjs --tor",
     "uxaudit": "tsx tools/uxaudit.mjs",
     "uxaudittor": "tsx tools/uxaudit.mjs --tor",
-    "baukarte": "tsx tools/baukarte.mjs"
+    "baukarte": "tsx tools/baukarte.mjs",
+    "wellenbau": "tsx tools/wellenbau.ts"
   },
   "keywords": [],
   "author": "",

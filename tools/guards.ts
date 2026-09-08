@@ -24,6 +24,7 @@ const START_GOLD = NORMAL.startGold;
 const START_LIVES = NORMAL.startLives;
 import { MAPS, goalOf, lanePaths } from '../src/data/maps';
 import { bauplaetze, kreuzdeckung, verschmelzung } from './bahnmass';
+import { abstand, ausstoss, druck, hoechstverlust, kurve, mischung } from './wellenmass';
 import { abnahmegrenzen } from './auftrag';
 import { GameState } from '../src/game/state';
 import { projektilform } from '../src/gfx/renderer';
@@ -1115,18 +1116,23 @@ for (const map of MAPS) {
   plan.forEach((w, i) => {
     if (!w.groups.length) fail(`${map.id}, Welle ${i + 1}: keine Gruppen.`);
     if (w.bonus <= 0) fail(`${map.id}, Welle ${i + 1}: kein Bonus.`);
-    let pressure = 0, maxLeak = 0, dur = 0;
     for (const g of w.groups) {
       if (!(g.enemy in ENEMIES)) { fail(`${map.id}, Welle ${i + 1}: unbekannter Gegner "${g.enemy}".`); continue; }
       if (g.count <= 0) fail(`${map.id}, Welle ${i + 1}: Gruppe mit Anzahl ${g.count}.`);
       if (g.gap <= 0) fail(`${map.id}, Welle ${i + 1}: Abstand muss groesser als null sein.`);
       if (g.delay < 0) fail(`${map.id}, Welle ${i + 1}: negative Verzoegerung.`);
-      const e = ENEMIES[g.enemy];
-      const split = e.split ? e.split.count * e.split.hpFactor : 0;
-      pressure += g.count * e.hp * (1 + split) * (g.hpMul ?? 1);
-      maxLeak += g.count * (e.leak + (e.split ? e.split.count * ENEMIES[e.split.into].leak : 0));
-      dur = Math.max(dur, g.delay + g.count * g.gap);
     }
+    // **Druck, Hoechstverlust und Ausstoss kommen aus `tools/wellenmass.ts`.**
+    //
+    // Bis v239 standen sie hier als vier Zeilen mitten in der Schleife - und
+    // die Druckformel damit ein zweites Mal im Baum, obwohl ueber
+    // `wellenDruck` in `src/data/waves.ts` seit v151 ein Absatz steht, der
+    // genau das begruendet ("zwei Fassungen davon waeren eine zu viel").
+    // Beide rechneten zufaellig dasselbe; das ist bei Regel 15 der
+    // Normalfall, solange niemand eine der beiden anfasst.
+    const pressure = druck(w);
+    const maxLeak = hoechstverlust(w);
+    const dur = ausstoss(w);
     if (dur > 90) warn(`${map.id}, Welle ${i + 1}: dauert rechnerisch ${Math.round(dur)} s - sehr lang.`);
     // Anteilig, nicht absolut.
     //
@@ -1149,27 +1155,78 @@ for (const map of MAPS) {
     prevPressure = Math.max(prevPressure, pressure);
   });
 
+  // **Die Form der Druckkurve - eine Ratsche je Karte** (v240, F1).
+  //
+  // Bis v239 hielt nur die Zeile darueber die Kurve, und die ist ein HINWEIS
+  // und sieht ausserdem nur einen Schritt weit: sie meldet einen Einbruch um
+  // mehr als ein Viertel, aber nicht, dass es vier davon gibt - und schon gar
+  // nicht, dass die letzte Welle schwaecher ist als die staerkste.
+  //
+  // Gemessen ueber alle vier Plaene: 3 bis 5 Rueckfaelle, der tiefste
+  // zwischen 43 und 59 %, das Finale bei 72 bis 93 % der Spitze. **Auf keiner
+  // Karte ist die letzte Welle die schwerste** - der Hoehepunkt liegt in der
+  // Mitte, und danach wird es leichter, waehrend die Verteidigung weiter
+  // waechst. Kein Tor hat das je gesehen.
+  //
+  // Die Grenzen sind deshalb kein Soll, sondern der heutige Stand plus ein
+  // Hauch Luft: eine Ratsche, die verhindert, dass es schlechter wird,
+  // waehrend das Soll (monoton, Finale = Spitze) offen bleibt. Das Soll steht
+  // im Spielspass-Audit als G6 und braucht neue Plaene, keine neue Grenze.
+  {
+    // **Gemessen wird die WIRKSAME Kurve, nicht die rohe.**
+    //
+    // Der Druck einer Welle ist nur einer von zwei Faktoren; der andere ist
+    // `hpScale`, und der steigt ueber einen Lauf um das Zwanzigfache. Der
+    // erste Anlauf mass nur den Plan und meldete 3 bis 5 Rueckfaelle und ein
+    // Finale bei 72 bis 93 % der Spitze. Mit der Skala gerechnet sind es
+    // 1 bis 3 und 81 bis 100 % - auf der Ascheschlucht ist das Finale die
+    // Spitze. Dieselbe Rechnung, eine andere Messstelle (Regel 12).
+    const d = DIFFICULTIES.normal;
+    const k = kurve(plan, (i) => hpScale(d, i, plan.length, map.balance.hpMul));
+    const grenzen: Record<string, { rueck: number; tief: number; finale: number }> = {
+      // Gemessen 19,2 / 29,3 / 26,5 / 47,6 % und 80,8 / 100 / 93,6 / 95,8 %.
+      // Ein Prozentpunkt Luft, damit ein Rundungsschritt die Kette nicht rot
+      // macht - mehr nicht, sonst ist es keine Ratsche.
+      spiralhain: { rueck: 1, tief: 0.20, finale: 0.80 },
+      ascheschlucht: { rueck: 2, tief: 0.30, finale: 0.99 },
+      frostspalte: { rueck: 2, tief: 0.27, finale: 0.93 },
+      farnkessel: { rueck: 3, tief: 0.48, finale: 0.95 },
+    };
+    const g = grenzen[map.id];
+    if (!g) {
+      fail(`${map.id}: keine Ratsche fuer die Druckkurve. Eine neue Karte traegt `
+        + 'ihren heutigen Stand hier ein - sonst waechst sie ungeprueft.');
+    } else {
+      if (k.rueckfaelle > g.rueck) {
+        fail(`${map.id}: die Druckkurve faellt ${k.rueckfaelle} mal, erlaubt sind `
+          + `${g.rueck}. Eine Kurve, die einbricht, ist keine Steigerung.`);
+      }
+      if (k.tiefsterRueckfall > g.tief) {
+        fail(`${map.id}: der tiefste Rueckfall der Druckkurve betraegt `
+          + `${Math.round(k.tiefsterRueckfall * 100)} %, erlaubt sind `
+          + `${Math.round(g.tief * 100)} %.`);
+      }
+      if (k.finaleGegenSpitze < g.finale) {
+        fail(`${map.id}: die letzte Welle bringt `
+          + `${Math.round(k.finaleGegenSpitze * 100)} % der staerksten, verlangt sind `
+          + `${Math.round(g.finale * 100)} %. Ein Finale unter der Spitze ist eine `
+          + 'Enttaeuschung - der Hoehepunkt liegt dann in der Mitte.');
+      }
+    }
+  }
+
   // Jede Karte soll etwas anderes verlangen. Zwei Plaene, die dieselbe
   // Gegnermischung haben, sind zwei Namen fuer dieselbe Karte.
-  const mixOf = (p: typeof plan) => {
-    const m = new Map<string, number>();
-    let total = 0;
-    for (const w of p) for (const g of w.groups) {
-      const e = ENEMIES[g.enemy];
-      if (!e) continue;
-      m.set(g.enemy, (m.get(g.enemy) ?? 0) + g.count * e.hp);
-      total += g.count * e.hp;
-    }
-    return { m, total };
-  };
+  // `mischung` und `abstand` kommen seit v240 aus `tools/wellenmass.ts` -
+  // dieselbe Bewegung wie bei der Druckformel eine Seite weiter oben. Der
+  // Abstand ist dort als HALBE Summe der Betraege definiert (die uebliche
+  // Form fuer zwei Verteilungen); hier stand die ganze. Die Grenze ist
+  // entsprechend mitgewandert, von 0,25 auf 0,125 - dieselbe Aussage, nur
+  // einmal aufgeschrieben.
   for (const other of MAPS) {
     if (other.id <= map.id) continue;
-    const a = mixOf(map.waves), b = mixOf(other.waves);
-    let diff = 0;
-    for (const key of new Set([...a.m.keys(), ...b.m.keys()])) {
-      diff += Math.abs((a.m.get(key) ?? 0) / a.total - (b.m.get(key) ?? 0) / b.total);
-    }
-    if (diff < 0.25) {
+    const diff = abstand(mischung(map.waves), mischung(other.waves));
+    if (diff < 0.125) {
       // Bis v116 nur ein Hinweis - und Hinweise scrollen vorbei, einunddreissig
       // Stueck sind es. C26 stand deshalb vier Runden im Verzeichnis mit einer
       // Zahl (0,22), die niemand nachgemessen hatte; sie war laengst auf 0,34
@@ -1182,7 +1239,7 @@ for (const map of MAPS) {
       // Paare bei 0,34 bis 0,44 - die Grenze ist mit Abstand gehalten, also
       // kostet die Verschaerfung nichts und haelt kuenftig etwas.
       fail(`${map.id} und ${other.id} verlangen fast dasselbe (Abstand ${diff.toFixed(2)}, `
-        + 'noetig sind 0,25) - dann sind es zwei Namen fuer dieselbe Karte, und die '
+        + 'noetig sind 0,125) - dann sind es zwei Namen fuer dieselbe Karte, und die '
         + 'zweite stellt keine eigene Frage.');
     }
   }

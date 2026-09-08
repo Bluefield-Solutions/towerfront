@@ -1,6 +1,6 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v233 · 07.09.2026
+Stand: v240 · 08.09.2026
 
 Die Datei ist **eine** Datei. Jedes Bild steckt als Datenadresse darin und
 wird dabei ein Drittel größer. Ohne Obergrenze wächst sie mit jedem Bild, bis
@@ -49,13 +49,21 @@ Gemessen an `dist/index.html` (v233, 07.09.2026):
 | Bildvorrat (44 WebP) | **1094 KB** | 77 % |
 | Startbilder (11 PNG/JPEG) | 108 KB | 8 % |
 | alles übrige — Code, HTML, Stilvorlage | 217 KB | 15 % |
-| **gesamt** | **1419 KB** | von **1800** erlaubt |
+| **gesamt** | **1423 KB** | von **1800** erlaubt |
 
 Alle vier Zahlen sind an `dist/index.html` selbst gemessen, indem jede
 `data:`-Adresse darin gezählt wird — nur die letzte Zeile ist die
 **Differenz**. Vorher stand hier „Bildvorrat 909 KB", und das war die
 Rohsumme aus dem Packwerkzeug mal 1,34, also eine Rechnung über eine falsche
-Zahl. Die 1419 sagt `ls`.
+Zahl. Die 1423 sagt `ls`.
+
+**Nachgemessen in v240** (`npm run art`, ohne Rohbilder — die Größe steht in
+`src/gfx/assets/*.ts` und ist ohne Packlauf zu lesen, Regel 12): Gegner 71,
+Objekte 192, Türme 302, Untergründe 256, zusammen **821 KB von 1075**. Die
+ausgelieferte Datei wiegt **1423 KB von 1800**. Gegenüber v233 sind das vier
+Kilobyte weniger Bildvorrat und vier mehr Code — die Bedienung hat in v239
+Turmsymbole bekommen, aber die entstehen zur Laufzeit aus dem vorhandenen
+Vorrat und liegen nicht als eigene Bilder in der Datei.
 Die alte Fassung dieser Tabelle spaltete sie in „Startbilder 108" und „Code
 212" auf — zusammen 320, was zur Gesamtzahl nicht mehr passte. Eine Zeile,
 die man nicht misst, schreibt man als Differenz hin oder gar nicht.
@@ -66,10 +74,10 @@ Der Bildvorrat als Rohbytes, also vor der Datenadresse — die Zahlen sagt
 | Gruppe | roh | Budget |
 |---|---|---|
 | Türme (18 Bilder) | 302 KB | 445 |
-| **Untergründe (4)** | **260 KB** | **300** |
+| **Untergründe (4)** | **256 KB** | **300** |
 | Objekte (14) | 192 KB | 250 |
 | Gegner (8) | 71 KB | 80 |
-| **Summe** | **825 KB** | **1075** |
+| **Summe** | **821 KB** | **1075** |
 
 **Diese Tabelle stand bis v230 auf dem Stand von v185**, und bis v233 waren
 zwei ihrer vier Zeilen trotzdem falsch: Untergründe „162" statt 260, Objekte

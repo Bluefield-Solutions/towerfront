@@ -1,6 +1,6 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v239 · 08.09.2026
+Stand: v240 · 08.09.2026
 
 > „Es kommt kaum Spielspaß auf."
 
@@ -123,25 +123,42 @@ alles ausgeben. Die Aussage bleibt trotzdem: eine Strategie, die vier
 Zehntel ihres Einkommens liegen lässt, gewinnt. Knappheit ist der Motor
 jeder Aufbauentscheidung; hier läuft er im Leerlauf.
 
-### 2.6 Die Druckkurve fällt am Ende ab
+### 2.6 Die Druckkurve fällt am Ende ab — und diese Zahl war falsch gemessen
 
 Aus dem Wellenplan gerechnet (`wellenDruck` — Lebenspunkte, die eine Welle
 aufs Feld bringt, Zerfallende mitgezählt):
 
 | Karte | Rückfälle | größter Rückfall | letzte Welle gegen die Spitze |
 |---|---|---|---|
-| Spiralhain | 3 von 14 | −43 % bei W10 | **76 %** (Spitze W9) |
-| Ascheschlucht | 3 von 14 | −48 % bei W12 | **89 %** (Spitze W11) |
-| Frostspalte | 5 von 14 | −43 % bei W13 | **72 %** (Spitze W9) |
-| Farnkessel | 5 von 14 | −59 % bei W13 | **93 %** (Spitze W14) |
+| Spiralhain | 3 von 14 | −43 % bei W10 | 76 % (Spitze W9) |
+| Ascheschlucht | 3 von 14 | −48 % bei W12 | 89 % (Spitze W11) |
+| Frostspalte | 5 von 14 | −43 % bei W13 | 72 % (Spitze W9) |
+| Farnkessel | 5 von 14 | −59 % bei W13 | 93 % (Spitze W14) |
 
-**Auf keiner der vier Karten ist die letzte Welle die schwerste.** Auf dem
-Spiralhain bringt Welle 9 ein Drittel mehr Lebenspunkte aufs Feld als das
-Finale. Der Höhepunkt liegt in der Mitte, und danach wird es leichter —
-während gleichzeitig die Verteidigung weiter wächst.
+**Daraus stand hier: „Auf keiner der vier Karten ist die letzte Welle die
+schwerste." Das ist falsch, und der Fehler ist meiner** (bemerkt in v240).
 
-Dass man trotzdem in W14/15 verliert, liegt an der Zusammensetzung
-(Schilde, Titanen), nicht an der Menge. Aber empfunden wird die Menge.
+Der Druck einer Welle ist nur EIN Faktor der Schwierigkeit. Der andere ist
+`hpScale` — die Lebenspunkte jedes Gegners werden mit ihr multipliziert, und
+sie steigt über einen Lauf von 1 auf über 20. Was ein Spieler erlebt, ist das
+Produkt. Dieselben Pläne, mit der Skala gerechnet:
+
+| Karte | Rückfälle | größter Rückfall | letzte Welle gegen die Spitze |
+|---|---|---|---|
+| Spiralhain | **1** | −19 % | **81 %** |
+| Ascheschlucht | **2** | −29 % | **100 %** |
+| Frostspalte | **2** | −27 % | **94 %** |
+| Farnkessel | **3** | −48 % | **96 %** |
+
+**Auf der Ascheschlucht IST das Finale die Spitze**, und die übrigen liegen
+zwischen 81 und 96 % statt zwischen 72 und 93. Die Kurve ist unruhiger, als
+sie sein sollte — aber sie bricht nicht ein, und der Höhepunkt liegt nicht in
+der Mitte.
+
+Regel 12, diesmal gegen den eigenen Befund: die Zahl war nicht falsch
+gerechnet, sie stand an der falschen Stelle. Seit v240 misst
+`tools/wellenmass.ts` beides und der Wächter hält die **wirksame** Kurve als
+Ratsche je Karte.
 
 ### 2.7 Ein Durchgang dauert lange und besteht meist aus Warten
 
@@ -253,7 +270,7 @@ spannendste. Verlieren ist spielbar.
 | G3 | **Kein einzelner Turmtyp schlägt das gemischte Feld** | alle drei | „nur Frost" ist der beste Lauf |
 | G4 | **Der Abstand zwischen dem besten und dem schwächsten Spielstil beträgt mindestens 20 Punkte** | Handwerk | 9 |
 | G5 | **Weniger als 20 % des Goldes bleiben liegen** | Kingdom Rush | 42 % |
-| G6 | **Die Druckkurve steigt monoton**, und die letzte Welle ist die Spitze | alle drei | fällt 3–5 mal, Finale bei 72–93 % |
+| G6 | **Die Druckkurve steigt monoton**, und die letzte Welle ist die Spitze | alle drei | wirksam gerechnet 1–3 Rückfälle, Finale bei 81–100 % — seit v240 als Ratsche gehalten |
 | G7 | **In jeder Welle steht eine Entscheidung an**, nicht nur beim Bauen | Kingdom Rush | keine |
 | G8 | **Jeder Zielmodus gewinnt irgendwo allein** | Regel 5, sinngemäß | „nah" nirgends |
 | G9 | **Jede Karte ist auf drei Sterne spielbar** | Handwerk | 2 von 4 |
@@ -261,7 +278,8 @@ spannendste. Verlieren ist spielbar.
 | G11 | **Ein Durchbruch ist ein benanntes Ereignis** mit Bild und Ton, kein stiller Abzug | Defense Grid | still |
 | G12 | **Der Hauptknopf ist nie tot** — während der Welle trägt er die nächste Handlung | Kingdom Rush (Frühstart) | ausgegraut |
 
-**Zwölf Punkte, null erfüllt.** Das ist unangenehm und es ist genau der
+**Zwölf Punkte, null ganz erfüllt** — und einer davon, G6, stand nach einer
+falsch gemessenen Zahl schlimmer da, als er ist (siehe 2.6). Das ist unangenehm und es ist genau der
 Grund, warum die Empfindung „kaum Spielspaß" richtig ist: das Spiel ist
 technisch sauber, gemessen bestanden und in fast jeder Genre-Kategorie
 abgehakt — aber die Kennzahlen, die es prüft, prüfen Korrektheit, nicht
@@ -274,8 +292,9 @@ Spannung.
 Die Reihenfolge folgt aus der Abhängigkeit: Knappheit zuerst, dann
 Entscheidungen, dann Rückmeldung.
 
-1. **G1, G5, G6 — Knappheit herstellen.** Kristall herunter, Druckkurve
-   monoton, Gold enger. Ohne Knappheit wirkt keine der übrigen Änderungen,
+1. **G1 und G5 — Knappheit herstellen.** Kristall herunter, Gold enger. (G6
+   ist nach der Korrektur in 2.6 der kleinste der drei: die wirksame Kurve
+   bricht nicht ein.) Ohne Knappheit wirkt keine der übrigen Änderungen,
    weil nichts von ihnen etwas kosten kann. **Das ist der Schlüsselschritt**,
    und er hängt an `npm run sim`: die Karten müssen danach neu eingemessen
    werden.

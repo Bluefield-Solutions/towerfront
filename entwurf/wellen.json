@@ -1,0 +1,222 @@
+{
+  "_": [
+    "Die Wellenplaene als BESCHREIBUNG, nicht als Punktlisten.",
+    "",
+    "Gesetzt wird hier, was eine Karte VERLANGT - wie steil sie ansteigt, wer",
+    "wann zum ersten Mal kommt, wieviel davon fliegt, ab wann Schilde",
+    "auftauchen. Die Wellen selbst rechnet `npm run wellenbau` daraus und",
+    "misst jede Regel, bevor es sie eintraegt.",
+    "",
+    "Dieselbe Bauart wie `entwurf/bahnen.json` seit v237, und aus demselben",
+    "Grund: von Hand gesetzte Zahlen lassen sich nicht durchprobieren, und",
+    "was man nicht durchprobieren kann, eicht man am Gefuehl.",
+    "",
+    "`druck` ist der Lebenspunktbetrag, den eine Welle aufs Feld bringt -",
+    "dieselbe Rechnung wie `wellenDruck`. `form` biegt die Kurve: 1 ist",
+    "linear, 2 ist quadratisch, also lange flach und spaet steil.",
+    "",
+    "waehrend `erste`, `letzte` und `form` ihre FORM beschreiben. Sie steht hier",
+    "als Zahl und nicht als Wunsch: der erste Entwurf hat die Form richtig",
+    "getroffen (null Rueckfaelle, Finale gleich Spitze) und war dabei so steil,",
+    "dass das gemischte Feld in Welle 14 verlor. Die Hoehe kommt deshalb aus dem",
+    "heutigen Plan - er ist eingemessen, die Form war es nie.",
+    "",
+    "**`erste` und `letzte` sind WIRKSAME Werte, nicht rohe.**",
+    "",
+    "Die Lebenspunkte jedes Gegners werden mit `hpScale` multipliziert, und die",
+    "steigt ueber einen Lauf von 1 auf ueber 20. Was ein Spieler erlebt, ist das",
+    "Produkt aus Plan und Skala. Der erste Entwurf hat gegen den rohen Plan",
+    "entworfen - die Form war auf Anhieb richtig, aber die letzte Welle traf",
+    "1,75 mal so hart wie heute, und `npm run sim` meldete 'Gemischt muss",
+    "gewinnen - die Kurve ist zu steil'.",
+    "",
+    "Gesetzt sind deshalb die wirksamen Eckwerte des heutigen Plans; die Werkbank",
+    "teilt durch `hpScale` und bekommt daraus die rohen Anzahlen. Damit ist die",
+    "wirksame Kurve von Bauart monoton UND endet dort, wo sie heute endet."
+  ],
+  "spiralhain": {
+    "wellen": 15,
+    "druck": {
+      "erste": 204,
+      "letzte": 50872,
+      "form": 1.85
+    },
+    "arten": [
+      {
+        "id": "crawler",
+        "ab": 1,
+        "gewicht": 3.0
+      },
+      {
+        "id": "runner",
+        "ab": 3,
+        "gewicht": 1.6
+      },
+      {
+        "id": "infantry",
+        "ab": 4,
+        "gewicht": 1.4
+      },
+      {
+        "id": "brute",
+        "ab": 5,
+        "gewicht": 1.2
+      },
+      {
+        "id": "splitter",
+        "ab": 6,
+        "gewicht": 1.0
+      },
+      {
+        "id": "flyer",
+        "ab": 7,
+        "gewicht": 1.0
+      },
+      {
+        "id": "titan",
+        "ab": 10,
+        "gewicht": 0.9,
+        "boss": true
+      }
+    ],
+    "luft": 0.157,
+    "schildAb": 8,
+    "traegerAb": 12,
+    "ausstossMax": 24
+  },
+  "ascheschlucht": {
+    "wellen": 15,
+    "druck": {
+      "erste": 102,
+      "letzte": 38209,
+      "form": 1.7
+    },
+    "arten": [
+      {
+        "id": "crawler",
+        "ab": 1,
+        "gewicht": 2.6
+      },
+      {
+        "id": "infantry",
+        "ab": 3,
+        "gewicht": 2.2
+      },
+      {
+        "id": "brute",
+        "ab": 5,
+        "gewicht": 1.6
+      },
+      {
+        "id": "splitter",
+        "ab": 6,
+        "gewicht": 1.6
+      },
+      {
+        "id": "flyer",
+        "ab": 8,
+        "gewicht": 0.6
+      },
+      {
+        "id": "titan",
+        "ab": 11,
+        "gewicht": 0.9,
+        "boss": true
+      }
+    ],
+    "luft": 0.091,
+    "schildAb": 9,
+    "traegerAb": 13,
+    "ausstossMax": 22
+  },
+  "frostspalte": {
+    "wellen": 15,
+    "druck": {
+      "erste": 136,
+      "letzte": 39422,
+      "form": 1.8
+    },
+    "arten": [
+      {
+        "id": "crawler",
+        "ab": 1,
+        "gewicht": 2.0
+      },
+      {
+        "id": "runner",
+        "ab": 2,
+        "gewicht": 2.4
+      },
+      {
+        "id": "brute",
+        "ab": 5,
+        "gewicht": 1.8
+      },
+      {
+        "id": "splitter",
+        "ab": 7,
+        "gewicht": 1.2
+      },
+      {
+        "id": "flyer",
+        "ab": 8,
+        "gewicht": 0.5
+      },
+      {
+        "id": "titan",
+        "ab": 11,
+        "gewicht": 0.9,
+        "boss": true
+      }
+    ],
+    "luft": 0.08,
+    "schildAb": 9,
+    "traegerAb": 12,
+    "ausstossMax": 22
+  },
+  "farnkessel": {
+    "wellen": 15,
+    "druck": {
+      "erste": 170,
+      "letzte": 35260,
+      "form": 1.75
+    },
+    "arten": [
+      {
+        "id": "infantry",
+        "ab": 1,
+        "gewicht": 2.8
+      },
+      {
+        "id": "flyer",
+        "ab": 3,
+        "gewicht": 1.1
+      },
+      {
+        "id": "crawler",
+        "ab": 4,
+        "gewicht": 1.4
+      },
+      {
+        "id": "brute",
+        "ab": 6,
+        "gewicht": 1.6
+      },
+      {
+        "id": "splitter",
+        "ab": 8,
+        "gewicht": 1.2
+      },
+      {
+        "id": "titan",
+        "ab": 12,
+        "gewicht": 0.9,
+        "boss": true
+      }
+    ],
+    "luft": 0.156,
+    "schildAb": 10,
+    "traegerAb": 13,
+    "ausstossMax": 22
+  }
+}

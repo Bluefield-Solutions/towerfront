@@ -1674,6 +1674,51 @@ const PROBEN = [
     ersatz: '    void wegZeichnen;',
     tor: 'wegdeckungtor',
   },
+  {
+    // v237: `art/` galt als "hier liegen Bildgruppen", und jede JSON darin
+    // wurde als eine gelesen. Eine Entwurfsbeschreibung dort abzulegen hat
+    // die ganze Torkette mit einem Stapelabzug abgebrochen - kein Befund,
+    // kein Satz. Der Eingriff nimmt die Pruefung heraus; dann versucht das
+    // Werkzeug wieder, jede JSON zu packen.
+    name: 'Bildwerkzeug haelt jede JSON fuer eine Bildgruppe',
+    datei: 'tools/pack-art.mjs',
+    //
+    // Gefangen wird der Eingriff vom SELBSTTEST des Werkzeugs, nicht vom
+    // Bestand: in `art/` liegt keine Nicht-Gruppe mehr, seit die
+    // Entwurfsbeschreibung nach `entwurf/` umgezogen ist. Ohne den
+    // Selbsttest bliebe diese Probe still (Regel 5).
+    regel: /^const istGruppeSpec = \(d\) => typeof d\.source === 'string' && typeof d\.output === 'string';$/m,
+    ersatz: 'const istGruppeSpec = () => true;',
+    tor: 'art',
+  },
+  {
+    // v237: die Kreuzdeckung. Der Eingriff nimmt die gierige Ueberdeckung
+    // heraus und stellt die zwoelf INDIVIDUELL besten Plaetze - genau der
+    // Fehler, den meine erste Fassung hatte: die stehen alle uebereinander,
+    // und die Zahl bricht ein. Der Waechter muss das sehen.
+    name: 'Kreuzdeckung stellt die Tuerme uebereinander',
+    datei: 'tools/bahnmass.ts',
+    regel: /^      if \(!best \|\| neu\.length > bestN\.length\) \{ best = p; bestN = neu; \}$/m,
+    ersatz: '      if (!best || neu.length > bestN.length) { best = p; bestN = neu; }\n'
+      + '      if (n > 0) break;',
+    tor: 'guards',
+  },
+  {
+    // Und das Gegengewicht: die Verschmelzung muss angeschlossen sein.
+    //
+    // **Die Grenze anzuheben taugt als Eingriff NICHT** - nachgefahren mit
+    // `VERSCHMELZUNG_MAX = 999` blieb der Waechter gruen, weil keine Karte
+    // in die Naehe der 55 kommt (die hoechste ist die Frostspalte mit 52).
+    // Ein Eingriff, der nur wirkt, wenn ohnehin etwas anschlaegt, beweist
+    // nichts. Gerueckt wird deshalb die MESSUNG: mit einem Schlauch von 400
+    // statt 10 Weltpunkten liegt jede Bahn in jeder anderen, und die Grenze
+    // muss anschlagen.
+    name: 'Verschmelzung wird nicht mehr begrenzt',
+    datei: 'tools/bahnmass.ts',
+    regel: /if \(bahnen\[j\]\.schlauchAbstand\(q\.x, q\.y\) < 10\) n\+\+;/,
+    ersatz: 'if (bahnen[j].schlauchAbstand(q.x, q.y) < 400) n++;',
+    tor: 'guards',
+  },
   // ---------------------------------------------------------------------
   // **`bahntreuetor` hat seit v233 KEINE Gegenprobe, und das steht hier
   // statt einer erfundenen.**
@@ -2551,32 +2596,44 @@ const PROBEN = [
     tor: 'gedraengetor',
   },
   {
-    // TF-032: "hinten" tut dasselbe wie "vorn" - eine Wahl ohne Folgen.
-    name: 'Zielmodus hinten wirkt wie vorn',
+    // **Die Gegenprobe auf "hinten" ist in v237 entfallen** - den Modus gibt
+    // es nicht mehr. Er hatte seinen einzigen (geteilten) Sieg auf der
+    // dritten Bahn der Ascheschlucht, und die war der Fehler, der aus dem
+    // Spiel gemeldet wurde: eine Verteidigung fuer eine der drei Bahnen sah
+    // von den anderen 35 %. Mit zwei gut gedeckten Bahnen entscheidet die
+    // Reihenfolge nichts mehr, und `npm run sim` hat es gemeldet.
+    //
+    // An ihre Stelle tritt die Probe auf den Modus, der die Lage jetzt
+    // anders liest als "vorn": "nah" nimmt den naechsten statt den
+    // vordersten. Macht man daraus eine Kopie von "vorn", muss der
+    // Rauchtest es sehen.
+    name: 'Zielmodus nah wirkt wie vorn',
     datei: 'src/game/state.ts',
-    // Der Fall braucht eine Welle, in der sich "vorn" und "hinten" ueberhaupt
-    // trennen. In v219 hat die lange Serpentine genau das gekostet: Welle 1
-    // trennte nichts mehr, und die Probe bewies still nichts.
-    haengtAn: ['src/data/maps.ts', 'src/data/waves.ts'],
-    regel: /        : wahl === 'hinten' \? -e\.travelled/,
-    ersatz: "        : wahl === 'hinten' ? e.travelled",
+    regel: /            : -d2;/,
+    ersatz: '            : e.travelled;',
     tor: 'smoke',
   },
   {
     // Und derselbe Eingriff gegen das Balance-Tor: dort wird nicht geprueft,
-    // ob der Modus ANDERS waehlt, sondern ob er etwas NUETZT.
-    name: 'Zielmodus hinten nuetzt nichts',
+    // ob der Modus ANDERS waehlt, sondern ob er etwas NUETZT. Seit v237 auf
+    // "nah" statt auf "hinten" - der Modus, der als letzter dazugekommen
+    // ist, muss sich rechtfertigen wie jeder andere.
+    name: 'Zielmodus nah nuetzt nichts',
     datei: 'src/game/state.ts',
-    regel: /        : wahl === 'hinten' \? -e\.travelled/,
-    ersatz: "        : wahl === 'hinten' ? e.travelled",
+    regel: /            : -d2;/,
+    ersatz: '            : e.travelled;',
     tor: 'sim',
   },
   {
     // Die Knopfreihe: feste vier Spalten bei fuenf Modi.
+    // **Die feste Zahl muss UNTER der Modizahl liegen, sonst ist es kein
+    // Eingriff.** Bis v236 stand hier 4 bei fuenf Modi; seit "hinten"
+    // entfallen ist, sind es vier - und `repeat(4, ...)` waere dasselbe wie
+    // die Ableitung. Drei bricht die Reihe bei jeder Modizahl ab drei.
     name: 'Zielreihe bricht auf zwei Zeilen um',
     datei: 'src/ui/ui.ts',
     regel: /      `repeat\(\$\{ZIELWAHL_ORDNUNG\.length\}, minmax\(0, 1fr\)\)`;/,
-    ersatz: "      'repeat(4, minmax(0, 1fr))';",
+    ersatz: "      'repeat(3, minmax(0, 1fr))';",
     tor: 'browsertor',
   },
   {

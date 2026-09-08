@@ -55,6 +55,7 @@
     "gelaendetor": "tsx tools/gelaende.mjs --tor",
     "gelaendesuche": "tsx tools/gelaendesuche.ts",
     "bahnentwurf": "tsx tools/bahnentwurf.ts",
+    "bahnbau": "tsx tools/bahnbau.ts",
     "bahnfit": "tsx tools/bahnfit.ts",
     "konter": "tsx tools/konter.ts",
     "kontertor": "tsx tools/konter.ts --tor",

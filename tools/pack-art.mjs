@@ -631,9 +631,40 @@ async function selbsttest() {
   console.log(`  Selbsttest: Teillieferung haelt beide Eintraege (${drin.join(', ')}).`);
 }
 
+// **Nur JSON-Dateien, die wirklich eine Bildgruppe beschreiben.**
+//
+// `art/` galt bis v237 als "hier liegen Bildgruppen", und jede JSON darin
+// wurde als eine gelesen. Eine Entwurfsbeschreibung, die dort abgelegt wurde,
+// hat die ganze Torkette mit einem `ERR_INVALID_ARG_TYPE` abgebrochen - kein
+// Befund, kein Satz, nur ein Stapelabzug aus `join()`. Eine Ablage, die man
+// nicht versehentlich benutzen kann, gibt es nicht; eine, die es sagt, schon.
+const istGruppeSpec = (d) => typeof d.source === 'string' && typeof d.output === 'string';
+const istGruppe = (f) => istGruppeSpec(JSON.parse(readFileSync(join(ART, f), 'utf8')));
+
+// **Selbsttest, weil der Fall im eingecheckten Baum nicht vorkommt.**
+//
+// Die Regel greift nur, wenn in `art/` eine JSON liegt, die keine Bildgruppe
+// ist - und die gibt es dort nicht mehr, seit die Entwurfsbeschreibung nach
+// `entwurf/` umgezogen ist. Eine Gegenprobe haette also nichts zu fassen und
+// bliebe still; genau die Verfallsart aus Regel 5. Deshalb stellt das
+// Werkzeug den Fall selbst.
+{
+  const gut = istGruppeSpec({ source: 'roh', output: 'x.ts', items: {} });
+  const schlecht = istGruppeSpec({ karten: {}, comment: 'ein Entwurf' });
+  if (!gut || schlecht) {
+    console.error('SELBSTTEST: die Gruppenerkennung trennt nicht - '
+      + `Bildgruppe ${gut}, Entwurf ${schlecht} (erwartet true / false).`);
+    process.exit(1);
+  }
+  console.log('  Selbsttest: eine JSON ohne "source"/"output" gilt nicht als Bildgruppe.');
+}
 const groups = only.length
   ? only
-  : readdirSync(ART).filter((f) => f.endsWith('.json')).map((f) => f.replace('.json', ''));
+  : readdirSync(ART).filter((f) => f.endsWith('.json')).filter((f) => {
+    if (istGruppe(f)) return true;
+    console.log(`  ${f}: keine Bildgruppe (kein "source"/"output") - uebersprungen.`);
+    return false;
+  }).map((f) => f.replace('.json', ''));
 
 /** **Wieviel wiegt das AUSGELIEFERTE Buendel?**
  *

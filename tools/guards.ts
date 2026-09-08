@@ -12,12 +12,18 @@ import { PERKS, PERK_ORDER, starsFor } from '../src/data/perks';
  *  anderen sehen muss. Gemessen: Frostspalte 56 %, Farnkessel 59 %,
  *  Ascheschlucht nach dem Umbau in v236 81 % - vorher 35 %. */
 const KREUZDECKUNG_MIN = 50;
+/** Wieviel eine Bahn hoechstens im Schlauch einer anderen liegen darf.
+ *  Gemessen an den angenommenen Karten: Frostspalte 52 %, Farnkessel 45 % -
+ *  beide teilen sich einen Schwanz, und das ist gewollt. Ein Entwurf aus
+ *  v236 stand bei 77 % und sah aus wie ein Weg, nicht wie drei. 55 liegt
+ *  knapp ueber dem hoechsten angenommenen Wert. */
+const VERSCHMELZUNG_MAX = 55;
 
 const NORMAL = DIFFICULTIES.normal;
 const START_GOLD = NORMAL.startGold;
 const START_LIVES = NORMAL.startLives;
 import { MAPS, goalOf, lanePaths } from '../src/data/maps';
-import type { LanePath } from '../src/core/path';
+import { bauplaetze, kreuzdeckung, verschmelzung } from './bahnmass';
 import { abnahmegrenzen } from './auftrag';
 import { GameState } from '../src/game/state';
 import { projektilform } from '../src/gfx/renderer';
@@ -241,76 +247,33 @@ for (const map of MAPS) {
   // Die Grenze ist gemessen: Frostspalte 56 %, Farnkessel 59 %, Ascheschlucht
   // nach dem Umbau 81 %. 50 liegt knapp darunter.
   if (paths.length > 1) {
-    const REICHWEITE = 252, SCHRITT = 12;
-    const probe = new GameState(map.id);
-    probe.reset(1, 'normal', map.id);
-    const plaetze: { x: number; y: number }[] = [];
-    for (let y = 60; y < WORLD_H; y += 60) {
-      for (let x = 60; x < WORLD_W; x += 60) {
-        if (probe.warumNicht('arrow', x, y) === null) plaetze.push({ x, y });
-      }
+    // Gerechnet wird in `tools/bahnmass.ts` - der EINEN Stelle, die diese
+    // Frage beantwortet. In v236 stand sie zweimal im Baum (hier und in
+    // einer Werkbank), die beiden gaben verschiedene Antworten, und ich habe
+    // eine Karte auf die falsche hin umgebaut, bevor es auffiel (Regel 15).
+    const plaetze = bauplaetze(map, paths);
+    const kreuz = kreuzdeckung(paths, plaetze);
+    const misch = verschmelzung(paths);
+    profile.push(`Kreuzdeckung ${kreuz.schwaechste.toFixed(0)} % (${kreuz.wo})`);
+    profile.push(`Verschmelzung ${misch.staerkste.toFixed(0)} % (${misch.wo})`);
+
+    // **Seit v237 ein Abbruch, nicht mehr ein Hinweis.** In v236 stand die
+    // Ascheschlucht bei 35 % und der Umbau war offen; ein Tor, das am Tag
+    // seiner Einfuehrung rot steht, wird abgeschaltet. Jetzt liegen alle
+    // drei mehrbahnigen Karten darueber (Ascheschlucht 61, Frostspalte 56,
+    // Farnkessel 59), also darf es halten.
+    if (kreuz.schwaechste < KREUZDECKUNG_MIN) {
+      fail(`${map.id}: Kreuzdeckung ${kreuz.schwaechste.toFixed(0)} % - ${kreuz.wo} gedeckt, `
+        + `verlangt sind ${KREUZDECKUNG_MIN} %. Wer seine Tuerme fuer eine Bahn stellt, `
+        + 'steht gegen die andere fast blank da - dann entscheidet nicht das Koennen, '
+        + 'sondern welche Bahn die Welle nimmt.');
     }
-    const abtasten = (b: LanePath): { x: number; y: number }[] => {
-      const pk: { x: number; y: number }[] = [];
-      for (let t = 0; t < b.length; t += SCHRITT) pk.push(b.at(t));
-      return pk;
-    };
-    /** Zwoelf Tuerme, gierig ueberdeckend - wie jemand sie verteilt. */
-    const stellen = (b: LanePath): { x: number; y: number }[] => {
-      const pk = abtasten(b);
-      const offen = new Set(pk.keys());
-      const gewaehlt: { x: number; y: number }[] = [];
-      for (let n = 0; n < 12 && offen.size; n++) {
-        let best: { x: number; y: number } | null = null; let bestN: number[] = [];
-        for (const p of plaetze) {
-          const neu: number[] = [];
-          for (const i of offen) {
-            if (Math.hypot(pk[i].x - p.x, pk[i].y - p.y) <= REICHWEITE) neu.push(i);
-          }
-          if (!best || neu.length > bestN.length) { best = p; bestN = neu; }
-        }
-        if (!best || !bestN.length) break;
-        gewaehlt.push(best);
-        for (const i of bestN) offen.delete(i);
-      }
-      return gewaehlt;
-    };
-    const tuerme = paths.map(stellen);
-    let schwaechste = 100, wo = '';
-    for (let i = 0; i < paths.length; i++) {
-      const pk = abtasten(paths[i]);
-      for (let j = 0; j < paths.length; j++) {
-        if (i === j) continue;
-        let n = 0;
-        for (const q of pk) {
-          if (tuerme[j].some((p) => Math.hypot(q.x - p.x, q.y - p.y) <= REICHWEITE)) n++;
-        }
-        const v = 100 * n / Math.max(1, pk.length);
-        if (v < schwaechste) { schwaechste = v; wo = `Bahn ${i + 1} von den Tuermen fuer Bahn ${j + 1}`; }
-      }
-    }
-    profile.push(`Kreuzdeckung ${schwaechste.toFixed(0)} % (${wo})`);
-    // **Hinweis, noch kein Abbruch - und das ist eine Entscheidung mit
-    // Begruendung, keine Nachsicht.**
-    //
-    // Die Ascheschlucht steht bei 35 % und muesste umgebaut werden. Vier
-    // Entwuerfe sind in v236 gemessen und alle verworfen: ein enges Geflecht
-    // erreicht 62 %, verschmilzt die drei Bahnen aber zu einem grauen
-    // Klumpen (Verschmelzung 77 % gegen 45 bis 52 der anderen Karten), ein
-    // weites haelt die Trennung und faellt auf 16 %. Auch zwei der heutigen
-    // drei Bahnen allein kommen nur auf 40 bis 49 %.
-    //
-    // Ein Tor, das am Tag seiner Einfuehrung rot steht, wird abgeschaltet -
-    // dieselbe Ueberlegung wie beim Grafiktor und seiner Figurendichte. Die
-    // Zahl steht deshalb erst einmal da und wird gemessen; der Umbau ist als
-    // D32 eingetragen, mit dieser Grenze als Schliessbedingung.
-    // Die Zeile traegt die Schliessbedingung von D32: wird aus `warn` ein
-    // `fail`, faellt der Punkt zu.
-    if (schwaechste < KREUZDECKUNG_MIN) { warn(`${map.id}: Kreuzdeckung ${schwaechste.toFixed(0)} % - ${wo} gedeckt, `
-        + `noetig waeren ${KREUZDECKUNG_MIN} % (Frostspalte 56, Farnkessel 59). Wer seine `
-        + 'Tuerme fuer eine Bahn stellt, steht gegen die andere fast blank da - dann '
-        + 'entscheidet nicht das Koennen, sondern welche Bahn die Welle nimmt. Steht als '
-        + 'D32 im Rueckstandsverzeichnis.');
+    // Und das Gegengewicht: zu nah beieinander ist auch falsch.
+    if (misch.staerkste > VERSCHMELZUNG_MAX) {
+      fail(`${map.id}: Verschmelzung ${misch.staerkste.toFixed(0)} % - ${misch.wo}, erlaubt `
+        + `sind ${VERSCHMELZUNG_MAX} %. Zwei Bahnen, die auf mehr als der Haelfte ihrer `
+        + 'Laenge uebereinanderliegen, sieht niemand als zwei. Ein geteilter Schwanz ist '
+        + 'gewollt (Frostspalte 52, Farnkessel 45), ein geteilter Weg nicht.');
     }
   }
 

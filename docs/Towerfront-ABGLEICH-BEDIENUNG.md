@@ -1,6 +1,6 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v230 · 06.09.2026
+Stand: v237 · 08.09.2026
 
 Schritt 0 des Durchgangs, nach `docs/Towerfront-SOLL-UND-BETRIEB.md` Teil 2.
 Ausgelöst durch vier Befunde vom Zielgerät:

@@ -2668,14 +2668,21 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
       'schwach muesste darunter liegen.',
     );
   }
-  // Und dasselbe fuer das zweite Paar (TF-032). Gemessen wird die
-  // zurueckgelegte STRECKE des anvisierten Gegners: mit "hinten" muss sie
-  // unter der mit "vorn" liegen. Wieder eine Ordnung statt einer Grenze -
-  // die Zahl selbst wandert mit jeder Balance-Runde, die Ordnung nicht.
-  if (strecken.hinten >= strecken.vorn) {
+  // **Das zweite Paar (TF-032) ist in v237 entfallen** - es verglich "vorn"
+  // gegen "hinten", und "hinten" gibt es nicht mehr. Der Modus hatte seinen
+  // einzigen Sieg auf der dritten Bahn der Ascheschlucht, und die war der
+  // Fehler, der aus dem Spiel gemeldet wurde. `npm run sim` verlangt von
+  // jedem Modus einen messbaren Fall; "hinten" hatte danach keinen mehr.
+  //
+  // Was an seine Stelle tritt, steht schon da: "nah" gegen "vorn". Beide
+  // gehen nach der Lage, aber nach verschiedenen - und damit bleibt die
+  // Ordnungspruefung fuer die Lage-Modi erhalten, statt ersatzlos zu
+  // verschwinden.
+  if (strecken.nah >= strecken.vorn) {
     problems.push(
-      `Ziellogik "hinten" wirkt nicht: sie visiert Gegner nach ${strecken.hinten.toFixed(0)} ` +
-      `Weltpunkten an, "vorn" nach ${strecken.vorn.toFixed(0)} - hinten muesste darunter liegen.`,
+      `Ziellogik "nah" wirkt nicht: sie visiert Gegner nach ${strecken.nah.toFixed(0)} ` +
+      `Weltpunkten an, "vorn" nach ${strecken.vorn.toFixed(0)} - der naechste Gegner ist `
+      + 'im Mittel weniger weit gekommen als der vorderste.',
     );
   }
   // **Und "Gefahr" muss den Schildtraeger nehmen, auch neben einem Titanen.**

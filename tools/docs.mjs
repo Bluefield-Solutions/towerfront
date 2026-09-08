@@ -171,6 +171,38 @@ for (const [name, text] of alle) {
   }
 }
 
+// --- 2b. Die Erledigt-Tabelle darf keine Luecke haben.
+//
+// **Zweimal passiert, und beide Male still.** In v230 endete sie bei v215 -
+// acht Fassungen fehlten. In v237 fiel auf, dass die Zeile fuer v236 nie
+// geschrieben worden war: das Einfuegeskript war an einem Tippfehler
+// gescheitert, und weil niemand nachzaehlt, stand die Runde einfach nicht da.
+//
+// Geprueft wird nicht "jede Fassung hat eine Zeile" - kleine Ergaenzungen
+// bekommen mit Absicht keine (der Bildauftrag in v231 zum Beispiel). Geprueft
+// wird die LUECKE: zwischen der hoechsten eingetragenen Fassung und der
+// aktuellen darf hoechstens eine liegen, und innerhalb der Tabelle darf keine
+// Fassung fehlen, die kleiner ist als die hoechste und groesser als die
+// zweithoechste plus eins... - das waere zu streng. Genommen wird die
+// einfache Form, die beide Faelle gefangen haette: die hoechste Zeile darf
+// nicht mehr als eine Fassung hinter `VERSION` liegen.
+{
+  const backlog = lies('docs/Towerfront-BACKLOG.md');
+  const zahlen = [...backlog.matchAll(/^\| v(\d+) \|/gm)].map((m) => Number(m[1]));
+  const heute = Number((version ?? 'v0').slice(1));
+  if (!zahlen.length) {
+    fail('Towerfront-BACKLOG.md: keine einzige Zeile in der Erledigt-Tabelle.');
+  } else {
+    const hoechste = Math.max(...zahlen);
+    if (heute - hoechste > 1) {
+      fail(`Towerfront-BACKLOG.md: die Erledigt-Tabelle endet bei v${hoechste}, das Spiel `
+        + `steht auf ${version}. ${heute - hoechste} Fassung(en) fehlen. Eine Runde, die nicht `
+        + 'darin steht, ist beim naechsten Nachschlagen nicht passiert - in v230 waren es acht, '
+        + 'in v236 eine, und beide Male hat es niemand gemerkt.');
+    }
+  }
+}
+
 // --- 2c. Ein erledigtes Ticket muss ueberall erledigt sein.
 //
 // Ein TF-Ticket steht im Masterplan an drei Stellen: in der Gap-Analyse, im

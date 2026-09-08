@@ -71,7 +71,7 @@ export interface Enemy {
  *  Gemessen wird bei `stark` und `schwach` der AKTUELLE Lebensstand, nicht
  *  der volle: der Spieler sieht den Balken ueber dem Gegner, und was er
  *  sieht, muss das sein, wonach der Turm geht. */
-export type Zielwahl = 'vorn' | 'hinten' | 'stark' | 'nah' | 'schwach';
+export type Zielwahl = 'vorn' | 'stark' | 'nah' | 'schwach';
 
 /** Kurzformen, und zwar aus Platzgruenden mit Mass.
  *
@@ -96,7 +96,6 @@ export type Zielwahl = 'vorn' | 'hinten' | 'stark' | 'nah' | 'schwach';
  *  Index, nicht das Wort. */
 export const ZIELWAHL_NAMEN: Record<Zielwahl, string> = {
   vorn: 'Vorn',
-  hinten: 'Hinten',
   // "Gefahr" und nicht mehr "Voll": der Modus nimmt seit v223 nicht den
   // Gegner mit den meisten Lebenspunkten, sondern den gefaehrlichsten - und
   // der gefaehrlichste ist der Schildtraeger, auch wenn er duenn ist.
@@ -106,9 +105,23 @@ export const ZIELWAHL_NAMEN: Record<Zielwahl, string> = {
 };
 
 // ANGEHAENGT, nicht eingeschoben: der Spielstand sichert die Zielwahl als
-// INDEX in diese Liste. Wer 'hinten' zwischen 'vorn' und 'stark' schiebt,
+// INDEX in diese Liste. Wer einen Modus zwischen zwei bestehende schiebt,
 // stellt jedem laufenden Spielstand die Tuerme um, ohne dass etwas rot wird.
-export const ZIELWAHL_ORDNUNG: Zielwahl[] = ['vorn', 'stark', 'nah', 'schwach', 'hinten'];
+//
+// **"Hinten" ist in v237 entfallen, und zwar am Ende der Liste** - der
+// einzige Platz, an dem sich ein Modus entfernen laesst, ohne die Indizes
+// der uebrigen zu verschieben. Ein alter Spielstand mit Index 4 faellt in
+// `state.ts` auf 'vorn' zurueck (`?? 'vorn'`).
+//
+// Der Grund ist gemessen, nicht geschmacklich: `npm run sim` verlangt von
+// jedem Modus, dass er irgendwo eine Welle gewinnt. "Hinten" hatte seinen
+// einzigen - geteilten - Sieg auf der dritten Bahn der Ascheschlucht, und
+// die war der Fehler, der in v236 aus dem Spiel gemeldet wurde: eine
+// Verteidigung fuer eine der drei Bahnen sah von den anderen 35 %. Mit zwei
+// gut gedeckten Bahnen stirbt in Reichweite ohnehin jeder, und die
+// Reihenfolge entscheidet nichts mehr. Ein Modus, dessen Nutzen an einem
+// Kartenfehler hing, verschwindet mit ihm.
+export const ZIELWAHL_ORDNUNG: Zielwahl[] = ['vorn', 'stark', 'nah', 'schwach'];
 
 export interface Tower {
   id: number;

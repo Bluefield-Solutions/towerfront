@@ -134,6 +134,19 @@ npm run bahnsuche   sucht im gemalten Wegenetz eine Route, die es noch nicht
                     Gegner zu schmal sind - ohne das findet es Routen, die
                     es nur auf dem Papier gibt (auf dem Spiralhain traegt
                     die schmalste Stelle acht Weltpunkte).
+npm run bahnbau     Bahnen aus einer BESCHREIBUNG erzeugen, messen und
+                    eintragen. Der Entwurf steht als Daten in
+                    `entwurf/bahnen.json` (Mittelachse, Tore, Querversatz je
+                    Bahn, Massstab), gerechnet wird in `tools/bahnmass.ts` -
+                    derselben Datei, die `npm run guards` benutzt. Das
+                    Werkzeug drueckt die KURVE aus den unwegsamen Flecken,
+                    misst jede Regel und traegt nur ein, wenn alle halten.
+                    `--suche` faehrt den Massstab durch und zeigt, wo das
+                    Fenster liegt - oder dass es keins gibt.
+                    Vorher wurden Bahnen von Hand gesetzt und mit
+                    Wegwerfskripten gemessen; in v236 rechnete die Werkbank
+                    anders als der Waechter (81 % gegen 62 %), weil sie die
+                    Bauplaetze aus der KARTE nahm statt aus dem Entwurf.
 npm run bahnfit     zieht die Bahnen auf die gemalte Strasse (schreibt
                     maps.ts). `--umleiten` aendert Routen, nicht nur Lagen.
 npm run bahntreue   prueft am Kartenbild, ob jede Bahn auf der GEMALTEN
@@ -398,7 +411,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v236. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v237. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -455,6 +468,57 @@ und „1506 KB von 1600 erlaubt", während die Grenze seit v187 bei 1800 liegt
 und die Datei **1592** wiegt. Die Tabelle nennt jetzt den Befehl, aus dem ihre
 Zahlen kommen (`npm run pack-art -- --force`), und die eine Zeile, die nicht
 gemessen ist, steht als **Differenz** da statt als Messung.
+
+**Bahnen entstehen seit v237 über ein System, nicht von Hand.** Der Anlass
+war eine Forderung des Nutzers — *„wir brauchen für alles ein sauberes
+reproduzierbares System, insbesondere für Karten, Wege, Gegnerläufe und
+Turmpositionierungen"* — und sie trifft genau, was v236 gekostet hat: Bahnen
+wurden als Punktlisten von Hand gesetzt und mit Wegwerfskripten gemessen. Die
+Werkbank rechnete anders als der Wächter (81 % gegen 62 %, später 71 % gegen
+16 %), weil sie die Bauplätze aus der KARTE nahm statt aus dem Entwurf — und
+ein Umbau lief auf die falsche Zahl hin, bis es auffiel.
+
+| | |
+|---|---|
+| `tools/bahnmass.ts` | die **eine** Stelle, an der Bahnzahlen entstehen. Wächter und Entwurfswerkzeug rechnen dieselbe Rechnung, und die Bauplätze kommen immer aus den Bahnen, die gerade gemessen werden |
+| `art/bahnen.json` | der Entwurf als **Daten**: Mittelachse, Tore, Querversatz je Bahn, Maßstab |
+| `npm run bahnbau` | erzeugt daraus die Punktlisten, drückt die **Kurve** aus den unwegsamen Flecken, misst jede Regel und trägt nur ein, wenn alle halten. `--suche` fährt den Maßstab durch |
+
+**Damit ist D32 zu.** Der Durchlauf zeigt, was vier Handentwürfe nur vermuten
+ließen: mit **drei** Bahnen gibt es auf dieser Karte kein Fenster — Kreuzdeckung
+≥ 50 nur bei Maßstab 0,40–0,50, und dort liegen die Bahnen zu 77–79 %
+übereinander. Mit **zwei** öffnet es sich:
+
+| | vorher (3 Bahnen) | **v237 (2 Bahnen)** |
+|---|---|---|
+| Kreuzdeckung | 35 % | **61 %** |
+| Verschmelzung | 54 % | **39 %** |
+| Bauplätze | 157 | **217** |
+| bester Lauf | 2 Sterne | **3 Sterne** |
+
+**Neues Tor: die Verschmelzung.** Die Kreuzdeckung allein belohnt Nähe — ein
+Entwurf stand in v236 bei 62 % und sah aus wie *ein* Weg statt wie drei. Die
+Grenze von 55 % kommt von den angenommenen Karten (Frostspalte 52, Farnkessel
+45).
+
+**Der Zielmodus „hinten" ist entfallen.** Er hatte seinen einzigen — geteilten
+— Sieg auf genau der dritten Bahn, also auf dem gemeldeten Fehler. Mit zwei
+gut gedeckten Bahnen stirbt in Reichweite ohnehin jeder, und `npm run sim`
+meldete „eine Wahl ohne Folgen". Gestrichen am **Ende** der Ordnung, dem
+einzigen Platz, der die Indizes der übrigen nicht verschiebt; alte Spielstände
+fallen auf „vorn" zurück.
+
+**Und der Satz stand seit v18 im Konzept.** Abschnitt 3.18: *„Zwei Zuwege
+halbieren die Deckung. Ein Turm sieht nur eine der beiden Seiten, solange die
+Bahnen getrennt laufen."* In v233 habe ich die Ascheschlucht auf drei getrennte
+Korridore umgebaut, ohne dass etwas rot wurde — die Regel war aufgeschrieben
+und von keinem Tor gehalten. Seit v236 ist sie eine Zahl, seit v237 ein Tor.
+
+**Nebenbei fehlte die v236-Zeile im Rückstandsverzeichnis.** Mein
+Einfügeskript war an einem Tippfehler gescheitert, und weil niemand nachzählt,
+stand die Runde einfach nicht da — dieselbe Klasse wie v230, wo acht Fassungen
+fehlten. `npm run doku` prüft jetzt, dass die Erledigt-Tabelle höchstens eine
+Fassung hinter `VERSION` zurückliegt.
 
 **Auf dem Notebook ließ sich nicht weit genug herauszoomen (v236).** Die
 Untergrenze war `coverScale` — „Bildschirm gefüllt". Das Feld ist 16:9, ein

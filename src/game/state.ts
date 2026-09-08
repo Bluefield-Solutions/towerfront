@@ -1527,10 +1527,9 @@ export class GameState {
       // Ein gemeinsames Mass, bei dem immer der groesste Wert gewinnt: dann
       // steht die Vergleichslogik einmal da und nicht viermal.
       const wert = wahl === 'vorn' ? e.travelled
-        : wahl === 'hinten' ? -e.travelled
-          : wahl === 'stark' ? e.hp + (e.traeger > 0 ? GEFAHR_TRAEGER : 0)
-            : wahl === 'schwach' ? -e.hp
-              : -d2;
+        : wahl === 'stark' ? e.hp + (e.traeger > 0 ? GEFAHR_TRAEGER : 0)
+          : wahl === 'schwach' ? -e.hp
+            : -d2;
       if (!best || wert > bestWert) { best = e; bestWert = wert; }
     }
     return best;

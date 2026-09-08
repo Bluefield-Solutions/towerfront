@@ -1,6 +1,6 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v230 · 06.09.2026
+Stand: v237 · 08.09.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Towerfront.html`
 
 > **Aufbau dieses Dokuments.** Die Abschnitte 1 bis 3.4 beschreiben den
@@ -904,6 +904,19 @@ Zwei Antworten darauf, in dieser Reihenfolge:
 vergrößert — Ascheschlucht von 43 auf 54 Pfadzellen, die Vereinigung früh statt
 in der Mitte. Damit deckt der größte Teil der Türme beide Seiten.
 
+**Und genau das ist in v233 wieder verlorengegangen.** Die Ascheschlucht bekam
+drei Bahnen, die als drei fast unabhängige Korridore liefen; eine Verteidigung
+für eine von ihnen sah von den anderen 35 %. Gemeldet hat es der Nutzer aus dem
+Spiel — „die Gegner laufen über einen ganz kurzen Weg direkt zum Ziel, wenn man
+auf der anderen Seite Türme gebaut hat" —, und der Satz oben stand die ganze
+Zeit hier. Er war aufgeschrieben und von keinem Tor gehalten.
+
+Seit v236 ist er eine Zahl (**Kreuzdeckung**), seit v237 ein Tor, und seit v237
+entstehen die Bahnen über `npm run bahnbau` aus einer Beschreibung in
+`art/bahnen.json` statt von Hand. Der Durchlauf über den Maßstab zeigt, was
+dieser Absatz behauptet, in Zahlen: mit drei Bahnen gibt es auf dieser Karte
+kein Fenster, in dem die Deckung reicht *und* die Wege getrennt bleiben.
+
 **Dann ein Ausgleich je Karte.** Jede Karte trägt einen eigenen Faktor auf
 Lebenspunkte und Einkommen. Die Alternative wäre gewesen, den Wellenplan je
 Karte zu verdoppeln — dann müsste jede spätere Balanceänderung dreifach gemacht
@@ -1409,13 +1422,20 @@ tragen sich selbst. Der Faktor bleibt als letzte Feinschraube, aber der Wächter
 lässt nur noch 0,85 bis 1,2 zu: ein größerer Bedarf heißt, dass der Plan nicht
 stimmt.
 
-**Neu in v18 — drei Karten, zwei davon mit Gabelung.**
+**Stand v237 — vier Karten, drei davon mit Gabelung.** Die Zahlen sagt
+`npm run guards`; „Pfadzellen" gibt es seit dem Wegfall des Gitters nicht mehr.
 
-| Karte | Zuwege | Pfadzellen | Bauplätze | Biom |
+| Karte | Zuwege | Bauplätze | Kreuzdeckung | Verschmelzung |
 |---|---|---|---|---|
-| Spiralhain | 1 | 43 | 171 | Mondmoos, kaltes Blaugrün |
-| Ascheschlucht | 2, früh vereint | 54 | 147 | Asche und Lava, warmes Braunrot |
-| Frostspalte | 2, spät vereint | 38 | 120 | Gletscher, kaltes Stahlblau |
+| Spiralhain | 1 | 202 | — | — |
+| Ascheschlucht | 2 | 217 | 61 % | 39 % |
+| Frostspalte | 2 | 210 | 56 % | 52 % |
+| Farnkessel | 2 | 203 | 59 % | 45 % |
+
+**Kreuzdeckung** ist die Zahl aus v236: zwölf Türme, gierig überdeckend für
+*eine* Bahn gestellt — wieviel sehen sie von der anderen? **Verschmelzung** ist
+ihr Gegengewicht: welcher Anteil einer Bahn im Schlauch der anderen liegt. Die
+erste allein belohnt Nähe, bis man zwei Wege nicht mehr als zwei sieht.
 
 Jede Karte bringt ihre eigene Farbwelt mit — Boden, Pfad, Felsen, Lichtstimmung
 und Nebelton. Kristall, Gold und Gefahr bleiben überall gleich, damit die

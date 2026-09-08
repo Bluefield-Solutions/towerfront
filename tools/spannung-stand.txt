@@ -1,0 +1,9 @@
+# Die Spannungsratsche - der Stand, unter den kein Lauf fallen darf.
+# Geschrieben von `npx tsx tools/sim.ts --spannung-schreiben`, gelesen von
+# jedem Lauf. Vier Spalten: Kennzahl, Richtung (hoch = mehr ist besser),
+# Stand, Soll. Das Soll wird von Hand gepflegt, der Stand nicht.
+stellen hoch 2.00 5
+ruhe tief 13.00 3
+goldUebrig tief 35.15 20
+stilAbstand hoch 6.48 20
+zweigWirkung hoch UNBELEGT 9

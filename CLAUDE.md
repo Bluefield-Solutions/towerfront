@@ -258,6 +258,17 @@ npm run naechste    welche Story als naechste dran ist, mit ihrem vollen
                     nichts mehr in der Hand. `--alle` zeigt den Stand aller
                     42. Es entscheidet nicht: die Reihenfolge des Katalogs
                     ist begruendet (Abschnitt 4).
+npm run sim         Balance kopflos, drei Aussaaten - und seit v253 die
+                    SPANNUNGSRATSCHE: fuenf Kennzahlen (Stellen mit Verlust,
+                    laengste folgenlose Strecke, uebriges Gold, Abstand der
+                    Spielstile, kleinste Zweigwirkung) stehen in
+                    `tools/spannung-stand.txt`, und der Lauf bricht ab, wenn
+                    eine darunter faellt. Sie haelt gegen das gemessene
+                    Rauschen der Kennzahl, nicht gegen eine nackte Zahl -
+                    sonst schlaegt sie bei jedem zweiten Lauf an. Das SOLL
+                    steht daneben und laeuft als Hinweis mit.
+                    `--spannung-schreiben` setzt den Stand neu und schreibt
+                    damit auch jeden Rueckschritt fest.
 npm run kritik      Wertung nach Testerkategorien, Ziel über 90
 npm run c18         die C18-Frage allein: ist die erste Karte ohne
                     Verbesserungen zu gewinnen? Zwei Sekunden statt zwei
@@ -451,7 +462,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v252. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v253. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

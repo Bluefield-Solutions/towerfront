@@ -477,6 +477,35 @@ const PROBEN = [
     meldet: 'Stories erkannt',
   },
   {
+    // **Die zwei Proben zur Spannungsratsche (v253).**
+    //
+    // Vier Spannungszahlen standen bis v252 nur in einem Dokument und in
+    // einem Hinweis, der nicht abbricht. Zwischen v238 und v248 ist der
+    // Stilabstand dabei von 9 auf 6 gefallen - schlechter geworden -, und
+    // kein Tor hat ein Wort gesagt. Die erste Probe macht das Spiel
+    // leichter: mit `hpEnd` 12 statt 19.5 traegt der Kristall die letzten
+    // Wellen muehelos, die Verluste fallen auf eine Stelle, und die Ratsche
+    // muss es sagen.
+    name: 'Die Spannung faellt und niemand sagt es',
+    datei: 'src/data/difficulty.ts',
+    suche: 'hpEnd: 19.5',
+    ersatz: 'hpEnd: 12.0',
+    tor: 'sim',
+    meldet: 'Spannungsratsche',
+  },
+  {
+    // Und der leere Stand. Eine leere Datei galt in v227 schon einmal als
+    // sauber, und `: > tools/proben-befund.txt` haette die Pruefung damit
+    // still abgeschaltet - dieselbe Falle steht hier. Ein Lauf ohne Stand
+    // sieht aus wie ein Lauf ohne Rueckschritt.
+    name: 'Die Spannungsratsche verliert ihren Stand',
+    datei: 'tools/spannung-stand.txt',
+    regel: /^(stellen|ruhe|goldUebrig|stilAbstand|zweigWirkung) .*$/gm,
+    ersatz: '',
+    tor: 'sim',
+    meldet: 'ist leer oder fehlt',
+  },
+  {
     // **Der Nachtlauf braucht einen Weg zurueck ins Tor.** Bis v226 landete
     // sein Befund nur im Protokoll auf dem Runner. In der Sitzung zu v226 ist
     // er dreimal gefahren, zweimal rot, und beide Befunde habe ich nur

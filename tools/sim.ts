@@ -15,6 +15,85 @@ import { MAPS } from '../src/data/maps';
 import { ALL_PERKS, NO_PERKS, starsFor } from '../src/data/perks';
 import { ABILITIES } from '../src/data/abilities';
 import { candidateSpots } from './spots';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+/** **Die Spannungsratsche** (S-P1-02).
+ *
+ *  Vier Zahlen sagen, ob das Spiel spannend ist - und alle vier standen bis
+ *  v252 nur in einem Dokument und in einem Hinweis, der nicht abbricht
+ *  (`OFFEN (T15): ...`). Eine Regel, die nur aufgeschrieben ist, wird
+ *  gebrochen; das hat dieses Projekt sechsmal gekostet. **Belegt an dieser
+ *  Datei:** zwischen v238 und v248 ist der Stilabstand von 9 auf 6 gefallen,
+ *  also schlechter geworden, und kein Tor hat ein Wort gesagt.
+ *
+ *  Die Ratsche ist **kein Soll**. Sie haelt nur fest, was schon einmal
+ *  erreicht war - dasselbe Muster wie `bahntreue` und `wegdeckung`. Das Soll
+ *  steht daneben und laeuft als Hinweis mit, solange es nicht erreicht ist.
+ *
+ *  **Und sie haelt gegen ihr eigenes Rauschen, nicht gegen eine nackte
+ *  Zahl.** Jede der fuenf Kennzahlen schwankt mit der Aussaat; eine Ratsche
+ *  ohne diese Spanne wuerde bei jedem zweiten Lauf anschlagen und damit
+ *  genau das werden, was ein Tor nicht sein darf - eine Meldung, die man
+ *  wegklickt. Erlaubt ist deshalb ein Rueckschritt bis zur gemessenen
+ *  Rauschgrenze der Kennzahl, alles darueber bricht ab. */
+const SPANNUNG_DATEI = fileURLToPath(new URL('spannung-stand.txt', import.meta.url));
+const SPANNUNG_SCHREIBEN = process.argv.slice(2).includes('--spannung-schreiben');
+
+interface Spannungswert {
+  /** Der gemessene Wert dieses Laufs. */
+  wert: number | null;
+  /** Die Spanne ueber die Aussaaten - die Rauschgrenze dieser Kennzahl. */
+  rauschen: number;
+  /** Woran gemessen wurde (Regel 12). Steht in jeder Meldung mit drin. */
+  messstelle: string;
+}
+const spannung = new Map<string, Spannungswert>();
+const spannungGemessen = (
+  schluessel: string, wert: number | null, rauschen: number, messstelle: string,
+): void => { spannung.set(schluessel, { wert, rauschen, messstelle }); };
+
+/** Mittelwert und Spanne einer Kennzahl ueber mehrere Laeufe. */
+const mittelUndSpanne = (werte: number[]): { mittel: number; spanne: number } => ({
+  mittel: werte.reduce((a, b) => a + b, 0) / werte.length,
+  spanne: Math.max(...werte) - Math.min(...werte),
+});
+
+/** Die laengste Strecke aufeinanderfolgender Wellen ohne einen einzigen
+ *  Verlust. Sie misst, wie lange nichts passiert - eine Partie, in der
+ *  dreizehn Wellen hintereinander folgenlos bleiben, hat ihre Entscheidung
+ *  laengst getroffen und spielt sie nur noch ab. */
+const laengsteRuhe = (leakByWave: number[]): number => {
+  let beste = 0, jetzt = 0;
+  for (const v of leakByWave) { if (v > 0) jetzt = 0; else beste = Math.max(beste, ++jetzt); }
+  return beste;
+};
+
+const KOPF = `# Die Spannungsratsche - der Stand, unter den kein Lauf fallen darf.
+# Geschrieben von \`npx tsx tools/sim.ts --spannung-schreiben\`, gelesen von
+# jedem Lauf. Vier Spalten: Kennzahl, Richtung (hoch = mehr ist besser),
+# Stand, Soll. Das Soll wird von Hand gepflegt, der Stand nicht.
+`;
+
+/** Den Stand lesen. Eine fehlende oder leere Datei gibt eine leere Karte
+ *  zurueck - der Aufrufer meldet das, statt sie fuer sauber zu halten. */
+function leseSpannungsstand(): Map<string, {
+  richtung: 'hoch' | 'tief'; stand: number | null; soll: number;
+}> {
+  const karte = new Map<string, { richtung: 'hoch' | 'tief'; stand: number | null; soll: number }>();
+  let text: string;
+  try { text = readFileSync(SPANNUNG_DATEI, 'utf8'); } catch { return karte; }
+  for (const zeile of text.split('\n')) {
+    const z = zeile.trim();
+    if (!z || z.startsWith('#')) continue;
+    const [k, richtung, stand, soll] = z.split(/\s+/);
+    if (!k || (richtung !== 'hoch' && richtung !== 'tief') || soll === undefined) continue;
+    karte.set(k, {
+      richtung, stand: stand === 'UNBELEGT' ? null : Number(stand), soll: Number(soll),
+    });
+  }
+  return karte;
+}
 
 const DT = 1 / 60;
 
@@ -466,15 +545,37 @@ for (const bot of BOTS) {
 // Lauf entweder makellos oder gescheitert - und jede Aenderung am Sortiment
 // kippt genau diese eine Entscheidung, statt sie zu verschieben.
 {
-  const r = play(mixedPlanBase);
+  // **Ueber die Aussaaten, nicht ueber einen Lauf** (v253). Bis v252 stand
+  // hier ein einziges `play(mixedPlanBase)`, und aus dieser einen Partie kam
+  // die Zahl, an der "die Verluste haengen an einer Welle" gemessen wurde.
+  // Sie schwankt gemessen zwischen zwei und vier Stellen, je nach Aussaat -
+  // als Ratsche waere sie damit ein Wuerfel gewesen.
+  const o = ueberAussaaten((aussaat) => play(
+    mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { seed: aussaat },
+  ));
+  const r = o.runs[0];
   const hot = r.leakByWave
     .map((v, i) => ({ w: i + 1, v }))
-    .filter((o) => o.v > 0);
+    .filter((o2) => o2.v > 0);
   const last = MAPS[0].waves.length;
-  const share = hot.length ? (r.leakByWave[last - 1] ?? 0) / hot.reduce((a, o) => a + o.v, 0) : 0;
+  const share = hot.length ? (r.leakByWave[last - 1] ?? 0) / hot.reduce((a, o2) => a + o2.v, 0) : 0;
+  const stellen = mittelUndSpanne(o.runs.map(
+    (x) => x.leakByWave.filter((v) => v > 0).length,
+  ));
+  const ruhe = mittelUndSpanne(o.runs.map((x) => laengsteRuhe(x.leakByWave)));
+  spannungGemessen('stellen', stellen.mittel, stellen.spanne,
+    `Wellen mit Verlust, gemischtes Feld, Meister, ${MAPS[0].id}, normal, `
+    + `${AUSSAATEN.length} Aussaaten`);
+  spannungGemessen('ruhe', ruhe.mittel, ruhe.spanne,
+    `laengste Strecke Wellen ohne Verlust, gleiche Messstelle wie "stellen"`);
   console.log(
-    `\nVerteilung der Verluste: ${hot.length ? hot.map((o) => `W${o.w}:${o.v}`).join('  ') : 'keine'}` +
+    `\nVerteilung der Verluste: ${hot.length ? hot.map((o2) => `W${o2.w}:${o2.v}`).join('  ') : 'keine'}` +
     `   davon in der letzten Welle ${Math.round(share * 100)} %`,
+  );
+  console.log(
+    `  ueber ${AUSSAATEN.length} Aussaaten: ${stellen.mittel.toFixed(1)} Stelle(n) `
+    + `(Rauschen ${stellen.spanne.toFixed(1)}), laengste folgenlose Strecke `
+    + `${ruhe.mittel.toFixed(1)} Wellen (Rauschen ${ruhe.spanne.toFixed(1)})`,
   );
   // Bewusst ein Hinweis und kein Abbruch: das ist der bekannte offene Punkt
   // T15, kein Rueckschritt. Er steht in jedem Lauf sichtbar da, bis er
@@ -522,6 +623,20 @@ for (const bot of BOTS) {
   // laedt dazu ein, den naechsten Zufall fuer eine Verbesserung zu halten.
   const stilRauschen = Math.max(...runs.map((r) => r.rauschen));
   const stilAbstand = best - worst;
+  spannungGemessen('stilAbstand', stilAbstand, stilRauschen,
+    `bester minus schlechtester Stil, ${MAPS[0].id}, normal, `
+    + `${AUSSAATEN.length} Aussaaten x ${VARIANTS.length} Abwandlungen`);
+  // **Gold uebrig am Ende** - die Zahl hinter "es fehlt an nichts". Wer am
+  // Ende 43 % seines Goldes nicht ausgegeben hat, hatte keine Entscheidung
+  // zu treffen, sondern nur eine Reihenfolge. Gemessen ueber alle drei
+  // Stile, weil ein einzelner sparsamer Bot nichts ueber die Karte sagt.
+  const uebrigJeStil = runs.map((r) => (r.earned > 0 ? (r.left / r.earned) * 100 : 0));
+  const gold = mittelUndSpanne(uebrigJeStil);
+  spannungGemessen('goldUebrig', gold.mittel, Math.max(...runs.map((r) => r.rauschen)),
+    `(verdient - ausgegeben) / verdient, Mittel ueber die ${runs.length} Stile, `
+    + `${MAPS[0].id}, normal`);
+  console.log(`  Gold uebrig am Ende: ${gold.mittel.toFixed(1)} % `
+    + `(je Stil ${uebrigJeStil.map((v) => v.toFixed(0)).join(' / ')} %)`);
   console.log(
     `\nAbstand der Spielstile: ` + runs.map((r) => `${r.name} ${r.mean.toFixed(0)}`).join('   ') +
     `   Spanne ${stilAbstand.toFixed(0)}` +
@@ -835,6 +950,23 @@ for (const id of TOWER_ORDER) {
     `${def.branches[1].name.padEnd(15)} ${fmt(b).padEnd(12)} ${urteil}`,
   );
 }
+{
+  // **Die kleinste Zweigwirkung, und nur die belegten zaehlen.** Ein Paar,
+  // dessen Abstand unter seinem eigenen Rauschen liegt, hat keinen Wert,
+  // den man festhalten koennte - es haette sonst die Ratsche auf einen
+  // Zufall gesetzt.
+  const belegte = TOWER_ORDER
+    .map((id) => {
+      const a = branchMittel.get(`${id}:0`)!, b = branchMittel.get(`${id}:1`)!;
+      return { abstand: Math.abs(a.mittel - b.mittel), rauschen: Math.max(a.spanne, b.spanne) };
+    })
+    .filter((o) => o.abstand >= o.rauschen);
+  spannungGemessen('zweigWirkung',
+    belegte.length ? Math.min(...belegte.map((o) => o.abstand)) : null,
+    belegte.length ? Math.max(...belegte.map((o) => o.rauschen)) : 0,
+    `kleinster belegter Zweigabstand von ${START_LIVES} Kristall, ${MAPS[0].id}, `
+    + `${AUSSAATEN.length} Aussaaten`);
+}
 if (unbelegteZweige === TOWER_ORDER.length) {
   console.log(`  Alle ${unbelegteZweige} Zweigpaare sind UNBELEGT - die Zweigwahl bewegt `
     + 'heute nichts, was ueber der Streuung des Verfahrens liegt (G2).');
@@ -1060,6 +1192,87 @@ const hot = mixed.leakByWave
   .filter((o) => o.v > 0);
 if (hot.length) {
   console.log('Verluste (gemischt): ' + hot.map((o) => `W${o.w}:${o.v}`).join('  '));
+}
+
+// --- Die Spannungsratsche.
+//
+// Sie steht hier unten, weil sie alle fuenf Kennzahlen braucht, und vor dem
+// Urteil, weil ihr Befund in dasselbe Urteil gehoert.
+{
+  const ORDNUNG = ['stellen', 'ruhe', 'goldUebrig', 'stilAbstand', 'zweigWirkung'];
+  const NAMEN: Record<string, string> = {
+    stellen: 'Stellen mit Verlust', ruhe: 'laengste folgenlose Strecke',
+    goldUebrig: 'Gold uebrig am Ende', stilAbstand: 'Abstand der Spielstile',
+    zweigWirkung: 'kleinste Zweigwirkung',
+  };
+
+  // Erst schreiben, wenn danach gefragt wird - sonst waere die Ratsche keine:
+  // ein Lauf, der seinen eigenen Stand fortschreibt, kann nicht darunter
+  // fallen. Deshalb ist `--spannung-schreiben` ein ausdruecklicher Griff.
+  if (SPANNUNG_SCHREIBEN) {
+    const alt2 = leseSpannungsstand();
+    const zeilen = ORDNUNG.map((k) => {
+      const m = spannung.get(k)!;
+      const a = alt2.get(k);
+      return `${k} ${a?.richtung ?? (k === 'ruhe' || k === 'goldUebrig' ? 'tief' : 'hoch')} `
+        + `${m.wert === null ? 'UNBELEGT' : m.wert.toFixed(2)} ${a?.soll ?? 0}`;
+    });
+    writeFileSync(SPANNUNG_DATEI, KOPF + zeilen.join('\n') + '\n');
+    console.log(`\nSpannungsratsche: Stand geschrieben (${SPANNUNG_DATEI}).`);
+  }
+
+  const stand = leseSpannungsstand();
+  if (stand.size === 0) {
+    // **Eine leere Datei galt in v227 schon einmal als sauber**, und
+    // `: > tools/proben-befund.txt` haette die Pruefung damit still
+    // abgeschaltet. Dieselbe Falle steht hier - also wird sie hier benannt.
+    errors.push('Spannungsratsche: tools/spannung-stand.txt ist leer oder fehlt. '
+      + 'Ohne Stand haelt die Ratsche nichts, und ein Lauf ohne Stand sieht aus '
+      + 'wie ein Lauf ohne Rueckschritt. Mit `npx tsx tools/sim.ts '
+      + '--spannung-schreiben` neu setzen - und dabei wissen, dass man damit '
+      + 'jeden Rueckschritt festschreibt.');
+  }
+  console.log('\nSpannungsratsche (Stand halten, Soll anstreben):');
+  for (const k of ORDNUNG) {
+    const m = spannung.get(k);
+    if (!m) { errors.push(`Spannungsratsche: die Kennzahl "${k}" wurde in diesem Lauf `
+      + 'gar nicht gemessen - dann haelt sie auch nichts.'); continue; }
+    const z = stand.get(k);
+    const wert = m.wert === null ? 'UNBELEGT' : m.wert.toFixed(2);
+    if (!z) {
+      if (stand.size > 0) {
+        errors.push(`Spannungsratsche: fuer "${k}" steht kein Stand in der Datei.`);
+      }
+      continue;
+    }
+    const besser = z.richtung === 'hoch' ? '>=' : '<=';
+    const sollErreicht = m.wert !== null
+      && (z.richtung === 'hoch' ? m.wert >= z.soll : m.wert <= z.soll);
+    console.log(
+      `  ${NAMEN[k].padEnd(30)} ${wert.padStart(9)}   Stand `
+      + `${z.stand === null ? 'UNBELEGT' : z.stand.toFixed(2)}   Soll ${besser} ${z.soll}`
+      + `${sollErreicht ? '   ERREICHT' : ''}   (Rauschen ${m.rauschen.toFixed(2)})`,
+    );
+    if (!sollErreicht) {
+      console.log(`    OFFEN: ${NAMEN[k]} liegt noch nicht beim Soll (${besser} ${z.soll}).`);
+    }
+    // Der Vergleich selbst - und er laesst das Rauschen der Kennzahl zu.
+    if (z.stand === null || m.wert === null) {
+      if (z.stand !== null && m.wert === null) {
+        errors.push(`Spannungsratsche: "${NAMEN[k]}" war belegt (Stand `
+          + `${z.stand.toFixed(2)}) und ist es nicht mehr. Eine Kennzahl, die aus `
+          + 'der Messbarkeit faellt, ist ein Rueckschritt wie jeder andere. '
+          + `Gemessen an: ${m.messstelle}.`);
+      }
+      continue;
+    }
+    const abfall = z.richtung === 'hoch' ? z.stand - m.wert : m.wert - z.stand;
+    if (abfall > m.rauschen) {
+      errors.push(`Spannungsratsche: "${NAMEN[k]}" faellt von ${z.stand.toFixed(2)} auf `
+        + `${m.wert.toFixed(2)} - ${abfall.toFixed(2)} schlechter bei einem Rauschen von `
+        + `${m.rauschen.toFixed(2)}. Gemessen an: ${m.messstelle}.`);
+    }
+  }
 }
 
 if (errors.length) {

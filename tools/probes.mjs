@@ -498,9 +498,18 @@ const PROBEN = [
     // sauber, und `: > tools/proben-befund.txt` haette die Pruefung damit
     // still abgeschaltet - dieselbe Falle steht hier. Ein Lauf ohne Stand
     // sieht aus wie ein Lauf ohne Rueckschritt.
+    //
+    // **Die erste Fassung zaehlte die Kennzahlen auf, und der volle Lauf zu
+    // v256 hat sie erwischt** - genau die Falle, gegen die dieses
+    // Verzeichnis seit v219 anschreibt. Sie loeschte `stellen|ruhe|
+    // goldUebrig|stilAbstand|zweigWirkung`; v254 und v255 haben drei
+    // Kennzahlen dazugestellt, die drei Zeilen blieben stehen, der Stand war
+    // nicht mehr leer, und das Tor meldete zu Recht etwas anderes. Eine
+    // Probe, die ihren Gegenstand aufzaehlt, veraltet mit ihm. Sie trifft
+    // jetzt die FORM einer Wertzeile, nicht ihre Namen.
     name: 'Die Spannungsratsche verliert ihren Stand',
     datei: 'tools/spannung-stand.txt',
-    regel: /^(stellen|ruhe|goldUebrig|stilAbstand|zweigWirkung) .*$/gm,
+    regel: /^[A-Za-z]+ (hoch|tief) .*$/gm,
     ersatz: '',
     tor: 'sim',
     meldet: 'ist leer oder fehlt',

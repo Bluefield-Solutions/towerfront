@@ -230,13 +230,29 @@ function einfuehrungImSpiel(): boolean {
   if (TUTORIAL[0].done(t)) return false;
 
   // Und jetzt die Handgriffe, in der Reihenfolge der Schritte.
-  t.buildChoice = 'arrow';
-  if (!TUTORIAL[0].done(t)) return false;
+  //
+  // **Diese Messung stand bis v242 auf einer festen Dreierfolge** - Turmsorte
+  // waehlen, bauen, Welle starten - und ist verfallen, als der erste dieser
+  // Schritte in v238 entfiel: seit `reset` den guenstigsten Turm vorwaehlt,
+  // ist die Wahl schon getroffen, bevor die Einfuehrung beginnt, und der
+  // Schritt hatte keinen Gegenstand mehr. Die Einfuehrung hat den Wegfall
+  // sauber verbucht, die Messung nicht - sie fragte danach `TUTORIAL[2]` an
+  // einer Liste mit einem Schritt weniger und meldete P3 als nicht erfuellt.
+  //
+  // Dieselbe Klasse wie die sechs verfallenen Gegenproben derselben Runde:
+  // eine Pruefung, die eine Reihenfolge abschreibt statt eine Eigenschaft zu
+  // pruefen, veraltet an der naechsten Aenderung - und ein "nicht erfuellt"
+  // sieht aus wie ein Befund ueber das Spiel.
+  //
+  // Gefragt wird jetzt nach der EIGENSCHAFT: die zwei Handgriffe, die jede
+  // Einfuehrung dieses Spiels verlangt - einen Turm setzen und eine Welle
+  // starten -, muessen die zwei ersten Schritte schliessen. Wieviele Schritte
+  // davor stehen, sagt die Messung nicht mehr vor.
   const platz = platzAmWeg(t);
   if (!platz || !t.build(platz.x, platz.y, 'arrow')) return false;
-  if (!TUTORIAL[1].done(t)) return false;
+  if (!TUTORIAL[0].done(t)) return false;
   t.startWave();
-  return TUTORIAL[2].done(t);
+  return TUTORIAL[1].done(t);
 }
 
 const CRITERIA: Criterion[] = [

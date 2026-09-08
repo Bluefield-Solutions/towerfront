@@ -1,9 +1,26 @@
 # Towerfront — Genre-Abgleich
 
-Messung: v35 · 08.08.2026 · Aktueller Wert: **27 von 30 Kriterien, gewichtet 93 %**
+Stand: v249 · 08.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+Kriterien, gewichtet 100 %** — davon 68 von 68 Gewichtspunkten über 28
+Kriterien wirklich gemessen, 2 Kriterien (P6, P7) von Hand beurteilt.
 
-*Verlauf: v11 = 18/27 (69 %) → v12 = 19/27 (73 %) → v15 = 21/30 (74 %) → v17 = 22/30 (76 %) → v18 = 24/30 (85 %) → v20 = 27/30 (93 %), K4, K5 und K6 erfüllt.
-In v15 kamen drei Grafik-Kriterien in den Katalog; zwei davon sind erfüllt.*
+> **Diese Zeile stand 213 Fassungen lang falsch da**: „Messung: v35 · Aktueller
+> Wert: 27 von 30, gewichtet 93 %", während das Werkzeug im selben Baum 30 von
+> 30 meldete. Aufgefallen ist es niemandem, und zwar aus einem Grund, der
+> schlimmer ist als der Fehler selbst: der Doku-Wächter prüft den Rückstand
+> einer Datei an einer Zeile, die mit `Stand: v` beginnt — diese hier begann
+> mit `Messung: v`. **Eine Datei ohne die erwartete Form war für ihn keine
+> falsche Datei, sondern gar keine.** Dreizehn von vierundzwanzig Dokumenten
+> standen so ausserhalb jeder Prüfung. Seit v249 verlangt der Wächter von
+> jedem Dokument, dass es sich erklärt: entweder `Stand: vNN` (lebendes
+> Dokument, das nicht zurückfallen darf) oder `Aufgezeichnet: vNN` (ein
+> Protokoll, das absichtlich stehen bleibt).
+
+*Verlauf: v11 = 18/27 (69 %) → v12 = 19/27 (73 %) → v15 = 21/30 (74 %) →
+v17 = 22/30 (76 %) → v18 = 24/30 (85 %) → v20 = 27/30 (93 %) → v111 = 29/30
+(99 %) → v135 = 30/30 (100 %, und erstmals vollständig gemessen statt zu 79 %
+behauptet) → v242 kurzzeitig 29/30, weil die Messung von P3 an einer
+Einführung hing, die es nicht mehr gab.*
 
 Dieses Dokument ist die Grundlage für `npm run bericht`. Es hält fest, *woher*
 jedes Kriterium stammt — jeder Punkt im Katalog geht auf ein Spiel zurück, das

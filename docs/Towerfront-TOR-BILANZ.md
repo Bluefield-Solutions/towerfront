@@ -1,5 +1,9 @@
 # Towerfront — Bilanz über alle Tore
 
+Aufgezeichnet: v153 — Messung über alle Tore in einer Fassung. Dieses Dokument wird
+absichtlich NICHT nachgezogen; was daraus weiterlebt, steht im
+Rückstandsverzeichnis.
+
 *Messung: v153 · 24.08.2026 · vorherige Messung v31, siehe Abschnitt 7*
 
 Die Frage dieser Runde ist dieselbe wie damals, nur mit 26 Toren statt zehn:

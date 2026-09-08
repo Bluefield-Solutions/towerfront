@@ -1,5 +1,9 @@
 # Towerfront — Vollaudit v136
 
+Aufgezeichnet: v136 — Audit einer Fassung — es beschreibt v136 und nichts sonst. Dieses Dokument wird
+absichtlich NICHT nachgezogen; was daraus weiterlebt, steht im
+Rückstandsverzeichnis.
+
 Messung: v136 · 23.08.2026 · gemessen an der ausgelieferten Datei, im Browser
 gespielt (iPhone quer, 844 × 390), am Quelltext gelesen, mit eigenen Proben
 belegt.

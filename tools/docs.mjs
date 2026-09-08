@@ -315,11 +315,43 @@ for (const [name, text] of alle) {
 }
 
 // --- 4. Die Standangabe darf nicht weit zurückliegen.
-// Nur lebende Dokumente. Ein Messbericht traegt "Messung: vNN" und beschreibt
-// absichtlich den Stand von damals - ihn zu aktualisieren waere Faelschung.
+//
+// Nur lebende Dokumente. Ein Protokoll beschreibt absichtlich den Stand von
+// damals - es nachzuziehen waere Faelschung.
+//
+// **Bis v249 entschied das die ABWESENHEIT einer Zeile, und das war die
+// Luecke.** Wer keine Standangabe trug, wurde nicht geprueft - und
+// dreizehn von vierundzwanzig Dokumenten trugen keine. Darunter
+// `Towerfront-BENCHMARK.md`, das seit v35 „27 von 30, gewichtet 93 %"
+// behauptete, waehrend `npm run bericht` im selben Baum 30 von 30 mass:
+// **213 Fassungen falsch, und unsichtbar, weil die Zeile mit „Messung: v"
+// begann statt mit „Stand: v".** Eine Datei, die die erwartete Form nicht
+// trifft, war fuer diese Pruefung keine falsche Datei, sondern gar keine.
+//
+// Jetzt muss sich jedes Dokument erklaeren. Es gibt genau zwei Antworten,
+// und keine dritte:
+//
+//   Stand: vNN          lebendes Dokument - es darf nicht zurueckfallen
+//   Aufgezeichnet: vNN  Protokoll - es bleibt absichtlich stehen
+//   Aufgezeichnet: TT.MM.JJJJ   dasselbe, wenn das Dokument keine Fassung
+//                               nennt: sechs der dreizehn tragen nur ein
+//                               Datum, und eine Fassung dazuzuerfinden waere
+//                               genau die Sorte Zahl, gegen die Regel 12 steht
+//
+// Die zweite Form ist kein Schlupfloch: sie steht in der Datei, ist im
+// Verzeichnis zu sehen und muss beim Schreiben gewaehlt werden. Eine
+// Ausnahme, die man ausspricht, ist etwas anderes als eine, die entsteht,
+// weil niemand hingesehen hat.
 for (const [name, text] of alle) {
   const m = text.match(/Stand: (v\d+)/);
-  if (!m) continue;
+  if (!m) {
+    if (!/^Aufgezeichnet: (v\d+|\d{2}\.\d{2}\.\d{4})/m.test(text)) {
+      fail(`${name}: hat weder "Stand: vNN" noch "Aufgezeichnet: vNN". `
+        + 'Ohne eine der beiden Zeilen prueft niemand, ob der Inhalt noch stimmt - '
+        + 'und genau so stand der Genre-Abgleich 213 Fassungen lang falsch da.');
+    }
+    continue;
+  }
   const alt = Number(m[1].slice(1)), neu = Number(version.slice(1));
   if (neu - alt > 6) {
     fail(`${name}: steht auf ${m[1]}, aktuell ist ${version} - ${neu - alt} Versionen Rückstand.`);

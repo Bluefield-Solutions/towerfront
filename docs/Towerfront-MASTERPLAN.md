@@ -1,5 +1,9 @@
 # Tower Front — Studio-Audit und Masterplan
 
+Aufgezeichnet: v141 — Studio-Audit einer Fassung. Dieses Dokument wird
+absichtlich NICHT nachgezogen; was daraus weiterlebt, steht im
+Rückstandsverzeichnis.
+
 Messung: v141 · 23.08.2026
 
 **Was das hier ist.** Ein Audit aus dreißig Rollen, ein Produktkonzept und ein

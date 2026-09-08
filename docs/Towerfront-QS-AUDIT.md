@@ -1,5 +1,9 @@
 # Towerfront — Qualitätssicherung, tiefer Durchgang
 
+Aufgezeichnet: v57 — Audit einer Fassung. Dieses Dokument wird
+absichtlich NICHT nachgezogen; was daraus weiterlebt, steht im
+Rückstandsverzeichnis.
+
 *Messung: v35 · 08.08.2026 · Auftrag: keine Fehler, keine Lücken, keine Widersprüche*
 
 Vorgehen: erst mechanisch (Typprüfung streng, ungenutzte Exporte, Wächterausgabe

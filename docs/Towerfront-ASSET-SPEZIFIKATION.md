@@ -1,5 +1,9 @@
 # Towerfront — Asset-Spezifikation für KI-generierte Grafik
 
+Aufgezeichnet: 07.08.2026 — Spezifikation von damals; die drei überholten Punkte stehen als Kasten darunter. Dieses Dokument wird
+absichtlich NICHT nachgezogen; was daraus weiterlebt, steht im
+Rückstandsverzeichnis.
+
 *Version 1.0 · 07.08.2026 · Umstieg von prozeduraler auf gerenderte Optik*
 *Zielspiel: Tower Defense, Aufsicht, eine autarke HTML-Datei*
 

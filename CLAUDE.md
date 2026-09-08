@@ -438,7 +438,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v248. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v249. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -1482,6 +1482,30 @@ Rauchtest sagt es.
 - Die Berührungsflächen im Spiel sind gemessen: `npm run beruehrung` rechnet
   die Turmtreffer auf der Leinwand aus Platzbedarf, Trefferzugabe und dem
   kleinsten Maßstab aus.
+
+---
+
+## Der Anforderungskatalog — was als Nächstes gebaut wird
+
+Seit v249 liegt der Plan als Katalog vor, und er ist die Arbeitsgrundlage für
+jede weitere Runde:
+
+| Datei | was drinsteht |
+|---|---|
+| `docs/Towerfront-ANFORDERUNGSKATALOG.md` | Zielbild in fünf messbaren Sätzen, acht Pakete, die begründete Reihenfolge — und fünf verworfene Richtungen |
+| `docs/Towerfront-STORIES.md` | **42 Stories**, jede eine Runde Arbeit, in der Reihenfolge, in der sie gefahren werden |
+| `docs/Towerfront-MESSLUECKEN.md` | was wir heute nicht messen können, und warum das schlimmer ist als eine fehlende Funktion |
+| `docs/Towerfront-MARKTRECHERCHE.md` | was moderne Tower-Defense-Spiele ausmacht, mit Quellen |
+
+**Die Reihenfolge ist nicht verhandelbar, und der Grund steht in Abschnitt 2.1
+des Katalogs:** drei der vier Zielzahlen liegen heute unter dem Rauschen ihres
+eigenen Messverfahrens. `npm run sim` fährt genau **eine** Aussaat, und die
+Zweigtabelle mittelt gar nicht. Wer P2 (Knappheit) vor P1 (Messung) fährt,
+justiert gegen Zufall — und dieses Projekt hat genau das schon fünfmal bezahlt.
+
+Der wichtigste Satz des ganzen Katalogs: **der Genre-Abgleich steht auf 30 von
+30, und das Spiel macht trotzdem wenig Spaß.** Die zweiunddreissig Tore prüfen
+Korrektheit, nicht Spannung.
 
 ---
 

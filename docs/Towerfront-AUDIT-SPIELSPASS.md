@@ -266,9 +266,9 @@ spannendste. Verlieren ist spielbar.
 | # | Soll | woher | v238 | v248 |
 |---|---|---|---|---|
 | G1 | **Verluste über mindestens fünf Wellen**, keine folgenlose Phase von mehr als drei | Kingdom Rush | 2 Stellen, 29 % in der letzten | **2 Stellen** (W14:10 W15:7) — offen |
-| G2 | **Die Zweigwahl ändert das Ergebnis um mindestens 15 %** | BTD6 | 5 % | **18 %** beim Mörser (43 gegen 54), 3–5 % bei den drei anderen — ein Viertel erfüllt |
+| G2 | **Die Zweigwahl ändert das Ergebnis um mindestens 15 %** | BTD6 | 5 % | **unbelegt** — die 18 % beim Mörser waren eine Zahl aus einer Aussaat; über sieben gemessene Aussaaten bleiben **8 %**, und auf einer ist der Zweig mit dem höheren Wert der schwächere. Siehe Anforderungskatalog 2.1 |
 | G3 | **Kein einzelner Turmtyp schlägt das gemischte Feld** | alle drei | „nur Frost" 50 gegen 43 | **11 gegen 43** — erfüllt in v244, und der Wächter misst jetzt gegen das gemischte Feld statt gegen eine Zahl |
-| G4 | **Abstand zwischen bestem und schwächstem Spielstil ≥ 20 Punkte** | Handwerk | 9 | **6** — offen, und schlechter: der Verbund hebt die schwächeren Stile mit |
+| G4 | **Abstand zwischen bestem und schwächstem Spielstil ≥ 20 Punkte** | Handwerk | 9 | **6 bis 10 je nach Aussaat** — und die Robustheitsmessung meldet im selben Lauf 5 bis 7 Punkte Streuung bei *identischen* Eingaben. Der gesuchte Effekt ist kleiner als das Rauschen des Verfahrens; G4 ist heute nicht messbar |
 | G5 | **Weniger als 20 % des Goldes bleiben liegen** | Kingdom Rush | 42 % | **43 %** — unverändert offen |
 | G6 | **Die Druckkurve steigt monoton**, letzte Welle ist die Spitze | alle drei | wirksam 1–3 Rückfälle, Finale 81–100 % | unverändert — die Ratsche aus v240 hält es, der Hebel ist das Knie und nicht der Plan (F9) |
 | G7 | **In jeder Welle steht eine Entscheidung an** | Kingdom Rush | keine | **der Frühstart steht im Wellenknopf** (v243) — erfüllt, das Risiko fehlt (F10) |
@@ -285,7 +285,16 @@ das Spiel war technisch sauber, gemessen bestanden und in fast jeder
 Genre-Kategorie abgehakt — aber die Kennzahlen, die es prüfte, prüften
 Korrektheit, nicht Spannung.
 
-**Stand v248: fünf erfüllt, einer zu einem Viertel, sechs offen.** Erfüllt
+**Berichtigt am 08.09.2026, noch am selben Tag.** Die zwei Zeilen zu G2 und G4
+standen eine Fassung lang mit Zahlen aus **einer einzigen Aussaat** da —
+`tools/sim.ts` fährt genau eine (`SEEDS = [20260807]`), und die Zweigtabelle
+ist die einzige Kennzahl der Datei, die gar nicht mittelt. Nachgemessen über
+sieben Aussaaten ist G2 unbelegt statt teilweise erfüllt, und G4 ist nicht
+messbar statt schlecht. Dieselbe Klasse wie der Fund in v246 — eine Messung,
+die weniger trägt, als der Satz daneben behauptet, und diesmal war der Satz
+meiner.
+
+**Stand v248: fünf erfüllt, sechs offen, einer nicht messbar.** Erfüllt
 sind die fünf, an denen etwas SICHTBAR wurde (G7, G10, G11, G12) oder an denen
 eine Regel dazukam, die das Mischen belohnt (G3). Offen sind die, die an der
 **Knappheit** hängen: G1, G4 und G5 messen alle dasselbe von drei Seiten — der

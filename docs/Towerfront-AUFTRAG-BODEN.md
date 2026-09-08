@@ -1,5 +1,9 @@
 # Towerfront — Auftrag: Bodenbilder
 
+Aufgezeichnet: 06.08.2026 — ein Bildauftrag, der einmal herausging. Dieses Dokument wird
+absichtlich NICHT nachgezogen; was daraus weiterlebt, steht im
+Rückstandsverzeichnis.
+
 *v56 · 08.08.2026 · Erstes Los der Grafikangleichung*
 
 ---

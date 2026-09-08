@@ -1,5 +1,9 @@
 # Towerfront — Schleifenbetrieb
 
+Aufgezeichnet: 08.08.2026 — wie der Schleifenbetrieb damals eingerichtet wurde. Dieses Dokument wird
+absichtlich NICHT nachgezogen; was daraus weiterlebt, steht im
+Rückstandsverzeichnis.
+
 *Version 1.0 · 08.08.2026 · wie wir arbeiten, ohne dass du jede Runde
 einzeln freigibst*
 

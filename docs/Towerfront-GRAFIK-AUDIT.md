@@ -1,5 +1,9 @@
 # Towerfront — Grafik-Audit
 
+Aufgezeichnet: v104 — Audit einer Fassung; seine Befunde leben im Rückstandsverzeichnis weiter. Dieses Dokument wird
+absichtlich NICHT nachgezogen; was daraus weiterlebt, steht im
+Rückstandsverzeichnis.
+
 *v55 · 08.08.2026 · Alle Ebenen, gemessen statt geschätzt*
 
 ---

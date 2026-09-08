@@ -1,5 +1,9 @@
 # Towerfront — Konzept für ein hochwertiges Spiel
 
+Aufgezeichnet: v34 — der Plan von v34, wie das Dokument selbst im Kasten sagt. Dieses Dokument wird
+absichtlich NICHT nachgezogen; was daraus weiterlebt, steht im
+Rückstandsverzeichnis.
+
 *Version 1.0 · 08.08.2026 · nach 34 Versionen, geschrieben nach Recherche zu
 Kingdom Rush, Bloons TD 6 und der Frage nach dem richtigen Unterbau*
 

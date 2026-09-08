@@ -1,5 +1,9 @@
 # Umzug nach Claude Code — Schritt für Schritt
 
+Aufgezeichnet: 05.09.2026 — Protokoll eines Umzugs. Dieses Dokument wird
+absichtlich NICHT nachgezogen; was daraus weiterlebt, steht im
+Rückstandsverzeichnis.
+
 *Geschätzt eine Viertelstunde. Alles, was hier vorbereitet werden konnte, ist
 vorbereitet: `CLAUDE.md`, der Arbeitsablauf, der relative Grundpfad.*
 

@@ -1489,6 +1489,33 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // **Ein Dokument ohne Standangabe wird wieder uebersehen.**
+    //
+    // Das war die Luecke, durch die der Genre-Abgleich 213 Fassungen lang
+    // "27 von 30" behaupten konnte, waehrend das Werkzeug im selben Baum
+    // 30 von 30 mass: seine Zeile begann mit "Messung: v" statt "Stand: v",
+    // und wer die erwartete Form nicht traf, wurde gar nicht geprueft.
+    // Dreizehn von vierundzwanzig Dokumenten standen so draussen.
+    name: 'Dokument ohne Standangabe faellt durch das Netz',
+    datei: 'docs/Towerfront-BENCHMARK.md',
+    regel: /^Stand: v\d+ · /m,
+    ersatz: 'Messung: v35 · ',
+    tor: 'doku',
+    meldet: 'weder "Stand: vNN" noch "Aufgezeichnet: vNN"',
+  },
+  {
+    // **Und die Gegenrichtung, ohne die die Probe darueber nichts beweist:**
+    // ein PROTOKOLL darf schweigen. Sonst besteht die Pruefung auch ein Tor,
+    // das jedes Dokument zum Nachziehen zwingt - und dann waeren die zwoelf
+    // Protokolle des Verzeichnisses entweder gefaelscht oder rot.
+    name: 'Protokoll darf ohne Fassung stehenbleiben',
+    datei: 'docs/Towerfront-MASTERPLAN.md',
+    regel: /^Aufgezeichnet: v141 /m,
+    ersatz: 'Aufgezeichnet: 23.08.2026 ',
+    tor: 'doku',
+    meldetNicht: 'weder "Stand: vNN"',
+  },
+  {
     // **Ein Befehl mit Ziffer im Namen wird wieder uebersehen.**
     //
     // Das Muster des Doku-Waechters war bis v244 `[a-z-]+`; `npm run c18`

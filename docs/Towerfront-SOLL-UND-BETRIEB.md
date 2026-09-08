@@ -1,5 +1,9 @@
 # Towerfront — Soll heben, Betrieb, Projektanweisungen
 
+Aufgezeichnet: 08.08.2026 — die Antwort auf drei Fragen, an dem Tag, an dem sie gestellt wurden. Dieses Dokument wird
+absichtlich NICHT nachgezogen; was daraus weiterlebt, steht im
+Rückstandsverzeichnis.
+
 *08.08.2026 · Antwort auf drei Fragen: Wie heben wir das Soll? Cowork oder
 etwas anderes? Was gehört in die Projektanweisungen?*
 

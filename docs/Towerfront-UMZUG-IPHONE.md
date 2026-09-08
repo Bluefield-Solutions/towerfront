@@ -1,5 +1,9 @@
 # Umzug — nur mit dem iPhone
 
+Aufgezeichnet: 05.09.2026 — Protokoll eines Umzugs. Dieses Dokument wird
+absichtlich NICHT nachgezogen; was daraus weiterlebt, steht im
+Rückstandsverzeichnis.
+
 *Korrigierte Fassung. Die erste Anleitung ging von einem Rechner aus. Ohne
 Rechner geht es auch, aber anders — und ein Schritt ist unbequem.*
 

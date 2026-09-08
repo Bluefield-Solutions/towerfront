@@ -677,6 +677,68 @@ if (start) {
   });
   void ziel;
 
+  // --- 5c. Steht der Fruehstart auf dem ZIELGERAET ueberhaupt im Bild?
+  //
+  // Das ist die Regression, die es wirklich gab (v243, F2). Der Bonus stand
+  // von jeher als zweite Zeile unter dem Wellenknopf - und die trug im
+  // Kompaktblock `display: none`, weil unter 480 Punkten Hoehe keine zweite
+  // Zeile hineinpasst. Auf dem iPhone quer war die ganze Mechanik damit
+  // unsichtbar, und kein Tor sagte ein Wort: der Rauchtest laeuft in jsdom
+  // und kennt keine Stilvorlage, das UX-Tor zaehlt Flaechen.
+  //
+  // Gemessen wird deshalb hier, im Browser, in der Groesse des Zielgeraets:
+  // die Anzeige muss gelegt werden, und der Knopf darf seine Breite nicht
+  // aendern, wenn der Bonus ablaeuft. Die zweite Haelfte ist keine
+  // Feinheit - ein Knopf, der unter dem Daumen um vierzig Punkte springt,
+  // ist genau in dem Augenblick woanders, in dem man ihn treffen will.
+  //
+  // Der Zustand wird GESTELLT statt abgewartet: eine Welle durchlaufen zu
+  // lassen kostet hier eine Minute und haengt an der Balance. Gemessen wird
+  // die Stilvorlage, nicht das Spiel - das tut der Rauchtest (Regel 13,
+  // getrennte Messstellen fuer getrennte Fragen).
+  {
+    const fs = await seite.evaluate(() => {
+      const knopf = document.getElementById('b-wave');
+      const plus = document.getElementById('b-wave-p');
+      const fuell = document.getElementById('b-wave-f');
+      if (!knopf || !plus || !fuell) return null;
+      const stellen = (an, text) => {
+        plus.dataset.an = an; plus.textContent = text;
+        fuell.dataset.an = an; fuell.style.transform = `scaleX(${an === '1' ? 0.8 : 0})`;
+        return {
+          breite: Math.round(knopf.getBoundingClientRect().width),
+          anzeige: getComputedStyle(plus).display,
+          sichtbar: getComputedStyle(plus).visibility,
+          plusBreite: Math.round(plus.getBoundingClientRect().width),
+          fuellBreite: Math.round(fuell.getBoundingClientRect().width),
+        };
+      };
+      const mit = stellen('1', '+30');
+      const ohne = stellen('0', '');
+      return { mit, ohne };
+    });
+    if (!fs) {
+      fail('Der Wellenknopf traegt keine Fruehstart-Anzeige (#b-wave-p / #b-wave-f fehlen).');
+    } else {
+      console.log(`Frühstart am Wellenknopf: Knopf ${fs.mit.breite} Punkte mit Bonus, `
+        + `${fs.ohne.breite} ohne · Zahl ${fs.mit.plusBreite} Punkte (${fs.mit.anzeige}, `
+        + `${fs.mit.sichtbar}) · Füllung ${fs.mit.fuellBreite} Punkte`);
+      if (fs.mit.anzeige === 'none' || fs.mit.sichtbar === 'hidden' || fs.mit.plusBreite < 8) {
+        fail('Der Frühstart-Bonus steht auf dem Zielgerät nicht im Bild '
+          + `(display ${fs.mit.anzeige}, visibility ${fs.mit.sichtbar}, `
+          + `${fs.mit.plusBreite} Punkte breit).`);
+      }
+      if (fs.mit.fuellBreite < 20) {
+        fail(`Die Frühstart-Füllung ist nur ${fs.mit.fuellBreite} Punkte breit - `
+          + 'dann zeigt sie das Zeitfenster nicht an.');
+      }
+      if (Math.abs(fs.mit.breite - fs.ohne.breite) > 1) {
+        fail(`Der Wellenknopf springt um ${Math.abs(fs.mit.breite - fs.ohne.breite)} Punkte, `
+          + 'wenn das Frühstart-Fenster zufällt - unter dem Daumen ist er dann woanders.');
+      }
+    }
+  }
+
   // Einen Turm bauen und den Pruefsteg oeffnen - durch Tippen, wie ein Mensch.
   let gebaut = false;
   for (let y = 90; y < HOCH - 50 && !gebaut; y += 40) {

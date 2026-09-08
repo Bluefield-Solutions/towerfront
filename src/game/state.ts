@@ -836,11 +836,27 @@ export class GameState {
     };
   }
 
+  /** Der Fruehstart als EINE Auskunft: was er bringt, wieviel Zeit noch
+   *  bleibt und wieviel des Fensters uebrig ist.
+   *
+   *  Bis v242 gab es nur die Goldzahl, und die Bedienung rechnete sich den
+   *  Rest selbst zusammen - beziehungsweise sie tat es nicht: das Fenster
+   *  stand nirgends im Bild. Wer eine Entscheidung zeigen will, braucht
+   *  beide Haelften an einer Stelle, sonst entsteht die zweite irgendwo in
+   *  der Oberflaeche noch einmal (Regel 15).
+   *
+   *  Die erste Welle traegt keinen Bonus: dort baut man ueberhaupt erst
+   *  seinen ersten Turm, und ein Anreiz zur Eile waere eine Falle. */
+  get fruehstart(): { gold: number; rest: number; anteil: number } {
+    if (!this.canStartWave || this.waveIndex === 0) return { gold: 0, rest: 0, anteil: 0 };
+    const rest = Math.max(0, EARLY_BONUS_WINDOW - this.idleTime);
+    const anteil = rest / EARLY_BONUS_WINDOW;
+    return { gold: Math.round(anteil * EARLY_BONUS_MAX), rest, anteil };
+  }
+
   /** Gold fuer einen frueh gestarteten Angriff. Faellt linear auf null. */
   get earlyBonus(): number {
-    if (!this.canStartWave || this.waveIndex === 0) return 0;
-    const left = Math.max(0, EARLY_BONUS_WINDOW - this.idleTime);
-    return Math.round((left / EARLY_BONUS_WINDOW) * EARLY_BONUS_MAX);
+    return this.fruehstart.gold;
   }
 
   startWave(): void {

@@ -70,7 +70,7 @@ if (!/\[hidden\][^{]*\{[^}]*display\s*:\s*none\s*!important/.test(html)) {
 // Laufzeit auf - hier faellt es beim Build auf.
 const REQUIRED_IDS = [
   'view', 'v-gold', 'v-lives', 'v-wave', 'b-sound', 'b-speed', 'b-pause',
-  'b-wave', 'b-wave-t', 'b-wave-b', 'next', 'n-list', 'build',
+  'b-wave', 'b-wave-t', 'b-wave-p', 'b-wave-f', 'next', 'n-list', 'build',
   'skills', 'inspector', 'i-name', 'i-stats', 'i-hint', 'i-ups', 'i-sell', 'i-close',
   'dock-toggle', 'dock-body', 'perf', 'coach', 'coach-text', 'coach-skip',
   // Das Einstellungsmenue - die einzige HTML-Flaeche, die im Spiel wirklich

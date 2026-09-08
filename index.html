@@ -230,7 +230,17 @@
          In einer Reihe sind es 68.
          Er steht bewusst NICHT in `dock-body`: die Leiste lässt sich
          einklappen, der Startknopf bleibt trotzdem stehen. -->
-    <button class="go" id="b-wave"><span id="b-wave-t">Welle starten</span><span class="go-bonus" id="b-wave-b"></span></button>
+    <!-- **Der Frühstart steht IM Knopf, nicht darunter** (v243, F2).
+         Bis v242 hing eine zweite Zeile daran ("+24 Gold für den frühen
+         Start") — und die war auf dem Zielgerät `display: none`: unter
+         480 Punkten Höhe hat das Band keinen Platz für zwei Zeilen. Das
+         ganze Zeitfenster war damit auf dem iPhone unsichtbar.
+         Jetzt trägt der Knopf selbst, was er kostet: eine goldene Füllung,
+         die mit dem Fenster schrumpft, und die Zahl am Ende der Zeile. -->
+    <button class="go" id="b-wave">
+      <span class="go-fuell" id="b-wave-f" aria-hidden="true"></span>
+      <span class="go-t" id="b-wave-t">Welle starten</span><span class="go-plus" id="b-wave-p"></span>
+    </button>
   </div>
 
   <!-- Versionsstempel im laufenden Spiel.

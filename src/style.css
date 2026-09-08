@@ -330,7 +330,37 @@ html, body {
   letter-spacing: 0.02em; color: #06121A;
   background: var(--crystal); border: none; border-radius: 12px;
   padding: 13px 22px; box-shadow: 0 6px 22px rgba(127, 231, 224, 0.28);
+  position: relative; overflow: hidden;
+  /* **Eine Zeile, nicht zwei** (v243). Bis v242 war der Knopf eine Spalte,
+     weil der Frühstart-Bonus als zweite Zeile darunter stand — und die war
+     auf dem flachen Gerät `display: none`, weil zwei Zeilen dort nicht
+     hineinpassen. Damit war der Anreiz auf dem Zielgerät unsichtbar. Die
+     Regel stand ausserdem 340 Zeilen weiter unten in einem anderen Block;
+     jetzt steht sie hier, bei den übrigen Eigenschaften des Knopfes. */
+  display: flex; align-items: center; gap: 6px; line-height: 1.15;
 }
+/* **Die Frühstart-Uhr** (v243, F2). Sie liegt IM Knopf und schrumpft mit dem
+   Fenster; was da wegläuft, ist das Gold. Gesetzt wird sie über `transform`
+   und nicht über `width` — eine Breite je Bild ließe das Flex-Band mit seinen
+   acht Knöpfen jedes Bild neu rechnen.
+   Sie liegt UNTER der Schrift (`z-index`), sonst deckt sie die Beschriftung
+   zur Hälfte ab, und `pointer-events: none`, damit sie die Trefferfläche des
+   Knopfes nicht teilt — das Browsertor misst in der Mitte. */
+.go-fuell {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: linear-gradient(90deg, rgba(240, 190, 90, 0.55), rgba(240, 190, 90, 0.22));
+  transform-origin: 0 50%; transform: scaleX(0);
+}
+.go-fuell[data-an="0"] { opacity: 0; }
+.go-t, .go-plus { position: relative; z-index: 1; }
+/* **Der Platz der Zahl bleibt stehen, wenn sie verschwindet.** Ohne das
+   springt der Knopf in dem Augenblick um seine Breite, in dem das Fenster
+   zufällt, und die Turmreihe daneben rückt mit. */
+.go-plus {
+  display: inline-block; min-width: 2.4em; text-align: right;
+  font-variant-numeric: tabular-nums; visibility: hidden;
+}
+.go-plus[data-an="1"] { visibility: visible; }
 .go:disabled { background: rgba(137, 148, 176, 0.3); color: var(--muted); box-shadow: none; }
 /* **Waehrend der Welle ist der Knopf gesperrt, aber nicht tot** (v239, E6).
    Er traegt den Fortschritt, und dafuer braucht er einen eigenen Zustand:
@@ -634,9 +664,6 @@ html, body {
   font-weight: 700;
 }
 
-.go { display: flex; flex-direction: column; align-items: center; gap: 1px; line-height: 1.15; }
-.go-bonus { font-size: var(--s-marke); font-weight: 700; opacity: 0.72; letter-spacing: 0.04em; }
-.go-bonus:empty { display: none; }
 
 /* Die Regeln fuer `.n` und `.r` sind mit v239 entfallen: der Knopf traegt
    kein Wort mehr, sondern das Turmbild und den Preis. Name und Rolle stehen
@@ -956,7 +983,6 @@ html, body {
      Telefon nirgends nachzulesen. */
   .skill-btn { min-width: 50px; padding: 4px 6px; }
   .go { padding: 9px 16px; }
-  .go-bonus { display: none; }
 
   .coach { padding-top: 4px; padding-bottom: 4px; }
 }

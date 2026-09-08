@@ -101,7 +101,8 @@ export class UI {
   private bWeg = $<HTMLButtonElement>('b-weg');
   private vVersion = $('v-version');
   private bWaveT = $('b-wave-t');
-  private bWaveB = $('b-wave-b');
+  private bWaveP = $('b-wave-p');
+  private bWaveF = $('b-wave-f');
   private next = $('next');
   private nList = $('n-list');
   private build = $('build');
@@ -171,6 +172,7 @@ export class UI {
   private tutTarget: HTMLElement | null = null;
   private lastSig = '';
   private lastBonus = -1;
+  private fruehstartAnteil = -1;
 
   constructor(private s: GameState) {
     for (const id of TOWER_ORDER) {
@@ -780,12 +782,7 @@ export class UI {
       }
     }
 
-    // Der Frühstart-Bonus tickt eigenstaendig herunter.
-    const bonus = s.earlyBonus;
-    if (bonus !== this.lastBonus) {
-      this.lastBonus = bonus;
-      this.bWaveB.textContent = bonus > 0 ? `+${bonus} Gold für den frühen Start` : '';
-    }
+    this.syncFruehstart(s);
     if (sig === this.lastSig) return;
     this.lastSig = sig;
 
@@ -1198,6 +1195,49 @@ export class UI {
   }
 
   /** Was in der naechsten Welle kommt - Planung braucht Vorwissen. */
+  /** **Der Fruehstart steht im Knopf** (v243, F2).
+   *
+   *  Die Sache gibt es seit Langem - `EARLY_BONUS_MAX` und
+   *  `EARLY_BONUS_WINDOW` -, im Bild stand davon aber nichts, was eine
+   *  Entscheidung getragen haette: eine zweite Zeile unter dem Knopf, und
+   *  die war auf dem ZIELGERAET `display: none`. Unter 480 Punkten Hoehe hat
+   *  das Band keinen Platz fuer zwei Zeilen, und so war der ganze Anreiz auf
+   *  dem iPhone unsichtbar. Gemessen: von den 22 Sekunden des Fensters stand
+   *  dort keine einzige.
+   *
+   *  Jetzt traegt der Knopf beides. Die goldene Fuellung schrumpft mit dem
+   *  Fenster - was da wegläuft, IST das Gold -, und die Zahl steht am Ende
+   *  derselben Zeile.
+   *
+   *  Zwei Dinge daran sind gemessen und nicht geraten:
+   *
+   *  * Die Fuellung wird ueber `transform` gesetzt, nicht ueber `width` -
+   *    eine Breite je Bild loest ein Umbrechen der ganzen Leiste aus, und
+   *    die Leiste ist ein Flex-Band mit acht Knoepfen darin.
+   *  * Der Platz der Zahl bleibt STEHEN, wenn sie verschwindet
+   *    (`visibility`, nicht `hidden`). Sonst springt der Knopf in dem
+   *    Augenblick um seine Breite, in dem das Fenster zufaellt - und die
+   *    Turmreihe daneben rueckt mit. Dieselbe Falle, die im Stilblatt schon
+   *    beim Wegknopf steht: ein Nachbar mit fester Abstandsrechnung
+   *    verrutscht beim Textwechsel. */
+  private syncFruehstart(s: GameState): void {
+    const f = s.fruehstart;
+    // Die Fuellung laeuft jedes Bild - sie ist die Uhr. `transform` kostet
+    // dabei kein Neuberechnen der Leiste.
+    if (f.anteil !== this.fruehstartAnteil) {
+      this.fruehstartAnteil = f.anteil;
+      this.bWaveF.style.transform = `scaleX(${f.anteil})`;
+      this.bWaveF.dataset.an = f.anteil > 0 ? '1' : '0';
+    }
+    // Die Zahl nur, wenn sie sich aendert - das ist einmal je Sekunde statt
+    // sechzig Mal.
+    if (f.gold !== this.lastBonus) {
+      this.lastBonus = f.gold;
+      this.bWaveP.textContent = f.gold > 0 ? `+${f.gold}` : '';
+      this.bWaveP.dataset.an = f.gold > 0 ? '1' : '0';
+    }
+  }
+
   private renderNext(): void {
     const s = this.s;
     // **Die Vorschau bleibt waehrend der Welle stehen** (v239, E6).

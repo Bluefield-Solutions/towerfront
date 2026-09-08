@@ -100,6 +100,7 @@ const { wirkungAnlegen, wirkungenTicken, tempoFaktor } = await import('../src/da
 type EnemyId = Parameters<typeof konterSatz>[0];
 const { candidateSpots } = await import('./spots');
 const { WORLD_W, WORLD_H } = await import('../src/data/config');
+const { EARLY_BONUS_WINDOW } = await import('../src/data/waves');
 
 // ---------------------------------------------------------------- Ablauf
 
@@ -3509,6 +3510,67 @@ step('Trefferstopp bleibt im Rahmen', () => {
 // Geprueft wird nicht, ob die Felder im Stand STEHEN, sondern ob nach dem
 // Laden dasselbe auf dem Feld ankommt. Ein Feld im Stand, das beim Laden
 // niemand liest, sieht genauso aus wie eines, das fehlt.
+/** **Der Fruehstart als Entscheidung** (v243, F2).
+ *
+ *  Die Sache gibt es seit Langem, im Bild stand aber nichts davon - eine
+ *  zweite Zeile unter dem Wellenknopf, und die war auf dem Zielgeraet
+ *  `display: none`. Geprueft wird deshalb beides: die Zahl UND dass sie im
+ *  Knopf ankommt.
+ *
+ *  Die Nullprobe steht mit drin (Regel 13): nach Ablauf des Fensters muss
+ *  alles auf null fallen. Ohne sie bewiese die Messung nur, dass irgendeine
+ *  Zahl da steht - und eine feste Zahl bestuende sie auch. */
+step('Fruehstart zeigt sein Fenster', () => {
+  const g = new GameState();
+  g.reset(4242, 'normal', 'spiralhain');
+  // Erst NACH der ersten Welle gibt es einen Bonus: in Welle 1 baut man
+  // ueberhaupt seinen ersten Turm.
+  if (g.fruehstart.gold !== 0) {
+    throw new Error(`Vor der ersten Welle steht ein Bonus von ${g.fruehstart.gold}.`);
+  }
+  g.waveIndex = 3;
+  g.idleTime = 0;
+  const voll = g.fruehstart;
+  if (voll.gold <= 0 || voll.anteil <= 0.99) {
+    throw new Error(`Gleich nach der Welle stehen ${voll.gold} Gold bei Anteil ${voll.anteil.toFixed(2)}.`);
+  }
+  // Die Haelfte des Fensters: beide Zahlen muessen mitgehen, nicht nur eine.
+  g.idleTime = EARLY_BONUS_WINDOW / 2;
+  const halb = g.fruehstart;
+  if (Math.abs(halb.anteil - 0.5) > 0.02 || Math.abs(halb.gold - voll.gold / 2) > 1) {
+    throw new Error(`Nach der Haelfte des Fensters ${halb.gold} Gold bei Anteil ${halb.anteil.toFixed(2)}.`);
+  }
+  // Nullprobe: Fenster abgelaufen.
+  g.idleTime = EARLY_BONUS_WINDOW + 1;
+  const leer = g.fruehstart;
+  if (leer.gold !== 0 || leer.anteil !== 0) {
+    throw new Error(`Nach dem Fenster stehen noch ${leer.gold} Gold bei Anteil ${leer.anteil.toFixed(2)}.`);
+  }
+
+  // Und kommt es im KNOPF an? Die Oberflaeche haengt am gemeinsamen Zustand,
+  // also wird der hier gefahren - eine zweite `UI` waere eine zweite
+  // Wahrheit ueber dasselbe Bild.
+  state.waveIndex = 3;
+  state.waveActive = false;
+  state.idleTime = 0;
+  ui.sync();
+  const plus = win.document.getElementById('b-wave-p') as HTMLElement;
+  const fuell = win.document.getElementById('b-wave-f') as HTMLElement;
+  if (!plus || !fuell) throw new Error('Der Wellenknopf traegt keine Fruehstart-Anzeige.');
+  if (!/^\+\d+$/.test(plus.textContent ?? '')) {
+    throw new Error(`Im Knopf steht "${plus.textContent}" statt einer Bonuszahl.`);
+  }
+  if (plus.getAttribute('data-an') !== '1' || fuell.getAttribute('data-an') !== '1') {
+    throw new Error('Die Fruehstart-Anzeige meldet sich als abgeschaltet, obwohl ein Bonus laeuft.');
+  }
+  state.idleTime = EARLY_BONUS_WINDOW + 1;
+  ui.sync();
+  if (plus.textContent !== '' || plus.getAttribute('data-an') !== '0') {
+    throw new Error(`Nach dem Fenster steht im Knopf noch "${plus.textContent}"`
+      + ` (data-an ${plus.getAttribute('data-an')}).`);
+  }
+});
+
 step('Welle ueberlebt das Sichern', () => {
   const schildWelle = (g: InstanceType<typeof GameState>) => {
     for (let i = 0; i < g.totalWaves; i++) {

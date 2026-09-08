@@ -1390,6 +1390,45 @@ const PROBEN = [
     tor: 'uxtor',
   },
   {
+    // **Der Fruehstart-Bonus wird auf dem Zielgeraet wieder unsichtbar.**
+    //
+    // Das ist die Regression, die es bis v242 wirklich gab: der Bonus stand
+    // als zweite Zeile unter dem Wellenknopf und trug im Kompaktblock
+    // `display: none`, weil unter 480 Punkten Hoehe keine zweite Zeile
+    // hineinpasst. Die Mechanik war damit auf dem iPhone quer nicht
+    // vorhanden, und kein Tor sagte ein Wort.
+    name: 'Fruehstart verschwindet vom Zielgeraet',
+    datei: 'src/style.css',
+    regel: /  display: inline-block; min-width: 2\.4em; text-align: right;/,
+    ersatz: '  display: none; min-width: 2.4em; text-align: right;',
+    tor: 'browsertor',
+  },
+  {
+    // **Der Platz der Zahl wird nicht mehr freigehalten.**
+    //
+    // Dann springt der Wellenknopf um seine Breite, sobald das Fenster
+    // zufaellt - und die Turmreihe daneben rueckt mit. Ein Knopf, der unter
+    // dem Daumen wandert, ist genau dann woanders, wenn man ihn treffen
+    // will. Gemessen sind 36 Punkte Sprung.
+    name: 'Wellenknopf springt beim Ablauf des Fensters',
+    datei: 'src/style.css',
+    regel: /  display: inline-block; min-width: 2\.4em; text-align: right;/,
+    ersatz: '  display: inline-block; min-width: 0; text-align: right;',
+    tor: 'browsertor',
+  },
+  {
+    // **Der Bonus faellt nicht mehr.**
+    //
+    // Eine Zahl, die immer gleich bleibt, ist keine Entscheidung - und die
+    // Fuellung im Knopf zeigte dann ein Fenster an, das es nicht gibt. Der
+    // Rauchtest misst beide Haelften an derselben Stelle: Gold UND Anteil.
+    name: 'Fruehstart-Bonus faellt nicht mehr',
+    datei: 'src/game/state.ts',
+    regel: /    return \{ gold: Math\.round\(anteil \* EARLY_BONUS_MAX\), rest, anteil \};/,
+    ersatz: '    return { gold: EARLY_BONUS_MAX, rest, anteil };',
+    tor: 'smoke',
+  },
+  {
     // **Die Vorwahl faellt weg.**
     //
     // Dann steht die baubare Flaeche erst da, wenn der Spieler von selbst

@@ -1,6 +1,6 @@
 # Referenzabgleich — Stützturm (C3, „Bannturm")
 
-Stand: v237 · 08.09.2026
+Stand: v244 · 08.09.2026
 
 Schritt 0 des Durchgangs, nach `docs/Towerfront-SOLL-UND-BETRIEB.md` Teil 2.
 Er stand aus: C3 ist seit v40 im Rückstandsverzeichnis, und ein Soll dafür
@@ -158,3 +158,38 @@ Geometrie und Gold, nicht gespielte Wellen. Sobald der Turm baubar ist, gilt
 Regel 9 — `npm run eichen` über die Verstärkung, bevor irgendetwas
 festgeschrieben wird. Die Werte hier sind der Startpunkt der Suche, nicht ihr
 Ergebnis.
+
+
+---
+
+## Nachtrag v244 — dieselbe Frage, eine andere Antwort
+
+Der **Verbund** (F4) beantwortet einen Teil dessen, wofür dieses Blatt den
+Bannturm entworfen hat — und zwar ohne einen fünften Turm.
+
+Jeder Turm zählt, wieviele **andere Turmarten** in 260 Weltpunkten stehen,
+und bekommt je Art +20 % Schaden, höchstens drei. Der Anlass war ein anderer
+als der hier beschriebene: „nur Frost" war mit 50 von 60 Kristall die stärkste
+Aufstellung des Spiels, gegen 43 im gemischten Feld. Gesucht war eine Regel,
+die das Mischen belohnt; gefunden wurde eine, die den Bauplatz zu einer Frage
+an den **eigenen Aufbau** macht — genau das, was Schritt 1 am Monkey Village
+als das Wichtige benannt hat.
+
+**Was er vom Bannturm übernimmt:**
+
+| | Bannturm (entworfen) | Verbund (gebaut) |
+|---|---|---|
+| Bauplatz wird eine Frage an den eigenen Aufbau | ja | ja |
+| Sichtbare Verbindung zwischen zwei Figuren | Bannmal | Fäden, wie beim Schildträger |
+| Stapelt nicht beliebig | zweiter zählt halb | zweite Art derselben Sorte zählt gar nicht |
+| Gemessen statt geschätzt | offen | Stufe über sechs Werte durchprobiert |
+
+**Was er NICHT beantwortet, und was damit offen bleibt:** der Bannturm kostet
+**Gold und einen Bauplatz** — er ist eine Wette, die schiefgehen kann. Der
+Verbund kostet nichts als Aufmerksamkeit; er ist eine Belohnung für gutes
+Stellen, keine Entscheidung gegen etwas anderes. S5 dieses Blattes („der
+unbedachte Aufbau muss ein Verlust sein") ist damit ausdrücklich **nicht**
+erfüllt.
+
+C3 bleibt also offen — aber der Teil davon, der „das Mischen muss sich lohnen"
+heisst, ist beantwortet, und die Zahlen dafür stehen in `src/game/verbund.ts`.

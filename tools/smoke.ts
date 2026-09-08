@@ -180,6 +180,20 @@ for (const step of TUTORIAL) {
     place: () => { probe.build(probe.map.hint.x, probe.map.hint.y, 'arrow'); },
     start: () => probe.startWave(),
     upgrade: () => { probe.gold += 2000; probe.upgrade(ersterTurm(probe), 0); },
+    // Der Verbund entsteht durch einen Nachbarn ANDERER Art im Umkreis.
+    // Gesucht wird der naechste Platz, an dem wirklich einer steht - der
+    // Frostturm braucht mehr Raum als der Bogenturm, und `candidateSpots`
+    // rechnet fuer den Bogenturm.
+    verbund: () => {
+      probe.gold += 2000;
+      const erst = ersterTurm(probe);
+      const nah = candidateSpots(probe)
+        .filter((p) => Math.hypot(p.x - erst.x, p.y - erst.y) > 0
+          && Math.hypot(p.x - erst.x, p.y - erst.y) < VERBUND_UMKREIS)
+        .sort((a, b) => Math.hypot(a.x - erst.x, a.y - erst.y)
+          - Math.hypot(b.x - erst.x, b.y - erst.y));
+      nah.some((p) => probe.build(p.x, p.y, 'frost'));
+    },
     early: () => { probe.waveIndex = 1; probe.waveActive = false; probe.startWave(); },
     meteor: () => { probe.cast('meteor', probe.goal.x, probe.goal.y); },
     end: () => { probe.waveIndex = 3; },

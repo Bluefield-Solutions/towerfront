@@ -1390,6 +1390,26 @@ const PROBEN = [
     tor: 'uxtor',
   },
   {
+    // **Ein Befehl mit Ziffer im Namen wird wieder uebersehen.**
+    //
+    // Das Muster des Doku-Waechters war bis v244 `[a-z-]+`; `npm run c18`
+    // las es als `npm run c`. Dieselbe Klasse wie die Zahlwort-Tabelle in
+    // v230: eine Pruefung, deren Zeichenvorrat hinter ihrem Gegenstand
+    // zurueckbleibt, sieht aus wie eine Pruefung.
+    //
+    // Der Eingriff nimmt die Ziffern wieder heraus. Dann meldet der Waechter
+    // "npm run c gibt es nicht" - also einen Fehler, aber den falschen; er
+    // wird trotzdem rot, und genau das ist hier zu zeigen. Waere er das
+    // nicht, koennte man jeden Befehl mit Ziffer nennen, ohne dass ihn
+    // jemand prueft.
+    name: 'Doku-Waechter sieht keine Ziffern in Befehlen',
+    datei: 'tools/docs.mjs',
+    regel: /\/`npm run \(\[a-z0-9-\]\+\)`\|npm run \(\[a-z0-9-\]\+\)\/g/,
+    ersatz: '/`npm run ([a-z-]+)`|npm run ([a-z-]+)/g',
+    tor: 'doku',
+    meldet: 'den Befehl gibt es nicht',
+  },
+  {
     // **Die Monokultur wird wieder die staerkste Aufstellung.**
     //
     // Ohne den Aurendeckel trifft die Aura jeden im Umkreis voll, ihre

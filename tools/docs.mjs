@@ -44,8 +44,15 @@ const alle = [['CLAUDE.md', claude], ...dateien.map((f) => [f, readFileSync(join
 //
 // Der häufigste Weg, wie eine Anleitung falsch wird: ein Befehl wird
 // umbenannt, und in drei Dokumenten steht weiter der alte.
+//
+// **Ziffern gehören dazu, und bis v244 nicht.** Das Muster war `[a-z-]+`;
+// `npm run c18` las es als `npm run c` und meldete einen Befehl, den es
+// nicht gibt — für einen, den es gibt. Dieselbe Klasse wie die
+// Zahlwort-Tabelle in v230: eine Prüfung, deren Zeichenvorrat hinter ihrem
+// Gegenstand zurückbleibt, sieht aus wie eine Prüfung. Gefunden hat es
+// `npm run c18` — der erste Befehl des Baums mit einer Ziffer im Namen.
 for (const [name, text] of alle) {
-  for (const m of text.matchAll(/`npm run ([a-z-]+)`|npm run ([a-z-]+)/g)) {
+  for (const m of text.matchAll(/`npm run ([a-z0-9-]+)`|npm run ([a-z0-9-]+)/g)) {
     const cmd = m[1] ?? m[2];
     if (!befehle.has(cmd)) fail(`${name}: nennt "npm run ${cmd}" - den Befehl gibt es nicht.`);
   }

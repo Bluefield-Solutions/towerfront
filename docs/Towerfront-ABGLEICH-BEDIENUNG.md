@@ -1,6 +1,6 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v237 · 08.09.2026
+Stand: v244 · 08.09.2026
 
 Schritt 0 des Durchgangs, nach `docs/Towerfront-SOLL-UND-BETRIEB.md` Teil 2.
 Ausgelöst durch vier Befunde vom Zielgerät:
@@ -171,3 +171,42 @@ ist seit v30 auf freies Bauen ausgelegt — Platzbedarf je Turmsorte,
 Wegabstand, Gelände —, und der Genre-Abgleich zählt das als eigenen Reiz.
 Die Referenz liefert hier das Soll für die *Sichtbarkeit*, nicht für die
 Mechanik.
+
+
+---
+
+## Nachtrag v238–v244 — was seit dem letzten Stand dazugekommen ist
+
+Die sieben Soll-Punkte B1–B7 stehen unverändert; keiner ist wieder aufgegangen.
+Dazugekommen sind drei Dinge, die dieses Blatt betreffen:
+
+**Die Bedienung ist ein Band am Rand** (v239, aus `Towerfront-AUDIT-HUD-UND-BILDSCHIRM.md`).
+Der Turmknopf trägt seit v239 das **Bild** des Turms und seinen Preis, nicht
+mehr Name, Preis und Rolle nebeneinander: 54 statt 86 Punkte breit, und erst
+damit passen Einklappknopf, vier Türme, vier Fähigkeiten und der Wellenknopf
+in **eine** Reihe. Der Satz oben, das Kingdom-Rush-Menü zeige „vier Türme samt
+Preis", gilt damit hier genauso — nur am Rand statt am Sockel. Name und Rolle
+stehen im Zeigerhinweis, in `aria-label` und in der Vorkauf-Karte, die
+derselbe Knopf öffnet.
+
+**Der Frühstart steht im Wellenknopf** (v243, F2). Er hatte bis dahin eine
+eigene Zeile darunter, und die war auf dem Zielgerät `display: none` — die
+Mechanik war auf dem iPhone unsichtbar. Jetzt schrumpft eine goldene Füllung
+im Knopf mit dem Zeitfenster, die Zahl steht am Ende derselben Zeile, und der
+Platz der Zahl bleibt stehen, wenn sie verschwindet (sonst springt der Knopf
+unter dem Daumen um 36 Punkte weg).
+
+**Der Verbund ist eine neue Auskunft im Prüfsteg** (v244, F4). Türme
+verschiedener Art in 260 Weltpunkten Umkreis verstärken einander. Angezeigt
+wird das an drei Stellen zugleich, und das ist Absicht: eine Zeile im Steg
+(die auch „allein" sagt, wenn es keinen gibt — wer allein baut, soll sehen,
+dass ihm etwas entgeht), der **angezeigte Schaden ist der wirkende**, und
+Fäden im Bild zeigen zu genau den Türmen, die den Zuschlag tragen. Letzteres
+ist dieselbe Sprache wie beim Schildträger und aus demselben Grund: eine
+Wirkung zwischen zwei Figuren muss man sehen, nicht erschliessen.
+
+**Ein achter Soll-Punkt fällt daraus ab, und er ist offen:** B2 verlangt, dass
+bezahlt wird „auf einer benannten Fläche, die ihren Preis trägt". Für den
+Verbund gibt es das Gegenstück noch nicht — beim Wählen eines Bauplatzes steht
+nirgends, welchen Zuschlag der Turm **dort** bekäme. Genau das ist die
+Entscheidung, die die Regel erzeugt. Steht im Rückstandsverzeichnis.

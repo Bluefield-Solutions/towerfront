@@ -1,7 +1,21 @@
-/** Nur die C18-Frage, in zwei Sekunden statt zwei Minuten.
+/** **Die C18-Frage allein**, in zwei Sekunden statt zwei Minuten.
  *
- *  Der Rauchtest misst sie mit, aber er braucht dafuer den ganzen Lauf. Beim
- *  Eichen einer Zahl gegen C18 will man sie zwanzigmal sehen. */
+ *  C18 heisst: die erste Karte muss mit einer Faehigkeit und ohne
+ *  Verbesserungen zu gewinnen sein. Der Rauchtest misst das mit - aber er
+ *  braucht dafuer den ganzen Lauf, und beim Eichen einer Zahl gegen C18 will
+ *  man die Antwort zwanzigmal sehen.
+ *
+ *  **Kein Tor.** Es meldet, es urteilt nicht; das Urteil faellt im Rauchtest,
+ *  und ein zweites daneben waere eine zweite Wahrheit ueber dieselbe Frage
+ *  (Regel 15). Es fuehrt denselben Bot und denselben Aufbau - waere es ein
+ *  eigener, sagte es etwas ueber einen anderen Spieler.
+ *
+ *  Entstanden in v244: der Aurendeckel bricht C18, und die Frage war, welche
+ *  Zahl ihn wieder traegt. Ohne dieses Werkzeug haette jeder der zwoelf
+ *  Messwerte zwei Minuten gekostet.
+ *
+ *  Aufruf:  npm run c18            die uebliche Aussaat
+ *           npm run c18 -- 7 99    mehrere, nebeneinander */
 import { GameState } from '../src/game/state';
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor } from '../src/data/towers';
 import { MAPS } from '../src/data/maps';

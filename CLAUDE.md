@@ -246,6 +246,12 @@ npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen - im
                     gezielt. `-- --voll` fährt alle; das dauert rund 50
                     Minuten und läuft deshalb nachts auf dem Runner.
 npm run kritik      Wertung nach Testerkategorien, Ziel über 90
+npm run c18         die C18-Frage allein: ist die erste Karte ohne
+                    Verbesserungen zu gewinnen? Zwei Sekunden statt zwei
+                    Minuten - der Rauchtest misst dasselbe, braucht dafür
+                    aber den ganzen Lauf. Kein Tor: es meldet, es urteilt
+                    nicht. In v244 hat es zwölf Messwerte getragen, die
+                    sonst je zwei Minuten gekostet hätten.
 Messschalter        In der Kopfzeile des Spiels: Messung an, und die Tafel
                     läuft mit. Aufklappen zum Ablesen, Kopieren gibt alles
                     als Text heraus — ein Foto muss abgetippt werden, und
@@ -432,7 +438,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v243. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v244. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

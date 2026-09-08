@@ -1380,8 +1380,12 @@ export class Renderer {
       if (partner.length) {
         ctx.save();
         const puls = 0.6 + 0.3 * Math.sin(s.time * 2.4);
-        ctx.strokeStyle = hexA('#7FE7E0', 0.30 + 0.22 * puls);
-        ctx.lineWidth = 3;
+        // Deckung angehoben nach dem ersten Blick - dieselbe Bewegung wie
+        // bei den Reichweitenringen in v108 und bei den Traegerfaeden: bei
+        // 0,30 waren die Faeden auf dem Waldboden nicht auszumachen, und
+        // damit sagten sie nicht, WOHER der Zuschlag kommt.
+        ctx.strokeStyle = hexA('#7FE7E0', 0.48 + 0.22 * puls);
+        ctx.lineWidth = 4;
         ctx.setLineDash([9, 7]);
         for (const o of partner) {
           ctx.beginPath();

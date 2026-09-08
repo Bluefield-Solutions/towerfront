@@ -52,6 +52,22 @@ export const TUTORIAL: TutorialStep[] = [
     done: (s) => s.gebaute.some((t) => t.level > 1) || s.waveIndex > 1,
   },
   {
+    // **Der Verbund** (v244, F4). Er ist die einzige Regel des Spiels, die
+    // aus der LAGE folgt und nicht aus Gold - und die einzige, auf die
+    // niemand von selbst kommt: zwei Tuerme nebeneinander sehen aus wie zwei
+    // Tuerme nebeneinander.
+    //
+    // Der Schritt steht NACH dem Ausbauen, weil er dieselbe Frage
+    // weiterdreht ("was macht meine Tuerme staerker") und weil er einen
+    // zweiten Turm voraussetzt, den man sich erst leisten koennen muss.
+    id: 'verbund',
+    text: 'Stell verschiedene Turmarten nebeneinander. Jede fremde Art in der Nähe'
+      + ' verstärkt deine Türme — tipp einen an, die Fäden zeigen, wer dazugehört.',
+    target: 'world',
+    wait: (s) => s.waveIndex < 1,
+    done: (s) => s.gebaute.some((t) => s.verbundVon(t) > 0) || s.waveIndex > 2,
+  },
+  {
     id: 'early',
     text: 'Startest du die nächste Welle früh, gibt es zusätzliches Gold. Der Bonus schrumpft mit jeder Sekunde.',
     target: 'b-wave',

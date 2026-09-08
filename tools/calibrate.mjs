@@ -111,12 +111,34 @@ function setKurve(v) {
   writeFileSync(DIFF, s);
 }
 
-const MAP_CONST = {
-  spiralhain: 'MAP_SPIRALHAIN',
-  laubschlucht: 'MAP_ASCHESCHLUCHT',
-  ascheschlucht: 'MAP_ASCHESCHLUCHT',
-  frostspalte: 'MAP_FROSTSPALTE',
-};
+/** Welche Kennung zu welcher Konstante gehört — **abgelesen, nicht
+ *  aufgeschrieben**.
+ *
+ *  Hier stand bis v246 eine Tabelle von Hand, und sie war seit v222 falsch:
+ *  der **Farnkessel fehlte** (23 Fassungen lang), und `laubschlucht` stand
+ *  noch als Kennung darin, die es seit der Umbenennung nicht mehr gibt.
+ *  `npm run eichen -- --karte farnkessel` antwortete „Karte gibt es nicht" —
+ *  für eine Karte, die im Spiel steht.
+ *
+ *  Dieselbe Klasse wie die Zahlwort-Tabelle des Doku-Wächters (v230) und das
+ *  Befehlsmuster ohne Ziffern (v244): eine Aufzählung, die hinter ihrem
+ *  Gegenstand zurückbleibt, sieht aus wie eine Prüfung. Und wie dort fällt es
+ *  erst auf, wenn jemand den fehlenden Fall wirklich braucht — hier war das
+ *  F7, „zwei von vier Karten sind nicht auf drei Sterne spielbar".
+ *
+ *  Jetzt wird `src/data/maps.ts` gelesen: jede `export const MAP_X` mit der
+ *  `id` darunter. Eine fünfte Karte ist damit von selbst dabei. */
+const MAP_CONST = Object.fromEntries(
+  [...backup.get(MAPS).matchAll(/export const (MAP_[A-Z_]+): GameMap = \{\s*\n\s*id: '([^']+)'/g)]
+    .map((m) => [m[2], m[1]]),
+);
+if (Object.keys(MAP_CONST).length < 2) {
+  fertig();
+  console.error('EICHEN: in src/data/maps.ts sind keine Karten zu finden.');
+  console.error('Das Muster passt nicht mehr - erst das reparieren, sonst eicht');
+  console.error('dieses Werkzeug ins Leere.');
+  process.exit(1);
+}
 
 function setKarte(id, feld, v) {
   const name = MAP_CONST[id];

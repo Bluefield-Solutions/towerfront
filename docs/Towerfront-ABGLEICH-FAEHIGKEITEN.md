@@ -1,6 +1,6 @@
 # Referenzabgleich — Fähigkeiten freischalten (C18)
 
-Stand: v244 · 08.09.2026
+Stand: v251 · 08.09.2026
 
 Schritt 0 des Durchgangs, nach `docs/Towerfront-SOLL-UND-BETRIEB.md` Teil 2.
 Er stand aus: C18 steht seit v40 im Rückstandsverzeichnis, und das Soll war
@@ -96,3 +96,25 @@ fortgesetzter Lauf plötzlich andere Regeln als der begonnene.
 Einkaufsweg und bleiben es; S1 verlangt ausdrücklich das Gegenteil davon.
 Zwei Währungen für dieselbe Sache wären die zweite Wahrheit über den
 Fortschritt.
+
+
+---
+
+## Nachtrag v251 — nachgesehen, nicht nachgezogen
+
+An den Fähigkeiten hat sich seit diesem Abgleich **nichts geändert**:
+`src/data/abilities.ts` ist zuletzt in **v195** angefasst worden (Fähigkeiten
+hängen am Fortschritt, C18), und danach nie wieder. Die vier Fähigkeiten,
+ihre Abklingzeiten und ihre Freischaltung über gewonnene Karten stehen wie
+hier beschrieben.
+
+**Das steht hier, weil die Standzeile sonst lügt.** Seit v249 verlangt der
+Doku-Wächter von jedem lebenden Dokument, dass es nicht zurückfällt — und die
+naheliegende Antwort darauf ist, die Zahl hochzusetzen und weiterzugehen. Das
+wäre genau die Fälschung, gegen die die Regel steht. Die ehrliche Antwort ist
+diese: nachgesehen, unverändert, und woran man es sieht.
+
+**Was die sieben Fassungen seit v244 mittelbar berühren:** der Verbund (v244)
+verstärkt Türme, keine Fähigkeiten — die Zahlen dieses Blattes bleiben
+gültig. Sollte der Katalog später eine Fähigkeit anfassen (Paket P5 nennt
+keine), gehört dieses Blatt vorher neu gemessen.

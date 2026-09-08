@@ -1489,6 +1489,41 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // **Die Mittelung faellt auf eine Aussaat zurueck.**
+    //
+    // Genau der Zustand bis v250: `SEEDS = [20260807]`, eine Zahl, und jede
+    // Balancezahl des Projekts haengt daran. Der Ausgabe sieht man es nicht
+    // an - sie meldet Mittelwerte, gleich wieviele Laeufe dahinterstehen.
+    // Deshalb zaehlt `play` die gefahrenen Aussaaten mit, und der Abgleich am
+    // Ende meldet die fehlenden.
+    name: 'Mittelung faellt auf eine Aussaat zurueck',
+    datei: 'tools/sim.ts',
+    regel: /  for \(const aussaat of AUSSAATEN\) \{/,
+    ersatz: '  for (const aussaat of AUSSAATEN.slice(0, 1)) {',
+    tor: 'sim',
+    meldet: 'Eine Mittelung ueber eine Aussaat ist keine',
+  },
+  {
+    // **Die Zweigtabelle mittelt wieder nicht.**
+    //
+    // Sie war bis v250 die EINZIGE Kennzahl dieser Datei ohne Mittelung, und
+    // auf ihr stand der einzige Teilerfolg von G2 im Spielspass-Audit -
+    // "18 % beim Moerser", eine Zahl aus einer Aussaat. Ueber drei gemessen
+    // ist jedes der vier Zweigpaare UNBELEGT.
+    //
+    // **Die Probe zaehlt je Funktion, und das ist der Punkt.** Ihr erster
+    // Entwurf schnitt dieselbe Schleife zurueck, aber der Selbsttest sammelte
+    // die Aussaaten im ganzen Lauf: `overVariants` fuhr weiterhin alle drei,
+    // die Menge war vollstaendig, und das Tor schwieg. Der Eingriff kam an
+    // und loeste nichts aus (Regel 3).
+    name: 'Zweigtabelle mittelt nicht mehr',
+    datei: 'tools/sim.ts',
+    regel: /  const runs = AUSSAATEN\.map\(\(a\) => \{ aussaatGezaehlt\('ueberAussaaten', a\); return run\(a\); \}\);/,
+    ersatz: "  const runs = AUSSAATEN.slice(0, 1).map((a) => { aussaatGezaehlt('ueberAussaaten', a); return run(a); });",
+    tor: 'sim',
+    meldet: 'Eine Mittelung ueber eine Aussaat ist keine',
+  },
+  {
     // **Ein Prompt geht ohne Stil-Block heraus.**
     //
     // `npm run bildprompt` steht nicht in der Torkette - es wird genau an dem

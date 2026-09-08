@@ -1,6 +1,6 @@
 # Towerfront — Art Bible
 
-Stand: v244 · 08.09.2026
+Stand: v251 · 08.09.2026
 
 **Dieses Dokument ist verbindlich.** Wer ein Bild bestellt, malt oder einbaut,
 richtet sich danach. Es ist die einzige Stelle, an der die Festlegungen
@@ -301,3 +301,30 @@ Was neue Bilder braucht, nach Dringlichkeit. Das ist zugleich, was
 * Eine Ratsche wird **enger** eingetragen, nie weiter. Wer sie lockert, hebt
   die Prüfung auf.
 * Wer ein Tor ändert, trägt in `npm run proben` eine Gegenprobe nach.
+
+
+---
+
+## Nachtrag v251 — die acht Zweigsymbole und die Formregel
+
+In v250 sind acht **Zweigsymbole** bestellt worden (Bildauftrag 6.8), und sie
+fallen unter dieselbe Regel wie die Figuren — Abschnitt 3.2b und 5.2: **kein
+Paar über 0,65 Umriss-Überdeckung.** Nur zählt sie hier schärfer, und das
+gehört festgehalten:
+
+* Bei Türmen und Gegnern trennt die Regel **alle gegen alle**: zwölf Figuren
+  auf einem Feld, und der Umriss sagt, welche wo steht.
+* Bei den Symbolen ist das **Paar desselben Turms** der Ernstfall. Die zwei
+  stehen im Menü nebeneinander und beantworten genau eine Frage — „worin
+  unterscheiden sich die beiden". Sind sie im Umriss ähnlich, ist die
+  Bestellung wertlos, ganz gleich wie die übrigen Paare stehen.
+
+Der Auftrag gibt deshalb je Paar die **entgegengesetzte Formensprache** vor:
+lang gegen kurz, Ring gegen Ausbruch, viele gegen einen, geteilt gegen
+gebündelt.
+
+**Und drei Zeilen des globalen Stil-Blocks gelten für sie nicht** — keine
+Sonne, keine Materialfamilien, kein „entsättigt mit einem Akzent". Ein Symbol
+ist kein Objekt in einer Welt, sondern ein gedrucktes Zeichen. Jeder der acht
+Prompts trägt dafür einen `OVERRIDES`-Absatz; der Abschnitt „Ein Auftrag darf
+nicht fordern, was sein eigenes Blatt bestreitet" (v230) verlangt genau das.

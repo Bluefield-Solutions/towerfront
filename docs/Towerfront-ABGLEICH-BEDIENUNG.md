@@ -1,6 +1,6 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v245 · 08.09.2026
+Stand: v251 · 08.09.2026
 
 Schritt 0 des Durchgangs, nach `docs/Towerfront-SOLL-UND-BETRIEB.md` Teil 2.
 Ausgelöst durch vier Befunde vom Zielgerät:
@@ -213,3 +213,23 @@ die die Regel erzeugt. Seit v245 trägt jeder Knopf der Turmwahl neben seinem
 Preis, was diese Sorte an dieser Stelle bekäme, und die Fäden zeigen es schon
 an der Bauvorschau. Damit steht die Auskunft **vor** der Entscheidung statt
 danach.
+
+
+---
+
+## Nachtrag v247/v248 — das Turmmenü
+
+**Der Prüfsteg endet an seinem Inhalt** (v247). Er spannte auf dem Zielgerät
+über die ganze Fensterhöhe: 276 Punkte, während sein Inhalt 176 verlangt —
+eine Zusage aus v205, die damals stimmte und seit den zweispaltigen Werten
+(v239) nicht mehr. Gemessen 276 → 230 Punkte, Belegung 35,4 → 31,3 %.
+
+**Das Bild des Turms steht im Kopf der Karte** (v247). Das Menü sitzt am
+rechten Rand, der gemeinte Turm irgendwo auf dem Feld — die Zuordnung musste
+bisher der Spieler leisten (B6 verlangt Trennung von Name, Werten und
+Handlungen; wovon die Rede ist, stand nirgends).
+
+**Die zwei Ausbauzweige sagen in Zahlen, worin sie sich unterscheiden**
+(v248): Schaden je Sekunde und das Merkmal, in dem sie **voneinander**
+abweichen. Der erklärende Satz bleibt auf dem Telefon ausgeblendet — dafür
+fehlen 90 Punkte, und die Antwort darauf ist die Bildbestellung aus v250.

@@ -1,6 +1,6 @@
 # Referenzabgleich — Stützturm (C3, „Bannturm")
 
-Stand: v244 · 08.09.2026
+Stand: v251 · 08.09.2026
 
 Schritt 0 des Durchgangs, nach `docs/Towerfront-SOLL-UND-BETRIEB.md` Teil 2.
 Er stand aus: C3 ist seit v40 im Rückstandsverzeichnis, und ein Soll dafür
@@ -193,3 +193,25 @@ erfüllt.
 
 C3 bleibt also offen — aber der Teil davon, der „das Mischen muss sich lohnen"
 heisst, ist beantwortet, und die Zahlen dafür stehen in `src/game/verbund.ts`.
+
+
+---
+
+## Nachtrag v251 — was der Verbund inzwischen sichtbar macht
+
+Der Nachtrag oben (v244) hält fest, dass der Verbund einen Teil dessen
+beantwortet, wofür dieses Blatt den Bannturm entworfen hat. Seither ist die
+**Sichtbarkeit** dazugekommen, und die war der eigentliche Prüfstein:
+
+* **v245** — die Turmwahl trägt, was diese Sorte an **dieser Stelle** bekäme.
+  Damit steht die Auskunft vor der Entscheidung statt danach; genau das
+  verlangt Schritt 2 dieses Blattes vom Bannturm („der Bauplatz wird von einer
+  Frage an den Weg zu einer Frage an den eigenen Aufbau" — das geht nur, wenn
+  man die Antwort vorher sieht).
+* **v247/v248** — das Turmmenü zeigt das Bild seines Turms, und die zwei
+  Zweige sagen in Zahlen, worin sie sich unterscheiden.
+
+**S5 bleibt unerfüllt, und das ist unverändert der Kern:** der Bannturm kostet
+Gold und einen Bauplatz — er ist eine Wette, die schiefgehen kann. Der Verbund
+kostet nur Aufmerksamkeit. Solange das so ist, ist er eine Belohnung für gutes
+Stellen und keine Entscheidung gegen etwas anderes. C3 bleibt offen.

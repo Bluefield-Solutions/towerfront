@@ -1,6 +1,6 @@
 # Towerfront — Stories
 
-Stand: v250 · 08.09.2026
+Stand: v251 · 08.09.2026
 
 Zu `KATALOG.md`. **42 Stories in acht Paketen, in der Reihenfolge, in der sie
 gefahren werden.** Jede Story ist eine Runde Arbeit: eine Änderung, eine

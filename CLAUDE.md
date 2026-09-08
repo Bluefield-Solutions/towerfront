@@ -44,7 +44,7 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 
 | Wann | Was | Dauer |
 |---|---|---|
-| **jede Runde** | `npm run gate` — enthält den Musterlauf | **rund 2,5 min** |
+| **jede Runde** | `npm run gate` — enthält den Musterlauf | **gemessen 4:49** (v251) |
 | **jede Runde** | `npm run proben` — nur die betroffenen Proben | **wenige Minuten** |
 | **jede Nacht** | `npm run proben -- --voll` auf dem Runner | rund 50 min, ohne mich |
 | jeder Push auf `master` | die volle Kette auf dem Runner | 3–4 min, ohne mich |
@@ -103,8 +103,14 @@ schwerer ist der Tag zu finden, an dem es passiert ist.
 
 ```
 npm run gate        zweiunddreissig Prüfungen. Muss vor jedem Commit grün sein.
-                    Gemessen 264 s vor v154, danach rund 190 - die teuren Tore
-                    haben ein Gedaechtnis bekommen (docs/Towerfront-TOR-BILANZ.md).
+                    **Gemessen 289 s (4:49) in v251** — auf demselben Baum, warm.
+                    Die alte Angabe „rund 190 s" stammt aus v154 und stand
+                    danach 97 Fassungen lang da, während die Kette von 26 auf
+                    32 Tore wuchs; „rund 2,5 min" in der Tabelle oben war
+                    schon damals eine Schätzung. Eine Laufzeit, die niemand
+                    nachmisst, wird nicht länger — sie wird nur falscher.
+                    Davon entfallen 56 s auf `sim` (drei Aussaaten seit v251,
+                    vorher 17 s bei einer).
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
 npm run bilder      alle 13 Aufnahmen (echte PNG ohne Browser)
 npm run bildtor     der Querschnitt, den die Torkette prüft
@@ -438,7 +444,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v250. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v251. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

@@ -18,7 +18,25 @@ import { candidateSpots } from './spots';
 
 const DT = 1 / 60;
 
-const SEEDS = [20260807];
+/** **Die Aussaaten** (v251, S-P1-01).
+ *
+ *  Bis v250 stand hier `const SEEDS = [20260807]` - EINE Zahl, und jede
+ *  Balancezahl dieses Projekts hing daran. Die drei Abwandlungen darunter
+ *  verstellen die Ruecklage des Bots und seinen Startplatz, **nicht** den
+ *  Zufallsgeber des Spiels; sie messen also drei Bauverlaeufe in derselben
+ *  Welt.
+ *
+ *  Nachgemessen an vier Aussaaten (Anforderungskatalog 2.1): der
+ *  Zweigunterschied beim Moerser betraegt +11, +9, -1 und +9 Kristall, der
+ *  Stilabstand 6, 8, 6 und 9 Punkte - **die Effekte, nach denen justiert
+ *  wird, sind kleiner als die Streuung des Verfahrens.** Eine Zahl, die sich
+ *  mit der Aussaat um mehr bewegt als durch die Aenderung, ist keine Zahl.
+ *
+ *  Drei Aussaaten, nicht mehr: gemessen kostet jede zusaetzliche rund
+ *  zwanzig Sekunden, und die Torkette hat zweieinhalb Minuten. Drei reichen
+ *  fuer eine Spanne; fuer eine Verteilung reichen sie nicht, und das steht
+ *  hier, damit niemand die Spanne fuer ein Vertrauensintervall haelt. */
+const AUSSAATEN = [20260807, 11111111, 22222222];
 
 /** Drei leicht abgewandelte Spielverlaeufe je Messung.
  *
@@ -29,10 +47,66 @@ const SEEDS = [20260807];
  *  mehrere vernuenftige Verlaeufe ist eine Zahl, nach der man justieren kann. */
 const VARIANTS = [0, 1, 2];
 
-/** Mittelwert einer Kennzahl ueber alle Abwandlungen. */
-function overVariants(run: (variant: number) => Result): { runs: Result[]; mean: number } {
-  const runs = VARIANTS.map(run);
-  return { runs, mean: runs.reduce((a, r) => a + score(r), 0) / runs.length };
+/** Mittelwert einer Kennzahl ueber Aussaat UND Abwandlung - neun Laeufe.
+ *
+ *  `spanne` ist der Abstand zwischen der besten und der schlechtesten
+ *  **Aussaat** (je Aussaat ueber die Abwandlungen gemittelt). Das ist die
+ *  Rauschgrenze dieser Kennzahl: ein Unterschied, der kleiner ist, ist keiner.
+ *
+ *  Die Spanne ueber alle neun Laeufe waere die falsche Zahl - sie enthielte
+ *  die Streuung der Bauverlaeufe, und die ist gewollt, nicht Rauschen. */
+function overVariants(
+  run: (variant: number, aussaat: number) => Result,
+): { runs: Result[]; mean: number; spanne: number } {
+  const runs: Result[] = [];
+  const jeAussaat: number[] = [];
+  for (const aussaat of AUSSAATEN) {
+    aussaatGezaehlt('overVariants', aussaat);
+    const dieser = VARIANTS.map((v) => run(v, aussaat));
+    runs.push(...dieser);
+    jeAussaat.push(dieser.reduce((a, r) => a + score(r), 0) / dieser.length);
+  }
+  return {
+    runs,
+    mean: runs.reduce((a, r) => a + score(r), 0) / runs.length,
+    spanne: Math.max(...jeAussaat) - Math.min(...jeAussaat),
+  };
+}
+
+/** Dasselbe fuer Messungen ohne Abwandlungen: nur ueber die Aussaaten.
+ *
+ *  Die Zweigtabelle braucht das. Mit Abwandlungen waeren es 72 Laeufe fuer
+ *  acht Zweige, und die Kette hat zweieinhalb Minuten. */
+/** Wieviele Aussaaten JEDE Mittelungsfunktion wirklich gefahren hat.
+ *
+ *  **Eine Mittelung ueber eine Aussaat ist keine**, und man sieht es der
+ *  Ausgabe nicht an: sie meldet Mittelwerte, gleich wieviele Laeufe
+ *  dahinterstehen.
+ *
+ *  **Je Funktion gezaehlt, nicht im ganzen Lauf** - und das ist der
+ *  Unterschied zwischen einer Pruefung und einer Beruhigung. Der erste
+ *  Entwurf sammelte die Aussaaten in `play`, also ueber alles zusammen:
+ *  schnitt man dann die Schleife der einen Funktion zurueck, fuhr die andere
+ *  weiterhin alle drei, die Menge war vollstaendig, und das Tor schwieg. Die
+ *  zwei Gegenproben haben genau das gemeldet (Regel 3 - der Eingriff kam an,
+ *  er loeste nur nichts aus). */
+const aussaatenJeMessung = new Map<string, Set<number>>();
+function aussaatGezaehlt(wo: string, aussaat: number): void {
+  const da = aussaatenJeMessung.get(wo) ?? new Set<number>();
+  da.add(aussaat);
+  aussaatenJeMessung.set(wo, da);
+}
+
+function ueberAussaaten(run: (aussaat: number) => Result): {
+  runs: Result[]; mittel: number; spanne: number;
+} {
+  const runs = AUSSAATEN.map((a) => { aussaatGezaehlt('ueberAussaaten', a); return run(a); });
+  const werte = runs.map((r) => (r.won ? r.lives : 0));
+  return {
+    runs,
+    mittel: werte.reduce((a, b) => a + b, 0) / werte.length,
+    spanne: Math.max(...werte) - Math.min(...werte),
+  };
 }
 
 /** Eine Zahl, die Sieg und Niederlage vergleichbar macht: Niederlage zaehlt
@@ -181,7 +255,7 @@ function play(
   } = {},
 ): Result {
   const s = new GameState(mapId);
-  s.reset(opts.seed ?? SEEDS[0], difficulty, mapId,
+  s.reset(opts.seed ?? AUSSAATEN[0], difficulty, mapId,
     { endless: opts.endless, perks: opts.perks ?? NO_PERKS,
       karten: opts.karten ?? MAPS.length });
   const spots = buildSpots(s);
@@ -421,12 +495,12 @@ for (const bot of BOTS) {
 // so gross ist, gibt es kein Fenster, in dem beides zugleich gilt.
 {
   const runs = BOTS.map((b) => {
-    const o = overVariants((variant) => play(
-      mixedPlanBase, () => 0, b, 'normal', MAPS[0].id, { variant },
+    const o = overVariants((variant, aussaat) => play(
+      mixedPlanBase, () => 0, b, 'normal', MAPS[0].id, { variant, seed: aussaat },
     ));
     const avg = (f: (r: Result) => number) => o.runs.reduce((a, r) => a + f(r), 0) / o.runs.length;
     return {
-      name: b.name, mean: o.mean,
+      name: b.name, mean: o.mean, rauschen: o.spanne,
       towers: avg((r) => r.towers), ups: avg((r) => r.upgrades),
       earned: avg((r) => r.earned), left: avg((r) => r.earned - r.spent),
     };
@@ -440,10 +514,23 @@ for (const bot of BOTS) {
   }
   const best = Math.max(...runs.map((r) => r.mean));
   const worst = Math.min(...runs.map((r) => r.mean));
+  // **Der Abstand steht seit v251 neben seiner Rauschgrenze** (G4).
+  //
+  // Er ist die Zahl, an der "die Stile liegen zu nah beieinander" gemessen
+  // wird - und gemessen schwankt er selbst zwischen 6 und 10, je nachdem,
+  // mit welcher Aussaat man rechnet. Eine Zahl ohne ihre Streuung daneben
+  // laedt dazu ein, den naechsten Zufall fuer eine Verbesserung zu halten.
+  const stilRauschen = Math.max(...runs.map((r) => r.rauschen));
+  const stilAbstand = best - worst;
   console.log(
     `\nAbstand der Spielstile: ` + runs.map((r) => `${r.name} ${r.mean.toFixed(0)}`).join('   ') +
-    `   Spanne ${(best - worst).toFixed(0)}`,
+    `   Spanne ${stilAbstand.toFixed(0)}` +
+    `   (Rauschen ueber ${AUSSAATEN.length} Aussaaten: ${stilRauschen.toFixed(1)})`,
   );
+  if (stilAbstand < stilRauschen) {
+    console.log('  UNBELEGT: der Abstand der Stile ist kleiner als die Streuung des '
+      + 'Verfahrens - er misst heute die Aussaat, nicht die Spielstile (G4).');
+  }
   if (best - worst > 18) {
     console.log(
       '  OFFEN (T16): die Stile liegen zu weit auseinander - deshalb laesst sich ' +
@@ -462,9 +549,9 @@ for (const bot of BOTS) {
 // frueher ankommendes Gold aendert die Baureihenfolge und damit alles
 // Weitere. Eine Zahl, die so springt, taugt nicht zum Justieren.
 {
-  const shifted = (mul: number) => overVariants((variant) => play(
+  const shifted = (mul: number) => overVariants((variant, aussaat) => play(
     mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id,
-    { perks: { ...NO_PERKS, damageMul: mul }, variant },
+    { perks: { ...NO_PERKS, damageMul: mul }, variant, seed: aussaat },
   ));
   const low = shifted(0.9), mid = shifted(1), high = shifted(1.1);
   const span = Math.max(low.mean, mid.mean, high.mean) - Math.min(low.mean, mid.mean, high.mean);
@@ -498,10 +585,11 @@ for (const bot of BOTS) {
 {
   // Ueber die Abwandlungen gemittelt: ein einzelner Lauf haengt an der
   // Baureihenfolge, und die aendert sich mit dem Startgold.
-  const plainMean = overVariants((variant) =>
-    play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { variant })).mean;
-  const buffedMean = overVariants((variant) =>
-    play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { perks: ALL_PERKS, variant })).mean;
+  const plainMean = overVariants((variant, aussaat) =>
+    play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { variant, seed: aussaat })).mean;
+  const buffedMean = overVariants((variant, aussaat) =>
+    play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id,
+      { perks: ALL_PERKS, variant, seed: aussaat })).mean;
   const plain = play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id);
   const buffed = play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { perks: ALL_PERKS });
   const hardBuffed = play(
@@ -612,8 +700,8 @@ const mixedPlan = mixedPlanBase;
 {
   console.log('\nZiellogik (gemischtes Feld, alle Tuerme umgestellt):');
   const messe = (f?: (t: Tower, i: number, s: GameState) => Zielwahl): number =>
-    overVariants((variant) => play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id,
-      { variant, ziel: f })).mean;
+    overVariants((variant, aussaat) => play(mixedPlanBase, () => 0, MEISTER, 'normal',
+      MAPS[0].id, { variant, seed: aussaat, ziel: f })).mean;
   const rein: Record<string, number> = {};
   for (const z of ZIELWAHL_ORDNUNG) rein[z] = messe(() => z);
   console.log('  rein (Spiralhain): ' + ZIELWAHL_ORDNUNG.map((z) => `${z} ${rein[z].toFixed(0)}`).join('  '));
@@ -704,22 +792,52 @@ const mixedPlan = mixedPlanBase;
   }
 }
 
-console.log('\nZweige einzeln (gemischtes Feld, ein Turmtyp umgestellt):');
+// **Die Zweigtabelle mittelt seit v251 - vorher war sie die einzige Kennzahl
+// dieser Datei, die es nicht tat.**
+//
+// Ein einziger Lauf je Zweig, direkt unter dem eigenen Kommentar der Datei
+// ("gemessen an einem einzelnen Verlauf ist das Chaos, nicht Balance"). Auf
+// dieser Zahl stand im Spielspass-Audit der einzige Teilerfolg von G2 - "18 %
+// beim Moerser". Ueber sieben Aussaaten nachgemessen bleiben 8 %, und auf
+// einer ist der angeblich staerkere Zweig der schwaechere.
+//
+// Gemeldet wird deshalb Mittelwert UND Spanne, und wo der Unterschied
+// zwischen den Zweigen kleiner ist als die groessere der beiden Spannen,
+// steht UNBELEGT statt einer Zahl. Das ist keine Zierde: genau diese
+// Unterscheidung haette den falschen Satz im Audit verhindert.
+console.log('\nZweige einzeln (gemischtes Feld, ein Turmtyp umgestellt, '
+  + `${AUSSAATEN.length} Aussaaten):`);
 const branchRuns = new Map<string, Result>();
+const branchMittel = new Map<string, { mittel: number; spanne: number }>();
 for (const id of TOWER_ORDER) {
   for (const b of [0, 1] as const) {
-    const r = play(mixedPlan, (t) => (t === id ? b : 0));
-    branchRuns.set(`${id}:${b}`, r);
+    const o = ueberAussaaten((aussaat) => play(
+      mixedPlan, (t) => (t === id ? b : 0), MEISTER, 'normal', MAPS[0].id, { seed: aussaat },
+    ));
+    branchRuns.set(`${id}:${b}`, o.runs[0]);
+    branchMittel.set(`${id}:${b}`, { mittel: o.mittel, spanne: o.spanne });
   }
 }
+let unbelegteZweige = 0;
 for (const id of TOWER_ORDER) {
-  const a = branchRuns.get(`${id}:0`)!, b = branchRuns.get(`${id}:1`)!;
-  const fmt = (r: Result) => (r.won ? `${r.lives}/${START_LIVES}` : `verloren W${r.wave}`);
+  const a = branchMittel.get(`${id}:0`)!, b = branchMittel.get(`${id}:1`)!;
   const def = TOWERS[id];
+  const abstand = Math.abs(a.mittel - b.mittel);
+  const rauschen = Math.max(a.spanne, b.spanne);
+  const urteil = abstand < rauschen
+    ? `UNBELEGT (Abstand ${abstand.toFixed(1)} < Rauschen ${rauschen.toFixed(1)})`
+    : `Abstand ${abstand.toFixed(1)} von ${START_LIVES}`;
+  if (abstand < rauschen) unbelegteZweige++;
+  const fmt = (o: { mittel: number; spanne: number }) =>
+    `${o.mittel.toFixed(1)}±${(o.spanne / 2).toFixed(1)}`;
   console.log(
-    `  ${def.name.padEnd(11)} ${def.branches[0].name.padEnd(15)} ${fmt(a).padEnd(14)}` +
-    `${def.branches[1].name.padEnd(15)} ${fmt(b)}`,
+    `  ${def.name.padEnd(11)} ${def.branches[0].name.padEnd(15)} ${fmt(a).padEnd(12)}` +
+    `${def.branches[1].name.padEnd(15)} ${fmt(b).padEnd(12)} ${urteil}`,
   );
+}
+if (unbelegteZweige === TOWER_ORDER.length) {
+  console.log(`  Alle ${unbelegteZweige} Zweigpaare sind UNBELEGT - die Zweigwahl bewegt `
+    + 'heute nichts, was ueber der Streuung des Verfahrens liegt (G2).');
 }
 
 // 1. Die gemischte Strategie muss gewinnen, sonst ist die Kurve zu steil.
@@ -914,6 +1032,27 @@ for (const m of MAPS) {
 
 // 5. Effektbudget: was die Simulation erzeugt, muss der Browser zeichnen koennen.
 if (mixed.peakFx > 900) errors.push(`Effektspitze ${mixed.peakFx} ist zu hoch fuer das Handy.`);
+
+// 5b. **Hat dieser Lauf wirklich ueber alle Aussaaten gemittelt?** (v251)
+//
+// Der Ausgabe sieht man es nicht an: sie meldet Mittelwerte, gleich wieviele
+// Laeufe dahinterstehen. Faellt die Schleife auf eine Aussaat zurueck - durch
+// eine Aenderung, einen Tippfehler, eine gut gemeinte Beschleunigung -, dann
+// steht ueberall weiter eine Zahl, und sie ist wieder das, was sie bis v250
+// war: ein Zufall mit Nachkommastelle.
+{
+  const teile: string[] = [];
+  for (const wo of ['overVariants', 'ueberAussaaten']) {
+    const da = aussaatenJeMessung.get(wo) ?? new Set<number>();
+    teile.push(`${wo} ${da.size}`);
+    const fehlend = AUSSAATEN.filter((a) => !da.has(a));
+    if (fehlend.length) {
+      errors.push(`${wo} hat nur ${da.size} von ${AUSSAATEN.length} Aussaaten gefahren `
+        + `(es fehlen ${fehlend.join(', ')}). Eine Mittelung ueber eine Aussaat ist keine.`);
+    }
+  }
+  console.log(`\nAussaaten: ${AUSSAATEN.join(', ')} - gefahren von ${teile.join(', ')}.`);
+}
 
 // Wo tut es weh - Grundlage fuer die naechste Feinjustierung.
 const hot = mixed.leakByWave

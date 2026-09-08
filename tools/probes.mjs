@@ -1390,6 +1390,34 @@ const PROBEN = [
     tor: 'uxtor',
   },
   {
+    // **Der Bestleistungs-Bot wird so schwach, dass eine Karte unerreichbar
+    // wird.**
+    //
+    // Zwei Tuerme reichen auf keiner Karte. Dann muss die Erreichbarkeits-
+    // pruefung anschlagen - sie ist die einzige, die sagt, ob ein Ziel
+    // ueberhaupt eines ist.
+    name: 'Sterne sind nicht mehr erreichbar',
+    datei: 'tools/sim.ts',
+    regel: /  name: 'Bestleistung', maxTowers: 24, maxLevel: MAX_LEVEL,/,
+    ersatz: "  name: 'Bestleistung', maxTowers: 2, maxLevel: 1,",
+    tor: 'sim',
+    meldet: 'unerreichbar',
+  },
+  {
+    // **Und die Gegenrichtung: ein bescheidener Aufbau holt ueberall drei
+    // Sterne.**
+    //
+    // Ohne diese Probe bewiese die darueber nichts - eine Pruefung, die nur
+    // nach unten sichert, laesst den dritten Stern still wertlos werden.
+    // Der Eingriff macht die drei Stile so stark wie die Bestleistung.
+    name: 'Bescheidener Aufbau holt ueberall drei Sterne',
+    datei: 'tools/sim.ts',
+    regel: /    name: 'Meister', maxTowers: 12, maxLevel: 3, reserve: 40, decideEvery: 30, deepenAt: 0\.65,/,
+    ersatz: "    name: 'Meister', maxTowers: 24, maxLevel: 6, reserve: 40, decideEvery: 20, deepenAt: 0.8,",
+    tor: 'sim',
+    meldet: 'dann ist der dritte wertlos',
+  },
+  {
     // **Die Turmwahl verschweigt, was der Turm HIER bekaeme.**
     //
     // Der Verbund folgt aus der LAGE, und die waehlt man in genau dem

@@ -100,6 +100,29 @@ const BOTS: Bot[] = [
 ];
 
 
+/** **Die Bestleistung** - der Spieler, der alles richtig macht (v246, F7).
+ *
+ *  Die drei Stile oben sind bewusst bescheiden: zwoelf Tuerme, hoechstens
+ *  Stufe 3 von sechs. Das ist richtig fuer die Frage "kommt ein normaler
+ *  Spieler durch" - und falsch fuer die Frage "sind drei Sterne ueberhaupt
+ *  erreichbar". Die stand trotzdem seit jeher auf denselben drei Laeufen.
+ *
+ *  Gemessen ist der Unterschied gross: auf dem Farnkessel kommen die drei
+ *  Stile auf 24 bis 29 von 60 Kristall, ein Bot ohne diese Deckel auf 38.
+ *  "Auch der beste Spielstil holt nur zwei Sterne" hiess also in Wahrheit
+ *  "auch der beste der drei bescheidenen Stile" - und daraus wurde im
+ *  Rueckstandsverzeichnis (F7) der Satz "die Haelfte des Spiels hat kein
+ *  erreichbares Bestergebnis". Dieselbe Klasse wie die Zahlwort-Tabelle in
+ *  v230 und das Befehlsmuster in v244: eine Messung, die weniger sagt, als
+ *  der Satz daneben behauptet.
+ *
+ *  Er zaehlt bewusst NICHT bei "keine Karte darf muehelos sein" - dort geht
+ *  es um den gewoehnlichen Spieler, und der ist einer der drei. */
+const BESTLEISTUNG: Bot = {
+  name: 'Bestleistung', maxTowers: 24, maxLevel: MAX_LEVEL,
+  reserve: 40, decideEvery: 20, deepenAt: 0.8,
+};
+
 const MEISTER = BOTS[0];
 const NUR_MESSEN = process.argv.slice(2).includes('--faehigkeiten');
 
@@ -535,7 +558,7 @@ console.log('\nKarten (Normal, alle Stile):');
 const mapRuns = new Map<string, Result>();
 for (const m of MAPS) {
   const line: string[] = [];
-  for (const bot of BOTS) {
+  for (const bot of [...BOTS, BESTLEISTUNG]) {
     const r = play(mixedPlanBase, () => 0, bot, 'normal', m.id);
     mapRuns.set(`${m.id}:${bot.name}`, r);
     line.push(`${bot.name} ${r.won ? `${r.lives}/${r.maxLives}` : `W${r.wave}`}`);
@@ -839,15 +862,20 @@ for (const id of TOWER_ORDER) {
 // unmoeglich: der beste Stil kam auf 18 von 60 Punkten, gefordert waren 54.
 // Ein Ziel, das niemand erreicht, ist kein Ziel.
 {
+  // **Erreichbarkeit fragt den Bestleistungs-Bot**, nicht die drei
+  // bescheidenen Stile - sonst misst sie die Bescheidenheit mit.
   const best = new Map<string, number>();
   for (const m of MAPS) {
-    let top = 0;
-    for (const bot of BOTS) {
-      const r = mapRuns.get(`${m.id}:${bot.name}`)!;
-      top = Math.max(top, starsFor(r.won, r.lives, r.maxLives));
-    }
+    const r = mapRuns.get(`${m.id}:${BESTLEISTUNG.name}`)!;
+    const top = starsFor(r.won, r.lives, r.maxLives);
     best.set(m.id, top);
-    console.log(`  ${m.name.padEnd(15)} bester Lauf: ${top} Stern(e)`);
+    const stile = Math.max(...BOTS.map((b) => {
+      const o = mapRuns.get(`${m.id}:${b.name}`)!;
+      return starsFor(o.won, o.lives, o.maxLives);
+    }));
+    console.log(`  ${m.name.padEnd(15)} bester Lauf: ${top} Stern(e) `
+      + `(${r.won ? `${r.lives}/${r.maxLives}` : `verloren in W${r.wave}`}) `
+      + `· die drei Stile: ${stile}`);
   }
   for (const m of MAPS) {
     if ((best.get(m.id) ?? 0) < 2) {
@@ -857,8 +885,17 @@ for (const id of TOWER_ORDER) {
   if (![...best.values()].some((v) => v >= 3)) {
     errors.push('Auf keiner Karte sind drei Sterne erreichbar - die Schwelle ist zu hoch.');
   }
-  if ([...best.values()].every((v) => v >= 3)) {
-    errors.push('Auf jeder Karte holt schon der Bot drei Sterne - dann ist der dritte wertlos.');
+  // **Diese Frage bleibt bei den drei Stilen.** Dass die Bestleistung ueberall
+  // drei Sterne holt, ist erlaubt - sie ist der Spieler, der alles richtig
+  // macht. Wertlos waere der dritte Stern erst, wenn ihn schon ein
+  // bescheidener Aufbau ueberall bekaeme.
+  const stileBest = MAPS.map((m) => Math.max(...BOTS.map((b) => {
+    const r = mapRuns.get(`${m.id}:${b.name}`)!;
+    return starsFor(r.won, r.lives, r.maxLives);
+  })));
+  if (stileBest.every((v) => v >= 3)) {
+    errors.push('Auf jeder Karte holt schon ein bescheidener Aufbau drei Sterne - '
+      + 'dann ist der dritte wertlos.');
   }
 }
 

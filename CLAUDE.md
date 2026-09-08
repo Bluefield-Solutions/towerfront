@@ -251,6 +251,13 @@ npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen - im
                     geändert hat. Ein Name oder ein Torname als Argument filtert
                     gezielt. `-- --voll` fährt alle; das dauert rund 50
                     Minuten und läuft deshalb nachts auf dem Runner.
+npm run naechste    welche Story als naechste dran ist, mit ihrem vollen
+                    Text - gelesen aus `docs/Towerfront-STORIES.md`, nicht
+                    gemerkt. Die Kette laeuft ueber Kontextgrenzen hinweg;
+                    wer sich den Stand merkt, hat nach dem ersten Neustart
+                    nichts mehr in der Hand. `--alle` zeigt den Stand aller
+                    42. Es entscheidet nicht: die Reihenfolge des Katalogs
+                    ist begruendet (Abschnitt 4).
 npm run kritik      Wertung nach Testerkategorien, Ziel über 90
 npm run c18         die C18-Frage allein: ist die erste Karte ohne
                     Verbesserungen zu gewinnen? Zwei Sekunden statt zwei
@@ -444,7 +451,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v251. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v252. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

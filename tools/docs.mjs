@@ -17,6 +17,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ausDatei, gestellt, werte } from './schliessbedingung.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DOCS = join(ROOT, 'docs');
@@ -423,63 +424,15 @@ const offeneIds = new Set();
   if (!backlog) {
     fail('Towerfront-BACKLOG.md fehlt - dann prueft hier nichts mehr.');
   } else {
-    /** Quelltext einer Datei, oder null. Als Funktion, damit die gestellten
-     *  Texte durch dieselbe Auswertung laufen wie die echten Dateien. */
-    const ausDatei = (pfad) => {
-      try { return lies(pfad); } catch { return null; }
-    };
-    /** Wieviele Eintraege hat das Array, das <NAME> zugewiesen bekommt? */
-    const listenLaenge = (inhalt, name) => {
-      const m = inhalt.match(new RegExp(`${name}[^=\\n]*=\\s*\\[([^\\]]*)\\]`));
-      if (!m) return null;
-      return m[1].split(',').map((s) => s.trim()).filter(Boolean).length;
-    };
-    /**
-     * Eine Bedingung auswerten. `quelle(pfad)` liefert den Text - bei der
-     * echten Auswertung aus der Datei, bei der Nullprobe der gestellte Text.
-     * Rueckgabe: { erfuellt } oder { fehler }.
-     */
-    const werte = (bed, quelle) => {
-      let m;
-      if ((m = bed.match(/^text (\S+) "([^"]+)" (>=|==) (\d+)$/))) {
-        const [, pfad, wort, op, n] = m;
-        const inhalt = quelle(pfad);
-        if (inhalt === null) return { fehler: `die Datei ${pfad} gibt es nicht` };
-        const anzahl = inhalt.split(wort).length - 1;
-        return { erfuellt: op === '>=' ? anzahl >= Number(n) : anzahl === Number(n) };
-      }
-      if ((m = bed.match(/^liste (\S+) ([A-Za-z_][A-Za-z0-9_]*) >= (\d+)$/))) {
-        const [, pfad, name, n] = m;
-        const inhalt = quelle(pfad);
-        if (inhalt === null) return { fehler: `die Datei ${pfad} gibt es nicht` };
-        const laenge = listenLaenge(inhalt, name);
-        if (laenge === null) return { fehler: `die Liste ${name} steht nicht in ${pfad}` };
-        return { erfuellt: laenge >= Number(n) };
-      }
-      return { fehler: `die Form "${bed}" kennt der Waechter nicht` };
-    };
-    /**
-     * Die zwei gestellten Texte zu einer Bedingung: einer, der sie erfuellen
-     * muss, und einer, der sie brechen muss. `null`, wenn die Form keine
-     * mechanische ist.
-     */
-    const gestellt = (bed) => {
-      let m;
-      if ((m = bed.match(/^text \S+ "([^"]+)" (>=|==) (\d+)$/))) {
-        const [, wort, op, n] = m;
-        // Der Trenner darf das Wort nicht selbst enthalten, sonst zaehlt die
-        // Auswertung mehr Treffer als gesetzt wurden.
-        return op === '>='
-          ? { ja: Array(Number(n)).fill(wort).join('\n'), nein: '' }
-          : { ja: '', nein: wort };
-      }
-      if ((m = bed.match(/^liste \S+ ([A-Za-z_][A-Za-z0-9_]*) >= (\d+)$/))) {
-        const [, name, n] = m;
-        const bau = (k) => `export const ${name} = [${Array(k).fill("'x'").join(', ')}];`;
-        return { ja: bau(Number(n)), nein: bau(0) };
-      }
-      return null;
-    };
+    // **Die Auswertung steht seit v252 in `tools/schliessbedingung.mjs`.**
+    //
+    // Nicht aus Ordnungsliebe: seit v249 traegt jede der 42 Stories dieselbe
+    // Art Bedingung, und `npm run naechste` faehrt sie, um zu sagen, welche
+    // als naechste dran ist. Zwei Fassungen derselben Rechnung waeren hier
+    // besonders teuer - die eine sagt, ob ein Punkt zugefallen ist, die
+    // andere, woran gearbeitet wird. Gehen sie auseinander, arbeitet die
+    // Kette an etwas, das der Waechter fuer erledigt haelt, und beide sind
+    // fuer sich gruen (Regel 15).
 
     // Nur die Abschnitte, die "Offen" heissen. Die Fundtabellen darunter
     // fuehren absichtlich vergangene Staende.
@@ -596,6 +549,61 @@ const offeneIds = new Set();
         + 'geaendert, und dann prueft hier nichts mehr.');
     }
     void geprueft;
+  }
+}
+
+// --- 8. Der Storykatalog muss auswertbar bleiben.
+//
+// **Weil die Kette ihm folgt, nicht mir.** `npm run naechste` liest die
+// Reihenfolge aus `docs/Towerfront-STORIES.md` und waehlt die erste offene
+// Story - ueber Stunden und ueber Kontextgrenzen hinweg. Faellt das Dokument
+// aus der Form, hat der Naechste nichts mehr in der Hand: eine Ueberschrift,
+// die das Muster nicht mehr trifft, verschwindet lautlos aus der Reihe, und
+// eine Story ohne Schliessbedingung gilt fuer immer als offen oder fuer immer
+// als zu, je nachdem wie man raet.
+//
+// Geprueft wird deshalb dasselbe, was Abschnitt 6 fuer das Verzeichnis
+// prueft - nur mit einem Unterschied, und der ist der wichtige: eine
+// ERFUELLTE Bedingung ist hier kein Fehler. Eine Story, die zu ist, ist
+// getan; ein offener Punkt, der zu ist, luegt.
+{
+  const stories = alle.find(([n]) => n === 'Towerfront-STORIES.md');
+  if (!stories) {
+    fail('Towerfront-STORIES.md fehlt - dann weiss die Kette nicht mehr, woran '
+      + 'sie arbeitet.');
+  } else {
+    const koepfe = [...stories[1].matchAll(/^### (S-[A-Z0-9-]+) · (.+)$/gm)];
+    if (koepfe.length < 10) {
+      fail(`Towerfront-STORIES.md: nur ${koepfe.length} Stories erkannt - die `
+        + 'Form der Ueberschriften hat sich geaendert, und dann liest '
+        + '`npm run naechste` die falsche Reihenfolge.');
+    }
+    const bloecke = stories[1].split(/^### (?=S-)/m).slice(1);
+    for (const block of bloecke) {
+      const id = block.match(/^(S-[A-Z0-9-]+)/)[1];
+      const b = block.match(/\*\*Schliesst, wenn:\*\* `([^`]+)`/);
+      if (!b) {
+        fail(`Story ${id}: keine Schliessbedingung. Dann kann die Kette nicht `
+          + 'entscheiden, ob sie getan ist.');
+        continue;
+      }
+      const bed = b[1];
+      if (/^(blick|nutzer): /.test(bed)) continue;
+      // Die Form muss der Auswerter kennen. Ob die ZIELDATEI schon da ist,
+      // wird hier NICHT verlangt - eine Story beschreibt Arbeit, die noch
+      // nicht getan ist, ihre Datei entsteht erst dabei.
+      const g = gestellt(bed);
+      if (!g) {
+        fail(`Story ${id}: die Form \`${bed}\` kennt der Waechter nicht.`);
+        continue;
+      }
+      const ja = werte(bed, () => g.ja);
+      const nein = werte(bed, () => g.nein);
+      if (!ja.erfuellt || nein.erfuellt) {
+        fail(`Story ${id}: die Bedingung \`${bed}\` besteht ihre eigene `
+          + 'Nullprobe nicht - sie kann nicht eintreten oder nicht ausbleiben.');
+      }
+    }
   }
 }
 

@@ -80,6 +80,7 @@
     "uxaudittor": "tsx tools/uxaudit.mjs --tor",
     "uxtor": "npm run build && npm run uxaudittor",
     "c18": "tsx tools/c18probe.ts",
+    "naechste": "node tools/naechste.mjs",
     "baukarte": "tsx tools/baukarte.mjs",
     "wellenbau": "tsx tools/wellenbau.ts"
   },

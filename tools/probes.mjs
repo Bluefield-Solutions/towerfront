@@ -447,6 +447,36 @@ const PROBEN = [
     meldet: 'keine Schliessbedingung',
   },
   {
+    // **Die zwei Proben zum Storykatalog (v252).**
+    //
+    // `npm run naechste` liest die Reihenfolge aus dem Katalog und waehlt die
+    // erste offene Story - ueber Stunden und ueber Kontextgrenzen hinweg. Es
+    // haelt sich also nichts im Kopf, sondern liest den Stand aus dem Baum;
+    // genau deshalb muss der Baum ihn tragen koennen. Eine Story ohne
+    // Bedingung gilt fuer immer als offen oder fuer immer als zu, je nachdem
+    // wie man raet - dieselbe Klasse, an der C24, D28-A und D28-F eine Ebene
+    // hoeher stehen geblieben sind.
+    name: 'Story ohne Schliessbedingung',
+    datei: 'docs/Towerfront-STORIES.md',
+    regel: /\*\*Schliesst, wenn:\*\* `text tools\/sim\.ts "entscheidungenJeWelle" >= 2`/,
+    ersatz: '',
+    tor: 'doku',
+    meldet: 'keine Schliessbedingung',
+  },
+  {
+    // Und die Form der Ueberschriften. Sie ist die leisere Gefahr: eine
+    // Story, deren Kopf das Muster nicht mehr trifft, faellt lautlos aus der
+    // Reihe - `naechste` ueberspringt sie, ohne ein Wort zu sagen, und die
+    // Kette arbeitet an der falschen Stelle weiter. Der Eingriff nimmt allen
+    // Koepfen die Kennung, damit die Zahl wirklich faellt.
+    name: 'Storykoepfe verlieren ihre Form',
+    datei: 'docs/Towerfront-STORIES.md',
+    regel: /^### S-/gm,
+    ersatz: '### ',
+    tor: 'doku',
+    meldet: 'Stories erkannt',
+  },
+  {
     // **Der Nachtlauf braucht einen Weg zurueck ins Tor.** Bis v226 landete
     // sein Befund nur im Protokoll auf dem Runner. In der Sitzung zu v226 ist
     // er dreimal gefahren, zweimal rot, und beide Befunde habe ich nur

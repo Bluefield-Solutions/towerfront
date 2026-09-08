@@ -3,6 +3,8 @@ import { accentFor, TOWERS, type BranchIndex, type TowerId } from '../data/tower
 import { hexA } from './glow';
 import { einbetten, einbettungSchluessel } from './einbettung';
 import { ablageAnmelden } from './speicher';
+import { getObjectArtStufeEingebettet } from './objectart';
+import { WAFFE_BREIT, WAFFE_HOCH } from '../data/turmgestalt';
 
 /** Gerenderte Turmbilder.
  *
@@ -97,6 +99,13 @@ export function artBreite(art: HTMLCanvasElement, schluessel: string): number {
   breiten.set(schluessel, anteil);
   return anteil;
 }
+/** Die Leistensymbole - eigene Ablage mit Tafel, damit der Kartenwechsel sie
+ *  wegraeumt (siehe `gfx/speicher.ts`). Sie haengen an der Einbettung, also
+ *  an der Karte. */
+const symbole = new Map<string, HTMLCanvasElement>();
+const symboltafel = new Map<string, string>();
+ablageAnmelden('turmsymbol', symbole, symboltafel);
+
 const raw = new Map<string, HTMLImageElement>();
 const ready = new Set<string>();
 let version = 0;
@@ -220,3 +229,53 @@ export function towerArtScale(level: number): number {
 
 export const hasTowerArt = (id: TowerId, branch: BranchIndex): boolean =>
   key(id, branch) in TOWER_ART;
+
+/** Ein kleines Symbol EINES Turms - fuer die Leiste, nicht fuer das Feld.
+ *
+ *  **Warum es das braucht** (v239, E4): die Turmleiste bot bis v238 Name und
+ *  Preis an. Der Preis ist die unwichtigste Eigenschaft eines Turms, und die
+ *  Namen machten die Knoepfe so breit, dass acht Stueck bei 844 Punkten
+ *  nicht in eine Reihe passten - die Leiste stapelte sich auf zwei und lag
+ *  ueber dem linken Bahnarm.
+ *
+ *  **Warum es hier steht und nicht in `ui.ts`:** ein Turm wird auf zwei
+ *  Arten gezeichnet. Frostturm, Moerser und Prisma haben ein Ganzbild in
+ *  `TOWER_ART`; der Bogenturm hat seit v166 keines mehr, sondern Sockel und
+ *  Waffe in `OBJECT_ART`. Wer das in der Bedienung noch einmal aufschreibt,
+ *  hat zwei Fassungen derselben Fallunterscheidung (Regel 15) - und die
+ *  zweite veraltet beim naechsten zweiteiligen Turm.
+ *
+ *  Genau das ist beim ersten Anlauf passiert: die Leiste fragte nur
+ *  `getTowerArt`, und der Bogenturm - der guenstigste, meistgebaute und
+ *  vorgewaehlte Turm - blieb als einziger ein leerer Kasten. Gesehen hat es
+ *  die Aufnahme, nicht der Code (Regel 8).
+ *
+ *  `null`, solange die Bilder noch laden; der Aufrufer versucht es wieder. */
+export function turmSymbol(id: TowerId, mapId = 'spiralhain'): HTMLCanvasElement | null {
+  const k = `symbol|${id}|${einbettungSchluessel(mapId)}`;
+  const da = symbole.get(k);
+  if (da) return da;
+
+  const sockel = getObjectArtStufeEingebettet(`sockel_${id}`, 1, mapId);
+  const waffe = getObjectArtStufeEingebettet(`waffe_${id}`, 1, mapId);
+  const ganz = sockel && waffe ? null : getTowerArt(id, null, 1, mapId);
+  if (!ganz && !(sockel && waffe)) return null;
+
+  const size = 96;
+  const cv = document.createElement('canvas');
+  cv.width = size; cv.height = size;
+  const g = cv.getContext('2d')!;
+  if (ganz) {
+    g.drawImage(ganz, 0, 0, size, size);
+  } else if (sockel && waffe) {
+    // Dieselben Anteile wie im Feld, nur ohne Drehung: ein noch nicht
+    // gebauter Turm hat kein Ziel, und ein Winkel waere hier eine Behauptung.
+    g.drawImage(sockel, 0, size * 0.16, size, size * 0.84);
+    const ww = size * WAFFE_BREIT;
+    const wh = ww * (waffe.height / waffe.width);
+    g.drawImage(waffe, (size - ww) / 2, size * 0.16 + size * 0.84 * WAFFE_HOCH - wh / 2, ww, wh);
+  }
+  symbole.set(k, cv);
+  symboltafel.set(k, mapId);
+  return cv;
+}

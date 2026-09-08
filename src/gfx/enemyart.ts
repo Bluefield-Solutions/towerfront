@@ -31,6 +31,28 @@ const raw = new Map<string, HTMLImageElement>();
 const ready = new Set<string>();
 let version = 0;
 
+/** Wieviele Gegnerbilder schon geladen sind - als Zaehler, der nur steigt.
+ *
+ *  **Warum die Bedienung das braucht** (v239): die Wellenvorschau baut ihre
+ *  Eintraege aus `getEnemyArt`, und die gibt `null` zurueck, solange ein Bild
+ *  laedt. `ui.sync` steigt aber frueh aus, wenn sich die SIGNATUR nicht
+ *  geaendert hat - und die beschreibt den Spielzustand, nicht den Bildvorrat.
+ *  Faellt der erste Aufbau in die Ladezeit, bleibt der Farbtupfer stehen, bis
+ *  sich zufaellig das Gold aendert.
+ *
+ *  Gemessen ist der Fall neu: bis v238 waren die Bilder rechtzeitig da. Mit
+ *  den Turmsymbolen der Leiste (E4) laden vier weitere Bilder gleichzeitig,
+ *  und das reicht. Der Eintrag der Vorschau schrumpfte damit von 38 auf 30
+ *  Punkte Breite - und seine Trefferflaeche von 47 auf 39, also unter den
+ *  Richtwert. Gemeldet hat es das Browsertor.
+ *
+ *  Der Zaehler gehoert deshalb in die Signatur: die Vorschau haengt am
+ *  Bildvorrat, also muss sie ihn kennen. Siebter Fall derselben Familie nach
+ *  Startknopf, Zielwahl, Bilanzblatt, Einstellungen, Werkzeugklappe und
+ *  Turmsymbol - was nicht am Spielzustand haengt, gehoert vor den Ausstieg
+ *  oder in die Signatur. */
+export const enemyArtVersion = (): number => version;
+
 
 function load(id: EnemyId): HTMLImageElement | null {
   const src = ENEMY_ART[id];

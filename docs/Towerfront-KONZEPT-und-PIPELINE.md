@@ -1,6 +1,6 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v237 · 08.09.2026
+Stand: v239 · 08.09.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Towerfront.html`
 
 > **Aufbau dieses Dokuments.** Die Abschnitte 1 bis 3.4 beschreiben den
@@ -192,7 +192,7 @@ Innerhalb von Schritt 1 gilt weiterhin:
 3. **`git diff` prüfen.** Nur die beabsichtigten Zeilen.
 4. **Erst einchecken, dann gegenproben.** Gegenproben arbeiten mit
    `git checkout` und löschen sonst die frische Arbeit. Dreimal passiert.
-5. **`npm run gate`** — einunddreissig Prüfungen, gemessen rund 190 Sekunden
+5. **`npm run gate`** — zweiunddreissig Prüfungen, gemessen rund 190 Sekunden
    (`docs/Towerfront-TOR-BILANZ.md`; vor v154 waren es 264, seither haben die
    teuren Tore ein Gedächtnis). Alles grün, sonst wird nicht ausgeliefert.
 6. **Der volle Gegenprobenlauf fährt nachts auf dem Runner**, nicht hier — er
@@ -239,6 +239,7 @@ Ein Befehl fährt alles: `npm run gate`
 | 29 | Build | `npm run build` | Bündelfehler |
 | 30 | Autarkie | `npm run autarkie` | externer URL, nicht inlintem Skript, Safari-Blur-Muster, fehlender DOM-Id, Ersatzschreibung statt Umlaut |
 | 31 | Browser | `npm run browser` | Konsolenfehlern; Spielbedienung, die im Menü sichtbar ist; Bedienung, die über der Landkarte liegt; einem Spiel, in das man nicht hineinkommt; Knöpfen, die gerechnet unter 44 Punkten liegen oder verdeckt sind — als einziges Tor mit gerechneter Kaskade, im echten Chromium auf 844 × 390 |
+| 32 | UX-Belegung | `npm run uxaudittor` | Bedienung, die mehr vom Bildschirm sperrt als erlaubt (Ruhe 16 %, Bauwahl 24 %, Prüfsteg 36 %, Welle 16 %); derselben Beschriftung zweimal im Bild; Trefferflächen unter 44 Punkten — gemessen mit `elementFromPoint` am gebauten Spiel, nicht an Umrisskästen |
 | — | Genre-Abgleich | `npm run bericht` | nichts — er meldet, er bricht nicht ab |
 
 Daneben zwei Werkzeuge, die nicht Teil der Kette sind:

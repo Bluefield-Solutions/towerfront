@@ -1,7 +1,7 @@
 import { SPEEDS, VERSION } from '../data/config';
 import { istSprung } from '../data/waves';
 import { ENEMIES, type EnemyId } from '../data/enemies';
-import { getEnemyArt } from '../gfx/enemyart';
+import { enemyArtVersion, getEnemyArt } from '../gfx/enemyart';
 import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
 import {
   TOWERS, TOWER_ORDER, MAX_LEVEL, accentFor, nextFor, sellValue,
@@ -11,6 +11,7 @@ import { Sfx } from '../core/audio';
 import { ersterBesuch, ersterGegner, getSettings, saveSettings } from '../core/storage';
 import { ZIELWAHL_NAMEN, ZIELWAHL_ORDNUNG, type Tower, type Zielwahl } from '../game/types';
 import { spriteCount } from '../gfx/sprites';
+import { turmSymbol } from '../gfx/towerart';
 import { TUTORIAL, kartenEinfuehrung, type TutorialStep } from '../game/tutorial';
 import { konterSatz } from '../data/konter';
 import type { GameState } from '../game/state';
@@ -35,6 +36,15 @@ export class UI {
   private lives = $('v-lives');
   private wave = $('v-wave');
   private bSound = $<HTMLButtonElement>('b-sound');
+  private bWerkzeug = $<HTMLButtonElement>('b-werkzeug');
+  private werkzeugKlappe = $<HTMLElement>('werkzeuge');
+  /** Steht die Werkzeugklappe offen?
+   *
+   *  Wie `bilanzOffen` eine reine Anzeigefrage - und wie dort in der
+   *  Signatur aufgezaehlt, sonst sieht `sync` die Aenderung nicht. Sie faellt
+   *  von selbst zu, sobald das Menue offen ist: `sync` leitet die
+   *  Sichtbarkeit ab, statt sie irgendwo zu setzen (Regel 6). */
+  private werkzeugeOffen = false;
   private bMess = $<HTMLButtonElement>('b-mess');
   private bSpeed = $<HTMLButtonElement>('b-speed');
   private bPause = $<HTMLButtonElement>('b-pause');
@@ -62,6 +72,10 @@ export class UI {
   private pBlattBody = $<HTMLElement>('p-blatt-body');
   private pTitle = $<HTMLElement>('p-title');
   private letzteBilanz = '';
+  /** Der zuletzt angezeigte Kristallstand - fuer den Durchbruch-Ausschlag.
+   *  Kein Spielzustand, sondern die Frage "hat sich das seit dem letzten
+   *  Schreiben geaendert, und in welche Richtung?" (v239, F5). */
+  private letzteLeben = -1;
   /** Zeigt der Einstellungsdialog gerade die zweite Karte ("Lauf
    *  nachstellen")? Wie `bilanzOffen` eine reine Anzeigefrage - und wie dort
    *  vor dem fruehen Ausstieg abgeleitet. */
@@ -164,11 +178,26 @@ export class UI {
       const b = document.createElement('button');
       b.className = 'tower-btn';
       b.id = `tb-${id}`;
-      b.title = def.blurb;
+      b.title = `${def.name} — ${def.role}. ${def.blurb}`;
+      b.setAttribute('aria-label', `${def.name}, ${def.base.cost} Gold`);
+      // **Der Turm wird als BILD angeboten, nicht als Preisschild** (v239, E4).
+      //
+      // Bis v238 stand hier Name, Preis und - nur auf hohen Fenstern - die
+      // Rolle. Zwei Schaeden: der Preis ist die unwichtigste Eigenschaft
+      // eines Turms, und das ZIELGERAET bekam weniger als der Schreibtisch,
+      // weil die Rollenzeile unter 480 Punkten Hoehe wegfiel.
+      //
+      // Und ein dritter, der die ganze Leiste betraf: die Namen machen die
+      // Knoepfe so breit, dass acht Stueck bei 844 Punkten nicht in eine
+      // Reihe passen. Die Leiste stapelte sich deshalb auf zwei Reihen und
+      // lag ueber dem linken Bahnarm. Mit Bild und Preis sind es rund 54
+      // Punkte statt 86, und alles passt in ein Band.
+      //
+      // Der Name ist nicht weg - er steht in `aria-label`, im Zeigerhinweis
+      // und in der Vorkauf-Karte, die ein Tipp auf denselben Knopf oeffnet.
       b.innerHTML =
-        `<span class="n">${def.name}</span>` +
-        `<span class="c">${def.base.cost} Gold</span>` +
-        `<span class="r">${def.role}</span>`;
+        `<span class="t-bild"></span>` +
+        `<span class="c">${def.base.cost}</span>`;
       b.addEventListener('click', () => {
         Sfx.unlock(); Sfx.play('tap');
         const anKlick = this.s.buildChoice === id && this.s.bauwahlErklaeren;
@@ -256,6 +285,14 @@ export class UI {
       this.s.speed = SPEEDS[(i + 1) % SPEEDS.length];
     });
     this.bPause.addEventListener('click', () => { this.s.paused = !this.s.paused; });
+
+    // **Die Werkzeugklappe** (v239, E1). Ein Tipp oeffnet und schliesst sie,
+    // ein Tipp auf einen Schalter darin laesst sie offen - wer die Messtafel
+    // anmacht, will meistens gleich noch den Ton ausmachen.
+    this.bWerkzeug.addEventListener('click', () => {
+      Sfx.unlock(); Sfx.play('tap');
+      this.werkzeugeOffen = !this.werkzeugeOffen;
+    });
     $<HTMLButtonElement>('p-resume').addEventListener('click', () => { this.s.paused = false; });
     this.pBilanz.addEventListener('click', () => { this.bilanzOffen = true; this.letzteBilanz = ''; });
     const oeffneOptionen = () => { this.optionenOffen = true; this.sync(); };
@@ -383,6 +420,11 @@ export class UI {
    *  zeichnet - die Bedienung ist HTML. Deshalb wird es hier geprueft und
    *  nicht im Bild. */
   setSpielansicht(anzeigen: boolean): void {
+    // Die Werkzeugklappe faellt zu, sobald das Menue offen ist. Sie liegt
+    // zwar in der Kopfzeile und verschwindet mit ihr - aber sie wieder offen
+    // vorzufinden, wenn man in eine Partie zurueckkehrt, waere ein Zustand,
+    // den niemand hergestellt hat.
+    if (!anzeigen) this.werkzeugeOffen = false;
     this.hud.hidden = !anzeigen;
     this.dock.hidden = !anzeigen;
     // Der Startknopf gehoert dazu - und fehlte hier bis v105.
@@ -592,6 +634,13 @@ export class UI {
     // Signatur eintragen, oder - wie hier - davor rechnen, weil es billig
     // ist und mit dem Spielzustand nichts zu tun hat.
     this.syncOptionen();
+    // Die Werkzeugklappe steht VOR dem Ausstieg, aus demselben Grund wie der
+    // Einstellungsdialog: sie haengt an keiner Zahl des Spielzustands, also
+    // wuerde sie hinter der Signatur erst aufgehen, wenn sich zufaellig das
+    // Gold aendert. Fuenfter Fall derselben Familie.
+    this.werkzeugKlappe.hidden = !this.werkzeugeOffen;
+    this.bWerkzeug.dataset.on = this.werkzeugeOffen ? '1' : '0';
+    this.bWerkzeug.setAttribute('aria-expanded', this.werkzeugeOffen ? 'true' : 'false');
     const sel = s.selectedTower;
     // **Der Inspektor zeigt EINS.** Turm, Turm vor dem Kauf oder Gegner -
     // und weil die Gegnerauskunft im Block vor den beiden anderen steht,
@@ -604,6 +653,8 @@ export class UI {
     const sig = [
       s.gold, s.lives, s.waveNumber, s.waveActive, s.speed, s.paused,
       s.buildChoice, s.bauwahlErklaeren, s.phase, getSettings().sound,
+      // Die Wellenvorschau haengt am Bildvorrat, nicht nur am Spielzustand.
+      enemyArtVersion(),
       // Sechster Fall derselben Art nach Startknopf, Zielwahl, Bilanzblatt,
       // Einstellungen und Gegnerauskunft: der Messschalter aendert nichts
       // am Gold. Ohne diesen Eintrag setzt er die Einstellung, die Tafel
@@ -663,6 +714,32 @@ export class UI {
 
 
 
+    // **Das Turmbild wird nachgetragen, sobald der Vorrat es hat.**
+    //
+    // `getTowerArt` gibt `null` zurueck, solange das Bild noch laedt - und
+    // beim ersten Bild einer Partie tut es das immer. Ein einmaliger Versuch
+    // im Konstruktor liesse die Knoepfe dauerhaft leer.
+    //
+    // **Und es steht bewusst VOR jeder Signaturpruefung.** Der erste Anlauf
+    // hing es in den Block der Abklingzeiten - der laeuft nur, wenn eine
+    // tickt, also im Ruhezustand fast nie. Die Knoepfe blieben leer, und die
+    // Aufnahme hat es gezeigt, nicht der Code (Regel 8). Sechster Fall
+    // derselben Familie nach Startknopf, Zielwahl, Bilanzblatt,
+    // Einstellungen und Werkzeugklappe: was nicht am Spielzustand haengt,
+    // gehoert vor den Ausstieg.
+    //
+    // Teuer ist es nicht: vier `dataset`-Abfragen, und nach dem ersten
+    // Treffer nie wieder.
+    for (const [id, b] of this.btns) {
+      if (b.dataset.bild === '1') continue;
+      const kunst = turmSymbol(id, this.s.map.id);
+      if (!kunst) continue;
+      const feld = b.querySelector('.t-bild') as HTMLElement | null;
+      if (!feld) continue;
+      feld.style.backgroundImage = `url(${kunst.toDataURL()})`;
+      b.dataset.bild = '1';
+    }
+
     // Abklingzeiten laufen fortlaufend - eigene, gröbere Prüfung.
     // Die Zahl gewonnener Karten steht mit drin: sie aendert sich nie
     // waehrend einer Partie, aber sie aendert sich zwischen zweien - und
@@ -710,6 +787,24 @@ export class UI {
     this.lastSig = sig;
 
     this.gold.textContent = String(s.gold);
+    // **Der Durchbruch ist ein benanntes Ereignis** (v239, F5).
+    //
+    // Am Kristall selbst passiert schon einiges - Ruckeln, Trefferstopp, ein
+    // roter Ring, eine aufsteigende "-3" und ein Geraeusch. Nur sieht man das
+    // alles nur, wenn man gerade dorthin schaut, und der Kristall steht in
+    // der Ecke; bei der Startvergroesserung ist er auf dem Telefon halb
+    // angeschnitten. In der Kopfzeile, wo der Stand steht, geschah gar
+    // nichts: die Zahl wurde kleiner, mehr nicht.
+    //
+    // Die Klasse wird abgeraeumt und im naechsten Bild neu gesetzt, sonst
+    // laeuft die Kurve beim zweiten Durchbruch nicht noch einmal an - eine
+    // Rueckmeldung, die beim zweiten Mal ausbleibt, ist schlimmer als keine.
+    if (this.letzteLeben >= 0 && s.lives < this.letzteLeben) {
+      this.lives.classList.remove('durchbruch');
+      void this.lives.offsetWidth;
+      this.lives.classList.add('durchbruch');
+    }
+    this.letzteLeben = s.lives;
     this.lives.textContent = String(s.lives);
     this.wave.textContent = s.endless ? `${s.waveNumber} ∞` : `${s.waveNumber}/${s.totalWaves}`;
     this.bSound.textContent = getSettings().sound ? 'Ton' : 'Stumm';
@@ -722,9 +817,22 @@ export class UI {
     this.syncBilanz(s);
     this.syncPick(s);
     this.bWave.disabled = !s.canStartWave;
+    // **Der Hauptknopf ist nie tot** (v239, E6/G12).
+    //
+    // Bis v238 stand waehrend einer Welle "Welle laeuft", ausgegraut - an der
+    // auffaelligsten Stelle des Bildschirms, und dort die laengste Zeit ueber.
+    // Der Spieler sah unbestimmt lange Gegner laufen, ohne zu wissen, ob noch
+    // zwei oder noch zwanzig kommen; alle drei Vorbilder zeigen den
+    // Wellenfortschritt laufend.
+    //
+    // Er bleibt gesperrt - waehrend einer Welle gibt es nichts zu starten -,
+    // traegt aber den Fortschritt. Das ist keine Handlung, aber eine
+    // Auskunft, und eine Auskunft an dieser Stelle ist mehr wert als eine
+    // graue Flaeche.
     this.bWaveT.textContent = s.waveActive
-      ? 'Welle läuft'
+      ? `Welle ${s.waveNumber} · noch ${s.wellenRest}`
       : s.waveIndex >= s.totalWaves ? 'Geschafft' : `Welle ${s.waveNumber} starten`;
+    this.bWave.dataset.laeuft = s.waveActive ? '1' : '0';
 
     this.renderNext();
 
@@ -821,6 +929,7 @@ export class UI {
       this.insp.hidden = true;
     }
   }
+
   /** Die Pausenkarte: Knoepfe oder Bilanzblatt.
    *
    *  Beides wird JEDES BILD abgeleitet, nichts wird auf Zuruf gesetzt.
@@ -1088,7 +1197,17 @@ export class UI {
   /** Was in der naechsten Welle kommt - Planung braucht Vorwissen. */
   private renderNext(): void {
     const s = this.s;
-    const w = s.canStartWave ? s.nextWave : null;
+    // **Die Vorschau bleibt waehrend der Welle stehen** (v239, E6).
+    //
+    // Bis v238 verschwand sie beim Wellenstart und hinterliess eine Luecke.
+    // Das war die Zeit, in der man sie am dringendsten braucht: waehrend die
+    // laufende Welle abgearbeitet wird, entscheidet man, wofuer das naechste
+    // Gold ausgegeben wird - und das haengt daran, was als Naechstes kommt.
+    //
+    // `vorschauWelle` und nicht `nextWave`: der Wellenzaehler steigt erst am
+    // ENDE einer Welle, `nextWave` zeigt waehrend Welle 3 also auf Welle 3.
+    // Unter der Ueberschrift "Als Naechstes" waere das die laufende.
+    const w = s.phase === 'playing' ? s.vorschauWelle : null;
     if (!w) { this.next.hidden = true; return; }
     this.next.hidden = false;
     const counts = new Map<string, number>();

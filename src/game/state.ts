@@ -781,6 +781,44 @@ export class GameState {
   }
   get nextWave() { return this.waveAt(this.waveIndex); }
 
+  /** Welche Welle die Vorschau zeigen soll.
+   *
+   *  `waveIndex` steigt erst in `finishWave`, nicht beim Start - waehrend
+   *  Welle 3 zeigt `nextWave` also auf Welle 3 selbst. Solange die Vorschau
+   *  zwischen den Wellen verschwand, fiel das nicht auf; seit sie stehen
+   *  bleibt (v239, E6), haette sie die LAUFENDE Welle unter der Ueberschrift
+   *  "Als Naechstes" gezeigt. Gesehen hat es die Aufnahme: der Knopf sagte
+   *  "Welle 1 - noch 6", und daneben stand "Als Naechstes 6x Erste Fuehler".
+   *
+   *  Am Ende des Plans gibt es kein Danach - ausser im Endlosmodus, und den
+   *  beantwortet `waveAt` von selbst. */
+  get vorschauWelle() {
+    const i = this.waveActive ? this.waveIndex + 1 : this.waveIndex;
+    if (!this.endless && i >= this.waves.length) return null;
+    return this.waveAt(i);
+  }
+
+  /** Wieviele Gegner der laufenden Welle noch kommen oder noch leben.
+   *
+   *  **Warum das fehlte** (v239, E6): waehrend einer Welle stand nirgends,
+   *  wie weit sie ist. Der Hauptknopf war ausgegraut ("Welle laeuft"), die
+   *  Vorschau verschwand, und der Spieler sah eine unbestimmte Zeit lang
+   *  Gegner laufen, ohne zu wissen, ob noch zwei oder noch zwanzig kommen.
+   *  Alle drei Vorbilder zeigen den Wellenfortschritt laufend.
+   *
+   *  Gezaehlt wird beides zusammen - was noch erscheint UND was schon da
+   *  ist. Nur das Ausstehende zu zaehlen liefe auf null, waehrend noch ein
+   *  halbes Dutzend auf dem Weg ist; nur das Lebende zaehlt am Anfang zu
+   *  wenig. Die Summe ist das, was der Spieler als "noch offen" empfindet.
+   *
+   *  Der Span zaehlt mit, sobald er da ist: er ist ein Gegner wie jeder
+   *  andere. Was aus einem Spalter noch WIRD, zaehlt nicht - das waere eine
+   *  Vorhersage, und eine Zahl, die beim Zerfallen nach oben springt, liest
+   *  sich als Fehler. */
+  get wellenRest(): number {
+    return this.pending.length + this.enemies.length;
+  }
+
   /** Der Wellenplan geht im Endlosmodus weiter: die letzten fuenf Wellen
    *  wiederholen sich, jede Runde mit mehr Gegnern. Die Lebenspunktkurve
    *  waechst ohnehin von selbst weiter. */

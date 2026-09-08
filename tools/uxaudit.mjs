@@ -36,10 +36,43 @@ if (!existsSync(DATEI)) {
 const BREIT = 844, HOCH = 390;
 const messwerte = {};
 
+/** Im Torbetrieb wird nur gemessen, nicht aufgenommen und nicht getastet.
+ *
+ *  Das Bauraster braucht rund zehn Minuten - es tippt 2240 Stellen an. In
+ *  einer Kette, die zweieinhalb Minuten dauert, hat das nichts zu suchen; es
+ *  beantwortet ausserdem eine Entwurfsfrage ("wo darf man bauen"), keine
+ *  Regressionsfrage. Das Tor faehrt die schnellen Messungen: Belegung des
+ *  Bildschirms, doppelte Beschriftungen, kleinste Trefferflaeche. */
+const TOR = process.argv.includes('--tor');
+const befunde = [];
+const fail = (m) => befunde.push(m);
+
+/** Die Grenzen. Alle vier sind an v239 gemessen, mit Luft nach oben - eine
+ *  Ratsche, kein Soll (Regel 2: anteilig, nicht absolut).
+ *
+ *  Sie halten fest, was v239 gekostet hat. Ohne sie wandert die Bedienung
+ *  beim naechsten Umbau still zurueck ueber das Feld, und kein Tor sagt ein
+ *  Wort - genau die Klasse, an der `kartenprobe` in v229 gebrochen ist: ein
+ *  Werkzeug, dessen Eingang niemand prueft, ist im Ernstfall kaputt. */
+const GRENZEN = {
+  ruhe: 16,        // gemessen 13,0 %
+  bauwahl: 24,     // gemessen 19,7 %
+  pruefsteg: 36,   // gemessen 31,9 %
+  welle: 16,       // gemessen 13,2 %
+};
+/** Wieviele Beschriftungen zugleich doppelt im Bild stehen duerfen.
+ *
+ *  Null. Bei offener Turmwahl standen bis v238 Bogenturm, Frostturm, Moerser,
+ *  Prisma und "Welle 1 starten" je zweimal da - die Leiste unten und die Wahl
+ *  am Tipppunkt fuehrten dieselbe Liste, verschieden gesetzt. Das ist
+ *  Regel 15 als Bedienoberflaeche: gepflegt wird eine von beiden. */
+const DOPPELT_MAX = 0;
+
 const browser = await browserStarten();
 
 let nr = 0;
 const schuss = async (seite, name) => {
+  if (TOR) return null;
   nr += 1;
   const p = join(AUS, `${String(nr).padStart(2, '0')}-${name}.png`);
   await seite.screenshot({ path: p });
@@ -85,6 +118,33 @@ const belegung = (seite) => seite.evaluate(() => {
     }
   }
   return { gesperrt: 100 * gesperrt / gesamt, bemalt: 100 * bemalt / gesamt };
+});
+
+/** Welche sichtbaren Beschriftungen stehen ZWEIMAL im Bild?
+ *
+ *  Gezaehlt werden nur Blattknoten - ein Behaelter traegt den Text seiner
+ *  Kinder, und jede Verschachtelung waere sonst ein Treffer. Und nur Text ab
+ *  drei Zeichen: "6x" und "1x" stehen absichtlich mehrfach. */
+const doppelteBeschriftung = (seite) => seite.evaluate(() => {
+  const zaehl = new Map();
+  for (const e of document.querySelectorAll('#app *')) {
+    if (e.children.length) continue;
+    const t = (e.textContent ?? '').trim();
+    if (t.length < 3) continue;
+    // Reine Zahlen zaehlen nicht. Der Preis steht absichtlich zweimal da -
+    // am Leistenknopf, damit man sieht was man sich leisten kann, und in der
+    // Turmwahl, weil dort bezahlt wird (B2 des Bedienungs-Abgleichs verlangt
+    // eine "benannte Flaeche, die ihren Preis traegt"). Gemeint ist die
+    // doppelte BESCHRIFTUNG, nicht die doppelte Zahl.
+    if (/^[\d.,\s×x/-]+$/.test(t)) continue;
+    const r = e.getBoundingClientRect();
+    const cs = getComputedStyle(e);
+    if (r.width < 2 || r.height < 2) continue;
+    if (cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity) <= 0.05) continue;
+    if (r.right <= 0 || r.bottom <= 0 || r.left >= innerWidth || r.top >= innerHeight) continue;
+    zaehl.set(t, (zaehl.get(t) ?? 0) + 1);
+  }
+  return [...zaehl].filter(([, n]) => n > 1).map(([t, n]) => `${n}x "${t}"`);
 });
 
 /** Was steht wo, wie gross, in welcher Farbe? */
@@ -156,6 +216,7 @@ await a.waitForTimeout(600);
 await schuss(a, 'spiel-ruhe');
 messwerte.ruhe = await layout(a);
 messwerte.belegung = { ruhe: await belegung(a) };
+messwerte.doppelt = { ruhe: await doppelteBeschriftung(a) };
 
 /** Einen Bauplatz suchen, ohne etwas zu bauen: tippen, pruefen, wieder zu. */
 const bauplatzSuchen = async (s, w, h, schritt = 22) => {
@@ -176,6 +237,7 @@ else {
   await schuss(a, 'bauwahl');
   messwerte.bauwahl = await layout(a);
 messwerte.belegung.bauwahl = await belegung(a);
+  messwerte.doppelt.bauwahl = await doppelteBeschriftung(a);
   await a.evaluate(() => document.querySelector('#pick-row .pick-btn:not([disabled])')?.click());
   await a.waitForTimeout(500);
   await schuss(a, 'turm-gebaut');
@@ -220,8 +282,8 @@ await schuss(a, 'dock-zu');
 // Die Frage des Nutzers, als Zahl: wieviele Stellen des Bildes nehmen einen
 // Turm an - und sieht man ihnen das an? Gemessen wird durch Tippen, also
 // genau so, wie ein Spieler es erfaehrt.
-const b = await neueSeite(BREIT, HOCH);
-if (await insSpiel(b, BREIT, HOCH)) {
+const b = TOR ? null : await neueSeite(BREIT, HOCH);
+if (b && await insSpiel(b, BREIT, HOCH)) {
   await b.waitForTimeout(500);
   const grund = join(AUS, 'raster-grund.png');
   await b.screenshot({ path: grund });
@@ -268,11 +330,13 @@ if (await insSpiel(b, BREIT, HOCH)) {
 }
 
 // ======================================================= Seite C: Notebook
-const c = await neueSeite(1400, 900, false);
-nr += 1;
-await c.screenshot({ path: join(AUS, `${String(nr).padStart(2, '0')}-notebook-landkarte.png`) });
-console.log(`  ${join(AUS, `${String(nr).padStart(2, '0')}-notebook-landkarte.png`)}`);
-if (await insSpiel(c, 1400, 900)) {
+const c = TOR ? null : await neueSeite(1400, 900, false);
+if (c) {
+  nr += 1;
+  await c.screenshot({ path: join(AUS, `${String(nr).padStart(2, '0')}-notebook-landkarte.png`) });
+  console.log(`  ${join(AUS, `${String(nr).padStart(2, '0')}-notebook-landkarte.png`)}`);
+}
+if (c && await insSpiel(c, 1400, 900)) {
   await c.waitForTimeout(700);
   await schuss(c, 'notebook-spiel');
   messwerte.notebook = await layout(c);
@@ -285,4 +349,72 @@ for (const [k, v] of Object.entries(messwerte.belegung ?? {})) {
 
 writeFileSync(join(AUS, 'messwerte.json'), JSON.stringify(messwerte, null, 1));
 console.log(`\nMesswerte: ${join(AUS, 'messwerte.json')}`);
+
+// --- Das Urteil.
+if (TOR) {
+  for (const [zustand, grenze] of Object.entries(GRENZEN)) {
+    const w = messwerte.belegung?.[zustand];
+    if (!w) { fail(`Belegung "${zustand}" wurde gar nicht gemessen.`); continue; }
+    if (w.gesperrt > grenze) {
+      fail(`Belegung "${zustand}": die Bedienung sperrt ${w.gesperrt.toFixed(1)} % des `
+        + `Bildschirms, erlaubt sind ${grenze} %. Auf dem Zielgeraet ist das Feld `
+        + 'das Spiel; was darueber liegt, nimmt es weg.');
+    }
+  }
+  for (const [zustand, liste] of Object.entries(messwerte.doppelt ?? {})) {
+    if (liste.length > DOPPELT_MAX) {
+      fail(`Doppelte Beschriftung im Zustand "${zustand}": ${liste.join(', ')}. `
+        + 'Zwei Fassungen desselben Textes im selben Bild - gepflegt wird eine '
+        + 'davon (Regel 15).');
+    }
+  }
+  // **Gemessen wird die TREFFERFLAECHE, nicht der Kasten.**
+  //
+  // Der erste Entwurf nahm `getBoundingClientRect` und meldete prompt einen
+  // Befund, den es nicht gibt: der Eintrag der Wellenvorschau ist 30 x 20
+  // Punkte gross, traegt aber ein `::after` mit `inset: -18px -5px -8px` und
+  // faengt den Finger damit auf 46 Punkten Hoehe. Ein Tor, das den Kasten
+  // misst, verbietet genau die Loesung, die das Problem behebt.
+  //
+  // Gefragt wird deshalb der Browser: von der Mitte aus nach aussen tasten,
+  // solange `elementFromPoint` noch diesen Knopf trifft.
+  const zuKlein = await a.evaluate((mind) => {
+    const raus = [];
+    for (const e of document.querySelectorAll('#app button')) {
+      const r = e.getBoundingClientRect();
+      const cs = getComputedStyle(e);
+      if (r.width < 2 || r.height < 2) continue;
+      if (cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity) <= 0.05) continue;
+      if (r.right <= 0 || r.bottom <= 0 || r.left >= innerWidth || r.top >= innerHeight) continue;
+      const cx = (r.left + r.right) / 2, cy = (r.top + r.bottom) / 2;
+      const trifft = (x, y) => {
+        const t = document.elementFromPoint(x, y);
+        return !!t && (t === e || e.contains(t));
+      };
+      if (!trifft(cx, cy)) continue;   // verdeckt - das prueft das Browsertor
+      const weit = (dx, dy) => {
+        let n = 0;
+        while (n < 60 && trifft(cx + dx * (n + 1), cy + dy * (n + 1))) n += 1;
+        return n;
+      };
+      const b = weit(-1, 0) + weit(1, 0) + 1;
+      const h = weit(0, -1) + weit(0, 1) + 1;
+      if (Math.min(b, h) < mind) {
+        raus.push(`${e.id || e.className || e.tagName} ("${(e.textContent ?? '').trim().slice(0, 14)}") `
+          + `trifft auf ${b}x${h}`);
+      }
+    }
+    return raus;
+  }, 44);
+  for (const k of zuKlein) {
+    fail(`Trefferflaeche zu klein: ${k} - ein Daumen braucht 44 Punkte.`);
+  }
+  if (befunde.length) {
+    console.error(`\nUX-TOR: ${befunde.length} Befund(e)`);
+    for (const f of befunde) console.error(`  - ${f}`);
+    await browser.close();
+    process.exit(1);
+  }
+  console.log('UX-TOR: Belegung, Doppelungen und Trefferflaechen in Ordnung.');
+}
 await browser.close();

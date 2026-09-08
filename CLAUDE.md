@@ -102,7 +102,7 @@ schwerer ist der Tag zu finden, an dem es passiert ist.
 ## Befehle
 
 ```
-npm run gate        einunddreissig Prüfungen. Muss vor jedem Commit grün sein.
+npm run gate        zweiunddreissig Prüfungen. Muss vor jedem Commit grün sein.
                     Gemessen 264 s vor v154, danach rund 190 - die teuren Tore
                     haben ein Gedaechtnis bekommen (docs/Towerfront-TOR-BILANZ.md).
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
@@ -276,7 +276,7 @@ Die Torkette: `tsc` → `guards` → `doku` → `muster` → `art` → `determin
 `konter` → `geschosse` → `muendung` → `gedraenge` → `bahntreue` → `bauflaeche` →
 `wegdeckung` → `bench` →
 `bench-draw` → `kartenwechsel` → `grafiktor` → `einbettung` → `zielplatte` → `kristall` → `speicher` → `gelaende` → `lesbarkeit` → `beruehrung` → `streifen` → `bildtor` → `smoke` →
-`build` → `autarkie` → `browser` → `bericht`.
+`build` → `autarkie` → `browser` → `uxaudittor` → `bericht`.
 
 `npm run browser` lädt die **gebaute** Datei in Chromium (iPhone quer) und ist
 damit das einzige Tor, das die Kaskade wirklich rechnet. Einzeln aufgerufen
@@ -411,7 +411,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v238. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v239. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -695,7 +695,7 @@ Bauverläufe auf 38/39/38 — gleichmäßiger als jede andere Karte.
 
 **Und die Runde hat einen Haushaltsfehler gefunden, den seit v222 niemand
 sehen konnte.** Die Gruppe „untergrund" wog eingecheckt **346 KB** gegen ein
-Budget von 250, und keine der einunddreissig Prüfungen sagte ein Wort. Zwei
+Budget von 250, und keine der damals einunddreissig Prüfungen sagte ein Wort. Zwei
 Ursachen, beide in derselben Zeile Gedankenlosigkeit:
 
 * **`total` zählte beim Packen nur die NEU gepackten Einträge.** In einer

@@ -44,29 +44,53 @@
   <canvas id="view"></canvas>
 
   <header class="hud" id="hud">
-    <div class="stat">
-      <span class="lab">Gold</span>
-      <span class="val" id="v-gold">0</span>
-    </div>
-    <div class="stat">
-      <span class="lab">Kristall</span>
-      <span class="val danger" id="v-lives">0</span>
-    </div>
-    <div class="stat">
-      <span class="lab">Welle</span>
-      <span class="val" id="v-wave">0/0</span>
+    <!-- **Die drei Zahlen bekommen eine Fläche** (v239, E5/H8).
+         Die Regel `.stats` steht seit Langem im Blatt — milchiges Glas,
+         Rand, Radius —, nur gab es im Markup keinen Behälter dafür: die drei
+         `.stat` lagen einzeln in der Kopfzeile, und Gold, Kristall und Welle
+         standen damit direkt auf dem Kartenfoto. Auf hellem Gras heller
+         Text. Gemessen: wo eine Fläche da ist, liegt der Kontrast bei 13:1
+         bis 16:1, wo keine ist, entscheidet das Foto.
+         `pointer-events: none`, weil sie nichts bedient — sonst fängt sie
+         Tipps ab, mit denen jemand oben links bauen will. -->
+    <div class="stats">
+      <div class="stat">
+        <span class="lab">Gold</span>
+        <span class="val" id="v-gold">0</span>
+      </div>
+      <div class="stat">
+        <span class="lab">Kristall</span>
+        <span class="val danger" id="v-lives">0</span>
+      </div>
+      <div class="stat">
+        <span class="lab">Welle</span>
+        <span class="val" id="v-wave">0/0</span>
+      </div>
     </div>
     <div class="spacer"></div>
-    <!-- Der Messschalter (D27). Er steht hier und nicht in den
-         Einstellungen, weil das Messen auf dem Zielgerät geschieht: dort
-         will man ihn im Spiel umlegen und weiterspielen, nicht durch zwei
-         Ebenen suchen. Wie jeder Knopf der Kopfzeile ist er im Menü
-         unsichtbar - das leitet `ui.sync()` ab, nicht ein Schalter. -->
-    <button class="chip" id="b-mess" aria-label="Messtafel an oder aus">Messung</button>
-    <button class="chip" id="b-weg" aria-label="Weg noch einmal zeigen">Weg</button>
-    <button class="chip" id="b-sound" aria-label="Ton an oder aus">Ton</button>
+    <!-- **Das Tempo bleibt vorn.** Es ist das einzige der fünf Werkzeuge,
+         das man mitten in einer Welle braucht - alle anderen ändern nur die
+         Ansicht oder das Messen. -->
     <button class="chip" id="b-speed" aria-label="Spieltempo">1×</button>
+    <!-- Die Werkzeugklappe (v239, E1).
+         Bis v238 standen hier fünf gleichrangige Pillen, und die breiteste
+         hiess "Messung" - ein Entwicklerwerkzeug an der auffälligsten
+         Stelle des Spiels. Sie stehen jetzt hinter einer Klappe; Tempo und
+         Pause bleiben draussen, weil man sie im Spiel braucht.
+         Wie jeder Knopf der Kopfzeile ist die Klappe im Menü unsichtbar -
+         das leitet `ui.sync()` ab, nicht ein Schalter (Regel 6). -->
+    <button class="chip" id="b-werkzeug" aria-label="Weitere Schalter"
+            aria-expanded="false">•••</button>
     <button class="chip" id="b-pause" aria-label="Pause">Pause</button>
+    <div class="werkzeuge" id="werkzeuge" hidden>
+      <!-- Der Messschalter (D27). Er steht hier und nicht in den
+           Einstellungen, weil das Messen auf dem Zielgerät geschieht: dort
+           will man ihn im Spiel umlegen und weiterspielen, nicht durch zwei
+           Ebenen suchen. -->
+      <button class="chip" id="b-mess" aria-label="Messtafel an oder aus">Messung</button>
+      <button class="chip" id="b-weg" aria-label="Weg noch einmal zeigen">Weg</button>
+      <button class="chip" id="b-sound" aria-label="Ton an oder aus">Ton</button>
+    </div>
   </header>
 
   <!-- Pausenmenue.
@@ -198,9 +222,16 @@
         <div class="skills" id="skills"></div>
       </div>
     </div>
+    <!-- **Der Wellenknopf steht seit v239 IM Bedienband, nicht daneben.**
+         Vorher lag er absolut unten rechts, und die Leiste musste links
+         daneben Platz finden - bei 844 Punkten Breite passten Turm- und
+         Fähigkeitsknöpfe deshalb nicht in EINE Reihe und stapelten sich auf
+         zwei. Das Band war 116 Punkte hoch und lag über dem linken Bahnarm.
+         In einer Reihe sind es 68.
+         Er steht bewusst NICHT in `dock-body`: die Leiste lässt sich
+         einklappen, der Startknopf bleibt trotzdem stehen. -->
+    <button class="go" id="b-wave"><span id="b-wave-t">Welle starten</span><span class="go-bonus" id="b-wave-b"></span></button>
   </div>
-
-  <button class="go" id="b-wave"><span id="b-wave-t">Welle starten</span><span class="go-bonus" id="b-wave-b"></span></button>
 
   <!-- Versionsstempel im laufenden Spiel.
        Er stand bisher nur auf dem Titelbildschirm - und wer eine Partie

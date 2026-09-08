@@ -158,8 +158,12 @@ const PROBEN = [
   {
     name: 'Knopf unter dem Richtwert',
     datei: 'src/style.css',
-    suche: '  min-height: 46px;\n}\n.tower-btn .n',
-    ersatz: '  min-height: 20px;\n}\n.tower-btn .n',
+    // Der Anker war bis v238 `.tower-btn .n` - die Namenszeile des
+    // Turmknopfs. Sie ist mit v239 entfallen, weil der Knopf jetzt das
+    // Turmbild traegt; die Probe zeigte danach ins Leere. Neuer Anker ist
+    // die Bildflaeche, die an derselben Stelle steht.
+    suche: '  min-height: 46px;\n}\n.tower-btn .t-bild',
+    ersatz: '  min-height: 20px;\n}\n.tower-btn .t-bild',
     tor: 'beruehrung',
   },
   {
@@ -1254,6 +1258,44 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
+    // **Die Turmleiste wird wieder breit.**
+    //
+    // Dann passen die acht Knoepfe nicht mehr in eine Reihe, das Band waechst
+    // von 96 auf rund 146 Punkte, und die Bedienung sperrt wieder mehr vom
+    // Feld. Genau der Zustand vor v239, in dem die Turmleiste zwei von vier
+    // Gegnern auf dem linken Bahnarm verdeckte.
+    name: 'Turmleiste sprengt das Band',
+    datei: 'src/style.css',
+    regel: /  gap: 1px; min-width: 54px; padding: 4px 6px 3px; cursor: pointer;/,
+    ersatz: '  gap: 1px; min-width: 200px; padding: 4px 6px 3px; cursor: pointer;',
+    tor: 'uxaudittor',
+  },
+  {
+    // **Der Turmname steht wieder auf dem Leistenknopf.**
+    //
+    // Dann fuehren Leiste und Turmwahl dieselbe Liste, verschieden gesetzt -
+    // Regel 15 als Bedienoberflaeche. Bis v238 standen so vier Turmnamen und
+    // "Welle 1 starten" doppelt im Bild.
+    name: 'Turmname steht doppelt im Bild',
+    datei: 'src/ui/ui.ts',
+    regel: /        `<span class="t-bild"><\/span>` \+/,
+    ersatz: '        `<span class="t-bild"></span><span class="n">${def.name}</span>` +',
+    tor: 'uxaudittor',
+  },
+  {
+    // **Ein Knopf faellt unter den Richtwert.**
+    //
+    // Der Einklappknopf ist der, an dem es v198 schon einmal passiert ist:
+    // 34 statt 44 Punkte, und das Beruehrungstor sagte selbst, dass es ihn
+    // nicht misst. Hier wird die TREFFERFLAECHE gemessen, nicht der Kasten -
+    // eine vergroesserte Flaeche ueber `::after` gilt also weiter.
+    name: 'Einklappknopf faellt unter den Richtwert',
+    datei: 'src/style.css',
+    regel: /  width: 44px; height: 44px; border-radius: 10px;/,
+    ersatz: '  width: 44px; height: 18px; border-radius: 10px;',
+    tor: 'uxaudittor',
+  },
+  {
     // **Die Vorwahl faellt weg.**
     //
     // Dann steht die baubare Flaeche erst da, wenn der Spieler von selbst
@@ -2001,8 +2043,11 @@ const PROBEN = [
     // das war die falsche: das Tor blieb gruen, obwohl der Eingriff ankam.
     // Der volle Probenlauf zu v199 hat es gemeldet, der Musterlauf hatte
     // es als "2 Treffer, greift den ersten" schon angezeigt.
-    regel: /    this\.syncOptionen\(\);\n    const sel = s\.selectedTower;/,
-    ersatz: '    const sel = s.selectedTower;',
+    // Seit v239 steht zwischen `syncOptionen()` und `const sel` die
+    // Werkzeugklappe - aus demselben Grund und mit demselben Kommentar.
+    // Der Eingriff nimmt weiterhin genau die eine Zeile heraus.
+    regel: /    this\.syncOptionen\(\);\n    \/\/ Die Werkzeugklappe steht VOR/,
+    ersatz: '    // Die Werkzeugklappe steht VOR',
     tor: 'smoke',
   },
   {

@@ -80,12 +80,25 @@ const PROBEN = [
     // Fassungen lang "neunundzwanzig Pruefungen".
     //
     // Eine Pruefung, deren Wertebereich hinter ihrem Gegenstand zurueckbleibt,
-    // sieht aus wie eine Pruefung. Diese Probe nimmt der Tabelle die Zahl der
-    // heutigen Kette - als Regel, damit sie mit jedem neuen Tor mitwandert.
+    // sieht aus wie eine Pruefung.
+    //
+    // **Und die Probe selbst ist genau daran verfallen** (gefunden im vollen
+    // Lauf zu v239). Sie nahm der Tabelle den Eintrag `31`, weil die Kette
+    // damals einunddreissig Schritte hatte - "als Regel, damit sie mit jedem
+    // neuen Tor mitwandert", stand hier. Sie wanderte nicht: mit dem
+    // zweiunddreissigsten Tor (`uxaudittor`) fragt der Waechter nach 32, und
+    // ob 31 in der Tabelle steht, ist ihm gleichgueltig. Der Eingriff kam an,
+    // das Tor schwieg zu Recht, und `npm run muster` konnte es nicht sehen -
+    // sein Muster passte ja noch.
+    //
+    // Jetzt wird die Tabelle bei 26 abgeschnitten, also auf ihren Stand vor
+    // v230 zurueckgesetzt. Das ist der historische Fehler selbst, und es
+    // bleibt richtig, solange die Kette mehr als 26 Schritte hat - bei
+    // weniger waere die Tabelle ja auch nicht zu kurz.
     name: 'Zahlwort-Tabelle kuerzer als die Torkette',
     datei: 'tools/docs.mjs',
-    regel: /(  30: 'dreissig', )31: 'einunddreissig', /,
-    ersatz: '$1',
+    regel: /\n  27: 'siebenundzwanzig'[\s\S]*?40: 'vierzig',/,
+    ersatz: '',
     tor: 'doku',
     meldet: 'Zahlwort-Tabelle in tools/docs.mjs kennt',
   },

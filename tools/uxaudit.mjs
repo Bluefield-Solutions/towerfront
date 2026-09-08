@@ -18,7 +18,7 @@
  *  seinen Gegenstand veraendert, misst den naechsten mit.
  */
 import { browserStarten } from './chromium.mjs';
-import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
@@ -29,8 +29,42 @@ const AUS = process.env.UXAUS || '/tmp/lab/ux';
 mkdirSync(AUS, { recursive: true });
 
 if (!existsSync(DATEI)) {
-  console.error('dist/index.html fehlt - erst `npm run build`.');
+  console.error('UX-TOR: dist/index.html fehlt - erst `npm run build`.');
   process.exit(1);
+}
+
+// --- Ist die gebaute Datei ueberhaupt die aktuelle?
+//
+// Dieselbe Falle wie im Browsertor, und ich bin voll hineingelaufen: dieses
+// Tor prueft ein ERZEUGNIS. Ohne diese Pruefung laedt es die dist von vorhin
+// und meldet Gruen fuer Arbeit, die es nie gesehen hat.
+//
+// Gekostet hat es drei Gegenproben. Der Nachtlauf zu v238 meldete "Turmleiste
+// sprengt das Band", "Turmname steht doppelt im Bild" und "Einklappknopf
+// faellt unter den Richtwert" als gegenstandslos - alle drei bauen einen
+// Fehler in `src/` ein und riefen dann `uxaudittor` auf, das gar nicht baut.
+// Das Tor sah den Eingriff nie (Regel 3: pruefen, ob der Eingriff angekommen
+// ist). Ein Tor ohne diese Pruefung ist nicht nur unscharf, es macht seine
+// eigenen Gegenproben wertlos.
+{
+  const juengste = (verz) => {
+    let t = 0;
+    for (const e of readdirSync(verz, { withFileTypes: true })) {
+      const pfad = join(verz, e.name);
+      t = Math.max(t, e.isDirectory() ? juengste(pfad) : statSync(pfad).mtimeMs);
+    }
+    return t;
+  };
+  const quelle = Math.max(
+    juengste(join(ROOT, 'src')),
+    statSync(join(ROOT, 'index.html')).mtimeMs,
+  );
+  if (statSync(DATEI).mtimeMs < quelle) {
+    console.error('UX-TOR: dist/index.html ist aelter als der Quelltext.\n');
+    console.error('Geprueft wuerde ein Stand von vorhin. Erst `npm run build`,');
+    console.error('oder gleich `npm run uxtor` - das baut selbst.');
+    process.exit(1);
+  }
 }
 
 const BREIT = 844, HOCH = 390;

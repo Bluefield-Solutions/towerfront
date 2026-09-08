@@ -427,18 +427,21 @@ export class UI {
     if (!anzeigen) this.werkzeugeOffen = false;
     this.hud.hidden = !anzeigen;
     this.dock.hidden = !anzeigen;
-    // Der Startknopf gehoert dazu - und fehlte hier bis v105.
+    // **Der Startknopf braucht hier seit v239 nichts mehr** - und das ist
+    // dieselbe Stelle, an der der Wegknopf schon einmal stand.
     //
-    // Er stand auf der Landkarte gross und tuerkis unten rechts und war
-    // anklickbar: "Welle 1 starten", 148 mal 46 Punkte, an vier Rasterpunkten
-    // ueber der Karte. Dritter Bruch derselben Regel, und wieder hat es kein
-    // Tor gesehen - der Rauchtest laeuft in jsdom und prueft `hidden`, aber
-    // dieses Feld war nie gesetzt worden. Gefunden hat es erst das
-    // Browsertor, das nachsieht, was TATSAECHLICH im Bild steht.
+    // Von v105 bis v238 stand hier `this.bWave.hidden = !anzeigen;`, und die
+    // Zeile war noetig: der Knopf lag absolut unten rechts, ausserhalb des
+    // Bedienbandes. Er stand auf der Landkarte gross und tuerkis, 148 mal 46
+    // Punkte, an vier Rasterpunkten ueber der Karte - dritter Bruch von
+    // Regel 6, gefunden erst vom Browsertor.
     //
-    // Die Lehre ist nicht "eine Zeile vergessen", sondern: eine Ableitung
-    // schuetzt nur das, was sie auch aufzaehlt.
-    this.bWave.hidden = !anzeigen;
+    // Seit v239 sitzt er IM Bedienband (`#dock`), und das wird eine Zeile
+    // weiter oben als ganzes ausgeblendet. Die Zeile war damit eine zweite
+    // Stelle, die dasselbe sagt (Regel 15). Aufgefallen ist sie genau wie
+    // beim Wegknopf: ihre Gegenprobe bewies nichts mehr - `hidden = false`
+    // an einem Kind eines ausgeblendeten Elternteils aendert nichts. Der
+    // Nachtlauf zu v238 hat es gemeldet.
     // Der Versionsstempel gehoert zur Spielansicht: im Menue steht er schon
     // auf dem Titelbildschirm, ein zweites Mal daneben waere doppelt. Er
     // haengt an DERSELBEN Ableitung wie alles andere (Regel 6) - anders als

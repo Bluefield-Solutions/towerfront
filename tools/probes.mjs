@@ -538,10 +538,20 @@ const PROBEN = [
     // Der dritte Bruch von Regel 6 - genau der Fehler, den dieses Tor bei
     // seinem ersten Lauf gefunden hat. Er stand sichtbar auf der Landkarte,
     // und dreizehn andere Tore hatten ihn durchgelassen.
-    name: 'Startknopf steht im Menue',
+    //
+    // **Sie hing bis v241 am Startknopf und bewies nichts mehr.** Seit v239
+    // sitzt der Knopf IM Bedienband, also traegt ihn `dock.hidden` mit; die
+    // eigene Zeile war eine zweite Stelle, die dasselbe sagt (Regel 15), und
+    // ihr Ausbau aenderte am Bild nichts. Gemeldet hat es der Nachtlauf zu
+    // v238. Sie greift jetzt an der Zeile, die den Knopf WIRKLICH traegt -
+    // und trifft damit die ganze untere Bedienung statt nur ihn.
+    //
+    // Die Probe auf `hud.hidden` daneben ist damit keine Doppelung: die
+    // Kopfzeile ist ein anderes Element und haengt am Rauchtest.
+    name: 'Bedienband steht im Menue',
     datei: 'src/ui/ui.ts',
-    regel: /this\.bWave\.hidden = !anzeigen;/,
-    ersatz: 'this.bWave.hidden = false;',
+    regel: /this\.dock\.hidden = !anzeigen;/,
+    ersatz: 'this.dock.hidden = false;',
     tor: 'browsertor',
   },
   {
@@ -1307,7 +1317,7 @@ const PROBEN = [
     datei: 'src/style.css',
     regel: /\.pick-name \{ font-size: var\(--s-text\); font-weight: 600; \}/,
     ersatz: '.pick-name { font-size: 11.5px; font-weight: 600; }',
-    tor: 'uxaudittor',
+    tor: 'uxtor',
   },
   {
     // **Die Turmleiste wird wieder breit.**
@@ -1320,7 +1330,7 @@ const PROBEN = [
     datei: 'src/style.css',
     regel: /  gap: 1px; min-width: 54px; padding: 4px 6px 3px; cursor: pointer;/,
     ersatz: '  gap: 1px; min-width: 200px; padding: 4px 6px 3px; cursor: pointer;',
-    tor: 'uxaudittor',
+    tor: 'uxtor',
   },
   {
     // **Der Turmname steht wieder auf dem Leistenknopf.**
@@ -1332,7 +1342,7 @@ const PROBEN = [
     datei: 'src/ui/ui.ts',
     regel: /        `<span class="t-bild"><\/span>` \+/,
     ersatz: '        `<span class="t-bild"></span><span class="n">${def.name}</span>` +',
-    tor: 'uxaudittor',
+    tor: 'uxtor',
   },
   {
     // **Ein Knopf faellt unter den Richtwert.**
@@ -1345,7 +1355,7 @@ const PROBEN = [
     datei: 'src/style.css',
     regel: /  width: 44px; height: 44px; border-radius: 10px;/,
     ersatz: '  width: 44px; height: 18px; border-radius: 10px;',
-    tor: 'uxaudittor',
+    tor: 'uxtor',
   },
   {
     // **Die Vorwahl faellt weg.**
@@ -3605,7 +3615,7 @@ if (process.argv.includes('--muster')) {
  *
  *  Neu gebaut wird nur nach den Toren, die ueberhaupt bauen oder bauen
  *  lassen - sonst kostete jede der 71 Proben unnoetig eine Sekunde. */
-const BAUT = new Set(['browsertor', 'browser', 'build', 'autarkie', 'bildtor', 'smoke']);
+const BAUT = new Set(['browsertor', 'browser', 'build', 'autarkie', 'bildtor', 'smoke', 'uxtor', 'uxaudittor']);
 const zuruecknehmen = (tor) => {
   execSync('git checkout -- .', { cwd: ROOT, stdio: 'pipe' });
   if (BAUT.has(tor)) execSync('npm run build', { cwd: ROOT, stdio: 'pipe', env: TOR_UMGEBUNG });

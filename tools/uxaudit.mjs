@@ -1,0 +1,288 @@
+/** UX-Audit: nimmt das GEBAUTE Spiel in den Zustaenden auf, die man beim
+ *  Spielen wirklich erreicht - und misst dabei, was ein Blick nicht zaehlen
+ *  kann (Flaechenanteile, Kontraste, Trefferflaechen).
+ *
+ *  Warum ein eigenes Werkzeug und nicht `npm run bilder`: die Bildabnahme
+ *  zeichnet die LEINWAND. Die halbe Bedienung ist aber HTML - Kopfzeile,
+ *  Turmleiste, Pruefsteg, Pausenkarte -, und genau darueber laeuft die
+ *  Beschwerde. Ein Audit, das die HTML-Schicht nicht sieht, redet ueber ein
+ *  anderes Spiel.
+ *
+ *  Regel 12: jede Zahl traegt ihre Messstelle. Aufgenommen wird auf
+ *  844 x 390 (iPhone quer, das Zielgeraet) mit deviceScaleFactor 2 und
+ *  zusaetzlich auf 1400 x 900 (Notebook, der zweite unterstuetzte Weg).
+ *
+ *  **Das Bauraster laeuft auf einer EIGENEN Seite.** Der erste Entwurf fuhr
+ *  es vor den Aufnahmen, und es baute dabei einen Turm - danach zeigten die
+ *  Bilder einen Zustand, den kein Spieler so herstellt. Ein Messlauf, der
+ *  seinen Gegenstand veraendert, misst den naechsten mit.
+ */
+import { browserStarten } from './chromium.mjs';
+import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const DATEI = join(ROOT, 'dist/index.html');
+const AUS = process.env.UXAUS || '/tmp/lab/ux';
+mkdirSync(AUS, { recursive: true });
+
+if (!existsSync(DATEI)) {
+  console.error('dist/index.html fehlt - erst `npm run build`.');
+  process.exit(1);
+}
+
+const BREIT = 844, HOCH = 390;
+const messwerte = {};
+
+const browser = await browserStarten();
+
+let nr = 0;
+const schuss = async (seite, name) => {
+  nr += 1;
+  const p = join(AUS, `${String(nr).padStart(2, '0')}-${name}.png`);
+  await seite.screenshot({ path: p });
+  console.log(`  ${p}`);
+  return p;
+};
+
+/** Wieviel des Bildschirms gehoert der Bedienung?
+ *
+ *  **Nicht ueber Umrisskaesten.** Die lassen sich durch Verschachteln
+ *  kleinrechnen: ein Behaelter der Hoehe null mit absolut gesetzten Kindern
+ *  meldet null Flaeche und deckt trotzdem alles zu. Gefragt wird deshalb der
+ *  Browser selbst - `elementFromPoint` ueber ein Raster von 4 Punkten - und
+ *  gezaehlt wird, was an dieser Stelle WIRKLICH getroffen wird. Diese Zahl
+ *  kann keine Umbauform beschoenigen.
+ *
+ *  Zwei Zahlen, weil es zwei Schaeden sind: `gesperrt` ist, was den Tipp
+ *  abfaengt (dort kommt man nicht mehr ans Feld), `bemalt` ist, was das Bild
+ *  ueberdeckt - auch dann, wenn es Tipps durchlaesst wie der Verlauf der
+ *  Kopfzeile. */
+const belegung = (seite) => seite.evaluate(() => {
+  const WURZELN = '#hud, #dock, #b-wave, #inspector, #pick, #coach, #perf, #v-version, #werkzeuge';
+  const w = innerWidth, h = innerHeight, S = 4;
+  let gesperrt = 0, bemalt = 0, gesamt = 0;
+  const malt = new Set();
+  for (const e of document.querySelectorAll(`${WURZELN}, ${WURZELN.split(', ').map((s) => `${s} *`).join(', ')}`)) {
+    const cs = getComputedStyle(e);
+    const g = cs.backgroundColor.match(/rgba?\(([^)]+)\)/);
+    const a = g ? (Number(g[1].split(',')[3] ?? 1)) : 0;
+    const hatBild = cs.backgroundImage !== 'none';
+    if ((g && a > 0.12) || hatBild) malt.add(e);
+  }
+  for (let y = S / 2; y < h; y += S) {
+    for (let x = S / 2; x < w; x += S) {
+      gesamt += 1;
+      const e = document.elementFromPoint(x, y);
+      if (e && e.closest(WURZELN)) gesperrt += 1;
+      // Bemalt: irgendein malendes Element deckt diesen Punkt.
+      for (const m of malt) {
+        const r = m.getBoundingClientRect();
+        if (x >= r.left && x < r.right && y >= r.top && y < r.bottom) { bemalt += 1; break; }
+      }
+    }
+  }
+  return { gesperrt: 100 * gesperrt / gesamt, bemalt: 100 * bemalt / gesamt };
+});
+
+/** Was steht wo, wie gross, in welcher Farbe? */
+const layout = (seite) => seite.evaluate(() => {
+  const raus = [];
+  const sichtbar = (e) => {
+    const r = e.getBoundingClientRect();
+    const cs = getComputedStyle(e);
+    return r.width > 1 && r.height > 1 && cs.display !== 'none'
+      && cs.visibility !== 'hidden' && Number(cs.opacity) > 0.05
+      && r.right > 0 && r.bottom > 0 && r.left < innerWidth && r.top < innerHeight;
+  };
+  for (const e of document.querySelectorAll('#app *')) {
+    if (!sichtbar(e)) continue;
+    const r = e.getBoundingClientRect();
+    const cs = getComputedStyle(e);
+    raus.push({
+      id: e.id || '', klasse: String(e.className || ''), tag: e.tagName.toLowerCase(),
+      text: (e.textContent ?? '').trim().slice(0, 40),
+      x: Math.round(r.left), y: Math.round(r.top),
+      w: Math.round(r.width), h: Math.round(r.height),
+      farbe: cs.color, grund: cs.backgroundColor,
+      groesse: cs.fontSize, gewicht: cs.fontWeight, radius: cs.borderRadius,
+    });
+  }
+  return raus;
+});
+
+// Regel 14: das Menue ist auf jeder Fenstergroesse dieselbe eingepasste Welt.
+const WELT_B = 1920, WELT_H = 1080;
+const nachSchirm = (wx, wy, w, h) => {
+  const k = Math.min(w / WELT_B, h / WELT_H);
+  return [wx * k + (w - WELT_B * k) / 2, wy * k + (h - WELT_H * k) / 2];
+};
+const insSpiel = async (s, w, h) => {
+  for (const [wx, wy] of [[384, 620], [1209, 838]]) {
+    const [x, y] = nachSchirm(wx, wy, w, h);
+    await s.mouse.click(x, y);
+    await s.waitForTimeout(500);
+  }
+  for (let i = 0; i < 8; i += 1) {
+    if (await s.evaluate(() => document.getElementById('coach')?.hidden !== false)) break;
+    await s.evaluate(() => document.getElementById('coach-skip')?.click());
+    await s.waitForTimeout(220);
+  }
+  return !(await s.evaluate(() => document.getElementById('hud')?.hidden));
+};
+
+const neueSeite = async (w, h, mobil = true) => {
+  const ctx = await browser.newContext({
+    viewport: { width: w, height: h },
+    deviceScaleFactor: 2, isMobile: mobil, hasTouch: mobil,
+  });
+  const s = await ctx.newPage();
+  s.on('pageerror', (e) => console.log(`  Ausnahme: ${e.message}`));
+  await s.goto(`file://${DATEI}`);
+  await s.waitForTimeout(2200);
+  return s;
+};
+
+console.log('Aufnahmen:');
+
+// ============================================================ Seite A: Bilder
+const a = await neueSeite(BREIT, HOCH);
+await schuss(a, 'landkarte');
+messwerte.landkarte = await layout(a);
+if (!(await insSpiel(a, BREIT, HOCH))) { console.error('Kein Weg ins Spiel.'); process.exit(1); }
+await a.waitForTimeout(600);
+await schuss(a, 'spiel-ruhe');
+messwerte.ruhe = await layout(a);
+messwerte.belegung = { ruhe: await belegung(a) };
+
+/** Einen Bauplatz suchen, ohne etwas zu bauen: tippen, pruefen, wieder zu. */
+const bauplatzSuchen = async (s, w, h, schritt = 22) => {
+  for (let y = 70; y < h - 70; y += schritt) {
+    for (let x = 20; x < w - 20; x += schritt) {
+      await s.mouse.click(x, y);
+      if (await s.evaluate(() => !document.getElementById('pick').hidden)) return { x, y };
+      await s.evaluate(() => document.getElementById('i-close')?.click());
+    }
+  }
+  return null;
+};
+const fleck = await bauplatzSuchen(a, BREIT, HOCH);
+if (!fleck) { console.error('Kein Bauplatz gefunden.'); }
+else {
+  console.log(`  (Bauwahl geoeffnet bei ${fleck.x},${fleck.y})`);
+  await a.waitForTimeout(300);
+  await schuss(a, 'bauwahl');
+  messwerte.bauwahl = await layout(a);
+messwerte.belegung.bauwahl = await belegung(a);
+  await a.evaluate(() => document.querySelector('#pick-row .pick-btn:not([disabled])')?.click());
+  await a.waitForTimeout(500);
+  await schuss(a, 'turm-gebaut');
+  await a.mouse.click(fleck.x, fleck.y);
+  await a.waitForTimeout(450);
+  await schuss(a, 'pruefsteg');
+  messwerte.pruefsteg = await layout(a);
+messwerte.belegung.pruefsteg = await belegung(a);
+  await a.evaluate(() => document.getElementById('i-ziel-auf')?.click());
+  await a.waitForTimeout(300);
+  await schuss(a, 'pruefsteg-ziel');
+  await a.evaluate(() => document.getElementById('i-close')?.click());
+  await a.waitForTimeout(250);
+}
+
+await a.evaluate(() => document.getElementById('b-wave')?.click());
+await a.waitForTimeout(2600);
+await schuss(a, 'welle-frueh');
+await a.waitForTimeout(4200);
+await schuss(a, 'welle-mitte');
+messwerte.welle = await layout(a);
+messwerte.belegung.welle = await belegung(a);
+await a.waitForTimeout(5200);
+await schuss(a, 'welle-spaet');
+
+await a.evaluate(() => document.getElementById('b-pause')?.click());
+await a.waitForTimeout(400);
+await schuss(a, 'pause');
+messwerte.pause = await layout(a);
+await a.evaluate(() => document.getElementById('p-optionen')?.click());
+await a.waitForTimeout(350);
+await schuss(a, 'optionen');
+await a.evaluate(() => document.getElementById('o-zurueck')?.click());
+await a.evaluate(() => document.getElementById('p-resume')?.click());
+await a.waitForTimeout(300);
+await a.evaluate(() => document.getElementById('dock-toggle')?.click());
+await a.waitForTimeout(350);
+await schuss(a, 'dock-zu');
+
+// ======================================================= Seite B: Bauraster
+//
+// Die Frage des Nutzers, als Zahl: wieviele Stellen des Bildes nehmen einen
+// Turm an - und sieht man ihnen das an? Gemessen wird durch Tippen, also
+// genau so, wie ein Spieler es erfaehrt.
+const b = await neueSeite(BREIT, HOCH);
+if (await insSpiel(b, BREIT, HOCH)) {
+  await b.waitForTimeout(500);
+  const grund = join(AUS, 'raster-grund.png');
+  await b.screenshot({ path: grund });
+  const raster = [];
+  const SCH = 12;
+  for (let y = 6; y < HOCH; y += SCH) {
+    for (let x = 6; x < BREIT; x += SCH) {
+      const ueber = await b.evaluate(([px, py]) => {
+        const e = document.elementFromPoint(px, py);
+        return !!(e && e.closest('#hud, #dock, #b-wave, #inspector, #pick, #coach, #perf'));
+      }, [x, y]);
+      if (ueber) { raster.push({ x, y, baubar: false, verdeckt: true }); continue; }
+      await b.mouse.click(x, y);
+      const auf = await b.evaluate(() => !document.getElementById('pick').hidden);
+      raster.push({ x, y, baubar: auf, verdeckt: false });
+      if (auf) await b.evaluate(() => { document.getElementById('pick').hidden = true; });
+      await b.evaluate(() => document.getElementById('i-close')?.click());
+    }
+  }
+  messwerte.bauraster = raster;
+  const frei = raster.filter((r) => !r.verdeckt);
+  const baubar = frei.filter((r) => r.baubar);
+  console.log(`\nBauraster (Schritt ${SCH} px, iPhone quer):`);
+  console.log(`  ${raster.length} Punkte, davon ${raster.length - frei.length} von der `
+    + `Bedienung verdeckt (${(100 * (raster.length - frei.length) / raster.length).toFixed(1)} %)`);
+  console.log(`  baubar: ${baubar.length} von ${frei.length} freien `
+    + `(${(100 * baubar.length / frei.length).toFixed(1)} %)`);
+
+  // Die Bau-Karte als Bild: gruen = nimmt einen Turm, rot = tut nichts.
+  const bild = await loadImage(grund);
+  const cv = createCanvas(bild.width, bild.height);
+  const g = cv.getContext('2d');
+  g.drawImage(bild, 0, 0);
+  const s = bild.width / BREIT;
+  for (const r of raster) {
+    if (r.verdeckt) continue;
+    g.fillStyle = r.baubar ? 'rgba(60,220,120,0.85)' : 'rgba(255,60,60,0.5)';
+    g.beginPath();
+    g.arc(r.x * s, r.y * s, r.baubar ? 5 : 3, 0, Math.PI * 2);
+    g.fill();
+  }
+  writeFileSync(join(AUS, 'raster-baukarte.png'), cv.toBuffer('image/png'));
+  console.log(`  ${join(AUS, 'raster-baukarte.png')}`);
+}
+
+// ======================================================= Seite C: Notebook
+const c = await neueSeite(1400, 900, false);
+nr += 1;
+await c.screenshot({ path: join(AUS, `${String(nr).padStart(2, '0')}-notebook-landkarte.png`) });
+console.log(`  ${join(AUS, `${String(nr).padStart(2, '0')}-notebook-landkarte.png`)}`);
+if (await insSpiel(c, 1400, 900)) {
+  await c.waitForTimeout(700);
+  await schuss(c, 'notebook-spiel');
+  messwerte.notebook = await layout(c);
+}
+
+console.log('\nBelegung des Bildschirms (844 x 390, Raster 4):');
+for (const [k, v] of Object.entries(messwerte.belegung ?? {})) {
+  console.log(`  ${k.padEnd(11)} gesperrt ${v.gesperrt.toFixed(1)} %   bemalt ${v.bemalt.toFixed(1)} %`);
+}
+
+writeFileSync(join(AUS, 'messwerte.json'), JSON.stringify(messwerte, null, 1));
+console.log(`\nMesswerte: ${join(AUS, 'messwerte.json')}`);
+await browser.close();

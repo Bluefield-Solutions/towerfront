@@ -75,7 +75,9 @@
     "bauflaeche": "tsx tools/bauflaeche.mjs",
     "wegdeckung": "tsx tools/wegdeckung.ts",
     "wegdeckungtor": "tsx tools/wegdeckung.ts --tor",
-    "bauflaechetor": "tsx tools/bauflaeche.mjs --tor"
+    "bauflaechetor": "tsx tools/bauflaeche.mjs --tor",
+    "uxaudit": "tsx tools/uxaudit.mjs",
+    "baukarte": "tsx tools/baukarte.mjs"
   },
   "keywords": [],
   "author": "",

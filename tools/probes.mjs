@@ -1489,6 +1489,21 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // **Ein Prompt geht ohne Stil-Block heraus.**
+    //
+    // `npm run bildprompt` steht nicht in der Torkette - es wird genau an dem
+    // Tag gebraucht, an dem eine Bestellung herausgeht. Faellt der Stil-Block
+    // aus, bekommt der Bild-Agent acht Auftraege ohne Stil, und niemand sagt
+    // es: das Werkzeug gibt seinen Text ja aus. Dieselbe Klasse wie
+    // `kartenprobe` in v229 - ein Werkzeug, dessen Eingang niemand prueft,
+    // ist im Ernstfall kaputt.
+    name: 'Prompt geht ohne Stil-Block heraus',
+    datei: 'tools/auftrag.ts',
+    regel: /  let fertig = prompt\.split\(PLATZHALTER\)\.join\(stil\);/,
+    ersatz: '  let fertig = prompt;',
+    tor: 'guards',
+  },
+  {
     // **Ein Dokument ohne Standangabe wird wieder uebersehen.**
     //
     // Das war die Luecke, durch die der Genre-Abgleich 213 Fassungen lang

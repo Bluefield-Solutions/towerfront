@@ -1201,6 +1201,340 @@ Wer die 55 % erreicht, hat die 0,55 geschenkt.
 
 ---
 
+## 6.8. Nachbestellung H4/H6 — **acht Zweigsymbole für das Turmmenü** (v249)
+
+Ablage: `art/roh/objekte/` · **96 × 96 PNG mit Alpha** · Budget für den ganzen
+Satz **20 KB** eingebettet (die ausgelieferte Datei wiegt heute 1429 von 1800
+erlaubten KB).
+
+**Warum es sie braucht, in einer Zahl.** Das Turmmenü sitzt am rechten
+Bildschirmrand, während der gemeinte Turm irgendwo auf dem Feld steht — die
+Zuordnung muss der Spieler leisten. Es an den Turm zu setzen scheitert an
+zehn Punkten Höhe: gemessen braucht die Karte **228**, frei sind **218**. Und
+der Satz, der erklärt, was ein Ausbauzweig tut, braucht **90 Punkte**, die
+dieser Bildschirm nicht hat — er trägt deshalb auf dem Zielgerät
+`display: none`, und wer auf dem Telefon spielt, wählte bis v248 zwischen zwei
+Namen. Vier Auswege sind in v239 durchgerechnet und reichen alle nicht
+(zweispaltige Werte −43 Punkte, breitere Karte macht es schlechter, Werte
+gegen Ziele −6, Vorschau nach oben +46 bei wachsender Kopfzeile).
+
+**Symbole statt Sätze** ist der Weg, den Kingdom Rush und Bloons TD 6 gehen,
+und er ist Bildmaterial, kein Code.
+
+**Diese acht Prompts widersprechen dem globalen Stil-Block in drei Zeilen —
+und sie sagen es.** Der Stil-Block beschreibt Objekte in einer Welt: eine
+Sonne von links oben, drei Materialfamilien, ein gesättigter Akzent auf
+entsättigtem Grund. Ein Symbol ist nichts davon; es ist ein gedrucktes
+Zeichen. Jeder der acht Prompts trägt deshalb einen `OVERRIDES`-Absatz, der
+die drei Zeilen ausdrücklich aufhebt und sagt, was weiter gilt. Abschnitt
+„Ein Auftrag darf nicht fordern, was sein eigenes Blatt bestreitet" (v230)
+verlangt genau das — dort war es eine Auflösungsangabe, hier sind es drei
+Stilzeilen.
+
+### Die Abnahme — was grün sein muss, bevor ein Symbol eingebaut wird
+
+| Prüfung | Werkzeug | Grenze |
+|---|---|---|
+| Format, Alpha, Rand, reines Schwarz | `npm run probebild -- <ordner>` | wie Abschnitt 2 |
+| Silhouetten-Überdeckung **untereinander** | `npm run probebild` | höchstens **0,65** je Paar (Art Bible 5.2) |
+| Feindetail, gemessen in **Anzeigegröße** (22 × 22) | `npm run probebild` | wie die Figuren, nicht wie die Quelle |
+| Gewicht des ganzen Satzes, eingebettet | `npm run art` | höchstens **20 KB** |
+
+**Die Silhouetten-Regel ist hier die wichtigste**, und sie gilt vor allem
+zwischen den zwei Symbolen **desselben Turms**: sie stehen im Spiel
+nebeneinander und beantworten genau die Frage „worin unterscheiden sich die
+beiden". Sehen sie gleich aus, ist der ganze Auftrag umsonst.
+
+### 6.8.1 `symbol_zweig_sniper.png` — Bogenturm · Scharfschütze
+
+Was der Zweig TUT: *Reichweite und ein harter Einzelschuss, der Panzerung durchschlägt.*
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+SUBJECT: A single flat interface ICON, not an object in a world. A single heavy long-barrelled precision cannon seen from directly above, one clean silhouette: a very long slim barrel with a muzzle brake, a compact breech, and a small rangefinder box on top. Nothing else in the frame.
+
+OVERRIDES THE STYLE BLOCK ABOVE — read this, it contradicts three lines of it
+on purpose: (1) LIGHT — there is NO sun and no cast shadow; the icon is flat.
+(2) MATERIALS — the three material families do not apply; this is not an object
+made of steel or glass, it is a printed symbol. (3) COLOUR — not "desaturated
+base with one accent": the WHOLE icon is one hue. Everything else in the style
+block still holds: transparency, margin, no text, no watermark, no glow.
+
+CRITICAL — THIS IS AN ICON, NOT A MODEL: no ground, no shadow on a floor, no
+perspective, no scene. Orthographic top-down. It is read at 22 x 22 points on
+a phone, so it must survive being shrunk to a thumbnail: at most five separate
+shapes, no shape thinner than one twentieth of the frame, no interior detail
+that disappears below 22 points.
+
+COLOUR: monochrome in #F2C14E on transparency, plus a darker shade of the same
+hue for depth. NO second hue, no white highlights, no gradient across the whole
+icon. The colour IS the identifier — it is the accent colour of this upgrade
+branch in the game and appears next to the icon in the interface.
+
+SILHOUETTE: the outline alone must identify it. Its sibling in the same tower
+uses the opposite shape language (long against short, ring against burst, one
+against many, split against merged) — the two must not be confusable in
+outline.
+
+FRAMING: fills about 88 percent of a 96x96 transparent canvas, centred, with
+even margins on all four sides.
+```
+
+### 6.8.2 `symbol_zweig_volley.png` — Bogenturm · Salve
+
+Was der Zweig TUT: *Halbe Wucht, doppelte Schlagzahl. Gegen Masse.*
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+SUBJECT: A single flat interface ICON, not an object in a world. Three short stubby barrels side by side seen from directly above, with three small shell casings tumbling away from them. The barrels are visibly SHORT and thick — the opposite of a sniper barrel.
+
+OVERRIDES THE STYLE BLOCK ABOVE — read this, it contradicts three lines of it
+on purpose: (1) LIGHT — there is NO sun and no cast shadow; the icon is flat.
+(2) MATERIALS — the three material families do not apply; this is not an object
+made of steel or glass, it is a printed symbol. (3) COLOUR — not "desaturated
+base with one accent": the WHOLE icon is one hue. Everything else in the style
+block still holds: transparency, margin, no text, no watermark, no glow.
+
+CRITICAL — THIS IS AN ICON, NOT A MODEL: no ground, no shadow on a floor, no
+perspective, no scene. Orthographic top-down. It is read at 22 x 22 points on
+a phone, so it must survive being shrunk to a thumbnail: at most five separate
+shapes, no shape thinner than one twentieth of the frame, no interior detail
+that disappears below 22 points.
+
+COLOUR: monochrome in #FF9B54 on transparency, plus a darker shade of the same
+hue for depth. NO second hue, no white highlights, no gradient across the whole
+icon. The colour IS the identifier — it is the accent colour of this upgrade
+branch in the game and appears next to the icon in the interface.
+
+SILHOUETTE: the outline alone must identify it. Its sibling in the same tower
+uses the opposite shape language (long against short, ring against burst, one
+against many, split against merged) — the two must not be confusable in
+outline.
+
+FRAMING: fills about 88 percent of a 96x96 transparent canvas, centred, with
+even margins on all four sides.
+```
+
+### 6.8.3 `symbol_zweig_eternal.png` — Frostturm · Ewiges Eis
+
+Was der Zweig TUT: *Weiter Umkreis, harte Bremse, kaum Schaden. Reine Kontrolle.*
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+SUBJECT: A single flat interface ICON, not an object in a world. A wide flat ring of frost seen from directly above, drawn as two concentric broken rings of ice crystals with a still, glassy centre. It must read as an AREA, not as an object — no barrel, no machine.
+
+OVERRIDES THE STYLE BLOCK ABOVE — read this, it contradicts three lines of it
+on purpose: (1) LIGHT — there is NO sun and no cast shadow; the icon is flat.
+(2) MATERIALS — the three material families do not apply; this is not an object
+made of steel or glass, it is a printed symbol. (3) COLOUR — not "desaturated
+base with one accent": the WHOLE icon is one hue. Everything else in the style
+block still holds: transparency, margin, no text, no watermark, no glow.
+
+CRITICAL — THIS IS AN ICON, NOT A MODEL: no ground, no shadow on a floor, no
+perspective, no scene. Orthographic top-down. It is read at 22 x 22 points on
+a phone, so it must survive being shrunk to a thumbnail: at most five separate
+shapes, no shape thinner than one twentieth of the frame, no interior detail
+that disappears below 22 points.
+
+COLOUR: monochrome in #7FE7E0 on transparency, plus a darker shade of the same
+hue for depth. NO second hue, no white highlights, no gradient across the whole
+icon. The colour IS the identifier — it is the accent colour of this upgrade
+branch in the game and appears next to the icon in the interface.
+
+SILHOUETTE: the outline alone must identify it. Its sibling in the same tower
+uses the opposite shape language (long against short, ring against burst, one
+against many, split against merged) — the two must not be confusable in
+outline.
+
+FRAMING: fills about 88 percent of a 96x96 transparent canvas, centred, with
+even margins on all four sides.
+```
+
+### 6.8.4 `symbol_zweig_shard.png` — Frostturm · Splitterfrost
+
+Was der Zweig TUT: *Bremst weniger, schneidet dafür.*
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+SUBJECT: A single flat interface ICON, not an object in a world. Five sharp ice shards bursting outward from a common centre, seen from directly above, each shard a slim tapered spike with a chipped edge. It must read as a BURST, the opposite of the calm ring of its sibling.
+
+OVERRIDES THE STYLE BLOCK ABOVE — read this, it contradicts three lines of it
+on purpose: (1) LIGHT — there is NO sun and no cast shadow; the icon is flat.
+(2) MATERIALS — the three material families do not apply; this is not an object
+made of steel or glass, it is a printed symbol. (3) COLOUR — not "desaturated
+base with one accent": the WHOLE icon is one hue. Everything else in the style
+block still holds: transparency, margin, no text, no watermark, no glow.
+
+CRITICAL — THIS IS AN ICON, NOT A MODEL: no ground, no shadow on a floor, no
+perspective, no scene. Orthographic top-down. It is read at 22 x 22 points on
+a phone, so it must survive being shrunk to a thumbnail: at most five separate
+shapes, no shape thinner than one twentieth of the frame, no interior detail
+that disappears below 22 points.
+
+COLOUR: monochrome in #9FD4FF on transparency, plus a darker shade of the same
+hue for depth. NO second hue, no white highlights, no gradient across the whole
+icon. The colour IS the identifier — it is the accent colour of this upgrade
+branch in the game and appears next to the icon in the interface.
+
+SILHOUETTE: the outline alone must identify it. Its sibling in the same tower
+uses the opposite shape language (long against short, ring against burst, one
+against many, split against merged) — the two must not be confusable in
+outline.
+
+FRAMING: fills about 88 percent of a 96x96 transparent canvas, centred, with
+even margins on all four sides.
+```
+
+### 6.8.5 `symbol_zweig_cluster.png` — Mörser · Streubombe
+
+Was der Zweig TUT: *Weiter Wirkradius, schnellere Folge, weniger Wucht je Treffer.*
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+SUBJECT: A single flat interface ICON, not an object in a world. One shell splitting into five small bomblets that fan out downward, seen from directly above: a small central body with five little rounded submunitions spreading in an arc around it.
+
+OVERRIDES THE STYLE BLOCK ABOVE — read this, it contradicts three lines of it
+on purpose: (1) LIGHT — there is NO sun and no cast shadow; the icon is flat.
+(2) MATERIALS — the three material families do not apply; this is not an object
+made of steel or glass, it is a printed symbol. (3) COLOUR — not "desaturated
+base with one accent": the WHOLE icon is one hue. Everything else in the style
+block still holds: transparency, margin, no text, no watermark, no glow.
+
+CRITICAL — THIS IS AN ICON, NOT A MODEL: no ground, no shadow on a floor, no
+perspective, no scene. Orthographic top-down. It is read at 22 x 22 points on
+a phone, so it must survive being shrunk to a thumbnail: at most five separate
+shapes, no shape thinner than one twentieth of the frame, no interior detail
+that disappears below 22 points.
+
+COLOUR: monochrome in #F08A3C on transparency, plus a darker shade of the same
+hue for depth. NO second hue, no white highlights, no gradient across the whole
+icon. The colour IS the identifier — it is the accent colour of this upgrade
+branch in the game and appears next to the icon in the interface.
+
+SILHOUETTE: the outline alone must identify it. Its sibling in the same tower
+uses the opposite shape language (long against short, ring against burst, one
+against many, split against merged) — the two must not be confusable in
+outline.
+
+FRAMING: fills about 88 percent of a 96x96 transparent canvas, centred, with
+even margins on all four sides.
+```
+
+### 6.8.6 `symbol_zweig_breaker.png` — Mörser · Brecher
+
+Was der Zweig TUT: *Enger Radius, gewaltige Wucht, durchschlägt schwere Panzerung.*
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+SUBJECT: A single flat interface ICON, not an object in a world. A single heavy armour-piercing shell driven point-first through a cracked armour plate, seen from directly above: the thick shell in the middle, the plate around it broken into four large angular pieces. Few, big shapes.
+
+OVERRIDES THE STYLE BLOCK ABOVE — read this, it contradicts three lines of it
+on purpose: (1) LIGHT — there is NO sun and no cast shadow; the icon is flat.
+(2) MATERIALS — the three material families do not apply; this is not an object
+made of steel or glass, it is a printed symbol. (3) COLOUR — not "desaturated
+base with one accent": the WHOLE icon is one hue. Everything else in the style
+block still holds: transparency, margin, no text, no watermark, no glow.
+
+CRITICAL — THIS IS AN ICON, NOT A MODEL: no ground, no shadow on a floor, no
+perspective, no scene. Orthographic top-down. It is read at 22 x 22 points on
+a phone, so it must survive being shrunk to a thumbnail: at most five separate
+shapes, no shape thinner than one twentieth of the frame, no interior detail
+that disappears below 22 points.
+
+COLOUR: monochrome in #D6564A on transparency, plus a darker shade of the same
+hue for depth. NO second hue, no white highlights, no gradient across the whole
+icon. The colour IS the identifier — it is the accent colour of this upgrade
+branch in the game and appears next to the icon in the interface.
+
+SILHOUETTE: the outline alone must identify it. Its sibling in the same tower
+uses the opposite shape language (long against short, ring against burst, one
+against many, split against merged) — the two must not be confusable in
+outline.
+
+FRAMING: fills about 88 percent of a 96x96 transparent canvas, centred, with
+even margins on all four sides.
+```
+
+### 6.8.7 `symbol_zweig_fork.png` — Prisma · Verzweigung
+
+Was der Zweig TUT: *Mehr Sprünge, kaum Abfall. Legt sich über eine ganze Kette.*
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+SUBJECT: A single flat interface ICON, not an object in a world. One beam entering from the bottom and splitting into four thin branches that spread toward the top, seen from directly above, drawn as sharp angular lightning-like segments of even thickness.
+
+OVERRIDES THE STYLE BLOCK ABOVE — read this, it contradicts three lines of it
+on purpose: (1) LIGHT — there is NO sun and no cast shadow; the icon is flat.
+(2) MATERIALS — the three material families do not apply; this is not an object
+made of steel or glass, it is a printed symbol. (3) COLOUR — not "desaturated
+base with one accent": the WHOLE icon is one hue. Everything else in the style
+block still holds: transparency, margin, no text, no watermark, no glow.
+
+CRITICAL — THIS IS AN ICON, NOT A MODEL: no ground, no shadow on a floor, no
+perspective, no scene. Orthographic top-down. It is read at 22 x 22 points on
+a phone, so it must survive being shrunk to a thumbnail: at most five separate
+shapes, no shape thinner than one twentieth of the frame, no interior detail
+that disappears below 22 points.
+
+COLOUR: monochrome in #B07CFF on transparency, plus a darker shade of the same
+hue for depth. NO second hue, no white highlights, no gradient across the whole
+icon. The colour IS the identifier — it is the accent colour of this upgrade
+branch in the game and appears next to the icon in the interface.
+
+SILHOUETTE: the outline alone must identify it. Its sibling in the same tower
+uses the opposite shape language (long against short, ring against burst, one
+against many, split against merged) — the two must not be confusable in
+outline.
+
+FRAMING: fills about 88 percent of a 96x96 transparent canvas, centred, with
+even margins on all four sides.
+```
+
+### 6.8.8 `symbol_zweig_lens.png` — Prisma · Bündelung
+
+Was der Zweig TUT: *Ein Sprung weniger, dafür ein Strahl, der wirklich wehtut.*
+
+```
+[STYLE-BLOCK EINFÜGEN]
+
+SUBJECT: A single flat interface ICON, not an object in a world. Four thin beams converging from the edges into ONE thick beam that continues to the top, seen from directly above — the exact mirror of its sibling: many in, one out.
+
+OVERRIDES THE STYLE BLOCK ABOVE — read this, it contradicts three lines of it
+on purpose: (1) LIGHT — there is NO sun and no cast shadow; the icon is flat.
+(2) MATERIALS — the three material families do not apply; this is not an object
+made of steel or glass, it is a printed symbol. (3) COLOUR — not "desaturated
+base with one accent": the WHOLE icon is one hue. Everything else in the style
+block still holds: transparency, margin, no text, no watermark, no glow.
+
+CRITICAL — THIS IS AN ICON, NOT A MODEL: no ground, no shadow on a floor, no
+perspective, no scene. Orthographic top-down. It is read at 22 x 22 points on
+a phone, so it must survive being shrunk to a thumbnail: at most five separate
+shapes, no shape thinner than one twentieth of the frame, no interior detail
+that disappears below 22 points.
+
+COLOUR: monochrome in #FF7ADF on transparency, plus a darker shade of the same
+hue for depth. NO second hue, no white highlights, no gradient across the whole
+icon. The colour IS the identifier — it is the accent colour of this upgrade
+branch in the game and appears next to the icon in the interface.
+
+SILHOUETTE: the outline alone must identify it. Its sibling in the same tower
+uses the opposite shape language (long against short, ring against burst, one
+against many, split against merged) — the two must not be confusable in
+outline.
+
+FRAMING: fills about 88 percent of a 96x96 transparent canvas, centred, with
+even margins on all four sides.
+```
+
+---
+
 ## 7. Die Objekte — vier Dateien
 
 Ablage: `art/roh/objekte/` · **256 × 256 PNG** · Füllgrad **0,92** ·

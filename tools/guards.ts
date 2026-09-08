@@ -25,7 +25,7 @@ const START_LIVES = NORMAL.startLives;
 import { MAPS, goalOf, lanePaths } from '../src/data/maps';
 import { bauplaetze, kreuzdeckung, verschmelzung } from './bahnmass';
 import { abstand, ausstoss, druck, hoechstverlust, kurve, mischung } from './wellenmass';
-import { abnahmegrenzen } from './auftrag';
+import { abnahmegrenzen, einsetzen, promptAbschnitte, stilBlock } from './auftrag';
 import { GameState } from '../src/game/state';
 import { projektilform } from '../src/gfx/renderer';
 import type { Tower } from '../src/game/types';
@@ -67,6 +67,40 @@ const isHex = (s: string) => /^#[0-9A-Fa-f]{6}$/.test(s);
   warn(`Abnahmegrenzen aus dem Bildauftrag: Mitte ${(g.mitte * 100).toFixed(0)} %, `
     + `Schlauch ${(g.schlauch * 100).toFixed(0)} %, Rand ${(g.rand * 100).toFixed(0)} %, `
     + `Nutzung ${(g.nutzung * 100).toFixed(0)} %, Wegfreiheit ${g.wegfrei} Farbschritte.`);
+}
+
+// **Und jeder Prompt muss vollstaendig herausgehen** (v249).
+//
+// Dieselbe Ueberlegung eine Stufe weiter: `npm run bildprompt` steht ebenso
+// wenig in der Torkette wie `kartenprobe`, und es wird genau an dem Tag
+// gebraucht, an dem eine Bestellung herausgeht. Geht ein Prompt dann ohne
+// Stil-Block heraus, bekommt der Bild-Agent einen Auftrag ohne Stil - und
+// niemand sagt es, weil das Werkzeug seinen Text ja ausgibt.
+//
+// Geprueft wird deshalb hier, bei jedem Lauf: jeder Abschnitt mit Prompt
+// laesst sich vollstaendig einsetzen, und keiner ist leer. `einsetzen`
+// bricht selbst ab, wenn ein Platzhalter stehen bleibt; der Aufruf holt
+// diesen Abbruch in die Kette.
+{
+  const abschnitte = promptAbschnitte();
+  if (abschnitte.length < 10) {
+    fail(`Der Bildauftrag traegt nur ${abschnitte.length} Prompt-Abschnitte - `
+      + 'das Lesemuster passt nicht mehr auf das Dokument.');
+  }
+  const stil = stilBlock();
+  if (stil.length < 200) {
+    fail(`Der Stil-Block ist nur ${stil.length} Zeichen lang - so kurz war er nie.`);
+  }
+  let kuerzester = Infinity;
+  for (const a of abschnitte) {
+    const fertig = einsetzen(a.prompt, stil);
+    kuerzester = Math.min(kuerzester, fertig.length);
+    if (fertig.includes('[STYLE-BLOCK')) {
+      fail(`Der Prompt "${a.titel}" geht ohne Stil-Block heraus.`);
+    }
+  }
+  warn(`Bildauftrag: ${abschnitte.length} Prompts, der kuerzeste ${kuerzester} Zeichen `
+    + `mit eingesetztem Stil-Block (${stil.length} Zeichen).`);
 }
 
 for (const map of MAPS) {

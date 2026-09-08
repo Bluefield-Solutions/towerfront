@@ -990,10 +990,30 @@ const PROBEN = [
     // Die Umkehrung von D18, seit v162: ein ruhender Turm steht still.
     // Eingebaut wird die alte Ruhebewegung - zwei Weltpunkte auf und ab -,
     // und das Tor muss sie sehen.
+    //
+    // **Sie griff bis v241 am SOCKEL allein und bewies damit nichts.** Der
+    // Nachtlauf zu v238 hat es gemeldet, und die Ursache ist keine Aenderung
+    // am Spiel, sondern ein Denkfehler in der Probe: das Tor misst die
+    // Ober- und die Unterkante der Figur. Die Oberkante gehoert der WAFFE,
+    // die im zweiteiligen Weg getrennt gezeichnet wird und stehen blieb; die
+    // Unterkante liegt am Schatten, der ohnehin nicht mitwandert. Ein
+    // Sockel, der sich zwischen beiden bewegt, aendert an keiner der zwei
+    // gemessenen Zahlen etwas.
+    //
+    // Nachgefahren, weil die naheliegende Erklaerung ("der Zweig laeuft gar
+    // nicht") gepruft gehoert (Regel 3): mit Ausschlag 40 statt 2 meldet das
+    // Tor "Oberkante wandert 11 Bildzeilen". Der Zweig laeuft also, und der
+    // Eingriff kommt an - er war nur zu klein fuer die Stelle, an der er
+    // sass.
+    //
+    // Sie greift jetzt an der Verschiebung des GANZEN Turms, und das ist
+    // ausserdem die ehrlichere Nachbildung: die Ruhebewegung von v116 bis
+    // v161 liess den Turm atmen, nicht seinen Fuss. Gemessen: 4 Bildzeilen,
+    // ein Befund.
     name: 'Tuerme atmen wieder',
     datei: 'src/gfx/renderer.ts',
-    regel: /^      ctx\.drawImage\(sockel, -bw \/ 2, oben, bw, sh\);$/m,
-    ersatz: '      ctx.drawImage(sockel, -bw / 2, oben + Math.sin(s.time * 1.9) * 2, bw, sh);',
+    regel: /^      ctx\.translate\(t\.x, t\.y\);$/m,
+    ersatz: '      ctx.translate(t.x, t.y + Math.sin(s.time * 1.9) * 2);',
     tor: 'bildtor',
   },
   {
@@ -2346,10 +2366,21 @@ const PROBEN = [
     // Reihe gleich breiter Knoepfe bei 40 - der Eingriff kam an und loeste
     // nichts aus (Regel 3). Zwoelf Punkte druecken auf 36 und damit unter
     // die Grenze, die das Tor wirklich zieht.
+    //
+    // **Und zwoelf reichen seit v237 auch nicht mehr - weil ein Modus weg
+    // ist.** "Hinten" ist damals entfallen; vier Knoepfe teilen sich die
+    // Breite, die vorher fuenf teilten. Gemessen gibt Abstand 12 jetzt
+    // 49 Punkte je Knopf, also neun ueber der Grenze. Die Probe ist an einer
+    // Aenderung verfallen, die sie gar nicht betraf, und der Nachtlauf zu
+    // v238 hat es gemeldet.
+    //
+    // Nachgemessen bei Abstand 28: 37 Punkte je Knopf, vier Befunde. Der
+    // Eingriff bleibt damit derselbe - Knoepfe unter das Fingermass
+    // druecken -, nur die Zahl ist an die vier Modi angepasst.
     name: 'Zielwahl unter das Fingermass gedraengt',
     datei: 'src/style.css',
     suche: '  display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;',
-    ersatz: '  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;',
+    ersatz: '  display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px;',
     tor: 'browsertor',
   },
   {

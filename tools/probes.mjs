@@ -544,6 +544,29 @@ const PROBEN = [
     meldet: 'Leerlauf der Partie',
   },
   {
+    // **Ein Grossbuchstabe hat E6 zehn Fassungen offengehalten (S-P1-06, v256).**
+    //
+    // Die Bedingung suchte `wellenfortschritt`, der Quelltext schreibt
+    // `Wellenfortschritt`. Alle vier Teile des Punktes waren seit v239
+    // geliefert; der Waechter verglich buchstabengetreu und schwieg - zu
+    // Recht, denn eine Bedingung, die Schreibweisen mischt, faengt Treffer,
+    // die keine sind. Falsch war nur, dass niemand den Zwischenfall meldete.
+    //
+    // Der Eingriff stellt genau ihn her: `bogenturm` klein, waehrend
+    // `src/data/towers.ts` dreimal `Bogenturm` schreibt.
+    //
+    // **Die Nullprobe dazu ist der heutige Baum selbst** und braucht keinen
+    // Eingriff: C3 sucht `Bannturm`, und das Wort kommt in towers.ts in
+    // KEINER Schreibweise vor. Jeder gruene Doku-Lauf zeigt damit, dass die
+    // Meldung schweigt, wenn ein Punkt einfach nur offen ist (Regel 13).
+    name: 'Schliessbedingung nur in anderer Schreibweise',
+    datei: 'docs/Towerfront-BACKLOG.md',
+    suche: 'text src/data/towers.ts "Bannturm" >= 1',
+    ersatz: 'text src/data/towers.ts "bogenturm" >= 1',
+    tor: 'doku',
+    meldet: 'andere Schreibweise',
+  },
+  {
     // **Der Nachtlauf braucht einen Weg zurueck ins Tor.** Bis v226 landete
     // sein Befund nur im Protokoll auf dem Runner. In der Sitzung zu v226 ist
     // er dreimal gefahren, zweimal rot, und beide Befunde habe ich nur

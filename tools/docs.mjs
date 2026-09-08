@@ -473,6 +473,36 @@ const offeneIds = new Set();
           fail(`Backlog ${id}: die Schliessbedingung \`${bed}\` ist ERFUELLT - der `
             + 'Punkt ist zugefallen, steht aber offen. Ins Erledigte umtragen.');
         }
+        // **Haelt eine andere Schreibweise den Punkt offen?** (S-P1-06)
+        //
+        // E6 stand von v239 bis v249 offen, weil ein einziger Grossbuchstabe
+        // nicht passte: die Bedingung suchte `wellenfortschritt`, der
+        // Quelltext schreibt `Wellenfortschritt`. Der Vergleich ist
+        // buchstabengetreu (`inhalt.split(wort).length - 1`), und das ist
+        // richtig so - eine Bedingung, die Schreibweisen mischt, faengt
+        // Treffer, die keine sind. Falsch war nur, dass niemand es merkte.
+        //
+        // Gemeldet wird deshalb genau der Zwischenfall: das Wort kommt vor,
+        // aber anders geschrieben. Kommt es GAR nicht vor, schweigt die
+        // Meldung - sonst sagte sie nur, dass ein Punkt offen ist, und eine
+        // Meldung, die immer kommt, ist keine (Regel 13).
+        if (!echt.erfuellt) {
+          const t = bed.match(/^text (\S+) "([^"]+)" >= (\d+)$/);
+          if (t) {
+            const [, pfad, wort] = t;
+            const inhalt = ausDatei(pfad);
+            if (inhalt) {
+              const genau = inhalt.split(wort).length - 1;
+              const egal = inhalt.toLowerCase().split(wort.toLowerCase()).length - 1;
+              if (genau === 0 && egal > 0) {
+                fail(`Backlog ${id}: fuer "${wort}" steht in ${pfad} nur eine `
+                  + `andere Schreibweise (${egal}x, genau 0x). Genau daran hing E6 `
+                  + 'zehn Fassungen lang - der Punkt war zu, und der Waechter sah '
+                  + 'es nicht.');
+              }
+            }
+          }
+        }
         // Und gegen die zwei gestellten Texte (Regel 5 und 13).
         const g = gestellt(bed);
         const ja = werte(bed, () => g.ja);

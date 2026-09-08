@@ -241,7 +241,10 @@ npm run doku        prüft die Dokumente gegen die Wirklichkeit - seit v224 auch
                     seit v217, v218 und v222 zugefallen waren. Seit v226 gilt
                     dasselbe eine Tabelle tiefer: eine FUNDZEILE darf Offenheit
                     nur behaupten, indem sie einen Punkt nennt, den es in einer
-                    Offen-Tabelle gibt. Vier taten es nicht.
+                    Offen-Tabelle gibt. Vier taten es nicht. Seit v256 meldet
+                    er ausserdem, wenn das gesuchte Wort nur in ANDERER
+                    Schreibweise in der Zieldatei steht - genau daran hing E6
+                    zehn Fassungen lang.
 npm run beruehrung  prüft, ob alles mit dem Daumen zu treffen ist
 npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen - im
                     Standardlauf nur die, deren ZIELDATEI oder `haengtAn`
@@ -470,7 +473,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v255. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v256. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

@@ -2533,6 +2533,54 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
       problems.push(`Turmwahl: ${knoepfe} Knoepfe fuer ${TOWER_ORDER.length} Turmsorten.`);
     }
 
+    // **Und sie sagt, was der Turm HIER an Verbund bekaeme** (v245, F4).
+    //
+    // Der Zuschlag folgt aus der Lage, und die waehlt man in genau diesem
+    // Augenblick. Ihn erst am gebauten Turm zu zeigen hiesse, die Auskunft
+    // nach der Entscheidung zu geben.
+    //
+    // Der Fall wird GESTELLT, nicht abgewartet: ein Turm anderer Art in
+    // Reichweite des angetippten Platzes. Ohne ihn stuende die Marke zu
+    // Recht nicht da, und die Probe bewiese nichts (Regel 13). Genau das
+    // ist die Nullprobe daneben - vorher darf keine Marke stehen.
+    if (wahl.querySelector('.pick-verbund')) {
+      problems.push('Turmwahl: nennt einen Verbund, obwohl kein Turm in der Naehe steht.');
+    }
+    {
+      state.gold = 99999;
+      const ziel = state.buildAt!;
+      // Nicht der NAECHSTE Platz, sondern einer im Band dazwischen. Der
+      // erste Anlauf nahm den naechsten - und der stand so dicht, dass er
+      // den angetippten Platz selbst zubaute: dann ist dort kein Turm mehr
+      // moeglich, es steht "passt hier nicht" statt einer Verbundmarke, und
+      // die Probe meldete einen Fehler, den es nicht gab. Zwei Tuerme
+      // brauchen 111 Weltpunkte Abstand, der Verbund reicht 260 weit; die
+      // Probe muss in diese Luecke zielen.
+      const nah = candidateSpots(state)
+        .filter((p) => Math.hypot(p.x - ziel.x, p.y - ziel.y) > 150
+          && Math.hypot(p.x - ziel.x, p.y - ziel.y) < VERBUND_UMKREIS)
+        .sort((a, b) => Math.hypot(a.x - ziel.x, a.y - ziel.y)
+          - Math.hypot(b.x - ziel.x, b.y - ziel.y));
+      if (!nah.some((p) => state.build(p.x, p.y, 'frost'))) {
+        problems.push('Turmwahl: kein Nachbar im Verbundumkreis setzbar - die Probe misst nichts.');
+      } else {
+        ui.sync();
+        const marken = [...wahl.querySelectorAll('.pick-verbund')]
+          .map((e) => (e.textContent ?? '').trim());
+        if (!marken.length) {
+          problems.push('Turmwahl: nennt keinen Verbund, obwohl ein Frostturm danebensteht.');
+        } else if (!marken.every((m) => /^\+\d+ %$/.test(m))) {
+          problems.push(`Turmwahl: Verbundmarke lautet "${marken[0]}".`);
+        }
+        // Der Frostturm selbst darf keine bekommen - er ist die Art, die
+        // schon dasteht.
+        const frostKnopf = wahl.querySelector('.pick-btn[data-turm="frost"]');
+        if (frostKnopf?.querySelector('.pick-verbund')) {
+          problems.push('Turmwahl: der Frostturm bekommt Verbund von seinesgleichen.');
+        }
+      }
+    }
+
     // Im Menue und in der Pause hat sie nichts zu suchen.
     state.paused = true;
     ui.sync();

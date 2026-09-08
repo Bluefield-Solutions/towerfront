@@ -1390,6 +1390,19 @@ const PROBEN = [
     tor: 'uxtor',
   },
   {
+    // **Die Turmwahl verschweigt, was der Turm HIER bekaeme.**
+    //
+    // Der Verbund folgt aus der LAGE, und die waehlt man in genau dem
+    // Augenblick, in dem diese Karte offen steht. Ihn erst am gebauten Turm
+    // zu zeigen hiesse, die Auskunft nach der Entscheidung zu geben - dann
+    // ist sie eine Bestaetigung und keine Grundlage.
+    name: 'Turmwahl verschweigt den Verbund',
+    datei: 'src/ui/ui.ts',
+    regel: /        const verbund = grund === null && nachbarn > 0/,
+    ersatz: '        const verbund = grund === null && nachbarn > 99',
+    tor: 'smoke',
+  },
+  {
     // **Ein Befehl mit Ziffer im Namen wird wieder uebersehen.**
     //
     // Das Muster des Doku-Waechters war bis v244 `[a-z-]+`; `npm run c18`

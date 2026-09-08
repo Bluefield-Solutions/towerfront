@@ -16,6 +16,7 @@ import { TUTORIAL, kartenEinfuehrung, type TutorialStep } from '../game/tutorial
 import { konterSatz } from '../data/konter';
 import type { GameState } from '../game/state';
 import { werteAmTurm, werteVorKauf, type Wertzeile } from '../game/turmwerte';
+import { VERBUND_STUFE } from '../game/verbund';
 import { bilanzblatt } from './statsblatt';
 import { aussaatLesen, laufAlsText } from '../game/mitschrift';
 
@@ -1081,9 +1082,23 @@ export class UI {
         // auch in der Wahl stehen.
         const grund = s.warumNicht(id, at.x, at.y);
         const sperre = !reicht || grund !== null;
+        // **Was der Turm HIER an Verbund bekaeme** (v245).
+        //
+        // Der Zuschlag folgt aus der LAGE, und die waehlt man genau in
+        // diesem Augenblick - danach steht er fest. Ihn erst am gebauten
+        // Turm zu zeigen hiesse, die Auskunft nach der Entscheidung zu
+        // geben; dann ist sie eine Bestaetigung und keine Grundlage.
+        //
+        // Nur wo er groesser als null ist. Eine Marke, die meistens "+0 %"
+        // sagt, macht aus einer Auskunft eine Zeile Rauschen - und wo
+        // ueberhaupt nichts steht, sagt schon das Fehlen genug.
+        const nachbarn = s.verbundPartnerAn(at.x, at.y, id).length;
+        const verbund = grund === null && nachbarn > 0
+          ? `<span class="pick-verbund">+${Math.round(VERBUND_STUFE * nachbarn * 100)} %</span>`
+          : '';
         const marke = grund !== null
           ? `<span class="pick-nein">${grund}</span>`
-          : `<span class="pick-cost">${def.base.cost}</span>`;
+          : `<span class="pick-cost">${def.base.cost}</span>${verbund}`;
         // **Die in der Leiste gewaehlte Sorte steht hervorgehoben da.**
         // Seit v202 baut ein Tipp aufs Feld nicht mehr, er oeffnet diese
         // Wahl - und dann muss sofort zu sehen sein, was man vorhin gewaehlt

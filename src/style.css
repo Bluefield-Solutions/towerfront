@@ -1309,6 +1309,14 @@ html, body {
   color: var(--danger); font-weight: 700; font-size: var(--s-marke);
   letter-spacing: 0.04em; text-transform: uppercase;
 }
+/* **Was der Turm HIER an Verbund bekäme** (v245).
+   In der Farbe des Kristalls, nicht in der des Goldes: der Preis darüber ist
+   das, was man zahlt, der Verbund das, was man geschenkt bekommt. Zwei
+   goldene Zahlen übereinander wären eine Rechenaufgabe. */
+.pick-verbund {
+  font-size: var(--s-marke); font-weight: 700; color: var(--crystal);
+  letter-spacing: 0.03em;
+}
 
 /* --- Die Messtafel (D27, nur mit `#messung` in der Adresse).
    Gross, ruhig, kontrastreich: sie wird abfotografiert und weitergeschickt,

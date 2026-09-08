@@ -793,34 +793,32 @@ export class GameState {
     if (this.verbundStand !== this.towersVersion) {
       this.verbundStand = this.towersVersion;
       this.verbundWert.clear();
-      const r2 = VERBUND_UMKREIS * VERBUND_UMKREIS;
       for (const a of this.towers) {
         if (a.def === 'core') continue;
-        const arten = new Set<TowerId>();
-        for (const b of this.towers) {
-          if (b === a || b.def === 'core' || b.def === a.def) continue;
-          if (dist2(a.x, a.y, b.x, b.y) <= r2) arten.add(b.def);
-        }
-        this.verbundWert.set(a.id, Math.min(VERBUND_MAX, arten.size));
+        this.verbundWert.set(a.id, this.verbundPartnerAn(a.x, a.y, a.def, a).length);
       }
     }
     return this.verbundWert.get(t.id) ?? 0;
   }
 
-  /** Welche Tuerme den Verbund dieses Turms tragen - fuer die Faeden im
-   *  Bild. Je Art HOECHSTENS einer, und zwar der naechste: gezeichnet wird,
-   *  was gezaehlt wird, nicht was zufaellig danebensteht.
+  /** Welche Tuerme einen Verbund an DIESER Stelle traegen wuerden - je Art
+   *  hoechstens einer, und zwar der naechste.
    *
-   *  Ohne die Begrenzung auf `VERBUND_MAX` liefe der Faden auch zu Arten,
-   *  die gar nicht mehr mitzaehlen - und dann sagte das Bild einen hoeheren
-   *  Zuschlag an, als der Pruefsteg zeigt. */
-  verbundPartner(t: Tower): Tower[] {
-    if (t.def === 'core') return [];
+   *  **Die eine Stelle, an der der Verbund gezaehlt wird** (v245). Vorher
+   *  standen dieselben drei Zeilen zweimal: einmal zum Zaehlen, einmal fuer
+   *  die Faeden im Bild - und als die Bauvorschau dazukam, waeren es drei
+   *  gewesen. Genau so entsteht ein Bild, das etwas anderes sagt als der
+   *  Pruefsteg (Regel 15).
+   *
+   *  `ohne` ist der Turm, der an dieser Stelle selbst steht; bei einer
+   *  Vorschau gibt es ihn noch nicht. */
+  verbundPartnerAn(x: number, y: number, art: TowerId, ohne: Tower | null = null): Tower[] {
+    if (art === 'core') return [];
     const r2 = VERBUND_UMKREIS * VERBUND_UMKREIS;
     const naechste = new Map<TowerId, { turm: Tower; d: number }>();
     for (const b of this.towers) {
-      if (b === t || b.def === 'core' || b.def === t.def) continue;
-      const d = dist2(t.x, t.y, b.x, b.y);
+      if (b === ohne || b.def === 'core' || b.def === art) continue;
+      const d = dist2(x, y, b.x, b.y);
       if (d > r2) continue;
       const alt = naechste.get(b.def);
       if (!alt || d < alt.d) naechste.set(b.def, { turm: b, d });
@@ -829,6 +827,12 @@ export class GameState {
       .sort((a, b) => a.d - b.d)
       .slice(0, VERBUND_MAX)
       .map((e) => e.turm);
+  }
+
+  /** Welche Tuerme den Verbund dieses Turms tragen - fuer die Faeden im
+   *  Bild. Gezeichnet wird, was gezaehlt wird. */
+  verbundPartner(t: Tower): Tower[] {
+    return this.verbundPartnerAn(t.x, t.y, t.def, t);
   }
 
   /** Werte der aktuellen Ausbaustufe eines Turms - mit dem Verbund.

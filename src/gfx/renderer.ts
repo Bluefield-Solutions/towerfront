@@ -962,6 +962,28 @@ export class Renderer {
         if (drawing) ctx.stroke();
       }
       ctx.restore();
+
+      // **Der Verbund schon VOR dem Bauen** (v245).
+      //
+      // Der Zuschlag folgt aus der Lage, und die waehlt man genau jetzt -
+      // danach steht sie fest. Die Faeden sind dieselben wie am gewaehlten
+      // Turm, nur gedaempfter: sie zeigen einen Zustand, den es noch nicht
+      // gibt.
+      const partner = s.verbundPartnerAn(x, y, wahl);
+      if (partner.length) {
+        ctx.save();
+        ctx.strokeStyle = hexA('#7FE7E0', 0.42);
+        ctx.lineWidth = 3;
+        ctx.setLineDash([7, 8]);
+        for (const o of partner) {
+          ctx.beginPath();
+          ctx.moveTo(x, y - 10);
+          ctx.lineTo(o.x, o.y - 10);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
     }
 
     ctx.globalAlpha = ok ? 0.7 : 0.3;

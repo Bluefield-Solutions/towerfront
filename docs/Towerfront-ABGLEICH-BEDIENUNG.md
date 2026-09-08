@@ -1,6 +1,6 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v244 · 08.09.2026
+Stand: v245 · 08.09.2026
 
 Schritt 0 des Durchgangs, nach `docs/Towerfront-SOLL-UND-BETRIEB.md` Teil 2.
 Ausgelöst durch vier Befunde vom Zielgerät:
@@ -205,8 +205,11 @@ Fäden im Bild zeigen zu genau den Türmen, die den Zuschlag tragen. Letzteres
 ist dieselbe Sprache wie beim Schildträger und aus demselben Grund: eine
 Wirkung zwischen zwei Figuren muss man sehen, nicht erschliessen.
 
-**Ein achter Soll-Punkt fällt daraus ab, und er ist offen:** B2 verlangt, dass
-bezahlt wird „auf einer benannten Fläche, die ihren Preis trägt". Für den
-Verbund gibt es das Gegenstück noch nicht — beim Wählen eines Bauplatzes steht
-nirgends, welchen Zuschlag der Turm **dort** bekäme. Genau das ist die
-Entscheidung, die die Regel erzeugt. Steht im Rückstandsverzeichnis.
+**Ein achter Soll-Punkt fiel daraus ab — und ist in v245 erfüllt.** B2 verlangt,
+dass bezahlt wird „auf einer benannten Fläche, die ihren Preis trägt". Für den
+Verbund fehlte das Gegenstück: beim Wählen eines Bauplatzes stand nirgends,
+welchen Zuschlag der Turm **dort** bekäme — und genau das ist die Entscheidung,
+die die Regel erzeugt. Seit v245 trägt jeder Knopf der Turmwahl neben seinem
+Preis, was diese Sorte an dieser Stelle bekäme, und die Fäden zeigen es schon
+an der Bauvorschau. Damit steht die Auskunft **vor** der Entscheidung statt
+danach.

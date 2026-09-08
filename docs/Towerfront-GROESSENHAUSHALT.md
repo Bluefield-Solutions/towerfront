@@ -1,6 +1,10 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v248 · 08.09.2026
+Stand: v255 · 08.09.2026
+
+**Nachgemessen in v255:** die gebaute Datei wiegt **1428,7 KB** gegen die 1429,
+die unten stehen — das Dokument stimmt, und diese Zeile hält fest, dass
+nachgesehen wurde statt nur das Datum gesetzt.
 
 Die Datei ist **eine** Datei. Jedes Bild steckt als Datenadresse darin und
 wird dabei ein Drittel größer. Ohne Obergrenze wächst sie mit jedem Bild, bis

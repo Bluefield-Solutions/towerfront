@@ -524,6 +524,26 @@ const PROBEN = [
     meldet: 'Wellen ohne Entscheidung',
   },
   {
+    // **Der Leerlauf muss steigen, wenn man wirklich wartet (S-P1-04, v255).**
+    //
+    // Gemessen liegt er bei 0,1 %, weil der Bot jede Welle in demselben Bild
+    // startet, in dem er es darf. Eine Zahl, die immer auf null steht, sieht
+    // aus wie eine Messung - erst wenn sie OHNE die Sache messbar faellt und
+    // MIT ihr steigt, ist sie eine (Regel 13). Der Eingriff laesst den Bot
+    // zehn Sekunden zwischen den Wellen warten; dann steht das Feld
+    // tatsaechlich leer, und die Ratsche muss es sagen.
+    //
+    // `decideEvery` waere der falsche Griff und steht deshalb hier: es
+    // verlangsamt das ENTSCHEIDEN, nicht den Wellenstart - der Bot wartet
+    // dann genauso wenig, er baut nur seltener.
+    name: 'Der Bot laesst das Feld leerlaufen',
+    datei: 'tools/sim.ts',
+    suche: 'if (s.canStartWave) s.startWave();',
+    ersatz: 'if (s.canStartWave && frame % 600 === 0) s.startWave();',
+    tor: 'sim',
+    meldet: 'Leerlauf der Partie',
+  },
+  {
     // **Der Nachtlauf braucht einen Weg zurueck ins Tor.** Bis v226 landete
     // sein Befund nur im Protokoll auf dem Runner. In der Sitzung zu v226 ist
     // er dreimal gefahren, zweimal rot, und beide Befunde habe ich nur

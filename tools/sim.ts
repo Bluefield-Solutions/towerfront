@@ -301,6 +301,12 @@ interface Result {
   leakByWave: number[];
   /** Wieviele Entscheidungen der Bot in jeder Welle getroffen hat (S-P1-03). */
   entscheidungenJeWelle: number[];
+  /** Dauer der Partie in Sekunden (S-P1-04). */
+  dauer: number;
+  /** Anteil der Spielzeit, in dem kein Gegner lebt und keiner mehr kommt. */
+  leerlaufAnteil: number;
+  /** Anteil der Spielzeit, in dem hoechstens ein Gegner auf dem Feld steht. */
+  duennAnteil: number;
 }
 
 type BranchPick = (id: TowerId) => 0 | 1;
@@ -362,6 +368,23 @@ function play(
    *  aus wie eine Messung (Regel 5). Was der Bot nicht tut, misst diese
    *  Zeile deshalb auch nicht, und das steht hier statt in einer Fussnote. */
   const entscheidungenJeWelle = new Array(s.waves.length).fill(0);
+  /** **Leerlauf** (S-P1-04): Zeit, in der kein Gegner lebt und keiner mehr
+   *  aussteht. `wellenRest` sagt beides in einer Zahl - Wartende und
+   *  Lebende. Gezaehlt wird VOR `update`, also im Zustand, den ein Spieler
+   *  in diesem Bild vor sich haette. */
+  let leerlaufBilder = 0;
+  /** **Und die Zahl daneben, die der Leerlauf NICHT liefert.**
+   *
+   *  Gemessen liegt der Leerlauf des Bots bei 0,1 bis 0,2 % - er startet die
+   *  naechste Welle in demselben Bild, in dem er es darf. Das ist nicht der
+   *  Leerlauf eines Spielers, der die Vorschau liest und selbst drueckt, und
+   *  eine Zahl, die auf 0,2 % steht, taugt als Vorher fuer P4 nicht.
+   *
+   *  Was die Frage von P4 wirklich trifft, ist die DUENNE Zeit: wie lange
+   *  steht hoechstens ein Gegner auf dem Feld. Da laeuft nichts zusammen,
+   *  da faellt keine Entscheidung, und genau die will die Ueberlappung
+   *  fuellen. */
+  let duennBilder = 0;
   let lastLives = s.lives;
 
   while (s.phase === 'playing' && t < 60 * 45) {
@@ -413,6 +436,8 @@ function play(
     }
 
     const wi = Math.min(s.waveIndex, s.waves.length - 1);
+    if (s.wellenRest === 0) leerlaufBilder++;
+    if (s.enemies.length <= 1) duennBilder++;
     if (s.canStartWave) s.startWave();
     s.update(DT);
     t += DT;
@@ -425,6 +450,8 @@ function play(
   return {
     lives: s.lives, wave: s.waveNumber, won: s.phase === 'won',
     towers: s.gebaute.length, upgrades, peakEnemies, peakFx, leakByWave, entscheidungenJeWelle,
+    dauer: t, leerlaufAnteil: frame > 0 ? leerlaufBilder / frame : 0,
+    duennAnteil: frame > 0 ? duennBilder / frame : 0,
     maxLives: s.maxLives,
     earned: s.stats.goldEarned, spent: s.stats.goldSpent,
   };
@@ -824,6 +851,46 @@ for (const m of MAPS) {
     line.push(`${bot.name} ${r.won ? `${r.lives}/${r.maxLives}` : `W${r.wave}`}`);
   }
   console.log(`  ${m.name.padEnd(15)} ${line.join('   ')}`);
+}
+
+// --- Dauer und Leerlauf je Karte (S-P1-04).
+//
+// **Ohne diese zwei Zahlen hat P4 kein Vorher.** Der reine Gegnerausstoss
+// aller fuenfzehn Wellen des Spiralhains betraegt 201 Sekunden; wie lange
+// eine Partie WIRKLICH dauert und wieviel davon Warten ist, stand nirgends -
+// `stats.duration` wurde mitgefuehrt und nie ausgewiesen.
+//
+// Leerlauf heisst: kein Gegner lebt, und keiner steht mehr aus. Das ist
+// nicht dasselbe wie "zwischen zwei Wellen": solange der Bot die naechste
+// Welle sofort startet, ist die Pause kurz - aber am ENDE einer Welle laeuft
+// oft nur noch ein einzelner Nachzuegler, und diese Zeit zaehlt hier zu
+// Recht nicht als Leerlauf, obwohl sie sich so anfuehlt.
+console.log(`\nDauer und Leerlauf je Karte (Meister, normal, ${AUSSAATEN.length} Aussaaten `
+  + `x ${VARIANTS.length} Abwandlungen):`);
+console.log('  Der Leerlauf misst den BOT, und der startet jede Welle in demselben Bild, in dem\n'
+  + '  er es darf - gemessen 0,1 bis 0,2 %. Was ein Spieler als Warten erlebt, steht daneben\n'
+  + '  als "duenn": hoechstens ein Gegner auf dem Feld.');
+for (const m of MAPS) {
+  const o = overVariants((variant, aussaat) => play(
+    mixedPlanBase, () => 0, MEISTER, 'normal', m.id, { variant, seed: aussaat },
+  ));
+  const d = mittelUndSpanne(o.runs.map((r) => r.dauer));
+  const l = mittelUndSpanne(o.runs.map((r) => r.leerlaufAnteil * 100));
+  const du = mittelUndSpanne(o.runs.map((r) => r.duennAnteil * 100));
+  console.log(
+    `  ${m.name.padEnd(15)} Dauer ${d.mittel.toFixed(0).padStart(4)} s `
+    + `(Spanne ${d.spanne.toFixed(0)})   Leerlauf ${l.mittel.toFixed(1).padStart(5)} % `
+    + `(Spanne ${l.spanne.toFixed(1)})   duenn ${du.mittel.toFixed(1).padStart(5)} % `
+    + `(Spanne ${du.spanne.toFixed(1)})`,
+  );
+  if (m.id === MAPS[0].id) {
+    spannungGemessen('duennAnteil', du.mittel, du.spanne,
+      `Anteil der Spielzeit mit hoechstens EINEM Gegner auf dem Feld, Meister, `
+      + `${m.id}, normal, ${AUSSAATEN.length} Aussaaten x ${VARIANTS.length} Abwandlungen`);
+    spannungGemessen('leerlaufAnteil', l.mittel, l.spanne,
+      `Anteil der Spielzeit ohne lebenden und ohne ausstehenden Gegner, Meister, `
+      + `${m.id}, normal, ${AUSSAATEN.length} Aussaaten x ${VARIANTS.length} Abwandlungen`);
+  }
 }
 
 // Jeder Schwierigkeitsgrad bekommt eine eigene Pruefung. Ein Grad, den kein
@@ -1256,10 +1323,12 @@ if (hot.length) {
 // Sie steht hier unten, weil sie alle fuenf Kennzahlen braucht, und vor dem
 // Urteil, weil ihr Befund in dasselbe Urteil gehoert.
 {
-  const ORDNUNG = ['stellen', 'ruhe', 'leereWellen', 'goldUebrig', 'stilAbstand', 'zweigWirkung'];
+  const ORDNUNG = ['stellen', 'ruhe', 'leereWellen', 'leerlaufAnteil', 'duennAnteil',
+    'goldUebrig', 'stilAbstand', 'zweigWirkung'];
   const NAMEN: Record<string, string> = {
     stellen: 'Stellen mit Verlust', ruhe: 'laengste folgenlose Strecke',
-    leereWellen: 'Wellen ohne Entscheidung',
+    leereWellen: 'Wellen ohne Entscheidung', leerlaufAnteil: 'Leerlauf der Partie',
+    duennAnteil: 'duenne Zeit (<=1 Gegner)',
     goldUebrig: 'Gold uebrig am Ende', stilAbstand: 'Abstand der Spielstile',
     zweigWirkung: 'kleinste Zweigwirkung',
   };
@@ -1272,7 +1341,8 @@ if (hot.length) {
     const zeilen = ORDNUNG.map((k) => {
       const m = spannung.get(k)!;
       const a = alt2.get(k);
-      const tiefer = ['ruhe', 'goldUebrig', 'leereWellen'].includes(k);
+      const tiefer = ['ruhe', 'goldUebrig', 'leereWellen', 'leerlaufAnteil',
+        'duennAnteil'].includes(k);
       return `${k} ${a?.richtung ?? (tiefer ? 'tief' : 'hoch')} `
         + `${m.wert === null ? 'UNBELEGT' : m.wert.toFixed(2)} ${a?.soll ?? 0}`;
     });

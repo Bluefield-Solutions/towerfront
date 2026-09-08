@@ -1,6 +1,6 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v248 · 08.09.2026
+Stand: v255 · 08.09.2026
 
 Ausgelöst durch drei Sätze des Nutzers:
 
@@ -30,12 +30,19 @@ durchsichtigem Verlauf, der Tipps durchlässt. Gefragt wird stattdessen der
 Browser selbst: `elementFromPoint` über ein Raster von 4 Punkten, gezählt
 wird, was dort **wirklich** getroffen wird.
 
-| Zustand | Tipp gesperrt | Bild überdeckt |
-|---|---|---|
-| Ruhe, nichts gewählt | 17,6 % | 18,0 % |
-| Turmwahl offen | 24,3 % | 24,5 % |
-| **Turmmenü offen** | **39,5 %** | **39,7 %** |
-| Welle läuft | 16,4 % | 15,2 % |
+| Zustand | Tipp gesperrt | Bild überdeckt | v248 (Tipp gesperrt) |
+|---|---|---|---|
+| Ruhe, nichts gewählt | 14,2 % | 17,1 % | 17,6 % |
+| Turmwahl offen | 20,8 % | 23,6 % | 24,3 % |
+| **Turmmenü offen** | **32,9 %** | **35,6 %** | **39,5 %** |
+| Welle läuft | 14,3 % | 16,6 % | 16,4 % |
+
+**Nachgemessen in v255** (`npm run uxtor`, 844 × 390, Raster 4). Die rechte
+Spalte hält den Stand von v248 daneben, weil die Differenz die Auskunft ist:
+der Prüfsteg ist von **39,5 auf 32,9 %** gefallen — das ist die Arbeit aus
+v247 und v248, und ohne die alte Spalte stünde hier eine neue Zahl ohne
+Vorher. Der Befund selbst bleibt: im meistbenutzten Zustand ist ein Drittel
+des Feldes nicht mehr da.
 
 **Mein erster Anlauf hat hier 40,0 % und 61,2 % gemeldet** — die vereinigten
 Umrisskästen der obersten Bedienbehälter. Die Zahl ist nicht falsch
@@ -44,8 +51,8 @@ Breite und zählt deshalb mit 15 Prozentpunkten mit, obwohl man mitten
 hindurch aufs Feld tippen kann. Regel 12, und diesmal hätte die falsche
 Messstelle die Arbeit in die falsche Richtung gelenkt.
 
-**Was bleibt, ist der Prüfsteg: 39,5 %.** Im meistbenutzten Zustand des
-Spiels — Turm angetippt, Ausbau überlegen — sind zwei Fünftel des Feldes
+**Was bleibt, ist der Prüfsteg: 32,9 % (v255, vorher 39,5).** Im meistbenutzten Zustand des
+Spiels — Turm angetippt, Ausbau überlegen — ist ein Drittel des Feldes
 nicht mehr da.
 
 ### 1.2 Und sie belegt genau die Stelle, an der gespielt wird

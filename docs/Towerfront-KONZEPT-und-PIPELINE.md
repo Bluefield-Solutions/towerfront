@@ -1,6 +1,6 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v248 · 08.09.2026
+Stand: v255 · 08.09.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Towerfront.html`
 
 > **Aufbau dieses Dokuments.** Die Abschnitte 1 bis 3.4 beschreiben den
@@ -204,9 +204,12 @@ Innerhalb von Schritt 1 gilt weiterhin:
 3. **`git diff` prüfen.** Nur die beabsichtigten Zeilen.
 4. **Erst einchecken, dann gegenproben.** Gegenproben arbeiten mit
    `git checkout` und löschen sonst die frische Arbeit. Dreimal passiert.
-5. **`npm run gate`** — zweiunddreissig Prüfungen, gemessen rund 190 Sekunden
-   (`docs/Towerfront-TOR-BILANZ.md`; vor v154 waren es 264, seither haben die
-   teuren Tore ein Gedächtnis). Alles grün, sonst wird nicht ausgeliefert.
+5. **`npm run gate`** — zweiunddreissig Prüfungen, **gemessen 289 s (4:49) in
+   v251**, auf demselben Baum und warm. Die Angabe „rund 190 Sekunden" stammte
+   aus v154 und stand hier neunundneunzig Fassungen lang, während die Kette von
+   26 auf 32 Tore wuchs — dieselbe Zahl stand bis v251 auch in `CLAUDE.md`
+   (Regel 15: was zweimal dasteht, veraltet einmal). Alles grün, sonst wird
+   nicht ausgeliefert.
 6. **Der volle Gegenprobenlauf fährt nachts auf dem Runner**, nicht hier — er
    dauert dort gemessen 87 Minuten. Hier läuft nur der **Umfangslauf**: die
    Proben, deren Zieldatei oder `haengtAn` seit dem letzten vollen Lauf

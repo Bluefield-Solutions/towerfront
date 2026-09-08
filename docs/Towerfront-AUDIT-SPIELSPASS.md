@@ -1,6 +1,6 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v248 · 08.09.2026
+Stand: v255 · 08.09.2026
 
 > „Es kommt kaum Spielspaß auf."
 
@@ -166,9 +166,32 @@ Der reine Ausstoß aller fünfzehn Wellen des Spiralhains beträgt **201
 Sekunden** — im Mittel 13 Sekunden Gegnernachschub je Welle. Dazu kommt die
 Laufzeit über 3942 Weltpunkte Bahn und die Zeit zwischen den Wellen.
 
-In dieser Zeit trifft der Spieler nach Ausweis der Simulation **12
+~~In dieser Zeit trifft der Spieler nach Ausweis der Simulation **12
 Bauentscheidungen und 24 Ausbauentscheidungen**, also 36 — gut zwei je
-Welle, und die meisten davon früh, weil später das Gold ohnehin reicht.
+Welle, und die meisten davon früh, weil später das Gold ohnehin reicht.~~
+
+**Dieser Absatz war falsch, und v254 hat es gemessen.** Die 36 sind zwei
+**Summenfelder des Ergebnisses**; *wann* die Entscheidungen fallen, hat hier
+niemand gezählt — es war eine Vermutung mit zwei belastbaren Zahlen davor.
+Gezählt am Bot über drei Aussaaten × drei Abwandlungen:
+
+| | behauptet | **gemessen (v254)** |
+|---|---|---|
+| Entscheidungen gesamt | 36 | **55,2** |
+| je Welle | „gut zwei" | **3,7** |
+| in der ersten Hälfte | „die meisten" | **51 %** |
+| Wellen ohne jede Entscheidung | — | **0,0 von 15** |
+
+Weder zwei je Welle noch „meistens früh". Der Befund von Teil 1 wird davon
+nicht besser: es fallen genug Entscheidungen, sie **wirken** nur nicht
+(G2 — alle vier Zweigpaare liegen unter ihrem eigenen Rauschen).
+
+**Und die Dauer stand nirgends** (v255): Spiralhain **470 s**, Frostspalte
+398, Ascheschlucht 287, Farnkessel 276 — gegen 201 Sekunden reinen Ausstoß.
+Der Leerlauf des Bots beträgt 0,1 %, misst aber den Bot: er startet jede
+Welle in demselben Bild, in dem er es darf. Was ein Spieler als Warten
+erlebt, steht daneben als **dünne Zeit** — höchstens ein Gegner auf dem
+Feld, gemessen **17,5 / 19,7 / 16,8 / 23,2 %**.
 
 ### 2.8 Von fünf Zielmodi trägt einer gar nichts
 
@@ -269,7 +292,7 @@ spannendste. Verlieren ist spielbar.
 | G2 | **Die Zweigwahl ändert das Ergebnis um mindestens 15 %** | BTD6 | 5 % | **unbelegt** — die 18 % beim Mörser waren eine Zahl aus einer Aussaat; über sieben gemessene Aussaaten bleiben **8 %**, und auf einer ist der Zweig mit dem höheren Wert der schwächere. Siehe Anforderungskatalog 2.1 |
 | G3 | **Kein einzelner Turmtyp schlägt das gemischte Feld** | alle drei | „nur Frost" 50 gegen 43 | **11 gegen 43** — erfüllt in v244, und der Wächter misst jetzt gegen das gemischte Feld statt gegen eine Zahl |
 | G4 | **Abstand zwischen bestem und schwächstem Spielstil ≥ 20 Punkte** | Handwerk | 9 | **6 bis 10 je nach Aussaat** — und die Robustheitsmessung meldet im selben Lauf 5 bis 7 Punkte Streuung bei *identischen* Eingaben. Der gesuchte Effekt ist kleiner als das Rauschen des Verfahrens; G4 ist heute nicht messbar |
-| G5 | **Weniger als 20 % des Goldes bleiben liegen** | Kingdom Rush | 42 % | **43 %** — unverändert offen |
+| G5 | **Weniger als 20 % des Goldes bleiben liegen** | Kingdom Rush | 42 % | **35,2 %** (v253, drei Aussaaten × drei Abwandlungen über alle drei Stile) — offen. Die 43 % stammten aus **einem** Lauf des gemischten Feldes |
 | G6 | **Die Druckkurve steigt monoton**, letzte Welle ist die Spitze | alle drei | wirksam 1–3 Rückfälle, Finale 81–100 % | unverändert — die Ratsche aus v240 hält es, der Hebel ist das Knie und nicht der Plan (F9) |
 | G7 | **In jeder Welle steht eine Entscheidung an** | Kingdom Rush | keine | **der Frühstart steht im Wellenknopf** (v243) — erfüllt, das Risiko fehlt (F10) |
 | G8 | **Jeder Zielmodus gewinnt irgendwo allein** | Regel 5 | „nah" nirgends | „nah" 1, **„stark" 0** — der Punkt ist gewandert, nicht verschwunden (F6) |

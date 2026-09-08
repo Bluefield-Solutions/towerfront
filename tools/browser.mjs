@@ -758,6 +758,43 @@ if (start) {
   if (!gebaut) {
     fail('Es liess sich kein Turm bauen und antippen - der Prüfsteg ging nie auf.');
   } else {
+    // --- Zeigt das Turmmenue den Turm, um den es geht? (v247, E3)
+    //
+    // Es steht am rechten Bildschirmrand, der gemeinte Turm irgendwo auf dem
+    // Feld - ohne Bild muss die Zuordnung der Spieler leisten.
+    //
+    // Gemessen wird hier und nicht im Rauchtest, obwohl der schneller waere:
+    // jsdom hat keine echte Leinwand, `toDataURL` gibt dort nichts zurueck,
+    // was ein Bild waere. Eine Pruefung, die im Rauchtest gruen ist, weil sie
+    // nichts sehen kann, ist keine (Regel 12 - die Zahl traegt ihre
+    // Messstelle). Und ein leeres Feld sieht im Markup genauso aus wie ein
+    // gefuelltes: so ist in v121 ein leeres Startbildschirm-Symbol durch alle
+    // Tore gegangen.
+    const kopfbild = await seite.evaluate(() => {
+      const e = document.getElementById('i-bild');
+      if (!e) return null;
+      const r = e.getBoundingClientRect();
+      return {
+        url: getComputedStyle(e).backgroundImage,
+        breite: Math.round(r.width), hoehe: Math.round(r.height),
+        verbucht: e.dataset.bild ?? '',
+      };
+    });
+    if (!kopfbild) {
+      fail('Im Turmmenü gibt es kein Feld für das Turmbild (#i-bild fehlt).');
+    } else {
+      console.log(`Turmmenü-Bild: ${kopfbild.breite}x${kopfbild.hoehe}, `
+        + `verbucht als "${kopfbild.verbucht}", ${kopfbild.url.length} Zeichen Quelle`);
+      if (kopfbild.breite < 18 || kopfbild.hoehe < 18) {
+        fail(`Das Turmbild im Menü ist ${kopfbild.breite}x${kopfbild.hoehe} - zu klein, `
+          + 'um einen Turm von einem anderen zu unterscheiden.');
+      }
+      if (!/^url\("?data:image\/png;base64,/.test(kopfbild.url) || kopfbild.url.length < 400) {
+        fail('Das Turmmenü zeigt kein Turmbild - das Feld ist leer '
+          + `(${kopfbild.url.slice(0, 40)}).`);
+      }
+    }
+
     const stand = await seite.evaluate(async () => {
       const knoepfe = [...document.querySelectorAll('.insp-ziel .ziel')];
       if (!knoepfe.length) return { fehlt: true };
@@ -1719,9 +1756,15 @@ if (streuung < 6) {
             + 'Wert steht dann oben in seinem Kasten und die Beschriftung mittig - sichtbar '
             + 'gehoeren die beiden nicht mehr zusammen.');
         }
-        // Der leere Rest gilt nur oberhalb der Schwelle: darunter ist der
-        // Steg absichtlich so hoch wie das Fenster.
-        if (h >= 481 && steg.leer > 60) {
+        // Der leere Rest gilt seit v247 auf JEDEM Format.
+        //
+        // Bis dahin stand hier `h >= 481`, weil der Steg auf dem flachen
+        // Geraet absichtlich so hoch war wie das Fenster - eine Zusage aus
+        // v205, als sein Inhalt die 276 Punkte wirklich brauchte. Seit die
+        // Werte zweispaltig stehen (v239) braucht er 176, und die unteren
+        // hundert standen leer. Die Ausnahme hat den Befund gedeckt, den sie
+        // eine Fenstergroesse weiter oben meldet.
+        if (steg.leer > 60) {
           fail(`Schreibtischprobe ${name}: unter dem Inhalt stehen ${steg.leer} Punkte `
             + 'leerer Steg (erlaubt 60). Er soll dort enden, wo sein Inhalt endet, statt '
             + 'als Glasstreifen ueber das halbe Bild zu laufen.');

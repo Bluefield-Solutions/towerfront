@@ -91,7 +91,7 @@ const fail = (m) => befunde.push(m);
 const GRENZEN = {
   ruhe: 16,        // gemessen 13,0 %
   bauwahl: 24,     // gemessen 19,7 %
-  pruefsteg: 36,   // gemessen 31,9 %
+  pruefsteg: 33,   // gemessen 31,3 % (v247; v239 stand bei 31,9, dazwischen 35,4)
   welle: 16,       // gemessen 13,2 %
 };
 /** Wieviele Beschriftungen zugleich doppelt im Bild stehen duerfen.

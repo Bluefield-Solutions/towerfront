@@ -1236,10 +1236,16 @@ const PROBEN = [
     //
     // 748 von 862 Punkten, die untere Haelfte leer - ein Glasstreifen ueber
     // dem halben Bild.
+    //
+    // **Sie greift seit v247 an der Regel OHNE Block.** Bis dahin galt das
+    // Enden am Inhalt nur oberhalb von 480 Punkten Fensterhoehe, also stand
+    // die Zeile in einem `@media` und war vier Zeichen eingerueckt. Jetzt
+    // gilt sie ueberall; die Probe fuer das flache Geraet steht daneben und
+    // trifft den Kompaktblock.
     name: 'Der Pruefsteg spannt ueber die ganze Fensterhoehe',
     datei: 'src/style.css',
-    regel: /    max-height: calc\(100% - 56px - var\(--sat\) - 58px - var\(--sab\)\);/,
-    ersatz: '    bottom: calc(58px + var(--sab));',
+    regel: /^  max-height: calc\(100% - 56px - var\(--sat\) - 58px - var\(--sab\)\);$/m,
+    ersatz: '  bottom: calc(58px + var(--sab));',
     tor: 'browsertor',
   },
   {
@@ -1388,6 +1394,31 @@ const PROBEN = [
     regel: /  width: 44px; height: 44px; border-radius: 10px;/,
     ersatz: '  width: 44px; height: 18px; border-radius: 10px;',
     tor: 'uxtor',
+  },
+  {
+    // **Der Pruefsteg spannt wieder ueber die ganze Fensterhoehe.**
+    //
+    // Die Zeile stand von v205 bis v246 im Kompaktblock und hat die Regel
+    // weiter oben still ueberschrieben - der Steg war 276 Punkte hoch, wo
+    // sein Inhalt 176 verlangt, und deckte damit ein Drittel des Feldes zu,
+    // um nichts zu zeigen. Gemessen: Belegung 31,3 zurueck auf 35,4 %.
+    name: 'Pruefsteg spannt ueber die ganze Hoehe',
+    datei: 'src/style.css',
+    regel: /    top: calc\(48px \+ var\(--sat\)\); bottom: auto;/,
+    ersatz: '    top: calc(48px + var(--sat)); bottom: calc(54px + var(--sab));',
+    tor: 'uxtor',
+  },
+  {
+    // **Das Turmbild im Kopf des Menues faellt weg.**
+    //
+    // Das Menue steht am rechten Rand, der gemeinte Turm irgendwo auf dem
+    // Feld - ohne Bild muss die Zuordnung der Spieler leisten. Genau das ist
+    // E3 des Bedienungs-Abgleichs.
+    name: 'Turmmenue zeigt den Turm nicht',
+    datei: 'src/ui/ui.ts',
+    regel: /      const symbol = turmSymbol\(sel\.def, s\.map\.id\);/,
+    ersatz: '      const symbol = null;',
+    tor: 'browsertor',
   },
   {
     // **Der Bestleistungs-Bot wird so schwach, dass eine Karte unerreichbar

@@ -110,6 +110,7 @@ export class UI {
   private skills = $('skills');
   private insp = $('inspector');
   private iName = $('i-name');
+  private iBild = $('i-bild');
   private iStats = $('i-stats');
   private iHint = $('i-hint');
   private iUps = $('i-ups');
@@ -911,6 +912,23 @@ export class UI {
         ? def.name
         : def.branches[sel.branch].name;
       this.iStufe.textContent = `Stufe ${sel.level}`;
+      // **Das Bild des Turms, um den es geht** (v247, E3).
+      //
+      // Gesetzt wird es hier und nicht einmal beim Aufbau: der Steg zeigt je
+      // nach Tipp einen anderen Turm, und `turmSymbol` gibt je Karte ein
+      // eigenes Bild zurueck (die Figuren sind in die Karte eingebettet).
+      // Ein Vorrat von vier Bildern waere die zweite Stelle, an der dieselbe
+      // Frage beantwortet wird.
+      //
+      // Kein Befund, wenn es fehlt: das Menue traegt seinen Namen, und ein
+      // leeres Feld ist besser als ein leerer Steg. Die Turmleiste macht es
+      // genauso.
+      const symbol = turmSymbol(sel.def, s.map.id);
+      const bildKey = `${sel.def}|${s.map.id}`;
+      if (symbol && this.iBild.dataset.bild !== bildKey) {
+        this.iBild.style.backgroundImage = `url(${symbol.toDataURL()})`;
+        this.iBild.dataset.bild = bildKey;
+      }
       this.iStats.innerHTML = werteAmTurm(def, sel.branch, sel.level, sel.kills, s.verbundVon(sel))
         .map(zeile).join('');
       this.rollhinweis();

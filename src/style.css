@@ -411,6 +411,16 @@ html, body {
   font-size: var(--s-wert); font-weight: 700; flex: 1 1 auto; min-width: 0;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+/* **Das Bild des Turms, um den es geht** (v247, E3).
+   Es ist bewusst so gross wie der Leistenknopf-Abdruck und nicht grösser:
+   der Kopf ist heute 26 Punkte hoch, ein Bild darüber liesse den ganzen Steg
+   wachsen, und der sperrt schon 35 % des Bildschirms. `flex: none`, damit es
+   nicht mit dem Namen um Platz streitet. */
+.insp-bild {
+  display: block; width: 26px; height: 26px; flex: none;
+  background-size: contain; background-repeat: no-repeat; background-position: center;
+}
+.insp-bild:not([data-bild]) { display: none; }
 
 /* Die Stufe steht neben dem Namen, nicht in ihm.
    "Scharfschuetze · Stufe 2" braucht rund 190 Punkte, die Zeile hat 178 -
@@ -530,13 +540,31 @@ html, body {
    kommt, ist nicht definiert - und eine Regel, deren Wirkung man nicht
    vorhersagen kann, ist keine. Gebraucht wird sie hier auch nicht: der Steg
    ist so hoch, wie die Liste es verlangt. */
-@media (min-height: 481px) {
-  .inspector {
-    bottom: auto;
-    max-height: calc(100% - 56px - var(--sat) - 58px - var(--sab));
-  }
-  .insp-stats { min-height: 0; }
+/* **Und seit v247 gilt das auf JEDEM Geraet, auch dem flachen.**
+
+   Die Ausnahme stammte aus v205 und war damals richtig: auf dem iPhone quer
+   spannte der Steg 276 Punkte, und sein Inhalt brauchte sie. Seit v239 stehen
+   die Werte zweispaltig (43 Punkte gespart), seit v244 ist eine Zeile
+   dazugekommen — gemessen braucht er jetzt 176 von 276, und die unteren
+   hundert standen leer. Ein Glaskasten, der ein Drittel des Feldes zudeckt,
+   um nichts zu zeigen, ist genau der Befund, den v205 auf dem Schreibtisch
+   behoben hat; auf dem Telefon ist er stehen geblieben, weil die Zahl dort
+   einmal gestimmt hat.
+
+   Regel 2 in ihrer zweiten Richtung: eine absolute Zusage veraltet nicht nur
+   nach oben, sondern auch nach unten. */
+.inspector {
+  bottom: auto;
+  max-height: calc(100% - 56px - var(--sat) - 58px - var(--sab));
 }
+/* **`flex: 0 1 auto` stand hier eine halbe Runde lang und war wirkungslos.**
+   Die Ueberlegung war richtig - `flex: 1 1 auto` laesst die Liste jede
+   uebrige Hoehe nehmen -, nur greift sie nur bei einem Kasten mit BESTIMMTER
+   Hoehe. Seit `bottom` weg ist, kommt die Hoehe vom Inhalt, und ein
+   Flex-Kind waechst dann nicht. Gemessen: mit und ohne die Zeile 230 Punkte,
+   und die Gegenprobe blieb gruen (Regel 5). Sie ist wieder draussen; was
+   wirkt, ist `bottom: auto`. */
+.insp-stats { min-height: 0; }
 
 /* Rollhinweis (D24).
    Technisch rollte die Werteliste schon immer, sichtbar war es nicht: auf dem
@@ -907,11 +935,27 @@ html, body {
 
 .insp-ups { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; flex: 0 0 auto; }
 
+/* **Die zwei Zweige sehen aus wie zwei verschiedene Dinge** (v247, E3).
+   Bis v246 trugen beide denselben Rahmen in ihrer Akzentfarbe und denselben
+   grauen Grund; unterschieden hat sie nur der Text. Die Wahl ist ENDGÜLTIG —
+   dann darf sie nicht aussehen wie zwei Zeilen derselben Liste.
+   Jetzt trägt jeder Zweig seine Farbe als Fläche: eine breite Kante links,
+   ein Hauch davon im Grund, der Rahmen nur noch angedeutet. Dieselbe Farbe
+   liegt auf dem Feld im Reichweitenring und am Sockel des ausgebauten Turms —
+   die Karte sagt also dasselbe wie das Bild. */
 .branch {
   display: flex; flex-direction: column; gap: 2px; text-align: left; cursor: pointer;
-  padding: 8px 10px; border-radius: 10px; font-family: var(--ui);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--tone); color: var(--text);
+  /* Links 7 statt 10: die Kante ist 4 Punkte statt 1, und drei Punkte
+     Innenraum sind hier keine Feinheit. Der erste Anlauf liess das Polster
+     stehen — dann passte "Scharfschütze" nicht mehr (96 Punkte in 94), und
+     das Browsertor hat es gemeldet, nicht der Blick. */
+  padding: 8px 10px 8px 7px; border-radius: 10px; font-family: var(--ui);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--tone) 22%, transparent), transparent 62%),
+    rgba(255, 255, 255, 0.04);
+  border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent);
+  border-left: 4px solid var(--tone);
+  color: var(--text);
   min-height: 46px;
 }
 .branch:disabled { opacity: 0.4; cursor: default; }
@@ -1052,14 +1096,22 @@ html, body {
      untereinander - sonst passen sie nicht auf den Bildschirm. */
   .inspector {
     padding: 9px;
-    top: calc(48px + var(--sat)); bottom: calc(54px + var(--sab));
+    /* `bottom` bleibt AUS - der Steg endet auch hier an seinem Inhalt
+       (v247). Die Zeile stand hier seit v205 und hat die Regel weiter oben
+       ueberschrieben, weil dieser Block spaeter im Blatt steht: dieselbe
+       Falle wie der doppelte `max-width: 58vw` in v239, nur andersherum -
+       nicht zwei Fassungen derselben Zusage, sondern eine, die eine andere
+       still aushebelt. Gefunden hat es die Messung der Kastenhoehe: sie
+       stand auf 276 Punkten, obwohl der Inhalt 176 verlangt. */
+    top: calc(48px + var(--sat)); bottom: auto;
+    max-height: calc(100% - 48px - var(--sat) - 54px - var(--sab));
   }
   /* **Zwei Wertepaare je Zeile statt einem.** Sechs Zeilen zu je 15 Punkten
      sind 90; drei zu je 15 sind 45. Der Steg ist der Bildschirm, den man am
      haeufigsten sieht, und die Haelfte seiner Hoehe war Zeilenabstand. */
   .insp-stats { grid-template-columns: 1fr auto 1fr auto; gap: 3px 8px; }
   .insp-ups { flex-direction: row; gap: 5px; }
-  .branch { flex: 1 1 0; min-width: 0; padding: 6px 7px; }
+  .branch { flex: 1 1 0; min-width: 0; padding: 6px 7px 6px 4px; }
   /* **Der Zweigtext bleibt auf dem flachen Gerät ausgeblendet - gemessen,
      nicht aus Bequemlichkeit** (v239, H6).
      Er gehört dorthin: die Zweigwahl ist ENDGÜLTIG, und ohne Auskunft wählt

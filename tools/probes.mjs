@@ -1346,10 +1346,22 @@ const PROBEN = [
     // von 96 auf rund 146 Punkte, und die Bedienung sperrt wieder mehr vom
     // Feld. Genau der Zustand vor v239, in dem die Turmleiste zwei von vier
     // Gegnern auf dem linken Bahnarm verdeckte.
+    //
+    // **Sie griff bis v241 an der GRUNDREGEL, und die gilt auf dem
+    // Zielgeraet gar nicht.** `.tower-btn { min-width: 54px }` wird auf
+    // 844 x 390 von `@media (max-height: 480px)` ueberschrieben; die Probe
+    // setzte 200 Punkte an einer Stelle, die das Bild nicht erreicht
+    // (Regel 3). Sie greift jetzt an der Regel des flachen Geraets - der
+    // einzigen, die dort urteilt.
+    //
+    // Der Umbau hat dabei eine Doppelung in der Stilvorlage gefunden: es gab
+    // ZWEI `@media (max-height: 480px)`-Bloecke, und beide setzten
+    // `.tower-btn`. Die zweite Fassung gewann, also war `padding: 3px 5px 2px`
+    // geschrieben und wirkungslos (Regel 15). Sie ist weg.
     name: 'Turmleiste sprengt das Band',
     datei: 'src/style.css',
-    regel: /  gap: 1px; min-width: 54px; padding: 4px 6px 3px; cursor: pointer;/,
-    ersatz: '  gap: 1px; min-width: 200px; padding: 4px 6px 3px; cursor: pointer;',
+    regel: /  \.tower-btn \{ min-width: 50px; padding: 3px 5px 2px; \}/,
+    ersatz: '  .tower-btn { min-width: 200px; padding: 3px 5px 2px; }',
     tor: 'uxtor',
   },
   {

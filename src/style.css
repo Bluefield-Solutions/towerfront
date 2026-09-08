@@ -1049,8 +1049,17 @@ html, body {
   .br-b { display: none; }
   .insp-stats { margin-bottom: 6px; }
 
-  .tower-btn { min-width: 50px; padding: 4px 6px 3px; }
-  .skill-btn { min-width: 50px; padding: 4px 6px; }
+  /* **Hier standen `.tower-btn` und `.skill-btn` ein zweites Mal** - in
+     einem zweiten `@media (max-height: 480px)`, also unter derselben
+     Bedingung wie oben, nur weiter unten in der Datei. Damit gewann diese
+     Fassung, und `padding: 3px 5px 2px` aus dem ersten Block hat auf dem
+     Zielgeraet nie gegolten: die enge Fassung war geschrieben und wirkungslos.
+     Regel 15, zum zweiten Mal in demselben Block - vier Zeilen tiefer steht
+     schon die Notiz ueber den doppelten `max-width: 58vw`.
+     Gefunden hat es die Reparatur einer Gegenprobe: "Turmleiste sprengt das
+     Band" setzte die Mindestbreite in der GRUNDREGEL auf 200 Punkte, und am
+     Bild aenderte sich nichts - weil auf 844 x 390 gar nicht die Grundregel
+     gilt. */
   /* **Hier stand ein zweiter `max-width: 58vw`** - derselbe Deckel wie in
      Zeile 220, und beim Umbau auf ein Band ueber die volle Breite habe ich
      nur den ersten entfernt. Die Reihe blieb bei 490 statt 624 Punkten und

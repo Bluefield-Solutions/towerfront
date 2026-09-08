@@ -1,6 +1,6 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v240 · 08.09.2026
+Stand: v241 · 08.09.2026
 
 Ausgelöst durch drei Sätze des Nutzers:
 
@@ -282,8 +282,8 @@ Feld.
 | H4 | Menü am Turm | Menü am rechten Bildschirmrand | voll offen |
 | H5 | Turm als Bild | Text und Preis, kein Bild | voll offen |
 | H6 | Ausbauweg | zwei Preisknöpfe, kein Pfad, keine Endstufe sichtbar | voll offen |
-| H7 | ≤ 5 Größen | **11** | voll offen |
-| H8 | Text auf Fläche | 32 Knoten ohne Fläche | voll offen |
+| H7 | ≤ 5 Größen | **11** | erledigt in v241 — jetzt 8, 10, 12, 15, 17 und nichts sonst, vom UX-Tor gehalten |
+| H8 | Text auf Fläche | 32 Knoten ohne Fläche | halb — die drei Zahlen haben seit v239 eine Fläche, der Versionsstempel steht am Rand |
 | H9 | keine Doppelung | 5 Beschriftungen doppelt | voll offen |
 | H10 | Telefon ≥ Schreibtisch | Telefon zeigt weniger | voll offen |
 | H11 | keine Werkzeuge vorn | „Messung" ist das breiteste Element oben | voll offen |

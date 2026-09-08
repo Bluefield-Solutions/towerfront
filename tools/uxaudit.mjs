@@ -68,6 +68,20 @@ const GRENZEN = {
  *  Regel 15 als Bedienoberflaeche: gepflegt wird eine von beiden. */
 const DOPPELT_MAX = 0;
 
+/** Wieviele verschiedene Schriftgroessen die Spielansicht haben darf.
+ *
+ *  Fuenf. Gemessen standen im Ruhezustand ELF nebeneinander - 8, 10, 10,5,
+ *  11, 11,5, 12, 13, 13,33, 15, 16 und 17 Punkte -, von denen vier dasselbe
+ *  meinen und keine zwei einen erkennbaren Rang trennen. Eine Skala hat drei
+ *  bis fuenf Stufen; alles darueber ist Zufall aus der Entstehungsgeschichte.
+ *
+ *  **Gezaehlt wird an den BLATTKNOTEN.** Ein Behaelter traegt den Text seiner
+ *  Kinder und meldet dabei seine eigene, geerbte Groesse - 16 px vom Koerper
+ *  und 13,33 px von der Voreinstellung fuer Knoepfe. Beide sind nie gesetzt
+ *  worden und nirgends zu sehen; sie mitzuzaehlen hiesse, eine Skala an
+ *  Knoten zu messen, die keine Schrift zeigen. */
+const GROESSEN_MAX = 5;
+
 const browser = await browserStarten();
 
 let nr = 0;
@@ -118,6 +132,33 @@ const belegung = (seite) => seite.evaluate(() => {
     }
   }
   return { gesperrt: 100 * gesperrt / gesamt, bemalt: 100 * bemalt / gesamt };
+});
+
+/** Welche Schriftgroessen zeigt die Spielansicht wirklich - an den Blaettern?
+ *
+ *  Ein Knoten gilt als Blatt, wenn er Text hat und kein Kindknoten ihn
+ *  traegt. Das ist enger als `children.length === 0`: ein `<span>` mit einem
+ *  `<b>` darin hat Kinder, zeigt aber selbst Text. */
+const schriftgroessen = (seite) => seite.evaluate(() => {
+  const sichtbar = (e) => {
+    const r = e.getBoundingClientRect();
+    const cs = getComputedStyle(e);
+    return r.width > 1 && r.height > 1 && cs.display !== 'none'
+      && cs.visibility !== 'hidden' && Number(cs.opacity) > 0.05
+      && r.right > 0 && r.bottom > 0 && r.left < innerWidth && r.top < innerHeight;
+  };
+  const zaehl = new Map();
+  for (const e of document.querySelectorAll('#app *')) {
+    if (!sichtbar(e)) continue;
+    // Nur eigener Text, nicht der der Kinder.
+    const eigen = [...e.childNodes]
+      .filter((n) => n.nodeType === 3 && (n.textContent ?? '').trim())
+      .length > 0;
+    if (!eigen) continue;
+    const g = parseFloat(getComputedStyle(e).fontSize);
+    zaehl.set(g, (zaehl.get(g) ?? 0) + 1);
+  }
+  return [...zaehl].sort((a, b) => a[0] - b[0]).map(([g, n]) => ({ g, n }));
 });
 
 /** Welche sichtbaren Beschriftungen stehen ZWEIMAL im Bild?
@@ -217,6 +258,7 @@ await schuss(a, 'spiel-ruhe');
 messwerte.ruhe = await layout(a);
 messwerte.belegung = { ruhe: await belegung(a) };
 messwerte.doppelt = { ruhe: await doppelteBeschriftung(a) };
+messwerte.groessen = { ruhe: await schriftgroessen(a) };
 
 /** Einen Bauplatz suchen, ohne etwas zu bauen: tippen, pruefen, wieder zu. */
 const bauplatzSuchen = async (s, w, h, schritt = 22) => {
@@ -238,6 +280,7 @@ else {
   messwerte.bauwahl = await layout(a);
 messwerte.belegung.bauwahl = await belegung(a);
   messwerte.doppelt.bauwahl = await doppelteBeschriftung(a);
+  messwerte.groessen.bauwahl = await schriftgroessen(a);
   await a.evaluate(() => document.querySelector('#pick-row .pick-btn:not([disabled])')?.click());
   await a.waitForTimeout(500);
   await schuss(a, 'turm-gebaut');
@@ -246,6 +289,7 @@ messwerte.belegung.bauwahl = await belegung(a);
   await schuss(a, 'pruefsteg');
   messwerte.pruefsteg = await layout(a);
 messwerte.belegung.pruefsteg = await belegung(a);
+  messwerte.groessen.pruefsteg = await schriftgroessen(a);
   await a.evaluate(() => document.getElementById('i-ziel-auf')?.click());
   await a.waitForTimeout(300);
   await schuss(a, 'pruefsteg-ziel');
@@ -378,6 +422,25 @@ if (TOR) {
   //
   // Gefragt wird deshalb der Browser: von der Mitte aus nach aussen tasten,
   // solange `elementFromPoint` noch diesen Knopf trifft.
+  // **Ueber ALLE gemessenen Zustaende, nicht nur den Ruhezustand.**
+  //
+  // Der erste Anlauf zaehlte nur die Ruhe, und die Gegenprobe bewies damit
+  // nichts: sie setzte `.pick-name` auf eine sechste Groesse, und die
+  // Turmwahl ist im Ruhezustand gar nicht offen. Ein Tor, das einen Zustand
+  // misst, prueft das Spiel nicht, sondern sein Standbild (Regel 3).
+  const alleGr = new Map();
+  for (const liste of Object.values(messwerte.groessen ?? {})) {
+    for (const x of liste) alleGr.set(x.g, (alleGr.get(x.g) ?? 0) + x.n);
+  }
+  const gr = [...alleGr].sort((a, b) => a[0] - b[0]);
+  console.log(`\nSchriftgroessen der Spielansicht: ${gr.map(([g, n]) => `${g}px x${n}`).join('  ')}`);
+  if (gr.length > GROESSEN_MAX) {
+    fail(`${gr.length} verschiedene Schriftgroessen in der Spielansicht `
+      + `(${gr.map(([g]) => g).join(', ')}), erlaubt sind ${GROESSEN_MAX}. Eine Skala `
+      + 'hat drei bis fuenf Stufen; alles darueber ist Zufall aus der '
+      + 'Entstehungsgeschichte, und keine zwei Groessen trennen dann noch einen Rang.');
+  }
+
   const zuKlein = await a.evaluate((mind) => {
     const raus = [];
     for (const e of document.querySelectorAll('#app button')) {

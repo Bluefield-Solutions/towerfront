@@ -1,6 +1,6 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v240 · 08.09.2026
+Stand: v241 · 08.09.2026
 
 > „Es kommt kaum Spielspaß auf."
 

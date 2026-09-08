@@ -1297,6 +1297,19 @@ const PROBEN = [
     tor: 'guards',
   },
   {
+    // **Die Typoskala bekommt eine sechste Stufe.**
+    //
+    // Gemessen standen im Ruhezustand elf Groessen nebeneinander, von denen
+    // vier dasselbe meinten. Eine einzige Ausnahme reicht, damit es wieder
+    // losgeht - genau so sind die elf entstanden: jede Zeile einzeln
+    // gesetzt, und niemand hat je alle nebeneinander gelegt.
+    name: 'Typoskala bekommt eine sechste Stufe',
+    datei: 'src/style.css',
+    regel: /\.pick-name \{ font-size: var\(--s-text\); font-weight: 600; \}/,
+    ersatz: '.pick-name { font-size: 11.5px; font-weight: 600; }',
+    tor: 'uxaudittor',
+  },
+  {
     // **Die Turmleiste wird wieder breit.**
     //
     // Dann passen die acht Knoepfe nicht mehr in eine Reihe, das Band waechst
@@ -2490,7 +2503,7 @@ const PROBEN = [
     // Der Ueberspringen-Knopf war 16 Punkte hoch, acht Fassungen lang.
     name: 'Ueberspringen wieder zu klein',
     datei: 'src/style.css',
-    suche: ".coach-skip::after { content: ''; position: absolute; inset: -5px -14px -26px; }",
+    suche: ".coach-skip::after { content: ''; position: absolute; inset: -6px -14px -28px; }",
     ersatz: ".coach-skip::after { content: ''; position: absolute; inset: -1px; }",
     tor: 'beruehrung',
   },
@@ -3023,8 +3036,12 @@ const PROBEN = [
     // Regel, die auf dem gemessenen Geraet WIRKT.
     name: 'Einweisungsblase waechst ueber das Feld',
     datei: 'src/style.css',
-    regel: /  \.coach-text \{ font-size: 11\.5px; \}/,
-    ersatz: '  .coach-text { font-size: 23px; }',
+    // Die eigene Groesse der Blase ist mit der Typoskala entfallen (v241);
+    // sie nimmt jetzt `--s-text`. Der Eingriff greift deshalb die Stufe
+    // selbst - dieselbe Wirkung, und er wandert mit, wenn die Skala einmal
+    // umgebaut wird.
+    regel: /    --s-text: 12px;/,
+    ersatz: '    --s-text: 23px;',
     tor: 'streifentor',
   },
   {

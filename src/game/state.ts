@@ -4,7 +4,7 @@ import { tempoFaktor, wirkungAnlegen, wirkungenTicken, type Wirkung, type Wirkun
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import {
   TOWERS, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor, hatZweigwahl,
-  type BranchIndex, type TowerId,
+  guenstigsterTurm, type BranchIndex, type TowerId,
 } from '../data/towers';
 import { EARLY_BONUS_MAX, EARLY_BONUS_WINDOW } from '../data/waves';
 import {
@@ -187,6 +187,22 @@ export class GameState {
   aiming: AbilityId | null = null;
 
   buildChoice: TowerId | null = null;
+  /** Hat der Spieler diese Sorte SELBST gewaehlt - oder ist sie nur
+   *  vorgewaehlt, damit die baubare Flaeche im Bild steht?
+   *
+   *  **Zwei Bedeutungen, die bis v238 in einem Feld lagen.** `buildChoice`
+   *  beantwortet "welche Sorte ist scharf" und treibt zwei Dinge: die
+   *  gezeichnete Baukante und die Vorkauf-Karte im Pruefsteg. Sobald `reset`
+   *  eine Sorte vorwaehlt, damit die Flaeche vom ersten Bild an sichtbar ist,
+   *  ging beides zugleich an - und die Karte sperrt gemessen 39,5 % des
+   *  Bildschirms statt 17,6 %. Ein neuer Spieler saehe die Antwort auf "wo
+   *  darf ich bauen" und dahinter kein Spielfeld mehr.
+   *
+   *  Die Karte haengt deshalb an DIESEM Feld: sie erscheint, wenn jemand in
+   *  der Leiste auf einen Turm tippt, nicht wenn das Spiel eine Sorte
+   *  bereitlegt. Gesetzt wird es an genau einer Stelle (dem Knopf), geloescht
+   *  wo die Wahl geloescht wird. */
+  bauwahlErklaeren = false;
   /** Wohin gebaut werden soll, wenn die Turmwahl offen ist.
    *
    *  Bis v101 musste man erst in der Leiste einen Turm waehlen und dann aufs
@@ -871,6 +887,7 @@ export class GameState {
   auswahlSchliessen(): void {
     this.selectedTower = null;
     this.buildChoice = null;
+    this.bauwahlErklaeren = false;
     this.gegnerInfo = null;
   }
 
@@ -1915,7 +1932,21 @@ export class GameState {
     this.towersVersion++;
     this.pending = [];
     this.selectedTower = null;
-    this.buildChoice = null;
+    // **Die baubare Flaeche steht vom ersten Bild an im Bild.**
+    //
+    // Sie wird nur waehrend der Turmwahl gezeichnet - ein dauerhafter
+    // Schleier ueber 30 % der Karte war in v122 schon einmal da und ist zu
+    // Recht wieder verschwunden. Der Preis dafuer war aber, dass ein Spieler
+    // sie NIE zu sehen bekam: man muss erst wissen, dass man in der Leiste
+    // eine Sorte waehlen muss, um die Antwort auf "wo darf ich bauen" zu
+    // bekommen. Genau das hat der Nutzer gemeldet.
+    //
+    // Vorgewaehlt ist deshalb der guenstigste Turm. Er kostet nichts (ein
+    // Tipp aufs Feld oeffnet die Wahl, er baut nicht - B2), er ist der,
+    // dessen Flaeche am groessten ist, und er verschwindet, sobald der
+    // Spieler etwas anderes tut. Kein Schleier, aber auch kein Geheimnis.
+    this.buildChoice = guenstigsterTurm();
+    this.bauwahlErklaeren = false;
     this.pendingPoint = null;
     this.speed = 1;
     this.paused = false;

@@ -299,6 +299,28 @@ state.karten = ALLE_KARTEN.length;
   // vermutet: 19294 gezeichnete Bilder und "won" wurden zu 18389 und "lost".
   state.reset(AUSSAAT, getSettings().difficulty, getSettings().map);
   state.karten = ALLE_KARTEN.length;
+
+  // **Die Vorwahl aus `reset` darf die Vorkauf-Karte NICHT oeffnen** (v238).
+  //
+  // Sie ist da, damit die baubare Flaeche vom ersten Bild an sichtbar ist.
+  // Haengt die Karte am selben Feld, steht sie von der ersten Sekunde an im
+  // Bild und sperrt gemessen 39,5 % des Bildschirms statt 17,6 % - der neue
+  // Spieler saehe die Antwort auf "wo darf ich bauen" und dahinter kein
+  // Spielfeld mehr. Genau das ist beim ersten Anlauf passiert.
+  //
+  // Die Pruefung steht HIER und nicht bei der Bauvorschau weiter unten:
+  // dort laeuft die Partie schon, und ein `reset` mittendrin loescht die
+  // Mitschrift, aus der zwei spaetere Pruefungen ihre Zahlen nehmen.
+  ui.sync();
+  if (state.buildChoice === null) {
+    problems.push('Vorwahl: nach einem neuen Lauf ist keine Turmsorte vorgewaehlt - '
+      + 'dann bleibt die baubare Flaeche unsichtbar, bis der Spieler von selbst '
+      + 'darauf kommt, in der Leiste zu tippen.');
+  }
+  if (!win.document.getElementById('inspector')?.hasAttribute('hidden')) {
+    problems.push('Vorwahl: die Vorkauf-Karte steht schon im Bild, ohne dass jemand '
+      + 'nach einem Turm gefragt hat - sie sperrt 39,5 % des Bildschirms.');
+  }
   ui.sync();
 }
 
@@ -1890,10 +1912,23 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
 }
 
 // Genre-Kriterium F4: vor dem Kauf muessen die Werte sichtbar sein.
+//
+// **Gedrueckt wird der KNOPF, nicht das Feld gesetzt** (seit v238). Vorher
+// stand hier `state.buildChoice = 'mortar'`, und das ist seit der Trennung
+// von Vorwahl und Nachfrage nicht mehr derselbe Zustand: `reset` waehlt eine
+// Sorte vor, damit die baubare Flaeche im Bild steht, und die Vorkauf-Karte
+// haengt seitdem an `bauwahlErklaeren` - der Frage "was kann dieser Turm?",
+// die nur ein Tipp auf die Leiste stellt. Ein Test, der das Feld selbst
+// setzt, prueft einen Zustand, den kein Spieler herstellt.
 {
   state.selectedTower = null;
-  state.buildChoice = 'mortar';
+  state.buildChoice = null;
+  state.bauwahlErklaeren = false;
+  (win.document.getElementById('tb-mortar') as HTMLButtonElement | null)?.click();
   ui.sync();
+  if (state.buildChoice !== 'mortar') {
+    problems.push('Bauvorschau: ein Tipp auf den Leistenknopf waehlt die Sorte nicht.');
+  }
   const panel = win.document.getElementById('inspector');
   const text = panel?.textContent ?? '';
   if (panel?.hasAttribute('hidden')) {

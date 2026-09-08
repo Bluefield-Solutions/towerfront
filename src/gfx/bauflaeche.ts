@@ -40,14 +40,44 @@ import { ablageAnmelden } from './speicher';
  * zu behaupten.
  */
 
-/** Die Stärke der Baukante - eine Stelle, damit `npm run baukante` sie
- *  durchprobieren kann, statt dass sie in einer Zeichenzeile steht.
+/** Wie stark die verbotene Fläche getönt wird.
  *
- *  `dunkel` ist die Abdunklung der verbotenen Fläche, `saum` ein zweiter,
- *  schwächerer Zug auf einem um `saumBreite` gewachsenen Bereich. Der Saum
- *  liegt damit als Band auf der BAUBAREN Seite und macht die Kante lesbar,
- *  ohne die ganze Fläche dunkler zu machen. */
-export const KANTE = { innen: 0.12, band: 0.70, breite: 7 };
+ *  **Bis v237 stand hier 0,12, und das war der Grund für den Befund des
+ *  Nutzers** („man sieht nicht gut, wo man etwas hinbauen kann"). Bei zwölf
+ *  Prozent verschwindet die Tönung auf einem fotografischen Untergrund fast
+ *  ganz; sichtbar blieb nur die helle Kante — also mehrere ineinander
+ *  verschachtelte Umrisse um Weg, Felsen und Kartenrand. Der Spieler bekam
+ *  eine Höhenlinienkarte und musste selbst schliessen, welche Seite die
+ *  erlaubte ist. „Wo darf ich bauen" ist aber eine Frage nach einer FLÄCHE.
+ *
+ *  Durchprobiert von 0,12 bis 0,28 gegen die vier Grenzen von TF-001
+ *  (`npm run bildtor`), gemessen am Spiralhain:
+ *
+ *  | FUELLUNG | Tönung | Relief | Lichtsaum | Zeichnung |
+ *  |---|---|---|---|---|
+ *  | 0,12 | 10 % | 0 % | 6,7 % | 89 % |
+ *  | **0,20** | **17 %** | **0 %** | **6,6 %** | **82 %** |
+ *  | 0,24 | 20 % | 0 % | 6,5 % | 78 % |
+ *  | 0,28 | 24 % | 27 % | 6,4 % | 75 % — drei Grenzen zugleich gerissen |
+ *
+ *  Zwanzig Hundertstel liegen sicher im Band (6 bis 22 %) und lassen die
+ *  Zeichnung der Landschaft mit 82 % stehen. Bei 0,28 kippt es auf einmal:
+ *  die Tönung läuft aus dem Band, das dunkle Relief springt von 0 auf 27 %,
+ *  und die Zeichnung fällt an die Grenze. Das ist keine Feinschraube mehr,
+ *  sondern der Vorhang aus v203. */
+export const FUELLUNG = 0.20;
+
+/** Die Stärke der Baukante - eine Stelle, damit sie sich durchprobieren
+ *  lässt, statt in einer Zeichenzeile zu stehen.
+ *
+ *  `band` ist die Deckkraft des hellen Zuges, `breite` seine Breite in
+ *  Weltpunkten. **Gemessen bewegt `band` keine der vier Grenzen** — über die
+ *  ganze Spanne 0,70 bis 0,25 ändert sich allein der Lichtsaum von 6,6 auf
+ *  6,0 % des Bildes. Es ist also eine Blickfrage, und der Blick sagt: bei
+ *  0,70 ist die Linie das Lauteste im Bild und erschlägt die Tönung, die die
+ *  eigentliche Auskunft trägt. Bei 0,40 trägt die Fläche, und die Linie sagt
+ *  nur noch, wo genau sie aufhört (Regel 8). */
+export const KANTE = { band: 0.40, breite: 7 };
 
 /** Auflösung des gebackenen Kantenbildes, als Teiler der Weltmasse.
  *  Zwei heisst 960 x 540 und 2 MB - die Kante wird dadurch um einen halben
@@ -237,7 +267,7 @@ export function bauflaechenBild(
   {
     const d = flaeche();
     const q = d.getContext('2d')!;
-    q.globalAlpha = KANTE.innen;
+    q.globalAlpha = FUELLUNG;
     q.drawImage(maske, 0, 0);
     q.globalAlpha = 1;
     q.globalCompositeOperation = 'source-in';

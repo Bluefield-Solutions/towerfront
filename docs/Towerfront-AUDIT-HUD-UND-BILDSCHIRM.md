@@ -1,6 +1,6 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v237 · 08.09.2026
+Stand: v238 · 08.09.2026
 
 Ausgelöst durch drei Sätze des Nutzers:
 

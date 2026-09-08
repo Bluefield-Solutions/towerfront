@@ -18,16 +18,23 @@ export interface TutorialStep {
 }
 
 export const TUTORIAL: TutorialStep[] = [
-  {
-    id: 'pick',
-    text: 'Tipp auf den Bogenturm.',
-    target: 'tb-arrow',
-    done: (s) => s.buildChoice !== null || s.gebaute.length > 0,
-  },
+  // **Der Schritt „Tipp auf den Bogenturm" ist in v238 entfallen, und zwar
+  // weil sein Gegenstand weg ist.**
+  //
+  // Er hatte genau eine Aufgabe: den Spieler dazu bringen, in der Leiste
+  // eine Turmsorte zu waehlen - denn erst dann zeigt das Spiel, wo gebaut
+  // werden darf. Seit `reset` den guenstigsten Turm vorwaehlt, ist das schon
+  // geschehen, bevor der erste Satz erscheint: `done` traf sofort zu, der
+  // Schritt wurde uebersprungen, und die Blase begann mit „Jetzt neben den
+  // Weg tippen" - ein „jetzt" ohne Vorher.
+  //
+  // Stehen zu lassen, was nichts mehr bewirkt, waere die Sorte Rest, die
+  // dieses Verzeichnis sonst als Fund notiert. Der erste Satz benennt
+  // stattdessen, was jetzt von selbst im Bild steht.
   {
     id: 'place',
-    text: 'Jetzt neben den Weg tippen — dort öffnet sich die Wahl. Gebaut wird erst,'
-      + ' wenn du in der Wahl auf den Turm tippst.',
+    text: 'Die hellen Flächen nehmen einen Turm auf — tipp auf eine davon.'
+      + ' Dort öffnet sich die Wahl; gebaut wird erst mit dem Tipp auf den Turm.',
     target: 'world',
     done: (s) => s.gebaute.length > 0,
   },

@@ -1,9 +1,4 @@
-import { TOWERS, TOWER_ORDER } from '../data/towers';
-
-/** Der guenstigste Turm - er entscheidet, ob ein Platz ueberhaupt taugt.
- *  Was dort nicht steht, steht nirgends. */
-const guenstigster = () =>
-  TOWER_ORDER.reduce((a, b) => (TOWERS[a].base.cost <= TOWERS[b].base.cost ? a : b));
+import { TOWERS, guenstigsterTurm } from '../data/towers';
 
 /** Wie weit ein Daumen danebenliegen darf, in Weltpunkten.
  *
@@ -316,9 +311,9 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
     // wenn es dort nicht geht, an der naechsten Stelle, an der wenigstens der
     // kleinste Turm steht. Wer mit dem Daumen irgendwohin faellt, will sehen,
     // was dort hin kann, und nicht raten, warum nichts passiert ist.
-    s.buildAt = s.einrasten(guenstigster(), c.x, c.y, fingerInWelt(r.scale));
+    s.buildAt = s.einrasten(guenstigsterTurm(), c.x, c.y, fingerInWelt(r.scale));
     if (s.buildAt) Sfx.play('tap');
-    else s.bauHinweis(c.x, c.y, s.warumNicht(guenstigster(), c.x, c.y));
+    else s.bauHinweis(c.x, c.y, s.warumNicht(guenstigsterTurm(), c.x, c.y));
   };
 
   canvas.addEventListener('pointerup', finish);

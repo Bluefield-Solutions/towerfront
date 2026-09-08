@@ -318,6 +318,16 @@ export const TOWERS: Record<TowerId, TowerDef> = {
  *  Eintrag keine einzige davon angefasst. */
 export const TOWER_ORDER: TowerId[] = ['arrow', 'frost', 'mortar', 'prism'];
 
+/** Der guenstigste Turm - er entscheidet, ob ein Platz ueberhaupt taugt.
+ *  Was dort nicht steht, steht nirgends.
+ *
+ *  Stand bis v238 in `core/input.ts` und wird seit v238 an einer zweiten
+ *  Stelle gebraucht (`state.reset` waehlt ihn vor, damit die baubare Flaeche
+ *  vom ersten Bild an im Bild steht). Zwei Fassungen waeren eine zu viel
+ *  (Regel 15): gepflegt wuerde die eine, gefragt die andere. */
+export const guenstigsterTurm = (): TowerId =>
+  TOWER_ORDER.reduce((a, b) => (TOWERS[a].base.cost <= TOWERS[b].base.cost ? a : b));
+
 /** Zweig 0 oder 1, oder null solange der Turm auf Stufe 1 steht. */
 export type BranchIndex = 0 | 1 | null;
 

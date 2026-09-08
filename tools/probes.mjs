@@ -1254,14 +1254,40 @@ const PROBEN = [
     tor: 'browsertor',
   },
   {
+    // **Die Vorwahl faellt weg.**
+    //
+    // Dann steht die baubare Flaeche erst da, wenn der Spieler von selbst
+    // darauf kommt, in der Leiste zu tippen - genau der Zustand, den der
+    // Nutzer als "man sieht nicht gut, wo man etwas hinbauen kann" gemeldet
+    // hat.
+    name: 'Keine Turmsorte ist vorgewaehlt',
+    datei: 'src/game/state.ts',
+    regel: /    this\.buildChoice = guenstigsterTurm\(\);/,
+    ersatz: '    this.buildChoice = null;',
+    tor: 'smoke',
+  },
+  {
+    // **Die Vorkauf-Karte haengt wieder an der blossen Vorwahl.**
+    //
+    // Dann steht sie von der ersten Sekunde an im Bild und sperrt gemessen
+    // 39,5 % des Bildschirms statt 17,6 %. Beim ersten Anlauf zu v238 ist
+    // genau das passiert, und keine der einunddreissig Pruefungen hat es
+    // gesagt - gefunden hat es die Messung, die fuer das Audit gebaut wurde.
+    name: 'Vorkauf-Karte oeffnet ungefragt',
+    datei: 'src/ui/ui.ts',
+    regel: /if \(!sel && s\.buildChoice && s\.bauwahlErklaeren\) \{/,
+    ersatz: 'if (!sel && s.buildChoice) {',
+    tor: 'smoke',
+  },
+  {
     // **Die Kante faellt weg.**
     //
     // Uebrig bliebe eine gleichmaessig getoente Flaeche ohne Rand - genau die
     // Fassung aus v203, die die Frage nicht beantwortet hat.
     name: 'Die Baukante hat keinen Saum mehr',
     datei: 'src/gfx/bauflaeche.ts',
-    regel: /export const KANTE = \{ innen: 0\.12, band: 0\.70, breite: 7 \};/,
-    ersatz: 'export const KANTE = { innen: 0.12, band: 0, breite: 7 };',
+    regel: /export const KANTE = \{ band: 0\.40, breite: 7 \};/,
+    ersatz: 'export const KANTE = { band: 0, breite: 7 };',
     tor: 'bildtor',
   },
   {
@@ -1274,8 +1300,8 @@ const PROBEN = [
     // Der dunkle Zug muss NEBEN den hellen, nicht unter ihn: unter ihm waere
     // er verdeckt und die Probe bewiese nichts. Genau das ist ihr im vollen
     // Lauf zu v207 passiert.
-    regel: /    q\.globalAlpha = KANTE\.innen;\n    q\.drawImage\(maske, 0, 0\);/,
-    ersatz: '    q.globalAlpha = KANTE.innen;\n    q.drawImage(maske, 0, 0);\n'
+    regel: /    q\.globalAlpha = FUELLUNG;\n    q\.drawImage\(maske, 0, 0\);/,
+    ersatz: '    q.globalAlpha = FUELLUNG;\n    q.drawImage(maske, 0, 0);\n'
       + '    q.globalAlpha = 0.5;\n'
       + "    q.drawImage(ohne(versetzt('source-over'), maske), 0, 0);",
     tor: 'bildtor',
@@ -1286,8 +1312,8 @@ const PROBEN = [
     // Schreibtisch liegt sie ueber zwei Dritteln der Welt.
     name: 'Die Baukante wird wieder zum Vorhang',
     datei: 'src/gfx/bauflaeche.ts',
-    regel: /export const KANTE = \{ innen: 0\.12, band: 0\.70, breite: 7 \};/,
-    ersatz: 'export const KANTE = { innen: 0.38, band: 0.70, breite: 7 };',
+    regel: /export const FUELLUNG = 0\.20;/,
+    ersatz: 'export const FUELLUNG = 0.38;',
     tor: 'bildtor',
   },
   {

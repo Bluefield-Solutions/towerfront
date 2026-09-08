@@ -171,7 +171,12 @@ export class UI {
         `<span class="r">${def.role}</span>`;
       b.addEventListener('click', () => {
         Sfx.unlock(); Sfx.play('tap');
-        this.s.buildChoice = this.s.buildChoice === id ? null : id;
+        const anKlick = this.s.buildChoice === id && this.s.bauwahlErklaeren;
+        this.s.buildChoice = anKlick ? null : id;
+        // Der Tipp auf den Knopf ist die Frage "was kann dieser Turm?" -
+        // erst er oeffnet die Vorkauf-Karte. Die Vorwahl aus `reset` tut es
+        // nicht, sonst steht die Karte von der ersten Sekunde an im Bild.
+        this.s.bauwahlErklaeren = !anKlick;
         this.s.selectedTower = null;
       });
       this.build.appendChild(b);
@@ -598,7 +603,7 @@ export class UI {
     if (sel || s.buildChoice || !s.canStartWave) s.gegnerInfo = null;
     const sig = [
       s.gold, s.lives, s.waveNumber, s.waveActive, s.speed, s.paused,
-      s.buildChoice, s.phase, getSettings().sound,
+      s.buildChoice, s.bauwahlErklaeren, s.phase, getSettings().sound,
       // Sechster Fall derselben Art nach Startknopf, Zielwahl, Bilanzblatt,
       // Einstellungen und Gegnerauskunft: der Messschalter aendert nichts
       // am Gold. Ohne diesen Eintrag setzt er die Einstellung, die Tafel
@@ -762,7 +767,7 @@ export class UI {
 
     // Vor dem Kauf zeigen, was der Turm kann. Ohne Werte laesst sich nicht
     // planen - und Planen ist der ganze Reiz des Genres.
-    if (!sel && s.buildChoice) {
+    if (!sel && s.buildChoice && s.bauwahlErklaeren) {
       const def = TOWERS[s.buildChoice];
       this.insp.hidden = false;
       // Die Rolle steht neben dem Namen, nicht in ihm - sonst wird aus

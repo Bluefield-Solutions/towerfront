@@ -299,6 +299,8 @@ interface Result {
   maxLives: number;
   earned: number; spent: number;
   leakByWave: number[];
+  /** Wieviele Entscheidungen der Bot in jeder Welle getroffen hat (S-P1-03). */
+  entscheidungenJeWelle: number[];
 }
 
 type BranchPick = (id: TowerId) => 0 | 1;
@@ -346,6 +348,20 @@ function play(
   let spotIdx = variant % 2, si = variant, t = 0, frame = 0, upgrades = 0;
   let peakEnemies = 0, peakFx = 0;
   const leakByWave = new Array(s.waves.length).fill(0);
+  /** **Entscheidungen je Welle** (S-P1-03).
+   *
+   *  Das Spielspass-Audit rechnete "12 Bauentscheidungen und 24
+   *  Ausbauentscheidungen, also 36 - gut zwei je Welle, und die meisten
+   *  davon frueh". Die 36 sind zwei Summenfelder des Ergebnisses; WANN sie
+   *  fallen, hat niemand gemessen. Damit liess sich nicht sagen, ob eine
+   *  Welle ueberhaupt eine Entscheidung enthaelt - und genau das ist G7.
+   *
+   *  Gezaehlt wird, was der Bot wirklich tut: bauen, ausbauen, eine
+   *  Faehigkeit ziehen. **Verkaufen, Versetzen und den Zielmodus umstellen
+   *  tut er nicht** - ein Zaehler dafuer stuende auf ewig auf null und saehe
+   *  aus wie eine Messung (Regel 5). Was der Bot nicht tut, misst diese
+   *  Zeile deshalb auch nicht, und das steht hier statt in einer Fussnote. */
+  const entscheidungenJeWelle = new Array(s.waves.length).fill(0);
   let lastLives = s.lives;
 
   while (s.phase === 'playing' && t < 60 * 45) {
@@ -365,13 +381,14 @@ function play(
       // Schaden - und "bau den aus, der am meisten leistet" fuehrte
       // geradewegs dorthin. Gemessen kostete das Normal/Meister 23 -> 11 von
       // 60, und das war kein Balancebefund, sondern ein Botfehler.
+      const welle = Math.min(s.waveIndex, s.waves.length - 1);
       const gebaut = s.gebaute;
       const wantBuild = gebaut.length < bot.maxTowers * bot.deepenAt &&
         spotIdx < spots.length && s.gold >= TOWERS[id].base.cost + reserve;
 
       if (wantBuild) {
         const sp = spots[spotIdx];
-        if (s.build(sp.x, sp.y, id)) { stelleZiel(s, opts.ziel); si++; }
+        if (s.build(sp.x, sp.y, id)) { stelleZiel(s, opts.ziel); si++; entscheidungenJeWelle[welle]++; }
         spotIdx++;
       } else {
         // In die Tiefe: immer in den Turm, der bisher am meisten geleistet hat.
@@ -382,15 +399,17 @@ function play(
           if (!n || s.gold < n.cost + reserve) continue;
           if (!best || tw.damageDone > best.damageDone) best = tw;
         }
-        if (best && s.upgrade(best, (best.branch ?? pick(best.def)) as 0 | 1)) upgrades++;
+        if (best && s.upgrade(best, (best.branch ?? pick(best.def)) as 0 | 1)) {
+          upgrades++; entscheidungenJeWelle[welle]++;
+        }
         else if (gebaut.length < bot.maxTowers && spotIdx < spots.length &&
           s.gold >= TOWERS[id].base.cost + reserve) {
           const sp = spots[spotIdx];
-          if (s.build(sp.x, sp.y, id)) { stelleZiel(s, opts.ziel); si++; }
+          if (s.build(sp.x, sp.y, id)) { stelleZiel(s, opts.ziel); si++; entscheidungenJeWelle[welle]++; }
           spotIdx++;
         }
       }
-      useAbilities(s);
+      entscheidungenJeWelle[welle] += useAbilities(s);
     }
 
     const wi = Math.min(s.waveIndex, s.waves.length - 1);
@@ -405,14 +424,18 @@ function play(
   }
   return {
     lives: s.lives, wave: s.waveNumber, won: s.phase === 'won',
-    towers: s.gebaute.length, upgrades, peakEnemies, peakFx, leakByWave, maxLives: s.maxLives,
+    towers: s.gebaute.length, upgrades, peakEnemies, peakFx, leakByWave, entscheidungenJeWelle,
+    maxLives: s.maxLives,
     earned: s.stats.goldEarned, spent: s.stats.goldSpent,
   };
 }
 
 /** Der Bot nutzt die Faehigkeiten so, wie ein aufmerksamer Spieler es taete:
  *  den Meteor auf die dichteste Traube, den Frostschlag, wenn es eng wird. */
-function useAbilities(s: GameState): void {
+/** Zieht die Faehigkeiten und gibt zurueck, wieviele wirklich gezogen
+ *  wurden - `cast` sagt es selbst, geraten wird nichts (Regel 3). */
+function useAbilities(s: GameState): number {
+  let gezogen = 0;
   if (s.ready('meteor') && s.enemies.length >= 5) {
     const r2 = (ABILITIES.meteor.radius ?? 100) ** 2;
     let best = null, bestN = 0;
@@ -423,11 +446,11 @@ function useAbilities(s: GameState): void {
       }
       if (n > bestN) { bestN = n; best = a; }
     }
-    if (best && bestN >= 4) s.cast('meteor', best.x, best.y);
+    if (best && bestN >= 4) { if (s.cast('meteor', best.x, best.y)) gezogen++; }
   }
   if (s.ready('freeze')) {
     const near = s.enemies.filter((e) => e.travelled > s.pathTotal * 0.75).length;
-    if (near >= 4) s.cast('freeze', 0, 0);
+    if (near >= 4) { if (s.cast('freeze', 0, 0)) gezogen++; }
   }
 
   // Bollwerk: auf die dichteste Traube, aber nur wenn sie schon WEIT ist.
@@ -445,7 +468,7 @@ function useAbilities(s: GameState): void {
       }
       if (n > bestN) { bestN = n; best = a; }
     }
-    if (best && bestN >= 3) s.cast('bollwerk', best.x, best.y);
+    if (best && bestN >= 3) { if (s.cast('bollwerk', best.x, best.y)) gezogen++; }
   }
 
   // Ernte: wenn das Gold fuer den naechsten Schritt nicht reicht.
@@ -456,8 +479,9 @@ function useAbilities(s: GameState): void {
   // handlungsunfaehig.
   if (s.ready('ernte')) {
     const teuerster = Math.max(...TOWER_ORDER.map((id) => TOWERS[id].base.cost));
-    if (s.gold < teuerster) s.cast('ernte', 0, 0);
+    if (s.gold < teuerster && s.cast('ernte', 0, 0)) gezogen++;
   }
+  return gezogen;
 }
 
 const strategies: Record<string, TowerId[]> = {
@@ -572,6 +596,39 @@ for (const bot of BOTS) {
     `\nVerteilung der Verluste: ${hot.length ? hot.map((o2) => `W${o2.w}:${o2.v}`).join('  ') : 'keine'}` +
     `   davon in der letzten Welle ${Math.round(share * 100)} %`,
   );
+  // --- Entscheidungen je Welle (S-P1-03).
+  //
+  // Ueber Aussaat UND Abwandlung, weil eine Entscheidung genau davon
+  // abhaengt: wann Gold ankommt, entscheidet, ob in Welle 7 gebaut wird
+  // oder in Welle 8. Ein einzelner Verlauf zaehlt hier einen Zufall.
+  {
+    const o2 = overVariants((variant, aussaat) => play(
+      mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { variant, seed: aussaat },
+    ));
+    const wellen = MAPS[0].waves.length;
+    const jeWelle = Array.from({ length: wellen }, (_, i) =>
+      o2.runs.reduce((a, r2) => a + (r2.entscheidungenJeWelle[i] ?? 0), 0) / o2.runs.length);
+    const summe = jeWelle.reduce((a, b) => a + b, 0);
+    const haelfte = jeWelle.slice(0, Math.ceil(wellen / 2)).reduce((a, b) => a + b, 0);
+    // Leer ist eine Welle, in der im MITTEL weniger als eine halbe
+    // Entscheidung faellt - nicht "genau null". Bei neun Laeufen ist eine
+    // einzige Entscheidung in einem davon 0,11, und das ist keine Welle,
+    // in der man etwas zu tun hat.
+    const leereJeLauf = o2.runs.map((r2) =>
+      r2.entscheidungenJeWelle.slice(0, wellen).filter((v) => v === 0).length);
+    const leer = mittelUndSpanne(leereJeLauf);
+    console.log(
+      `\nEntscheidungen je Welle (gezaehlt am Bot, ${AUSSAATEN.length} Aussaaten x `
+      + `${VARIANTS.length} Abwandlungen, gemischtes Feld, ${MAPS[0].id}, normal):`);
+    console.log('  ' + jeWelle.map((v, i) => `W${i + 1}:${v.toFixed(1)}`).join('  '));
+    console.log(
+      `  Summe ${summe.toFixed(1)}   Wellen ohne jede Entscheidung `
+      + `${leer.mittel.toFixed(1)} von ${wellen} (Rauschen ${leer.spanne.toFixed(1)})`
+      + `   in der ersten Haelfte ${summe > 0 ? Math.round((haelfte / summe) * 100) : 0} %`);
+    spannungGemessen('leereWellen', leer.mittel, leer.spanne,
+      `Wellen ohne eine einzige Entscheidung des Bots, gemischtes Feld, Meister, `
+      + `${MAPS[0].id}, normal, ${AUSSAATEN.length} Aussaaten x ${VARIANTS.length} Abwandlungen`);
+  }
   console.log(
     `  ueber ${AUSSAATEN.length} Aussaaten: ${stellen.mittel.toFixed(1)} Stelle(n) `
     + `(Rauschen ${stellen.spanne.toFixed(1)}), laengste folgenlose Strecke `
@@ -1199,9 +1256,10 @@ if (hot.length) {
 // Sie steht hier unten, weil sie alle fuenf Kennzahlen braucht, und vor dem
 // Urteil, weil ihr Befund in dasselbe Urteil gehoert.
 {
-  const ORDNUNG = ['stellen', 'ruhe', 'goldUebrig', 'stilAbstand', 'zweigWirkung'];
+  const ORDNUNG = ['stellen', 'ruhe', 'leereWellen', 'goldUebrig', 'stilAbstand', 'zweigWirkung'];
   const NAMEN: Record<string, string> = {
     stellen: 'Stellen mit Verlust', ruhe: 'laengste folgenlose Strecke',
+    leereWellen: 'Wellen ohne Entscheidung',
     goldUebrig: 'Gold uebrig am Ende', stilAbstand: 'Abstand der Spielstile',
     zweigWirkung: 'kleinste Zweigwirkung',
   };
@@ -1214,7 +1272,8 @@ if (hot.length) {
     const zeilen = ORDNUNG.map((k) => {
       const m = spannung.get(k)!;
       const a = alt2.get(k);
-      return `${k} ${a?.richtung ?? (k === 'ruhe' || k === 'goldUebrig' ? 'tief' : 'hoch')} `
+      const tiefer = ['ruhe', 'goldUebrig', 'leereWellen'].includes(k);
+      return `${k} ${a?.richtung ?? (tiefer ? 'tief' : 'hoch')} `
         + `${m.wert === null ? 'UNBELEGT' : m.wert.toFixed(2)} ${a?.soll ?? 0}`;
     });
     writeFileSync(SPANNUNG_DATEI, KOPF + zeilen.join('\n') + '\n');

@@ -268,7 +268,10 @@ npm run sim         Balance kopflos, drei Aussaaten - und seit v253 die
                     sonst schlaegt sie bei jedem zweiten Lauf an. Das SOLL
                     steht daneben und laeuft als Hinweis mit.
                     `--spannung-schreiben` setzt den Stand neu und schreibt
-                    damit auch jeden Rueckschritt fest.
+                    damit auch jeden Rueckschritt fest. Seit v254 zaehlt der
+                    Lauf ausserdem die ENTSCHEIDUNGEN je Welle - gemessen
+                    3,7 je Welle und 51 % in der ersten Haelfte, waehrend
+                    das Audit "gut zwei je Welle, meistens frueh" rechnete.
 npm run kritik      Wertung nach Testerkategorien, Ziel über 90
 npm run c18         die C18-Frage allein: ist die erste Karte ohne
                     Verbesserungen zu gewinnen? Zwei Sekunden statt zwei
@@ -462,7 +465,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v253. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v254. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

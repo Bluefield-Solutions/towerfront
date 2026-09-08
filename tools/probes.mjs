@@ -506,6 +506,24 @@ const PROBEN = [
     meldet: 'ist leer oder fehlt',
   },
   {
+    // **Der Zaehler der Entscheidungen (S-P1-03, v254).**
+    //
+    // Das Spielspass-Audit rechnete "36 Entscheidungen, gut zwei je Welle,
+    // und die meisten davon frueh" - aus zwei Summenfeldern des Ergebnisses.
+    // WANN sie fallen, hat niemand gemessen, und damit liess sich nicht
+    // sagen, ob eine Welle ueberhaupt eine Entscheidung enthaelt (G7).
+    //
+    // Ohne diese Probe bewiese die neue Zeile nur, dass ein Zaehler zaehlt.
+    // Mit einer Ruecklage von 9999 kann der Meister nichts mehr kaufen -
+    // dann ist jede Welle entscheidungslos, und die Ratsche muss es sagen.
+    name: 'Der Bot trifft keine Entscheidung mehr',
+    datei: 'tools/sim.ts',
+    suche: "name: 'Meister', maxTowers: 12, maxLevel: 3, reserve: 40",
+    ersatz: "name: 'Meister', maxTowers: 12, maxLevel: 3, reserve: 9999",
+    tor: 'sim',
+    meldet: 'Wellen ohne Entscheidung',
+  },
+  {
     // **Der Nachtlauf braucht einen Weg zurueck ins Tor.** Bis v226 landete
     // sein Befund nur im Protokoll auf dem Runner. In der Sitzung zu v226 ist
     // er dreimal gefahren, zweimal rot, und beide Befunde habe ich nur

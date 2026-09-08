@@ -28,6 +28,7 @@ import {
   nextFor, statsFor,
   type BranchIndex, type TowerDef, type TowerStats,
 } from '../data/towers';
+import { VERBUND_STUFE } from './verbund';
 
 /** Welchen Wert eine Zeile zeigt. `null` heisst abgeleitet - Schaden je
  *  Sekunde steht in keinem Feld, sondern folgt aus zweien. */
@@ -67,16 +68,24 @@ export function werteVorKauf(def: TowerDef): Wertzeile[] {
   return z;
 }
 
-/** Was am gebauten Turm zu sehen ist, mit der naechsten Stufe daneben. */
+/** Was am gebauten Turm zu sehen ist, mit der naechsten Stufe daneben.
+ *
+ *  `verbund` ist die Zahl der ANDEREN Turmarten im Umkreis (v244, F4). Sie
+ *  steht hier und nicht nur im Zustand, weil der Schaden sonst zweimal
+ *  gerechnet wuerde: einmal fuer die Wirkung und einmal fuer die Anzeige -
+ *  und die zweite Rechnung wandert bei der naechsten Aenderung weg von der
+ *  ersten (Regel 15). Der Pruefsteg zeigt, was der Turm WIRKLICH macht. */
 export function werteAmTurm(
-  def: TowerDef, branch: BranchIndex, level: number, kills: number,
+  def: TowerDef, branch: BranchIndex, level: number, kills: number, verbund = 0,
 ): Wertzeile[] {
   const st = statsFor(def, branch, level);
   const nx = nextFor(def, branch, level);
+  const mal = 1 + VERBUND_STUFE * verbund;
+  const schaden = (v: number): string => String(Math.round(v * mal * 10) / 10);
   const z: Wertzeile[] = [
     {
-      feld: 'damage', name: 'Schaden', wert: String(st.damage),
-      danach: nx ? String(nx.damage) : undefined,
+      feld: 'damage', name: 'Schaden', wert: schaden(st.damage),
+      danach: nx ? schaden(nx.damage) : undefined,
     },
     {
       feld: 'range', name: 'Reichweite', wert: String(Math.round(st.range)),
@@ -126,6 +135,17 @@ export function werteAmTurm(
   // Luftziele stehen am gebauten Turm nur, wenn er KEINE trifft: eine
   // Einschraenkung ist eine Nachricht, eine Selbstverstaendlichkeit nicht.
   if (!def.hitsAir) z.push({ feld: 'hitsAir', name: 'Luftziele', wert: 'nein' });
+  // **Der Verbund steht auch dann da, wenn es keinen gibt.**
+  //
+  // Eine Zeile, die nur bei Erfolg erscheint, erzaehlt nur die halbe Sache:
+  // wer allein baut, sieht nie, dass ihm etwas entgeht. Genau die Frage soll
+  // sie stellen.
+  z.push({
+    feld: null, name: 'Verbund',
+    wert: verbund > 0
+      ? `+${Math.round(VERBUND_STUFE * verbund * 100)} % · ${verbund} Art${verbund > 1 ? 'en' : ''}`
+      : 'allein',
+  });
   z.push({ feld: null, name: 'Erledigt', wert: String(kills) });
   return z;
 }

@@ -7,6 +7,7 @@ import {
   guenstigsterTurm, type BranchIndex, type TowerId,
 } from '../data/towers';
 import { EARLY_BONUS_MAX, EARLY_BONUS_WINDOW } from '../data/waves';
+import { VERBUND_MAX, VERBUND_STUFE, VERBUND_UMKREIS } from './verbund';
 import {
   DIFFICULTIES, hpScale, type DifficultyDef, type DifficultyId,
 } from '../data/difficulty';
@@ -92,6 +93,17 @@ export const VERSATZ_ZEIT = 0.1;
  *  Zwei Sekunden fuer den Lauf plus ein halbe zum Ausklingen. Kuerzer las
  *  sich als Zucken, laenger haelt den Spieler auf, bevor er etwas tun darf. */
 export const WEGVORSCHAU_DAUER = 2.5;
+
+/** Wieviele Gegner eine Aura hoechstens VOLL trifft (F4).
+ *
+ *  Ab hier wird der Schaden verteilt: bei zwoelf Zielen bekommt jedes ein
+ *  Drittel. Die Bremse bleibt fuer alle voll - der Frostturm ist ein
+ *  Stuetzturm, und was er stuetzt, soll er weiter stuetzen.
+ *
+ *  Die Vier ist gemessen, nicht gewaehlt: siehe die Tabelle im
+ *  Rueckstandsverzeichnis unter F4. */
+export const AUREN_DECKEL = 4;
+
 
 export class GameState {
   /** Die Karte kann zwischen zwei Partien wechseln, deshalb ist hier nichts
@@ -765,8 +777,72 @@ export class GameState {
     Sfx.play('sell');
   }
 
-  /** Werte der aktuellen Ausbaustufe eines Turms. */
-  towerStats(t: Tower) { return statsFor(TOWERS[t.def], t.branch, t.level); }
+  /** Wieviele ANDERE Turmarten stehen im Umkreis dieses Turms?
+   *
+   *  Gerechnet wird fuer alle Tuerme auf einmal und nur dann, wenn sich das
+   *  Feld geaendert hat - `towersVersion` steigt bei Bau, Ausbau, Verkauf
+   *  und Versetzen. Ohne das liefe die Rechnung je Turm und Bild, und sie
+   *  ist quadratisch in der Turmzahl.
+   *
+   *  Der Ausbau aendert den Verbund nicht, zaehlt aber trotzdem mit: eine
+   *  eigene Fassung des Zaehlers, die nur bei Bau und Verkauf steigt, waere
+   *  eine zweite Wahrheit ueber denselben Zustand (Regel 15). */
+  private verbundStand = -1;
+  private readonly verbundWert = new Map<number, number>();
+  verbundVon(t: Tower): number {
+    if (this.verbundStand !== this.towersVersion) {
+      this.verbundStand = this.towersVersion;
+      this.verbundWert.clear();
+      const r2 = VERBUND_UMKREIS * VERBUND_UMKREIS;
+      for (const a of this.towers) {
+        if (a.def === 'core') continue;
+        const arten = new Set<TowerId>();
+        for (const b of this.towers) {
+          if (b === a || b.def === 'core' || b.def === a.def) continue;
+          if (dist2(a.x, a.y, b.x, b.y) <= r2) arten.add(b.def);
+        }
+        this.verbundWert.set(a.id, Math.min(VERBUND_MAX, arten.size));
+      }
+    }
+    return this.verbundWert.get(t.id) ?? 0;
+  }
+
+  /** Welche Tuerme den Verbund dieses Turms tragen - fuer die Faeden im
+   *  Bild. Je Art HOECHSTENS einer, und zwar der naechste: gezeichnet wird,
+   *  was gezaehlt wird, nicht was zufaellig danebensteht.
+   *
+   *  Ohne die Begrenzung auf `VERBUND_MAX` liefe der Faden auch zu Arten,
+   *  die gar nicht mehr mitzaehlen - und dann sagte das Bild einen hoeheren
+   *  Zuschlag an, als der Pruefsteg zeigt. */
+  verbundPartner(t: Tower): Tower[] {
+    if (t.def === 'core') return [];
+    const r2 = VERBUND_UMKREIS * VERBUND_UMKREIS;
+    const naechste = new Map<TowerId, { turm: Tower; d: number }>();
+    for (const b of this.towers) {
+      if (b === t || b.def === 'core' || b.def === t.def) continue;
+      const d = dist2(t.x, t.y, b.x, b.y);
+      if (d > r2) continue;
+      const alt = naechste.get(b.def);
+      if (!alt || d < alt.d) naechste.set(b.def, { turm: b, d });
+    }
+    return [...naechste.values()]
+      .sort((a, b) => a.d - b.d)
+      .slice(0, VERBUND_MAX)
+      .map((e) => e.turm);
+  }
+
+  /** Werte der aktuellen Ausbaustufe eines Turms - mit dem Verbund.
+   *
+   *  Der Zuschlag sitzt HIER und nicht an den Stellen, an denen Schaden
+   *  ausgeteilt wird. Die gibt es naemlich dreimal (Aura, Geschoss,
+   *  Flaechentreffer), und drei Fassungen desselben Zuschlags waeren zwei zu
+   *  viel - der Pruefsteg, der den Wert anzeigt, waere die vierte. */
+  towerStats(t: Tower) {
+    const st = statsFor(TOWERS[t.def], t.branch, t.level);
+    const v = this.verbundVon(t);
+    if (v <= 0) return st;
+    return { ...st, damage: st.damage * (1 + VERBUND_STUFE * v) };
+  }
 
   // ---------------------------------------------------------------- Wellen
 
@@ -1402,8 +1478,26 @@ export class GameState {
         t.flash = 1;
         this.ring(t.x, t.y, st.range, def.accent, 0.45, 3);
         Sfx.play('frost');
+        // **Der Aurendeckel** (v244, F4).
+        //
+        // Die Aura trifft jeden im Umkreis zugleich, ihre Wirkung waechst
+        // also mit der Pulkgroesse - und genau die bringen die schweren
+        // Wellen. Gemessen war "nur Frost" damit die staerkste Aufstellung
+        // des Spiels (50 von 60 Kristall gegen 43 im gemischten Feld); eine
+        // Monokultur, die das Mischen schlaegt, nimmt dem Spiel seine
+        // Entscheidung.
+        //
+        // Gedeckelt wird der SCHADEN, nicht die Bremse: der Frostturm ist
+        // ein Stuetzturm, und was er kann, soll er weiter koennen. Was er
+        // nicht mehr kann, ist zwanzig Gegner auf einmal erschlagen.
+        //
+        // Verteilt statt abgeschnitten - wer nur die ersten vier trifft,
+        // laesst den Rest ungebremst durch UND verschenkt die Bremse. Und
+        // ein Treffer mit null Schaden waere schlimmer als keiner: er
+        // verbraucht eine Schildladung.
+        const teiler = targets.length > AUREN_DECKEL ? AUREN_DECKEL / targets.length : 1;
         for (let i = 0; i < targets.length; i++) {
-          this.damage(targets[i], st.damage, t, accentFor(def, t.branch),
+          this.damage(targets[i], st.damage * teiler, t, accentFor(def, t.branch),
             st.slow ?? 0, st.slowTime ?? 0, st.pierce ?? 0);
         }
         continue;

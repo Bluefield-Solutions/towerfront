@@ -31,8 +31,11 @@ import { projektilform } from '../src/gfx/renderer';
 import type { Tower } from '../src/game/types';
 import {
   TOWERS, TOWER_ORDER, MAX_LEVEL, DRAW_SCALE, TURM_BREITE, TURM_HOEHE, rangeFor, statsFor,
-  type TowerId,
 } from '../src/data/towers';
+import {
+  VERBUND_MAX, VERBUND_STUFE, VERBUND_UMKREIS,
+} from '../src/game/verbund';
+import type { TowerId } from '../src/data/towers';
 import { ENEMIES, type EnemyId } from '../src/data/enemies';
 import { fehltVorKauf } from '../src/game/turmwerte';
 import { enemyArtWidth } from '../src/gfx/enemyart';
@@ -551,6 +554,62 @@ for (const map of MAPS) {
   }
   if (TURM_HOEHE < 1) {
     fail(`Turmhoehe ${TURM_HOEHE} - unter 1 waere der Turm breiter als hoch.`);
+  }
+  // --- Der Verbund (v244, F4): drei Zahlen, drei Fragen.
+  //
+  // Er ist der einzige Zuschlag im Spiel, der aus der LAGE folgt und nicht
+  // aus Gold. Damit ist er der wirksamste Hebel, den ein Spieler hat - und
+  // zugleich der einzige, den keine Kostenrechnung deckelt. Was ihn deckelt,
+  // steht hier.
+  {
+    const voll = VERBUND_STUFE * VERBUND_MAX;
+    // 1. Wieviel Schaden die Lage hoechstens macht. Ueber drei Viertel wuerde
+    //    ein gut gestelltes Feld eine ganze Ausbaustufe geschenkt bekommen -
+    //    und Gold ist die Waehrung dieses Spiels, nicht Geometrie.
+    if (voll > 0.75) {
+      fail(`Der Verbund gibt bis zu +${Math.round(voll * 100)} % Schaden allein aus der Lage `
+        + '- mehr als eine Ausbaustufe. Dann entscheidet die Geometrie statt der Kasse.');
+    }
+    // 2. Und er muss ueberhaupt etwas bewegen. Unter zehn Prozent ueber alle
+    //    Arten ist er eine Zeile im Pruefsteg, die niemand liest (Regel 5).
+    if (voll < 0.1) {
+      fail(`Der Verbund gibt hoechstens +${Math.round(voll * 100)} % - das aendert keine `
+        + 'Entscheidung. Eine Wirkung, die niemand merkt, ist keine.');
+    }
+    // 3. Der Umkreis muss ERREICHBAR sein.
+    //
+    //    Zwei Tuerme koennen nicht beliebig dicht stehen - `canPlace`
+    //    verlangt den halben Platzbedarf beider. Bei den zwei groessten
+    //    sind das 111 Weltpunkte. Ein Umkreis darunter waere ein Zuschlag,
+    //    den niemand je bekommt: eine Wirkung, die nie eintritt, ist keine
+    //    (Regel 5).
+    const gross = [...TOWER_ORDER].map((id) => TOWERS[id].footprint).sort((a, b) => b - a);
+    const engster = (gross[0] + gross[1]) / 2;
+    if (VERBUND_UMKREIS < engster) {
+      fail(`Der Verbundumkreis ist ${VERBUND_UMKREIS}, dichter als ${Math.round(engster)} `
+        + 'lassen sich die zwei groessten Tuerme aber gar nicht stellen. Dann gaebe es '
+        + 'ihn nie.');
+    }
+    // 4. Und er muss oertlich bleiben.
+    //
+    //    Ueber der laengsten Reichweite hinaus waere er kein Nachbarschafts-
+    //    zuschlag mehr, sondern eine zweite Kasse: jeder Turm der Karte
+    //    zaehlte fuer jeden anderen mit, und die Lage waere wieder
+    //    gleichgueltig.
+    //
+    //    **Die naheliegende schaerfere Fassung ist gemessen und verworfen.**
+    //    Sie hiess "kleiner als die KUERZESTE Reichweite" (240) und stand
+    //    eine Fassung lang hier - begruendet, nicht gemessen. Durchprobiert
+    //    faellt darunter die Eroeffnung: bei Umkreis 140 bis 230 verliert
+    //    der C18-Lauf in Welle 14 oder 15, bei 260 gewinnt er mit 25
+    //    Kristall. Eine Regel, die aus einer Ueberlegung stammt und der
+    //    Messung widerspricht, geht (Regel 10 andersherum: das Soll kommt
+    //    nicht aus mir).
+    const laengste = Math.max(...TOWER_ORDER.map((id) => statsFor(TOWERS[id], null, 1).range));
+    if (VERBUND_UMKREIS > laengste) {
+      fail(`Der Verbundumkreis ist ${VERBUND_UMKREIS}, die laengste Reichweite auf Stufe 1 `
+        + `nur ${Math.round(laengste)} - dann ist er kein Nachbarschaftszuschlag mehr.`);
+    }
   }
   // Zwei Tuerme dicht nebeneinander duerfen sich hoechstens leicht ueberdecken.
   //

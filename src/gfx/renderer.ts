@@ -1364,6 +1364,34 @@ export class Renderer {
       ctx.beginPath(); ctx.arc(sel.x, sel.y, st.range, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = hexA(tone, 0.75); ctx.lineWidth = 3;
       ctx.beginPath(); ctx.arc(sel.x, sel.y, st.range, 0, Math.PI * 2); ctx.stroke();
+
+      // **Der Verbund als Faeden** (v244, F4).
+      //
+      // Ein Zuschlag, der nur als Prozentzahl im Pruefsteg steht, ist eine
+      // Behauptung ueber das Feld - man muesste sie nachrechnen, um zu
+      // wissen, WOHER er kommt. Die Faeden sagen es: sie gehen zu genau den
+      // Tuermen, die ihn tragen.
+      //
+      // Dieselbe Sprache wie beim Schildtraeger, und aus demselben Grund
+      // (G5): eine Wirkung zwischen zwei Figuren muss man sehen, nicht
+      // erschliessen. Nur die Farbe ist eine andere - der Traeger ist ein
+      // Gegner, der Verbund gehoert dem Spieler.
+      const partner = s.verbundPartner(sel);
+      if (partner.length) {
+        ctx.save();
+        const puls = 0.6 + 0.3 * Math.sin(s.time * 2.4);
+        ctx.strokeStyle = hexA('#7FE7E0', 0.30 + 0.22 * puls);
+        ctx.lineWidth = 3;
+        ctx.setLineDash([9, 7]);
+        for (const o of partner) {
+          ctx.beginPath();
+          ctx.moveTo(sel.x, sel.y - 10);
+          ctx.lineTo(o.x, o.y - 10);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
     }
   }
 

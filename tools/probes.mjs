@@ -1390,6 +1390,69 @@ const PROBEN = [
     tor: 'uxtor',
   },
   {
+    // **Die Monokultur wird wieder die staerkste Aufstellung.**
+    //
+    // Ohne den Aurendeckel trifft die Aura jeden im Umkreis voll, ihre
+    // Wirkung waechst also mit der Pulkgroesse - und genau die bringen die
+    // schweren Wellen. Gemessen: "nur Frost" steigt von 11 auf 50 von 60
+    // Kristall und schlaegt damit das gemischte Feld (43).
+    name: 'Aurendeckel ausgebaut',
+    datei: 'src/game/state.ts',
+    regel: /        const teiler = targets\.length > AUREN_DECKEL \? AUREN_DECKEL \/ targets\.length : 1;/,
+    ersatz: '        const teiler = 1;',
+    tor: 'sim',
+  },
+  {
+    // **Der Verbund gibt nichts mehr.**
+    //
+    // Dann faellt das gemischte Feld von 43 auf 39, und die C18-Eroeffnung
+    // - die Karte mit einer Faehigkeit und ohne Verbesserungen - verliert in
+    // Welle 14. Das ist die Zahl, an der die Sperre der Eroeffnung haengt.
+    name: 'Verbund wirkt nicht mehr',
+    datei: 'src/game/verbund.ts',
+    regel: /export const VERBUND_STUFE = 0\.20;/,
+    ersatz: 'export const VERBUND_STUFE = 0;',
+    tor: 'smoke',
+  },
+  {
+    // **Der Verbund wird zur zweiten Kasse.**
+    //
+    // Bei +25 % je Art und drei Arten sind es +75 % Schaden allein aus der
+    // Lage - mehr als eine ganze Ausbaustufe, und die kostet Gold. Der
+    // Waechter zieht die Grenze bei 75 %.
+    name: 'Verbund schlaegt eine Ausbaustufe',
+    datei: 'src/game/verbund.ts',
+    regel: /export const VERBUND_STUFE = 0\.20;/,
+    ersatz: 'export const VERBUND_STUFE = 0.30;',
+    tor: 'guards',
+  },
+  {
+    // **Der Verbund wird unerreichbar.**
+    //
+    // Zwei Tuerme koennen nicht dichter als 111 Weltpunkte stehen -
+    // `canPlace` verlangt den halben Platzbedarf beider. Ein Umkreis von 80
+    // waere ein Zuschlag, den niemand je bekommt, und eine Wirkung, die nie
+    // eintritt, ist keine (Regel 5).
+    name: 'Verbund wird unerreichbar eng',
+    datei: 'src/game/verbund.ts',
+    regel: /export const VERBUND_UMKREIS = 260;/,
+    ersatz: 'export const VERBUND_UMKREIS = 80;',
+    tor: 'guards',
+  },
+  {
+    // **Der Pruefsteg verschweigt den Verbund.**
+    //
+    // Ein Zuschlag, den man nicht sieht, ist keine Entscheidung, sondern
+    // eine Ueberraschung - genau der Befund, an dem der Fruehstart bis v242
+    // haengengeblieben ist. Die Zeile steht auch dann da, wenn es keinen
+    // Verbund gibt: wer allein baut, soll sehen, dass ihm etwas entgeht.
+    name: 'Verbund steht nicht im Pruefsteg',
+    datei: 'src/game/turmwerte.ts',
+    regel: /    feld: null, name: 'Verbund',/,
+    ersatz: "    feld: null, name: 'Erledigt',",
+    tor: 'smoke',
+  },
+  {
     // **Der Fruehstart-Bonus wird auf dem Zielgeraet wieder unsichtbar.**
     //
     // Das ist die Regression, die es bis v242 wirklich gab: der Bonus stand

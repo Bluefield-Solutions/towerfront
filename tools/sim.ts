@@ -744,10 +744,23 @@ if (ground && ground.won && ground.lives >= mixed.lives) {
 // saehe aus wie ein zweiter Beweis.
 
 // 4. Keine einzelne Turmsorte darf das Spiel allein tragen.
+//
+// **Die Grenze ist seit v244 das gemischte Feld selbst, nicht 85 % vom
+// Kristall.** Die alte Fassung war eine Zahl neben der Sache: "nur Frost"
+// stand bei 50 von 60, die Schwelle bei 51, und das gemischte Feld bei 43 -
+// die Monokultur war die staerkste Aufstellung des Spiels, und die Pruefung
+// meldete gruen. Sie fragte "ist eine Sorte zu stark", wo die Frage
+// "schlaegt eine Sorte das Mischen" heisst; und die zweite Frage ist die,
+// wegen der es vier Turmarten gibt.
+//
+// Ein Gleichstand ist erlaubt. Es geht nicht darum, dass Mischen immer
+// besser sein MUSS - es darf nur nicht schlechter sein.
+const gemischtLeben = results.get('gemischt')?.lives ?? 0;
 for (const [name, r] of results) {
   if (name === 'gemischt') continue;
-  if (r.won && r.lives > START_LIVES * 0.85) {
-    errors.push(`"${name}" gewinnt allein mit ${r.lives}/${START_LIVES} - dominiert das Feld.`);
+  if (r.won && r.lives > gemischtLeben) {
+    errors.push(`"${name}" gewinnt allein mit ${r.lives}/${START_LIVES} und schlaegt damit `
+      + `das gemischte Feld (${gemischtLeben}) - dann ist die Turmwahl keine Frage mehr.`);
   }
 }
 

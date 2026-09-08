@@ -101,6 +101,8 @@ type EnemyId = Parameters<typeof konterSatz>[0];
 const { candidateSpots } = await import('./spots');
 const { WORLD_W, WORLD_H } = await import('../src/data/config');
 const { EARLY_BONUS_WINDOW } = await import('../src/data/waves');
+const { VERBUND_UMKREIS } = await import('../src/game/verbund');
+const { werteAmTurm } = await import('../src/game/turmwerte');
 
 // ---------------------------------------------------------------- Ablauf
 
@@ -3510,6 +3512,73 @@ step('Trefferstopp bleibt im Rahmen', () => {
 // Geprueft wird nicht, ob die Felder im Stand STEHEN, sondern ob nach dem
 // Laden dasselbe auf dem Feld ankommt. Ein Feld im Stand, das beim Laden
 // niemand liest, sieht genauso aus wie eines, das fehlt.
+/** **Der Verbund steht im Pruefsteg und stimmt** (v244, F4).
+ *
+ *  Ein Zuschlag, den man nicht sieht, ist keine Entscheidung, sondern eine
+ *  Ueberraschung - genau der Befund, an dem der Fruehstart bis v242 hing.
+ *  Und einer, der ANDERS angezeigt wird, als er wirkt, ist schlimmer als
+ *  keiner: dann plant der Spieler mit einer Zahl, die es nicht gibt.
+ *
+ *  Geprueft wird deshalb beides an derselben Stelle: die Zeile ist da, und
+ *  der angezeigte Schaden ist der, den der Turm wirklich macht. Die
+ *  Nullprobe steht daneben (Regel 13) - ein Turm allein muss "allein"
+ *  melden und seinen Grundschaden zeigen. */
+step('Verbund steht im Pruefsteg und stimmt', () => {
+  const g = new GameState();
+  g.reset(4242, 'normal', 'spiralhain');
+  g.gold = 99999;
+  const plaetze = candidateSpots(g);
+  if (plaetze.length < 2) throw new Error('Zu wenige Bauplaetze - die Probe misst nichts.');
+
+  // Erst allein: kein Verbund, Grundschaden.
+  if (!g.build(plaetze[0].x, plaetze[0].y, 'arrow')) throw new Error('Kein Turm setzbar.');
+  const t = g.gebaute[0];
+  if (g.verbundVon(t) !== 0) {
+    throw new Error(`Ein einzelner Turm hat Verbund ${g.verbundVon(t)}.`);
+  }
+  const allein = werteAmTurm(TOWERS[t.def], t.branch, t.level, t.kills, g.verbundVon(t));
+  const zeile = (n: string) => allein.find((z) => z.name === n);
+  if (zeile('Verbund')?.wert !== 'allein') {
+    throw new Error(`Der einzelne Turm meldet Verbund "${zeile('Verbund')?.wert}".`);
+  }
+
+  // Jetzt einen Turm ANDERER Art danebenstellen, innerhalb des Umkreises.
+  //
+  // Gesucht wird der naechste Platz, an dem ein Frostturm WIRKLICH steht -
+  // nicht der naechste in der Liste. `candidateSpots` ist fuer den Bogenturm
+  // gerechnet, und der Frostturm braucht mehr Platz; der erste Anlauf nahm
+  // den naechstbesten und scheiterte am Bauriegel.
+  const nahe = plaetze
+    .filter((p) => Math.hypot(p.x - t.x, p.y - t.y) > 0
+      && Math.hypot(p.x - t.x, p.y - t.y) < VERBUND_UMKREIS)
+    .sort((a, b) => Math.hypot(a.x - t.x, a.y - t.y) - Math.hypot(b.x - t.x, b.y - t.y));
+  if (!nahe.length) throw new Error('Kein zweiter Bauplatz im Verbundumkreis - die Probe misst nichts.');
+  if (!nahe.some((p) => g.build(p.x, p.y, 'frost'))) {
+    throw new Error(`An keinem der ${nahe.length} Plaetze im Umkreis laesst sich ein `
+      + 'Frostturm setzen - die Probe misst nichts.');
+  }
+  if (g.verbundVon(t) !== 1) {
+    throw new Error(`Mit einem Nachbarn anderer Art steht der Verbund auf ${g.verbundVon(t)}.`);
+  }
+
+  // Und die angezeigte Zahl muss die WIRKENDE sein.
+  const werte = werteAmTurm(TOWERS[t.def], t.branch, t.level, t.kills, g.verbundVon(t));
+  const gezeigt = Number(werte.find((z) => z.name === 'Schaden')?.wert);
+  const wirklich = g.towerStats(t).damage;
+  if (!Number.isFinite(gezeigt) || Math.abs(gezeigt - wirklich) > 0.11) {
+    throw new Error(`Der Pruefsteg zeigt ${gezeigt} Schaden, der Turm macht ${wirklich}.`);
+  }
+  if (!/^\+\d+ % · 1 Art$/.test(werte.find((z) => z.name === 'Verbund')?.wert ?? '')) {
+    throw new Error(`Die Verbundzeile lautet "${werte.find((z) => z.name === 'Verbund')?.wert}".`);
+  }
+  // Und die Faeden im Bild zeigen auf genau den Nachbarn, der zaehlt.
+  const partner = g.verbundPartner(t);
+  if (partner.length !== 1 || partner[0].def !== 'frost') {
+    throw new Error(`Die Verbundfaeden gehen zu ${partner.length} Turm/Tuermen `
+      + `(${partner.map((o) => o.def).join(', ')}) statt zu dem einen Frostturm.`);
+  }
+});
+
 /** **Der Fruehstart als Entscheidung** (v243, F2).
  *
  *  Die Sache gibt es seit Langem, im Bild stand aber nichts davon - eine

@@ -910,7 +910,7 @@ export class UI {
         ? def.name
         : def.branches[sel.branch].name;
       this.iStufe.textContent = `Stufe ${sel.level}`;
-      this.iStats.innerHTML = werteAmTurm(def, sel.branch, sel.level, sel.kills)
+      this.iStats.innerHTML = werteAmTurm(def, sel.branch, sel.level, sel.kills, s.verbundVon(sel))
         .map(zeile).join('');
       this.rollhinweis();
       this.renderUpgrades();

@@ -1,6 +1,6 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v241 · 08.09.2026
+Stand: v248 · 08.09.2026
 
 Die Datei ist **eine** Datei. Jedes Bild steckt als Datenadresse darin und
 wird dabei ein Drittel größer. Ohne Obergrenze wächst sie mit jedem Bild, bis
@@ -42,14 +42,14 @@ leicht verwechselt.
 
 ## Was heute drinsteckt
 
-Gemessen an `dist/index.html` (v233, 07.09.2026):
+Gemessen an `dist/index.html` (v248, 08.09.2026):
 
 | Teil | eingebettet | Anteil |
 |---|---|---|
-| Bildvorrat (44 WebP) | **1094 KB** | 77 % |
+| Bildvorrat (44 WebP) | **1095 KB** | 77 % |
 | Startbilder (11 PNG/JPEG) | 108 KB | 8 % |
-| alles übrige — Code, HTML, Stilvorlage | 217 KB | 15 % |
-| **gesamt** | **1423 KB** | von **1800** erlaubt |
+| alles übrige — Code, HTML, Stilvorlage | 225 KB | 16 % |
+| **gesamt** | **1429 KB** | von **1800** erlaubt |
 
 Alle vier Zahlen sind an `dist/index.html` selbst gemessen, indem jede
 `data:`-Adresse darin gezählt wird — nur die letzte Zeile ist die
@@ -57,13 +57,18 @@ Alle vier Zahlen sind an `dist/index.html` selbst gemessen, indem jede
 Rohsumme aus dem Packwerkzeug mal 1,34, also eine Rechnung über eine falsche
 Zahl. Die 1423 sagt `ls`.
 
-**Nachgemessen in v240** (`npm run art`, ohne Rohbilder — die Größe steht in
+**Nachgemessen in v248** (`npm run art`, ohne Rohbilder — die Größe steht in
 `src/gfx/assets/*.ts` und ist ohne Packlauf zu lesen, Regel 12): Gegner 71,
-Objekte 192, Türme 302, Untergründe 256, zusammen **821 KB von 1075**. Die
-ausgelieferte Datei wiegt **1423 KB von 1800**. Gegenüber v233 sind das vier
-Kilobyte weniger Bildvorrat und vier mehr Code — die Bedienung hat in v239
-Turmsymbole bekommen, aber die entstehen zur Laufzeit aus dem vorhandenen
-Vorrat und liegen nicht als eigene Bilder in der Datei.
+Objekte 192, Türme 302, Untergründe 256, zusammen **821 KB von 1075** — seit
+v240 unverändert, es ist in sieben Fassungen kein einziges Bild dazugekommen.
+
+**Gewachsen ist der Code: 217 → 225 KB.** Acht Kilobyte für den Verbund
+(v244/v245), den Frühstart im Wellenknopf (v243), das Turmbild im Menü und
+die Zweigwirkung (v247/v248). Die Turmsymbole und das Kopfbild entstehen zur
+Laufzeit aus dem vorhandenen Vorrat und liegen nicht als eigene Bilder in der
+Datei — sonst wären es vier Bilder je Karte, also sechzehn.
+
+Die ausgelieferte Datei wiegt **1429 KB von 1800**.
 Die alte Fassung dieser Tabelle spaltete sie in „Startbilder 108" und „Code
 212" auf — zusammen 320, was zur Gesamtzahl nicht mehr passte. Eine Zeile,
 die man nicht misst, schreibt man als Differenz hin oder gar nicht.

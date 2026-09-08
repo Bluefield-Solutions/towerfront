@@ -1,6 +1,6 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v241 · 08.09.2026
+Stand: v248 · 08.09.2026
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Towerfront.html`
 
 > **Aufbau dieses Dokuments.** Die Abschnitte 1 bis 3.4 beschreiben den
@@ -20,8 +20,20 @@ genauso wie im Desktop-Browser.
 
 **Der Kern in einem Satz:** Die Leere schickt Wellen über einen gewundenen Weg
 zum Herzkristall, und du entscheidest mit jedem Goldstück neu, ob du in Breite
-oder in Tiefe investierst — wobei jeder Turm Platz braucht und nicht überall
-Platz ist.
+oder in Tiefe investierst — wobei jeder Turm Platz braucht, nicht überall Platz
+ist, und **Türme verschiedener Art einander verstärken, wenn sie beieinander
+stehen**.
+
+**Der letzte Halbsatz ist seit v244 da, und er hat gefehlt.** Bis dahin
+belohnte das Spiel das Mischen mit gar nichts — gemessen war „nur Frosttürme"
+sogar die stärkste Aufstellung des ganzen Spiels (50 von 60 Kristall gegen 43
+im gemischten Feld). Ein Genre, dessen ganze Frage „welcher Turm wogegen"
+heisst, hatte auf seine eigene Frage keine Antwort. Der **Verbund** gibt einem
+Turm je andere Turmart in 260 Weltpunkten Umkreis +20 % Schaden, höchstens
+drei; zwei Nachbarn derselben Art zählen einmal. Damit ist der Bauplatz nicht
+mehr nur eine Frage an den Weg, sondern auch eine an den eigenen Aufbau — genau
+das, was der Referenzabgleich am Monkey Village aus Bloons TD 6 als das
+Wesentliche benannt hat.
 
 **Die Fantasie, die das Spiel bedient:** Ein Feld, das du selbst gebaut hast,
 arbeitet ohne dich. Der Moment, in dem eine Welle startet und du nur noch
@@ -1634,3 +1646,38 @@ kopflose Rauchtest und die Leistungsmessung.
 
 Was noch fehlt: mehr als eine Karte, fliegende Gegner, Fähigkeiten auf Abruf,
 Endlosmodus. Das komplette Rückstandsverzeichnis steht in der zweiten Datei.
+
+
+---
+
+## 6. Stand v248 — was seit v241 dazugekommen ist
+
+Sieben Fassungen, und der rote Faden durch alle ist derselbe: **eine Regel,
+die niemand sieht, ist keine Regel — und eine Messung, die weniger sagt als
+der Satz daneben, ist keine Messung.**
+
+| | |
+|---|---|
+| **v242** | Sechs verfallene Gegenproben repariert. Drei lagen an einem Konstruktionsfehler im UX-Tor: es lädt `dist/`, baut aber nicht — der Eingriff kam nie an. `npm run uxtor` baut jetzt selbst, und das Werkzeug bricht ab, wenn die gebaute Datei älter ist als der Quelltext |
+| **v243** | Der **Frühstart** steht im Wellenknopf. Die Mechanik gab es seit Langem; angezeigt wurde sie als zweite Zeile, und die trug auf dem Zielgerät `display: none` |
+| **v244** | Der **Verbund** und der **Aurendeckel** — F4. Über acht Deckelwerte gibt es keinen, bei dem die Monokultur bricht *und* die Eröffnung hält; die Antwort war eine andere Art von Regel, nicht eine andere Zahl |
+| **v245** | Der Verbund steht in der **Turmwahl** — die Auskunft vor der Entscheidung statt danach |
+| **v246** | **F7 war ein Messfehler.** „Zwei von vier Karten sind nicht auf drei Sterne spielbar" stand auf drei Bot-Läufen mit `maxTowers: 12, maxLevel: 3` von sechs Stufen. Ein Bestleistungs-Bot holt auf dem Farnkessel 50 statt 24 — alle vier Karten erreichen drei Sterne |
+| **v247** | Das **Turmmenü**: es endet an seinem Inhalt statt an der Fensterhöhe (276 → 230 Punkte), trägt das Bild seines Turms und zwei sichtbar verschiedene Zweige |
+| **v248** | Was v247 drei Toren an Gegenstand genommen hat, und **H6**: die Zweigwahl sagt in Zahlen, worin sich die zwei Zweige unterscheiden |
+
+**Gemessen über die sieben Fassungen** (`npm run uxaudittor`, 844 × 390, mit
+`elementFromPoint` statt Umrisskästen):
+
+| Zustand | v238 | v248 |
+|---|---|---|
+| Ruhe | 17,6 % | **14,2 %** |
+| laufende Welle | 16,4 % | **14,3 %** |
+| Turmmenü | 39,5 % | **32,9 %** |
+| Bedienband | 151 Punkte, drei Reihen | **96, eine** |
+
+**Drei Fehler in meiner eigenen Arbeit stehen im Verzeichnis statt
+weggeräumt:** eine erfundene Wächterregel, die die Messung widerlegt hat
+(v244); eine Stilregel, die wirkungslos war und deren Gegenprobe es gezeigt
+hat (v247); und eine Zusage aus v137, die ich in v247 still abgeschaltet habe,
+ohne es zu merken (v248).

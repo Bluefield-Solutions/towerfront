@@ -532,14 +532,35 @@ if (!start) {
           }
           // **Stehen Wert und Beschriftung beieinander?**
           //
-          // Auf dem Telefon ist der Steg fest so hoch wie das Fenster, und
-          // die Werteliste hat einen Boden von einem Drittel - bei einer
-          // kurzen Liste bleibt darin Platz uebrig, und ein Raster verteilt
-          // uebrigen Platz auf seine Zeilen. Genau hier wirkt
-          // `align-content: start`; am Schreibtisch ist der Steg seit v206
-          // inhaltshoch, dort gibt es nichts zu verteilen.
+          // Ein Raster verteilt uebrigen Platz auf seine Zeilen: hat die
+          // Werteliste mehr Hoehe, als ihre Zeilen brauchen, stehen Wert und
+          // Beschriftung am Ende 44 Punkte auseinander. Dagegen steht
+          // `align-content: start`.
+          //
+          // **Der Zustand wird seit v248 GESTELLT, nicht abgewartet.** Bis
+          // v247 gab es ihn von selbst: der Steg war auf dem Telefon fest so
+          // hoch wie das Fenster und hatte Platz uebrig. Seit er an seinem
+          // Inhalt endet, gibt es auf keinem Fenster mehr etwas zu
+          // verteilen - und die Gegenprobe dazu bewies nichts mehr (der
+          // volle Lauf zu v247 hat es gemeldet). Ein Messplatz, der auf
+          // einen Zustand wartet, hoert leise auf zu pruefen, sobald der
+          // Zustand verschwindet; dieselbe Form wie die vier Funde aus v219.
+          //
+          // Gestellt wird er, indem der Steg fuer die Dauer der Messung eine
+          // feste Hoehe bekommt - genau das, was eine kuenftige Aenderung
+          // versehentlich tun koennte. Danach wird sie zurueckgenommen: eine
+          // Messung, die ihren Gegenstand veraendert, misst den naechsten
+          // mit (die Lehre aus dem Bauraster des UX-Tors).
           {
             const weit = await seite.evaluate(() => {
+              const steg = document.querySelector('.inspector');
+              const vorher = steg ? [steg.style.height, steg.style.maxHeight] : null;
+              // `maxHeight` muss mit weg: sie gewinnt gegen `height`, und
+              // ohne sie waere die gestellte Hoehe auf die Fensterhoehe
+              // gedeckelt. Mit 340 gegen 288 gemessen waren es 33 Punkte
+              // Zeilenhoehe gegen eine Grenze von 32 - eine Nadel, keine
+              // Flaeche; mit 520 sind es 84.
+              if (steg) { steg.style.maxHeight = 'none'; steg.style.height = '520px'; }
               const dts = [...document.querySelectorAll('.insp-stats dt')];
               const dds = [...document.querySelectorAll('.insp-stats dd')];
               let schlimm = { was: '', ab: -1 };
@@ -547,15 +568,51 @@ if (!start) {
                 const ab = dds[i].getBoundingClientRect().height;
                 if (ab > schlimm.ab) schlimm = { was: (dts[i] ?? dds[i]).textContent.trim(), ab };
               }
+              if (steg && vorher) { [steg.style.height, steg.style.maxHeight] = vorher; }
               return schlimm;
             });
             if (weit.ab > ZEILE_MAX) {
               fail(`Prüfsteg (Ziellogik ${wie}): die Wertezeile "${weit.was}" ist `
-                + `${Math.round(weit.ab)} Punkte hoch (erlaubt ${ZEILE_MAX}). Ein Raster ohne `
-                + '`align-content` verteilt uebrigen Platz auf seine Zeilen, sobald in der '
-                + 'Liste Platz uebrig ist.');
+                + `${Math.round(weit.ab)} Punkte hoch (erlaubt ${ZEILE_MAX}), sobald der Steg `
+                + 'mehr Hoehe hat als seine Zeilen brauchen. Ein Raster ohne `align-content` '
+                + 'verteilt uebrigen Platz auf seine Zeilen.');
             }
           }
+          // **Sagen die zwei Ausbauzweige, worin sie sich unterscheiden?**
+          // (v248, H6)
+          //
+          // Die Wahl ist endgueltig. Bis v247 stand daneben ein Satz, und
+          // der trug auf dem Zielgeraet `display: none` - wer auf dem
+          // Telefon spielt, waehlte zwischen zwei Namen. Jetzt stehen dort
+          // Zahlen.
+          //
+          // Geprueft wird nicht, DASS eine Zeile da steht, sondern dass die
+          // beiden Zeilen VERSCHIEDEN sind. Die erste Fassung dieser Zeile
+          // nahm je Zweig das Merkmal, das sich am staerksten gegenueber
+          // heute aendert - und schrieb damit bei vier von acht Zweigen
+          // "Durchschlag neu" auf BEIDE Karten. Eine Auskunft, die auf
+          // beiden Seiten dasselbe sagt, ist keine.
+          if (wie === 'zu') {
+            const zweige = await seite.evaluate(() => [...document.querySelectorAll('.branch')]
+              .map((b) => ({
+                name: (b.querySelector('.br-n')?.textContent ?? '').trim(),
+                wirkung: (b.querySelector('.br-w')?.textContent ?? '').trim(),
+              })));
+            if (zweige.length === 2) {
+              console.log(`Zweigwirkung: ${zweige.map((z) => `${z.name} "${z.wirkung}"`).join(' / ')}`);
+              for (const z of zweige) {
+                if (!/Schaden\/s [+−]\d/.test(z.wirkung)) {
+                  fail(`Ausbauzweig "${z.name}" sagt nicht, was er aendert ("${z.wirkung}"). `
+                    + 'Die Zweigwahl ist endgueltig - ohne Auskunft ist sie ein Muenzwurf.');
+                }
+              }
+              if (zweige[0].wirkung && zweige[0].wirkung === zweige[1].wirkung) {
+                fail(`Beide Ausbauzweige sagen dasselbe ("${zweige[0].wirkung}"). `
+                  + 'Eine Auskunft, die auf beiden Seiten gleich lautet, unterscheidet nichts.');
+              }
+            }
+          }
+
           // **Und der Name eigens**, weil ihn die Pruefung darueber nicht
           // sieht: sie ueberspringt alles mit `overflow: hidden`, und genau
           // das traegt er - er kuerzt sich mit drei Punkten ab, statt seinen

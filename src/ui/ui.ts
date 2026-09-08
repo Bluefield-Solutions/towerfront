@@ -15,7 +15,7 @@ import { turmSymbol } from '../gfx/towerart';
 import { TUTORIAL, kartenEinfuehrung, type TutorialStep } from '../game/tutorial';
 import { konterSatz } from '../data/konter';
 import type { GameState } from '../game/state';
-import { werteAmTurm, werteVorKauf, type Wertzeile } from '../game/turmwerte';
+import { werteAmTurm, werteVorKauf, zweigWirkung, type Wertzeile } from '../game/turmwerte';
 import { VERBUND_STUFE } from '../game/verbund';
 import { bilanzblatt } from './statsblatt';
 import { aussaatLesen, laufAlsText } from '../game/mitschrift';
@@ -1207,12 +1207,20 @@ export class UI {
     }
 
     if (sel.branch === null) {
+      const wirkung = zweigWirkung(def, sel.branch, sel.level);
       this.iUps.innerHTML = def.branches.map((br, i) => {
         const l = br.levels[0];
         const poor = s.gold < l.cost;
         return `<button class="branch" data-branch="${i}" style="--tone:${br.color}"` +
           `${poor ? ' disabled' : ''}>` +
           `<span class="br-n">${br.name}</span>` +
+          // **Die Zahlen stehen VOR dem Satz** (v248, H6).
+          //
+          // Der Satz erklaert die Absicht, die Zahlen die Wirkung - und auf
+          // dem Zielgeraet ist nur fuer eines Platz. Also steht das oben,
+          // was dort bleibt: `.br-b` faellt unter 480 Punkten Hoehe weg,
+          // `.br-w` nicht.
+          `<span class="br-w">${wirkung[i] ?? ''}</span>` +
           `<span class="br-b">${br.blurb}</span>` +
           `<span class="br-c">${l.cost} Gold</span></button>`;
       }).join('');

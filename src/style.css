@@ -501,10 +501,20 @@ html, body {
 
      **Anteilig statt absolut** (Regel 2). Die 96 Punkte standen fest, und
      als die Kopfzeile auf drei Zeilen wuchs, verlangte der Inhalt 322
-     Punkte in einem Kasten von 288 - abgeschnitten wurde die Zielwahl. Ein
-     Drittel des Stegs gibt nach, wenn ueber ihm etwas waechst, und bleibt
-     bei jeder Bildschirmhoehe dieselbe Zusage. */
-  min-height: 33%;
+     Punkte in einem Kasten von 288 - abgeschnitten wurde die Zielwahl.
+
+     **Und `33%` war ab v247 gegenstandslos, ohne dass es jemand gemerkt
+     hat** (behoben in v248). Ein Prozentsatz braucht eine bestimmte Hoehe
+     des Elternteils; seit der Steg an seinem Inhalt endet, hat er keine,
+     und die Zusage fiel still weg. Nachgewiesen an der Gegenprobe zum
+     ueberlaufenden Steg: von fuenf Wertezeilen war KEINE mehr zu sehen -
+     genau der Zustand von v137, gegen den diese Zeile steht.
+
+     Jetzt haengt der Boden an der SCHRIFT statt am Kasten: drei Zeilen,
+     gerechnet aus der Textgroesse der Skala. Das ist dieselbe Zusage wie
+     die des Browsertors ("mindestens drei Zeilen sichtbar"), es waechst mit
+     der Typoskala mit, und es ist auf jedem Fenster bestimmt. */
+  min-height: calc(3 * var(--s-text) * 1.6);
 }
 /* **Und waehrend die Ziellogik offen steht, gibt sie ganz nach.**
    Die fuenf Knoepfe brauchen 44 Punkte plus Abstand; ohne diese Zeile
@@ -563,8 +573,15 @@ html, body {
    Hoehe. Seit `bottom` weg ist, kommt die Hoehe vom Inhalt, und ein
    Flex-Kind waechst dann nicht. Gemessen: mit und ohne die Zeile 230 Punkte,
    und die Gegenprobe blieb gruen (Regel 5). Sie ist wieder draussen; was
-   wirkt, ist `bottom: auto`. */
-.insp-stats { min-height: 0; }
+   wirkt, ist `bottom: auto`.
+
+   **Und `min-height: 0` stand hier eine Fassung lang zu Unrecht** (v248).
+   Sie kam mit der Regel fuer hohe Fenster mit und hatte dort ihren Grund:
+   ein Prozentsatz gegen eine Hoehe, die selbst vom Inhalt kommt, ist nicht
+   definiert. Seit v247 gilt die Regel ueberall - und damit hat sie den
+   Boden der Werteliste ueberall abgeschaltet, auch dort, wo er gebraucht
+   wird. Der Boden steht jetzt in Zeilen statt in Prozent (siehe oben) und
+   ist auf jedem Fenster bestimmt; diese Zeile ist damit ueberfluessig. */
 
 /* Rollhinweis (D24).
    Technisch rollte die Werteliste schon immer, sichtbar war es nicht: auf dem
@@ -962,6 +979,13 @@ html, body {
 .branch:active:not(:disabled) { transform: scale(0.97); }
 .br-n { font-size: var(--s-text); font-weight: 700; color: var(--tone); }
 .br-b { font-size: var(--s-klein); line-height: 1.35; color: var(--muted); }
+/* **Was der Zweig wirklich aendert** (v248, H6). Eine Zeile, in der Farbe
+   des Zweiges: sie gehoert zur Entscheidung, nicht zur Beschreibung. */
+.br-w {
+  font-size: var(--s-marke); font-weight: 700; letter-spacing: 0.03em;
+  color: var(--tone); font-variant-numeric: tabular-nums;
+}
+.br-w:empty { display: none; }
 .br-c {
   font-size: var(--s-klein); font-weight: 700; color: var(--gold);
   font-variant-numeric: tabular-nums;
@@ -1111,7 +1135,13 @@ html, body {
      haeufigsten sieht, und die Haelfte seiner Hoehe war Zeilenabstand. */
   .insp-stats { grid-template-columns: 1fr auto 1fr auto; gap: 3px 8px; }
   .insp-ups { flex-direction: row; gap: 5px; }
-  .branch { flex: 1 1 0; min-width: 0; padding: 6px 7px 6px 4px; }
+  /* **Enger, seit die Zweige ihre Wirkung tragen** (v248). Die zwei Zahlen
+     brauchen eine zweite Zeile; die Karte waechst dadurch von 46 auf 61
+     Punkte, und der Steg sperrt 2 Punkte mehr vom Bildschirm. Vier davon
+     kommen ueber das Polster zurueck - die Mindesthoehe von 46 bleibt
+     unangetastet, das ist das Fingermass. */
+  .branch { flex: 1 1 0; min-width: 0; padding: 4px 6px 4px 4px; }
+  .insp-ups { margin-bottom: 5px; }
   /* **Der Zweigtext bleibt auf dem flachen Gerät ausgeblendet - gemessen,
      nicht aus Bequemlichkeit** (v239, H6).
      Er gehört dorthin: die Zweigwahl ist ENDGÜLTIG, und ohne Auskunft wählt

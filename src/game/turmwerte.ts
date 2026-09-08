@@ -25,7 +25,7 @@
  *  kommt und hier niemand eine Zeile nachtraegt. Genau das ist dreimal
  *  passiert. */
 import {
-  nextFor, statsFor,
+  MAX_LEVEL, nextFor, statsFor,
   type BranchIndex, type TowerDef, type TowerStats,
 } from '../data/towers';
 import { VERBUND_STUFE } from './verbund';
@@ -66,6 +66,85 @@ export function werteVorKauf(def: TowerDef): Wertzeile[] {
   if (st.pierce) z.push({ feld: 'pierce', name: 'Durchschlag', wert: String(st.pierce) });
   z.push({ feld: 'hitsAir', name: 'Luftziele', wert: def.hitsAir ? 'ja' : 'nein' });
   return z;
+}
+
+/** **Was ein Zweig WIRKLICH aendert - als Zahlen statt als Satz** (v248, H6).
+ *
+ *  Die Zweigwahl ist endgueltig, und bis v247 stand daneben ein Satz ("Halbe
+ *  Wucht, doppelte Schlagzahl"). Auf dem ZIELGERAET stand er nicht: `.br-b`
+ *  trug dort `display: none`, weil vier Zeilen Prosa je Zweig neunzig Punkte
+ *  kosten, die dieser Bildschirm nicht hat. Wer auf dem Telefon spielt -
+ *  und das ist das Zielgeraet - waehlte also zwischen zwei Namen.
+ *
+ *  Zahlen kosten eine Zeile statt vier und sagen mehr: sie stehen im
+ *  Verhaeltnis zu dem, was der Turm HEUTE kann, und sie stimmen auch dann
+ *  noch, wenn jemand einen Wert aendert. Ein Satz veraltet still - und
+ *  dieses Verzeichnis hat davon genug.
+ *
+ *  Gezeigt werden zwei Zahlen. **Schaden je Sekunde** fasst beide Haelften
+ *  des Ausbaus zusammen; Schaden allein waere irrefuehrend, weil ein Zweig
+ *  regelmaessig Wucht gegen Takt tauscht. Dazu die groesste Aenderung unter
+ *  den Eigenschaften, die den Zweigen ihren Charakter geben - und genau die
+ *  ist die Entscheidung: Schaden je Sekunde bekommen beide, weiter oder
+ *  haerter wird nur einer.
+ *
+ *  Der Satz bleibt daneben stehen, wo Platz ist. Er erklaert die ABSICHT,
+ *  die Zahlen die Wirkung; das eine ersetzt das andere nicht. */
+const MERKMALE: [string, keyof TowerStats][] = [
+  ['Reichweite', 'range'], ['Radius', 'splash'], ['Bremse', 'slow'],
+  ['Durchschlag', 'pierce'], ['Sprünge', 'chains'], ['Bremsdauer', 'slowTime'],
+];
+
+function delta(v: number): string {
+  const p = Math.round(v * 100);
+  return `${p >= 0 ? '+' : '−'}${Math.abs(p)} %`;
+}
+
+export function zweigWirkung(def: TowerDef, von: BranchIndex, level: number): [string, string] {
+  if (level >= MAX_LEVEL || def.branches.length < 2) return ['', ''];
+  const jetzt = statsFor(def, von, level);
+  const dann: TowerStats[] = [statsFor(def, 0, level + 1), statsFor(def, 1, level + 1)];
+  const dps = (st: TowerStats): number => st.damage / st.cooldown;
+
+  // **Gesucht ist das Merkmal, in dem sich die ZWEIGE unterscheiden - nicht
+  // das, in dem sich jeder am meisten von heute unterscheidet.**
+  //
+  // Die erste Fassung fragte das zweite, und gemessen sagte sie bei vier von
+  // acht Zweigen "Durchschlag neu": ein Merkmal, das der Turm heute gar
+  // nicht hat, schlaegt jede prozentuale Aenderung. Beide Karten trugen
+  // dieselbe Zeile, und die Entscheidung stand wieder nirgends. Die Frage
+  // heisst nicht "was aendert sich", sondern "was ist der Unterschied".
+  let feld: keyof TowerStats | null = null;
+  let beste = 0;
+  for (const [, f] of MERKMALE) {
+    const a = Number(dann[0][f] ?? 0);
+    const b = Number(dann[1][f] ?? 0);
+    const gross = Math.max(a, b);
+    if (gross === 0) continue;
+    const unterschied = Math.abs(a - b) / gross;
+    if (unterschied > beste) { beste = unterschied; feld = f; }
+  }
+  const name = MERKMALE.find(([, f]) => f === feld)?.[0] ?? '';
+
+  return [0, 1].map((i) => {
+    const teile = [`Schaden/s ${delta((dps(dann[i]) - dps(jetzt)) / dps(jetzt))}`];
+    // Unter fuenf Prozent Unterschied ist es keine Entscheidung, sondern
+    // Rauschen - dann steht die zweite Zahl gar nicht da.
+    if (feld && beste >= 0.05) {
+      const a = Number(jetzt[feld] ?? 0);
+      const b = Number(dann[i][feld] ?? 0);
+      // Was der Turm heute noch gar nicht hat, steht als ZAHL da, nicht als
+      // Prozentsatz: "Durchschlag +100 %" ist bei einem Ausgangswert von
+      // null keine Auskunft, sondern eine Division, die nicht stattgefunden
+      // hat. Und die Null selbst wird zum Strich - die Entscheidung ist
+      // "der eine kann es, der andere nicht", und ein Strich sagt das
+      // schneller als eine Ziffer.
+      teile.push(a === 0
+        ? `${name} ${b > 0 ? Math.round(b * 100) / 100 : '—'}`
+        : `${name} ${delta((b - a) / a)}`);
+    }
+    return teile.join(' · ');
+  }) as [string, string];
 }
 
 /** Was am gebauten Turm zu sehen ist, mit der naechsten Stufe daneben.

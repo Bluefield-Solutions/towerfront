@@ -1,6 +1,6 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v241 · 08.09.2026
+Stand: v248 · 08.09.2026
 
 > „Es kommt kaum Spielspaß auf."
 
@@ -263,27 +263,42 @@ spannendste. Verlieren ist spielbar.
 
 ## Teil 4 — Soll
 
-| # | Soll | woher | heute |
-|---|---|---|---|
-| G1 | **Verluste verteilen sich über mindestens fünf Wellen**, und keine Phase von mehr als drei Wellen ist folgenlos | Kingdom Rush | 2 Wellen, 13 folgenlos |
-| G2 | **Die Zweigwahl ändert das Ergebnis um mindestens 15 %** eines Kristalls | BTD6 | 5 % |
-| G3 | **Kein einzelner Turmtyp schlägt das gemischte Feld** | alle drei | „nur Frost" ist der beste Lauf |
-| G4 | **Der Abstand zwischen dem besten und dem schwächsten Spielstil beträgt mindestens 20 Punkte** | Handwerk | 9 |
-| G5 | **Weniger als 20 % des Goldes bleiben liegen** | Kingdom Rush | 42 % |
-| G6 | **Die Druckkurve steigt monoton**, und die letzte Welle ist die Spitze | alle drei | wirksam gerechnet 1–3 Rückfälle, Finale bei 81–100 % — seit v240 als Ratsche gehalten |
-| G7 | **In jeder Welle steht eine Entscheidung an**, nicht nur beim Bauen | Kingdom Rush | keine |
-| G8 | **Jeder Zielmodus gewinnt irgendwo allein** | Regel 5, sinngemäß | „nah" nirgends |
-| G9 | **Jede Karte ist auf drei Sterne spielbar** | Handwerk | 2 von 4 |
-| G10 | **Der Wellenfortschritt ist jederzeit ablesbar** | alle drei | nicht vorhanden |
-| G11 | **Ein Durchbruch ist ein benanntes Ereignis** mit Bild und Ton, kein stiller Abzug | Defense Grid | still |
-| G12 | **Der Hauptknopf ist nie tot** — während der Welle trägt er die nächste Handlung | Kingdom Rush (Frühstart) | ausgegraut |
+| # | Soll | woher | v238 | v248 |
+|---|---|---|---|---|
+| G1 | **Verluste über mindestens fünf Wellen**, keine folgenlose Phase von mehr als drei | Kingdom Rush | 2 Stellen, 29 % in der letzten | **2 Stellen** (W14:10 W15:7) — offen |
+| G2 | **Die Zweigwahl ändert das Ergebnis um mindestens 15 %** | BTD6 | 5 % | **18 %** beim Mörser (43 gegen 54), 3–5 % bei den drei anderen — ein Viertel erfüllt |
+| G3 | **Kein einzelner Turmtyp schlägt das gemischte Feld** | alle drei | „nur Frost" 50 gegen 43 | **11 gegen 43** — erfüllt in v244, und der Wächter misst jetzt gegen das gemischte Feld statt gegen eine Zahl |
+| G4 | **Abstand zwischen bestem und schwächstem Spielstil ≥ 20 Punkte** | Handwerk | 9 | **6** — offen, und schlechter: der Verbund hebt die schwächeren Stile mit |
+| G5 | **Weniger als 20 % des Goldes bleiben liegen** | Kingdom Rush | 42 % | **43 %** — unverändert offen |
+| G6 | **Die Druckkurve steigt monoton**, letzte Welle ist die Spitze | alle drei | wirksam 1–3 Rückfälle, Finale 81–100 % | unverändert — die Ratsche aus v240 hält es, der Hebel ist das Knie und nicht der Plan (F9) |
+| G7 | **In jeder Welle steht eine Entscheidung an** | Kingdom Rush | keine | **der Frühstart steht im Wellenknopf** (v243) — erfüllt, das Risiko fehlt (F10) |
+| G8 | **Jeder Zielmodus gewinnt irgendwo allein** | Regel 5 | „nah" nirgends | „nah" 1, **„stark" 0** — der Punkt ist gewandert, nicht verschwunden (F6) |
+| G9 | **Jede Karte ist auf drei Sterne spielbar** | Handwerk | 2 von 4 | **4 von 4** — erfüllt in v246, und es war ein Messfehler, kein Balancefehler |
+| G10 | **Der Wellenfortschritt ist jederzeit ablesbar** | alle drei | nicht vorhanden | **„Welle 3 · noch 12" im Hauptknopf** (v239) — erfüllt |
+| G11 | **Ein Durchbruch ist ein benanntes Ereignis** | Defense Grid | still | **die Zahl in der Kopfzeile schlägt aus** (v239) — erfüllt |
+| G12 | **Der Hauptknopf ist nie tot** | Kingdom Rush | ausgegraut, „Welle läuft" | erfüllt in v239, seit v243 trägt er zusätzlich das Frühstart-Fenster |
 
-**Zwölf Punkte, null ganz erfüllt** — und einer davon, G6, stand nach einer
-falsch gemessenen Zahl schlimmer da, als er ist (siehe 2.6). Das ist unangenehm und es ist genau der
-Grund, warum die Empfindung „kaum Spielspaß" richtig ist: das Spiel ist
-technisch sauber, gemessen bestanden und in fast jeder Genre-Kategorie
-abgehakt — aber die Kennzahlen, die es prüft, prüfen Korrektheit, nicht
-Spannung.
+**Beim Abgleich in v238: zwölf Punkte, null ganz erfüllt** — und einer davon,
+G6, stand nach einer falsch gemessenen Zahl schlimmer da, als er ist (siehe
+2.6). Das war der Grund, warum die Empfindung „kaum Spielspaß" richtig war:
+das Spiel war technisch sauber, gemessen bestanden und in fast jeder
+Genre-Kategorie abgehakt — aber die Kennzahlen, die es prüfte, prüften
+Korrektheit, nicht Spannung.
+
+**Stand v248: fünf erfüllt, einer zu einem Viertel, sechs offen.** Erfüllt
+sind die fünf, an denen etwas SICHTBAR wurde (G7, G10, G11, G12) oder an denen
+eine Regel dazukam, die das Mischen belohnt (G3). Offen sind die, die an der
+**Knappheit** hängen: G1, G4 und G5 messen alle dasselbe von drei Seiten — der
+Bot beendet die Partie mit 43 % ungenutztem Gold, also kostet nichts etwas,
+also gibt es keine Spannung. Das ist weiterhin der Schlüsselschritt, und er ist
+in diesen sieben Fassungen **nicht** angefasst worden: er verlangt, jede Karte
+neu einzumessen.
+
+**Zwei Punkte sind dabei genauer geworden statt erledigt**, und das ist der
+ehrlichere Ausgang: G8 ist gewandert („nah" hat jetzt einen Alleinsieg, „stark"
+keinen — die Vermutung aus v239, der Aurendeckel schliesse ihn von selbst, ist
+damit gemessen widerlegt), und G4 ist **schlechter** geworden, weil der Verbund
+die schwächeren Spielstile mithebt.
 
 ---
 

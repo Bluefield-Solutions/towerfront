@@ -1,6 +1,6 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v241 · 08.09.2026
+Stand: v248 · 08.09.2026
 
 Ausgelöst durch drei Sätze des Nutzers:
 
@@ -274,24 +274,32 @@ Feld.
 
 ## Teil 4 — Abstand
 
-| # | Soll | heute | Abstand |
-|---|---|---|---|
-| H1 | ≤ 14 % / ≤ 25 % | **17,6 % / 39,5 %** | +3,6 / +14,5 Punkte |
-| H2 | nichts über der Bahn | Turmleiste verdeckt zwei von vier Gegnern auf dem linken Bahnarm | voll offen |
-| H3 | Fläche, immer abrufbar | Kontur, nur bei gewählter Sorte | halb |
-| H4 | Menü am Turm | Menü am rechten Bildschirmrand | voll offen |
-| H5 | Turm als Bild | Text und Preis, kein Bild | voll offen |
-| H6 | Ausbauweg | zwei Preisknöpfe, kein Pfad, keine Endstufe sichtbar | voll offen |
-| H7 | ≤ 5 Größen | **11** | erledigt in v241 — jetzt 8, 10, 12, 15, 17 und nichts sonst, vom UX-Tor gehalten |
-| H8 | Text auf Fläche | 32 Knoten ohne Fläche | halb — die drei Zahlen haben seit v239 eine Fläche, der Versionsstempel steht am Rand |
-| H9 | keine Doppelung | 5 Beschriftungen doppelt | voll offen |
-| H10 | Telefon ≥ Schreibtisch | Telefon zeigt weniger | voll offen |
-| H11 | keine Werkzeuge vorn | „Messung" ist das breiteste Element oben | voll offen |
-| H12 | ≥ 44 | kleinste 38 × 20 | knapp offen |
+| # | Soll | v238 | v248 | Stand |
+|---|---|---|---|---|
+| H1 | ≤ 14 % / ≤ 25 % | 17,6 % / 39,5 % | **14,2 % / 32,9 %** | erste Hälfte auf 0,2 Punkte heran, zweite offen — sie hängt an H4 |
+| H2 | nichts über der Bahn | Turmleiste verdeckt zwei von vier Gegnern | Band 96 statt 151 Punkte, eine Reihe statt drei | erledigt in v239, gemessen an einem A/B-Paar im selben Augenblick: 4 statt 2 sichtbare Gegner |
+| H3 | Fläche, immer abrufbar | Kontur, nur bei gewählter Sorte | Fläche (v238), und eine Sorte ist von Anfang an vorgewählt (v242) | erledigt |
+| H4 | Menü am Turm | am rechten Bildschirmrand, braucht 265 Punkte bei 218 freien | am Rand, braucht **228** bei 218 | offen — noch zehn Punkte, siehe E9 |
+| H5 | Turm als Bild | Text und Preis, kein Bild | Bild auf dem Leistenknopf (v239) und im Kopf des Menüs (v247) | erledigt |
+| H6 | Ausbauweg | zwei Preisknöpfe, keine Auskunft | zwei Knöpfe, die in Zahlen sagen, worin sie sich unterscheiden (v248) | halb — die Auskunft ist da, der **Weg mit Stufen** nicht |
+| H7 | ≤ 5 Größen | 11 | 8, 10, 12, 15, 17 | erledigt in v241, vom UX-Tor gehalten |
+| H8 | Text auf Fläche | 32 Knoten ohne Fläche | die drei Zahlen haben seit v239 eine Fläche | halb — der Versionsstempel steht weiter nackt am Rand |
+| H9 | keine Doppelung | 5 Beschriftungen doppelt | keine | erledigt in v239, vom UX-Tor gehalten |
+| H10 | Telefon ≥ Schreibtisch | Telefon zeigt weniger | Frühstart (v243) und Zweigwirkung (v248) stehen jetzt auf beiden | halb — der erklärende Zweigsatz bleibt Schreibtisch-only, dafür fehlen 90 Punkte |
+| H11 | keine Werkzeuge vorn | „Messung" ist das breiteste Element oben | hinter der Werkzeugklappe (v239) | erledigt |
+| H12 | ≥ 44 | kleinste 38 × 20 | Kasten 40 × 20, **Trefferfläche 52 × 46** | erledigt — gemessen wird die Trefferfläche, nicht der Kasten |
 
-**Zwölf Punkte, einer halb erfüllt, elf offen.** Der Abgleich für die
-*Bedienung* stand nach v203 auf sieben von sieben erfüllt — und das stimmt
-weiterhin. Gemessen wurde damals der **Ablauf**; nie die **Fläche**.
+**Zwölf Punkte: sieben erledigt, drei halb, zwei offen.** Beim Abgleich in
+v238 war einer halb erfüllt und elf offen.
+
+**Die zwei offenen hängen aneinander.** H4 (Menü am Turm) fehlen noch zehn
+Punkte Höhe, und dieselben zehn kämen aus H6 und H10 — der Zweigsatz, der auf
+dem Telefon nicht passt. Beides löst dieselbe Sache: **Symbole statt Sätze**.
+Das ist Bildmaterial, kein Code, und steht als E9.
+
+Der Abgleich für die *Bedienung* stand nach v203 auf sieben von sieben
+erfüllt — und das stimmt weiterhin. Gemessen wurde damals der **Ablauf**; nie
+die **Fläche**.
 
 ---
 

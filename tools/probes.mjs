@@ -1396,6 +1396,33 @@ const PROBEN = [
     tor: 'uxtor',
   },
   {
+    // **Die Zweigwahl verliert ihre Auskunft.**
+    //
+    // Die Wahl ist endgueltig, und auf dem Zielgeraet steht der erklaerende
+    // Satz nicht (`.br-b` traegt dort `display: none`). Ohne die Zahlen
+    // waehlt man zwischen zwei Namen.
+    name: 'Zweigwahl sagt nicht, was sie aendert',
+    datei: 'src/ui/ui.ts',
+    regel: /          `<span class="br-w">\$\{wirkung\[i\] \?\? ''\}<\/span>` \+/,
+    ersatz: "          `<span class=\"br-w\"></span>` +",
+    tor: 'browsertor',
+  },
+  {
+    // **Beide Zweige sagen dasselbe.**
+    //
+    // Genau der Fehler der ersten Fassung: sie nahm je Zweig das Merkmal,
+    // das sich am staerksten gegenueber HEUTE aendert, statt das, in dem
+    // sich die zwei Zweige voneinander unterscheiden - und schrieb damit
+    // bei vier von acht Zweigen "Durchschlag neu" auf beide Karten. Eine
+    // Auskunft, die auf beiden Seiten gleich lautet, unterscheidet nichts.
+    name: 'Beide Ausbauzweige sagen dasselbe',
+    datei: 'src/game/turmwerte.ts',
+    regel: /  return \[0, 1\]\.map\(\(i\) => \{/,
+    ersatz: '  return [0, 0].map((i) => {',
+    tor: 'browsertor',
+    meldet: 'sagen dasselbe',
+  },
+  {
     // **Der Pruefsteg spannt wieder ueber die ganze Fensterhoehe.**
     //
     // Die Zeile stand von v205 bis v246 im Kompaktblock und hat die Regel
@@ -1903,22 +1930,6 @@ const PROBEN = [
     regel: /const left = Math\.max\(0, 0\.09 - this\.stopBudget\);/,
     ersatz: 'const left = 10;',
     tor: 'smoke',
-  },
-  {
-    // Der Pruefsteg wird wieder von oben gedeckelt statt von unten begrenzt -
-    // genau der Zustand bis v137. Dann verlangt sein Inhalt mehr Hoehe, als
-    // er hat, und etwas verschwindet: entweder die Knoepfe (dann schlaegt die
-    // Abschneide-Pruefung an) oder die Werte (dann die Werte-Pruefung).
-    //
-    // Von Hand nachgestellt: mit BEIDEN Aenderungen zusammen - Deckel zurueck
-    // und Mindesthoehe der Liste weg - meldet das Tor "von 4 Zeilen sind 2 zu
-    // sehen (Liste 48 Punkte hoch)". Eine Probe darf nur EINE Datei anfassen,
-    // deshalb steht hier die Aenderung, die fuer sich allein anschlaegt.
-    name: 'Pruefsteg wieder von oben gedeckelt',
-    datei: 'src/style.css',
-    regel: /  bottom: calc\(58px \+ var\(--sab\)\);/,
-    ersatz: '  max-height: calc(100% - 150px - var(--sat) - var(--sab));',
-    tor: 'browsertor',
   },
   {
     // Der groesste einzelne Posten fuer den Raumeindruck: ohne Sortierung
@@ -2522,10 +2533,21 @@ const PROBEN = [
     // so hoch, dass der Steg sicher ueberlaeuft: geprueft wird, ob das Tor
     // einen ueberlaufenden Steg ueberhaupt bemerkt - und genau das hat es
     // bis v201 nicht getan.
+    //
+    // **Dritte Fassung, und wieder aus demselben Grund** (v248): sie griff
+    // an `min-height: 33%` der Werteliste und setzte sie auf 200 Punkte.
+    // Seit der Steg an seinem Inhalt endet (v247), waechst er dann einfach
+    // mit - die Liste ist 200 hoch, alle Zeilen sind zu sehen, und es gibt
+    // nichts zu melden. Der volle Lauf zu v247 hat es gefangen.
+    //
+    // Sie greift jetzt ueber den Ausbauzweigen: die stehen fest
+    // (`flex: 0 0 auto`), also verdraengen sie die Liste, statt den Kasten
+    // zu dehnen. Nachgemessen: 394 Punkte Inhalt in 288, und von fuenf
+    // Wertezeilen ist keine zu sehen.
     name: 'Pruefsteg laeuft ueber, ohne dass es auffaellt',
     datei: 'src/style.css',
-    suche: '  min-height: 33%;',
-    ersatz: '  min-height: 200px;',
+    suche: '.insp-ups { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; flex: 0 0 auto; }',
+    ersatz: '.insp-ups { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; flex: 0 0 auto; min-height: 260px; }',
     tor: 'browsertor',
   },
   {

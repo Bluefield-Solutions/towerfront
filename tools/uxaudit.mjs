@@ -91,7 +91,14 @@ const fail = (m) => befunde.push(m);
 const GRENZEN = {
   ruhe: 16,        // gemessen 13,0 %
   bauwahl: 24,     // gemessen 19,7 %
-  pruefsteg: 33,   // gemessen 31,3 % (v247; v239 stand bei 31,9, dazwischen 35,4)
+  // gemessen 32,9 % (v248). Der Verlauf steht dabei, weil eine Ratsche ohne
+  // ihn nur eine Zahl ist: v239 31,9 -> v246 35,4 (der Verbund und die
+  // Verbundzeile kamen dazu) -> v247 31,3 (der Steg endet an seinem Inhalt)
+  // -> v248 32,9 (die Zweige tragen ihre Wirkung). Die Grenze steht ueber
+  // dem Gemessenen und nicht darauf: 33 waere eine Nadel gewesen, und eine
+  // Ratsche, die beim naechsten Textwechsel von selbst anschlaegt, wird
+  // nach zwei Runden hochgesetzt statt ernst genommen.
+  pruefsteg: 34,
   welle: 16,       // gemessen 13,2 %
 };
 /** Wieviele Beschriftungen zugleich doppelt im Bild stehen duerfen.

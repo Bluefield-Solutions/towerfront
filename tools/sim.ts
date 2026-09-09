@@ -322,9 +322,23 @@ const BOTS: Bot[] = [
 const BESTLEISTUNG: Bot = {
   name: 'Bestleistung', maxTowers: 24, maxLevel: MAX_LEVEL,
   reserve: 40, decideEvery: 20, deepenAt: 0.8,
-  // Der Spieler, der alles richtig macht, baut sein Labyrinth zuerst -
-  // gemessen gewinnt `lang` auf dem Spiralhain die Welle 15 allein.
-  weichenStil: 'lang',
+  // **In der Sache Weichen ist auch die Bestleistung nicht die beste - und
+  // das ist kein Versehen, sondern M17.**
+  //
+  // Der erste Entwurf gab ihr `lang`: der Spieler, der alles richtig macht,
+  // baut sein Labyrinth zuerst. Seit der Spiralhain zwei Weichen hat, macht
+  // `lang` dort beide zu (+43 % Weg), und der Waechter hat es sofort
+  // gemeldet: "auch der beste Spielstil holt nur 1 Stern".
+  //
+  // Gemessen ist die beste Stellung je Karte verschieden - auf dem Spiralhain
+  // gewinnt `offen` drei Wellen allein, auf der Frostspalte `lang` drei. Ein
+  // FESTER Stil kann also nicht der beste Spieler sein, und ausrechnen laesst
+  // sich die bessere Stellung heute nicht: gedeckte Laenge sagt den Verlust
+  // nicht vorher (M17).
+  //
+  // Sie laesst deshalb offen - den Zustand, gegen den die ganze Balance
+  // geeicht ist. Das ist ehrlicher als eine Wahl, die sich als beste ausgibt.
+  weichenStil: 'offen',
 };
 
 const MEISTER = BOTS[0];

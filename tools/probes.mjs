@@ -111,20 +111,22 @@ const PROBEN = [
     regel: /\{ id: 'saeule3', kante: '[a-z0-9-]+', name: 'Kammbogen' \}/,
     ersatz: "{ id: 'saeule3', kante: 'kreuz1-kreuz2', name: 'Kammbogen' }",
     tor: 'guards',
-    meldet: 'Weichenfenster',
+    meldet: 'entscheidet nichts',
   },
   {
-    // **Der Weichenbau darf keinen Entwurf durchlassen, der einen Fleck
-    // trifft.** Der Eingriff schiebt den ersten Zwischenpunkt der
-    // Ascheschlucht-Weiche auf ihr groesstes Felsnest.
-    name: 'Weichenentwurf laeuft durch ein Felsnest',
+    // **Entwurf und Netz muessen dasselbe sagen.** Der Eingriff schiebt den
+    // ersten Zwischenpunkt der Ascheschlucht-Weiche auf ihr groesstes
+    // Felsnest; im Netz steht der alte. Laufen die beiden auseinander, luegt
+    // eines von beiden - und das faellt sonst erst auf, wenn jemand Jahre
+    // spaeter den Entwurf liest und glaubt, er beschreibe die Karte.
+    name: 'Weichenentwurf und Netz laufen auseinander',
     datei: 'entwurf/weichen.json',
     // Die Datei steht mit einem Feld je Zeile da (so schreibt sie
     // `json.dump`), deshalb greift die Regel an der Zahl statt am Objekt.
     regel: /"x": 520,\n(\s*)"y": 430,/,
     ersatz: '"x": 957,\n$1"y": 135,',
     tor: 'weichenbau',
-    meldet: 'naeher als die heutige Bahn',
+    meldet: 'laufen auseinander',
   },
   {
     // **Zwei Weichenstile, die dasselbe tun, sind ein Stil mit zwei Namen.**

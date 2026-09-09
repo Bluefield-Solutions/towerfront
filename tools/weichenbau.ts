@@ -98,6 +98,34 @@ for (const map of MAPS) {
         + `Bahn ${e.bahn} nicht beide zu finden (oder in der falschen Reihenfolge).`);
       continue;
     }
+    // **Steht die Weiche schon im Netz, wird sie NACHGEPRUEFT statt eingebaut.**
+    //
+    // Die Gegenprobe hat es gefunden: nach dem Eintragen war das Werkzeug rot,
+    // weil die beiden Enden jetzt Knoten sind und keine Zwischenpunkte mehr.
+    // Ein Werkzeug, das im Normalzustand rot steht, ist keins - und die
+    // Gegenprobe an einem roten Tor beweist ohnehin nichts.
+    //
+    // Nachgeprueft wird das, was wirklich zaehlt: dass Entwurf und Netz
+    // dasselbe sagen. Laufen sie auseinander, luegt eines von beiden.
+    const gebaut = (netz.weichen ?? []).find((w) => w.id === e.id);
+    if (gebaut) {
+      const kurzK = netz.kanten.find((k) => k.id === gebaut.kante);
+      const langK = netz.kanten.find((k) => k.von === kurzK?.von && k.nach === kurzK?.nach
+        && k.id !== kurzK?.id);
+      const soll = e.punkte.map((p) => `${p.x}:${p.y}`).join(',');
+      const ist = (langK?.punkte ?? []).map((p) => `${p.x}:${p.y}`).join(',');
+      if (soll !== ist) {
+        verstoesse.push(`${e.id}: Entwurf und Netz laufen auseinander. Der Entwurf nennt `
+          + `${e.punkte.length} Punkte (${soll.slice(0, 40)}...), im Netz stehen `
+          + `${langK?.punkte.length ?? 0} (${ist.slice(0, 40)}...). Eines von beiden luegt - `
+          + 'mit `--schreiben` gewinnt der Entwurf.');
+      } else {
+        console.log(`  ${e.id} (${e.name}): steht im Netz, Entwurf und Netz stimmen ueberein `
+          + `(${e.punkte.length} Punkte).`);
+      }
+      if (!SCHREIBEN) continue;
+    }
+
     const A = bahn[iA], B = bahn[iB];
     const kurz = bahn.slice(iA + 1, iB).map((p) => ({ ...p }));
     const lang = [A, ...e.punkte, B].map((p) => ({ ...p }));

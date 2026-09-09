@@ -172,6 +172,9 @@ for (const map of MAPS) {
   let kuerzeste = Infinity, laengste = 0;
   let woKurz = '', woLang = '';
   let geprueft = 0;
+  /** Der Bahnverlauf je Stellung - der Fingerabdruck, an dem zwei gleiche
+   *  Stellungen auffallen. */
+  const abdruecke = new Map<string, string[]>();
   for (let maske = 0; maske < 2 ** weichen.length; maske++) {
     const gestellt = new Set(weichen.filter((_, i) => (maske >> i) & 1).map((w) => w.id));
     const name = gestellt.size ? [...gestellt].join('+') : 'alles offen';
@@ -199,6 +202,25 @@ for (const map of MAPS) {
     }
     if (summe < kuerzeste) { kuerzeste = summe; woKurz = name; }
     if (summe > laengste) { laengste = summe; woLang = name; }
+    const abdruck = bahnen.map((b) => b.map((p) => `${p.x}:${p.y}`).join(',')).join('|');
+    const da = abdruecke.get(abdruck);
+    if (da) da.push(name); else abdruecke.set(abdruck, [name]);
+  }
+
+  // **Keine zwei Stellungen duerfen dieselben Bahnen ergeben.**
+  //
+  // Gefunden von der Gegenprobe zu v284: haengt man zwei Weichen auf DIESELBE
+  // Kante, fallen zwei der vier Stellungen zusammen - die zweite Weiche
+  // entscheidet nichts. Die Spreizung sieht das nicht, sie misst nur den
+  // Abstand zwischen der kuerzesten und der laengsten. Ein Schalter, der
+  // nichts tut, ist schlimmer als keiner: der Spieler legt ihn um und wartet
+  // auf eine Wirkung.
+  for (const [abdruck, wer] of abdruecke) {
+    if (wer.length > 1) {
+      fail(`${map.id}: die Stellungen ${wer.map((w) => `"${w}"`).join(' und ')} ergeben `
+        + 'dieselben Bahnen - eine der Weichen entscheidet nichts.');
+      void abdruck;
+    }
   }
 
   const spreizung = laengste / Math.max(1, kuerzeste);

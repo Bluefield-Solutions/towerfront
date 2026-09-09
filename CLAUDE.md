@@ -341,6 +341,15 @@ npm run doku        prüft die Dokumente gegen die Wirklichkeit - seit v224 auch
                     er ausserdem, wenn das gesuchte Wort nur in ANDERER
                     Schreibweise in der Zieldatei steht - genau daran hing E6
                     zehn Fassungen lang.
+npm run lesbarkeit  Kontrast jeder Figur gegen den Untergrund, Groesse auf dem
+                    Bildschirm, Farbabstand der Gegnerarten. **Seit v274 gegen
+                    das GEBACKENE Terrain** - bis v273 gegen das gepackte
+                    Rohbild, also gegen einen Grund, den niemand sieht
+                    (Regel 12). Der Unterschied ist der Messwert selbst: 20
+                    von 20 Figuren liegen unter der Lesbarkeitslinie,
+                    gemeldet waren 8. Gefunden hat es ein Durchlauf, kein
+                    Verdacht: `BODEN_HELL` sechsmal durchprobiert, sechsmal
+                    dieselbe Zahl.
 npm run beruehrung  prüft, ob alles mit dem Daumen zu treffen ist
 npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen - im
                     Standardlauf nur die, deren ZIELDATEI oder `haengtAn`
@@ -631,7 +640,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v273. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v274. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

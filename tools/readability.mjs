@@ -90,7 +90,26 @@ const RIM_HINWEIS = 1.5;        // darunter: sichtbar schwach, aber kein Abbruch
  *  1,46 -> 1,89. Eine Zaehlung ueber einer harten Schwelle kann das nicht
  *  sehen; deshalb steht seit v177 `MIN_KANTE_STAND` daneben und misst, was
  *  hier gemeint ist. Diese Zahl allein waere ab jetzt Zahlenpflege. */
-const MAX_SCHWACHE_KANTEN = 12;
+/** Wieviele Figuren eine Kante unter `MIN_KANTE` haben duerfen - eine
+ *  Ratsche auf den Stand, kein Soll.
+ *
+ *  **In v274 von 12 auf 20 gesetzt, und das ist keine Lockerung, sondern das
+ *  erste Mal, dass die Zahl ihren Gegenstand hat.** Bis v273 wurde jede Figur
+ *  gegen das gepackte ROHBILD des Untergrunds gerechnet (2,1 bis 6,2 % in den
+ *  Einheiten dieses Werkzeugs) statt gegen den gebackenen, den der Spieler
+ *  sieht (5,8 bis 8,4 %). Gegen einen dunkleren Grund hat alles mehr
+ *  Kontrast; die 12 waren nicht zu niedrig, sie zaehlten etwas anderes.
+ *
+ *  Gemessen am richtigen Grund sind es **20 von 20**, und die schwaechste
+ *  Kante faellt von 1,32 auf 1,10.
+ *
+ *  **Das ist ein Befund ueber das Spiel, kein gruener Haken.** Die Ratsche
+ *  haelt den Stand, damit es nicht schlimmer wird; das Soll steht unveraendert
+ *  bei `MIN_KANTE` = 1,5, und das kommt vom Handy, nicht von uns (Regel 10).
+ *  Behoben wird es am BILD, nicht am Code - Befund B1, und der Beschluss aus
+ *  v269 nennt genau diese Ursache: "Figuren verschwinden auf hellem Boden".
+ *  Bis v273 konnte kein Werkzeug das bestaetigen; jetzt schon. */
+const MAX_SCHWACHE_KANTEN = 20;
 
 /** Der schlechteste Kantenwert im ganzen Satz - die Zahl, die die Zaehlung
  *  darueber nicht sehen kann.
@@ -99,7 +118,9 @@ const MAX_SCHWACHE_KANTEN = 12;
  *  v153 der schwaechste Rand im Spiel. Er wird durch neue TUERME nicht
  *  beruehrt; die Zahl steht hier, damit eine Lieferung, die ihn
  *  unterbietet, nicht in einer Zaehlung untergeht. */
-const MIN_KANTE_STAND = 1.30;
+// In v274 von 1,30 auf 1,10 gesetzt - aus demselben Grund wie
+// MAX_SCHWACHE_KANTEN: die 1,30 waren gegen das Rohbild gemessen.
+const MIN_KANTE_STAND = 1.10;
 const MIN_BODY_CONTRAST = 1.15; // Körper gegen den Boden - nur noch Rückhalt
 const MIN_TOWER_PX = 26;       // Bildschirmpunkte Breite der Turmsilhouette
 const MIN_ENEMY_PX = 13;       // dasselbe für Gegner
@@ -302,12 +323,15 @@ async function measureEdge(buffer) {
 }
 
 /** Mittlere Farbe eines Untergrundbildes. */
-async function measureBackground(buffer) {
-  const { data, info } = await sharp(buffer).resize(240, 132, { fit: 'fill' })
-    .removeAlpha().raw().toBuffer({ resolveWithObject: true });
+/** Mittlere Farbe ueber RGBA-Daten.
+ *
+ *  Tritt an die Stelle von `measureBackground`, das ein PNG durch `sharp`
+ *  schickte: das gebackene Terrain liegt schon als Leinwand vor, ein Umweg
+ *  ueber eine Datei waere nur eine Gelegenheit, etwas anderes zu messen. */
+function mittelwert(data) {
   let r = 0, g = 0, b = 0;
-  const n = info.width * info.height;
-  for (let i = 0; i < n; i++) { r += data[i * 3]; g += data[i * 3 + 1]; b += data[i * 3 + 2]; }
+  const n = data.length / 4;
+  for (let i = 0; i < data.length; i += 4) { r += data[i]; g += data[i + 1]; b += data[i + 2]; }
   return [r / n, g / n, b / n];
 }
 
@@ -328,6 +352,15 @@ const { enemyArtWidth, FARBSCHLEIER: SCHLEIER_GEGNER } = await import('../src/gf
 const { towerArtScale, FARBSCHLEIER: SCHLEIER_TURM } = await import('../src/gfx/towerart');
 const { turmMasse, WAFFE_HOCH, WAFFE_BREIT } = await import('../src/data/turmgestalt');
 const { umriss, umrissZusammen, ueberdeckung } = await import('./silhouette.ts');
+// Das Zeichengeruest, um das gebackene Terrain herstellen zu koennen - eine
+// Leinwand, auf der man messen darf (Regel 16). `bilderAbwarten` steht
+// daneben, weil ein Untergrund ohne dekodiertes Foto ein anderer Untergrund
+// ist: `bakeTerrain` malt dann seinen Verlauf statt des Bildes.
+const { geruestStellen, bilderAbwarten } = await import('./leinwand.mjs');
+geruestStellen();
+const { bakeTerrain } = await import('../src/gfx/terrain.ts');
+const { getBackground } = await import('../src/gfx/backgrounds.ts');
+const { GameState } = await import('../src/game/state.ts');
 
 
 const problems = [];
@@ -344,14 +377,52 @@ const objectArt = readAssets('objects.ts');
 // Der dunkelste Untergrund ist der schwierigste Fall für helle Objekte, der
 // hellste für dunkle. Gemessen wird gegen den, bei dem der Kontrast am
 // schwächsten ist.
+//
+// **Gemessen wird das GEBACKENE Terrain, nicht das Quellbild** (v274, Regel 12).
+//
+// Bis v273 stand hier `bgArt.get(m.id)`, also das gepackte Rohbild - und
+// dazwischen liegt `bakeTerrain`: die Tonwertangleichung zieht JEDEN Boden
+// auf `BODEN_HELL`, dazu kommen Weg, Randsteine, Felsen, Vignette und Saum.
+// Der Unterschied ist kein Feinschliff, er ist der Messwert selbst - hier in
+// den Einheiten DIESES Werkzeugs, also linearisierte Leuchtdichte (Regel 12;
+// `npm run grafik` rechnet anders und nennt fuer dasselbe gebackene Terrain
+// 26 bis 32 %, das ist keine zweite Messung derselben Zahl):
+//
+//   Karte           Rohbild   gebacken   Faktor
+//   Spiralhain        2,6 %     5,8 %      2,2
+//   Ascheschlucht     5,6 %     8,2 %      1,5
+//   Frostspalte       6,2 %     8,4 %      1,4
+//   Farnkessel        2,1 %     5,9 %      2,8
+//
+// Gerechnet wurde also jede Figur gegen einen dunkleren Grund, als es ihn
+// gibt, und gegen einen dunklen Grund hat alles Kontrast. Die Zahlen waren
+// nicht ungenau, sie massen etwas anderes: **20 von 20 Figuren liegen unter
+// der Lesbarkeitslinie, gemeldet waren 8.**
+//
+// **Es ist derselbe Fehler, den dieses Projekt schon einmal bezahlt hat.**
+// `tools/artaudit.mjs` hat ihn in v105 behoben, mit dem Satz daneben: *"Bis
+// v105 stand hier das Quellbild, und das war falsch - dazwischen liegen der
+// Weg, die Randsteine, die Felsen, die Tonwertangleichung, die Vignette und
+// der Saum. Beim Quellbild misst man etwas, das niemand zu sehen bekommt."*
+// Er steht seit S86 als Regel 12 in CLAUDE.md. `readability.mjs` hat die
+// Reparatur nie bekommen.
+//
+// **Gefunden hat es ein Durchlauf, kein Verdacht** (Regel 9): `BODEN_HELL`
+// von 0,355 bis 0,14 durchprobiert, sechs Werte - die Lesbarkeit meldete
+// sechsmal exakt dieselbe Zahl. Ein Eingriff, der nichts bewegt, ist keiner,
+// und das Werkzeug sah die Helligkeit des Bodens gar nicht.
 const bgs = [];
 for (const m of MAPS) {
-  const buf = bgArt.get(m.id);
-  if (!buf) { problems.push(`Untergrundbild für ${m.id} fehlt.`); continue; }
-  const rgb = await measureBackground(buf);
+  if (!bgArt.get(m.id)) { problems.push(`Untergrundbild für ${m.id} fehlt.`); continue; }
+  const st = new GameState(m, 'normal');
+  getBackground(m.id);
+  await bilderAbwarten();
+  const cv = bakeTerrain(m, st.lanes, m.palette, getBackground(m.id));
+  const bild = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
+  const rgb = mittelwert(bild.data);
   bgs.push({ id: m.id, name: m.name, rgb, lum: luminance(...rgb) });
 }
-console.log('Untergründe (mittlere Helligkeit):');
+console.log('Untergründe (gebackenes Terrain, mittlere Helligkeit):');
 for (const b of bgs) console.log(`  ${b.name.padEnd(15)} ${(b.lum * 100).toFixed(1)} %`);
 
 /** Schlechtester Kontrast über alle Untergründe - jeweils gegen den Saum, den

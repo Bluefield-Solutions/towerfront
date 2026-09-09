@@ -4033,6 +4033,28 @@ const PROBEN = [
     // `pack-art` ERZEUGT, und welche Gegnerart dort zuerst steht, ist keine
     // Zusage. Eine Probe auf `'crawler'` veraltete beim ersten Umbau des
     // Bildvorrats - und der steht dem Neubau bevor.
+    // **Bis v273 sah die Lesbarkeitsmessung die Helligkeit des Bodens gar
+    // nicht** - sie rechnete jede Figur gegen das gepackte ROHBILD statt
+    // gegen das gebackene Terrain, das der Spieler sieht. Gefunden hat es
+    // ein Durchlauf, kein Verdacht (Regel 9): `BODEN_HELL` von 0,355 bis
+    // 0,14 durchprobiert, sechs Werte, sechsmal exakt dieselbe Zahl.
+    //
+    // Diese Probe haelt genau das fest. Sie hellt den Boden auf; damit
+    // sinkt der Kontrast jeder Figur gegen ihn, und das Tor muss es melden.
+    // Vor v274 waere sie stumm geblieben - dieselbe Klasse wie die vier
+    // Messplaetze aus v219, nur schlimmer, weil dieser nie etwas gemessen
+    // hat statt es irgendwann zu verlernen.
+    //
+    // Als Regel auf die Zahl: die Backhelligkeit ist ein Wert, der sich
+    // aendert, sobald jemand am Untergrund dreht - zuletzt in v232 von 0,52
+    // auf 0,37 an einer Karte.
+    name: 'Lesbarkeit sieht die Helligkeit des Bodens nicht',
+    datei: 'src/gfx/terrain.ts',
+    regel: /const BODEN_HELL = [0-9.]+;/,
+    ersatz: 'const BODEN_HELL = 0.42;',
+    tor: 'lesbarkeit',
+  },
+  {
     name: 'Ein Gegnerbild fehlt im Vorrat',
     datei: 'src/gfx/assets/enemies.ts',
     regel: /\n  '[a-z]+': 'data:image[^']*',/,

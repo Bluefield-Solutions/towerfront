@@ -1,6 +1,6 @@
 # Towerfront — Art Bible
 
-Stand: v272 · 08.09.2026
+Stand: v274 · 08.09.2026
 
 **Nachgesehen in v272:** unveraendert. Die Zahlen dieses Dokuments haengen an `npm run art`, `grafiktor`, `lesbarkeit` und `einbettung` - alle vier im Runner-Lauf zu v271 gruen, und v272 hat kein Bild und keine Grenze angefasst.
 
@@ -285,7 +285,7 @@ Was neue Bilder braucht, nach Dringlichkeit. Das ist zugleich, was
 |---|---|---|
 | 1 | ~~Gleiter neu beleuchtet~~ **erledigt v159** | war 66° neben der Sonne, jetzt liegt die schlimmste Figur (Infanterie) bei **31°** |
 | 2 | ~~Infanterie neu~~ **erledigt v159** | war 42° und 0,0025; jetzt 31° und die flachste Figur ist der Koloss mit 0,0040. Als Fußtrupp aus drei Soldaten füllt sie ihre Kachel |
-| 3 | ~~Koloss, Kante~~ **erledigt v156/v159** | Randlicht plus neues Bild: schwache Kanten 9 → **8 von 20** |
+| 3 | ~~Koloss, Kante~~ **erledigt v156/v159** | Randlicht plus neues Bild: schwache Kanten 9 → **8 von 20**. **Diese Zahl ist gegen den falschen Grund gemessen** (v274): `readability.mjs` rechnete bis dahin gegen das Rohbild des Untergrunds statt gegen das gebackene Terrain. Am richtigen Grund sind es **20 von 20**. Die Richtung der Verbesserung bleibt richtig, die Höhe nicht |
 | 4 | ~~Späher und Leerentitan~~ **erledigt v159** | beide unter 26° |
 | 5 | **Alle Figuren mit weniger Feindetail** — für die Gegner gebessert, nicht gelöst | 6,0-fach → **5,3-fach** gegen den Untergrund, erlaubt sind 3,0. Bleibt Befund B1, jetzt vor allem an den Türmen |
 | 6 | **Ein Kamerawinkel** für alle | TF-017, und dafür alle Figuren neu |

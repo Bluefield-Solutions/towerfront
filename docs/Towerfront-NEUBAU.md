@@ -1,6 +1,6 @@
 # Towerfront — der Neubau
 
-Stand: v269 · beschlossen am 09.09.2026
+Stand: v274 · beschlossen am 09.09.2026
 
 **Dieses Dokument ist ab v269 die oberste Arbeitsgrundlage.** Es steht über
 `Towerfront-ANFORDERUNGSKATALOG.md`: wo beide etwas sagen, gilt dieses hier.
@@ -94,6 +94,29 @@ Jede Zeile ist eine Entscheidung des Nutzers, jede mit ihrem Grund. Wer sie
 |---|---|---|
 | **Blickwinkel** | **Leichte Schrägsicht, gemalt.** Die Weltkoordinaten bleiben flach wie heute; nur die Bilder werden schräg gemalt — Karten mit tiefem Horizont, Figuren mit sichtbarer Seite und Bodenschatten. | Eine echte Projektion entwertet `bahnmass`, `bauflaeche`, `wegdeckung`, `gedraenge`, `beruehrung`, `zielplatte` und `einbettung` in einem Zug. Die Plastik kommt ohnehin aus dem Bild, nicht aus der Projektion. Der Preis: Reichweite bleibt ein Kreis, kein Oval. |
 | **Stil** | **Industriell, dunkler Grund, leuchtende Akzente.** | Nicht Geschmack, sondern drei gemessene Befunde: Figuren verschwinden auf hellem Boden (die Backhelligkeit musste dreimal nachjustiert werden), Weg gegen Boden muss künstlich in ein Band von 40–90 Farbschritten gezwungen werden, und Koloss und Spalter überdecken sich in der Silhouette zu 0,76 bei erlaubten 0,65. Ein dunkler Grund mit leuchtenden Akzenten löst alle drei auf einmal. |
+
+**Nachgemessen in v274 — der Stilbeschluss ist jetzt belegt, nicht nur
+begründet.** Bis dahin konnte kein Werkzeug ihn bestätigen: `npm run
+lesbarkeit` rechnete jede Figur gegen das gepackte Rohbild des Untergrunds
+statt gegen das gebackene Terrain und sah die Helligkeit des Bodens gar nicht.
+Mit der Reparatur steht der Durchlauf da:
+
+| `BODEN_HELL` | Figuren mit Kante unter 1,5 | schwächste Kante |
+|---|---|---|
+| **0,355** (heute) | **20 von 20** | 1,10 |
+| 0,30 | 14 von 20 | 1,27 |
+| 0,24 | **1 von 20** | 1,49 |
+| 0,18 | **0 von 20** | 1,74 |
+
+Ein dunklerer Grund repariert die Lesbarkeit **jeder einzelnen Figur, ohne
+dass ein Bild angefasst wird**. Der Satz „Figuren verschwinden auf hellem
+Boden" ist damit keine Begründung mehr, sondern eine Messung.
+
+**Umgesetzt ist er noch nicht**, und der Grund gehört dazu: `BODEN_HELL` zu
+senken verschiebt `grafiktor` (Bodenband 0,30–0,36), `wegdeckung` (Weg gegen
+Boden 40–90 Farbschritte), `kristall` und `einbettung` in einem Zug. Das ist
+eine eigene Runde, und sie hängt an S-N5-01.
+
 | **HUD** | **In Ebenen.** Ruhezustand minimal; jede Tiefe auf Anforderung **an Ort und Stelle** statt in einer Randleiste. | Mehr zeigen allein macht eine Tabelle, weniger zeigen allein nimmt die Entscheidungsgrundlage — und die fehlt heute: man sieht nicht, ob der Mörser etwas taugt. Bedingung: die Ratschen des UX-Tors dürfen nicht fallen. |
 
 ### 3.4 Verworfen — und warum

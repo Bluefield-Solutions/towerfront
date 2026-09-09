@@ -271,8 +271,23 @@ interface Bot {
    *  genauso; in beiden ist die Eroeffnung die Stelle, an der man sich
    *  zwischen Feuerkraft und Einkommen entscheidet.
    *
-   *  Null heisst: dieser Stil baut keine. Der Stil muss vertreten bleiben -
-   *  die ganze Balance ist gegen ihn geeicht.
+   *  **Heute steht ueberall null, und das ist eine Messentscheidung** (v285).
+   *  Vier Eichungen sind gemessen worden (Bonus 0,25 bis 0,40, Radius 192 bis
+   *  230, ein bis drei Foerderer je Bot); jede hat die bestehende Eichung an
+   *  anderer Stelle verschoben - unerreichbare Karten, Monokulturen, die das
+   *  gemischte Feld schlagen, und einmal alle vier Zweigpaare unter dem
+   *  Rauschen.
+   *
+   *  Der vierte Punkt hat gesagt, warum das so bleiben wuerde: das Rauschen
+   *  dieser Kennzahlen schwankt zwischen 2,0 und 24,0 und liegt bei der
+   *  Spanne der Spielstile mit 11,0 UEBER dem Messwert von 9. Wer daran
+   *  weiterdreht, justiert gegen Zufall - genau wovor Abschnitt 2.1 des
+   *  Anforderungskatalogs warnt (M1).
+   *
+   *  Die Bots bauen deshalb vorerst keine. Was der Foerderer TUT, misst der
+   *  eigene Abschnitt weiter unten - mit demselben Bot, einmal mit und einmal
+   *  ohne. Er misst und urteilt nicht; das Urteil braucht eine Eichrunde, und
+   *  die braucht ein ruhigeres Messgeraet.
    *
    *  **Der Bot baut Foerderer, aber er baut sie nicht AUS, und das steht hier
    *  statt in einer Fussnote.** Sein Ausbauzweig nimmt den Turm mit dem
@@ -303,7 +318,7 @@ interface Bot {
  *  Obergrenze benachteiligt. */
 const BOTS: Bot[] = [
   {
-    name: 'Meister', foerderer: 1, maxTowers: 12, maxLevel: 3, reserve: 40, decideEvery: 30, deepenAt: 0.65,
+    name: 'Meister', foerderer: 0, maxTowers: 12, maxLevel: 3, reserve: 40, decideEvery: 30, deepenAt: 0.65,
     // Der Meister laesst offen - und zwar bewusst der, gegen den alle
     // uebrigen Zahlen dieses Werkzeugs geeicht sind. Wer ihn umstellt,
     // verschiebt jede andere Messung mit.
@@ -316,7 +331,7 @@ const BOTS: Bot[] = [
   },
   {
     // Nur die Haelfte der Plaetze, dafuer frueh tief und mit Ruecklage.
-    name: 'Sparsam', foerderer: 1, maxTowers: 12, maxLevel: 3, reserve: 140, decideEvery: 30, deepenAt: 0.5,
+    name: 'Sparsam', foerderer: 0, maxTowers: 12, maxLevel: 3, reserve: 140, decideEvery: 30, deepenAt: 0.5,
     weichenStil: 'lang',
   },
 ];
@@ -341,7 +356,7 @@ const BOTS: Bot[] = [
  *  Er zaehlt bewusst NICHT bei "keine Karte darf muehelos sein" - dort geht
  *  es um den gewoehnlichen Spieler, und der ist einer der drei. */
 const BESTLEISTUNG: Bot = {
-  name: 'Bestleistung', foerderer: 1, maxTowers: 24, maxLevel: MAX_LEVEL,
+  name: 'Bestleistung', foerderer: 0, maxTowers: 24, maxLevel: MAX_LEVEL,
   reserve: 40, decideEvery: 20, deepenAt: 0.8,
   // **In der Sache Weichen ist auch die Bestleistung nicht die beste - und
   // das ist kein Versehen, sondern M17.**
@@ -513,6 +528,32 @@ function weichenstileMessen(): void {
  *  Stelle, an der `welle` noch nicht in Reichweite ist. */
 function welleNr(s: GameState): number {
   return Math.max(0, Math.min(s.waves.length - 1, s.waveIndex));
+}
+
+/** **Was der Foerderer TUT** (S-N3-01).
+ *
+ *  Derselbe Bot, einmal mit einem Foerderer und einmal ohne - nichts anderes
+ *  unterschieden (Regel 13). Gemessen wird, was ein Einkommensgebaeude
+ *  ueberhaupt bewegen kann: verdientes Gold, gebaute Ausbauten und der
+ *  Kristall am Ende.
+ *
+ *  **Es misst und urteilt nicht**, und das ist die Entscheidung dieser Runde.
+ *  Vier Eichungen sind gefahren, jede hat die bestehende Balance an anderer
+ *  Stelle verschoben - und der vierte Punkt hat gezeigt, warum: das Rauschen
+ *  dieser Kennzahlen liegt teils UEBER dem Effekt, den sie messen sollen
+ *  (M1). Eine Ratsche darauf waere eine Ratsche auf Zufall. */
+function foerdererMessen(): void {
+  console.log('\nFoerderer (derselbe Bot, einmal mit und einmal ohne):');
+  for (const mm of MAPS) {
+    const ohne = play(mixedPlanBase, () => 0, { ...MEISTER, foerderer: 0 }, 'normal', mm.id);
+    const mit = play(mixedPlanBase, () => 0, { ...MEISTER, foerderer: 1 }, 'normal', mm.id);
+    const dGold = mit.earned - ohne.earned;
+    console.log(`  ${mm.id.padEnd(15)} Gold ${ohne.earned} -> ${mit.earned} `
+      + `(${dGold >= 0 ? '+' : ''}${dGold}, ${(100 * dGold / Math.max(1, ohne.earned)).toFixed(1)} %)`
+      + `   Ausbauten ${ohne.upgrades} -> ${mit.upgrades}`
+      + `   Kristall ${ohne.lives}/${ohne.maxLives} -> ${mit.lives}/${mit.maxLives}`);
+  }
+  console.log('  (misst, urteilt nicht - die Eichung braucht ein ruhigeres Messgeraet, siehe M1)');
 }
 
 /** Welche Weichen dieser Stil gestellt haben will.
@@ -1484,6 +1525,7 @@ const mixedPlan = mixedPlanBase;
     }
   }
   weichenstileMessen();
+  foerdererMessen();
   console.log(`  Alleinsiege: ${ZIELWAHL_ORDNUNG.map((z) => `${z} ${siege[z]}`).join('  ')}`
     + `   (${entschieden} Wellen trennen ueberhaupt)`);
   console.log(`  geteilt:     ${ZIELWAHL_ORDNUNG.map((z) => `${z} ${geteilt[z]}`).join('  ')}`);

@@ -253,6 +253,17 @@ npm run bahnbau     Bahnen aus einer BESCHREIBUNG erzeugen, messen und
                     Wegwerfskripten gemessen; in v236 rechnete die Werkbank
                     anders als der Waechter (81 % gegen 62 %), weil sie die
                     Bauplaetze aus der KARTE nahm statt aus dem Entwurf.
+npm run weichenbau  eine Weiche messen, BEVOR sie in die Karte kommt. Der
+                    Entwurf steht als Daten in `entwurf/weichen.json`,
+                    gerechnet wird mit `tools/bahnmass.ts` - derselben Datei,
+                    die `npm run guards` benutzt -, eingetragen wird ueber
+                    denselben Schreiber wie bei `bahnbau`. Gemessen werden
+                    Laengengewinn, Fleckabstand, Knick (dieselben 25 Grad wie
+                    der Waechter), Feldrand und die Spreizung ueber alle
+                    Stellungen. `--schreiben` traegt ein, wenn jede Regel
+                    haelt. Die erste Weiche (v280) war von Hand gesetzt und
+                    mit einem Wegwerfskript gemessen - genau der Zustand, den
+                    v237 fuer die Bahnen abgeschafft hat.
 npm run wellenbau   Wellenplaene aus einer BESCHREIBUNG erzeugen, messen und
                     eintragen. Der Entwurf steht als Daten in
                     `entwurf/wellen.json` (Form und Hoehe der Kurve, wer wann
@@ -676,7 +687,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v283. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v284. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

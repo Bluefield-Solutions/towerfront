@@ -1,6 +1,15 @@
 # Towerfront — Bildauftrag
 
-Stand: v277 · 08.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v284 · 09.09.2026 · **Auftragsdokument für den Bild-Agenten**
+
+**Nachgesehen in v284 — nachgefahren, nicht gestempelt.** `npm run guards`
+liest die Abnahmegrenzen bei jedem Lauf aus diesem Dokument und meldet sie:
+Mitte 99 %, Schlauch 90 %, Rand 75 %, Nutzung 90 %, Wegfreiheit 25
+Farbschritte. Es zählt ausserdem 35 Prompts, der kürzeste 3331 Zeichen mit
+eingesetztem Stil-Block (alt 2701, Neubau 2622); `npm run bildprompt --
+werkhof` gibt 107 Zeilen in einem Stück aus. Inhaltlich unverändert seit v277:
+seither ist kein Bild bestellt und keine Grenze verschoben worden — die
+Runden v278 bis v284 waren Wegenetz, Route und Weichen, also Quelltext.
 
 **Nachgesehen in v272:** unveraendert. Die Abnahmegrenzen dieses Dokuments werden seit v229 bei jedem `npm run guards` mitgelesen (0 Fehler im heutigen Baum) - genau deshalb, weil `kartenprobe` nicht in der Torkette steht und ein Werkzeug, dessen Eingang niemand prueft, im Ernstfall kaputt ist.
 

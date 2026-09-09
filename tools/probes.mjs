@@ -101,6 +101,32 @@ const PROBEN = [
     meldet: 'stillschweigend',
   },
   {
+    // **Zwei Weichen auf derselben Kante: eine von beiden entscheidet nichts.**
+    // Der Eingriff haengt den Kammbogen auf die Kante der Nordschleife um.
+    // Dann fallen zwei der vier Stellungen zusammen, und die Spreizung faellt
+    // von 1,43 auf die einer einzelnen Weiche - der Weichenfenster-Waechter
+    // muss es melden.
+    name: 'Zwei Weichen sperren dieselbe Kante',
+    datei: 'src/data/wegnetz.ts',
+    regel: /\{ id: 'saeule3', kante: '[a-z0-9-]+', name: 'Kammbogen' \}/,
+    ersatz: "{ id: 'saeule3', kante: 'kreuz1-kreuz2', name: 'Kammbogen' }",
+    tor: 'guards',
+    meldet: 'Weichenfenster',
+  },
+  {
+    // **Der Weichenbau darf keinen Entwurf durchlassen, der einen Fleck
+    // trifft.** Der Eingriff schiebt den ersten Zwischenpunkt der
+    // Ascheschlucht-Weiche auf ihr groesstes Felsnest.
+    name: 'Weichenentwurf laeuft durch ein Felsnest',
+    datei: 'entwurf/weichen.json',
+    // Die Datei steht mit einem Feld je Zeile da (so schreibt sie
+    // `json.dump`), deshalb greift die Regel an der Zahl statt am Objekt.
+    regel: /"x": 520,\n(\s*)"y": 430,/,
+    ersatz: '"x": 957,\n$1"y": 135,',
+    tor: 'weichenbau',
+    meldet: 'naeher als die heutige Bahn',
+  },
+  {
     // **Zwei Weichenstile, die dasselbe tun, sind ein Stil mit zwei Namen.**
     // Der Eingriff laesst `lang` alles offen lassen - dann sind beide Stile
     // derselbe, und `npm run sim` muss es melden. Genau diese Pruefung hat in

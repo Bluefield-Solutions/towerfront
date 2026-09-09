@@ -505,6 +505,10 @@ export class UI {
       else { this.showCoach(this.konterStep); return; }
     }
     const frisch = this.neuerKonter();
+    if ((globalThis as { TF_DEBUG?: boolean }).TF_DEBUG) {
+      console.log(`TUT konter=${this.konterStep?.id ?? '-'} frisch=${frisch?.id ?? '-'} `
+        + `tutStep=${this.tutStep}`);
+    }
     if (frisch) { this.konterStep = frisch; this.showCoach(frisch); return; }
 
     if (this.tutStep < 0) { this.hideCoach(); return; }

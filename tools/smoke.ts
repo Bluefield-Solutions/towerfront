@@ -898,7 +898,9 @@ step('Konter-Satz erscheint einmal und rechtzeitig', () => {
       // Und er verschwindet, sobald die Welle laeuft: danach ist er kein Rat
       // mehr, sondern ein Vorwurf.
       state.wellenZumPruefen([state.waveIndex]);
+      (globalThis as { TF_DEBUG?: boolean }).TF_DEBUG = i === 2;
       ui.sync();
+      (globalThis as { TF_DEBUG?: boolean }).TF_DEBUG = false;
       if (!blase.hidden) {
         // **Mit dem Schritt, der stehen bleibt.** Ohne ihn sagt die Meldung
         // nur, dass etwas steht - und die Blase traegt zwei Bewohner, den

@@ -44,6 +44,18 @@ export interface SaveGame {
    *  eine Karte gewinnt, saehe die neue Faehigkeit mitten in der alten
    *  Partie erscheinen. */
   karten?: number;
+  /** Die umgelegten Weichen (v280, S-N2-03).
+   *
+   *  ANGEHAENGT und optional, aus demselben Grund wie `karten`: ein Stand
+   *  aus v279 hat das Feld nicht und laedt weiter - er hat dann keine
+   *  Weiche umgelegt, und das ist genau der Zustand, in dem er gesichert
+   *  wurde.
+   *
+   *  Ohne dieses Feld liefen die Gegner nach dem Laden wieder die kurze
+   *  Bahn, waehrend der Spieler seine Tuerme an den Umweg gestellt hat -
+   *  ein Fehler, den man erst in der naechsten Welle sieht und dann nicht
+   *  mehr erklaeren kann. */
+  weichen?: string[];
   /** Meteore im Anflug: [x, y, Fortschritt, Dauer, Radius, Schaden].
    *  Anders als ein Geschoss ist ein Meteor eine bereits bezahlte
    *  Entscheidung - die Abklingzeit laeuft schon. Ihn beim Fortsetzen

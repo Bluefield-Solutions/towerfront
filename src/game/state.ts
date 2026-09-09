@@ -15,6 +15,7 @@ import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
 import {
   MAPS, mapById, goalOf, lanePaths, snap, PATH_CLEARANCE, type GameMap,
 } from '../data/maps';
+import { WEGNETZ } from '../data/wegnetz';
 import type { LanePath } from '../core/path';
 import type { Vec } from '../core/math';
 import { dist, dist2 } from '../core/math';
@@ -565,12 +566,66 @@ export class GameState {
    *  so gibt es keinen Zustand, der zur alten Karte gehoert. */
   loadMap(mapId: string): void {
     this.map = mapById(mapId);
-    this.lanes = lanePaths(this.map);
+    this.weichen.clear();
+    this.bahnStand++;
+    this.bahnenNeu();
     this.goal = goalOf(this.map);
+  }
+
+  /** Die umgelegten Weichen. Leer heisst: alles offen, also die kuerzeste
+   *  Route - der Zustand, gegen den die ganze Balance geeicht ist. */
+  readonly weichen = new Set<string>();
+
+  /** Zaehlt hoch, sooft sich die Bahnen aendern.
+   *
+   *  Der Renderer backt seinen Untergrund aus den Bahnen; ohne diese Zahl
+   *  bliebe nach dem Umlegen die alte Strasse stehen, waehrend die Gegner
+   *  woanders laufen. Eine Zahl statt eines Vergleichs, weil der Vergleich
+   *  vier Bahnen mal dreissig Punkte je Bild waere. */
+  bahnStand = 0;
+
+  private bahnenNeu(): void {
+    this.lanes = lanePaths(this.map, this.weichen);
     this.pathTotal = Math.max(...this.lanes.map((l) => l.length));
     this.airTotal = Math.max(...this.lanes.map(
       (l) => dist(l.pts[0].x, l.pts[0].y, this.goal.x, this.goal.y),
     ));
+  }
+
+  /** Eine Weiche umlegen - zwischen den Wellen.
+   *
+   *  **Waehrend eine Welle laeuft, wird es abgelehnt**, und das ist keine
+   *  Bequemlichkeit: ein Gegner traegt als einzige Zustandsgroesse seine
+   *  zurueckgelegte Strecke. Tauscht man die Bahn unter ihm aus, springt er
+   *  auf die neue Kurve - dieselbe Strecke, anderer Ort. Das waere keine
+   *  Korrektur mehr, sondern eine neue Mechanik (dieselbe Begruendung wie
+   *  beim Turmversetzen in v108).
+   *
+   *  Geprueft wird nicht nur `waveActive`, sondern ob ueberhaupt noch jemand
+   *  auf dem Feld steht: ein Raeuber mit einem Splitter laeuft seine Bahn
+   *  ZURUECK, und seine Welle kann laengst zu Ende sein.
+   *
+   *  Gibt zurueck, ob umgelegt wurde. */
+  weicheStellen(id: string, zu: boolean): boolean {
+    if (this.waveActive || this.enemies.length > 0 || this.pending.length > 0) return false;
+    const netz = WEGNETZ[this.map.id];
+    if (!netz?.weichen?.some((w) => w.id === id)) return false;
+    if (zu === this.weichen.has(id)) return true;
+    const vorher = new Set(this.weichen);
+    if (zu) this.weichen.add(id); else this.weichen.delete(id);
+    try {
+      this.bahnenNeu();
+    } catch {
+      // Keine Route mehr - die Stellung wird zurueckgenommen statt das Spiel
+      // anzuhalten. Dass es diese Stellung ueberhaupt gibt, faengt der
+      // Weichenfenster-Waechter (S-N2-04).
+      this.weichen.clear();
+      for (const w of vorher) this.weichen.add(w);
+      this.bahnenNeu();
+      return false;
+    }
+    this.bahnStand++;
+    return true;
   }
 
   // ---------------------------------------------------------------- Bauen
@@ -2553,6 +2608,7 @@ export class GameState {
       hitStop: this.hitStop,
       stats: this.stats,
       abilityCd: ABILITY_ORDER.map((id) => [id, this.abilityCd[id]] as [AbilityId, number]),
+      weichen: [...this.weichen].sort(),
       karten: this.karten,
       meteors: this.meteors.map((m) => [m.x, m.y, m.t, m.dur, m.radius, m.damage]) as
         [number, number, number, number, number, number][],
@@ -2634,6 +2690,17 @@ export class GameState {
     this.reset(save.seed, save.difficulty, save.map,
       { endless: save.endless, karten: save.karten });
     this.rng.state = save.rng;
+    // **Die Weichenstellung gehoert zum Spielstand** - und sie muss HIER
+    // stehen, vor `laufende` und `pending`. `weicheStellen` verweigert, sobald
+    // jemand auf dem Feld ist oder eine Welle laeuft; eine Zeile weiter unten
+    // waere der Aufruf also lautlos wirkungslos gewesen, und der Fehler zeigte
+    // sich erst beim Fortsetzen einer angefangenen Welle.
+    //
+    // Gestellt wird ueber `weicheStellen` statt durch Einsetzen in die Menge:
+    // dann laeuft dieselbe Pruefung wie im Spiel, und eine Weiche, die es in
+    // der Karte nicht mehr gibt, wird still uebergangen statt den Stand
+    // unlesbar zu machen.
+    for (const id of save.weichen ?? []) this.weicheStellen(id, true);
     this.gold = save.gold;
     this.lives = save.lives;
     this.waveIndex = save.waveIndex;

@@ -35,7 +35,15 @@ export function netzText(id: string, netz: Wegnetz): string {
     }
     z.push('      },');
   }
-  z.push('    ],', '  },');
+  z.push('    ],');
+  if (netz.weichen?.length) {
+    z.push('    weichen: [');
+    for (const w of netz.weichen) {
+      z.push(`      { id: '${w.id}', kante: '${w.kante}', name: '${w.name}' },`);
+    }
+    z.push('    ],');
+  }
+  z.push('  },');
   return z.join('\n');
 }
 

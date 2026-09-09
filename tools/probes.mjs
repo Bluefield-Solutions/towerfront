@@ -101,6 +101,43 @@ const PROBEN = [
     meldet: 'stillschweigend',
   },
   {
+    // **Eine Weiche wird nur zwischen den Wellen umgelegt.** Ohne die Sperre
+    // springt jeder Gegner auf die neue Kurve - dieselbe zurueckgelegte
+    // Strecke, anderer Ort. Der Rauchtest misst den Sprung, nicht den
+    // Rueckgabewert: ein `false` sagt nur, dass die Funktion nein gesagt hat.
+    name: 'Weiche laesst sich mitten in der Welle umlegen',
+    datei: 'src/game/state.ts',
+    regel: /if \(this\.waveActive \|\| this\.enemies\.length > 0 \|\| this\.pending\.length > 0\) return false;/,
+    ersatz: '',
+    tor: 'smoke',
+    meldet: 'gesprungen',
+  },
+  {
+    // **Die Weichenstellung gehoert in den Spielstand.** Ohne sie liefen die
+    // Gegner nach dem Laden wieder die kurze Bahn, waehrend die Tuerme am
+    // Umweg stehen. Geprueft wird nicht das Feld, sondern die Bahnlaenge
+    // nach dem Laden - ein Feld, das beim Laden niemand liest, sieht aus wie
+    // eines, das fehlt (v137).
+    name: 'Der Spielstand vergisst die Weichen',
+    datei: 'src/game/state.ts',
+    regel: /for \(const id of save\.weichen \?\? \[\]\) this\.weicheStellen\(id, true\);/,
+    ersatz: '',
+    tor: 'smoke',
+    meldet: 'Nach dem Laden ist die Bahn',
+  },
+  {
+    // **Der Bahnspeicher muss die Weichenstellung mittragen.** Bis v279 stand
+    // nur die Kartenkennung im Schluessel; seit eine Weiche die Bahn aendert,
+    // waere das der Speicher, der nach dem Umlegen die ALTE Bahn zurueckgibt -
+    // und zwar lautlos. Die Nullprobe des Rauchtests faengt es.
+    name: 'Der Bahnspeicher vergisst die Weichenstellung',
+    datei: 'src/data/maps.ts',
+    regel: /const schluessel = weichen\?\.size\n\s*\? `\$\{map\.id\}\|\$\{\[\.\.\.weichen\]\.sort\(\)\.join\(','\)\}` : map\.id;/,
+    ersatz: 'const schluessel = map.id;',
+    tor: 'smoke',
+    meldet: 'aendert die Bahn kaum',
+  },
+  {
     // **Die Kostenfunktion muss die KUERZESTE Route nehmen.** Heute hat keine
     // der vier Karten eine zweite Route - `kuerzesteRoute` koennte an ihnen
     // die laengste nehmen, die erstbeste oder wuerfeln, und alle sieben

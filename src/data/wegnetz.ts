@@ -40,9 +40,43 @@ export type WegKnoten = RouteKnoten;
  *  liefe beim ersten Verschieben auseinander. */
 export type WegKante = RouteKante;
 
+/** Eine Weiche: ein Schalter, der genau eine Kante zumacht.
+ *
+ *  **Warum eine Kante und nicht ein Knoten.** Der Beschluss lautet "an
+ *  mehreren Knoten sitzen Weichen"; gebaut ist es als Sperre auf einer KANTE,
+ *  und das ist dasselbe mit einer Stelle weniger zum Irren. Ein Knoten mit
+ *  drei Ausgaengen braeuchte sonst eine zweite Angabe, WELCHEN er zumacht -
+ *  und die stuende dann neben der Kante, die sie meint (Regel 15).
+ *
+ *  **Zu heisst laenger, nie kuerzer.** Offen nimmt die Rechnung die kuerzeste
+ *  Route; eine Weiche kann sie also nur verlaengern. Das ist die Entscheidung
+ *  aus dem Vorbild (Defense Grid mauert, der Gegner rechnet neu) - und der
+ *  Grund, warum `map.lanes` im Grundzustand unveraendert bleibt: dort ist
+ *  keine Weiche gestellt. */
+export interface Weiche {
+  id: string;
+  /** Die Kante, die diese Weiche zumacht. */
+  kante: string;
+  /** Was der Spieler davon sieht (S-N2-05). */
+  name: string;
+}
+
 export interface Wegnetz extends RoutenNetz {
   knoten: WegKnoten[];
   kanten: WegKante[];
+  weichen?: Weiche[];
+}
+
+/** Welche Kanten bei dieser Weichenstellung zu sind.
+ *
+ *  `gestellt` nennt die Weichen, die der Spieler umgelegt hat. Eine Weiche,
+ *  die es im Netz nicht gibt, wird uebergangen statt zu werfen - ein alter
+ *  Spielstand darf eine Karte nicht unspielbar machen. */
+export function gesperrteKanten(netz: Wegnetz, gestellt?: ReadonlySet<string>): Set<string> {
+  const zu = new Set<string>();
+  if (!gestellt?.size) return zu;
+  for (const w of netz.weichen ?? []) if (gestellt.has(w.id)) zu.add(w.kante);
+  return zu;
 }
 
 const schluessel = (p: PathPoint | WegKnoten): string => `${p.x}:${p.y}:${p.w ?? ''}`;
@@ -66,7 +100,8 @@ export function tore(netz: Wegnetz): WegKnoten[] {
  *  Je Tor die kuerzeste OFFENE Route. Gibt es von einem Tor aus keine mehr,
  *  wirft es - eine Sperre, die eine Bahn ganz zumacht, ist ein Datenfehler
  *  und darf nicht als "dann eben eine Bahn weniger" durchgehen. */
-export function bahnenAusNetz(netz: Wegnetz, gesperrt?: ReadonlySet<string>): PathPoint[][] {
+export function bahnenAusNetz(netz: Wegnetz, gestellt?: ReadonlySet<string>): PathPoint[][] {
+  const gesperrt = gesperrteKanten(netz, gestellt);
   const knoten = new Map(netz.knoten.map((k) => [k.id, k]));
   const bahnen: PathPoint[][] = [];
   for (const tor of tore(netz)) {
@@ -191,23 +226,54 @@ export const WEGNETZ: Record<string, Wegnetz> = {
     knoten: [
       { id: 'ziel', x: 1730, y: 514, w: 68, art: 'ziel' },
       { id: 'tor1', x: -60, y: 1035, w: 38, art: 'tor' },
+      { id: 'kreuz1', x: 528, y: 700, w: 50, art: 'kreuz' },
+      { id: 'kreuz2', x: 690, y: 500, w: 44, art: 'kreuz' },
     ],
     kanten: [
       {
-        id: 'tor1-ziel', von: 'tor1', nach: 'ziel',
+        id: 'tor1-kreuz1', von: 'tor1', nach: 'kreuz1',
         punkte: [
           { x: 160, y: 1050, w: 44 }, { x: 380, y: 1042, w: 46 }, { x: 520, y: 1000, w: 48 },
-          { x: 524, y: 860, w: 50 }, { x: 528, y: 700, w: 50 }, { x: 540, y: 580, w: 48 },
-          { x: 590, y: 516, w: 44 }, { x: 690, y: 500, w: 44 }, { x: 790, y: 548, w: 46 },
-          { x: 816, y: 680, w: 50 }, { x: 820, y: 820, w: 50 }, { x: 826, y: 950, w: 48 },
-          { x: 886, y: 1016, w: 44 }, { x: 996, y: 1030, w: 44 }, { x: 1096, y: 980, w: 46 },
-          { x: 1116, y: 850, w: 50 }, { x: 1120, y: 700, w: 50 }, { x: 1128, y: 570, w: 48 },
-          { x: 1182, y: 502, w: 44 }, { x: 1288, y: 490, w: 44 }, { x: 1390, y: 542, w: 46 },
-          { x: 1408, y: 680, w: 50 }, { x: 1414, y: 820, w: 52 }, { x: 1444, y: 940, w: 52 },
-          { x: 1540, y: 1004, w: 52 }, { x: 1646, y: 978, w: 54 }, { x: 1700, y: 850, w: 56 },
-          { x: 1716, y: 700, w: 58 }, { x: 1726, y: 570, w: 62 },
+          { x: 524, y: 860, w: 50 },
         ],
       },
+      {
+        id: 'kreuz1-kreuz2', von: 'kreuz1', nach: 'kreuz2',
+        punkte: [
+          { x: 540, y: 580, w: 48 }, { x: 590, y: 516, w: 44 },
+        ],
+      },
+      {
+        id: 'kreuz1-kreuz2-2', von: 'kreuz1', nach: 'kreuz2',
+        punkte: [
+          { x: 430, y: 630, w: 48 }, { x: 300, y: 580, w: 46 }, { x: 210, y: 460, w: 44 },
+          { x: 185, y: 330, w: 44 }, { x: 245, y: 215, w: 44 }, { x: 370, y: 155, w: 44 },
+          { x: 490, y: 190, w: 44 }, { x: 520, y: 290, w: 44 }, { x: 560, y: 400, w: 44 },
+          { x: 620, y: 460, w: 44 },
+        ],
+      },
+      {
+        id: 'kreuz2-ziel', von: 'kreuz2', nach: 'ziel',
+        punkte: [
+          { x: 790, y: 548, w: 46 }, { x: 816, y: 680, w: 50 }, { x: 820, y: 820, w: 50 },
+          { x: 826, y: 950, w: 48 }, { x: 886, y: 1016, w: 44 }, { x: 996, y: 1030, w: 44 },
+          { x: 1096, y: 980, w: 46 }, { x: 1116, y: 850, w: 50 }, { x: 1120, y: 700, w: 50 },
+          { x: 1128, y: 570, w: 48 }, { x: 1182, y: 502, w: 44 }, { x: 1288, y: 490, w: 44 },
+          { x: 1390, y: 542, w: 46 }, { x: 1408, y: 680, w: 50 }, { x: 1414, y: 820, w: 52 },
+          { x: 1444, y: 940, w: 52 }, { x: 1540, y: 1004, w: 52 }, { x: 1646, y: 978, w: 54 },
+          { x: 1700, y: 850, w: 56 }, { x: 1716, y: 700, w: 58 }, { x: 1726, y: 570, w: 62 },
+        ],
+      },
+    ],
+    weichen: [
+      // **Die Nordschleife** schickt die Gegner durch die obere linke
+      // Kartenhaelfte, die seit v219 gemessen nie betreten wird. Zu heisst
+      // laenger: die Bahn waechst von 3882 auf 4914 Weltpunkte (+25 %), der
+      // Umwegfaktor von 2,08 auf 2,64. Gemessen mit `tools/bahnmass.ts`,
+      // also derselben Rechnung wie der Waechter: Knick 6,3 Grad wie heute,
+      // engster Fleckabstand unveraendert, und KEIN Punkt laeuft mehr aus
+      // dem Feld (heute neun).
+      { id: 'saeule1', kante: 'kreuz1-kreuz2', name: 'Nordschleife' },
     ],
   },
   ascheschlucht: {

@@ -93,6 +93,8 @@ export class Renderer {
   private terrainBgVersion = -1;
   /** Der laufende Kartenaufbau, solange er noch nicht fertig ist. */
   private terrainArbeit: TerrainAuftrag | null = null;
+  /** Der Bahnstand, aus dem der heutige Untergrund gebacken ist (v280). */
+  private terrainBahnStand = -1;
   /** Wurde die gezeigte Karte aus dem Foto gebacken oder aus der Palette
    *  gemalt? Nur zum Pruefen - im Spiel entscheidet das niemand. */
   private terrainMitFoto = false;
@@ -404,7 +406,8 @@ export class Renderer {
     // Neu backen bei Kartenwechsel - und noch einmal, sobald das
     // Untergrundbild fertig dekodiert ist.
     const bgV = backgroundVersion();
-    if (!this.terrain || this.terrainFor !== s.map.id || this.terrainBgVersion !== bgV) {
+    if (!this.terrain || this.terrainFor !== s.map.id || this.terrainBgVersion !== bgV
+      || this.terrainBahnStand !== s.bahnStand) {
       // Beim WECHSEL der Karte das Alte wegwerfen - nicht, wenn nur das
       // Untergrundbild fertig dekodiert ist. Der zweite Fall tritt eine
       // halbe Sekunde nach dem ersten ein und beschriebe dieselbe Karte:
@@ -418,6 +421,11 @@ export class Renderer {
       this.terrainArbeit = terrainAuftrag(s.map, s.lanes, s.map.palette, getBackground(s.map.id));
       this.terrainFor = s.map.id;
       this.terrainBgVersion = bgV;
+      // **Die Strasse wird aus den Bahnen gebacken.** Ohne diese Zeile bliebe
+      // nach dem Umlegen einer Weiche die alte Strasse stehen, waehrend die
+      // Gegner woanders laufen - und kein Tor saehe es, weil beide fuer sich
+      // richtig sind.
+      this.terrainBahnStand = s.bahnStand;
     }
     // Der Aufbau laeuft ueber mehrere Bilder statt in einem Zug. Bis er
     // fertig ist, bleibt die VORHERIGE Karte stehen - deshalb sieht man von

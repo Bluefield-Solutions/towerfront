@@ -3908,6 +3908,101 @@ step('Trefferstopp bleibt im Rahmen', () => {
   }
 });
 
+/** **Eine Weiche wird nur zwischen den Wellen umgelegt** (v280, S-N2-03).
+ *
+ *  Ein Gegner traegt als einzige Zustandsgroesse seine zurueckgelegte
+ *  Strecke. Tauscht man die Bahn unter ihm aus, springt er auf die neue
+ *  Kurve: dieselbe Strecke, anderer Ort. Das waere keine Korrektur mehr,
+ *  sondern eine neue Mechanik - dieselbe Begruendung wie beim Turmversetzen
+ *  in v108.
+ *
+ *  **Gemessen wird der Sprung, nicht der Rueckgabewert.** Ein `false` sagt
+ *  nur, dass die Funktion nein gesagt hat; ob dabei trotzdem etwas an den
+ *  Bahnen passiert ist, sagt es nicht. Also: Ort jedes Gegners vorher und
+ *  nachher.
+ *
+ *  Die Nullprobe steht daneben (Regel 13): OHNE Gegner auf dem Feld muss
+ *  dieselbe Weiche sich umlegen lassen und die Bahn messbar aendern - sonst
+ *  bewiese die Probe nur, dass die Weiche gar nicht geht. */
+step('Weiche laesst sich waehrend einer Welle nicht umlegen', () => {
+  const g = new GameState();
+  g.reset(4242, 'normal', 'spiralhain');
+
+  // Nullprobe zuerst, im Ruhezustand: die Weiche geht, und sie wirkt.
+  const vorLaenge = g.lanes[0].length;
+  if (!g.weicheStellen('saeule1', true)) {
+    throw new Error('Die Weiche laesst sich zwischen den Wellen gar nicht umlegen.');
+  }
+  const nachLaenge = g.lanes[0].length;
+  if (Math.abs(nachLaenge - vorLaenge) < 100) {
+    throw new Error(`Die Weiche aendert die Bahn kaum: ${vorLaenge.toFixed(0)} -> `
+      + `${nachLaenge.toFixed(0)} Weltpunkte.`);
+  }
+  if (!g.weicheStellen('saeule1', false)) throw new Error('Die Weiche geht nicht zurueck.');
+
+  // Jetzt mit laufender Welle.
+  g.startWave();
+  for (let i = 0; i < 400 && g.enemies.length < 3; i++) g.update(DT);
+  if (g.enemies.length < 3) throw new Error('Keine Gegner auf dem Feld - die Probe misst nichts.');
+
+  const vorher = g.enemies.map((e) => ({ id: e.id, x: e.x, y: e.y }));
+  const bahnVorher = g.lanes[0].length;
+  g.weicheStellen('saeule1', true);
+  g.update(DT);
+
+  if (Math.abs(g.lanes[0].length - bahnVorher) > 0.5) {
+    throw new Error(`Die Bahn hat sich waehrend der Welle geaendert: `
+      + `${bahnVorher.toFixed(0)} -> ${g.lanes[0].length.toFixed(0)} Weltpunkte.`);
+  }
+  let groesster = 0;
+  for (const a of vorher) {
+    const b = g.enemies.find((e) => e.id === a.id);
+    if (!b) continue;
+    groesster = Math.max(groesster, Math.hypot(b.x - a.x, b.y - a.y));
+  }
+  // Ein Bild Bewegung ist erlaubt; ein Bahnwechsel wirft den Gegner um
+  // Hunderte von Weltpunkten.
+  if (groesster > 60) {
+    throw new Error(`Ein Gegner ist beim Umlegen um ${groesster.toFixed(0)} Weltpunkte `
+      + 'gesprungen - die Route wurde mitten im Lauf gewechselt.');
+  }
+});
+
+/** **Die Weichenstellung ueberlebt das Sichern** (v280).
+ *
+ *  Ohne sie liefen die Gegner nach dem Laden wieder die kurze Bahn, waehrend
+ *  die Tuerme am Umweg stehen - ein Fehler, den man erst in der naechsten
+ *  Welle sieht und dann nicht mehr erklaeren kann.
+ *
+ *  Geprueft wird nicht, ob das Feld im Stand STEHT, sondern was nach dem
+ *  Laden auf dem Feld ankommt: die Laenge der Bahn. Ein Feld im Stand, das
+ *  beim Laden niemand liest, sieht genauso aus wie eines, das fehlt (v137). */
+step('Weichenstellung ueberlebt das Sichern', () => {
+  const g = new GameState();
+  g.reset(4242, 'normal', 'spiralhain');
+  const kurz = g.lanes[0].length;
+  if (!g.weicheStellen('saeule1', true)) throw new Error('Die Weiche liess sich nicht umlegen.');
+  const lang = g.lanes[0].length;
+
+  const b = new GameState();
+  if (!b.restore(g.snapshot())) throw new Error('Der Stand liess sich nicht laden.');
+  if (Math.abs(b.lanes[0].length - lang) > 0.5) {
+    throw new Error(`Nach dem Laden ist die Bahn ${b.lanes[0].length.toFixed(0)} statt `
+      + `${lang.toFixed(0)} Weltpunkte lang (offen waeren ${kurz.toFixed(0)}).`);
+  }
+
+  // Nullprobe (Regel 13): ein Stand OHNE umgelegte Weiche laedt die kurze
+  // Bahn. Sonst bewiese die Probe nur, dass beide Staende gleich aussehen.
+  const c = new GameState();
+  c.reset(4242, 'normal', 'spiralhain');
+  const d = new GameState();
+  if (!d.restore(c.snapshot())) throw new Error('Der offene Stand liess sich nicht laden.');
+  if (Math.abs(d.lanes[0].length - kurz) > 0.5) {
+    throw new Error(`Ein Stand ohne Weiche laedt ${d.lanes[0].length.toFixed(0)} statt `
+      + `${kurz.toFixed(0)} Weltpunkte.`);
+  }
+});
+
 // --- Ueberlebt eine Welle das Sichern? (v137)
 //
 // Bis v136 sicherte `snapshot` von jedem WARTENDEN Gegner vier von sechs

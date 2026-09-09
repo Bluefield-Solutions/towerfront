@@ -506,11 +506,18 @@ export function mapById(id: string): GameMap {
   return MAPS.find((m) => m.id === id) ?? MAP_SPIRALHAIN;
 }
 
-/** Die Kurven einer Karte, einmal gebaut und zwischengespeichert. */
+/** Die Kurven einer Karte, einmal gebaut und zwischengespeichert.
+ *
+ *  **Der Schluessel traegt die Weichenstellung mit (v280).** Vorher stand nur
+ *  die Kartenkennung darin; seit eine Weiche die Bahn aendert, waere das der
+ *  Speicher, der die alte Bahn zurueckgibt, nachdem der Spieler umgelegt hat -
+ *  und zwar lautlos. */
 const laneCache = new Map<string, LanePath[]>();
 
-export function lanePaths(map: GameMap): LanePath[] {
-  let hit = laneCache.get(map.id);
+export function lanePaths(map: GameMap, weichen?: ReadonlySet<string>): LanePath[] {
+  const schluessel = weichen?.size
+    ? `${map.id}|${[...weichen].sort().join(',')}` : map.id;
+  let hit = laneCache.get(schluessel);
   if (!hit) {
     // Der letzte Kontrollpunkt jeder Bahn liegt auf der Zielplattform.
     //
@@ -518,10 +525,12 @@ export function lanePaths(map: GameMap): LanePath[] {
     // den Verlauf, und wo alle Bahnen enden, ist EINE Angabe - sie stuende
     // sonst so oft da, wie es Bahnen gibt, und liefe beim naechsten Mal
     // auseinander (Regel 15).
-    hit = map.lanes.map((l) => new LanePath(
+    const roh = weichen?.size && WEGNETZ[map.id]
+      ? bahnenAusNetz(WEGNETZ[map.id], weichen) : map.lanes;
+    hit = roh.map((l) => new LanePath(
       map.ziel ? [...l.slice(0, -1), { ...l[l.length - 1], ...map.ziel }] : l,
     ));
-    laneCache.set(map.id, hit);
+    laneCache.set(schluessel, hit);
   }
   return hit;
 }

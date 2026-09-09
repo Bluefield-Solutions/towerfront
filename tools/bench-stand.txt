@@ -1,0 +1,8 @@
+# Die Bildratenratsche - der Stand, ueber den kein Lauf steigen darf.
+# Geschrieben von `npx tsx tools/bench.ts --schreiben`, gelesen von jedem Lauf.
+#
+# Eine Zahl: der DICHTEFAKTOR - dichte Last geteilt durch duenne, beide im
+# selben Prozess gemessen. Absichtlich keine Millisekundenzahl: dieses Tor
+# laeuft auf dem Runner, und eine Millisekunde dort ist eine andere als hier.
+# Das Band steht in tools/bench.ts.
+5.95

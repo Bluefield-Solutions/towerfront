@@ -3985,6 +3985,45 @@ const PROBEN = [
     ersatz: 'hpEnd: 40, hpCurve: 2.4',
     tor: 'guards',
   },
+  {
+    // **Die erste Gegenprobe fuer `bench` ueberhaupt** (S-N0-04). Von den 33
+    // Kettenschritten hatten vier keine: `build` und `bericht` sind keine
+    // Tore, `bahntreuetor` ist seit v233 bekannt gegenstandslos - und `bench`
+    // war schlicht unbewiesen.
+    //
+    // **Der Versuch, sie zu bauen, hat gezeigt, warum es keine gab: das Tor
+    // konnte nichts melden.** Es mass 0,081 ms gegen ein Budget von 4 - und
+    // nimmt man dem Spiel das ganze Umkreisraster weg, misst es 0,079. Der
+    // Umbau in v272 steht im Kopf von `tools/bench.ts`; hier steht nur, was
+    // die Probe stellt.
+    //
+    // Gestellt wird der Fehler, gegen den dieses Tor ueberhaupt steht: die
+    // Zellenkante des Umkreisrasters wird so gross, dass alle Gegner in
+    // derselben Zelle liegen. Jede Abfrage gibt dann jeden Gegner zurueck -
+    // das Ergebnis bleibt richtig, nur der Aufwand haengt wieder an der
+    // Gesamtzahl statt an der Dichte. Ein verstellter Kantenwert ist auch
+    // der wahrscheinlichste Weg, auf dem das im Ernst passiert.
+    //
+    // Gemessen: Dichtefaktor 5,83 bis 6,71 ueber fuenf Laeufe mit Raster,
+    // 12,38 bis 13,06 ueber vier ohne. Keine Ueberschneidung, und die
+    // Ratsche laesst bei einem Stand von 5,95 bis 7,74 zu.
+    //
+    // **Ein schwaecherer Eingriff war zuerst da und ist verworfen:** das
+    // Raster alle Zellen durchsuchen zu lassen statt nur der beruehrten.
+    // Der meldet zwar (8,70 gegen 7,74), aber nur mit 12 % Abstand zur
+    // Schwelle - denn er verteuert auch die duenne Last, und im Verhaeltnis
+    // kuerzt sich das halb heraus. Eine Gegenprobe, die im Rauschen des
+    // naechsten Rechners verschwinden kann, ist keine.
+    //
+    // Als Regel, nicht als Muster: die Kantenlaenge ist eine Zahl, die sich
+    // aendert, sobald jemand das Raster nachstellt.
+    name: 'Bildrate bricht ein',
+    datei: 'src/game/state.ts',
+    regel: /new SpatialGrid<Enemy>\(\d+, WORLD_W, WORLD_H\)/,
+    ersatz: 'new SpatialGrid<Enemy>(100000, WORLD_W, WORLD_H)',
+    tor: 'bench',
+    meldet: 'Bildrate bricht ein',
+  },
 ];
 
 // ------------------------------------------------------------------- Schutz

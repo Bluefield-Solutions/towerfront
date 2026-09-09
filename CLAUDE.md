@@ -282,6 +282,17 @@ npm run muster      prueft in 0,4 s, ob jede der 258 Gegenproben noch einen
                     ausserdem `tools/proben-befund.txt`: was der Nachtlauf
                     gefunden hat, macht die Torkette rot, statt im Protokoll
                     des Runners zu bleiben.
+npm run bench       misst den heissen Pfad - und seit v272 als VERHAELTNIS,
+                    nicht als Millisekundenzahl. Der Dichtefaktor ist die
+                    dichte Last (320 Gegner) geteilt durch die duenne (24),
+                    beide im selben Prozess; damit kuerzt sich die
+                    Rechengeschwindigkeit heraus, und das Tor darf auf dem
+                    Runner stehen (Regel 12). Stand in
+                    `tools/bench-stand.txt`, Band 30 %, `--schreiben` setzt
+                    ihn neu und lockert ihn dabei nie. Bis v271 hat es
+                    NICHTS gemessen: Grenze 49-fach zu hoch, Last zu duenn,
+                    Last schmilzt waehrend der Messung weg, und am Ende lief
+                    gar keine Simulation mehr.
 npm run streifen    misst beide Baender ueber dem Feld: die Wellenvorschau in
                     JEDER Welle und die Einweisungsblase beim laengsten Satz.
                     Echtes Markup, echte Stilvorlage - das Browsertor sieht
@@ -610,7 +621,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v271. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v272. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

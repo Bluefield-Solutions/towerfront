@@ -1,6 +1,8 @@
 # Towerfront — Bildauftrag
 
-Stand: v265 · 08.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v272 · 08.09.2026 · **Auftragsdokument für den Bild-Agenten**
+
+**Nachgesehen in v272:** unveraendert. Die Abnahmegrenzen dieses Dokuments werden seit v229 bei jedem `npm run guards` mitgelesen (0 Fehler im heutigen Baum) - genau deshalb, weil `kartenprobe` nicht in der Torkette steht und ein Werkzeug, dessen Eingang niemand prueft, im Ernstfall kaputt ist.
 
 **Nachgesehen in v265:** unveraendert. Abschnitt 6.8 (acht Zweigsymbole)
 bleibt offen — bestellt und nicht geliefert.

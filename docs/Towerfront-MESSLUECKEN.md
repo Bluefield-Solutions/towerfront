@@ -1,6 +1,13 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v265 · 08.09.2026
+Stand: v272 · 08.09.2026
+
+**Nachgesehen in v272:** die fuenfzehn Luecken stehen unveraendert. Dazu ist
+**M16** gekommen, und der Weg dorthin ist der eigentliche Befund - dieses
+Verzeichnis konnte die Luecke nicht kennen, weil es aus dem gesammelt ist, wovon
+wir WISSEN, dass wir es nicht messen. Ein Tor, das nichts beweist, weiss man
+nicht.
+
 
 Zu `KATALOG.md` und `STORIES.md`. Stand des Spiels **v248** (`5623c3b`).
 
@@ -431,6 +438,41 @@ Hinweis, der immer dasteht, ist keiner).
 Liste, für die es noch keinen belegten Bedarf gibt — der Nutzer hat sie nicht
 gemeldet, und keine Messung zeigt darauf. Sie gehört ins Verzeichnis, damit sie
 nicht vergessen wird, nicht in den Plan.
+
+---
+
+## M16 · Ein Tor kann seit jeher in der Kette stehen, ohne je etwas bewiesen zu haben
+
+**Gefunden in v269, geschlossen in v272 — und dieses Verzeichnis konnte es
+nicht wissen.** Die fuenfzehn Luecken davor sind aus dem gesammelt, wovon wir
+wissen, dass wir es nicht messen. Ein Tor, das laeuft, gruen meldet und dabei
+nichts prueft, kommt in so einer Sammlung nicht vor: es sieht von aussen aus
+wie eine Messung.
+
+Sichtbar wurde es durch eine Zaehlung, nicht durch ein Nachdenken. Von 33
+Kettenschritten hatten vier keine einzige Gegenprobe. Zwei sind keine Tore
+(`build`, `bericht`), einer ist seit v233 bekannt gegenstandslos
+(`bahntreuetor`) — und `bench` war schlicht unbewiesen.
+
+**Es war schlimmer als unbewiesen: es konnte nichts melden.** Gemessen in
+v272, vier Ursachen: die Grenze lag 49 mal ueber dem Messwert (4 ms gegen
+0,081); die Last war so duenn, dass das Herausnehmen des ganzen
+Umkreisrasters 0,079 statt 0,081 ms ergab; die Last schmolz waehrend der
+Messung von 320 auf 84 Gegner; und der letzte Block mass gar keine Simulation
+mehr, weil die Partie zwischendurch endete. Die letzten beiden waren
+unsichtbar, solange 1500 Schritte in einem Stueck gemittelt wurden.
+
+**Die Luecke ist damit nicht `bench`, sondern das Verfahren.** Was ein Tor
+haelt, weiss man erst, wenn jemand den Fehler stellt, gegen den es steht. Die
+Zaehlung „welcher Kettenschritt hat wieviele Gegenproben" gehoert deshalb
+regelmaessig gefahren, nicht einmal.
+
+**Offen bleibt der zweite Teil.** Eine Gegenprobe belegt, dass ein Tor bei
+EINEM gestellten Fehler anschlaegt. Sie sagt nichts darueber, wieviel von dem,
+was es zu halten vorgibt, es wirklich haelt — `bench` faengt jetzt einen
+Aufwand, der mit der Gegnerzahl waechst, und ausdruecklich NICHT einen, der
+beide Lasten gleich trifft. Das steht im Kopf des Werkzeugs, gemessen wird es
+nicht.
 
 ---
 

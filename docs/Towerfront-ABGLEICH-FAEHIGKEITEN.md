@@ -1,6 +1,8 @@
 # Referenzabgleich — Fähigkeiten freischalten (C18)
 
-Stand: v265 · 08.09.2026
+Stand: v272 · 08.09.2026
+
+**Nachgesehen in v272:** unveraendert. Die Faehigkeiten werden von `npm run sim` und dem Rauchtest gefahren, beide im Runner-Lauf zu v271 gruen.
 
 **Nachgesehen in v265:** unveraendert.
 

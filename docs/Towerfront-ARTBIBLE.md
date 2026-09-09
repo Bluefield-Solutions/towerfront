@@ -1,6 +1,8 @@
 # Towerfront — Art Bible
 
-Stand: v265 · 08.09.2026
+Stand: v272 · 08.09.2026
+
+**Nachgesehen in v272:** unveraendert. Die Zahlen dieses Dokuments haengen an `npm run art`, `grafiktor`, `lesbarkeit` und `einbettung` - alle vier im Runner-Lauf zu v271 gruen, und v272 hat kein Bild und keine Grenze angefasst.
 
 **Nachgesehen in v265:** unveraendert. Neu dazugekommen ist die Marke des
 Raeubers (Splitter in der Kristallfarbe, Faden zum Kristall) — gebacken, kein

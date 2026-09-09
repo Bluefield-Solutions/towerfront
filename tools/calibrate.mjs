@@ -69,16 +69,18 @@ const opt = (name) => {
 const kurve = opt('--kurve');
 const knie = opt('--knie');
 const leben = opt('--leben');
+const beute = opt('--beute');
 const karte = opt('--karte');
 const hp = opt('--hp');
 const gold = opt('--gold');
 
-if (!kurve && !knie && !leben && !hp && !gold) {
+if (!kurve && !knie && !leben && !beute && !hp && !gold) {
   console.log(`Eichen — einen Wert durchprobieren, alle Kennzahlen sehen.
 
   npm run eichen -- --kurve 30,34,38          Schwierigkeitskurve (hpEnd)
   npm run eichen -- --knie 0.35,0.40,0.45     Knie der Lebenskurve (KNIE_ANFANG)
   npm run eichen -- --leben 30,40,50          Groesse des Kristalls (startLives)
+  npm run eichen -- --beute 0.7,0.85,1.0      Einkommen im Grad normal (bountyMul/bonusMul)
   npm run eichen -- --karte X --hp 0.85,0.9   Ausgleich einer Karte
   npm run eichen -- --karte X --gold 1.0,1.1  Einkommen einer Karte
 
@@ -151,6 +153,20 @@ function setLeben(v) {
   writeFileSync(DIFF, s);
 }
 
+/** Das Einkommen im Grad `normal` setzen (S-P2-04).
+ *
+ *  `bountyMul` ist das Gold je Abschuss, `bonusMul` der Wellenbonus. Beide
+ *  stehen auf 1,0 und werden GEMEINSAM gefahren: getrennt waeren es zwei
+ *  Dinge auf einmal, und sie ziehen ohnehin an derselben Schraube.
+ *
+ *  Die anderen zwei Grade bleiben stehen. Ruhig zahlt 1,3, Erbarmungslos
+ *  0,85; der Waechter verlangt nur, dass ein haerterer Grad nicht MEHR
+ *  zahlt, und das gilt, solange normal nicht ueber 1,3 steigt. */
+function setBeute(v) {
+  writeFileSync(DIFF, backup.get(DIFF).replace(
+    /bountyMul: 1(\.0)?, bonusMul: 1(\.0)?,/, `bountyMul: ${v}, bonusMul: ${v},`));
+}
+
 /** Welche Kennung zu welcher Konstante gehört — **abgelesen, nicht
  *  aufgeschrieben**.
  *
@@ -220,14 +236,19 @@ function messen() {
     anteil: line(/letzten Welle (\d+) %/),
     robust: line(/Robustheit.*Spanne ([0-9.]+)/),
     stile: line(/Abstand der Spielstile.*Spanne (\d+)/),
+    // Seit v260 mitgemessen: was ohne diese zwei Zahlen nicht zu sehen war,
+    // ist genau das, was S-P2-04 einstellt. Der Knappheitsanteil sagt, ob
+    // Gold der Engpass ist; "uebrig" sagt, wieviel liegen bleibt.
+    knapp: line(/^ {2}Meister\s+([0-9.]+) % \(Spanne/m),
+    uebrig: line(/Gold uebrig am Ende: ([0-9.]+) %/),
     sterne,
     fehler,
   };
 }
 
 const rows = [];
-const werte = (kurve ?? knie ?? leben ?? hp ?? gold).split(',').map((v) => Number(v.trim()));
-const was = kurve ? 'Kurve' : knie ? 'KNIE_ANFANG' : leben ? 'startLives' : `${karte} ${hp ? 'hpMul' : 'goldMul'}`;
+const werte = (kurve ?? knie ?? leben ?? beute ?? hp ?? gold).split(',').map((v) => Number(v.trim()));
+const was = kurve ? 'Kurve' : knie ? 'KNIE_ANFANG' : leben ? 'startLives' : beute ? 'bountyMul/bonusMul' : `${karte} ${hp ? 'hpMul' : 'goldMul'}`;
 
 console.log(`Eichen: ${was}, ${werte.length} Werte\n`);
 for (const v of werte) {
@@ -235,14 +256,15 @@ for (const v of werte) {
   if (kurve) setKurve(v);
   else if (knie) setKnie(v);
   else if (leben) setLeben(v);
+  else if (beute) setBeute(v);
   else setKarte(karte, hp ? 'hp' : 'gold', v);
   const m = messen();
   rows.push([v, m]);
   console.log(karte
     ? `  ${String(v).padEnd(6)} ${karte}: ${m.eigen.padEnd(26)} ` +
       `Sterne ${m.sterne.padEnd(6)} Fehler ${m.fehler.length}`
-    : `  ${String(v).padEnd(6)} ${m.verteilung.padEnd(26)} ` +
-      `letzte ${(m.anteil + ' %').padStart(5)}  ` +
+    : `  ${String(v).padEnd(6)} ${m.verteilung.padEnd(22)} ` +
+      `knapp ${(m.knapp + ' %').padStart(7)}  uebrig ${(m.uebrig + ' %').padStart(7)}  ` +
       `Robust ${m.robust.padStart(5)}  Stile ${m.stile.padStart(3)}  ` +
       `Sterne ${m.sterne.padEnd(6)} Fehler ${m.fehler.length}`);
 }

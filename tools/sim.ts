@@ -11,8 +11,7 @@ import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../src/data/d
 const START_LIVES = DIFFICULTIES.normal.startLives;
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, type TowerId } from '../src/data/towers';
 
-import { MAPS, lanePaths } from '../src/data/maps';
-import { REICHWEITE } from './bahnmass';
+import { MAPS } from '../src/data/maps';
 import { WEGNETZ } from '../src/data/wegnetz';
 import { ALL_PERKS, NO_PERKS, starsFor } from '../src/data/perks';
 import { ABILITIES } from '../src/data/abilities';
@@ -266,7 +265,10 @@ interface Bot {
 const BOTS: Bot[] = [
   {
     name: 'Meister', maxTowers: 12, maxLevel: 3, reserve: 40, decideEvery: 30, deepenAt: 0.65,
-    weichenStil: 'deckung',
+    // Der Meister laesst offen - und zwar bewusst der, gegen den alle
+    // uebrigen Zahlen dieses Werkzeugs geeicht sind. Wer ihn umstellt,
+    // verschiebt jede andere Messung mit.
+    weichenStil: 'offen',
   },
   {
     // Erst alle Stellungen besetzen, dann ausbauen.
@@ -302,8 +304,9 @@ const BOTS: Bot[] = [
 const BESTLEISTUNG: Bot = {
   name: 'Bestleistung', maxTowers: 24, maxLevel: MAX_LEVEL,
   reserve: 40, decideEvery: 20, deepenAt: 0.8,
-  // Der Spieler, der alles richtig macht, stellt auch die Weichen richtig.
-  weichenStil: 'deckung',
+  // Der Spieler, der alles richtig macht, baut sein Labyrinth zuerst -
+  // gemessen gewinnt `lang` auf dem Spiralhain die Welle 15 allein.
+  weichenStil: 'lang',
 };
 
 const MEISTER = BOTS[0];
@@ -380,7 +383,7 @@ function stelleZiel(s: GameState, f?: (t: Tower, i: number, s: GameState) => Zie
  *  Weiche hat, koennen sich die Stile auf den anderen dreien gar nicht
  *  unterscheiden. Das steht als Zahl da, statt als stille Null in der
  *  Statistik zu verschwinden. */
-const WEICHENSTILE = ['offen', 'lang', 'deckung'] as const;
+const WEICHENSTILE = ['offen', 'lang'] as const;
 
 /** Der Grad, auf dem die Weichenstile verglichen werden.
  *
@@ -450,14 +453,6 @@ function weichenstileMessen(): void {
   }
 }
 
-/** Die Reichweite, mit der die Deckung gerechnet wird.
- *
- *  Dieselbe Zahl wie in `tools/bahnmass.ts`, und zwar von dort geholt: eine
- *  zweite Reichweite neben der ersten liefe beim naechsten Turmwert
- *  auseinander (Regel 15). Sie ist bewusst die des mittleren Turms und nicht
- *  die des gerade gebauten - der Bot entscheidet ueber die STELLUNG, nicht
- *  ueber einen einzelnen Turm.
- */
 /** Die Welle, der eine Entscheidung zugeschlagen wird.
  *
  *  Dieselbe Rechnung wie im Entscheidungszaehler weiter unten - nur an einer
@@ -484,24 +479,9 @@ function welleNr(s: GameState): number {
 function weichenWahl(s: GameState, bot: Bot): Set<string> {
   const alle = s.weichenPunkte();
   if (!alle.length || bot.weichenStil === 'offen') return new Set();
-  if (bot.weichenStil === 'lang') {
-    // Alles zu, was zugeht - und was nicht zugeht, meldet `weicheStellen`
-    // selbst, indem es die Stellung zuruecknimmt.
-    return new Set(alle.map((w) => w.id));
-  }
-  if (!s.towers.length || alle.length > 8) return new Set();
-  let beste = new Set<string>(); let bestwert = -1;
-  for (let maske = 0; maske < 2 ** alle.length; maske++) {
-    const gestellt = new Set(alle.filter((_, i) => (maske >> i) & 1).map((w) => w.id));
-    let bahnen;
-    try { bahnen = lanePaths(s.map, gestellt); } catch { continue; }
-    let wert = 0;
-    for (const bahn of bahnen) {
-      for (const t of s.towers) wert += bahn.coveredLength(t.x, t.y, REICHWEITE);
-    }
-    if (wert > bestwert) { bestwert = wert; beste = gestellt; }
-  }
-  return beste;
+  // Alles zu, was zugeht - und was nicht zugeht, meldet `weicheStellen`
+  // selbst, indem es die Stellung zuruecknimmt.
+  return new Set(alle.map((w) => w.id));
 }
 
 function play(

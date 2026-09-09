@@ -1,6 +1,8 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v269 · 09.09.2026
+Stand: v276 · 09.09.2026
+
+**Nachgesehen in v276:** eine Zeile war falsch und ist berichtigt - `npm run bench` prueft seit v272 den Dichtefaktor, nicht mehr die 4-ms-Grenze. Die Torzahl und die uebrigen Beschreibungen stimmen (`npm run doku` prueft beides bei jedem Lauf).
 
 > **Nachgesehen in v269 — und teilweise überholt.** Der Nutzer hat entschieden,
 > Level, Spielregeln und Oberfläche neu zu bauen; die Beschlüsse stehen in
@@ -246,7 +248,7 @@ Ein Befehl fährt alles: `npm run gate`
 | 12 | Bahntreue | `npm run bahntreuetor` | einer Bahn, die weniger auf der gemalten Straße liegt als heute — Ratsche, gemessen am Kartenbild |
 | 13 | Baukante | `npm run bauflaechetor` | einer gezeigten Baufläche, die neben der Bauregel liegt — `isPointInPath` gegen `warumNicht`, mit Nullprobe: ein um sechs Punkte verschobener Pfad muss durchfallen |
 | 14 | Kulisse | `npm run wegdeckungtor` | einer gemalten Straße, an der keine Bahn entlangläuft und die trotzdem aussieht wie die benutzte — gemessen am gebackenen Untergrund, als Ratsche je Karte |
-| 15 | Messung Simulation | `npm run bench` | mehr als 4 ms Simulationszeit je Bild |
+| 15 | Messung Simulation | `npm run bench` | einem **Dichtefaktor** über dem Stand (seit v272) — dichte Last durch dünne, beide im selben Prozess. Die absolute 4-ms-Grenze steht daneben, hat aber nie etwas gefangen: sie lag 49-fach über dem Messwert |
 | 16 | Messung Zeichnen | `npm run bench-draw` | mehr als 3.000 Zeichenbefehlen **oder** 24 MB gebackenen Bildern |
 | 17 | Kartenwechsel | `npm run kartenwechsel` | zu vielen Bildpunkten je Kartenaufbau — gezählt statt in Millisekunden gemessen, weil die Zeit um Faktor zwei streute |
 | 18 | Grafiktor | `npm run grafiktor` | einem Untergrund, dessen Helligkeit oder Spanne aus dem Band der Referenz fällt — je Karte, nicht gemittelt |
@@ -311,6 +313,14 @@ kostet im Spiel nichts mehr.
 ausgebaut, die letzte Welle unterwegs — und misst die reine Simulationszeit je
 Bild. Bei 60 Bildern pro Sekunde stehen 16,7 ms zur Verfügung, das Zeichnen
 braucht davon den größeren Teil; 4 ms sind die Obergrenze für die Simulation.
+
+**Seit v272 ist das nicht mehr die Prüfung, sondern nur noch ihr Rückhalt.**
+Gemessen lag der heisse Pfad bei 0,081 ms — 49-fach unter der Grenze, und das
+Herausnehmen des ganzen Umkreisrasters bewegte sie um 0,002 ms. Geprüft wird
+seitdem der **Dichtefaktor**: dichte Last (320 Gegner) geteilt durch dünne
+(24), beide im selben Prozess, damit sich die Rechengeschwindigkeit
+herauskürzt und das Tor auf dem Runner stehen darf (Regel 12). Gemessen 6,2
+mit Raster gegen 12,7 ohne.
 
 **Der Datenwächter** liest Karten, Türme, Gegner und Wellen und prüft, was
 TypeScript nicht sehen kann: Kreuzt sich der Pfad? Liegt eine Deko-Zelle darauf?

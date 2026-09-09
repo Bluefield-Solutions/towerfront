@@ -1,6 +1,8 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v269 · 09.09.2026
+Stand: v276 · 09.09.2026
+
+**Nachgemessen in v276:** die gebaute Datei wiegt **1434 KB** gegen die Grenze von 1800 (`ls -la dist/index.html` nach `npm run build`). Die 1506 KB weiter unten sind die historische Zahl, an der das Budget hergeleitet wurde, keine Messung von heute.
 
 **Nachgesehen in v269:** die Haushaltszahlen sind unverändert gültig — sie
 messen den ausgelieferten Bildvorrat, und an dem hat sich nichts geändert. Der

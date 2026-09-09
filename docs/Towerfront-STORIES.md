@@ -1,6 +1,6 @@
 # Towerfront — Stories
 
-Stand: v275 · 09.09.2026
+Stand: v276 · 09.09.2026
 
 **Dieses Dokument ist das Lenkrad.** `npm run naechste` liest die Reihenfolge
 hier und wählt die erste offene Story — über Stunden und über Kontextgrenzen
@@ -313,7 +313,7 @@ gebackenen Terrain, nicht aus der Palette.
 Einbruch melden. Vorher wäre es stumm geblieben, weil der Mittelwert sich
 kaum bewegt.
 
-**Schliesst, wenn:** `text tools/readability.mjs "wegflaeche" >= 2`
+**Schliesst, wenn:** `text tools/readability.mjs "Wegflaeche" >= 2`
 
 ---
 

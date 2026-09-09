@@ -4048,6 +4048,27 @@ const PROBEN = [
     // Als Regel auf die Zahl: die Backhelligkeit ist ein Wert, der sich
     // aendert, sobald jemand am Untergrund dreht - zuletzt in v232 von 0,52
     // auf 0,37 an einer Karte.
+    // **Die Lesbarkeit misst seit v275 zwei Flaechen je Karte** - den Weg,
+    // auf dem die Gegner laufen, und den Boden daneben. Sie stehen 53,6 bis
+    // 60,9 Farbschritte auseinander, und das ist gewollt: `wegdeckung`
+    // pflegt dieselbe Zahl als Abnahme im Band 40 bis 90.
+    //
+    // Die zwei Ratschen darauf sind EINSEITIG - sie schlagen an, wenn es
+    // schlechter wird, nicht wenn weniger gemessen wird. Faellt die
+    // Wegflaeche weg, faellt die schlechtere der beiden Flaechen weg, die
+    // Zahlen werden besser, und alles bliebe still. Genau die Verfallsart,
+    // die dieses Werkzeug in v274 selbst hatte.
+    //
+    // Der Eingriff nimmt die Wegflaeche heraus, indem die Schlauchgrenze
+    // unerreichbar wird. Das Tor muss es NENNEN.
+    name: 'Lesbarkeit findet die Wegflaeche nicht mehr',
+    datei: 'tools/readability.mjs',
+    regel: /if \(nah <= 0\) \{ wr \+= d\[j\];/,
+    ersatz: 'if (nah <= -9999) { wr += d[j];',
+    tor: 'lesbarkeit',
+    meldet: 'keine Wegflaeche im gebackenen Terrain',
+  },
+  {
     name: 'Lesbarkeit sieht die Helligkeit des Bodens nicht',
     datei: 'src/gfx/terrain.ts',
     regel: /const BODEN_HELL = [0-9.]+;/,

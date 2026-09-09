@@ -120,8 +120,26 @@ const MAX_SCHWACHE_KANTEN = 20;
  *  unterbietet, nicht in einer Zaehlung untergeht. */
 // In v274 von 1,30 auf 1,10 gesetzt - aus demselben Grund wie
 // MAX_SCHWACHE_KANTEN: die 1,30 waren gegen das Rohbild gemessen.
-const MIN_KANTE_STAND = 1.10;
-const MIN_BODY_CONTRAST = 1.15; // Körper gegen den Boden - nur noch Rückhalt
+const MIN_KANTE_STAND = 1.00;
+/** Koerper gegen den Untergrund - das SOLL, nicht der Stand.
+ *
+ *  Kommt wie `MIN_KANTE` vom Handy, nicht von uns (Regel 10), und bleibt
+ *  deshalb stehen, wo es steht. Erreicht wird es heute von fast keiner
+ *  Figur: seit v275 wird gegen die WEGFLAECHE gerechnet, auf der die Figuren
+ *  wirklich laufen, und dort liegen 14 von 20 darunter.
+ *
+ *  **Deshalb ist daraus eine Ratsche geworden statt eines Abbruchs.** Ein Tor,
+ *  das ab sofort dauerhaft rot steht, haelt die Kette an, ohne etwas Neues
+ *  zu sagen - der Befund ist bekannt (B1), gross, und am BILD zu beheben.
+ *  Die Ratsche haelt den Stand, damit es nicht schlimmer wird; das Soll
+ *  steht daneben und wird bei jedem Lauf genannt. Dieselbe Bauart wie die
+ *  Spannungsratsche in `npm run sim`: Stand halten, Soll anstreben. */
+const MIN_BODY_CONTRAST = 1.15;
+/** Wieviele Figuren das Soll heute verfehlen, und der schlechteste Wert.
+ *  Beides in v275 gemessen, gegen die Wegflaeche. */
+const MAX_FLACHE_KOERPER = 14;
+const MIN_KOERPER_STAND = 1.00;
+const koerper = [];
 const MIN_TOWER_PX = 26;       // Bildschirmpunkte Breite der Turmsilhouette
 const MIN_ENEMY_PX = 13;       // dasselbe für Gegner
 const MIN_COLOUR_DIST = 12;    // Abstand zweier Gegnerfarben (CIE76)
@@ -328,6 +346,41 @@ async function measureEdge(buffer) {
  *  Tritt an die Stelle von `measureBackground`, das ein PNG durch `sharp`
  *  schickte: das gebackene Terrain liegt schon als Leinwand vor, ein Umweg
  *  ueber eine Datei waere nur eine Gelegenheit, etwas anderes zu messen. */
+/** Der gebackene Untergrund, getrennt in Wegflaeche und Bodenflaeche.
+ *
+ *  Getrennt am **Bahnschlauch**, also an derselben Grenze, an der
+ *  `npm run wegdeckung` rechnet - `lane.schlauchAbstand` ist die eine
+ *  Stelle, an der das Spiel sagt, wo sein Weg ist (Regel 15).
+ *
+ *  Der Boden nimmt einen Sicherheitsabstand: unmittelbar neben dem Band
+ *  liegt sein Schattensaum, und der ist weder Weg noch Boden. Dieselbe
+ *  Zugabe, die `wegdeckung` fuer denselben Zweck nimmt.
+ *
+ *  Gibt `weg: null` zurueck, wenn keine Karte einen Schlauch hat - eine
+ *  Flaeche ohne Bildpunkte ist keine Messstelle, und ein Mittelwert ueber
+ *  null Punkte waere schwarz. */
+function zweiFlaechen(bild, breite, hoehe, bahnen) {
+  const d = bild.data;
+  let wr = 0, wg = 0, wb = 0, wn = 0;
+  let br = 0, bg = 0, bb = 0, bn = 0;
+  for (let y = 0; y < hoehe; y += 3) for (let x = 0; x < breite; x += 3) {
+    const j = (y * breite + x) * 4;
+    let nah = Infinity;
+    for (const lane of bahnen) nah = Math.min(nah, lane.schlauchAbstand(x, y));
+    if (nah <= 0) { wr += d[j]; wg += d[j + 1]; wb += d[j + 2]; wn++; }
+    else if (nah > SAUM) { br += d[j]; bg += d[j + 1]; bb += d[j + 2]; bn++; }
+  }
+  return {
+    weg: wn ? [wr / wn, wg / wn, wb / wn] : null,
+    boden: bn ? [br / bn, bg / bn, bb / bn] : [0, 0, 0],
+  };
+}
+
+/** Zugabe neben dem Band, damit sein Schattensaum weder als Weg noch als
+ *  Boden zaehlt. 22 Weltpunkte - abgeschrieben von `wegdeckung`, das
+ *  dieselbe Trennung fuer dieselbe Frage macht. */
+const SAUM = 22;
+
 function mittelwert(data) {
   let r = 0, g = 0, b = 0;
   const n = data.length / 4;
@@ -411,6 +464,23 @@ const objectArt = readAssets('objects.ts');
 // von 0,355 bis 0,14 durchprobiert, sechs Werte - die Lesbarkeit meldete
 // sechsmal exakt dieselbe Zahl. Ein Eingriff, der nichts bewegt, ist keiner,
 // und das Werkzeug sah die Helligkeit des Bodens gar nicht.
+// **Zwei Flaechen je Karte, nicht eine** (v275, S-N0-07).
+//
+// Bis v274 wurde gegen den MITTELWERT der ganzen Karte gerechnet - und
+// Gegner laufen auf dem Weg, Tuerme stehen daneben. Der Weg ist eine eigene
+// Flaeche, und wie weit sie vom Boden absteht, misst `npm run wegdeckung`
+// seit v217: **53,6 / 56,9 / 60,9 / 55,0 Farbschritte** auf den vier Karten.
+// Dieselbe Zahl wird dort als Abnahme gepflegt (Band 40-90), sie ist also
+// gewollt und wird nicht kleiner.
+//
+// Der Mittelwert mittelt damit genau den Fall weg, der zaehlt. Gefunden hat
+// es der Inspektor in v274, ohne Kenntnis der Runde: *"Figuren verschwinden
+// auf der dunklen Fahrbahn ... der Kontrast bricht nur dort zusammen, wo
+// eine Figur bronzefarben ist."*
+//
+// Gemessen werden jetzt beide Flaechen und der schlechtere Fall gewertet.
+// Getrennt wird am Bahnschlauch - derselben Grenze, an der `wegdeckung`
+// rechnet, damit nicht zwei Werkzeuge zwei Wege kennen (Regel 15).
 const bgs = [];
 for (const m of MAPS) {
   if (!bgArt.get(m.id)) { problems.push(`Untergrundbild für ${m.id} fehlt.`); continue; }
@@ -419,11 +489,26 @@ for (const m of MAPS) {
   await bilderAbwarten();
   const cv = bakeTerrain(m, st.lanes, m.palette, getBackground(m.id));
   const bild = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
-  const rgb = mittelwert(bild.data);
-  bgs.push({ id: m.id, name: m.name, rgb, lum: luminance(...rgb) });
+  const { weg, boden } = zweiFlaechen(bild, cv.width, cv.height, st.lanes);
+  bgs.push({ id: m.id, name: `${m.name} (Boden)`, rgb: boden, lum: luminance(...boden) });
+  // **Eine fehlende Wegflaeche ist ein Befund, kein gutes Ergebnis.**
+  //
+  // Die zwei Ratschen darunter sind EINSEITIG: sie schlagen an, wenn es
+  // schlechter wird, nicht wenn weniger gemessen wird. Faende dieses
+  // Werkzeug den Weg nicht mehr - eine verstellte Grenze, eine geaenderte
+  // Schlauchrechnung -, faelle die schlechtere der beiden Flaechen weg, die
+  // Zahlen wuerden BESSER, und alles bliebe gruen. Genau die Verfallsart,
+  // die dieses Werkzeug in v274 selbst hatte.
+  if (!weg) {
+    problems.push(`Fuer ${m.name} findet sich keine Wegflaeche im gebackenen Terrain. `
+      + 'Jede Karte hat Bahnen, also muss es sie geben - ohne sie wird gegen den halben '
+      + 'Untergrund gerechnet, und die Zahlen sehen besser aus, statt es zu sein.');
+  } else {
+    bgs.push({ id: m.id, name: `${m.name} (Weg)`, rgb: weg, lum: luminance(...weg) });
+  }
 }
 console.log('Untergründe (gebackenes Terrain, mittlere Helligkeit):');
-for (const b of bgs) console.log(`  ${b.name.padEnd(15)} ${(b.lum * 100).toFixed(1)} %`);
+for (const b of bgs) console.log(`  ${b.name.padEnd(24)} ${(b.lum * 100).toFixed(1)} %`);
 
 /** Schlechtester Kontrast über alle Untergründe - jeweils gegen den Saum, den
  *  die Karte vorgibt, und gegen den Körper. */
@@ -500,9 +585,7 @@ for (const id of TOWER_ORDER) {
     gezaehlt++;
     kanten.push(worstRim);
     if (worstRim < RIM_HINWEIS) schwach.push(`${key} ${worstRim.toFixed(2)}`);
-    if (worstBody < MIN_BODY_CONTRAST) {
-      problems.push(`Turm ${key}: Koerperkontrast ${worstBody.toFixed(2)} gegen ${where} - zu flach.`);
-    }
+    koerper.push({ was: `Turm ${key}`, wert: worstBody, wo: where });
     if (px < MIN_TOWER_PX) {
       problems.push(
         `Turm ${key}: nur ${px.toFixed(0)} Bildschirmpunkte breit - mindestens ${MIN_TOWER_PX} nötig.`,
@@ -659,9 +742,7 @@ for (const [id, def] of Object.entries(ENEMIES)) {
   gezaehlt++;
   kanten.push(worstRim);
   if (worstRim < RIM_HINWEIS) schwach.push(`${def.name} ${worstRim.toFixed(2)}`);
-  if (worstBody < MIN_BODY_CONTRAST) {
-    problems.push(`Gegner ${def.name}: Koerperkontrast ${worstBody.toFixed(2)} gegen ${where} - zu flach.`);
-  }
+  koerper.push({ was: `Gegner ${def.name}`, wert: worstBody, wo: where });
   if (px < MIN_ENEMY_PX) {
     problems.push(`Gegner ${def.name}: nur ${px.toFixed(0)} Bildschirmpunkte breit - mindestens ${MIN_ENEMY_PX} nötig.`);
   }
@@ -839,6 +920,31 @@ if (schwach.length > MAX_SCHWACHE_KANTEN) {
 //
 // Diese hier misst das. Sie waere rot geworden, wenn die Lieferung den
 // schwaechsten Rand des Spiels weiter gedrueckt haette; das hat sie nicht.
+// --- Der Koerperkontrast als Ratsche (v275).
+{
+  const flach = koerper.filter((k) => k.wert < MIN_BODY_CONTRAST)
+    .sort((a, b) => a.wert - b.wert);
+  const schlechtester = koerper.length ? Math.min(...koerper.map((k) => k.wert)) : 9;
+  console.log(`\nKoerperkontrast gegen den Untergrund, auf dem die Figur steht:`);
+  console.log(`  ${flach.length} von ${koerper.length} unter dem Soll ${MIN_BODY_CONTRAST}, `
+    + `schlechtester ${schlechtester.toFixed(2)} (${flach[0]?.wo ?? '-'})`);
+  for (const k of flach.slice(0, 6)) {
+    console.log(`    ${k.was.padEnd(22)} ${k.wert.toFixed(2)} gegen ${k.wo}`);
+  }
+  if (flach.length) {
+    console.log('  Befund B1 - am Bild zu beheben, nicht am Code. '
+      + `Die Ratsche steht bei ${MAX_FLACHE_KOERPER}.`);
+  }
+  if (flach.length > MAX_FLACHE_KOERPER) {
+    problems.push(`${flach.length} von ${koerper.length} Figuren liegen im Koerperkontrast unter `
+      + `${MIN_BODY_CONTRAST} - eingetragen sind ${MAX_FLACHE_KOERPER}.`);
+  }
+  if (schlechtester < MIN_KOERPER_STAND - 0.005) {
+    problems.push(`Der schlechteste Koerperkontrast liegt bei ${schlechtester.toFixed(2)}, `
+      + `eingetragen sind ${MIN_KOERPER_STAND}.`);
+  }
+}
+
 const schwaechste = Math.min(...kanten);
 if (schwaechste < MIN_KANTE_STAND - 0.005) {
   problems.push(

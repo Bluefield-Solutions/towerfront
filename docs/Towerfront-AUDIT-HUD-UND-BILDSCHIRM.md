@@ -1,6 +1,8 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v269 · 09.09.2026
+Stand: v276 · 09.09.2026
+
+**Nachgesehen in v276:** die Messbefunde stehen unveraendert. Was seitdem dazugekommen ist, steht NICHT hier, sondern als Stories - die drei Inspektorlaeufe zu v271, v272 und v274 haben das HUD betreffend S-N4-04 bis S-N4-10 geliefert (verdeckter Text, verdeckte Knoepfe, Bedienung ueber dem Spielfeld, zwei Turmleisten, angeschnittener Kristall, drei Woerter fuer dieselbe Sache). Ein Audit sammelt einmal; die Kette arbeitet ab.
 
 **Nachgesehen in v269:** die Messungen gelten unverändert — Belegung, Typoskala
 und Trefferflächen sind gemessen in Ordnung, und genau das ist der Grund, warum

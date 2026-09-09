@@ -1,6 +1,8 @@
 # Marktrecherche — was moderne Tower-Defense-Spiele ausmacht
 
-Stand: v269 · 09.09.2026
+Stand: v276 · 09.09.2026
+
+**Nachgesehen in v276:** unveraendert. Der Referenzabgleich aus v269 (Defense Grid, Infinitode 2, Rogue Tower) steht hier mit seinen Quellen; die Beschluesse daraus stehen in `Towerfront-NEUBAU.md`. Neu belegt ist seit v274 einer davon: der dunkle Grund ist gemessen, nicht mehr nur begruendet.
 
 **Erweitert in v269: der Referenzabgleich zu den drei benannten Vorbildern.**
 Bis dahin hielt dieses Dokument Marktbefunde allgemein — „modern, nicht

@@ -349,7 +349,18 @@ npm run lesbarkeit  Kontrast jeder Figur gegen den Untergrund, Groesse auf dem
                     von 20 Figuren liegen unter der Lesbarkeitslinie,
                     gemeldet waren 8. Gefunden hat es ein Durchlauf, kein
                     Verdacht: `BODEN_HELL` sechsmal durchprobiert, sechsmal
-                    dieselbe Zahl.
+                    dieselbe Zahl. **Seit v275 zwei Flaechen je Karte** - der
+                    Weg, auf dem die Gegner laufen, und der Boden daneben.
+                    Sie stehen 53,6 bis 60,9 Farbschritte auseinander
+                    (`wegdeckung` pflegt dieselbe Zahl als Abnahme), und der
+                    Mittelwert mittelte genau den Fall weg, der zaehlt.
+                    Gemessen: der Spiralhain-Weg ist mit 2,4 % dreimal
+                    DUNKLER als sein Boden, die Wege von Ascheschlucht und
+                    Frostspalte mit 14 % doppelt so HELL. 14 von 20 Figuren
+                    liegen im Koerperkontrast unter dem Soll, alle gegen
+                    einen Weg. Beide Ratschen halten den Stand; das Soll
+                    kommt vom Handy (Regel 10) und wird bei jedem Lauf
+                    genannt.
 npm run beruehrung  prüft, ob alles mit dem Daumen zu treffen ist
 npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen - im
                     Standardlauf nur die, deren ZIELDATEI oder `haengtAn`
@@ -650,7 +661,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v275. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v276. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

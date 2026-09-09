@@ -1,6 +1,8 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v269 · 09.09.2026
+Stand: v276 · 09.09.2026
+
+**Nachgesehen in v276:** unveraendert gueltig, und der Kernsatz erst recht - der Genre-Abgleich steht auf 30 von 30, und das Spiel macht trotzdem wenig Spass. Was seit v269 daraus folgt, steht in `Towerfront-NEUBAU.md`; dieses Dokument ist die Diagnose, nicht der Plan.
 
 **Nachgesehen in v269:** dieses Audit hat die Diagnose gestellt, aus der der
 Neubau folgt — „der Genre-Abgleich steht auf 30 von 30, und das Spiel macht

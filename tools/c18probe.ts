@@ -34,7 +34,18 @@ function botSchritt(g: GameState, plaetze: { x: number; y: number }[], z: Z): vo
     return !!n && g.gold >= n.cost + 80;
   });
   if (up) g.upgrade(up, (up.branch ?? ((up.id % 2) as 0 | 1)) as 0 | 1);
-  if (g.canStartWave) g.startWave();
+  // **Die Bots ueberlappen nicht** (S-P4-01, v266).
+  //
+  // Seit v266 darf eine zweite Welle starten, waehrend die erste laeuft -
+  // `canStartWave` allein heisst also nicht mehr "nichts laeuft". Ein Bot, der
+  // bei jeder Gelegenheit startet, faehrt damit dauerhaft zwei Wellen, und das
+  // ist die AGGRESSIVSTE Spielweise, nicht die vernuenftige: gemessen verliert
+  // die erste Karte damit in Welle 13, und C18 waere rot.
+  //
+  // Die Ueberlappung ist eine Entscheidung des Spielers. Die Balance ist gegen
+  // einen Bot geeicht, der sie nicht trifft; wer sie messen will, misst sie
+  // eigens (S-P4-02).
+  if (g.canStartWave && !g.waveActive) g.startWave();
 }
 
 const saaten = process.argv.slice(2).map(Number).filter((n) => !Number.isNaN(n));

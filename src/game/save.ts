@@ -16,7 +16,7 @@ import type { DifficultyId } from '../data/difficulty';
  *  wegzulassen war bequem, aber falsch: die Determinismus-Pruefung hat gezeigt,
  *  dass eine fortgesetzte Partie dadurch messbar anders verlaeuft. */
 export interface SaveGame {
-  v: 7;
+  v: 8;
   difficulty: DifficultyId;
   map: string;
   endless: boolean;
@@ -25,7 +25,9 @@ export interface SaveGame {
   gold: number;
   lives: number;
   waveIndex: number;
-  waveActive: boolean;
+  /** Die laufenden Wellen als [Welle, Startzeit] (S-P4-01). Ersetzt
+   *  `waveActive`: ein Schalter kann nicht sagen, WELCHE Wellen laufen. */
+  laufende: [number, number][];
   waveTime: number;
   idleTime: number;
   leaked: number;
@@ -72,7 +74,7 @@ export interface SaveGame {
    *  Schild und Traeger sind ANGEHAENGT: ein Stand aus v136 hat vier Felder
    *  und laedt weiter, er bekommt Null. Deshalb bleibt auch die Formatnummer,
    *  wo sie war. */
-  pending: [number, EnemyId, number, number, number?, number?][];
+  pending: [number, EnemyId, number, number, number?, number?, number?][];
   /** Rest der Trefferpause - sie haelt die Simulation an und gehoert deshalb
    *  in den Stand, obwohl sie sich wie ein Effekt anfuehlt.
    *
@@ -151,7 +153,7 @@ export function loadGame(): SaveGame | null {
     if (!raw) return null;
     const p = JSON.parse(raw) as SaveGame;
     // Ein Stand aus einer aelteren Fassung wird verworfen statt halb geladen.
-    if (p.v !== 7 || !Array.isArray(p.towers) || !Array.isArray(p.enemies)) return null;
+    if (p.v !== 8 || !Array.isArray(p.towers) || !Array.isArray(p.enemies)) return null;
     return p;
   } catch {
     return null;

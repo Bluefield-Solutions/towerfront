@@ -190,7 +190,18 @@ function auswertungNachDerPartie(): boolean {
   // werden - von allein laeuft keine an.
   t.lives = 1;
   for (let i = 0; i < 60 * 300 && t.phase === 'playing'; i++) {
-    if (t.canStartWave) t.startWave();
+    // **Die Bots ueberlappen nicht** (S-P4-01, v266).
+    //
+    // Seit v266 darf eine zweite Welle starten, waehrend die erste laeuft -
+    // `canStartWave` allein heisst also nicht mehr "nichts laeuft". Ein Bot, der
+    // bei jeder Gelegenheit startet, faehrt damit dauerhaft zwei Wellen, und das
+    // ist die AGGRESSIVSTE Spielweise, nicht die vernuenftige: gemessen verliert
+    // die erste Karte damit in Welle 13, und C18 waere rot.
+    //
+    // Die Ueberlappung ist eine Entscheidung des Spielers. Die Balance ist gegen
+    // einen Bot geeicht, der sie nicht trifft; wer sie messen will, misst sie
+    // eigens (S-P4-02).
+    if (t.canStartWave && !t.waveActive) t.startWave();
     t.update(1 / 60);
   }
   if (t.phase === 'playing') return false;

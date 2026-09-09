@@ -366,7 +366,15 @@ function play(
   const reserve = bot.reserve + variant * 15;
   let spotIdx = variant % 2, si = variant, t = 0, frame = 0, upgrades = 0;
   let peakEnemies = 0, peakFx = 0;
-  const leakByWave = new Array(s.waves.length).fill(0);
+  // **Die Verluste je Welle kommen aus dem Spiel, nicht aus einer zweiten
+  // Zaehlung hier** (S-P4-01, v266).
+  //
+  // Bis v265 zaehlte dieses Werkzeug selbst mit, ueber `s.waveIndex`. Der
+  // bedeutet seit den ueberlappenden Wellen "gestartet" statt "fertig", und
+  // die Zaehlung landete eine Welle zu weit: gemessen standen alle 16
+  // Verluste in Welle 15, waehrend das Spiel 14 in Welle 14 verbuchte. Zwei
+  // Zaehlungen derselben Sache, und eine davon veraltet (Regel 15) - jetzt
+  // ist es eine, und sie steht dort, wo der Gegner seine Welle kennt.
   /** **Entscheidungen je Welle** (S-P1-03).
    *
    *  Das Spielspass-Audit rechnete "12 Bauentscheidungen und 24
@@ -493,21 +501,33 @@ function play(
       entscheidungenJeWelle[welle] += useAbilities(s);
     }
 
-    const wi = Math.min(s.waveIndex, s.waves.length - 1);
     if (s.wellenRest === 0) leerlaufBilder++;
     if (s.enemies.length <= 1) duennBilder++;
-    if (s.canStartWave) s.startWave();
+    // **Die Bots ueberlappen nicht** (S-P4-01, v266).
+    //
+    // Seit v266 darf eine zweite Welle starten, waehrend die erste laeuft -
+    // `canStartWave` allein heisst also nicht mehr "nichts laeuft". Ein Bot, der
+    // bei jeder Gelegenheit startet, faehrt damit dauerhaft zwei Wellen, und das
+    // ist die AGGRESSIVSTE Spielweise, nicht die vernuenftige: gemessen verliert
+    // die erste Karte damit in Welle 13, und C18 waere rot.
+    //
+    // Die Ueberlappung ist eine Entscheidung des Spielers. Die Balance ist gegen
+    // einen Bot geeicht, der sie nicht trifft; wer sie messen will, misst sie
+    // eigens (S-P4-02).
+    if (s.canStartWave && !s.waveActive) s.startWave();
     s.update(DT);
     t += DT;
     frame++;
-    if (s.lives < lastLives) { leakByWave[wi] += lastLives - s.lives; lastLives = s.lives; }
+    if (s.lives < lastLives) lastLives = s.lives;
     if (s.enemies.length > peakEnemies) peakEnemies = s.enemies.length;
     const fx = s.particles.length + s.projectiles.length + s.rings.length;
     if (fx > peakFx) peakFx = fx;
   }
   return {
     lives: s.lives, wave: s.waveNumber, won: s.phase === 'won',
-    towers: s.gebaute.length, upgrades, peakEnemies, peakFx, leakByWave, entscheidungenJeWelle,
+    towers: s.gebaute.length, upgrades, peakEnemies, peakFx,
+    leakByWave: Array.from({ length: s.waves.length }, (_, i) => s.stats.leaksByWave[i] ?? 0),
+    entscheidungenJeWelle,
     dauer: t, leerlaufAnteil: frame > 0 ? leerlaufBilder / frame : 0,
     duennAnteil: frame > 0 ? duennBilder / frame : 0,
     knappheitsAnteil: entscheidungsBilder > 0 ? knappeBilder / entscheidungsBilder : 0,

@@ -483,6 +483,13 @@ und schreibt die Punkte wieder gut. Solange er lebt, ist nichts endgueltig
 verloren. Er traegt seinen Splitter sichtbar, und ein Faden zum Kristall
 sagt, wohin das Stueck gehoert - er wird mit der Strecke schwaecher.
 
+**Ueberlappende Wellen (v266).** Die naechste Welle laeuft los, waehrend die
+alte noch auf dem Feld steht - hoechstens zwei zugleich. `waveIndex` heisst
+seitdem "gestartet" statt "fertig", `waveActive` ist eine Ableitung, und jeder
+Gegner traegt seine Welle: daran haengen seine Lebenspunkte, die Verbuchung
+seines Durchbruchs und das Ende seiner Welle. Die Bots ueberlappen NICHT - die
+Balance ist gegen einen Spieler geeicht, der diese Entscheidung nicht trifft.
+
 **Kein Gitter mehr.** Wege sind Catmull-Rom-Kurven mit
 Bogenlängen-Tabelle; ein Gegner hat als einzige Zustandsgröße die
 zurückgelegte Strecke. Gebaut wird frei, begrenzt durch Platzbedarf je
@@ -492,7 +499,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v265. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v266. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

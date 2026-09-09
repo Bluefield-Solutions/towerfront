@@ -63,14 +63,18 @@ export interface Enemy {
    *  Gegner tot. Ein Abzug ist kein Ereignis - der schlimmste Augenblick des
    *  Spiels war der ereignisloseste. */
   kernraub: number;
-  /** In welcher Welle der Raub verbucht wurde (S-P3-02).
+  /** **Aus welcher Welle dieser Gegner kommt** (S-P4-01).
    *
-   *  Ein Raeuber kann in einer spaeteren Welle sterben als der, in der er
-   *  gestohlen hat. Wird die Rueckgabe dann der LAUFENDEN Welle
-   *  gutgeschrieben, steht in der Bilanz ein Verlust, den es nicht gab -
-   *  und in einer anderen Welle eine Gutschrift ohne Verlust. Gemessen
-   *  meldete der Rauchtest genau das: 17 verbucht, 5 wirklich weg. */
-  raubWelle: number;
+   *  Daran haengt dreierlei: die Skalierung seiner Lebenspunkte, die
+   *  Verbuchung seines Durchbruchs und das Ende seiner Welle.
+   *
+   *  Bis v265 hiess dieses Feld `raubWelle` und wurde erst beim Raub
+   *  gesetzt - eine zweite Wahrheit ueber dieselbe Sache (Regel 15). Der
+   *  Grund war derselbe: ein Raeuber kann in einer spaeteren Welle sterben
+   *  als der, in der er gestohlen hat, und die Rueckgabe muss dorthin, wo
+   *  der Verlust verbucht wurde. Mit ueberlappenden Wellen gilt das fuer
+   *  JEDEN Gegner, nicht nur fuer Raeuber. */
+  welle: number;
 }
 
 /** Wonach ein Turm sein Ziel aussucht.

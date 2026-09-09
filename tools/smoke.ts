@@ -194,7 +194,7 @@ for (const step of TUTORIAL) {
           - Math.hypot(b.x - erst.x, b.y - erst.y));
       nah.some((p) => probe.build(p.x, p.y, 'frost'));
     },
-    early: () => { probe.waveIndex = 1; probe.waveActive = false; probe.startWave(); },
+    early: () => { probe.waveIndex = 1; probe.wellenZumPruefen([]); probe.startWave(); },
     meteor: () => { probe.cast('meteor', probe.goal.x, probe.goal.y); },
     end: () => { probe.waveIndex = 3; },
   };
@@ -376,7 +376,18 @@ function botSchritt(g: Spielzustand, plaetze: { x: number; y: number }[], z: { s
     return !!n && g.gold >= n.cost + 80;
   });
   if (up) g.upgrade(up, (up.branch ?? ((up.id % 2) as 0 | 1)) as 0 | 1);
-  if (g.canStartWave) g.startWave();
+  // **Die Bots ueberlappen nicht** (S-P4-01, v266).
+  //
+  // Seit v266 darf eine zweite Welle starten, waehrend die erste laeuft -
+  // `canStartWave` allein heisst also nicht mehr "nichts laeuft". Ein Bot, der
+  // bei jeder Gelegenheit startet, faehrt damit dauerhaft zwei Wellen, und das
+  // ist die AGGRESSIVSTE Spielweise, nicht die vernuenftige: gemessen verliert
+  // die erste Karte damit in Welle 13, und C18 waere rot.
+  //
+  // Die Ueberlappung ist eine Entscheidung des Spielers. Die Balance ist gegen
+  // einen Bot geeicht, der sie nicht trifft; wer sie messen will, misst sie
+  // eigens (S-P4-02).
+  if (g.canStartWave && !g.waveActive) g.startWave();
 }
 
 step('Partie durchspielen', () => {
@@ -875,7 +886,7 @@ step('Konter-Satz erscheint einmal und rechtzeitig', () => {
   const gezeigt = new Map<string, number>();
   for (let i = 0; i < plan.length; i++) {
     state.waveIndex = i;
-    state.waveActive = false;
+    state.wellenZumPruefen([]);
     ui.sync();
     if (!blase.hidden && text.dataset.step?.startsWith('konter:')) {
       const id = text.dataset.step.slice('konter:'.length);
@@ -886,12 +897,12 @@ step('Konter-Satz erscheint einmal und rechtzeitig', () => {
       }
       // Und er verschwindet, sobald die Welle laeuft: danach ist er kein Rat
       // mehr, sondern ein Vorwurf.
-      state.waveActive = true;
+      state.wellenZumPruefen([state.waveIndex]);
       ui.sync();
       if (!blase.hidden) {
         problems.push(`Konter W${i + 1}: die Blase steht noch, obwohl die Welle laeuft.`);
       }
-      state.waveActive = false;
+      state.wellenZumPruefen([]);
     }
   }
   // Jede Art hoechstens einmal.
@@ -931,7 +942,7 @@ step('Wellenvorschau zeigt alle Arten', () => {
   state.reset(4711, 'normal', 'spiralhain');
   for (let i = 0; i < state.waves.length; i++) {
     state.waveIndex = i;
-    state.waveActive = false;
+    state.wellenZumPruefen([]);
     ui.sync();
     const arten = new Set(state.waves[i].groups.map((g) => g.enemy));
     // Seit v194 ist jeder Eintrag ein `<button>` mit `data-gegner` - der
@@ -957,7 +968,7 @@ step('Wellenvorschau zeigt alle Arten', () => {
   let ersterSchild = -1;
   for (let i = 0; i < state.waves.length; i++) {
     state.waveIndex = i;
-    state.waveActive = false;
+    state.wellenZumPruefen([]);
     ui.sync();
     const soll = { Schild: new Set<string>(), 'Träger': new Set<string>() };
     for (const g of state.waves[i].groups) {
@@ -986,7 +997,7 @@ step('Wellenvorschau zeigt alle Arten', () => {
   let sprungzahl = 0;
   for (let i = 0; i < state.waves.length; i++) {
     state.waveIndex = i;
-    state.waveActive = false;
+    state.wellenZumPruefen([]);
     ui.sync();
     if (streifen.dataset.sprung === '1') sprungzahl++;
   }
@@ -2137,6 +2148,80 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// **Wellen duerfen ueberlappen** (S-P4-01).
+//
+// F10 woertlich: der Fruehstart hatte sein Zeitfenster, aber kein Risiko.
+// `canStartWave` verlangte `!waveActive` - man konnte erst starten, wenn die
+// vorige durch war, und frueh starten kostete nur Bauzeit. Kingdom Rush legt
+// genau dort das Risiko hin.
+//
+// Gestellt, nicht abgewartet: eine Welle starten, ein paar Bilder rechnen,
+// die zweite starten.
+{
+  const probe = new GameState();
+  probe.reset();
+  probe.startWave();
+  for (let i = 0; i < 120; i++) probe.update(1 / 60);
+  const ersteRest = probe.wellenRest;
+  if (!probe.canStartWave) {
+    problems.push('Ueberlappung: waehrend Welle 1 laeuft, laesst sich keine zweite starten.');
+  } else {
+    probe.startWave();
+    if (probe.laufende.length !== 2) {
+      problems.push(`Ueberlappung: nach zwei Starts laufen ${probe.laufende.length} Wellen.`);
+    }
+    // Beide Stroeme muessen wirklich ausstossen.
+    for (let i = 0; i < 240; i++) probe.update(1 / 60);
+    const wellen = new Set(probe.enemies.filter((e) => !e.dead).map((e) => e.welle));
+    if (wellen.size < 2) {
+      problems.push(
+        `Ueberlappung: auf dem Feld stehen Gegner aus ${wellen.size} Welle(n) - `
+        + 'die zweite stoesst nicht aus.');
+    }
+    // **Eine dritte wird abgelehnt.** Drei waeren keine Entscheidung mehr,
+    // sondern eine Lawine.
+    if (probe.canStartWave) {
+      problems.push('Ueberlappung: eine dritte Welle laesst sich starten - '
+        + 'die Obergrenze von zwei haelt nicht.');
+    }
+    void ersteRest;
+  }
+}
+
+// **Der Verlust wird an der Welle DES GEGNERS verbucht** (S-P4-01).
+//
+// Das ist die Ersatzpruefung fuer das, was die Ueberlappung entwertet:
+// `stats.leaksByWave` buchte unter `this.waveIndex`, und der zeigt bei
+// Ueberlappung auf die NEUERE Welle. Damit wanderten Verluste der alten
+// Welle in die neue, und die Verlustverteilung - die Kennzahl von G1 -
+// waere still falsch geworden.
+{
+  const probe = new GameState();
+  probe.reset();
+  probe.startWave();
+  for (let i = 0; i < 120; i++) probe.update(1 / 60);
+  probe.startWave();
+  // Ein Gegner AUS DER ERSTEN Welle ans Bahnende.
+  const alt = probe.enemies.find((e) => e.welle === 0 && !e.dead);
+  if (!alt) {
+    problems.push('Wellenbuchung: kein Gegner aus Welle 1 auf dem Feld - der Fall ist nicht gestellt.');
+  } else {
+    const vorher = [...probe.stats.leaksByWave];
+    const bahn = probe.lanes[alt.lane] ?? probe.lanes[0];
+    alt.travelled = bahn.length;
+    probe.update(1 / 60);
+    const dazu = probe.stats.leaksByWave
+      .map((v, i) => (v ?? 0) - (vorher[i] ?? 0))
+      .map((v, i) => ({ i, v }))
+      .filter((o) => o.v > 0);
+    if (dazu.length !== 1 || dazu[0].i !== 0) {
+      problems.push(
+        `Wellenbuchung: der Verlust eines Gegners aus Welle 1 wurde bei `
+        + `${dazu.map((o) => `Welle ${o.i + 1}`).join(', ') || 'keiner Welle'} verbucht.`);
+    }
+  }
+}
+
 // **Panzerung muss auf jeder Stufe etwas ausmachen - und Durchschlag auch.**
 //
 // Panzerung ist seit Langem ein ANTEIL und kein Abzug: jeder Punkt nimmt
@@ -2461,7 +2546,9 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
     let f = 0;
     while (h.phase === 'playing' && f < 60 * 60 * 20) {
       botSchritt(h, plaetze, z);
-      if (h.canStartWave) h.startWave();
+      // Auch dieser Bot ueberlappt nicht - siehe die Begruendung bei
+      // `botSchritt` weiter oben (S-P4-01).
+      if (h.canStartWave && !h.waveActive) h.startWave();
       h.update(1 / 60);
       f++;
     }
@@ -3939,7 +4026,7 @@ step('Fruehstart zeigt sein Fenster', () => {
   // also wird der hier gefahren - eine zweite `UI` waere eine zweite
   // Wahrheit ueber dasselbe Bild.
   state.waveIndex = 3;
-  state.waveActive = false;
+  state.wellenZumPruefen([]);
   state.idleTime = 0;
   ui.sync();
   const plus = win.document.getElementById('b-wave-p') as HTMLElement;

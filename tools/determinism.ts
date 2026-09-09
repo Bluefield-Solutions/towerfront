@@ -59,7 +59,18 @@ function scriptedStep(s: GameState, frame: number, spots: { x: number; y: number
     s.cast('meteor', e.x, e.y);
   }
   if (frame % 733 === 0 && s.ready('freeze')) s.cast('freeze', 0, 0);
-  if (s.canStartWave) s.startWave();
+  // **Die Bots ueberlappen nicht** (S-P4-01, v266).
+  //
+  // Seit v266 darf eine zweite Welle starten, waehrend die erste laeuft -
+  // `canStartWave` allein heisst also nicht mehr "nichts laeuft". Ein Bot, der
+  // bei jeder Gelegenheit startet, faehrt damit dauerhaft zwei Wellen, und das
+  // ist die AGGRESSIVSTE Spielweise, nicht die vernuenftige: gemessen verliert
+  // die erste Karte damit in Welle 13, und C18 waere rot.
+  //
+  // Die Ueberlappung ist eine Entscheidung des Spielers. Die Balance ist gegen
+  // einen Bot geeicht, der sie nicht trifft; wer sie messen will, misst sie
+  // eigens (S-P4-02).
+  if (s.canStartWave && !s.waveActive) s.startWave();
 }
 
 

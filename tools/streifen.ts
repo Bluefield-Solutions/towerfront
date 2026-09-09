@@ -87,7 +87,7 @@ const streifen = win.document.getElementById('next')!;
 const wellen: { nr: number; markup: string; sprung: string }[] = [];
 for (let i = 0; i < state.waves.length; i++) {
   state.waveIndex = i;
-  state.waveActive = false;
+  state.wellenZumPruefen([]);
   ui.sync();
   wellen.push({ nr: i + 1, markup: liste.innerHTML, sprung: streifen.dataset.sprung ?? '0' });
 }

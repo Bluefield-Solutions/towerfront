@@ -560,8 +560,8 @@ const PROBEN = [
     // dann genauso wenig, er baut nur seltener.
     name: 'Der Bot laesst das Feld leerlaufen',
     datei: 'tools/sim.ts',
-    suche: 'if (s.canStartWave) s.startWave();',
-    ersatz: 'if (s.canStartWave && frame % 600 === 0) s.startWave();',
+    suche: 'if (s.canStartWave && !s.waveActive) s.startWave();',
+    ersatz: 'if (s.canStartWave && !s.waveActive && frame % 600 === 0) s.startWave();',
     tor: 'sim',
     meldet: 'Leerlauf der Partie',
   },
@@ -759,6 +759,33 @@ const PROBEN = [
     ersatz: '      if (false) {',
     tor: 'bildtor',
     meldet: 'nicht zu sehen',
+  },
+  {
+    // **Die zwei Proben zu den ueberlappenden Wellen (S-P4-01, v266).**
+    //
+    // Erstens die Verbuchung. `stats.leaksByWave` buchte bis v265 unter
+    // `this.waveIndex`, und der zeigt bei Ueberlappung auf die NEUERE Welle:
+    // Verluste der alten wanderten in die neue, und die Verlustverteilung -
+    // die Kennzahl von G1 - waere still falsch geworden. Verbucht wird
+    // deshalb an der Welle DES GEGNERS.
+    name: 'Verluste wandern in die neuere Welle',
+    datei: 'src/game/state.ts',
+    regel: /this\.stats\.leaksByWave\[e\.welle\] = \(this\.stats\.leaksByWave\[e\.welle\] \?\? 0\) \+ wirklich;/,
+    ersatz: 'this.stats.leaksByWave[this.waveIndex] = '
+      + '(this.stats.leaksByWave[this.waveIndex] ?? 0) + wirklich;',
+    tor: 'smoke',
+    meldet: 'Wellenbuchung',
+  },
+  {
+    // Zweitens die Obergrenze. Drei Wellen zugleich waeren keine
+    // Entscheidung mehr, sondern eine Lawine - und die Kreuzdeckung der
+    // Karten ist auf einen Wellenstrom je Bahn eingemessen (v237).
+    name: 'Drei Wellen lassen sich stapeln',
+    datei: 'src/game/state.ts',
+    suche: 'static readonly UEBERLAPPUNG_MAX = 2;',
+    ersatz: 'static readonly UEBERLAPPUNG_MAX = 3;',
+    tor: 'smoke',
+    meldet: 'Obergrenze von zwei haelt nicht',
   },
   {
     // **Die zwei Proben zu den Rettungen (S-P3-04, v264), und sie treffen
@@ -2352,7 +2379,7 @@ const PROBEN = [
     // Angaben gesichert, und der geladene Stand ist leichter als der laufende.
     name: 'Schild faellt aus dem Spielstand',
     datei: 'src/game/state.ts',
-    regel: /p\.lane, p\.shield, p\.traeger\]\)/,
+    regel: /p\.lane, p\.shield, p\.traeger, p\.welle\]\)/,
     ersatz: 'p.lane])',
     tor: 'smoke',
   },
@@ -2663,8 +2690,9 @@ const PROBEN = [
     // ohne dass man saehe welche.
     name: 'Wellenverlauf laeuft von der Summe weg',
     datei: 'src/game/state.ts',
-    regel: /^      \(this\.stats\.damageByWave\[this\.waveIndex\] \?\? 0\) \+ dmg;$/m,
-    ersatz: '      (this.stats.damageByWave[this.waveIndex] ?? 0) + dmg * 0.5;',
+    regel: /this\.stats\.damageByWave\[e\.welle\] = \(this\.stats\.damageByWave\[e\.welle\] \?\? 0\) \+ dmg;/,
+    ersatz: 'this.stats.damageByWave[e.welle] = '
+      + '(this.stats.damageByWave[e.welle] ?? 0) + dmg * 0.5;',
     tor: 'smoke',
   },
   {
@@ -2841,8 +2869,8 @@ const PROBEN = [
     // Bis v174 hat das nie jemand nachgespielt.
     name: 'Endlosmodus endet mit dem Wellenplan',
     datei: 'src/game/state.ts',
-    regel: /^    return !this\.waveActive && \(this\.endless \|\| this\.waveIndex < this\.waves\.length\);$/m,
-    ersatz: '    return !this.waveActive && this.waveIndex < this.waves.length;',
+    regel: /&& \(this\.endless \|\| this\.waveIndex < this\.waves\.length\);/,
+    ersatz: '&& this.waveIndex < this.waves.length;',
     tor: 'smoke',
   },
   {

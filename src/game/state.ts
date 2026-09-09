@@ -37,7 +37,19 @@ import type {
 import { ZIELWAHL_ORDNUNG } from './types';
 
 interface PendingSpawn {
+  /** Zeit **relativ zum Start der eigenen Welle** - so wie vor v266 auch.
+   *
+   *  Der erste Entwurf rechnete absolut, damit eine Warteschlange fuer zwei
+   *  Wellen ohne zwei Zeitmassstaebe auskommt. Gemessen kostete das
+   *  Genauigkeit: `waveTime` waechst auf mehrere hundert Sekunden, und
+   *  `gross + klein` traegt weniger Stellen als `klein`. Der Lauf war
+   *  danach um rund vier Bilder je Welle verschoben, und die Verluste
+   *  wanderten von Welle 14 nach 15 - eine Aenderung der Balance ohne eine
+   *  einzige geaenderte Zahl. Jede Welle traegt deshalb ihre eigene Uhr. */
   time: number; enemy: EnemyId; hpMul: number; lane: number;
+  /** Aus welcher Welle dieser Gegner kommt. Daran haengt die Verbuchung des
+   *  Verlusts, die Skalierung der Lebenspunkte und das Ende der Welle. */
+  welle: number;
   shield?: number; traeger?: number;
 }
 
@@ -143,8 +155,33 @@ export class GameState {
   gold = DIFFICULTIES.normal.startGold;
   lives = DIFFICULTIES.normal.startLives;
   maxLives = DIFFICULTIES.normal.startLives;
+  /** Wieviele Wellen GESTARTET sind - nicht mehr, wieviele fertig sind.
+   *
+   *  Bis v265 stieg der Zaehler in `finishWave`, weil immer nur eine Welle
+   *  laufen konnte und beides dasselbe war. Mit ueberlappenden Wellen ist es
+   *  das nicht mehr, und von den zwei moeglichen Bedeutungen ist "gestartet"
+   *  die tragende: daran haengt, welche Welle als naechste kommt. */
   waveIndex = 0;
-  waveActive = false;
+
+  /** **Die laufenden Wellen** (S-P4-01, `ueberlappendeWellen`).
+   *
+   *  F10 woertlich: der Fruehstart hat sein Zeitfenster, aber kein Risiko.
+   *  `canStartWave` verlangte `!waveActive` - man konnte erst starten, wenn
+   *  die vorige durch war. Frueh starten kostete damit nur Bauzeit; es
+   *  konnte nichts schiefgehen. Kingdom Rush legt genau dort das Risiko hin.
+   *
+   *  Je Welle steht hier, wann sie gestartet ist: der Takt der Tore haengt
+   *  daran, und die Verbuchung des Bonus. */
+  laufende: { welle: number; uhr: number }[] = [];
+
+  /** **Hoechstens zwei zugleich.** Drei waeren keine Entscheidung mehr,
+   *  sondern eine Lawine - und die Kreuzdeckung der Karten ist auf einen
+   *  Wellenstrom je Bahn eingemessen (v237). */
+  static readonly UEBERLAPPUNG_MAX = 2;
+
+  /** Laeuft ueberhaupt eine Welle? Eine ABLEITUNG, kein Schalter - es gibt
+   *  keine Stelle mehr, an der die beiden auseinanderlaufen koennen. */
+  get waveActive(): boolean { return this.laufende.length > 0; }
   speed = 1;
   paused = false;
   quality: Quality = 'hoch';
@@ -646,6 +683,17 @@ export class GameState {
     return this.enemies[this.enemies.length - 1];
   }
 
+  /** Eine laufende Welle stellen oder abraeumen - fuer Werkzeuge (S-P4-01).
+   *
+   *  `waveActive` ist seit v266 eine ABLEITUNG aus `laufende` und laesst sich
+   *  nicht mehr setzen. Das ist der Sinn der Sache: es gibt keine Stelle
+   *  mehr, an der Schalter und Wirklichkeit auseinanderlaufen koennen. Wer
+   *  einen Zustand stellen will, stellt ihn - und dieser eine Griff sagt,
+   *  wie. */
+  wellenZumPruefen(laufend: number[]): void {
+    this.laufende = laufend.map((welle) => ({ welle, uhr: 0 }));
+  }
+
   trefferZumPruefen(e: Enemy, schaden: number, durchschlag = 0): void {
     this.damage(e, schaden, null, '#fff', 0, 0, durchschlag);
   }
@@ -900,11 +948,16 @@ export class GameState {
   /** Der Wellenplan der aktuellen Karte. */
   get waves() { return this.map.waves; }
   get waveNumber(): number {
-    return this.endless ? this.waveIndex + 1 : Math.min(this.waveIndex + 1, this.waves.length);
+    // Gezeigt wird die NEUESTE laufende Welle; laeuft keine, die naechste.
+    const i = this.laufende.length
+      ? Math.max(...this.laufende.map((l) => l.welle))
+      : this.waveIndex;
+    return this.endless ? i + 1 : Math.min(i + 1, this.waves.length);
   }
   get totalWaves(): number { return this.waves.length; }
   get canStartWave(): boolean {
-    return !this.waveActive && (this.endless || this.waveIndex < this.waves.length);
+    return this.laufende.length < GameState.UEBERLAPPUNG_MAX
+      && (this.endless || this.waveIndex < this.waves.length);
   }
   get nextWave() { return this.waveAt(this.waveIndex); }
 
@@ -920,7 +973,9 @@ export class GameState {
    *  Am Ende des Plans gibt es kein Danach - ausser im Endlosmodus, und den
    *  beantwortet `waveAt` von selbst. */
   get vorschauWelle() {
-    const i = this.waveActive ? this.waveIndex + 1 : this.waveIndex;
+    // Seit v266 zeigt `waveIndex` auf die naechste Welle - die Vorschau
+    // braucht deshalb keine Fallunterscheidung mehr.
+    const i = this.waveIndex;
     if (!this.endless && i >= this.waves.length) return null;
     return this.waveAt(i);
   }
@@ -994,19 +1049,21 @@ export class GameState {
       this.stats.goldEarned += bonus;
       this.float(this.goal.x, this.goal.y - 70, `Frueh gestartet  +${bonus}`, C.gold, 22);
     }
-    const wave = this.waveAt(this.waveIndex);
+    const welle = this.waveIndex;
+    const wave = this.waveAt(welle);
     // Spaetere Wellen kommen dichter: was zaehlt, ist die Huelle je Sekunde.
-    const dense = 1 + this.waveIndex * this.diff.densityRamp;
-    this.pending = [];
-    // Auf mehrspurigen Karten werden die Bahnen abwechselnd bedient, damit
-    // eine Welle nicht zufaellig nur einen Zuweg belastet.
+    const dense = 1 + welle * this.diff.densityRamp;
+    // **Angehaengt, nicht ersetzt** (S-P4-01, `ueberlappendeWellen`). Bis
+    // v265 stand hier `this.pending = []` - die zweite Welle haette die
+    // erste einfach geloescht.
     const laneCount = this.lanes.length;
-    let laneTurn = this.waveIndex % laneCount;
+    let laneTurn = welle % laneCount;
     for (const g of wave.groups) {
       for (let i = 0; i < g.count; i++) {
         this.pending.push({
           time: g.delay + (i * g.gap) / dense,
           enemy: g.enemy, hpMul: g.hpMul ?? 1,
+          welle,
           shield: g.shield ?? 0,
           traeger: g.traeger ?? 0,
           lane: laneTurn % laneCount,
@@ -1014,23 +1071,36 @@ export class GameState {
         laneTurn++;
       }
     }
-    this.pending.sort((a, b) => a.time - b.time);
-    this.waveTime = 0;
-    this.waveActive = true;
+    // Sortiert wird nur, was zu DIESER Welle gehoert - die Eintraege der
+    // aelteren behalten ihre Reihenfolge und ihre eigene Uhr.
+    const eigene = this.pending.filter((p) => p.welle === welle);
+    eigene.sort((a, b) => a.time - b.time);
+    this.pending = this.pending.filter((p) => p.welle !== welle).concat(eigene);
+    this.laufende.push({ welle, uhr: 0 });
+    this.waveIndex++;
     this.idleTime = 0;
     Sfx.play('wave');
   }
 
-  private finishWave(): void {
-    const wave = this.waveAt(this.waveIndex);
+  /** Eine EINZELNE Welle ist durch: nichts mehr im Anmarsch, nichts mehr von
+   *  ihr auf dem Feld.
+   *
+   *  **Der Bonus wird je Welle einzeln ausgezahlt** - sonst verschwimmen zwei
+   *  Belohnungen zu einer, und der Spieler weiss nicht, wofuer er bezahlt
+   *  wurde. */
+  private finishWave(welle: number): void {
+    const i = this.laufende.findIndex((l) => l.welle === welle);
+    if (i < 0) return;
+    this.laufende.splice(i, 1);
+    const wave = this.waveAt(welle);
     const payout = Math.round(wave.bonus * this.diff.bonusMul * this.map.balance.goldMul);
     this.gold += payout;
     this.stats.goldEarned += payout;
-    this.float(this.goal.x, this.goal.y - 56, `Welle geschafft  +${payout}`, C.gold, 26);
-    this.waveIndex++;
-    this.waveActive = false;
+    this.float(this.goal.x, this.goal.y - 56, `Welle ${welle + 1} geschafft  +${payout}`,
+      C.gold, 26);
     this.idleTime = 0;
-    if (!this.endless && this.waveIndex >= this.waves.length) {
+    // Gewonnen ist die Partie, wenn ALLE Wellen gestartet UND durch sind.
+    if (!this.endless && this.waveIndex >= this.waves.length && !this.laufende.length) {
       this.finishRun(true);
       Sfx.play('win');
     }
@@ -1258,9 +1328,21 @@ export class GameState {
 
     if (this.waveActive) {
       this.waveTime += dt;
-      while (this.pending.length && this.pending[0].time <= this.waveTime) {
-        const p = this.pending.shift()!;
-        this.spawnEnemy(p.enemy, p.hpMul, this.offeneBahn(p.lane), p.shield ?? 0, p.traeger ?? 0);
+      // **Jede Welle hat ihre eigene Uhr** (S-P4-01), und die faengt bei null
+      // an - genau wie `waveTime` es bis v265 tat. Damit rechnet der Ausstoss
+      // Bild fuer Bild dieselbe Aufgabe wie vorher.
+      for (const l of this.laufende) l.uhr += dt;
+      // Durchgegangen wird die ganze Liste, nicht nur ihr Kopf: bei zwei
+      // Wellen ist der naechste faellige Eintrag nicht zwingend der erste.
+      // Die Liste ist kurz (Zehner), und die Reihenfolge bleibt die der
+      // Warteschlange, damit der Ausstoss vorhersagbar ist.
+      for (let i = 0; i < this.pending.length;) {
+        const p = this.pending[i];
+        const uhr = this.laufende.find((l) => l.welle === p.welle)?.uhr;
+        if (uhr === undefined || p.time > uhr) { i++; continue; }
+        this.pending.splice(i, 1);
+        this.spawnEnemy(p.enemy, p.hpMul, this.offeneBahn(p.lane), p.shield ?? 0,
+          p.traeger ?? 0, p.welle);
       }
       // **Ein fliehender Raeuber haelt die Welle nicht auf** (S-P3-01).
       //
@@ -1272,8 +1354,12 @@ export class GameState {
       // Die Welle ist vorbei, wenn nichts mehr ANGREIFT. Wer mit Beute nach
       // draussen laeuft, greift nicht an - er wird verfolgt, und genau das
       // soll er, waehrend die naechste Welle schon kommt.
-      if (!this.pending.length && !this.enemies.some((e) => e.kernraub === 0)) {
-        this.finishWave();
+      // **Je Welle geprueft, nicht fuer alle zusammen.** Sonst haengt die
+      // erste Welle an der zweiten, und ihr Bonus kaeme zu spaet.
+      for (const l of [...this.laufende]) {
+        const offen = this.pending.some((p) => p.welle === l.welle)
+          || this.enemies.some((e) => e.welle === l.welle && e.kernraub === 0);
+        if (!offen) this.finishWave(l.welle);
       }
     }
 
@@ -1315,7 +1401,8 @@ export class GameState {
    *  kann damit planen. Ein Tor, dessen Takt man nicht vorhersagen kann, ist
    *  kein Hindernis, sondern eine Laune.
    */
-  torZu(bahn: number, zeit = this.waveTime): boolean {
+  torZu(bahn: number, zeit = this.laufende.length
+    ? this.laufende[this.laufende.length - 1].uhr : 0): boolean {
     const t = this.map.tor;
     if (!t || t.bahn !== bahn) return false;
     const takt = t.zu + t.auf;
@@ -1341,13 +1428,18 @@ export class GameState {
 
   private spawnEnemy(
     id: EnemyId, hpMul: number, lane: number, shield = 0, traeger = 0,
+    welle = this.waveIndex,
   ): void {
     this.spawnsJeBahn[lane] = (this.spawnsJeBahn[lane] ?? 0) + 1;
     if (this.torZu(lane)) this.spawnsTrotzSperre++;
     const def = ENEMIES[id];
     const ln = lane % this.lanes.length;
     const p0 = this.lanes[ln].pts[0];
-    const ramp = hpScale(this.diff, this.waveIndex, this.waves.length, this.map.balance.hpMul);
+    // **Die Skalierung kommt aus der Welle des Gegners, nicht aus dem
+    // Zaehler des Spiels** (S-P4-01). Bei Ueberlappung zeigt der Zaehler auf
+    // die neuere Welle - die Nachzuegler der aelteren waeren sonst still
+    // haerter, als ihr Plan sagt.
+    const ramp = hpScale(this.diff, welle, this.waves.length, this.map.balance.hpMul);
     const hp = Math.round(def.hp * hpMul * ramp);
     // Flieger starten leicht versetzt, damit ein Schwarm nicht als eine Linie
     // uebereinander liegt.
@@ -1358,7 +1450,7 @@ export class GameState {
       side: (this.rng.next() * 2 - 1) * 0.85, travelled: 0,
       wirkungen: null, auraIn: 0, shield, traeger,
       hitFlash: 0, squash: 0, hpShown: hp, wobble: this.rng.next() * 9,
-      dead: false, leaked: false, kernraub: 0, raubWelle: -1,
+      dead: false, leaked: false, kernraub: 0, welle,
     });
   }
 
@@ -1384,7 +1476,9 @@ export class GameState {
         // sich Erzeuger und Bruchstueck dieselbe Liste.
         wirkungen: parent.wirkungen ? parent.wirkungen.map((w) => ({ ...w })) : null,
         hitFlash: 0, squash: 0, hpShown: hp, wobble: this.rng.next() * 9,
-        dead: false, leaked: false, kernraub: 0, raubWelle: -1,
+        // Der Span gehoert zur Welle seines Erzeugers - sonst haenge die
+        // alte Welle an Bruchstuecken, die auf die neue gebucht sind.
+        dead: false, leaked: false, kernraub: 0, welle: parent.welle,
       });
     }
     this.ring(parent.x, parent.y, 46, child.trim, 0.3, 3);
@@ -1560,7 +1654,7 @@ export class GameState {
     this.splitter.push({
       x: e.x, y: e.y, punkte: e.kernraub,
       rest: GameState.SPLITTER_DAUER, dauer: GameState.SPLITTER_DAUER,
-      welle: e.raubWelle,
+      welle: e.welle,
     });
     e.kernraub = 0;
   }
@@ -1621,8 +1715,11 @@ export class GameState {
     const wirklich = Math.min(def.leak, Math.max(0, this.lives));
     this.lives -= wirklich;
     this.leakedTotal++;
-    this.stats.leaksByWave[this.waveIndex] =
-      (this.stats.leaksByWave[this.waveIndex] ?? 0) + wirklich;
+    // **Verbucht wird an der Welle DES GEGNERS, nicht am Zaehler des
+    // Spiels** (S-P4-01). Bei Ueberlappung zeigt `waveIndex` auf die neuere
+    // Welle; die Verluste der aelteren wanderten sonst dorthin, und die
+    // Verlustverteilung - die Kennzahl von G1 - waere still falsch.
+    this.stats.leaksByWave[e.welle] = (this.stats.leaksByWave[e.welle] ?? 0) + wirklich;
     this.crystalHit = 1;
     this.shake = Math.min(1, this.shake + 0.55);
     this.stop(0.8);
@@ -1641,7 +1738,6 @@ export class GameState {
     // passiert ist.
     if (wirklich > 0) {
       e.kernraub = wirklich;
-      e.raubWelle = this.waveIndex;
       this.raubTotal++;
     } else {
       e.dead = true;
@@ -2062,8 +2158,9 @@ export class GameState {
     // DERSELBEN Stelle wie die Summe, damit die beiden nicht auseinander
     // laufen koennen - eine zweite Buchungsstelle waere die naechste Zahl,
     // die still falsch wird.
-    this.stats.damageByWave[this.waveIndex] =
-      (this.stats.damageByWave[this.waveIndex] ?? 0) + dmg;
+    // Wie beim Verlust: verbucht an der Welle DES GEGNERS (S-P4-01). Der
+    // Zaehler des Spiels zeigt bei Ueberlappung auf die neuere Welle.
+    this.stats.damageByWave[e.welle] = (this.stats.damageByWave[e.welle] ?? 0) + dmg;
     const src = owner ? owner.def : 'meteor';
     this.stats.damageBy[src] = (this.stats.damageBy[src] ?? 0) + dmg;
     if (slow > 0) {
@@ -2252,7 +2349,7 @@ export class GameState {
     this.stars = 0;
     this.sterneVorher = 0;
     this.waveIndex = 0;
-    this.waveActive = false;
+    this.laufende.length = 0;
     this.enemies.length = 0; this.towers.length = 0; this.projectiles.length = 0;
     this.particles.length = 0; this.floats.length = 0;
     this.rings.length = 0; this.bolts.length = 0; this.meteors.length = 0;
@@ -2341,7 +2438,7 @@ export class GameState {
   /** Nur das, was den Verlauf bestimmt. Reine Darstellung bleibt draussen. */
   snapshot(): SaveGame {
     return {
-      v: 7,
+      v: 8,
       difficulty: this.difficulty,
       endless: this.endless,
       map: this.map.id,
@@ -2350,7 +2447,7 @@ export class GameState {
       gold: this.gold,
       lives: this.lives,
       waveIndex: this.waveIndex,
-      waveActive: this.waveActive,
+      laufende: this.laufende.map((l) => [l.welle, l.uhr] as [number, number]),
       waveTime: this.waveTime,
       idleTime: this.idleTime,
       leaked: this.leakedTotal,
@@ -2373,7 +2470,7 @@ export class GameState {
       // Gegner wurde mit vier von sechs Angaben gesichert, und wer die App
       // schloss und weiterspielte, bekam eine LEICHTERE Welle als der, der
       // durchspielte. Gemessen waren es 10 Schildpunkte gegen 0.
-      pending: this.pending.map((p) => [p.time, p.enemy, p.hpMul, p.lane, p.shield, p.traeger]),
+      pending: this.pending.map((p) => [p.time, p.enemy, p.hpMul, p.lane, p.shield, p.traeger, p.welle]),
       towers: this.towers.map((t) => [
         t.def, t.x, t.y, t.level, t.kills, t.damageDone, t.cooldownLeft, t.retargetIn, t.branch,
         t.target ? this.enemies.indexOf(t.target) : -1,
@@ -2395,7 +2492,7 @@ export class GameState {
         // Seit v262: was er nach draussen traegt (S-P3-01). Ohne dieses Feld
         // liefe ein geladener Raeuber wieder auf den Kristall zu, den er
         // gerade bestohlen hat - und zoege ein zweites Mal ab.
-        e.kernraub, e.raubWelle,
+        e.kernraub, e.welle,
       ]),
     };
   }
@@ -2404,7 +2501,12 @@ export class GameState {
    *  Stand nicht zu den aktuellen Daten passt - dann wird er verworfen statt
    *  halb geladen. */
   restore(save: SaveGame): boolean {
-    if (save.v !== 7) return false;
+    // **Fassung 8 seit v266.** `waveIndex` bedeutet jetzt "gestartet" statt
+    // "fertig", und die laufenden Wellen stehen als Liste da. Ein Stand der
+    // Fassung 7 laesst sich nicht umrechnen, ohne zu raten, welche Welle
+    // gerade lief - er wird deshalb verworfen statt halb geladen, so wie es
+    // hier seit jeher gehalten wird.
+    if (save.v !== 8) return false;
     if (!MAPS.some((m) => m.id === save.map)) return false;
     if (!(save.difficulty in DIFFICULTIES)) return false;
     if (save.waveIndex < 0) return false;
@@ -2438,7 +2540,9 @@ export class GameState {
     this.gold = save.gold;
     this.lives = save.lives;
     this.waveIndex = save.waveIndex;
-    this.waveActive = save.waveActive;
+    // `waveActive` ist seit v266 eine Ableitung; gesichert werden die
+    // laufenden Wellen selbst.
+    this.laufende = (save.laufende ?? []).map(([welle, uhr]) => ({ welle, uhr }));
     this.waveTime = save.waveTime;
     this.idleTime = save.idleTime;
     this.leakedTotal = save.leaked;
@@ -2455,8 +2559,9 @@ export class GameState {
     // einer Zeit, die es noch nicht gibt.
     this.wegvorschauAb = -99;
     this.speed = save.speed === 2 || save.speed === 3 ? save.speed : 1;
-    this.pending = save.pending.map(([time, enemy, hpMul, lane, shield, traeger]) =>
-      ({ time, enemy, hpMul, lane: lane ?? 0, shield: shield ?? 0, traeger: traeger ?? 0 }));
+    this.pending = save.pending.map(([time, enemy, hpMul, lane, shield, traeger, welle]) =>
+      ({ time, enemy, hpMul, lane: lane ?? 0, shield: shield ?? 0, traeger: traeger ?? 0,
+        welle: welle ?? 0 }));
     for (const [id, cd] of save.abilityCd ?? []) {
       if (id in this.abilityCd) this.abilityCd[id] = Math.max(0, cd);
     }
@@ -2506,7 +2611,7 @@ export class GameState {
     });
 
     for (const [def, x, y, hp, hpMax, travelled, roh, wobble, lane, auraIn, side,
-      shield, traeger, kernraub, raubWelle] of zeilen) {
+      shield, traeger, kernraub, welle] of zeilen) {
       const wirkungen: Wirkung[] = [];
       const liste = roh as (string | number)[];
       for (let i = 0; i + 2 < (liste?.length ?? 0); i += 3) {
@@ -2519,7 +2624,7 @@ export class GameState {
         speed: ENEMIES[def].speed, lane: lane ?? 0, heading: 0, travelled,
         wirkungen: wirkungen.length ? wirkungen : null,
         auraIn: auraIn ?? 0, shield: shield ?? 0, traeger: traeger ?? 0,
-        kernraub: kernraub ?? 0, raubWelle: raubWelle ?? -1,
+        kernraub: kernraub ?? 0, welle: welle ?? 0,
         hitFlash: 0, squash: 0, hpShown: hp,
         side: side ?? 0,
         wobble,

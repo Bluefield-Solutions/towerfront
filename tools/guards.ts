@@ -30,7 +30,7 @@ import { GameState } from '../src/game/state';
 import { projektilform } from '../src/gfx/renderer';
 import type { Tower } from '../src/game/types';
 import {
-  TOWERS, TOWER_ORDER, MAX_LEVEL, DRAW_SCALE, TURM_BREITE, TURM_HOEHE, rangeFor, statsFor,
+  TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, DRAW_SCALE, TURM_BREITE, TURM_HOEHE, rangeFor, statsFor,
 } from '../src/data/towers';
 import {
   VERBUND_MAX, VERBUND_STUFE, VERBUND_UMKREIS,
@@ -1036,6 +1036,76 @@ for (const [id, e] of Object.entries(ENEMIES)) {
       fail(`Schwierigkeitsgrad ${id}: Durchbruchgewicht ${(gewicht * 100).toFixed(1)} % `
         + `(${schwerster} von ${d.startLives} Kristall) - ein Durchbruch des schwersten `
         + 'Gegners muss mindestens ein Zehntel kosten, sonst ist er folgenlos.');
+    }
+  }
+}
+
+// --- Goldbindung (S-P2-04).
+//
+// **Wieviel von dem, was eine Partie einbringt, ist ueberhaupt zu binden?**
+//
+// Die Kernzahl von G5 heisst "Gold bleibt liegen", und v257 hat gemessen,
+// dass die alte Fassung davon zur Haelfte den Deckel des Bots beschrieb. Was
+// NICHT am Bot haengt, ist diese Rechnung: was eine Karte an Gold ausschuettet,
+// gegen das, was zwoelf voll ausgebaute Tuerme kosten. Bleibt viel uebrig,
+// gibt es am Ende nichts mehr zu entscheiden - ganz gleich, wer spielt.
+//
+// Zwoelf, weil das der Baudeckel der drei Spielstile ist und die
+// Deckungsmessungen (`bahnentwurf`) mit denselben zwoelf besten Plaetzen
+// rechnen. Die Grenze ist ein VIELFACHES, nicht eine Goldsumme (Regel 2):
+// als der Kristall von 20 auf 60 stieg, wurden fuenf absolute Pruefungen
+// still bedeutungslos.
+//
+// **Und die erste Messung hat die Frage umgedreht.** Gemessen liegt die
+// Bindung bei 464 bis 522 %: eine Karte schuettet 5088 bis 5719 aus,
+// zwoelf voll ausgebaute Tuerme kosten 26550 - man kann sich rund ein
+// Fuenftel davon leisten. Die Wirtschaft ist also NICHT locker. Dass ein
+// Drittel des Goldes liegen bleibt, ist der Deckel des Bots (zwoelf Tuerme,
+// Stufe 3) und nicht die Freigebigkeit des Spiels - dieselbe Auskunft wie
+// v257, nur aus den Daten statt aus der Simulation, ohne einen einzigen
+// Lauf.
+//
+// Die Schranke steht deshalb bei 300 %: sie liegt unter dem heutigen Stand
+// und ueber dem, was die Gegenprobe erzeugt (dreifaches Einkommen ergibt
+// gemessen rund 170 %). Sie ist eine Ratsche gegen kuenftige
+// Einkommensinflation, kein Soll.
+{
+  const d = DIFFICULTIES.normal;
+  // Was zwoelf Tuerme voll ausgebaut kosten - der teuerste Ausbauzweig je
+  // Turm, damit die Schranke nicht vom billigsten Pfad abhaengt.
+  const vollAusbau = (id: TowerId): number => {
+    const def = TOWERS[id];
+    let bester = 0;
+    for (const zweig of [0, 1] as const) {
+      let summe = def.base.cost;
+      for (let stufe = 1; stufe < MAX_LEVEL; stufe++) {
+        const n = nextFor(def, zweig, stufe);
+        if (n) summe += n.cost;
+      }
+      bester = Math.max(bester, summe);
+    }
+    return bester;
+  };
+  const teuerste = TOWER_ORDER.map(vollAusbau).sort((a, b) => b - a);
+  // Zwoelf Tuerme aus vier Sorten: drei je Sorte.
+  const zwoelf = teuerste.reduce((a, c) => a + c * 3, 0);
+
+  for (const m of MAPS) {
+    let verdient = d.startGold;
+    for (const w of m.waves) {
+      for (const g of w.groups) verdient += g.count * ENEMIES[g.enemy].bounty * d.bountyMul;
+      verdient += w.bonus * d.bonusMul;
+    }
+    verdient *= m.balance.goldMul;
+    const bindung = zwoelf / verdient;
+    if (bindung < 3.0) {
+      fail(`Karte "${m.name}": Goldbindung ${(bindung * 100).toFixed(0)} % - zwoelf voll `
+        + `ausgebaute Tuerme kosten ${Math.round(zwoelf)}, die Karte schuettet aber `
+        + `${Math.round(verdient)} aus. Was nicht zu binden ist, ist am Ende keine `
+        + 'Entscheidung mehr.');
+    } else {
+      warn(`Goldbindung ${m.name}: ${(bindung * 100).toFixed(0)} % `
+        + `(${Math.round(zwoelf)} von ${Math.round(verdient)})`);
     }
   }
 }

@@ -637,6 +637,21 @@ const PROBEN = [
     tor: 'guards',
     meldet: 'Durchbruchgewicht',
   },
+  {
+    // **Die Goldbindung (S-P2-04, v260).**
+    //
+    // Sie haelt das Verhaeltnis zwischen dem, was eine Karte ausschuettet,
+    // und dem, was zwoelf voll ausgebaute Tuerme kosten. Heute 464 bis
+    // 522 % - die Wirtschaft ist nicht locker, man kann sich ein Fuenftel
+    // eines vollen Feldes leisten. Dreifaches Einkommen drueckt sie unter
+    // die Schranke von 300 %.
+    name: 'Das Einkommen wird verdreifacht',
+    datei: 'src/data/difficulty.ts',
+    suche: 'bountyMul: 1, bonusMul: 1,',
+    ersatz: 'bountyMul: 3, bonusMul: 3,',
+    tor: 'guards',
+    meldet: 'Goldbindung',
+  },
   // **Die andere Richtung hat KEINE Gegenprobe, und das steht hier statt in
   // einer Fussnote.**
   //

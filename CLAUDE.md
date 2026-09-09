@@ -118,8 +118,10 @@ npm run pack-art    Bildvorrat aus art/roh/ neu einbacken
 npm run eichen      einen Wert durchprobieren, alle Kennzahlen nebeneinander.
                     `--kurve` die Schwierigkeitskurve, `--knie` das Knie der
                     Lebenspunktkurve (seit v258), `--leben` die Groesse des
-                    Kristalls (seit v259), `--karte X --hp/--gold` den
-                    Ausgleich einer Karte.
+                    Kristalls (seit v259), `--beute` das Einkommen im Grad
+                    normal (seit v260), `--karte X --hp/--gold` den Ausgleich
+                    einer Karte. Jede Zeile zeigt seit v260 auch Knappheit
+                    und uebriges Gold.
 npm run einbettung  misst, wie sehr eine Figur zur Karte gehört (--eichen: Raum)
 npm run zielplatte  findet die Zielplattform im Kartenbild und prüft die Zahl.
                     Seit v216 auch die GÜTE: die Suche gibt immer einen
@@ -482,7 +484,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v259. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v260. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

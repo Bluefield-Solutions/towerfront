@@ -4,6 +4,7 @@ import { hexA } from './glow';
 import { mapById } from '../data/maps';
 import { randlicht } from './einbettung';
 import { ablageAnmelden } from './speicher';
+import { getPlatzhalter } from './sprites';
 
 /** Gerenderte Gegnerbilder.
  *
@@ -82,6 +83,23 @@ export function getEnemyArt(
   const cacheKey = `${id}|${flash ? 'f' : 'n'}|${mapId}`;
   const hit = baked.get(cacheKey);
   if (hit) return hit;
+
+  // **Gar nicht bestellt ist etwas anderes als noch nicht geladen** (v272).
+  //
+  // Bis hierher waren beide Faelle `null`, und `null` heisst fuer den
+  // Renderer "zeichne die Ersatzform". Die sieht ordentlich aus - und genau
+  // deshalb war ein Bild, das es gar nicht gibt, unsichtbar. Fuer den Blick
+  // wie fuer jedes Tor.
+  //
+  // Nur der eine Fall bekommt den Platzhalter: kein EINTRAG im Vorrat. Ein
+  // Eintrag, der bloss noch nicht dekodiert ist, faellt weiter auf die
+  // gezeichnete Form zurueck - sonst flackerte jeder Ladevorgang durch eine
+  // Schraffur, und die kopflosen Werkzeuge (kein Dekoder, nie ein Bild)
+  // saehen ueberhaupt nichts anderes mehr.
+  if (!ENEMY_ART[id]) {
+    const r = ENEMIES[id].radius;
+    return getPlatzhalter(`gegner:${id}`, r * 2.6, r * 2.6);
+  }
 
   const img = load(id);
   if (!img) return null;

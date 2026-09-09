@@ -54,6 +54,70 @@ export function drawSprite(
   ctx.drawImage(sprite, x - w / 2, y - h / 2, w, h);
 }
 
+// ------------------------------------------------------------- Platzhalter
+
+/** Die Marke des Platzhalters - eine Farbe, die es sonst nirgends gibt.
+ *
+ *  Sie ist nicht schmueckend, sie ist der MESSPUNKT: `npm run bildtor` zaehlt
+ *  offene Bestellungen, indem es diese Farbe im Bild sucht. Ein Register
+ *  allein taete das nicht - das waere eine Buchhaltung ueber Bilder, keine
+ *  Eigenschaft der Bilder. Ein Platzhalter, der versehentlich ausgeliefert
+ *  wird, ist so auch im BILD zu finden und nicht nur in einer Liste.
+ *
+ *  Nachgesehen vor der Wahl: weder `FF00` noch `00FF` noch `magenta` kommt
+ *  sonst irgendwo in `src/` vor. */
+export const PLATZHALTER_FARBE = '#FF00E5';
+
+/** Ein erkennbarer Platzhalter fuer ein Bild, das noch nicht bestellt oder
+ *  noch nicht geliefert ist.
+ *
+ *  **Warum ueberhaupt einer** (S-N0-05): heute faellt ein fehlendes Bild auf
+ *  die gezeichnete Form zurueck, und die sieht ordentlich aus. Damit ist ein
+ *  fehlendes Bild unsichtbar - fuer den Blick wie fuer jedes Tor. Der Neubau
+ *  macht mittelfristig den ganzen Bildvorrat neu; wartet die Kette darauf,
+ *  steht sie, und wer nicht wartet, liefert stillschweigend Luecken aus.
+ *
+ *  Der Platzhalter sagt beides: **hier gehoert etwas hin** (Silhouette in der
+ *  richtigen Groesse, damit Gedraenge, Lesbarkeit und Einbettung weiter
+ *  etwas zu messen haben) und **hier ist noch nichts** (Schraffur, kein
+ *  Detail, die Marke). Er soll ausdruecklich NICHT gut aussehen.
+ *
+ *  Kein Leuchten, kein Weichzeichner - Regel 11. */
+export function getPlatzhalter(
+  schluessel: string, breite: number, hoehe: number,
+): HTMLCanvasElement {
+  const B = Math.max(2, Math.ceil(breite));
+  const H = Math.max(2, Math.ceil(hoehe));
+  return bake(`platzhalter:${schluessel}:${B}x${H}`, B, H, (g) => {
+    // Die Silhouette: ein abgerundetes Rechteck ueber fast die ganze Kachel.
+    // Sie traegt die GROESSE, und daran haengen die Tore, die Figuren gegen
+    // die Wegbreite und gegen die Anzeigegroesse messen.
+    const w = B * 0.82, h = H * 0.82;
+    g.save();
+    roundRect(g, -w / 2, -h / 2, w, h, Math.min(w, h) * 0.18);
+    g.clip();
+    g.fillStyle = hexA(PLATZHALTER_FARBE, 0.22);
+    g.fillRect(-B / 2, -H / 2, B, H);
+    // Schraffur unter 45 Grad. Der Abstand haengt an der Kachel, damit ein
+    // kleiner Platzhalter nicht zur vollen Flaeche wird.
+    g.strokeStyle = hexA(PLATZHALTER_FARBE, 0.85);
+    g.lineWidth = Math.max(1, Math.min(B, H) * 0.035);
+    const schritt = Math.max(4, Math.min(B, H) * 0.16);
+    for (let x = -B - H; x < B + H; x += schritt) {
+      g.beginPath();
+      g.moveTo(x, -H / 2);
+      g.lineTo(x + H, H / 2);
+      g.stroke();
+    }
+    g.restore();
+    // Der Umriss bleibt ungeschnitten, damit die Silhouette scharf bleibt.
+    g.strokeStyle = PLATZHALTER_FARBE;
+    g.lineWidth = Math.max(1, Math.min(B, H) * 0.05);
+    roundRect(g, -w / 2, -h / 2, w, h, Math.min(w, h) * 0.18);
+    g.stroke();
+  });
+}
+
 // ------------------------------------------------------------------ Gegner
 
 /** Wie viele Einzelbilder ein Laufzyklus hat. Mehr Bilder kosten nur

@@ -5,6 +5,8 @@ import { einbetten, einbettungSchluessel } from './einbettung';
 import { ablageAnmelden } from './speicher';
 import { getObjectArtStufeEingebettet } from './objectart';
 import { WAFFE_BREIT, WAFFE_HOCH } from '../data/turmgestalt';
+import { OBJECT_ART } from './assets/objects';
+import { getPlatzhalter } from './sprites';
 
 /** Gerenderte Turmbilder.
  *
@@ -164,6 +166,21 @@ export function getTowerArt(
   const cacheKey = `${k}|${accent}|${einbettungSchluessel(mapId)}`;
   const hit = tinted.get(cacheKey);
   if (hit) return hit;
+
+  // **Gar nicht bestellt ist etwas anderes als noch nicht geladen** (v272) -
+  // dieselbe Unterscheidung wie in `enemyart`, und aus demselben Grund: bis
+  // v271 waren beide `null`, und `null` heisst "zeichne die Ersatzform".
+  //
+  // Der Turm hat aber ZWEI Wege zu einem Bild: das Ganzbild aus `towers.ts`
+  // und Sockel plus Waffe aus `objects.ts` (seit v166, der Bogenturm geht
+  // diesen Weg). Erst wenn beide leer sind, ist wirklich nichts bestellt -
+  // ein erster Entwurf fragte nur das Ganzbild und haette den Bogenturm
+  // dauerhaft als Platzhalter gezeichnet, obwohl er vollstaendig im Feld
+  // steht. Genau dieselbe Falle steht als Kasten an `fehlendeBilder`.
+  if (!TOWER_ART[k] && !OBJECT_ART[`sockel_${id}` as keyof typeof OBJECT_ART]) {
+    const seite = TOWERS[id].footprint * 1.6;
+    return getPlatzhalter(`turm:${k}`, seite, seite);
+  }
 
   const img = load(k);
   if (!img) return null;

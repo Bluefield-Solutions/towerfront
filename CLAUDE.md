@@ -181,7 +181,17 @@ npm run gate        zweiunddreissig Prüfungen. Läuft seit v269 auf dem Runner;
                     Treffer im Speicher, kein voller Lauf.
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
 npm run bilder      alle 13 Aufnahmen (echte PNG ohne Browser)
-npm run bildtor     der Querschnitt, den die Torkette prüft
+npm run bildtor     der Querschnitt, den die Torkette prüft - und seit v273
+                    die OFFENEN BESTELLUNGEN: welche Bilder das Spiel
+                    erwartet (`src/gfx/bestellung.ts`, abgeleitet aus
+                    ENEMIES, MAPS und TOWER_ORDER) und im Vorrat nicht
+                    liegen. Gruen, aber nie verschwiegen - ein fehlendes Bild
+                    ist eine laufende Bestellung, kein Fehler im Code.
+                    Gebaut wird gegen `getPlatzhalter`: Silhouette in der
+                    richtigen Groesse, Schraffur, kein Detail, Marke
+                    #FF00E5. Bis v272 war ein fehlendes Bild unsichtbar - es
+                    fiel auf die gezeichnete Ersatzform zurueck, und die
+                    sieht ordentlich aus.
 npm run pack-art    Bildvorrat aus art/roh/ neu einbacken
 npm run eichen      einen Wert durchprobieren, alle Kennzahlen nebeneinander.
                     `--kurve` die Schwierigkeitskurve, `--knie` das Knie der
@@ -621,7 +631,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v272. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v273. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

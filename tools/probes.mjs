@@ -4017,6 +4017,30 @@ const PROBEN = [
     //
     // Als Regel, nicht als Muster: die Kantenlaenge ist eine Zahl, die sich
     // aendert, sobald jemand das Raster nachstellt.
+    // **Ein fehlendes Bild war bis v272 unsichtbar** (S-N0-05). Jedes der
+    // vier Bildmodule faellt bei fehlendem Eintrag auf `null` zurueck, der
+    // Renderer zeichnet dann seine eigene Form, und die sieht ordentlich
+    // aus. Kein Tor hat je gefragt, ob der Vorrat vollstaendig IST - es gab
+    // gar keine Stelle, an der stand, was vollstaendig heisst.
+    //
+    // Gestellt wird genau der Fall: ein Bild aus dem Vorrat nehmen. Das Tor
+    // muss es NENNEN und trotzdem gruen bleiben - deshalb `meldet` statt
+    // `schlaegt an`. Ein fehlendes Bild ist kein Fehler im Code, sondern
+    // eine laufende Bestellung; wuerde der Lauf daran rot, stuende die Kette
+    // bis zur Lieferung still, und genau davor soll K5 sie bewahren.
+    //
+    // Als Regel und ohne Namen: `src/gfx/assets/enemies.ts` ist von
+    // `pack-art` ERZEUGT, und welche Gegnerart dort zuerst steht, ist keine
+    // Zusage. Eine Probe auf `'crawler'` veraltete beim ersten Umbau des
+    // Bildvorrats - und der steht dem Neubau bevor.
+    name: 'Ein Gegnerbild fehlt im Vorrat',
+    datei: 'src/gfx/assets/enemies.ts',
+    regel: /\n  '[a-z]+': 'data:image[^']*',/,
+    ersatz: '',
+    tor: 'bildtor',
+    meldet: 'OFFENE BESTELLUNGEN',
+  },
+  {
     name: 'Bildrate bricht ein',
     datei: 'src/game/state.ts',
     regel: /new SpatialGrid<Enemy>\(\d+, WORLD_W, WORLD_H\)/,

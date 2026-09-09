@@ -1547,6 +1547,71 @@ for (const pruefung of pruefungen) {
   }
 }
 
+// --- Offene Bestellungen: gruen, aber nie verschwiegen (S-N0-05).
+//
+// Das steht ABSICHTLICH nicht in `probleme`. Ein fehlendes Bild ist kein
+// Fehler im Code - es ist eine Bestellung, die noch laeuft, und der Neubau
+// macht mittelfristig den ganzen Bildvorrat neu. Wuerde der Lauf daran rot,
+// stuende die Kette so lange, bis der Nutzer geliefert hat; genau davor
+// soll K5 sie bewahren.
+//
+// Verschweigen darf sie es aber nicht, und deshalb steht die Zeile nach den
+// Aufnahmen und vor dem Urteil - dort, wo sie gelesen wird.
+{
+  const { offeneBestellungen, erwarteteBilder } = await import('../src/gfx/bestellung.ts');
+  const { getPlatzhalter, PLATZHALTER_FARBE } = await import('../src/gfx/sprites.ts');
+
+  // **Traegt der Platzhalter seine Marke wirklich?** Bei JEDEM Lauf, nicht
+  // nur wenn gerade etwas fehlt.
+  //
+  // Sonst waere "von einem echten Bild maschinell unterscheidbar" eine
+  // Zusage, die genau an dem Tag zum ersten Mal geprueft wird, an dem man
+  // sich auf sie verlaesst - und das ist die Klasse von Fehler, die dieses
+  // Projekt bei `kartenprobe` (v229) schon einmal bezahlt hat.
+  {
+    const cv = getPlatzhalter('selbsttest', 64, 64);
+    const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
+    const r0 = parseInt(PLATZHALTER_FARBE.slice(1, 3), 16);
+    const g0 = parseInt(PLATZHALTER_FARBE.slice(3, 5), 16);
+    const b0 = parseInt(PLATZHALTER_FARBE.slice(5, 7), 16);
+    let marke = 0, deckend = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i + 3] < 8) continue;
+      deckend++;
+      if (Math.abs(d[i] - r0) < 24 && Math.abs(d[i + 1] - g0) < 24
+        && Math.abs(d[i + 2] - b0) < 24) marke++;
+    }
+    // **Gemessen wird der Platzhalter SELBST, nicht die Szene** (Regel 12).
+    //
+    // Der Unterschied ist gemessen: eine Farbregel auf das fertige Bild
+    // gelegt zaehlt auf der Frostspalte 237 magenta Punkte, obwohl kein
+    // Platzhalter darin vorkommt - eisiges Violett faellt in dieselbe
+    // Regel. Mit einer Luecke sind es 22 617, das Signal traegt also
+    // hundertfach; als GRENZE taugt der Grundpegel trotzdem nicht, weil er
+    // je Karte anders hoch liegt. Auf der Leinwand des Platzhalters gibt es
+    // ihn gar nicht.
+    const anteil = deckend ? marke / deckend : 0;
+    console.log(`\nPlatzhalter: ${(anteil * 100).toFixed(0)} % der deckenden Punkte tragen die `
+      + `Marke ${PLATZHALTER_FARBE} (${marke} von ${deckend}).`);
+    if (anteil < 0.25) {
+      probleme.push(`Platzhalter traegt seine Marke nicht: nur ${(anteil * 100).toFixed(0)} % `
+        + 'der deckenden Punkte liegen bei ' + PLATZHALTER_FARBE + ' (mindestens 25 % noetig). '
+        + 'Ohne die Marke ist ein Platzhalter von einem echten Bild nicht zu unterscheiden.');
+    }
+  }
+
+  const offen = offeneBestellungen();
+  const gesamt = erwarteteBilder().length;
+  if (offen.length) {
+    console.log(`\nOFFENE BESTELLUNGEN: ${offen.length} von ${gesamt} Bildern fehlen im Vorrat`);
+    for (const b of offen) console.log(`  - ${b.art}: ${b.schluessel}`);
+    console.log('  (kein Fehler - gebaut wird gegen den Platzhalter, siehe'
+      + ' docs/Towerfront-BILDAUFTRAG.md)');
+  } else {
+    console.log(`\nOffene Bestellungen: keine, alle ${gesamt} erwarteten Bilder liegen vor.`);
+  }
+}
+
 if (probleme.length) {
   console.error(`\nBILDABNAHME: ${probleme.length} Problem(e)`);
   for (const p of probleme) console.error(`  - ${p}`);

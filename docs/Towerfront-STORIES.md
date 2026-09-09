@@ -1,6 +1,6 @@
 # Towerfront — Stories
 
-Stand: v272 · 09.09.2026
+Stand: v273 · 09.09.2026
 
 **Dieses Dokument ist das Lenkrad.** `npm run naechste` liest die Reihenfolge
 hier und wählt die erste offene Story — über Stunden und über Kontextgrenzen
@@ -187,7 +187,21 @@ sein, verschweigen darf er es nicht.
 **Gegenprobe.** Ein echtes Bild durch einen Platzhalter ersetzen: die Zahl der
 offenen Bestellungen muss steigen.
 
-**Schliesst, wenn:** `text src/gfx/sprites.ts "platzhalter" >= 2`
+**Die Schliessbedingung ist in v273 berichtigt, und der Grund gehoert an die
+Zeile.** Sie hiess `text src/gfx/sprites.ts "platzhalter" >= 2` — klein
+geschrieben. Geschrieben wurde sie in v269, bevor es Code gab, und sie hat die
+Schreibweise geraten: dieses Projekt schreibt Bezeichner in camelCase und
+SCREAMING_CASE, kleines `platzhalter` kommt genau einmal vor (im Schluessel des
+gebackenen Bildes). Zwei Treffer auf ein klein geschriebenes Wort waeren
+ausserdem mit zwei Kommentarzeilen zu haben — die Bedingung haette **nichts**
+festgehalten.
+
+Gepinnt wird jetzt die Sache statt des Wortes: `PLATZHALTER_FARBE` muss
+erklaert **und** benutzt sein. Ohne die Marke ist ein Platzhalter von einem
+echten Bild nicht zu unterscheiden, und genau das ist der zweite
+Abnahmepunkt.
+
+**Schliesst, wenn:** `text src/gfx/sprites.ts "PLATZHALTER_FARBE" >= 2`
 
 ---
 

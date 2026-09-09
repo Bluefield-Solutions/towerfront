@@ -1,6 +1,6 @@
 # Towerfront — Stories
 
-Stand: v274 · 09.09.2026
+Stand: v275 · 09.09.2026
 
 **Dieses Dokument ist das Lenkrad.** `npm run naechste` liest die Reihenfolge
 hier und wählt die erste offene Story — über Stunden und über Kontextgrenzen
@@ -202,6 +202,118 @@ echten Bild nicht zu unterscheiden, und genau das ist der zweite
 Abnahmepunkt.
 
 **Schliesst, wenn:** `text src/gfx/sprites.ts "PLATZHALTER_FARBE" >= 2`
+
+---
+
+### S-N0-06 · Der Inspektor sagt, ob es überhaupt etwas Neues zu sehen gibt
+
+**Paket:** N0 · **Aufwand:** S · **Hängt an:** — · **Herkunft:** gemessen in v274
+
+**Problem.** Drei Runden hintereinander hat der Inspektor dieselben Kernbefunde
+geliefert, weil sich das Bild nicht geändert hatte — eine Runde, die nur an
+Werkzeugen und Dokumenten arbeitet, kann es gar nicht ändern. Jedes dieser
+Urteile hat einen vollen Durchgang gekostet und nichts Neues gebracht.
+
+**Ein Urteil über ein unverändertes Bild ist kein Urteil, sondern eine
+Wiederholung.** Es ist aber auch keine Erlaubnis, den Blick zu überspringen:
+gesagt werden darf nur, ob es etwas **zu sehen gibt**, und das muss gemessen
+sein, nicht behauptet.
+
+**Ein erster Entwurf ist in v274 gebaut und wieder zurückgenommen worden**, und
+der Grund gehört hierher: er hat einen sha1 über die Bytes der Aufnahmen
+gelegt und mit dem letzten beurteilten Lauf verglichen. Gemessen taugt das
+nicht — `src/ui/ui.ts:393` schreibt `VERSION` in die Kopfzeile, also steht die
+Fassungsnummer **in jedem Bild**, und sie ändert sich in jeder Runde. Der
+Abdruck wäre jedes Mal verschieden gewesen, die Prüfung hätte nie angeschlagen
+und dabei ausgesehen wie eine Prüfung (Regel 5). Lieber keine als eine, die
+schweigt.
+
+**Was gebaut wird.** Ein Vergleich, der den Fassungsstempel nicht mitzählt.
+Zwei Wege sind zu messen, bevor einer gewählt wird: das Stempelfeld vor dem
+Hashen ausblenden, oder statt der Bildpunkte die **Eingänge** des Bildes
+vergleichen (alles unter `src/gfx`, `src/ui`, `src/game`, `index.html`,
+`src/style.css` und der Bildvorrat).
+
+**Abnahme.**
+* Zwei Läufe ohne Änderung am Bild werden als **unverändert** gemeldet,
+  obwohl die Fassungsnummer dazwischen gestiegen ist.
+* Eine Änderung, die einen einzigen Bildpunkt bewegt, wird als **neu**
+  gemeldet. Beide Richtungen, sonst beweist es nichts (Regel 13).
+
+**Gegenprobe.** Ist selbst eine: der Lauf muss beide Fälle unterscheiden. Der
+Inspektor steht nicht in der Torkette, also bezeugen ihn seine Selbsttests —
+dieselbe Lage wie in v271, und sie fahren an **gestellten** Eingängen: eine
+geänderte Datei, eine umbenannte, und eine höhere Fassungsnummer, die den
+Abdruck nicht bewegen darf. Eine Prüfung, die den echten Baum ändern müsste,
+um sich zu beweisen, fährt niemand.
+
+**Die Schliessbedingung nennt `bildEingaenge`, nicht `beweisAbdruck`.** Der
+erste Entwurf hieß so, weil die Story vor dem Bau geschrieben wurde und den
+Weg über die Bildpunkte noch offen ließ; gewählt ist der über die Eingänge.
+Dritte berichtigte Bedingung in drei Runden, und immer aus demselben Grund:
+eine Bedingung, die vor dem Code geschrieben wird, rät den Namen.
+
+**Schliesst, wenn:** `text tools/inspektor.mjs "bildEingaenge" >= 2`
+
+---
+
+### S-N0-07 · Gemessen wird gegen den Grund, auf dem die Figur wirklich steht
+
+**Paket:** N0 · **Aufwand:** M · **Hängt an:** — · **Herkunft:** Inspektorlauf v274
+
+**Problem.** v274 hat `npm run lesbarkeit` vom Rohbild auf das gebackene
+Terrain umgestellt — und der Inspektor hat im selben Lauf gezeigt, dass das
+erst die halbe Strecke war. Sein Befund, ohne jede Kenntnis der Runde:
+
+> *„Figuren verschwinden auf der dunklen **Fahrbahn**. Turm bei x≈1060/y≈600 —
+> bronzefarben auf dunkelbraunem Weg, praktisch nur am gestrichelten Ring zu
+> erkennen. Dieselben Gegner in `09` und `12` heben sich einwandfrei ab; der
+> Kontrast bricht nur dort zusammen, wo eine Figur bronzefarben ist."*
+
+**Das misst das Werkzeug bis heute nicht.** Es rechnet gegen den **Mittelwert
+der ganzen Karte** — und Gegner laufen auf dem Weg, Türme stehen daneben. Der
+Weg ist eine eigene Fläche, und wie weit sie vom Boden absteht, misst
+`npm run wegdeckung` seit v217:
+
+| Karte | Weg gegen Boden |
+|---|---|
+| Spiralhain | 53,6 Farbschritte |
+| Ascheschlucht | 56,9 |
+| Frostspalte | **60,9** |
+| Farnkessel | 55,0 |
+
+Eine Figur auf dem Weg wird also gegen einen Grund gerechnet, der rund
+**55 Farbschritte** von dem entfernt ist, auf dem sie steht — und dieselbe
+Zahl wird als Abnahme gepflegt (Band 40–90), sie ist also gewollt. Der
+Mittelwert mittelt genau den Fall weg, der zählt: **der schlechteste Kontrast
+im Spiel ist der zwischen Gegner und Weg**, und niemand misst ihn.
+
+**Der Befund korrigiert dabei die Richtung, in die v274 gezeigt hat.** Dort
+stand „Figuren verschwinden auf hellem Boden"; der Blick sagt „auf dunklem
+Weg". Beides trifft dieselbe Ursache — Kontrast bricht zusammen, wo die
+Helligkeit der Figur der des Untergrunds gleicht —, aber die Abhilfe ist
+verschieden: den Boden zu verdunkeln hilft der Figur auf der Wiese und
+**schadet** der auf dem Weg. Ohne diese Messung wäre die Grundhelligkeit im
+Bildauftrag in die falsche Richtung bestellt worden.
+
+**Was gebaut wird.** Der Kontrast wird gegen **beide** Flächen gerechnet und
+der schlechtere Fall gewertet: Wegoberfläche für alles, was auf dem Weg ist,
+Bodenfläche für alles, was daneben steht. Beide Werte kommen aus dem
+gebackenen Terrain, nicht aus der Palette.
+
+**Abnahme.**
+* Der gemeldete schlechteste Kontrast ist **nicht besser** als der heutige —
+  eine Messung, die durch Verfeinerung besser wird, hat sich etwas
+  weggemittelt.
+* Der vom Inspektor genannte Fall (bronzener Turm auf der Fahrbahn) taucht
+  namentlich in der Liste der schwachen Kanten auf.
+* Die Ratschen werden danach neu gesetzt, mit dem Grund an der Zeile.
+
+**Gegenprobe.** Die Wegfarbe an die Bodenfarbe angleichen: das Tor muss den
+Einbruch melden. Vorher wäre es stumm geblieben, weil der Mittelwert sich
+kaum bewegt.
+
+**Schliesst, wenn:** `text tools/readability.mjs "wegflaeche" >= 2`
 
 ---
 
@@ -918,107 +1030,6 @@ Ursache steht aufgeschrieben, nicht nur die Behebung.
 fest und ist mechanisch, kommt sie in `tools/probes.mjs`.
 
 **Schliesst, wenn:** `blick: was ein Zeichen im Bild bedeutet, beantwortet kein Tor - beide Befunde stammen aus einem Blick, und nur ein Blick kann sagen, dass sie weg sind`
-
----
-
-### S-N0-06 · Der Inspektor sagt, ob es überhaupt etwas Neues zu sehen gibt
-
-**Paket:** N0 · **Aufwand:** S · **Hängt an:** — · **Herkunft:** gemessen in v274
-
-**Problem.** Drei Runden hintereinander hat der Inspektor dieselben Kernbefunde
-geliefert, weil sich das Bild nicht geändert hatte — eine Runde, die nur an
-Werkzeugen und Dokumenten arbeitet, kann es gar nicht ändern. Jedes dieser
-Urteile hat einen vollen Durchgang gekostet und nichts Neues gebracht.
-
-**Ein Urteil über ein unverändertes Bild ist kein Urteil, sondern eine
-Wiederholung.** Es ist aber auch keine Erlaubnis, den Blick zu überspringen:
-gesagt werden darf nur, ob es etwas **zu sehen gibt**, und das muss gemessen
-sein, nicht behauptet.
-
-**Ein erster Entwurf ist in v274 gebaut und wieder zurückgenommen worden**, und
-der Grund gehört hierher: er hat einen sha1 über die Bytes der Aufnahmen
-gelegt und mit dem letzten beurteilten Lauf verglichen. Gemessen taugt das
-nicht — `src/ui/ui.ts:393` schreibt `VERSION` in die Kopfzeile, also steht die
-Fassungsnummer **in jedem Bild**, und sie ändert sich in jeder Runde. Der
-Abdruck wäre jedes Mal verschieden gewesen, die Prüfung hätte nie angeschlagen
-und dabei ausgesehen wie eine Prüfung (Regel 5). Lieber keine als eine, die
-schweigt.
-
-**Was gebaut wird.** Ein Vergleich, der den Fassungsstempel nicht mitzählt.
-Zwei Wege sind zu messen, bevor einer gewählt wird: das Stempelfeld vor dem
-Hashen ausblenden, oder statt der Bildpunkte die **Eingänge** des Bildes
-vergleichen (alles unter `src/gfx`, `src/ui`, `src/game`, `index.html`,
-`src/style.css` und der Bildvorrat).
-
-**Abnahme.**
-* Zwei Läufe ohne Änderung am Bild werden als **unverändert** gemeldet,
-  obwohl die Fassungsnummer dazwischen gestiegen ist.
-* Eine Änderung, die einen einzigen Bildpunkt bewegt, wird als **neu**
-  gemeldet. Beide Richtungen, sonst beweist es nichts (Regel 13).
-
-**Gegenprobe.** Ist selbst eine: der Lauf muss beide Fälle unterscheiden.
-
-**Schliesst, wenn:** `text tools/inspektor.mjs "beweisAbdruck" >= 2`
-
----
-
-### S-N0-07 · Gemessen wird gegen den Grund, auf dem die Figur wirklich steht
-
-**Paket:** N0 · **Aufwand:** M · **Hängt an:** — · **Herkunft:** Inspektorlauf v274
-
-**Problem.** v274 hat `npm run lesbarkeit` vom Rohbild auf das gebackene
-Terrain umgestellt — und der Inspektor hat im selben Lauf gezeigt, dass das
-erst die halbe Strecke war. Sein Befund, ohne jede Kenntnis der Runde:
-
-> *„Figuren verschwinden auf der dunklen **Fahrbahn**. Turm bei x≈1060/y≈600 —
-> bronzefarben auf dunkelbraunem Weg, praktisch nur am gestrichelten Ring zu
-> erkennen. Dieselben Gegner in `09` und `12` heben sich einwandfrei ab; der
-> Kontrast bricht nur dort zusammen, wo eine Figur bronzefarben ist."*
-
-**Das misst das Werkzeug bis heute nicht.** Es rechnet gegen den **Mittelwert
-der ganzen Karte** — und Gegner laufen auf dem Weg, Türme stehen daneben. Der
-Weg ist eine eigene Fläche, und wie weit sie vom Boden absteht, misst
-`npm run wegdeckung` seit v217:
-
-| Karte | Weg gegen Boden |
-|---|---|
-| Spiralhain | 53,6 Farbschritte |
-| Ascheschlucht | 56,9 |
-| Frostspalte | **60,9** |
-| Farnkessel | 55,0 |
-
-Eine Figur auf dem Weg wird also gegen einen Grund gerechnet, der rund
-**55 Farbschritte** von dem entfernt ist, auf dem sie steht — und dieselbe
-Zahl wird als Abnahme gepflegt (Band 40–90), sie ist also gewollt. Der
-Mittelwert mittelt genau den Fall weg, der zählt: **der schlechteste Kontrast
-im Spiel ist der zwischen Gegner und Weg**, und niemand misst ihn.
-
-**Der Befund korrigiert dabei die Richtung, in die v274 gezeigt hat.** Dort
-stand „Figuren verschwinden auf hellem Boden"; der Blick sagt „auf dunklem
-Weg". Beides trifft dieselbe Ursache — Kontrast bricht zusammen, wo die
-Helligkeit der Figur der des Untergrunds gleicht —, aber die Abhilfe ist
-verschieden: den Boden zu verdunkeln hilft der Figur auf der Wiese und
-**schadet** der auf dem Weg. Ohne diese Messung wäre die Grundhelligkeit im
-Bildauftrag in die falsche Richtung bestellt worden.
-
-**Was gebaut wird.** Der Kontrast wird gegen **beide** Flächen gerechnet und
-der schlechtere Fall gewertet: Wegoberfläche für alles, was auf dem Weg ist,
-Bodenfläche für alles, was daneben steht. Beide Werte kommen aus dem
-gebackenen Terrain, nicht aus der Palette.
-
-**Abnahme.**
-* Der gemeldete schlechteste Kontrast ist **nicht besser** als der heutige —
-  eine Messung, die durch Verfeinerung besser wird, hat sich etwas
-  weggemittelt.
-* Der vom Inspektor genannte Fall (bronzener Turm auf der Fahrbahn) taucht
-  namentlich in der Liste der schwachen Kanten auf.
-* Die Ratschen werden danach neu gesetzt, mit dem Grund an der Zeile.
-
-**Gegenprobe.** Die Wegfarbe an die Bodenfarbe angleichen: das Tor muss den
-Einbruch melden. Vorher wäre es stumm geblieben, weil der Mittelwert sich
-kaum bewegt.
-
-**Schliesst, wenn:** `text tools/readability.mjs "wegflaeche" >= 2`
 
 ---
 

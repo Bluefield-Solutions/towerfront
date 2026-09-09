@@ -1,6 +1,6 @@
 # Towerfront — die Kette
 
-Stand: v269 · 09.09.2026
+Stand: v275 · 09.09.2026
 
 **Wie eine Runde läuft, wenn niemand zusieht.** Die Beschlüsse dahinter stehen
 in `Towerfront-NEUBAU.md` Abschnitt 4; hier steht nur der Ablauf.
@@ -25,8 +25,16 @@ Regel, die nur behauptet wird, gilt nicht.
 6. Vorlauf               npm run vorlauf      — 4 s, nur tsc. Kein Tor.
 7. Buchführung           VERSION in src/data/config.ts, Zeile in
                          docs/Towerfront-BACKLOG.md, Stand in CLAUDE.md
-8. Inspektor             ein eigener Durchgang, der NUR Bericht und Bilder
+8. Inspektor              ein eigener Durchgang, der NUR Bericht und Bilder
                          sieht. Urteil: Freigabe · neue Schleife · Rückbau.
+                         `npm run inspektor` sagt seit v275 vorweg, ob es
+                         ueberhaupt etwas Neues zu sehen gibt: meldet es
+                         UNVERAENDERT, traegt das letzte Urteil weiter und
+                         wird beim Namen genannt - eine Runde an Werkzeugen
+                         und Dokumenten kann das Bild nicht aendern, und
+                         drei solche Durchgaenge hintereinander haben
+                         dieselben Befunde geliefert. Meldet es NEU, wird
+                         geurteilt.
                          (Das Werkzeug dafür baut S-N0-03; bis dahin
                          geschieht es von Hand — und der Doku-Wächter hat
                          genau darauf bestanden: hier stand erst der Befehl,

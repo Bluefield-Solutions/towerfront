@@ -408,9 +408,19 @@ npm run inspektor   stellt die Beweismittel fuer den INSPEKTOR: Aufnahmen des
                     "<Grund>"` haelt das Urteil fest (ohne Begruendung wird es
                     abgelehnt - ein Urteil ohne Begruendung ist ein Stempel),
                     `--pruefen` sagt, ob eines fuer DIESE Fassung vorliegt.
-                    Zwei Selbsttests bei jedem Lauf, weil es nicht in der
+                    Vier Selbsttests bei jedem Lauf, weil es nicht in der
                     Torkette steht (v229: ein Werkzeug, dessen Eingang niemand
                     prueft, ist im Ernstfall kaputt).
+                    **Seit v275 sagt es vorweg, ob es ueberhaupt etwas Neues
+                    zu sehen gibt** - verglichen werden die EINGAENGE des
+                    Bildes (alles unter `src/`, dazu `index.html`), nicht
+                    seine Bildpunkte, und die Zeile mit `VERSION` zaehlt nicht
+                    mit. Der erste Entwurf hashte die Bildpunkte und ist genau
+                    daran gescheitert: die Fassungsnummer steht in jedem Bild
+                    und steigt jede Runde, die Pruefung haette nie
+                    angeschlagen (Regel 5). Absichtlich zu weit gefasst - zu
+                    weit kostet einen ueberfluessigen Durchgang, zu eng einen
+                    ungesehenen Stand.
 npm run kritik      Wertung nach Testerkategorien, Ziel über 90
 npm run c18         die C18-Frage allein: ist die erste Karte ohne
                     Verbesserungen zu gewinnen? Zwei Sekunden statt zwei
@@ -640,7 +650,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v274. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v275. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

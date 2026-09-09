@@ -30,6 +30,7 @@ import {
   copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync,
 } from 'node:fs';
 import { statSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join, dirname, extname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -37,6 +38,22 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ORDNER = join(ROOT, 'schleife/inspektion');
 const URTEIL = join(ORDNER, 'urteil.md');
 const AUFTRAG = join(ORDNER, 'auftrag.md');
+/** Der Abdruck der zuletzt BEURTEILTEN Bildeingaenge.
+ *
+ *  Liegt ausserhalb von `ORDNER`, und das ist notwendig: das Zusammenstellen
+ *  loescht die Mappe jedes Mal - und der naechste Durchgang soll ohnehin
+ *  nicht lesen, was der vorige gefunden hat. */
+const ABDRUCK = join(ROOT, 'schleife/bildeingaenge.txt');
+
+/** Woraus das Bild entsteht. Alles unter `src/` und die eine HTML-Datei.
+ *
+ *  **Absichtlich zu weit gefasst.** Enger waere genauer - `src/data/waves.ts`
+ *  aendert die Wellen, nicht das Aussehen - aber die Richtung des Irrtums
+ *  entscheidet: zu weit heisst hoechstens, dass ein Durchgang gefahren wird,
+ *  den es nicht gebraucht haette. Zu eng hiesse, eine Aenderung fuer
+ *  unsichtbar zu erklaeren, die man sieht. Das erste kostet Zeit, das zweite
+ *  einen ungesehenen Stand. */
+const BILDQUELLEN = ['src', 'index.html'];
 
 /** Die drei Urteile. Mehr gibt es nicht, und weniger auch nicht:
  *  "Freigabe" allein waere ein Stempel, "Freigabe oder nicht" liesse offen,
@@ -97,6 +114,51 @@ const opt = (n) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : nu
  *
  *  Beide Male wird BEIDE Richtungen geprueft. Eine Pruefung, die nur die
  *  eine kennt, besteht auch eine Regel, die immer anschlaegt. */
+/** Die Zeile mit der Fassungsnummer heraus - und sonst nichts.
+ *
+ *  **Das ist der ganze Grund, warum der erste Entwurf in v274 verworfen
+ *  wurde.** Er hat die BILDPUNKTE der Aufnahmen gehasht; `src/ui/ui.ts:393`
+ *  schreibt `VERSION` aber in die Kopfzeile, die Fassungsnummer steht damit
+ *  in jedem Bild und steigt in jeder Runde. Der Abdruck waere jedes Mal
+ *  verschieden gewesen, die Pruefung haette nie angeschlagen und dabei
+ *  ausgesehen wie eine Pruefung (Regel 5).
+ *
+ *  Ueber die Eingaenge laesst sich die eine Zeile sauber ausnehmen. Was
+ *  bleibt, ist eine ehrliche Frage: hat sich etwas geaendert, aus dem das
+ *  Bild entsteht? */
+const ohneFassung = (text) => text.replace(/^export const VERSION = '[^']*';$/m, '');
+
+/** Der Abdruck aller Bildeingaenge: sha1 ueber Pfad und Inhalt.
+ *
+ *  Der PFAD geht mit ein, nicht nur der Inhalt - sonst waere das Umbenennen
+ *  einer Datei unsichtbar, und ein umbenanntes Bildmodul ist genau die Sorte
+ *  Aenderung, die man sehen will. */
+const abdruckVon = (dateien) => {
+  const h = createHash('sha1');
+  for (const [pfad, inhalt] of [...dateien].sort((a, b) => a[0].localeCompare(b[0]))) {
+    h.update(pfad);
+    h.update('\u0000');
+    h.update(inhalt);
+  }
+  return h.digest('hex').slice(0, 16);
+};
+
+/** Alle Bildeingaenge einlesen. */
+const bildEingaenge = () => {
+  const dateien = [];
+  const gehen = (rel) => {
+    const abs = join(ROOT, rel);
+    if (!existsSync(abs)) return;
+    if (statSync(abs).isDirectory()) {
+      for (const f of readdirSync(abs).sort()) gehen(`${rel}/${f}`);
+      return;
+    }
+    dateien.push([rel, ohneFassung(readFileSync(abs, 'utf8'))]);
+  };
+  for (const q of BILDQUELLEN) gehen(q);
+  return dateien;
+};
+
 const selbsttest = () => {
   // 1. Erkennt die Quelltext-Sperre einen Quelltext - und schweigt sie ohne?
   const trifft = (namen) => namen.filter((f) => QUELLTEXT.includes(extname(f)));
@@ -128,10 +190,39 @@ const selbsttest = () => {
     console.error('INSPEKTOR: der Selbsttest der Altersregel ist gescheitert.');
     process.exit(1);
   }
+  // 4. Sieht der Abdruck eine Aenderung - und eine hoehere Fassung NICHT?
+  //
+  // Beide Richtungen, und die zweite ist die eigentliche: an ihr ist der
+  // erste Entwurf in v274 gescheitert. Gefahren wird an gestellten Eingaengen
+  // statt am Baum - eine Pruefung, die den echten Baum aendern muesste, um
+  // sich zu beweisen, faehrt niemand.
+  {
+    const a = [['src/x.ts', 'A'], ['src/y.ts', 'B']];
+    const gleich = [['src/y.ts', 'B'], ['src/x.ts', 'A']];   // andere Reihenfolge
+    const anders = [['src/x.ts', 'A'], ['src/y.ts', 'C']];
+    const umbenannt = [['src/x.ts', 'A'], ['src/z.ts', 'B']];
+    if (abdruckVon(a) !== abdruckVon(gleich)
+      || abdruckVon(a) === abdruckVon(anders)
+      || abdruckVon(a) === abdruckVon(umbenannt)) {
+      console.error('INSPEKTOR: der Selbsttest des Abdrucks ist gescheitert.');
+      process.exit(1);
+    }
+    // Und die Fassungsnummer darf ihn NICHT bewegen.
+    const v1 = "export const VERSION = 'v274';\nexport const WORLD_W = 1920;\n";
+    const v2 = "export const VERSION = 'v275';\nexport const WORLD_W = 1920;\n";
+    const v3 = "export const VERSION = 'v275';\nexport const WORLD_W = 1900;\n";
+    if (abdruckVon([['c', ohneFassung(v1)]]) !== abdruckVon([['c', ohneFassung(v2)]])
+      || abdruckVon([['c', ohneFassung(v2)]]) === abdruckVon([['c', ohneFassung(v3)]])) {
+      console.error('INSPEKTOR: der Selbsttest der Fassungsausnahme ist gescheitert - '
+        + 'entweder bewegt die Fassungsnummer den Abdruck, oder sie nimmt zuviel heraus.');
+      process.exit(1);
+    }
+  }
   console.log(`  Selbsttest: die Quelltext-Sperre trifft .ts und laesst .png und .md `
     + `durch; es gibt genau ${URTEILE.length} Urteile; was mehr als `
     + `${TOLERANZ_MS / 60000} min hinter dem Lauf liegt, bleibt draussen - `
-    + 'Aufnahmen wie Bericht.');
+    + 'Aufnahmen wie Bericht; der Abdruck sieht eine geaenderte und eine '
+    + 'umbenannte Datei, die Fassungsnummer aber nicht.');
 };
 selbsttest();
 
@@ -179,6 +270,7 @@ if (args.includes('--urteil')) {
     process.exit(1);
   }
   mkdirSync(ORDNER, { recursive: true });
+  writeFileSync(ABDRUCK, `${abdruckVon(bildEingaenge())} ${version()} ${u}\n`);
   writeFileSync(URTEIL, [
     `Urteil: ${u}`,
     `Fassung: ${version()}`,
@@ -353,5 +445,26 @@ if (veraltet.length) {
 console.log(`INSPEKTOR: ${bilder.length} Aufnahme(n) und `
   + `${existsSync(join(ORDNER, 'bericht.md')) ? 'ein Bericht' : 'kein Bericht'} `
   + `liegen in schleife/inspektion/ - kein Quelltext (${QUELLTEXT.length} Endungen geprueft).`);
+// **Gibt es ueberhaupt etwas Neues zu sehen?** Gemessen, nicht behauptet
+// (S-N0-06). Verglichen werden die EINGAENGE des Bildes, nicht seine
+// Bildpunkte - der erste Entwurf in v274 hat die Bildpunkte gehasht und ist
+// an der Fassungsnummer in der Kopfzeile gescheitert.
+//
+// Es ist ausdruecklich keine Erlaubnis, den Blick zu ueberspringen: die
+// Zeile sagt nur, ob es etwas zu sehen GIBT.
+{
+  const jetzt = abdruckVon(bildEingaenge());
+  const alt = existsSync(ABDRUCK) ? readFileSync(ABDRUCK, 'utf8').trim().split(/\s+/) : null;
+  if (alt && alt[0] === jetzt) {
+    console.log(`  UNVERAENDERT: an den Bildeingaengen hat sich seit dem Urteil `
+      + `"${alt[2]}" fuer ${alt[1]} nichts geaendert (die Fassungsnummer zaehlt nicht mit). `
+      + 'Ein zweites Urteil ueber dasselbe Bild waere eine Wiederholung.');
+  } else if (alt) {
+    console.log(`  NEU: die Bildeingaenge haben sich seit dem Urteil "${alt[2]}" fuer `
+      + `${alt[1]} geaendert. Es gibt etwas zu sehen.`);
+  } else {
+    console.log('  Kein frueherer Abdruck - der erste wird mit dem naechsten Urteil gesetzt.');
+  }
+}
 console.log(`  Auftrag: ${basename(AUFTRAG)}`);
 console.log('  Danach: npm run inspektor -- --pruefen');

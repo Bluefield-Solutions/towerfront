@@ -57,6 +57,18 @@ jobs:
       # bereit und muss nicht ein zweites Mal erzeugt werden.
       - name: Torkette
         run: npm run gate
+      # **Eingefrorene Fassungen wandern mit hoch.**
+      #
+      # Waehrend des Neubaus (ab v269) traegt `/` den jeweils neuesten Stand -
+      # und der ist eine Baustelle. `web/` haelt die letzte Fassung, die
+      # wirklich fertig war, als gebaute Datei; sie bleibt unter ihrer eigenen
+      # Adresse erreichbar, egal was auf `/` passiert.
+      #
+      # Es ist eine KOPIE, kein zweiter Bau: die Datei ist autark, sie braucht
+      # weder Quelltext noch Torkette. Genau deshalb kostet die Ruecklinie
+      # nichts.
+      - name: Eingefrorene Fassungen dazulegen
+        run: cp -v web/*.html dist/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

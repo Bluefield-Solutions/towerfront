@@ -67,7 +67,15 @@ beginnt — ein roter Lauf ist die nächste Runde.
 
 **Gegenprobe.** Einen Typfehler einbauen: `vorlauf` muss abbrechen.
 
-**Schliesst, wenn:** `text package.json "vorlauf" >= 2`
+**Schliesst, wenn:** `text package.json "vorlauf" >= 1`
+
+> **Warum hier `>= 1` steht und sonst überall `>= 2`.** Die Zwei ist kein
+> Zufall: ein Bezeichner steht im Quelltext einmal an seiner Stelle und einmal
+> im Kommentar darüber, und eine Bedingung auf `>= 1` schließt deshalb schon,
+> wenn jemand den Namen versehentlich irgendwo hinschreibt. `package.json`
+> kennt keine Kommentare — dort gibt es die zweite Stelle nicht, und `>= 2`
+> wäre eine Bedingung, die nie eintreten kann. Genau das hat sie beim ersten
+> Lauf auch getan.
 
 ---
 

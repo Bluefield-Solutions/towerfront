@@ -4,7 +4,7 @@ import { ENEMIES, type EnemyId } from '../data/enemies';
 import { enemyArtVersion, getEnemyArt } from '../gfx/enemyart';
 import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
 import {
-  TOWERS, TOWER_ORDER, MAX_LEVEL, accentFor, nextFor, sellValue,
+  TOWERS, BAU_ORDER, MAX_LEVEL, accentFor, nextFor, sellValue,
   type TowerId,
 } from '../data/towers';
 import { Sfx } from '../core/audio';
@@ -178,7 +178,7 @@ export class UI {
   private fruehstartAnteil = -1;
 
   constructor(private s: GameState) {
-    for (const id of TOWER_ORDER) {
+    for (const id of BAU_ORDER) {
       const def = TOWERS[id];
       const b = document.createElement('button');
       b.className = 'tower-btn';
@@ -1091,7 +1091,7 @@ export class UI {
       + `|${s.buildChoice ?? '-'}`;
     if (schluessel !== this.pickKey) {
       this.pickKey = schluessel;
-      this.pickRow.innerHTML = TOWER_ORDER.map((id) => {
+      this.pickRow.innerHTML = BAU_ORDER.map((id) => {
         const def = TOWERS[id];
         const reicht = s.gold >= def.base.cost;
         // Zwei verschiedene Gruende, nicht einer. Bis v124 wurde nur

@@ -12,7 +12,7 @@ import { WORLD_W } from './config';
  *  gewesen, und Nachbauten veralten. Jede Torpruefung laeuft ueber
  *  `TOWER_ORDER`, also sieht keine von ihnen die Zielunit - und keine
  *  musste dafuer angefasst werden. */
-export type TowerId = 'arrow' | 'frost' | 'mortar' | 'prism' | 'core';
+export type TowerId = 'arrow' | 'frost' | 'mortar' | 'prism' | 'foerderer' | 'core';
 
 /** Wie ein Turm angreift. Der Angriffstyp bestimmt die Rolle im Feld,
  *  nicht die Zahlenhoehe - sonst waeren es nur Varianten voneinander. */
@@ -20,7 +20,8 @@ export type AttackKind =
   | 'single'  // Einzelziel, Geschoss
   | 'aura'    // Dauerpuls im Umkreis, kein Geschoss
   | 'splash'  // ballistisches Geschoss mit Flaechenschaden
-  | 'chain';  // Sofortstrahl, springt weiter
+  | 'chain'   // Sofortstrahl, springt weiter
+  | 'keiner'; // schiesst gar nicht - der Foerderer (S-N3-01)
 
 /** Eine Ausbaustufe, wie sie in den Daten steht.
  *
@@ -275,6 +276,56 @@ export const TOWERS: Record<TowerId, TowerDef> = {
       },
     ],
   },
+  /** **Der Foerderer** (S-N3-01): belegt einen Bauplatz, schiesst nicht,
+   *  erhoeht die Beute in seinem Umkreis.
+   *
+   *  Alle drei Vorbilder machen Einkommen zu einer BAUentscheidung - Command
+   *  Tower, Miner, House. Towerfront hatte bis v284 nur Abschussbeute und
+   *  Wellenbonus: Gold kam von selbst, und die einzige Frage war, wann man es
+   *  ausgibt. Der Foerderer stellt die Frage davor: wofuer gibt man den PLATZ
+   *  her.
+   *
+   *  Er hat wie jeder andere zwei Zweige - **Ertrag** bringt mehr je Gegner,
+   *  **Weite** deckt mehr Flaeche ab. Beides ist Einkommen, und beides ist
+   *  eine andere Wette: mehr je Kopf lohnt an einer engen Stelle, mehr
+   *  Flaeche an einer, wo die Wege auseinanderlaufen. */
+  foerderer: {
+    id: 'foerderer', footprint: FOOTPRINT, name: 'Förderer', role: 'Einkommen',
+    blurb: 'Schiesst nicht. Was in seinem Umkreis stirbt, bringt mehr Gold.',
+    color: '#C7B27A', accent: '#F2C14E',
+    attack: 'keiner', hitsAir: false, projectileSpeed: 0,
+    // Teurer als der Bogenturm und billiger als der Moerser: er soll gegen
+    // den fruehen Ausbau konkurrieren, nicht gegen den spaeten.
+    base: { cost: 90, damage: 0, cooldown: 0 },
+    branches: [
+      {
+        // **Zweig 0 ist der weite** - gemessen, nicht gewaehlt: die
+        // Reichweitenkurve gibt ihm das 1,84-fache ueber sechs Stufen, dem
+        // anderen das 1,40-fache. Wer die Namen andersherum setzt, hat einen
+        // Zweig namens "Weite", der weniger Weite bringt.
+        id: 'weite', name: 'Weite', color: '#7FE7E0',
+        blurb: 'Mehr Fläche, kleinerer Zuschlag. Lohnt, wo die Wege auseinanderlaufen.',
+        levels: [
+          { cost: 110, damage: 0, cooldown: 0 },
+          { cost: 170, damage: 0, cooldown: 0 },
+          { cost: 250, damage: 0, cooldown: 0 },
+          { cost: 360, damage: 0, cooldown: 0 },
+          { cost: 500, damage: 0, cooldown: 0 },
+        ],
+      },
+      {
+        id: 'ertrag', name: 'Ertrag', color: '#F2C14E',
+        blurb: 'Mehr Gold je Gegner, kleinere Fläche. Lohnt an einer engen Stelle.',
+        levels: [
+          { cost: 110, damage: 0, cooldown: 0 },
+          { cost: 170, damage: 0, cooldown: 0 },
+          { cost: 250, damage: 0, cooldown: 0 },
+          { cost: 360, damage: 0, cooldown: 0 },
+          { cost: 500, damage: 0, cooldown: 0 },
+        ],
+      },
+    ],
+  },
   core: {
     id: 'core', footprint: 200, name: 'Zielunit', role: 'Letzte Linie',
     blurb: 'Steht von Anfang an und schiesst mit. Ausbau kostet ein Vielfaches.',
@@ -311,12 +362,60 @@ export const TOWERS: Record<TowerId, TowerDef> = {
   },
 };
 
+/** Wieviel mehr Beute ein Gegner bringt, der im Umkreis EINES Foerderers
+ *  stirbt (S-N3-01).
+ *
+ *  **Die Zahl kommt aus der Referenz, nicht aus mir** (Regel 10). Defense
+ *  Grids Command Tower bringt 125 / 135 / 145 % fuer je 300 Gold und schiesst
+ *  nicht; das ist der Vergleichsfall, weil er wie hier einen Bauplatz belegt.
+ *  25 % ist seine erste Stufe.
+ *
+ *  Mehrere Foerderer im selben Umkreis addieren sich NICHT unbegrenzt: der
+ *  Zuschlag ist gedeckelt, sonst waere die Antwort auf jede Karte "erst sechs
+ *  Foerderer, dann Tuerme". */
+export const FOERDER_BONUS = 0.25;
+export const FOERDER_DECKEL = 0.75;
+
+/** Welcher Zweig des Foerderers der Ertrags-Zweig ist.
+ *
+ *  Eine Zahl statt einer Zeichenkette, weil `Tower.branch` eine Zahl ist -
+ *  und hier statt an drei Stellen, weil sie sonst dreimal dastuende. */
+export const FOERDER_ERTRAG_ZWEIG = 1;
+
+/** Der Zuschlag EINES Foerderers, nach Zweig und Stufe.
+ *
+ *  Der Ertrags-Zweig steigt je Stufe um 8 Prozentpunkte, der weite um 3 -
+ *  dafuer waechst dessen Reichweite ueber sechs Stufen auf das 1,84-fache
+ *  statt auf das 1,40-fache. Mehr je Kopf gegen mehr Koepfe; das ist die
+ *  Entscheidung, und sie ist in beiden Richtungen bezahlt. */
+export function foerderZuschlag(branch: 0 | 1 | null, level: number): number {
+  const schritt = branch === FOERDER_ERTRAG_ZWEIG ? 0.08 : 0.03;
+  return FOERDER_BONUS + Math.max(0, level - 1) * schritt;
+}
+
 /** Die kaufbaren Tuerme, in der Reihenfolge der Bauleiste.
  *
  *  Die Zielunit steht hier NICHT: sie wird nicht gebaut. Jede Torpruefung
  *  laeuft ueber diese Liste, nicht ueber `TOWERS` - deshalb hat der fuenfte
  *  Eintrag keine einzige davon angefasst. */
 export const TOWER_ORDER: TowerId[] = ['arrow', 'frost', 'mortar', 'prism'];
+
+/** Was der Spieler bauen kann - die vier Geschuetze UND der Foerderer.
+ *
+ *  **Warum zwei Listen und nicht eine** (die Frage ist Regel 15, und die
+ *  Antwort ist: es sind zwei Gegenstaende). `TOWER_ORDER` ist die Liste der
+ *  GESCHUETZE, und an ihr haengen zwei Dutzend Torpruefungen, die alle von
+ *  Schaden, Reichweite und Zweigen handeln: "jede Stufe bringt Reichweite",
+ *  "die Grundreichweiten liegen 1,5-fach auseinander", "kein Turm traegt mehr
+ *  als 40 % des Schadens". Auf ein Gebaeude, das nicht schiesst, ist keine
+ *  davon anwendbar - der Foerderer haette sie reihenweise rot gemacht, und
+ *  die einzige Reparatur waere gewesen, ueberall eine Ausnahme
+ *  einzuraeumen. Eine Ausnahme, die man einmal einraeumt, bleibt stehen, bis
+ *  niemand mehr weiss, dass sie eine war (v235).
+ *
+ *  Gefragt wird diese Liste ueberall dort, wo es um die BAULEISTE geht:
+ *  Bedienung, Bildvorrat, Bildbestellung. */
+export const BAU_ORDER: TowerId[] = [...TOWER_ORDER, 'foerderer'];
 
 /** Der guenstigste Turm - er entscheidet, ob ein Platz ueberhaupt taugt.
  *  Was dort nicht steht, steht nirgends.
@@ -369,6 +468,10 @@ const REICHWEITE_GRUND: Record<TowerId, number> = {
   arrow: 0.170,   // 326 px - der Allrounder
   prism: 0.160,   // 307 px - Ketten brauchen Nachbarn in Reichweite
   mortar: 0.225,  // 432 px - schlaegt weit hinten ein
+  // Der Foerderer sieht enger als jedes Geschuetz. Das ist die Entscheidung:
+  // sein Zuschlag gilt nur dort, wo wirklich gestorben wird, und ein Platz,
+  // der viel Beute UND viel Feuer sieht, ist damit doppelt umkaempft.
+  foerderer: 0.100,   // 192 px
   // Die Zielunit deckt ihren eigenen Vorplatz, nicht die Karte. Sie steht
   // dort, wo alle Bahnen enden - mit der Weite eines Moersers waere sie der
   // beste Turm im Spiel und noch dazu geschenkt.
@@ -404,6 +507,10 @@ const WUCHT_AUSGLEICH: Record<TowerId, number> = {
   frost: 1.10,   // die Bremse trifft alles im Umkreis, Weite wiegt schwer
   mortar: 1.06,
   prism: 1.02,
+  // Beim Foerderer heisst der Weiten-Zweig wirklich Weite und der andere
+  // Ertrag - Schaden gibt es keinen. Der Eintrag steht hier, weil der Typ
+  // ihn verlangt; gewirkt haette er nur auf eine Schadenszahl.
+  foerderer: 1,
   // Die Zielunit hat nur einen Zweig, also greift der Ausgleich nie. Der
   // Eintrag steht hier, weil der Typ ihn verlangt, und nicht, weil er wirkt.
   core: 1.00,

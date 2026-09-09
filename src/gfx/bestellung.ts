@@ -27,7 +27,7 @@
  *  keine der beiden ist eine von Hand gepflegte Kopie der anderen. */
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import { MAPS } from '../data/maps';
-import { TOWER_ORDER } from '../data/towers';
+import { BAU_ORDER } from '../data/towers';
 import { ENEMY_ART } from './assets/enemies';
 import { MAP_BACKGROUNDS } from './assets/backgrounds';
 import { OBJECT_ART } from './assets/objects';
@@ -59,7 +59,7 @@ export function erwarteteBilder(): Bestellung[] {
   for (const s of PFLICHT_GEGENSTAENDE) aus.push({ art: 'gegenstand', schluessel: s });
   // Je KAUFBAREM Turm ein Bild auf der ersten Stufe - mehr ist Kuer.
   //
-  // `TOWER_ORDER`, nicht `TOWERS`: die Zielunit `core` steht in `TOWERS`,
+  // `BAU_ORDER`, nicht `TOWERS`: die Zielunit `core` steht in `TOWERS`,
   // hat aber ausdruecklich kein Turmbild - sie wird als Kristall gezeichnet,
   // und der steht als Pflichtgegenstand ohnehin schon auf der Liste. Der
   // erste Entwurf nahm `TOWERS` und meldete prompt `core_1_1` als offene
@@ -72,7 +72,7 @@ export function erwarteteBilder(): Bestellung[] {
   // dieser Rueckfall ist eine ENTSCHEIDUNG. Wer ihn als Luecke fuehrte,
   // meldete auf Dauer zwei Dutzend offene Bestellungen - und eine Meldung,
   // die immer dasteht, wird ueberlesen.
-  for (const id of TOWER_ORDER) {
+  for (const id of BAU_ORDER) {
     aus.push({ art: 'turm', schluessel: `${id}_1_1` });
   }
   return aus;

@@ -5,6 +5,7 @@ import { ENEMIES, type EnemyId } from '../data/enemies';
 import {
   TOWERS, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor, hatZweigwahl,
   guenstigsterTurm, type BranchIndex, type TowerId,
+  FOERDER_DECKEL, foerderZuschlag,
 } from '../data/towers';
 import { EARLY_BONUS_MAX, EARLY_BONUS_WINDOW, EARLY_RISIKO_HUB } from '../data/waves';
 import { VERBUND_MAX, VERBUND_STUFE, VERBUND_UMKREIS } from './verbund';
@@ -1947,6 +1948,28 @@ export class GameState {
     }
   }
 
+  /** Um wieviel die Beute an dieser Stelle steigt (S-N3-01).
+   *
+   *  **Gezaehlt wird am ORT des Todes, nicht am Toeter.** Ein Zuschlag, der
+   *  daran haengt, welcher Turm den letzten Treffer gesetzt hat, waere fuer
+   *  den Spieler nicht nachvollziehbar - er sieht den Umkreis, nicht die
+   *  Trefferbuchhaltung. So ist es dieselbe Frage wie beim Bauen: liegt diese
+   *  Stelle im Kreis oder nicht.
+   *
+   *  Mehrere Foerderer addieren sich, aber gedeckelt: ohne Deckel waere die
+   *  Antwort auf jede Karte "erst sechs Foerderer, dann Tuerme", und das ist
+   *  keine Entscheidung mehr, sondern eine Reihenfolge. */
+  foerderFaktor(x: number, y: number): number {
+    let zuschlag = 0;
+    for (const t of this.towers) {
+      if (t.def !== 'foerderer') continue;
+      const st = this.towerStats(t);
+      if (Math.hypot(t.x - x, t.y - y) > st.range) continue;
+      zuschlag += foerderZuschlag(t.branch, t.level);
+    }
+    return 1 + Math.min(FOERDER_DECKEL, zuschlag);
+  }
+
   private updateTowers(dt: number): void {
     for (const t of this.towers) {
       const def = TOWERS[t.def];
@@ -1956,6 +1979,13 @@ export class GameState {
       if (t.pulse > 0) t.pulse = Math.max(0, t.pulse - dt * 2.2);
       if (t.spring > 0) t.spring = Math.max(0, t.spring - dt * 3.2);
       t.cooldownLeft -= dt;
+
+      // **Der Foerderer schiesst nicht** (S-N3-01). Er bekommt seine
+      // Abklingzeit und seine Federung wie jeder andere - er soll sich im
+      // Bild bewegen -, aber hier ist Schluss. Ohne diese Zeile suchte er ein
+      // Ziel, faende eines und machte null Schaden: sichtbar waere ein Turm,
+      // der auf alles feuert und nichts trifft.
+      if (def.attack === 'keiner') continue;
 
       if (def.attack === 'aura') {
         if (t.cooldownLeft > 0) continue;
@@ -2375,7 +2405,8 @@ export class GameState {
     if (e.hp <= 0) {
       e.dead = true;
       if (e.kernraub > 0) this.splitterLoesen(e);
-      const bounty = Math.max(1, Math.round(def.bounty * this.diff.bountyMul * this.map.balance.goldMul));
+      const bounty = Math.max(1, Math.round(def.bounty * this.diff.bountyMul
+        * this.map.balance.goldMul * this.foerderFaktor(e.x, e.y)));
       this.gold += bounty;
       this.stats.goldEarned += bounty;
       this.stats.kills++;

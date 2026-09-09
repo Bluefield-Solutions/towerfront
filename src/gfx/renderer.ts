@@ -7,7 +7,7 @@ import { wirkungRest } from '../data/wirkungen';
 import {
   TOWERS, accentFor, statsFor,
   type BranchIndex, type TowerDef, type TowerId, type TowerLevel,
-  TOWER_ORDER } from '../data/towers';
+  TOWER_ORDER, BAU_ORDER } from '../data/towers';
 import { turmMasse, muendung, WAFFE_HOCH, WAFFE_BREIT } from '../data/turmgestalt';
 import { ABILITIES } from '../data/abilities';
 import { makeRng } from '../core/math';
@@ -160,7 +160,7 @@ export class Renderer {
     const fehlt: string[] = [];
     if (this.menu) return fehlt;
     if (!getBackground(s.map.id)) fehlt.push(`Untergrund ${s.map.id}`);
-    for (const id of TOWER_ORDER) {
+    for (const id of BAU_ORDER) {
       // Ein Turm ist gezeichnet, wenn ER GEZEICHNET WIRD - egal auf welchem
       // der beiden Wege. Der Bogenturm hat seit v166 kein Ganzbild mehr,
       // sondern Sockel und Waffe; die Frage nach dem Ganzbild allein haette

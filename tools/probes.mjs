@@ -101,6 +101,19 @@ const PROBEN = [
     meldet: 'stillschweigend',
   },
   {
+    // **Zwei Weichenstile, die dasselbe tun, sind ein Stil mit zwei Namen.**
+    // Der Eingriff laesst `lang` alles offen lassen - dann sind beide Stile
+    // derselbe, und `npm run sim` muss es melden. Genau diese Pruefung hat in
+    // v283 den dritten Stil (`deckung`) erledigt; ohne die Probe waere sie
+    // eine Zeile, die einmal etwas gesagt hat und danach nie wieder.
+    name: 'Zwei Weichenstile tun dasselbe',
+    datei: 'tools/sim.ts',
+    regel: /if \(!alle\.length \|\| bot\.weichenStil === 'offen'\) return new Set\(\);/,
+    ersatz: 'if (alle.length >= 0) return new Set();',
+    tor: 'sim',
+    meldet: 'zwei Namen fuer denselben Stil',
+  },
+  {
     // **Eine Mechanik, die man nicht sieht, gibt es nicht.** Der Eingriff
     // nimmt die Zeichnung aus dem Bild; die Zahl der geaenderten Bildpunkte
     // muss dann auf null fallen. Ohne diese Probe bewiese die Messung nur,

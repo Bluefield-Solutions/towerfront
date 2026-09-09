@@ -1,8 +1,13 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v276 · 09.09.2026
+Stand: v283 · 09.09.2026
 
-**Nachgesehen in v276:** eine Zeile war falsch und ist berichtigt - `npm run bench` prueft seit v272 den Dichtefaktor, nicht mehr die 4-ms-Grenze. Die Torzahl und die uebrigen Beschreibungen stimmen (`npm run doku` prueft beides bei jedem Lauf).
+**Nachgesehen in v283:** die Tortabelle ist um das **Wegenetz-Tor** gewachsen
+(`npm run netztor`, Stelle 3 der Kette, seit v278) und steht damit auf
+dreiunddreissig Schritten; `npm run doku` prueft Zahl und Tabelle bei jedem
+Lauf. Die uebrigen Beschreibungen sind nachgesehen und stimmen. In v276 war
+hier eine Zeile falsch - `npm run bench` prueft seit v272 den Dichtefaktor,
+nicht mehr die 4-ms-Grenze.
 
 > **Nachgesehen in v269 — und teilweise überholt.** Der Nutzer hat entschieden,
 > Level, Spielregeln und Oberfläche neu zu bauen; die Beschlüsse stehen in

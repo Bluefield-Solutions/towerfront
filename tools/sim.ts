@@ -402,7 +402,8 @@ const WEICHEN_GRAD: DifficultyId = 'erbarmungslos';
 
 function weichenstileMessen(): void {
   const mitWeiche = MAPS.filter((m) => (WEGNETZ[m.id]?.weichen?.length ?? 0) > 0);
-  console.log(`\nWeichenstile (derselbe Bot, drei Stellungsstrategien) - `
+  console.log(`\nWeichenstile (derselbe Bot, ${WEICHENSTILE.length} Stellungsstrategien, `
+    + `Grad ${WEICHEN_GRAD}) - `
     + `${mitWeiche.length} von ${MAPS.length} Karten haben ueberhaupt eine Weiche:`);
   if (!mitWeiche.length) {
     errors.push('Weichenstile: keine Karte hat eine Weiche - die Stile messen nichts.');

@@ -1,8 +1,19 @@
 # Marktrecherche — was moderne Tower-Defense-Spiele ausmacht
 
-Stand: v276 · 09.09.2026
+Stand: v283 · 09.09.2026
 
-**Nachgesehen in v276:** unveraendert. Der Referenzabgleich aus v269 (Defense Grid, Infinitode 2, Rogue Tower) steht hier mit seinen Quellen; die Beschluesse daraus stehen in `Towerfront-NEUBAU.md`. Neu belegt ist seit v274 einer davon: der dunkle Grund ist gemessen, nicht mehr nur begruendet.
+**Nachgesehen in v283:** unveraendert richtig, und **einer der Befunde ist
+seitdem am eigenen Baum nachgemessen**. Hier steht, Defense Grid mache das
+Labyrinth zur Entscheidung und der Gegner rechne neu. Genau das ist in v280
+bis v283 gebaut worden - und der Bot hat dabei zweimal gezeigt, dass die
+Reihenfolge dazugehoert: wer erst baut und dann verlaengert, hat seine Tuerme
+an einer Strasse stehen, die es nicht mehr gibt. Erst das Labyrinth, dann die
+Tuerme; so herum gewinnt der lange Weg gemessen die Welle 15.
+
+Der Referenzabgleich aus v269 (Defense Grid, Infinitode 2, Rogue Tower) steht
+hier mit seinen Quellen; die Beschluesse daraus in `Towerfront-NEUBAU.md`.
+Belegt statt begruendet sind inzwischen zwei davon: der dunkle Grund (v274)
+und der Weg als Entscheidung (v283).
 
 **Erweitert in v269: der Referenzabgleich zu den drei benannten Vorbildern.**
 Bis dahin hielt dieses Dokument Marktbefunde allgemein — „modern, nicht

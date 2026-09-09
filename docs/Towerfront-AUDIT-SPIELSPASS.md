@@ -1,8 +1,17 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v276 · 09.09.2026
+Stand: v283 · 09.09.2026
 
-**Nachgesehen in v276:** unveraendert gueltig, und der Kernsatz erst recht - der Genre-Abgleich steht auf 30 von 30, und das Spiel macht trotzdem wenig Spass. Was seit v269 daraus folgt, steht in `Towerfront-NEUBAU.md`; dieses Dokument ist die Diagnose, nicht der Plan.
+**Nachgesehen in v283:** unveraendert gueltig, und der Kernsatz erst recht -
+der Genre-Abgleich steht auf 30 von 30, und das Spiel macht trotzdem wenig
+Spass. **Eine seiner Zahlen hat sich seit v280 zum ersten Mal bewegt, und
+zwar in die richtige Richtung:** der Abstand der Spielstile stand auf 12,43
+und steht jetzt auf 13,15 - die Weichen sind die erste Entscheidung, an der
+sich zwei Bots ueberhaupt unterscheiden koennen, ohne dass einer schlechter
+spielt. Zum Soll von 20 ist es weit; das Rauschen der Kennzahl liegt bei
+3,17, die Bewegung ist also noch keine Aussage. Dieses Dokument ist die
+Diagnose, nicht der Plan - was daraus folgt, steht in
+`Towerfront-NEUBAU.md`.
 
 **Nachgesehen in v269:** dieses Audit hat die Diagnose gestellt, aus der der
 Neubau folgt — „der Genre-Abgleich steht auf 30 von 30, und das Spiel macht

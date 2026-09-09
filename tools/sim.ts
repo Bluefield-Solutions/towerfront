@@ -648,8 +648,8 @@ function play(
       // fuer die Geschuetze, denn genau darum geht es: es ist DIESELBE
       // Flaeche.
       const stehen = s.gebaute.filter((tw) => tw.def === 'foerderer').length;
-      let id = stehen < bot.foerderer ? 'foerderer' as TowerId
-        : strategy[si % strategy.length];
+      const willFoerdern = stehen < bot.foerderer;
+      let id = willFoerdern ? 'foerderer' as TowerId : strategy[si % strategy.length];
       if (s.gold < TOWERS[id].base.cost) {
         const affordable = strategy.filter((c) => s.gold >= TOWERS[c].base.cost + reserve);
         if (affordable.length) id = affordable[0];
@@ -697,9 +697,24 @@ function play(
       }
 
       if (wantBuild) {
-        const sp = spots[spotIdx];
+        // **Der Foerderer bekommt NICHT den besten Platz** (S-N3-01).
+        //
+        // Der erste Entwurf nahm die Liste von vorn, und die ist nach
+        // Wegdeckung sortiert: der Bot stellte sein Einkommen genau dorthin,
+        // wo die Geschuetze am meisten sehen. Das tut kein Mensch, und
+        // gemessen hat es die Zweigwirkung auf allen vier Paaren unter das
+        // Rauschen gedrueckt - der Bot hatte danach zu wenig Feuer, um
+        // ueberhaupt noch zwischen zwei Zweigen zu unterscheiden.
+        //
+        // Ein Modell, das schlechter spielt als ein Mensch, misst seinen
+        // eigenen Fehler (Regel 4). Der Foerderer nimmt deshalb den ersten
+        // Platz HINTER dem Baudeckel: gut genug, um Abschuesse zu sehen,
+        // ohne der Verteidigung ihre beste Stellung wegzunehmen.
+        const fIdx = bot.maxTowers + stehen;
+        const nimm = willFoerdern && fIdx < spots.length ? fIdx : spotIdx;
+        const sp = spots[nimm];
         if (s.build(sp.x, sp.y, id)) { stelleZiel(s, opts.ziel); si++; entscheidungenJeWelle[welle]++; }
-        spotIdx++;
+        if (!willFoerdern || nimm === spotIdx) spotIdx++;
       } else {
         // In die Tiefe: immer in den Turm, der bisher am meisten geleistet hat.
         let best: (typeof s.towers)[number] | null = null;

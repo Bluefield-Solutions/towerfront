@@ -1,6 +1,6 @@
 # Towerfront — Stories
 
-Stand: v269 · 09.09.2026
+Stand: v272 · 09.09.2026
 
 **Dieses Dokument ist das Lenkrad.** `npm run naechste` liest die Reihenfolge
 hier und wählt die erste offene Story — über Stunden und über Kontextgrenzen
@@ -726,11 +726,21 @@ wird geprüft, ob ein anderes Element darüberliegt — mit `elementFromPoint` a
 den Textzeilen selbst, nicht über Umrisskästen (die lassen sich durch
 Verschachteln kleinrechnen, das ist seit v248 die Messstelle dieses Tores).
 
+**Nachgetragen aus dem Inspektorlauf v272 — es trifft nicht nur Text,
+sondern Knöpfe.** Der aufgeklappte Prüfsteg schneidet in `05`, `06` und
+`browser.png` die beiden runden Kopfknöpfe (`•••`, `Pause`) unten ab, und in
+`06` und `browser.png` liegt er über der oberen Rundung des türkisen
+Hauptknopfs „Welle 1 starten" — **des einen Knopfes, ohne den das Spiel nicht
+weitergeht**. Ein angeschnittener Text ist unlesbar; ein angeschnittener Knopf
+ist unter dem Daumen auch noch unerreichbar.
+
 **Abnahme.**
 * Beide gefundenen Zustände werden gemeldet, bevor sie behoben sind — sonst
   misst die Prüfung nicht, was sie messen soll.
 * Gemessen wird in **allen** Formaten, die das Browsertor fährt, nicht nur im
   Standardfenster: der Fehler war formatabhängig.
+* Gemessen wird auch an **Knöpfen**, nicht nur an Textzeilen: kein Element
+  darf über der Trefferfläche eines anderen liegen.
 * Nach der Behebung: null verdeckte Textzeilen, und das ist eine Ratsche.
 
 **Gegenprobe.** Ein Element über eine Textzeile schieben: das Tor muss es
@@ -764,6 +774,116 @@ nur die erste; die Bandhöhe hält ihre Grenze von 86 Punkten.
 namentlich melden.
 
 **Schliesst, wenn:** `text src/ui/ui.ts "vorschauName" >= 2`
+
+---
+
+### S-N4-06 · Die Bedienung liegt nicht über dem Spielfeld
+
+**Paket:** N4 · **Aufwand:** M · **Hängt an:** S-N4-01 · **Herkunft:** Inspektorlauf v272
+
+**Problem.** Zweimal derselbe Fehler an zwei Rändern, und beide Male ist das
+Verdeckte das, worum es im Spiel geht.
+
+* **Unten liegt die Bedienleiste auf der Bahn.** In `08-welle-mitte.png` schaut
+  bei x≈450/y≈570 ein Gegner zur Hälfte hinter einer Turmkachel hervor, ein
+  zweiter bei x≈480/y≈660 hinter „Bollwerk", ein dritter ist am unteren Rand
+  nur noch angeschnitten. In `09-welle-spaet.png` steht derselbe Fall. Auf
+  diesem Abschnitt sieht man nicht, was passiert — **und bauen kann man dort
+  auch nicht**, weil die Knöpfe die Fläche belegen.
+* **Oben links verdeckt die Statusleiste den Bauplatz.** In `03-bauwahl.png`
+  liegt die Turmvorschau bei x≈50/y≈110 zu zwei Dritteln hinter der
+  `GOLD/KRISTALL/WELLE`-Kachel; sichtbar bleibt ein Streifen Dach. In
+  `04-turm-gebaut.png` gilt dasselbe für den **fertig gebauten** Turm, und der
+  Reichweitenring läuft links aus dem Bild. Der Spieler baut ins Blinde.
+
+`12-dock-zu.png` sagt, was zu holen ist: mit eingeklapptem Dock atmet das Feld,
+und die Gegner auf der Bahn sind sofort zu zählen. Der Zustand existiert also
+schon — er ist nur nicht der Normalfall.
+
+**Was gebaut wird.** `feldVerdeckung` im UX-Audit: an den Punkten, an denen das
+Spiel wirklich stattfindet — auf dem Bahnschlauch und auf der bebaubaren
+Fläche — wird mit `elementFromPoint` gefragt, ob dort Bedienung liegt.
+Gemessen an denselben Zuständen, die das Audit ohnehin aufnimmt.
+
+**Abnahme.**
+* Beide gefundenen Zustände werden gemeldet, **bevor** sie behoben sind.
+* Nach der Behebung: kein Punkt des Bahnschlauchs und kein Bauplatz liegt
+  unter einem Bedienelement — Ratsche je Zustand.
+* Der Reichweitenring eines gewählten Turms liegt vollständig im Bild.
+
+**Gegenprobe.** Die Leiste über die Bahn schieben: das Tor muss den Zustand
+namentlich melden.
+
+**Schliesst, wenn:** `text tools/uxaudit.mjs "feldVerdeckung" >= 2`
+
+---
+
+### S-N4-07 · Eine Wahl, eine Leiste
+
+**Paket:** N4 · **Aufwand:** S · **Hängt an:** — · **Herkunft:** Inspektorlauf v272
+
+**Problem.** In `03-bauwahl.png` stehen **zwei** Turmleisten gleichzeitig im
+Bild: oben links eine mit Namen und Preisen (Bogenturm 55, Frostturm 80,
+Mörser, Prisma 140), unten die Kachelleiste mit Bildern und Preisen
+(55, 80, 125, 140). Sie sehen aus wie dieselbe Wahl in zwei Größen.
+
+Sie sind es nicht — die obere zeigt, was **an dieser Stelle** baubar ist, und
+deshalb trägt der Mörser dort statt seines Preises das rote Wort `RAND`. Das
+ist eine gute Auskunft, und niemand kann sie so lesen: an derselben Stelle, an
+der drei Nachbarn eine Zahl tragen, steht bei einem ein Wort. Der Inspektor
+hat es wörtlich als *„zwei Leisten für dieselbe Wahl, und in einer davon fehlt
+die Zahl"* gelesen.
+
+**Was gebaut wird.** Eine Leiste. Die Ortsauskunft (`warumNicht`) wandert an
+die Kacheln, die es ohnehin gibt, und sie sagt sie als **Zustand**, nicht als
+Ersatz für den Preis: der Preis bleibt stehen, die Kachel wird gesperrt und
+nennt den Grund.
+
+**Abnahme.**
+* Im Zustand „Turm gewählt" steht genau **eine** Turmleiste im Bild.
+* Eine gesperrte Kachel zeigt Preis **und** Grund, nie den Grund statt des
+  Preises.
+* `npm run beruehrung` hält seine Grenzen: eine Leiste weniger darf die
+  übrigen Trefferflächen nicht schrumpfen lassen.
+
+**Gegenprobe.** Den Preis auf einer gesperrten Kachel ausblenden: das
+Browsertor muss es melden.
+
+**Schliesst, wenn:** `text src/ui/ui.ts "gesperrteKachel" >= 2`
+
+---
+
+### S-N4-08 · Zwei Dinge im Bild, die niemand erklären kann
+
+**Paket:** N4 · **Aufwand:** S · **Hängt an:** — · **Herkunft:** Inspektorlauf v272
+
+**Problem.** Der Inspektor hat zwei Erscheinungen gemeldet, für die er keine
+Deutung fand — und das ist der Befund, nicht die Nebenbemerkung:
+
+* **Ein doppeltes, versetztes Turmbild.** In `14-notebook-spiel.png` liegen bei
+  x≈1300 zwei Turmbilder übereinander: ein aufrechter Turm bei y≈900 und ein
+  zweiter, halbdurchsichtiger bei y≈990 in einem rot gestrichelten Kreis.
+  Wörtlich: *„es sieht aus wie ein Geisterbild, nicht wie Turm plus Marker"*.
+* **Eine lila Linie.** In `02-spiel-ruhe.png` und `14` liegt ein violetter
+  Strich mit weißem Endpunkt mitten auf dem Weg, ohne Beschriftung und ohne
+  erkennbaren Bezug zu irgendetwas.
+
+Beides ist wahrscheinlich klein zu richten. Es steht hier trotzdem als eigene
+Story, weil **ein Zeichen, das niemand deuten kann, im Bild schlimmer wirkt als
+ein fehlendes**: der Spieler sucht eine Bedeutung, findet keine und traut dem
+Rest auch nicht mehr.
+
+**Was gebaut wird.** Erst die Ursache beider finden, dann entscheiden: eine
+Erscheinung bekommt eine Bedeutung, die man sieht, oder sie verschwindet. Kein
+Drittes.
+
+**Abnahme.** Der nächste Inspektorlauf nennt keines von beiden mehr — und die
+Ursache steht aufgeschrieben, nicht nur die Behebung.
+
+**Gegenprobe.** Hängt an der Ursache und wird mit ihr nachgetragen; steht sie
+fest und ist mechanisch, kommt sie in `tools/probes.mjs`.
+
+**Schliesst, wenn:** `blick: was ein Zeichen im Bild bedeutet, beantwortet kein Tor - beide Befunde stammen aus einem Blick, und nur ein Blick kann sagen, dass sie weg sind`
 
 ---
 
@@ -855,6 +975,14 @@ Dazu ein dritter: über der Karte liegen weiße Schlaufen um Baumgruppen und
 Felsfelder, ohne Verlauf und ohne Legende. Auf dem Notebook-Bild beherrschen
 sie das Bild und lesen sich als Gekritzel. Der Inspektor konnte nicht sagen,
 was sie darstellen sollen — und das ist der Befund.
+
+**Der zweite Inspektorlauf (v272) hat dazu die Hälfte nachgeliefert, die
+fehlte: sie verschwinden ganz, sobald die Welle läuft.** In `02` bis `06`
+beherrschen sie das Bild, in `07` bis `09` sind sie weg — wörtlich *„der
+Übergang ist ein harter Bruch im Erscheinungsbild"*. Damit ist auch klar, was
+sie sind: die Baukante, gezeichnet nur während der Turmwahl. Eine Linie, die
+eine Regel des Spiels zeigt, ist richtig; eine reinweiße Kontur ohne Schatten
+und ohne Perspektive über einem Foto ist die falsche Art, sie zu zeigen.
 
 **Was gebaut wird.** Eine Farbregel, die einmal dasteht (Regel 15): welche
 Farbe welchen Zustand meint, und keine Farbe zwei. Das Tor rückt so weit ins

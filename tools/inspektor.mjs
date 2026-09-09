@@ -214,7 +214,23 @@ const berichtOhneAbsicht = (text) => {
  *  ein Werkzeugbild aus `bilder/` zeigt eine Messung, kein Spiel. */
 const QUELLEN = [
   { ordner: '/tmp/lab/ux', muster: /^\d\d-.*\.png$/, marke: 'messwerte.json' },
-  { ordner: join(ROOT, 'bilder'), muster: /^(browser|wellenvorschau)\.png$/ },
+  // **`wellenvorschau.png` ist hier heraus (v272), und der Inspektor hat es
+  // selbst gefunden.** Er meldete "Platzhaltertext in der Einweisung: *und so
+  // weiter und so weiter und so weiter*" - und hatte recht, dass es dasteht.
+  // Nur steht es nicht im Spiel: `tools/streifen.ts` fuellt den laengsten Satz
+  // absichtlich auf `MAX_ZEICHEN` auf, um den schlimmsten Fall zu MESSEN.
+  //
+  // Damit war es ein Befund am Beweismaterial, nicht am Spiel - und der
+  // Inspektor kann diesen Unterschied nicht sehen, weil er nicht wissen soll,
+  // was ein Werkzeug ist und was das Spiel. Vier Zeilen weiter oben stand der
+  // Satz schon richtig da ("ein Werkzeugbild aus `bilder/` zeigt eine Messung,
+  // kein Spiel") - und darunter nahm der Code trotzdem eins.
+  //
+  // `browser.png` bleibt: es ist eine Aufnahme der GEBAUTEN Datei in Chromium,
+  // also das Spiel, nur in einem anderen Format. Genau daran hing der Befund
+  // ueber die verdeckte Zeile SCHADEN/REICHWEITE, den keine andere Aufnahme
+  // zeigt.
+  { ordner: join(ROOT, 'bilder'), muster: /^browser\.png$/ },
 ];
 
 const laufZeit = (q) => {

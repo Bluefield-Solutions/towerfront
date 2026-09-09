@@ -18,7 +18,7 @@ Bildvorrat, Buildkette und das ganze Messgerät.
 |---|---|
 | `docs/Towerfront-NEUBAU.md` | **die oberste Arbeitsgrundlage.** Der Referenzabgleich, alle Beschlüsse mit Begründung, und was ausdrücklich verworfen wurde |
 | `docs/Towerfront-KETTE.md` | wie eine Runde läuft, wenn niemand zusieht |
-| `docs/Towerfront-STORIES.md` | **38 Stories** in der Reihenfolge, in der sie gefahren werden. `npm run naechste` liest sie |
+| `docs/Towerfront-STORIES.md` | die Stories in der Reihenfolge, in der sie gefahren werden. **Wieviele es sind, steht hier absichtlich nicht** — `npm run naechste --alle` zaehlt sie, und jeder Inspektorlauf legt welche nach (Regel 15) |
 
 **Die vier Sätze, aus denen alles folgt:**
 
@@ -1681,7 +1681,7 @@ Seit v249 liegt der Plan als Katalog vor:
 | Datei | was drinsteht |
 |---|---|
 | `docs/Towerfront-ANFORDERUNGSKATALOG.md` | Zielbild in fünf messbaren Sätzen, acht Pakete, die begründete Reihenfolge — und fünf verworfene Richtungen |
-| `docs/Towerfront-STORIES.md` | **42 Stories**, jede eine Runde Arbeit, in der Reihenfolge, in der sie gefahren werden |
+| `docs/Towerfront-STORIES.md` | dieselbe Datei wie oben — in v269 vollstaendig ersetzt. Der alte Katalog von 42 Stories steht nicht mehr darin |
 | `docs/Towerfront-MESSLUECKEN.md` | was wir heute nicht messen können, und warum das schlimmer ist als eine fehlende Funktion |
 | `docs/Towerfront-MARKTRECHERCHE.md` | was moderne Tower-Defense-Spiele ausmacht, mit Quellen |
 

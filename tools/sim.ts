@@ -261,6 +261,27 @@ interface Bot {
    *  ist keine dritte Strategie, sondern eine Kennzahl, die Verluste
    *  vorhersagt - und die gibt es heute nicht (M17). */
   weichenStil: 'offen' | 'lang';
+  /** Wieviele Foerderer dieser Stil baut, bevor er Geschuetze stellt
+   *  (S-N3-01).
+   *
+   *  **Zuerst, nicht nebenbei** - und das ist keine Bequemlichkeit: ein
+   *  Einkommensgebaeude zahlt sich ueber die Restlaufzeit aus, also ist die
+   *  einzige Frage, wie frueh man es hinstellt. Wer es spaet baut, hat es
+   *  bezahlt und nichts davon. Defense Grid und Rogue Tower machen es
+   *  genauso; in beiden ist die Eroeffnung die Stelle, an der man sich
+   *  zwischen Feuerkraft und Einkommen entscheidet.
+   *
+   *  Null heisst: dieser Stil baut keine. Der Stil muss vertreten bleiben -
+   *  die ganze Balance ist gegen ihn geeicht.
+   *
+   *  **Der Bot baut Foerderer, aber er baut sie nicht AUS, und das steht hier
+   *  statt in einer Fussnote.** Sein Ausbauzweig nimmt den Turm mit dem
+   *  meisten Schaden; ein Foerderer macht keinen und kommt deshalb nie an die
+   *  Reihe. Eine Ersatzregel waere zu erfinden gewesen ("immer bis Stufe 2"),
+   *  und eine erfundene Regel im Messgeraet misst die Regel statt das Spiel
+   *  (Regel 4). Die Foerderer stehen also auf Stufe 1 mit 25 % Zuschlag - was
+   *  hier gemessen wird, ist die untere Kante ihrer Wirkung. */
+  foerderer: number;
 }
 
 /** Die Stile bilden unterschiedliche *Entscheidungen* ab, keine Fehler.
@@ -282,7 +303,7 @@ interface Bot {
  *  Obergrenze benachteiligt. */
 const BOTS: Bot[] = [
   {
-    name: 'Meister', maxTowers: 12, maxLevel: 3, reserve: 40, decideEvery: 30, deepenAt: 0.65,
+    name: 'Meister', foerderer: 2, maxTowers: 12, maxLevel: 3, reserve: 40, decideEvery: 30, deepenAt: 0.65,
     // Der Meister laesst offen - und zwar bewusst der, gegen den alle
     // uebrigen Zahlen dieses Werkzeugs geeicht sind. Wer ihn umstellt,
     // verschiebt jede andere Messung mit.
@@ -290,12 +311,12 @@ const BOTS: Bot[] = [
   },
   {
     // Erst alle Stellungen besetzen, dann ausbauen.
-    name: 'Breite', maxTowers: 12, maxLevel: 3, reserve: 15, decideEvery: 20, deepenAt: 1,
+    name: 'Breite', foerderer: 0, maxTowers: 12, maxLevel: 3, reserve: 15, decideEvery: 20, deepenAt: 1,
     weichenStil: 'offen',
   },
   {
     // Nur die Haelfte der Plaetze, dafuer frueh tief und mit Ruecklage.
-    name: 'Sparsam', maxTowers: 12, maxLevel: 3, reserve: 140, decideEvery: 30, deepenAt: 0.5,
+    name: 'Sparsam', foerderer: 3, maxTowers: 12, maxLevel: 3, reserve: 140, decideEvery: 30, deepenAt: 0.5,
     weichenStil: 'lang',
   },
 ];
@@ -320,7 +341,7 @@ const BOTS: Bot[] = [
  *  Er zaehlt bewusst NICHT bei "keine Karte darf muehelos sein" - dort geht
  *  es um den gewoehnlichen Spieler, und der ist einer der drei. */
 const BESTLEISTUNG: Bot = {
-  name: 'Bestleistung', maxTowers: 24, maxLevel: MAX_LEVEL,
+  name: 'Bestleistung', foerderer: 3, maxTowers: 24, maxLevel: MAX_LEVEL,
   reserve: 40, decideEvery: 20, deepenAt: 0.8,
   // **In der Sache Weichen ist auch die Bestleistung nicht die beste - und
   // das ist kein Versehen, sondern M17.**
@@ -496,19 +517,14 @@ function welleNr(s: GameState): number {
 
 /** Welche Weichen dieser Stil gestellt haben will.
  *
- *  **`deckung` ist die eigentliche Entscheidung**, und sie wird gerechnet,
- *  nicht geraten: fuer jede Stellung wird gemessen, wieviel der entstehenden
- *  Bahnen die schon gebauten Tuerme sehen (`coveredLength`, dieselbe Rechnung,
- *  aus der `bahnentwurf` seine Deckungszahl macht). Genommen wird die beste.
+ *  Zwei Stile, zwei Zeilen: `offen` ruehrt keine an, `lang` macht alles zu,
+ *  was zugeht. Ein dritter, der die bessere Stellung WAEHLT, ist zweimal
+ *  gebaut und zweimal gemessen gescheitert - nicht an sich, sondern an der
+ *  Kennzahl, auf die er optimieren muesste (M17, siehe `Bot.weichenStil`).
  *
- *  Solange noch kein Turm steht, gibt es nichts zu decken - dann bleibt alles
- *  offen. Das ist kein Sonderfall, sondern die richtige Antwort: eine Weiche
- *  vor dem ersten Turm umzulegen hiesse, gegen eine Verteidigung zu planen,
- *  die es nicht gibt.
- *
- *  Die Zahl der Stellungen ist 2^Weichen; der Weichenfenster-Waechter laesst
- *  hoechstens zwoelf Weichen zu, also 4096 - hier wird bei acht abgebrochen,
- *  weil diese Schleife je Welle laeuft und nicht einmal je Torkette. */
+ *  Was nicht zugeht, meldet `weicheStellen` selbst, indem es die Stellung
+ *  zuruecknimmt - der Weichenfenster-Waechter faengt den Fall ohnehin
+ *  vorher. */
 function weichenWahl(s: GameState, bot: Bot): Set<string> {
   const alle = s.weichenPunkte();
   if (!alle.length || bot.weichenStil === 'offen') return new Set();
@@ -627,7 +643,13 @@ function play(
 
   while (s.phase === 'playing' && t < 60 * 45) {
     if (frame % bot.decideEvery === 0) {
-      let id = strategy[si % strategy.length];
+      // **Erst die Foerderer, dann die Geschuetze** (S-N3-01). Gezaehlt wird,
+      // wieviele schon stehen; die Plaetze kommen aus derselben Liste wie
+      // fuer die Geschuetze, denn genau darum geht es: es ist DIESELBE
+      // Flaeche.
+      const stehen = s.gebaute.filter((tw) => tw.def === 'foerderer').length;
+      let id = stehen < bot.foerderer ? 'foerderer' as TowerId
+        : strategy[si % strategy.length];
       if (s.gold < TOWERS[id].base.cost) {
         const affordable = strategy.filter((c) => s.gold >= TOWERS[c].base.cost + reserve);
         if (affordable.length) id = affordable[0];

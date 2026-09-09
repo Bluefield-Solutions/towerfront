@@ -82,8 +82,8 @@ export const DIFFICULTY_ORDER: DifficultyId[] = ['ruhig', 'normal', 'erbarmungsl
  *  In v23 war das schon einmal versucht und wieder ausgebaut - damals verloren
  *  dabei zwei von drei Spielstilen. Der Grund war der Abstand der Stile, und
  *  der ist mit den festen Bauplaetzen weg. */
-const KNEE_START = 0.55;
-const KNEE_END = 0.92;
+const KNIE_ANFANG = 0.55;
+const KNIE_ENDE = 0.92;
 
 function smoothstep(a: number, b: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -94,6 +94,6 @@ function smoothstep(a: number, b: number, x: number): number {
  *  `mapMul` ist der Ausgleich der Karte - siehe GameMap.balance. */
 export function hpScale(d: DifficultyDef, i: number, waveCount: number, mapMul = 1): number {
   const t = i / Math.max(1, waveCount - 1);
-  const shape = 0.82 * smoothstep(KNEE_START, KNEE_END, t) + 0.18 * Math.pow(t, d.hpCurve);
+  const shape = 0.82 * smoothstep(KNIE_ANFANG, KNIE_ENDE, t) + 0.18 * Math.pow(t, d.hpCurve);
   return 1 + shape * d.hpEnd * mapMul;
 }

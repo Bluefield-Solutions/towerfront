@@ -67,14 +67,16 @@ const opt = (name) => {
 };
 
 const kurve = opt('--kurve');
+const knie = opt('--knie');
 const karte = opt('--karte');
 const hp = opt('--hp');
 const gold = opt('--gold');
 
-if (!kurve && !hp && !gold) {
+if (!kurve && !knie && !hp && !gold) {
   console.log(`Eichen — einen Wert durchprobieren, alle Kennzahlen sehen.
 
   npm run eichen -- --kurve 30,34,38          Schwierigkeitskurve (hpEnd)
+  npm run eichen -- --knie 0.35,0.40,0.45     Knie der Lebenskurve (KNIE_ANFANG)
   npm run eichen -- --karte X --hp 0.85,0.9   Ausgleich einer Karte
   npm run eichen -- --karte X --gold 1.0,1.1  Einkommen einer Karte
 
@@ -109,6 +111,21 @@ function setKurve(v) {
   s = s.replace(/hpEnd: [0-9.]+, hpCurve: 2\.6/, `hpEnd: ${v}, hpCurve: 2.6`);
   s = s.replace(/hpEnd: [0-9.]+, hpCurve: 2\.7/, `hpEnd: ${+(v * 1.18).toFixed(1)}, hpCurve: 2.7`);
   writeFileSync(DIFF, s);
+}
+
+/** Das Knie der Lebenskurve setzen (S-P2-02).
+ *
+ *  `KNIE_ANFANG` sagt, ab welchem Anteil des Wellenplans die Lebenspunkte
+ *  wirklich anziehen. Steht es spaet, bleibt der ganze Mittelteil folgenlos -
+ *  und genau das ist gemessen: die Verluste liegen auf jeder Aussaat an
+ *  denselben zwei Stellen, dreizehn Wellen kosten nichts.
+ *
+ *  Nur der ANFANG wird gefahren, nicht das Ende: beide zugleich waeren zwei
+ *  Dinge auf einmal, und das Ende bei 0,92 ist der Punkt, an dem die Kurve
+ *  ihre volle Hoehe erreicht - er gehoert ans Ende des Plans. */
+function setKnie(v) {
+  writeFileSync(DIFF, backup.get(DIFF).replace(
+    /const KNIE_ANFANG = [0-9.]+;/, `const KNIE_ANFANG = ${v};`));
 }
 
 /** Welche Kennung zu welcher Konstante gehört — **abgelesen, nicht
@@ -186,13 +203,14 @@ function messen() {
 }
 
 const rows = [];
-const werte = (kurve ?? hp ?? gold).split(',').map((v) => Number(v.trim()));
-const was = kurve ? 'Kurve' : `${karte} ${hp ? 'hpMul' : 'goldMul'}`;
+const werte = (kurve ?? knie ?? hp ?? gold).split(',').map((v) => Number(v.trim()));
+const was = kurve ? 'Kurve' : knie ? 'KNIE_ANFANG' : `${karte} ${hp ? 'hpMul' : 'goldMul'}`;
 
 console.log(`Eichen: ${was}, ${werte.length} Werte\n`);
 for (const v of werte) {
   restore();
   if (kurve) setKurve(v);
+  else if (knie) setKnie(v);
   else setKarte(karte, hp ? 'hp' : 'gold', v);
   const m = messen();
   rows.push([v, m]);

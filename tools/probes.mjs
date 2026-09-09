@@ -4288,26 +4288,28 @@ const zeitRatscheFehler = (alterH) => {
     : null;
 };
 
-/** Wann der vermerkte Stand entstanden ist.
+/** Wann der vermerkte Stand entstanden ist - **aus der Datei, sonst nirgends**.
  *
- *  Drei Wege, in dieser Reihenfolge: die Zeitangabe in der Datei; sonst das
- *  Commit-Datum des vermerkten Standes (der Commit ist ohnehin da, und er
- *  sagt genau, wann jener Baum aktuell war); sonst nichts.
+ *  **Der erste Entwurf hatte einen Rueckfallweg, und der hat den ersten
+ *  Runner-Lauf rot gemacht.** Er las das Commit-Datum des vermerkten Standes:
+ *  hier ging das, weil der Baum die ganze Geschichte hat. Auf dem Runner nicht
+ *  - `actions/checkout@v4` klont **flach**, den Commit gibt es dort gar nicht,
+ *  und `git log` faellt auf die Nase.
  *
- *  Der zweite Weg ist der Grund, warum diese Aenderung keine Umstellung
- *  braucht: der Stand von v265 traegt keine Zeit, sein Commit aber schon. */
+ *  Das ist genau die Klasse aus v225: *eine Regel, die auf einem Rechner
+ *  beweist und auf dem anderen nicht, ist keine* - und schlimmer als keine,
+ *  weil ein gruener Lauf dann wie ein Beweis aussieht. Hier war es umgekehrt
+ *  herum sichtbar (rot statt still gruen), und das nur, weil "unbekannt zaehlt
+ *  als zu alt" gilt. Waere die Vorgabe "unbekannt ist frisch" gewesen, haette
+ *  die Ratsche vom ersten Tag an geschwiegen.
+ *
+ *  Also nur noch die Datei. Der Stand von v265 hat seine Zeit einmalig von
+ *  Hand bekommen - abgelesen am Commit, der ihn geschrieben hat, hier wo die
+ *  Geschichte vollstaendig ist. Ab dem naechsten Nachtlauf schreibt der
+ *  Runner sie selbst. */
 const standZeit = (roh) => {
   const teile = roh.trim().split(/\s+/);
-  const ausDatei = teile[2] && !Number.isNaN(Date.parse(teile[2]))
-    ? Date.parse(teile[2]) : null;
-  if (ausDatei !== null) return ausDatei;
-  if (!teile[1]) return null;
-  try {
-    const d = execSync(`git log -1 --format=%cI ${teile[1]}`,
-      { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' }).trim();
-    const t = Date.parse(d);
-    return Number.isNaN(t) ? null : t;
-  } catch { return null; }
+  return teile[2] && !Number.isNaN(Date.parse(teile[2])) ? Date.parse(teile[2]) : null;
 };
 
 /** Die Regel selbst pruefen, ohne ein Tor und ohne Ringschluss.
@@ -4360,6 +4362,26 @@ const standSelbsttest = () => {
     + `an, schweigt bei ${STAND_HOECHSTALTER_H} und wertet ein unbekanntes Alter als zu alt.`);
   console.log(`  Selbsttest: die Standregel schlaegt bei ${STAND_ABSTAND + 1} Fassungen `
     + `Abstand an und schweigt bei ${STAND_ABSTAND}.`);
+
+  // **Und das LESEN des Standes, nicht nur die Regel darauf.**
+  //
+  // Der erste Entwurf hat den Runner rot gemacht, weil das Lesen auf zwei
+  // Rechnern Verschiedenes tat (flacher Klon, siehe `standZeit`). Gefangen
+  // hat das keine Pruefung, sondern die Vorgabe "unbekannt zaehlt als zu
+  // alt" - sie hat es laut gemacht statt still. Was sich pruefen laesst,
+  // ist die FORM: drei gestellte Staende, und keiner darf durchrutschen.
+  const mitZeit = standZeit('v265 abc123 2026-09-09T11:01:50Z');
+  const ohne = standZeit('v265 abc123');
+  const kaputt = standZeit('v265 abc123 keinDatum');
+  if (mitZeit === null || ohne !== null || kaputt !== null) {
+    console.error('PROBEN: der Selbsttest des Standlesens ist gescheitert - '
+      + `mit Zeit ${mitZeit === null ? 'NICHT gelesen' : 'gelesen'}, `
+      + `ohne Zeit ${ohne === null ? 'unbekannt' : 'IRGENDWAS gelesen'}, `
+      + `mit Unsinn ${kaputt === null ? 'unbekannt' : 'IRGENDWAS gelesen'}.`);
+    process.exit(1);
+  }
+  console.log('  Selbsttest: der Stand wird nur aus seiner Zeitangabe gelesen - '
+    + 'fehlt sie oder ist sie Unsinn, gilt das Alter als unbekannt.');
 };
 
 /** Umgebung fuer jedes Tor, das dieser Lauf startet.

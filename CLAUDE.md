@@ -92,11 +92,18 @@ angehalten. Wovor die Ratsche schützt (eine Probe hört leise auf zu beweisen),
 ist ohnehin eine Frage von Zeit. Die Fassungszahl steht weiter in der Meldung,
 sie urteilt nur nicht mehr.
 
-Das Alter kommt aus einem dritten Feld in der Standdatei — und wo das fehlt,
-aus dem **Commit-Datum** des vermerkten Standes. Deshalb brauchte die
-Umstellung keine Migration. **Ein unbekanntes Alter zählt als zu alt:** ein
-Stand ohne Zeit sähe sonst aus wie ein frischer, und das ist genau die
-Verfallsart, gegen die die ganze Ratsche gebaut ist.
+Das Alter kommt aus einem dritten Feld in der Standdatei — **und sonst
+nirgends**. Der erste Entwurf hatte einen Rückfallweg über das Commit-Datum
+des vermerkten Standes, und der hat in v270 den ersten Runner-Lauf rot
+gemacht: hier ging er, weil der Baum die ganze Geschichte hat; auf dem Runner
+nicht, weil `actions/checkout@v4` **flach klont** und den Commit dort gar
+nicht gibt. Dieselbe Klasse wie v225 — eine Regel, die auf einem Rechner
+beweist und auf dem anderen nicht, ist keine.
+
+**Ein unbekanntes Alter zählt als zu alt**, und genau das hat den Fehler laut
+gemacht statt still: mit der Vorgabe „unbekannt ist frisch" hätte die Ratsche
+vom ersten Tag an geschwiegen. Der Stand von v265 hat seine Zeit einmalig von
+Hand bekommen; ab dem nächsten Nachtlauf schreibt der Runner sie selbst.
 
 Erzwungen, nicht aufgeschrieben — eine Regel, die nur in einem Dokument steht,
 wird gebrochen; das hat dieses Projekt sechsmal gekostet.
@@ -589,7 +596,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v269. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v270. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

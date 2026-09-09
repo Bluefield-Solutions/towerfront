@@ -1,6 +1,9 @@
 # Towerfront — Genre-Abgleich
 
-Stand: v258 · 08.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+Stand: v265 · 08.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+
+**Nachgesehen in v265:** unveraendert 30 von 30, gewichtet 100 %, davon 68 von
+68 Gewichtspunkten gemessen.
 
 **Nachgesehen in v258:** `npm run bericht` misst im Baum unverändert 30 von 30,
 gewichtet 100 %, davon 68 von 68 Gewichtspunkten gemessen. Von Hand beurteilt

@@ -1,6 +1,10 @@
 # Towerfront — Art Bible
 
-Stand: v258 · 08.09.2026
+Stand: v265 · 08.09.2026
+
+**Nachgesehen in v265:** unveraendert. Neu dazugekommen ist die Marke des
+Raeubers (Splitter in der Kristallfarbe, Faden zum Kristall) — gebacken, kein
+Schein (Regel 11), und vom Bildtor gehalten.
 
 **Nachgesehen in v258:** die Zahlen dieses Dokuments hängen an `npm run art`,
 `grafiktor`, `lesbarkeit` und `einbettung` — alle vier in jeder Torkette grün.

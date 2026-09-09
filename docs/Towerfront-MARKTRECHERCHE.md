@@ -1,6 +1,10 @@
 # Marktrecherche — was moderne Tower-Defense-Spiele ausmacht
 
-Stand: v258 · 08.09.2026
+Stand: v265 · 08.09.2026
+
+**Nachgesehen in v265:** unveraendert — Marktbefunde mit Quellen, keine Zahlen
+aus diesem Baum. Der Kernraub (v262) folgt Defense Grid, das hier als Vorbild
+steht; die Zeile dort galt schon vorher.
 
 **Nachgesehen in v258:** das Dokument hält Marktbefunde mit Quellen und keine
 Zahlen aus diesem Baum — es kann durch eine Fassung des Spiels nicht veralten.

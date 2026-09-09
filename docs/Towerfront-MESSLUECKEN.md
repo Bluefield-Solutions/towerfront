@@ -1,6 +1,6 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v258 · 08.09.2026
+Stand: v265 · 08.09.2026
 
 Zu `KATALOG.md` und `STORIES.md`. Stand des Spiels **v248** (`5623c3b`).
 

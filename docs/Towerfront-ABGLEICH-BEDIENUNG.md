@@ -1,6 +1,8 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v258 · 08.09.2026
+Stand: v265 · 08.09.2026
+
+**Nachgesehen in v265:** unveraendert, alle sieben Punkte haengen an gruenen Toren.
 
 **Nachgesehen in v258:** alle sieben Punkte hängen an `bauflaechetor` und dem
 Browsertor, beide in jeder Torkette grün.

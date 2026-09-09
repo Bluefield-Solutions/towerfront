@@ -1,6 +1,8 @@
 # Referenzabgleich — Fähigkeiten freischalten (C18)
 
-Stand: v258 · 08.09.2026
+Stand: v265 · 08.09.2026
+
+**Nachgesehen in v265:** unveraendert.
 
 **Nachgesehen in v258:** unverändert. Die Fähigkeiten werden von `npm run sim`
 und dem Rauchtest gefahren, beide grün.

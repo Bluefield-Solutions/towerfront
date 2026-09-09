@@ -1,6 +1,8 @@
 # Referenzabgleich — Stützturm (C3, „Bannturm")
 
-Stand: v258 · 08.09.2026
+Stand: v265 · 08.09.2026
+
+**Nachgesehen in v265:** unveraendert offen als C3 — den Bannturm gibt es nicht.
 
 **Nachgesehen in v258:** unverändert offen als C3 — den Bannturm gibt es nicht,
 und die Schließbedingung des Punktes sagt es (`"Bannturm" >= 1` in

@@ -1016,6 +1016,27 @@ for (const [id, e] of Object.entries(ENEMIES)) {
     if (!TOWER_ORDER.some((t) => TOWERS[t].base.cost <= d.startGold)) {
       fail(`Schwierigkeitsgrad ${id}: kein Turm ist mit ${d.startGold} Startgold bezahlbar.`);
     }
+
+    // **Durchbruchgewicht** (S-P2-03): was ein Durchbruch des schwersten
+    // Gegners am Kristall kostet.
+    //
+    // Bis v258 stand der Kristall auf 60, und der Leerentitan nimmt 5 - also
+    // 8,3 %. Kingdom Rush arbeitet mit 20 Leben, und ein einziger Durchbruch
+    // ist dort sichtbar teuer. Die Folge hier: selbst wenn die Verluste ueber
+    // mehr Wellen verteilt waeren, KOSTET ein einzelner nichts, was man
+    // spuert - das ist die zweite Haelfte von G1.
+    //
+    // Gemessen wird der ANTEIL, nicht die Punktzahl (Regel 2). Als der
+    // Kristall von 20 auf 60 stieg, wurden fuenf Pruefungen still
+    // bedeutungslos, ohne dass etwas rot wurde; eine absolute Grenze haette
+    // hier dasselbe getan.
+    const schwerster = Math.max(...Object.values(ENEMIES).map((e) => e.leak));
+    const gewicht = schwerster / d.startLives;
+    if (gewicht < 0.10) {
+      fail(`Schwierigkeitsgrad ${id}: Durchbruchgewicht ${(gewicht * 100).toFixed(1)} % `
+        + `(${schwerster} von ${d.startLives} Kristall) - ein Durchbruch des schwersten `
+        + 'Gegners muss mindestens ein Zehntel kosten, sonst ist er folgenlos.');
+    }
   }
 }
 

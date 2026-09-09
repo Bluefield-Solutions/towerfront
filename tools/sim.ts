@@ -1146,14 +1146,14 @@ const mixedPlan = mixedPlanBase;
 // Unterscheidung haette den falschen Satz im Audit verhindert.
 console.log('\nZweige einzeln (gemischtes Feld, ein Turmtyp umgestellt, '
   + `${AUSSAATEN.length} Aussaaten):`);
-const branchRuns = new Map<string, Result>();
+const branchRuns = new Map<string, Result[]>();
 const branchMittel = new Map<string, { mittel: number; spanne: number }>();
 for (const id of TOWER_ORDER) {
   for (const b of [0, 1] as const) {
     const o = ueberAussaaten((aussaat) => play(
       mixedPlan, (t) => (t === id ? b : 0), MEISTER, 'normal', MAPS[0].id, { seed: aussaat },
     ));
-    branchRuns.set(`${id}:${b}`, o.runs[0]);
+    branchRuns.set(`${id}:${b}`, o.runs);
     branchMittel.set(`${id}:${b}`, { mittel: o.mittel, spanne: o.spanne });
   }
 }
@@ -1266,16 +1266,39 @@ for (const [name, r] of results) {
 for (const id of TOWER_ORDER) {
   const def = TOWERS[id];
   const a = branchRuns.get(`${id}:0`)!, b = branchRuns.get(`${id}:1`)!;
-  for (const [br, r] of [[def.branches[0], a], [def.branches[1], b]] as const) {
-    if (!r.won) errors.push(`${def.name} / ${br.name}: gewinnt nicht - toter Ausbaupfad.`);
+  for (const [br, laeufe] of [[def.branches[0], a], [def.branches[1], b]] as const) {
+    // Tot ist ein Zweig, der auf KEINER Aussaat gewinnt. Bis v258 stand hier
+    // `runs[0]` - eine einzelne Aussaat, und ein Zweig, der auf zweien
+    // gewinnt und auf der dritten knapp verliert, hiess "toter Ausbaupfad".
+    if (laeufe.every((r) => !r.won)) {
+      errors.push(`${def.name} / ${br.name}: gewinnt auf keiner Aussaat - toter Ausbaupfad.`);
+    }
   }
-  // Der Abstand wird am Anteil des Kristalls gemessen, nicht in Punkten -
-  // sonst haengt die Grenze am Schwierigkeitsgrad.
-  const share = Math.abs(a.lives - b.lives) / Math.max(1, a.maxLives);
-  if (a.won && b.won && share > 0.22) {
+  // **Der Abstand kommt seit v259 aus der Mittelung, und er muss ueber dem
+  // eigenen Rauschen liegen.**
+  //
+  // Bis v258 las diese Regel `a.lives` - EINE Aussaat, waehrend
+  // `branchMittel` wenige Zeilen weiter oben denselben Wert ueber drei
+  // Aussaaten gemittelt bereithielt. Gefunden hat es S-P2-03: bei 48
+  // Kristall meldete die Regel "die Moerserzweige liegen 23 % auseinander",
+  // waehrend die Zweigtabelle im selben Lauf UNBELEGT sagte - der Abstand
+  // lag unter seiner eigenen Streuung. Ein Tor, das eine Zahl verurteilt,
+  // die die Datei daneben fuer Rauschen haelt, blockiert Arbeit auf einen
+  // Zufall hin.
+  //
+  // Der Anteil bleibt am Kristall gemessen und nicht in Punkten, sonst
+  // haengt die Grenze am Schwierigkeitsgrad (Regel 2).
+  const ma = branchMittel.get(`${id}:0`)!, mb = branchMittel.get(`${id}:1`)!;
+  const abstand = Math.abs(ma.mittel - mb.mittel);
+  const rauschen = Math.max(ma.spanne, mb.spanne);
+  const share = abstand / Math.max(1, a[0].maxLives);
+  const gewinntBeides = a.some((r) => r.won) && b.some((r) => r.won);
+  if (gewinntBeides && abstand > rauschen && share > 0.22) {
     errors.push(
-      `${def.name}: die Zweige liegen ${Math.round(share * 100)} % des Kristalls auseinander - ` +
-      `"${a.lives > b.lives ? def.branches[0].name : def.branches[1].name}" ist die klar bessere Wahl.`,
+      `${def.name}: die Zweige liegen ${Math.round(share * 100)} % des Kristalls auseinander ` +
+      `(Abstand ${abstand.toFixed(1)} ueber ${AUSSAATEN.length} Aussaaten, Rauschen ` +
+      `${rauschen.toFixed(1)}) - "` +
+      `${ma.mittel > mb.mittel ? def.branches[0].name : def.branches[1].name}" ist die klar bessere Wahl.`,
     );
   }
 }

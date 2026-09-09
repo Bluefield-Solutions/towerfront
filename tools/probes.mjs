@@ -590,8 +590,8 @@ const PROBEN = [
     // bewegt, misst etwas anderes (Regel 13).
     name: 'Gold ist ploetzlich im Ueberfluss da',
     datei: 'src/data/difficulty.ts',
-    suche: 'startGold: 220, startLives: 60',
-    ersatz: 'startGold: 5000, startLives: 60',
+    suche: 'startGold: 220, startLives: 42',
+    ersatz: 'startGold: 5000, startLives: 42',
     tor: 'sim',
     meldet: 'Knappheit',
   },
@@ -609,6 +609,33 @@ const PROBEN = [
     ersatz: 'const KNIE_ANFANG = 0.92;',
     tor: 'guards',
     meldet: 'Kurve',
+  },
+  {
+    // **Die zwei Proben zum Durchbruchgewicht (S-P2-03, v259), und sie
+    // treffen dieselbe Zahl von beiden Seiten.**
+    //
+    // Der Kristall stand bis v258 auf 60, der Leerentitan nimmt 5 - also
+    // 8,3 %. Kingdom Rush arbeitet mit 20 Leben, und ein einziger Durchbruch
+    // ist dort sichtbar teuer. Gemessen wird der ANTEIL, nicht die
+    // Punktzahl: als der Kristall von 20 auf 60 stieg, wurden fuenf
+    // Pruefungen still bedeutungslos (Regel 2).
+    name: 'Der Kristall ist wieder zu gross',
+    datei: 'src/data/difficulty.ts',
+    suche: 'startGold: 220, startLives: 42',
+    ersatz: 'startGold: 220, startLives: 600',
+    tor: 'guards',
+    meldet: 'Durchbruchgewicht',
+  },
+  {
+    // Von der anderen Seite: der schwerste Gegner nimmt nur noch 1 statt 5.
+    // Ohne diese zweite Probe hinge die Regel allein am Nenner, und ein
+    // Zaehler, der still auf null faellt, saehe genauso aus.
+    name: 'Der schwerste Gegner tut nicht mehr weh',
+    datei: 'src/data/enemies.ts',
+    suche: 'hp: 682, speed: 53, bounty: 48, leak: 5',
+    ersatz: 'hp: 682, speed: 53, bounty: 48, leak: 1',
+    tor: 'guards',
+    meldet: 'Durchbruchgewicht',
   },
   // **Die andere Richtung hat KEINE Gegenprobe, und das steht hier statt in
   // einer Fussnote.**

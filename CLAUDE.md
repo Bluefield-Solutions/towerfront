@@ -117,7 +117,8 @@ npm run bildtor     der Querschnitt, den die Torkette prüft
 npm run pack-art    Bildvorrat aus art/roh/ neu einbacken
 npm run eichen      einen Wert durchprobieren, alle Kennzahlen nebeneinander.
                     `--kurve` die Schwierigkeitskurve, `--knie` das Knie der
-                    Lebenspunktkurve (seit v258), `--karte X --hp/--gold` den
+                    Lebenspunktkurve (seit v258), `--leben` die Groesse des
+                    Kristalls (seit v259), `--karte X --hp/--gold` den
                     Ausgleich einer Karte.
 npm run einbettung  misst, wie sehr eine Figur zur Karte gehört (--eichen: Raum)
 npm run zielplatte  findet die Zielplattform im Kartenbild und prüft die Zahl.
@@ -481,7 +482,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v258. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v259. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

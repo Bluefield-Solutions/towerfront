@@ -788,6 +788,33 @@ const PROBEN = [
     meldet: 'Obergrenze von zwei haelt nicht',
   },
   {
+    // **Die zwei Proben zum Wellenband (S-P4-03, v268).**
+    //
+    // Erstens die, die die Story nennt: den laufenden Strom im Kompaktblock
+    // ausblenden - also genau der Fehler, der den Fruehstart bis v243 auf dem
+    // ZIELGERAET unsichtbar gemacht hat. Der Rauchtest sieht das nicht, weil
+    // jsdom keine Stilvorlage kennt; es muss das Browsertor sein.
+    name: 'Laufender Strom auf dem Zielgeraet ausgeblendet',
+    datei: 'src/style.css',
+    suche: '@media (max-height: 480px) {\n  /* **Die Skala schrumpft',
+    ersatz: '@media (max-height: 480px) {\n  .go-lauf { display: none; }\n'
+      + '  /* **Die Skala schrumpft',
+    tor: 'browsertor',
+    meldet: 'laufende Strom steht auf dem Zielgerät nicht im Bild',
+  },
+  {
+    // Zweitens die Mehrdeutigkeit selbst. `waveNumber` zeigt die NEUESTE
+    // laufende Welle, `startWelle` die naechste startbare - solange nur eine
+    // laufen konnte, waren beide dasselbe. Mit der alten Zahl sagt der Knopf
+    // wieder "Welle 1 starten", waehrend er Welle 2 startet.
+    name: 'Der Wellenknopf nennt die falsche Welle',
+    datei: 'src/ui/ui.ts',
+    suche: '      ? `Welle ${s.startWelle} starten`',
+    ersatz: '      ? `Welle ${s.waveNumber} starten`',
+    tor: 'smoke',
+    meldet: 'er startet aber Welle 2',
+  },
+  {
     // **Die zwei Proben zum Fruehstart-Risiko (S-P4-02, v267).**
     //
     // Erstens die Lage selbst - das ist die Gegenprobe, die die Story

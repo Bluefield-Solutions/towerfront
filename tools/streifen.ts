@@ -84,13 +84,28 @@ state.reset(1, 'normal', 'spiralhain');
 const liste = win.document.getElementById('n-list')!;
 const streifen = win.document.getElementById('next')!;
 
+// **Der laufende Strom steht NICHT in diesem Streifen** (v268, S-P4-03).
+//
+// Der erste Entwurf setzte ihn hierher, und dieses Tor hat ihn
+// zurueckgewiesen: mit dem breitesten moeglichen Strom ("Welle 15 · noch
+// 71") stiegen die Wellen 14 und 15 auf 113 Punkte gegen erlaubte 86. Sie
+// brechen ohnehin schon auf zwei Zeilen um; der Streifen machte drei daraus.
+// Er sitzt seitdem links im Wellenknopf, und diese Zeilen stehen hier, damit
+// niemand den Weg ein zweites Mal geht.
 const wellen: { nr: number; markup: string; sprung: string }[] = [];
 for (let i = 0; i < state.waves.length; i++) {
   state.waveIndex = i;
   state.wellenZumPruefen([]);
   ui.sync();
-  wellen.push({ nr: i + 1, markup: liste.innerHTML, sprung: streifen.dataset.sprung ?? '0' });
+  const sprung = streifen.dataset.sprung ?? '0';
+  // **Das ganze Markup aus der Oberflaeche**, nicht von Hand nachgebaut.
+  // Bis v267 schrieb dieses Werkzeug seine Marke selbst ("Als nächstes",
+  // klein geschrieben, waehrend das Spiel "Als Nächstes" zeigt) - eine
+  // zweite Fassung desselben Streifens, und die haette den Strom von v268
+  // schlicht nicht gehabt (Regel 15).
+  wellen.push({ nr: i + 1, markup: streifen.innerHTML, sprung });
 }
+void liste;
 
 // --- Die Hoehe: echte Stilvorlage in Chromium.
 const css = readFileSync(join(ROOT, 'src/style.css'), 'utf8');
@@ -106,8 +121,7 @@ const echt = (markup: string): string =>
 const bloecke = wellen.map((w) =>
   `<div style="width:${BREITE}px">`
   + `<div class="next" data-sprung="${w.sprung}" data-nr="${w.nr}">`
-  + '<span class="next-lab">Als nächstes</span>'
-  + `<div class="next-list">${echt(w.markup)}</div></div></div>`).join('');
+  + `${echt(w.markup)}</div></div>`).join('');
 
 // Genau 844 x 390 - nicht groesser (Regel 12). Zwei Stilregeln haengen
 // daran, und beide wuerden bei einem bequemeren Fenster ausbleiben:
@@ -212,9 +226,17 @@ if (summe > summeGrenze) {
 const hoechste = hoehen.reduce((a, b) => (b.h > a.h ? b : a));
 console.log(`\n  Hoechste: Welle ${hoechste.nr} mit ${hoechste.h} Punkten `
   + `(Grenze ${grenze.toFixed(0)}). Bild: bilder/wellenvorschau.png`);
+// **Die Messstelle wird abgelesen, nicht behauptet** (Regel 12).
+//
+// Hier stand `max-width: 58vw` - seit v218 steht in der Stilvorlage 72vw,
+// und die Zeile log zehn Fassungen lang ueber genau die Zahl, an der die
+// Messung haengt. Eine Messstelle, die man von Hand pflegt, veraltet
+// (Regel 15); jetzt kommt sie aus der Datei, die gemessen wird.
+const breiteRegel = (css.match(/\.next\s*\{[^}]*?max-width:\s*([^;]+);/s) ?? [])[1] ?? '?';
 console.log(`  Messstelle: ${BREITE} x ${SCHIRM_H} in Chromium (iPhone quer), `
-  + 'src/style.css unveraendert - also mit `max-width: 58vw` und dem Kompaktblock '
-  + 'unter `@media (max-height: 480px)`. Markup aus Ui.sync().');
+  + `src/style.css unveraendert - also mit \`max-width: ${breiteRegel.trim()}\` am `
+  + 'Streifen und dem Kompaktblock unter `@media (max-height: 480px)`. '
+  + 'Markup aus Ui.sync().');
 
 if (fehler) { console.error(`\nBAENDER: ${fehler} Band/Baender zu hoch.`); if (TOR) process.exit(1); }
 else console.log('\nBAENDER: Wellenvorschau und Einweisungsblase bleiben im Rahmen.');

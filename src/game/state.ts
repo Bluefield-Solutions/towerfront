@@ -976,6 +976,31 @@ export class GameState {
   }
   get nextWave() { return this.waveAt(this.waveIndex); }
 
+  /** **Welche Welle der Knopf startet** (S-P4-03, `zweiWellenband`).
+   *
+   *  `waveNumber` beantwortet eine andere Frage: es zeigt die NEUESTE
+   *  laufende. Solange nur eine Welle laufen konnte, waren beide dasselbe -
+   *  seit v266 nicht mehr, und der Knopf sagte deshalb "Welle 3 · noch 12"
+   *  und startete Welle 4. */
+  get startWelle(): number {
+    return this.endless
+      ? this.waveIndex + 1
+      : Math.min(this.waveIndex + 1, this.waves.length);
+  }
+
+  /** **Was von jeder laufenden Welle noch aussteht** - Anmarsch plus Feld.
+   *
+   *  `wellenRest` zaehlt alles zusammen, und das war richtig, solange nur
+   *  eine Welle laufen konnte. Mit zweien ist "noch X" mehrdeutig: die Zahl
+   *  gehoert zu keiner der beiden. */
+  get laufendeReste(): { welle: number; rest: number }[] {
+    return this.laufende.map((l) => ({
+      welle: l.welle,
+      rest: this.pending.filter((p) => p.welle === l.welle).length
+        + this.enemies.filter((e) => !e.dead && !e.leaked && e.welle === l.welle).length,
+    }));
+  }
+
   /** Welche Welle die Vorschau zeigen soll.
    *
    *  `waveIndex` steigt erst in `finishWave`, nicht beim Start - waehrend

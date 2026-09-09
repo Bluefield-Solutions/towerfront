@@ -361,6 +361,25 @@ html, body {
   font-variant-numeric: tabular-nums; visibility: hidden;
 }
 .go-plus[data-an="1"] { visibility: visible; }
+/* **Der laufende Strom im Knopf** (v268, S-P4-03). Links der Zustand, rechts
+   die Handlung - eine Zeile, wie alles in diesem Knopf seit v243.
+
+   Dieselbe Schriftstufe wie die Marken der Kopfzeile: die Typoskala hat
+   fuenf Stufen, und eine sechste fuer einen Streifen waere eine zu viel
+   (H7). Gedaempft und mit einem Trennstrich, damit er sich von der Handlung
+   abhebt, ohne eine zweite Farbe einzufuehren.
+
+   Ausgeblendet mit `display: none`, nicht `visibility: hidden` - anders als
+   beim Zahlplatz rechts soll er seine Breite zurueckgeben. Der Knopf steht
+   ganz rechts im Band und waechst nach links; ein Nachbar, der dabei
+   verrutschen koennte, ist dort keiner. */
+.go-lauf {
+  font-size: var(--s-marke); letter-spacing: 0.08em; font-weight: 700;
+  font-variant-numeric: tabular-nums; opacity: 0.72;
+  position: relative; z-index: 1;
+  padding-right: 8px; border-right: 1px solid currentColor;
+}
+.go-lauf[data-an="0"] { display: none; }
 .go:disabled { background: rgba(137, 148, 176, 0.3); color: var(--muted); box-shadow: none; }
 /* **Waehrend der Welle ist der Knopf gesperrt, aber nicht tot** (v239, E6).
    Er traegt den Fortschritt, und dafuer braucht er einen eigenen Zustand:

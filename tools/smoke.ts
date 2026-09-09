@@ -4111,6 +4111,72 @@ step('Fruehstart wiegt die Lage', () => {
   }
 });
 
+/** **Zwei Stroeme, zwei Stellen** (S-P4-03, `zweiWellenband`).
+ *
+ *  Seit v266 duerfen zwei Wellen zugleich laufen, und der Hauptknopf war
+ *  damit mehrdeutig: er stand auf "Welle 3 · noch 12" und startete Welle 4.
+ *  Links steht jetzt der Zustand, rechts die Handlung - und wenn sich nichts
+ *  starten laesst, traegt der Knopf wieder den Fortschritt (G12, er ist nie
+ *  tot).
+ *
+ *  Geprueft wird beides an derselben Oberflaeche, die das Spiel benutzt: eine
+ *  zweite `UI` waere eine zweite Wahrheit ueber dasselbe Bild. */
+step('Wellenband trennt Zustand und Handlung', () => {
+  const wave = win.document.getElementById('b-wave') as HTMLButtonElement;
+  const wt = win.document.getElementById('b-wave-t') as HTMLElement;
+  const wl = win.document.getElementById('b-wave-l') as HTMLElement;
+  const hud = win.document.getElementById('v-wave') as HTMLElement;
+  if (!wave || !wt || !wl || !hud) throw new Error('Das Wellenband fehlt im Markup.');
+
+  // Abgelesen wird in Schnappschuessen: `textContent` bleibt sonst auf den
+  // ersten Vergleich festgelegt, und die spaeteren pruefen dann nichts mehr.
+  const lies = (): { t: string; l: string; an: string; hud: string; zu: boolean } => {
+    ui.sync();
+    return { t: wt.textContent ?? '', l: wl.textContent ?? '',
+      an: wl.dataset.an ?? '', hud: hud.textContent ?? '', zu: wave.disabled };
+  };
+
+  state.reset(4242, 'normal', 'spiralhain');
+  const ruhe = lies();
+  if (ruhe.t !== 'Welle 1 starten') {
+    throw new Error(`Vor der ersten Welle steht im Knopf "${ruhe.t}".`);
+  }
+  if (ruhe.an !== '0') throw new Error('Ohne laufende Welle steht ein Strom im Knopf.');
+
+  // Eine Welle laeuft: der Knopf startet die NAECHSTE und sagt das auch.
+  state.startWave();
+  const eine = lies();
+  if (eine.t !== 'Welle 2 starten') {
+    throw new Error(`Waehrend Welle 1 laeuft, steht im Knopf "${eine.t}" - `
+      + 'er startet aber Welle 2.');
+  }
+  if (eine.an !== '1' || !/^Welle 1 · noch \d+$/.test(eine.l)) {
+    throw new Error(`Der laufende Strom steht auf "${eine.l}" (an ${eine.an}) `
+      + 'statt auf "Welle 1 · noch X".');
+  }
+  if (eine.zu) throw new Error('Der Knopf ist gesperrt, obwohl sich Welle 2 starten laesst.');
+  if (eine.hud !== '1/15') {
+    throw new Error(`Die Kopfzeile zeigt "${eine.hud}" bei einer laufenden Welle.`);
+  }
+
+  // Zwei Wellen: nichts mehr zu starten, also traegt der Knopf wieder den
+  // Fortschritt - und der Strom bleibt leer, sonst stuende dasselbe zweimal.
+  state.startWave();
+  const zwei = lies();
+  if (!zwei.zu) throw new Error('Bei zwei laufenden Wellen laesst sich eine dritte starten.');
+  if (!/^Welle 2 · noch \d+$/.test(zwei.t)) {
+    throw new Error(`Bei zwei laufenden Wellen steht im Knopf "${zwei.t}".`);
+  }
+  if (zwei.an !== '0') {
+    throw new Error(`Der Strom steht neben demselben Satz im Knopf ("${zwei.l}") - `
+      + 'eine Doppelung.');
+  }
+  if (zwei.hud !== '1–2/15') {
+    throw new Error(`Die Kopfzeile zeigt "${zwei.hud}" statt "1–2/15" - `
+      + 'die aeltere laufende Welle fehlt darin.');
+  }
+});
+
 step('Welle ueberlebt das Sichern', () => {
   const schildWelle = (g: InstanceType<typeof GameState>) => {
     for (let i = 0; i < g.totalWaves; i++) {

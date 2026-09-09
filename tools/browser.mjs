@@ -796,6 +796,69 @@ if (start) {
     }
   }
 
+  // --- 5d. Und steht der LAUFENDE Strom im Bild? (v268, S-P4-03)
+  //
+  // Dieselbe Frage eine Stelle weiter links, und dieselbe Falle: seit v266
+  // duerfen zwei Wellen zugleich laufen, und der Knopf trug beides in einem
+  // Satz - er stand auf "Welle 3 · noch 12" und startete Welle 4. Links
+  // steht jetzt der Zustand, rechts die Handlung.
+  //
+  // Warum im Browser und nicht im Rauchtest: der Streifen haengt an
+  // `display: none` im Aus-Zustand, und jsdom kennt keine Stilvorlage. Ein
+  // Kompaktblock, der ihn auf dem Zielgeraet ausblendet, waere dort
+  // unsichtbar - genau der Fehler, der den Fruehstart bis v243 gekostet hat.
+  //
+  // Gestellt, nicht abgewartet: eine Welle laufen zu lassen kostet hier eine
+  // Minute und haengt an der Balance.
+  {
+    const st = await seite.evaluate(() => {
+      const knopf = document.getElementById('b-wave');
+      const lauf = document.getElementById('b-wave-l');
+      const text = document.getElementById('b-wave-t');
+      if (!knopf || !lauf || !text) return null;
+      const stellen = (an) => {
+        lauf.dataset.an = an;
+        lauf.textContent = an === '1' ? 'Welle 15 · noch 71' : '';
+        return {
+          breite: Math.round(lauf.getBoundingClientRect().width),
+          hoehe: Math.round(knopf.getBoundingClientRect().height),
+          anzeige: getComputedStyle(lauf).display,
+          sichtbar: getComputedStyle(lauf).visibility,
+          knopf: Math.round(knopf.getBoundingClientRect().width),
+        };
+      };
+      const mit = stellen('1');
+      const ohne = stellen('0');
+      return { mit, ohne, hoehe: mit.hoehe };
+    });
+    if (!st) {
+      fail('Der Wellenknopf traegt keinen laufenden Strom (#b-wave-l fehlt).');
+    } else {
+      console.log(`Laufender Strom im Wellenknopf: ${st.mit.breite} Punkte `
+        + `(${st.mit.anzeige}, ${st.mit.sichtbar}) · Knopf ${st.mit.knopf} Punkte mit, `
+        + `${st.ohne.knopf} ohne · Knopfhöhe ${st.hoehe}`);
+      if (st.mit.anzeige === 'none' || st.mit.sichtbar === 'hidden' || st.mit.breite < 30) {
+        fail('Der laufende Strom steht auf dem Zielgerät nicht im Bild '
+          + `(display ${st.mit.anzeige}, visibility ${st.mit.sichtbar}, `
+          + `${st.mit.breite} Punkte breit).`);
+      }
+      // **Eine Zeile, nicht zwei.** Der Knopf ist seit v243 eine Zeile, und
+      // ein umbrechender Strom machte daraus wieder zwei - auf 390 Punkten
+      // Hoehe ist das die Falle, die den Fruehstart schon einmal gekostet
+      // hat. Gemessen an der Hoehe, nicht am Augenschein.
+      if (st.hoehe > 60) {
+        fail(`Der Wellenknopf ist mit dem laufenden Strom ${st.hoehe} Punkte hoch - `
+          + 'er bricht damit auf zwei Zeilen um.');
+      }
+      // Und er muss seine Breite zurueckgeben, wenn er verschwindet: sonst
+      // stuende dort dauerhaft eine leere Flaeche.
+      if (st.mit.knopf - st.ohne.knopf < 20) {
+        fail(`Der Strom kostet den Knopf nur ${st.mit.knopf - st.ohne.knopf} Punkte - `
+          + 'er wird also gar nicht gelegt.');
+      }
+    }
+  }
+
   // Einen Turm bauen und den Pruefsteg oeffnen - durch Tippen, wie ein Mensch.
   let gebaut = false;
   for (let y = 90; y < HOCH - 50 && !gebaut; y += 40) {

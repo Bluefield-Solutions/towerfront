@@ -239,7 +239,13 @@
          die mit dem Fenster schrumpft, und die Zahl am Ende der Zeile. -->
     <button class="go" id="b-wave">
       <span class="go-fuell" id="b-wave-f" aria-hidden="true"></span>
-      <span class="go-t" id="b-wave-t">Welle starten</span><span class="go-plus" id="b-wave-p"></span>
+      <!-- **Der laufende Strom, links im Knopf** (v268, S-P4-03).
+           Seit v266 duerfen zwei Wellen zugleich laufen, und der Knopf trug
+           beides in EINEM Satz: er stand auf "Welle 3 · noch 12" und
+           startete Welle 4. Jetzt links der Zustand, rechts die Handlung.
+           Er steht nicht in der Wellenvorschau: dort GEMESSEN sprengt er
+           sie (Wellen 14 und 15 auf 113 Punkte, erlaubt 86). -->
+      <span class="go-lauf" id="b-wave-l" data-an="0"></span><span class="go-t" id="b-wave-t">Welle starten</span><span class="go-plus" id="b-wave-p"></span>
     </button>
   </div>
 

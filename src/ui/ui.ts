@@ -104,6 +104,7 @@ export class UI {
   private bWaveT = $('b-wave-t');
   private bWaveP = $('b-wave-p');
   private bWaveF = $('b-wave-f');
+  private bWaveL = $('b-wave-l');
   private next = $('next');
   private nList = $('n-list');
   private build = $('build');
@@ -808,7 +809,14 @@ export class UI {
     }
     this.letzteLeben = s.lives;
     this.lives.textContent = String(s.lives);
-    this.wave.textContent = s.endless ? `${s.waveNumber} ∞` : `${s.waveNumber}/${s.totalWaves}`;
+    // **Die Kopfzeile nennt beide laufenden Wellen** (v268, S-P4-03).
+    // `waveNumber` zeigt die neueste; mit zwei Stroemen verschwieg die
+    // Anzeige, dass noch eine aeltere auf dem Feld steht.
+    const reste = s.laufendeReste;
+    const nummern = reste.length > 1
+      ? `${Math.min(...reste.map((r) => r.welle)) + 1}–${Math.max(...reste.map((r) => r.welle)) + 1}`
+      : String(s.waveNumber);
+    this.wave.textContent = s.endless ? `${nummern} ∞` : `${nummern}/${s.totalWaves}`;
     this.bSound.textContent = getSettings().sound ? 'Ton' : 'Stumm';
     this.bMess.dataset.on = getSettings().messung ? '1' : '0';
     this.bSpeed.textContent = `${s.speed}×`;
@@ -831,10 +839,7 @@ export class UI {
     // traegt aber den Fortschritt. Das ist keine Handlung, aber eine
     // Auskunft, und eine Auskunft an dieser Stelle ist mehr wert als eine
     // graue Flaeche.
-    this.bWaveT.textContent = s.waveActive
-      ? `Welle ${s.waveNumber} · noch ${s.wellenRest}`
-      : s.waveIndex >= s.totalWaves ? 'Geschafft' : `Welle ${s.waveNumber} starten`;
-    this.bWave.dataset.laeuft = s.waveActive ? '1' : '0';
+    this.zweiWellenband(s, reste);
 
     this.renderNext();
 
@@ -1261,6 +1266,56 @@ export class UI {
    *    Turmreihe daneben rueckt mit. Dieselbe Falle, die im Stilblatt schon
    *    beim Wegknopf steht: ein Nachbar mit fester Abstandsrechnung
    *    verrutscht beim Textwechsel. */
+  /** **Zwei Stroeme, zwei Stellen** (v268, S-P4-03, `zweiWellenband`).
+   *
+   *  Seit v266 duerfen zwei Wellen zugleich laufen, und damit war der
+   *  Hauptknopf mehrdeutig: er stand auf "Welle 3 · noch 12" und startete
+   *  Welle 4. Beides ist wichtig, aber es sind zwei verschiedene Dinge -
+   *  ein Zustand und eine Handlung -, und sie standen an derselben Stelle.
+   *
+   *  Der Knopf traegt jetzt die HANDLUNG, der Streifen den ZUSTAND. Und weil
+   *  der Streifen je Welle rechnet, ist "noch X" nicht mehr eine Zahl fuer
+   *  zwei Wellen: `laufendeReste` gibt sie einzeln.
+   *
+   *  **Der Knopf ist weiterhin nie tot** (v239, E6/G12). Laesst sich nichts
+   *  starten - zwei Wellen laufen, oder der Plan ist durch -, dann traegt er
+   *  wieder den Fortschritt. In genau diesem Fall bleibt der Streifen leer:
+   *  derselbe Satz an zwei Stellen ist eine Doppelung, und das UX-Tor zaehlt
+   *  sie (H9, heute null).
+   *
+   *  **Er steht nicht als zweite Zeile unter dem Knopf.** Das war der Fehler
+   *  von v242: die zweite Zeile war auf dem Zielgeraet `display: none`,
+   *  unter 480 Punkten Hoehe hat das Band keinen Platz dafuer, und der ganze
+   *  Fruehstart war auf dem iPhone unsichtbar. Er steht LINKS im Knopf, auf
+   *  derselben Zeile.
+   *
+   *  **Der erste Entwurf setzte ihn in die Wellenvorschau, und die Messung
+   *  hat ihn zurueckgewiesen.** Dort ist kein Platz: `npm run streifen`
+   *  meldete fuer die Wellen 14 und 15 **113 Punkte gegen erlaubte 86** -
+   *  beide brechen ohnehin schon auf zwei Zeilen um, der Streifen machte
+   *  drei daraus. Gesehen hat es das Tor erst, nachdem es den Fall
+   *  ueberhaupt STELLTE: bis v267 mass es die Vorschau nur zwischen den
+   *  Wellen, also in dem einen Zustand, in dem es den Strom nicht gibt. */
+  private zweiWellenband(s: GameState, reste: { welle: number; rest: number }[]): void {
+    const startbar = s.canStartWave;
+    this.bWaveT.textContent = startbar
+      ? `Welle ${s.startWelle} starten`
+      : s.waveActive ? `Welle ${s.waveNumber} · noch ${s.wellenRest}` : 'Geschafft';
+    this.bWave.dataset.laeuft = s.waveActive ? '1' : '0';
+    // Der Streifen nur dann, wenn der Knopf ihn nicht schon traegt.
+    const zeigen = startbar && reste.length > 0;
+    const text = zeigen
+      ? reste.map((r) => `Welle ${r.welle + 1} · noch ${r.rest}`).join('  ')
+      : '';
+    if (text !== this.letzterStrom) {
+      this.letzterStrom = text;
+      this.bWaveL.textContent = text;
+      this.bWaveL.dataset.an = zeigen ? '1' : '0';
+    }
+  }
+
+  private letzterStrom = '';
+
   private syncFruehstart(s: GameState): void {
     const f = s.fruehstart;
     // Die Fuellung laeuft jedes Bild - sie ist die Uhr. `transform` kostet

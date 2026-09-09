@@ -509,6 +509,16 @@ ab Hub 3 verdient der durchgehend ueberlappende Bot mehr Gold als der
 vorsichtige, und damit waere der Fruehstart eine Einnahmequelle statt eines
 Risikos. Gesetzt ist 2,0.
 
+**Das Wellenband trennt Zustand und Handlung (v268).** Der Hauptknopf stand
+auf "Welle 3 - noch 12" und startete Welle 4 - `waveNumber` zeigt die neueste
+laufende, `startWelle` die naechste startbare. Links steht jetzt der Zustand,
+rechts die Handlung; laesst sich nichts starten, traegt der Knopf wieder den
+Fortschritt und der Streifen bleibt leer. Der erste Entwurf setzte ihn in die
+Wellenvorschau, und `npm run streifen` hat ihn zurueckgewiesen: 113 Punkte
+gegen erlaubte 86. Gesehen hat das Tor es erst, nachdem es den Fall STELLTE -
+bis v267 mass es die Vorschau nur zwischen den Wellen, also in dem einen
+Zustand, in dem es den Strom nicht gibt.
+
 **Kein Gitter mehr.** Wege sind Catmull-Rom-Kurven mit
 Bogenlängen-Tabelle; ein Gegner hat als einzige Zustandsgröße die
 zurückgelegte Strecke. Gebaut wird frei, begrenzt durch Platzbedarf je
@@ -518,7 +528,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v267. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v268. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

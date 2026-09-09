@@ -1,6 +1,16 @@
 # Towerfront — die Kette
 
-Stand: v275 · 09.09.2026
+Stand: v282 · 09.09.2026
+
+**Nachgesehen in v282 — der Ablauf trägt, und zwei Stellen sind schärfer
+geworden.** Schritt 8 ist seit v275 mechanisch (`npm run inspektor` sagt
+vorweg, ob es etwas Neues zu sehen gibt); gemessen über die Runden v278 bis
+v282 hat er dreimal `NEU` gemeldet und dreimal ein Urteil bekommen. Und
+Schritt 5 hat in dieser Kette **viermal** eine Probe zurückgewiesen, die
+nichts bewies (Regel 3) — der Gleichstands-Selbsttest in v279, der
+Sprungmesspunkt zweimal in v280, und der Freiraum-Entwurf der Nordschleife.
+Das ist kein Ärgernis, sondern der Schritt, der arbeitet: eine Probe, die den
+Fall nicht wirklich herstellt, sieht aus wie ein bestandenes Tor.
 
 **Wie eine Runde läuft, wenn niemand zusieht.** Die Beschlüsse dahinter stehen
 in `Towerfront-NEUBAU.md` Abschnitt 4; hier steht nur der Ablauf.

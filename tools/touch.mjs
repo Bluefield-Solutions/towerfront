@@ -62,6 +62,18 @@ for (const [name, w, h] of GERAETE) {
     }
   }
   console.log(`  ${name.padEnd(20)} Maßstab ${scale.toFixed(3)}   ${teile.join('   ')}`);
+
+  // **Die Weiche ist ein Griff wie jeder andere** (v282). Sie sitzt auf dem
+  // Weg, wo kein Turm steht - aber ein Griff, den man nicht trifft, ist
+  // keiner, und der Daumen weiss nicht, dass dort ausnahmsweise mehr Platz
+  // ist. Gerechnet aus demselben Maßstab wie die Turmauswahl.
+  const weiche = GameState.weicheTapRadius(scale) * 2 * scale;
+  if (weiche < MINDEST) {
+    probleme.push(
+      `Weiche auf ${name}: ${weiche.toFixed(0)} Punkte, mindestens ${MINDEST} nötig.`,
+    );
+  }
+  console.log(`  ${''.padEnd(20)} Weiche ${weiche.toFixed(0).padStart(3)} Punkte`);
 }
 
 // ------------------------------------------------------------------- Im HTML

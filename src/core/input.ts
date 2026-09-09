@@ -294,6 +294,21 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
     // nur mit der gewaehlten Sorte schon hervorgehoben. Bezahlt wird auf
     // einer benannten Flaeche, die ihren Preis traegt. Es kostet keinen
     // Handgriff mehr als vorher: vorher Leiste + Feld, jetzt Feld + Wahl.
+    // **Die Weiche zuerst** (S-N2-05). Sie sitzt auf dem Weg, und dort steht
+    // ohnehin kein Turm - der Griff kann also keinem anderen weggenommen
+    // werden. Der erste Tipp WAEHLT sie und zeigt beide Routen; erst der
+    // zweite legt um. Ein Weg, der sich beim ersten Antippen aendert, waere
+    // eine Entscheidung, die man trifft, bevor man sie gesehen hat.
+    const weiche = s.weicheTreffer(c.x, c.y, r.scale);
+    if (weiche) {
+      if (s.weicheGewaehlt !== weiche) { s.weicheGewaehlt = weiche; Sfx.play('tap'); return; }
+      const zu = !s.weichen.has(weiche);
+      if (s.weicheStellen(weiche, zu)) Sfx.play('tap');
+      else s.bauHinweis(c.x, c.y, 'Weichen werden zwischen den Wellen gestellt.');
+      return;
+    }
+    s.weicheGewaehlt = null;
+
     if (s.buildChoice) {
       if (existing) { s.selectedTower = existing; s.buildChoice = null; Sfx.play('tap'); return; }
       const choice = s.buildChoice;

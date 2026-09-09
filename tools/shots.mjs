@@ -85,7 +85,7 @@ const ersterTurm = (g) => g.gebaute[0];
 // das es bewacht, laesst genau die Luecke.
 const TOR = ['menu-karte', 'menu-einweisung', 'menu-fortschritt', 'menu-sieg',
   'menu-niederlage', 'welle8', 'kristall-riss', 'kernraub', 'zier-beruehrung',
-  'menu-tastatur'];
+  'menu-tastatur', 'weiche'];
 const nurTor = process.argv.includes('--tor');
 
 /** Eine Aufnahme: Zustand herstellen, ein paar Bilder laufen lassen, ausgeben.
@@ -332,6 +332,21 @@ takes.push(['menu-niederlage', () => shot('menu-niederlage', 844, 390, (s, r) =>
 
 takes.push(['start', () => shot('start', 844, 390, (s) => {
   s.reset(1, 'normal', 'spiralhain');
+  return 30;
+})]);
+
+takes.push(['weiche', () => shot('weiche', 844, 390, (s, r) => {
+  // Die Weiche gestellt UND angetippt: so sieht der Spieler beide Routen
+  // nebeneinander, bevor er sich festlegt.
+  s.reset(1, 'normal', 'spiralhain');
+  s.weicheStellen('saeule1', true);
+  s.weicheGewaehlt = 'saeule1';
+  // Naeher heran, sonst ist der Ring auf 844 x 390 ein Punkt - und der
+  // gedaempfte Ast liefe halb aus dem Bild.
+  r.resize();
+  r.zoomAt(1.7, 422, 195);
+  const p = r.worldToScreen(528, 640);
+  r.panBy(422 - p.x, 195 - p.y);
   return 30;
 })]);
 
@@ -1043,6 +1058,64 @@ pruefungen.push(async () => {
 // Trennung fand die Vorgaengerfassung als Unterkante den Rand des
 // Kontaktschattens - und der bewegt sich nie, ganz gleich was der Turm
 // tut. Die Gegenprobe blieb dadurch gruen (Regel 13).
+/** **Die Weiche ist im Bild wirklich zu sehen** (v282, S-N2-05).
+ *
+ *  Eine Mechanik, die man nicht sieht, gibt es nicht. Gemessen wird deshalb
+ *  nicht, ob die Zeichenfunktion aufgerufen WIRD, sondern wieviele Bildpunkte
+ *  sich dadurch aendern.
+ *
+ *  **Die Nullprobe ist der Kern (Regel 13):** dieselbe Lage, derselbe
+ *  Weichenstand, nur ohne die Markierung. Ist der Unterschied null, misst die
+ *  Pruefung nichts - und genau das war der Zustand, in dem der Kernraub bis
+ *  v263 gelegen hat.
+ *
+ *  Ausgeschaltet wird ueber `weichenPunkte`, nicht ueber die Weichenstellung:
+ *  wer die Weiche aufmacht, aendert die BAHN, und dann misst der Vergleich
+ *  eine andere Strasse statt einer fehlenden Marke. */
+pruefungen.push(async () => {
+  const rig = async (mitMarke) => {
+    const canvas = createCanvas(844 * 2, 390 * 2);
+    Object.defineProperty(canvas, 'clientWidth', { get: () => 844 });
+    Object.defineProperty(canvas, 'clientHeight', { get: () => 390 });
+    const s = new GameState();
+    const r = new Renderer(canvas);
+    r.menu = null;
+    s.reset(1, 'normal', 'spiralhain');
+    s.quality = 'niedrig';
+    if (!s.weicheStellen('saeule1', true)) throw new Error('Weichenprobe: die Weiche geht nicht.');
+    s.weicheGewaehlt = 'saeule1';
+    if (!mitMarke) s.weichenPunkte = () => [];
+    r.resize();
+    r.zoomAt(1.7, 422, 195);
+    const p = r.worldToScreen(528, 640);
+    r.panBy(422 - p.x, 195 - p.y);
+    r.draw(s);
+    for (const k of Object.keys(OBJECT_ART)) getObjectArt(k);
+    getBackground(s.map.id);
+    await settle();
+    r.kartenaufbauAbschliessen(s);
+    r.draw(s);
+    const g = canvas.getContext('2d');
+    return g.getImageData(0, 0, canvas.width, canvas.height).data;
+  };
+
+  const mit = await rig(true);
+  const ohne = await rig(false);
+  let anders = 0;
+  for (let i = 0; i < mit.length; i += 4) {
+    if (Math.abs(mit[i] - ohne[i]) > 8 || Math.abs(mit[i + 1] - ohne[i + 1]) > 8
+      || Math.abs(mit[i + 2] - ohne[i + 2]) > 8) anders++;
+  }
+  // Die Grenze ist gemessen, nicht gesetzt: der Ring allein deckt bei
+  // Massstab 1,7 rund 25 000 Bildpunkte, der gedaempfte Ast ein Vielfaches.
+  // 4000 liegt weit darunter und weit ueber dem Kantenglaetten.
+  if (anders < 4000) {
+    throw new Error(`Die Weichenmarke aendert nur ${anders} Bildpunkte - im Bild ist sie `
+      + 'nicht zu sehen.');
+  }
+  console.log(`\nWeiche im Bild: ${anders} Bildpunkte tragen die Marke und den gedaempften Ast.`);
+});
+
 pruefungen.push(async () => {
   const rig = async (mitTurm) => {
     const canvas = createCanvas(844 * 2, 390 * 2);

@@ -592,6 +592,57 @@ export class GameState {
     ));
   }
 
+  /** Radius der GEZEICHNETEN Weichenmarke in Weltpunkten. */
+  static readonly WEICHE_RADIUS = 70;
+
+  /** Wie gross die Weiche zu treffen ist, in Weltpunkten.
+   *
+   *  **Der gezeichnete Ring ist nicht der Griff** - genau wie beim Turm, wo
+   *  `tapSize` seit jeher den Platzbedarf um `tapSlack` erweitert. Ein fester
+   *  Radius von 70 traegt auf dem iPhone SE (Massstab 0,347) mit 49
+   *  Bildschirmpunkten, faellt auf einem kleinen Android-Querformat (0,296)
+   *  aber auf 41 - unter die geforderten 44. Gemessen, nicht geschaetzt:
+   *  `npm run beruehrung` hat es beim ersten Lauf gemeldet.
+   *
+   *  Der Daumen bekommt deshalb dieselbe Zugabe wie beim Turm. Der Ring
+   *  bleibt, wie er ist; groesser gezeichnet saehe er aus wie ein Bauwerk. */
+  static weicheTapRadius(scale: number): number {
+    return Math.max(GameState.WEICHE_RADIUS, GameState.tapSlack(scale));
+  }
+
+  /** Welche Weiche gerade angetippt ist - dann zeigt die Karte beide Routen
+   *  im Vergleich, bevor man entscheidet. */
+  weicheGewaehlt: string | null = null;
+
+  /** Wo die Weichen dieser Karte sitzen und wie sie stehen.
+   *
+   *  Der Ort ist der Knoten, an dem sich die gesperrte Kante abzweigt - also
+   *  die Stelle, an der die Entscheidung wirklich faellt. Ihn aus dem Netz zu
+   *  lesen statt ihn eigens einzutragen ist kein Geiz: eine zweite Angabe
+   *  neben der Kante liefe beim ersten Verschieben auseinander (Regel 15). */
+  weichenPunkte(): { id: string; name: string; x: number; y: number; zu: boolean }[] {
+    const netz = WEGNETZ[this.map.id];
+    if (!netz?.weichen?.length) return [];
+    const raus: { id: string; name: string; x: number; y: number; zu: boolean }[] = [];
+    for (const w of netz.weichen) {
+      const kante = netz.kanten.find((k) => k.id === w.kante);
+      const knoten = netz.knoten.find((k) => k.id === kante?.von);
+      if (!knoten) continue;
+      raus.push({ id: w.id, name: w.name, x: knoten.x, y: knoten.y, zu: this.weichen.has(w.id) });
+    }
+    return raus;
+  }
+
+  /** Welche Weiche liegt unter diesem Punkt? */
+  weicheTreffer(wx: number, wy: number, scale = 1): string | null {
+    let beste: string | null = null; let nah = GameState.weicheTapRadius(scale);
+    for (const w of this.weichenPunkte()) {
+      const d = Math.hypot(wx - w.x, wy - w.y);
+      if (d <= nah) { nah = d; beste = w.id; }
+    }
+    return beste;
+  }
+
   /** Eine Weiche umlegen - zwischen den Wellen.
    *
    *  **Waehrend eine Welle laeuft, wird es abgelehnt**, und das ist keine

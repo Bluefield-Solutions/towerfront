@@ -101,6 +101,19 @@ const PROBEN = [
     meldet: 'stillschweigend',
   },
   {
+    // **Eine Mechanik, die man nicht sieht, gibt es nicht.** Der Eingriff
+    // nimmt die Zeichnung aus dem Bild; die Zahl der geaenderten Bildpunkte
+    // muss dann auf null fallen. Ohne diese Probe bewiese die Messung nur,
+    // dass zwei Bilder verschieden sind - nicht, dass der Unterschied die
+    // Weiche ist (Regel 13).
+    name: 'Die Weiche wird nicht mehr gezeichnet',
+    datei: 'src/gfx/renderer.ts',
+    regel: /\n    this\.weicheZeichnen\(s\);/,
+    ersatz: '',
+    tor: 'bildtor',
+    meldet: 'nicht zu sehen',
+  },
+  {
     // **Eine Stellung, die alles zumacht, ist ein Knopf mit der Aufschrift
     // "gewinnen".** Der Waechter faehrt deshalb ALLE Stellungen, nicht die
     // eine, die gerade gesetzt ist - der Grundzustand ist trivial in Ordnung,

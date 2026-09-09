@@ -180,7 +180,7 @@ npm run gate        dreiunddreissig Prüfungen. Läuft seit v269 auf dem Runner;
                     `.abdruck/`-Zwischenspeicher — die zwei 0,7-s-Zahlen sind
                     Treffer im Speicher, kein voller Lauf.
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
-npm run bilder      alle 13 Aufnahmen (echte PNG ohne Browser)
+npm run bilder      alle Aufnahmen (echte PNG ohne Browser)
 npm run bildtor     der Querschnitt, den die Torkette prüft - und seit v273
                     die OFFENEN BESTELLUNGEN: welche Bilder das Spiel
                     erwartet (`src/gfx/bestellung.ts`, abgeleitet aus
@@ -676,7 +676,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v281. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v282. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

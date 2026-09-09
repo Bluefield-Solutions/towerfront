@@ -1,4 +1,7 @@
 import { C, LICHT, WORLD_H, WORLD_W } from '../data/config';
+import { WEGNETZ, gesperrteKanten } from '../data/wegnetz';
+import { kuerzesteRoute } from '../core/route';
+import { LanePath } from '../core/path';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import { wirkungRest } from '../data/wirkungen';
 import {
@@ -470,6 +473,7 @@ export class Renderer {
     this.lichtteich(s);
     this.wegvorschau(s, hi);
     this.drawPortal(s, hi);
+    this.weicheZeichnen(s);
     this.drawBauflaeche(s);
     this.drawRings(s);
     this.zeichneStand(s, hi);
@@ -680,6 +684,93 @@ export class Renderer {
    *  zwei Dinge in ein Bild gelegt: der Ort ist eine Ortsfrage, das Gold eine
    *  Kontofrage. Das Gold sagt der Turmknopf (`data-poor`) und die Vorschau
    *  am Tipppunkt - beide stehen dort, wo man hinsieht. */
+  /** Die Weichen im Bild (S-N2-05).
+   *
+   *  **Eine Mechanik, die man nicht sieht, gibt es nicht** - das hat der
+   *  Schildtraeger in v110 vorgemacht und der Kernraub in v263 wiederholt.
+   *  Drei Dinge stehen deshalb im Bild:
+   *
+   *   1. **Der geschlossene Ast, gedaempft.** Jede Kante des Netzes, die die
+   *      Gegner gerade NICHT benutzen, liegt als blasses Band da. Damit sieht
+   *      man, wohin sie liefen, bevor man umlegt - und nebenbei loest es die
+   *      alte Klage aus D28: das Bild verspricht ein Netz, das Spiel benutzt
+   *      einen Weg davon. Jetzt ist der Unterschied SICHTBAR gemacht statt
+   *      versteckt.
+   *   2. **Der Knoten.** Ein Ring dort, wo die Entscheidung faellt.
+   *   3. **Der Vergleich.** Angetippt zeigt die Weiche beide Routen mit ihren
+   *      Laengen, bevor man sich festlegt.
+   *
+   *  Alles gezeichnet, nichts geleuchtet (Regel 11): kein `filter: blur`,
+   *  kein `lighter`, damit es auf iOS nicht nach einer Sekunde schwarz wird. */
+  private weicheZeichnen(s: GameState): void {
+    const punkte = s.weichenPunkte();
+    if (!punkte.length) return;
+    const netz = WEGNETZ[s.map.id];
+    const ctx = this.ctx;
+
+    // Welche Kanten laufen gerade? Alles andere ist der geschlossene Ast.
+    const benutzt = new Set<string>();
+    for (const tor of netz.knoten.filter((k) => k.art === 'tor')) {
+      for (const id of kuerzesteRoute(netz, tor.id, gesperrteKanten(netz, s.weichen)) ?? []) {
+        benutzt.add(id);
+      }
+    }
+
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (const kante of netz.kanten) {
+      if (benutzt.has(kante.id)) continue;
+      const a = netz.knoten.find((k) => k.id === kante.von);
+      const b = netz.knoten.find((k) => k.id === kante.nach);
+      if (!a || !b) continue;
+      const kurve = new LanePath([
+        { x: a.x, y: a.y, w: a.w }, ...kante.punkte, { x: b.x, y: b.y, w: b.w },
+      ]);
+      // Der geschlossene Ast in seiner WIRKLICHEN Breite - sonst sieht er aus
+      // wie ein Trampelpfad neben einer Strasse, und man haelt ihn fuer
+      // Zierde statt fuer den zweiten Weg.
+      const w = kurve.widthRange();
+      ctx.beginPath();
+      for (let t = 0; t <= 1.0001; t += 0.01) {
+        const q = kurve.at(kurve.length * t);
+        if (t === 0) ctx.moveTo(q.x, q.y); else ctx.lineTo(q.x, q.y);
+      }
+      const hell = s.weicheGewaehlt !== null;
+      ctx.lineWidth = w.max * 2;
+      ctx.strokeStyle = hexA(s.map.palette.path, hell ? 0.42 : 0.22);
+      ctx.stroke();
+      ctx.lineWidth = 3;
+      ctx.setLineDash([18, 22]);
+      ctx.strokeStyle = hexA(s.map.palette.pathEdge, hell ? 0.7 : 0.4);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ctx.restore();
+
+    for (const w of punkte) {
+      const r = GameState.WEICHE_RADIUS;
+      const gewaehlt = s.weicheGewaehlt === w.id;
+      ctx.save();
+      ctx.translate(w.x, w.y);
+      // Die Scheibe darunter, damit der Ring auf jedem Untergrund traegt.
+      ctx.fillStyle = hexA(C.ink, 0.38);
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.84, 0, Math.PI * 2); ctx.fill();
+      ctx.lineWidth = gewaehlt ? 7 : 5;
+      ctx.strokeStyle = hexA(w.zu ? C.danger : C.crystal, gewaehlt ? 1 : 0.85);
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.66, 0, Math.PI * 2); ctx.stroke();
+      // Der Hebel: waagerecht heisst offen, quer heisst zu. Eine FORM statt
+      // nur einer Farbe - Rot und Tuerkis allein trennen fuer einen Teil der
+      // Spieler gar nichts.
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      if (w.zu) { ctx.moveTo(-r * 0.34, -r * 0.34); ctx.lineTo(r * 0.34, r * 0.34); }
+      else { ctx.moveTo(-r * 0.4, 0); ctx.lineTo(r * 0.4, 0); }
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
   private drawBauflaeche(s: GameState): void {
     const wahl = s.movingTower ? s.movingTower.def : s.buildChoice;
     if (!wahl) return;

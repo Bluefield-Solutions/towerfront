@@ -3940,20 +3940,25 @@ step('Weiche laesst sich waehrend einer Welle nicht umlegen', () => {
   }
   if (!g.weicheStellen('saeule1', false)) throw new Error('Die Weiche geht nicht zurueck.');
 
-  // Jetzt mit laufender Welle.
+  // Jetzt mit laufender Welle - und zwar so weit, dass wenigstens einer die
+  // Weiche schon PASSIERT hat.
+  //
+  // **Der erste Entwurf mass an der falschen Stelle.** Er liess 400 Bilder
+  // laufen und pruefte dann; nach 400 Bildern steht der vorderste Gegner
+  // aber noch auf dem gemeinsamen Anfang, und der ist bei jeder
+  // Weichenstellung derselbe. Der Sprung war null - mit und ohne Fehler.
   g.startWave();
-  for (let i = 0; i < 400 && g.enemies.length < 3; i++) g.update(DT);
-  if (g.enemies.length < 3) throw new Error('Keine Gegner auf dem Feld - die Probe misst nichts.');
+  const abzweig = 900;
+  for (let i = 0; i < 4000 && !g.enemies.some((e) => e.travelled > abzweig); i++) g.update(DT);
+  if (!g.enemies.some((e) => e.travelled > abzweig)) {
+    throw new Error('Kein Gegner hinter der Weiche - die Probe misst nichts.');
+  }
 
   const vorher = g.enemies.map((e) => ({ id: e.id, x: e.x, y: e.y }));
   const bahnVorher = g.lanes[0].length;
   g.weicheStellen('saeule1', true);
   g.update(DT);
 
-  if (Math.abs(g.lanes[0].length - bahnVorher) > 0.5) {
-    throw new Error(`Die Bahn hat sich waehrend der Welle geaendert: `
-      + `${bahnVorher.toFixed(0)} -> ${g.lanes[0].length.toFixed(0)} Weltpunkte.`);
-  }
   let groesster = 0;
   for (const a of vorher) {
     const b = g.enemies.find((e) => e.id === a.id);
@@ -3965,6 +3970,10 @@ step('Weiche laesst sich waehrend einer Welle nicht umlegen', () => {
   if (groesster > 60) {
     throw new Error(`Ein Gegner ist beim Umlegen um ${groesster.toFixed(0)} Weltpunkte `
       + 'gesprungen - die Route wurde mitten im Lauf gewechselt.');
+  }
+  if (Math.abs(g.lanes[0].length - bahnVorher) > 0.5) {
+    throw new Error(`Die Bahn hat sich waehrend der Welle geaendert: `
+      + `${bahnVorher.toFixed(0)} -> ${g.lanes[0].length.toFixed(0)} Weltpunkte.`);
   }
 });
 

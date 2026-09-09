@@ -89,7 +89,7 @@ const { Renderer } = await import('../src/gfx/renderer');
 const { UI } = await import('../src/ui/ui');
 const { bindInput } = await import('../src/core/input');
 const { ABILITIES } = await import('../src/data/abilities');
-const { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, statsFor } = await import('../src/data/towers');
+const { TOWERS, TOWER_ORDER, BAU_ORDER, MAX_LEVEL, nextFor, statsFor } = await import('../src/data/towers');
 
 const { TUTORIAL } = await import('../src/game/tutorial');
 const { auswertung } = await import('../src/game/auswertung');
@@ -156,8 +156,8 @@ if (problems.length) {
 
 // Die Baumenue-Knoepfe muessen tatsaechlich erzeugt worden sein.
 const towerButtons = win.document.querySelectorAll('.tower-btn').length;
-if (towerButtons !== TOWER_ORDER.length) {
-  problems.push(`Baumenue zeigt ${towerButtons} statt ${TOWER_ORDER.length} Tuerme.`);
+if (towerButtons !== BAU_ORDER.length) {
+  problems.push(`Baumenue zeigt ${towerButtons} statt ${BAU_ORDER.length} Bauwerke.`);
 }
 
 // Jede Einfuehrung zeigt auf ein Bedienelement. Fehlt eines - etwa weil ein
@@ -900,7 +900,14 @@ step('Konter-Satz erscheint einmal und rechtzeitig', () => {
       state.wellenZumPruefen([state.waveIndex]);
       ui.sync();
       if (!blase.hidden) {
-        problems.push(`Konter W${i + 1}: die Blase steht noch, obwohl die Welle laeuft.`);
+        // **Mit dem Schritt, der stehen bleibt.** Ohne ihn sagt die Meldung
+        // nur, dass etwas steht - und die Blase traegt zwei Bewohner, den
+        // Konter-Satz und die Einfuehrung. Beim ersten Auftreten (v285) hat
+        // genau das eine Viertelstunde gekostet.
+        const wer = (win.document.getElementById('coach-text') as HTMLElement | null)
+          ?.dataset.step ?? 'unbekannt';
+        problems.push(`Konter W${i + 1}: die Blase steht noch, obwohl die Welle laeuft `
+          + `(Schritt "${wer}").`);
       }
       state.wellenZumPruefen([]);
     }
@@ -2873,8 +2880,8 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
     ui.sync();
     if (wahl.hidden) problems.push('Turmwahl: bleibt verborgen, obwohl ein Platz gewaehlt ist.');
     const knoepfe = wahl.querySelectorAll('.pick-btn').length;
-    if (knoepfe !== TOWER_ORDER.length) {
-      problems.push(`Turmwahl: ${knoepfe} Knoepfe fuer ${TOWER_ORDER.length} Turmsorten.`);
+    if (knoepfe !== BAU_ORDER.length) {
+      problems.push(`Turmwahl: ${knoepfe} Knoepfe fuer ${BAU_ORDER.length} Bauwerke.`);
     }
 
     // **Und sie sagt, was der Turm HIER an Verbund bekaeme** (v245, F4).

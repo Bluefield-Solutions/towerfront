@@ -1028,6 +1028,37 @@ const PROBEN = [
     meldet: 'laufende Strom steht auf dem Zielgerät nicht im Bild',
   },
   {
+    // **Die zwei Proben zur Trennung der FLAECHE (v286).**
+    //
+    // v268 hat den Satz getrennt - Zustand links, Handlung rechts - und die
+    // Trefferflaeche nicht: der Strom stand IM Knopf, machte ihn von 208 auf
+    // 317 Punkte breit, und wer die Anzeige antippte, startete eine Welle.
+    // Gemessen kostete das 1,4 % des Bildschirms; `uxaudittor` wurde daran
+    // rot, sobald ein fuenfter Bauknopf dazukam.
+    //
+    // Erstens: nimmt man die Durchlaessigkeit heraus, faengt der Strom
+    // wieder. Das UX-Tor faende es auch, aber erst als Prozentzahl ohne
+    // Ursache - hier steht die Sache selbst.
+    name: 'Laufender Strom faengt den Finger wieder',
+    datei: 'src/style.css',
+    suche: '  color: var(--crystal);\n  pointer-events: none;\n  margin-left: auto;',
+    ersatz: '  color: var(--crystal);\n  pointer-events: auto;\n  margin-left: auto;',
+    tor: 'browsertor',
+    meldet: 'laufende Strom fängt den Finger',
+  },
+  {
+    // Zweitens: `margin-left: auto` traegt der Strom, sobald er da ist, sonst
+    // der Knopf. Faellt die Uebergabe weg, tragen es BEIDE - Flexbox teilt
+    // dann den Restraum auf, der Strom steht mitten im Band und der Knopf
+    // rutscht unter dem Daumen weg.
+    name: 'Wellenknopf rutscht, wenn der Strom erscheint',
+    datei: 'src/style.css',
+    suche: '.go-lauf[data-an="1"] ~ .go { margin-left: 0; }',
+    ersatz: '',
+    tor: 'browsertor',
+    meldet: 'Wellenknopf rutscht um',
+  },
+  {
     // Zweitens die Mehrdeutigkeit selbst. `waveNumber` zeigt die NEUESTE
     // laufende Welle, `startWelle` die naechste startbare - solange nur eine
     // laufen konnte, waren beide dasselbe. Mit der alten Zahl sagt der Knopf

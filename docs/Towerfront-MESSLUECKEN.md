@@ -1,6 +1,26 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v279 · 09.09.2026
+Stand: v286 · 09.09.2026
+
+**Nachgesehen in v286 — und M1 hat seine erste Zahl aus dem laufenden Betrieb
+bekommen.** Die Luecke gilt als geschlossen (drei Aussaaten, `UNBELEGT` statt
+einer Zahl), und v285 hat gezeigt, wozu das gut ist: bei der vierten Eichung
+des Foerderers lag das **Rauschen der Kennzahl (11,0) UEBER dem Messwert (9)**,
+und die Eichung ist daraufhin abgebrochen worden statt weiterzudrehen. Die
+Luecke ist damit nicht wieder offen - sie hat zum ersten Mal Arbeit verhindert,
+statt Arbeit zu kosten. Was bleibt, steht als Preis daneben: **eine Wirkung
+unterhalb dieses Rauschens ist heute nicht eichbar**, ganz gleich ob sie
+besteht. Der Foerderer wartet aus genau diesem Grund auf eine ruhigere
+Messung, nicht auf eine bessere Idee.
+
+Eine **achtzehnte** Luecke ist in v286 aufgetaucht und in derselben Runde
+geschlossen worden, deshalb steht sie hier nur als Klasse: `uxaudittor` meldete
+„16,5 % gegen erlaubte 16" und nannte den Verursacher nicht. Meine erste
+Vermutung (der fuenfte Bauknopf) war falsch; die richtige Ursache (der
+laufende Strom im Wellenknopf) stand in einer Aufschluesselung, die es nicht
+gab. **Eine Ratsche, die anschlaegt, ohne den Verursacher zu nennen, kostet
+jedes Mal dieselbe halbe Stunde - und liefert dabei mit gleicher Sicherheit
+den falschen.** Das Tor schluesselt seitdem je Wurzel auf.
 
 **Nachgesehen in v284:** siebzehn Luecken, und die letzten beiden sind in
 dieser Kette entstanden statt gesammelt worden. **M16** (ein Tor kann in der

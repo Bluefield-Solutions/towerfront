@@ -796,7 +796,8 @@ if (start) {
     }
   }
 
-  // --- 5d. Und steht der LAUFENDE Strom im Bild? (v268, S-P4-03)
+  // --- 5d. Und steht der LAUFENDE Strom im Bild - ohne zu handeln?
+  //         (v268, S-P4-03; die zweite Haelfte in v286)
   //
   // Dieselbe Frage eine Stelle weiter links, und dieselbe Falle: seit v266
   // duerfen zwei Wellen zugleich laufen, und der Knopf trug beides in einem
@@ -819,12 +820,22 @@ if (start) {
       const stellen = (an) => {
         lauf.dataset.an = an;
         lauf.textContent = an === '1' ? 'Welle 15 · noch 71' : '';
+        const r = knopf.getBoundingClientRect();
+        const l = lauf.getBoundingClientRect();
+        // Wen trifft ein Tipp mitten auf den Strom? Gefragt wird der
+        // Browser, nicht die Stilvorlage - `pointer-events` erbt und laesst
+        // sich eine Ebene hoeher wieder einschalten.
+        const mitte = an === '1'
+          ? document.elementFromPoint(l.left + l.width / 2, l.top + l.height / 2)
+          : null;
         return {
-          breite: Math.round(lauf.getBoundingClientRect().width),
-          hoehe: Math.round(knopf.getBoundingClientRect().height),
+          breite: Math.round(l.width),
+          hoehe: Math.round(r.height),
           anzeige: getComputedStyle(lauf).display,
           sichtbar: getComputedStyle(lauf).visibility,
-          knopf: Math.round(knopf.getBoundingClientRect().width),
+          knopf: Math.round(r.width),
+          rechts: Math.round(r.right),
+          faengt: mitte ? (mitte.closest('#b-wave, #b-wave-l') ? 'ja' : 'nein') : '-',
         };
       };
       const mit = stellen('1');
@@ -834,9 +845,10 @@ if (start) {
     if (!st) {
       fail('Der Wellenknopf traegt keinen laufenden Strom (#b-wave-l fehlt).');
     } else {
-      console.log(`Laufender Strom im Wellenknopf: ${st.mit.breite} Punkte `
-        + `(${st.mit.anzeige}, ${st.mit.sichtbar}) · Knopf ${st.mit.knopf} Punkte mit, `
-        + `${st.ohne.knopf} ohne · Knopfhöhe ${st.hoehe}`);
+      console.log(`Laufender Strom neben dem Wellenknopf: ${st.mit.breite} Punkte `
+        + `(${st.mit.anzeige}, ${st.mit.sichtbar}) · fängt den Finger: ${st.mit.faengt} `
+        + `· Knopf ${st.mit.knopf} Punkte mit, ${st.ohne.knopf} ohne `
+        + `· rechte Kante ${st.mit.rechts}/${st.ohne.rechts} · Knopfhöhe ${st.hoehe}`);
       if (st.mit.anzeige === 'none' || st.mit.sichtbar === 'hidden' || st.mit.breite < 30) {
         fail('Der laufende Strom steht auf dem Zielgerät nicht im Bild '
           + `(display ${st.mit.anzeige}, visibility ${st.mit.sichtbar}, `
@@ -850,11 +862,39 @@ if (start) {
         fail(`Der Wellenknopf ist mit dem laufenden Strom ${st.hoehe} Punkte hoch - `
           + 'er bricht damit auf zwei Zeilen um.');
       }
-      // Und er muss seine Breite zurueckgeben, wenn er verschwindet: sonst
+      // **Und er darf den Finger nicht fangen** (v286).
+      //
+      // Diese Pruefung stand bis v285 auf dem Kopf: sie verlangte, dass der
+      // Strom den Knopf um mindestens 20 Punkte BREITER macht - als Beweis
+      // dafuer, dass er ueberhaupt gelegt wird. Genau das war der Schaden.
+      // Der Strom ist ein Zustand; als Kind des Knopfes trug er dessen
+      // Trefferflaeche mit (208 -> 317 Punkte), und ein Tipp auf die Anzeige
+      // startete eine Welle. Gemessen kostete das 1,4 % des Bildschirms, und
+      // `uxaudittor` wurde daran rot, sobald ein fuenfter Bauknopf dazukam.
+      //
+      // Dass er gelegt wird, beweist jetzt seine eigene Breite (oben, >= 30
+      // Punkte) - das ist ohnehin der genauere Messpunkt. Hier steht die
+      // Zusage, die dieses Tor allein halten kann.
+      if (st.mit.faengt !== 'nein') {
+        fail('Der laufende Strom fängt den Finger - ein Tipp auf die Anzeige '
+          + 'startet eine Welle. Er zeigt einen Zustand, er ist keine Handlung.');
+      }
+      if (st.mit.knopf !== st.ohne.knopf) {
+        fail(`Der Wellenknopf ist mit dem Strom ${st.mit.knopf} Punkte breit und ohne `
+          + `${st.ohne.knopf} - der Zustand trägt die Trefferfläche der Handlung mit.`);
+      }
+      // Der Knopf steht ganz rechts im Band und muss dort bleiben, ob der
+      // Strom nun da ist oder nicht: `margin-left: auto` wechselt zwischen
+      // beiden. Truegen es beide, teilte Flexbox den Restraum auf.
+      if (Math.abs(st.mit.rechts - st.ohne.rechts) > 1) {
+        fail(`Der Wellenknopf rutscht um ${Math.abs(st.mit.rechts - st.ohne.rechts)} Punkte, `
+          + 'wenn der Strom erscheint - unter dem Daumen ist er dann woanders.');
+      }
+      // Er muss seine Breite zurueckgeben, wenn er verschwindet: sonst
       // stuende dort dauerhaft eine leere Flaeche.
-      if (st.mit.knopf - st.ohne.knopf < 20) {
-        fail(`Der Strom kostet den Knopf nur ${st.mit.knopf - st.ohne.knopf} Punkte - `
-          + 'er wird also gar nicht gelegt.');
+      if (st.ohne.breite !== 0) {
+        fail(`Der Strom belegt ohne Inhalt noch ${st.ohne.breite} Punkte - `
+          + 'er gibt seine Breite nicht zurück.');
       }
     }
   }

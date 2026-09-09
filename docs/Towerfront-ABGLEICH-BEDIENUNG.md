@@ -1,6 +1,20 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v279 · 09.09.2026
+Stand: v286 · 09.09.2026
+
+**Nachgesehen in v286 — und einer der sieben Punkte hat eine Messung
+bekommen.** v286 hat den laufenden Strom aus dem Wellenknopf herausgeloest:
+er stand als Kind IM Knopf, trug dessen Trefferflaeche mit (208 -> 317 Punkte
+breit) und startete eine Welle, wenn man auf die ANZEIGE tippte. Ein Zustand,
+der wie eine Handlung reagiert, ist genau die Klasse, die dieser Abgleich
+meint. Gemessen: die Bedienung sperrte im Zustand „welle" 16,5 % des
+Bildschirms gegen erlaubte 16, jetzt 15,1 % - gleichauf mit dem Ruhezustand.
+
+Das Browsertor haelt seitdem drei Zusagen, die es vorher nicht hatte (der
+Strom faengt den Finger nicht, der Knopf wird durch ihn nicht breiter, seine
+rechte Kante rutscht nicht), und `uxaudit` schluesselt die gesperrte Flaeche
+je Wurzel auf statt eine Gesamtzahl zu melden. Die uebrigen sechs Punkte
+unveraendert.
 
 **Nachgesehen in v279:** unveraendert. Die sieben Punkte haengen an `bauflaechetor` und dem Browsertor; an beiden hat seit v272 keine Runde etwas angefasst, und beide liefen im Runner-Lauf zu v278 gruen.
 

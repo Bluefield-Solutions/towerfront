@@ -1,6 +1,14 @@
 # Referenzabgleich — Fähigkeiten freischalten (C18)
 
-Stand: v279 · 09.09.2026
+Stand: v286 · 09.09.2026
+
+**Nachgesehen in v286:** unveraendert. Die vier Faehigkeiten sind zwischen
+v279 und v286 nicht angefasst worden; `npm run sim` und der Rauchtest fahren
+sie weiter, beide im Runner-Lauf zu v284 gruen. Die Weichen (v278-v284) und
+der Foerderer (v285) beruehren sie nicht - eine Weiche aendert die Bahn, und
+keine der vier Faehigkeiten haengt an einer Bahnlage. Der Konter-Fund aus v285
+(`neuerKonter` fragte `!canStartWave`) betrifft die Einweisung, nicht die
+Faehigkeiten.
 
 **Nachgesehen in v279:** unveraendert. Die Faehigkeiten werden von `npm run sim` und dem Rauchtest gefahren, beide im Runner-Lauf zu v278 gruen. v278 und v279 haben die Bahnen auf ein Wegenetz umgestellt - gemessen mit 0,00 Weltpunkten Abweichung, also ohne Wirkung auf diesen Abgleich.
 

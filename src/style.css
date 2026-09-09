@@ -361,25 +361,43 @@ html, body {
   font-variant-numeric: tabular-nums; visibility: hidden;
 }
 .go-plus[data-an="1"] { visibility: visible; }
-/* **Der laufende Strom im Knopf** (v268, S-P4-03). Links der Zustand, rechts
-   die Handlung - eine Zeile, wie alles in diesem Knopf seit v243.
+/* **Der laufende Strom NEBEN dem Knopf** (v268, S-P4-03; herausgeloest in
+   v286). Links der Zustand, rechts die Handlung - auf einer Zeile.
 
    Dieselbe Schriftstufe wie die Marken der Kopfzeile: die Typoskala hat
    fuenf Stufen, und eine sechste fuer einen Streifen waere eine zu viel
-   (H7). Gedaempft und mit einem Trennstrich, damit er sich von der Handlung
-   abhebt, ohne eine zweite Farbe einzufuehren.
+   (H7). Gedaempft, damit er sich von der Handlung abhebt, ohne eine zweite
+   Farbe einzufuehren.
 
-   Ausgeblendet mit `display: none`, nicht `visibility: hidden` - anders als
-   beim Zahlplatz rechts soll er seine Breite zurueckgeben. Der Knopf steht
-   ganz rechts im Band und waechst nach links; ein Nachbar, der dabei
-   verrutschen koennte, ist dort keiner. */
+   **`pointer-events: none` ist hier keine Feinheit, sondern die Sache
+   selbst.** Bis v285 stand er IM Knopf: der Zustand trug damit die
+   Trefferflaeche der Handlung mit, machte sie von 208 auf 317 Punkte breit
+   und startete eine Welle, wenn man auf die Anzeige tippte. v268 hat den
+   SATZ getrennt und die FLAECHE nicht. Gemessen sind es 1,4 % des
+   Bildschirms - der Betrag, an dem `uxaudittor` in v285 rot wurde.
+
+   Der Trennstrich bleibt an SEINER rechten Seite, nicht am linken Rand des
+   Knopfes: er trennt Zustand von Handlung, und die Grenze gehoert zu dem,
+   was hier endet. Ueber dem Feld statt auf dem Kristallgrund braucht er
+   ausserdem eine eigene Farbe - `--crystal` ist dieselbe, in der die
+   Zahlenflaeche oben links anzeigt, ohne zu handeln.
+
+   Ausgeblendet mit `display: none`, nicht `visibility: hidden` - er soll
+   seine Breite zurueckgeben. Und weil er sie zurueckgibt, muss der Knopf im
+   Band weiterhin nach rechts rutschen: `margin-left: auto` traegt der
+   Strom, sobald er da ist, sonst der Knopf. Truegen es beide, teilte
+   Flexbox den Restraum zwischen ihnen auf und der Strom stuende in der
+   Mitte des Bandes. */
 .go-lauf {
   font-size: var(--s-marke); letter-spacing: 0.08em; font-weight: 700;
   font-variant-numeric: tabular-nums; opacity: 0.72;
-  position: relative; z-index: 1;
+  color: var(--crystal);
+  pointer-events: none;
+  margin-left: auto;
   padding-right: 8px; border-right: 1px solid currentColor;
 }
 .go-lauf[data-an="0"] { display: none; }
+.go-lauf[data-an="1"] ~ .go { margin-left: 0; }
 .go:disabled { background: rgba(137, 148, 176, 0.3); color: var(--muted); box-shadow: none; }
 /* **Waehrend der Welle ist der Knopf gesperrt, aber nicht tot** (v239, E6).
    Er traegt den Fortschritt, und dafuer braucht er einen eigenen Zustand:

@@ -1,6 +1,40 @@
 # Referenzabgleich — Stützturm (C3, „Bannturm")
 
-Stand: v279 · 09.09.2026
+Stand: v286 · 09.09.2026
+
+**Nachgesehen in v286 — und diesmal nicht unveraendert: seit v285 steht ein
+Gebaeude im Spiel, das nicht schiesst.** Der **Foerderer** ist nicht der
+Bannturm (er verstaerkt keine Tuerme, er erhoeht die Beute), aber er ist die
+erste Antwort auf S1, und er hat drei der sechs Sollpunkte gemessen
+beantwortet:
+
+| # | Soll | der Foerderer | Abstand heute |
+|---|---|---|---|
+| S1 | eigener Bauplatz, kein Zweig | **erfuellt** - `attack: 'keiner'`, 90 Gold, belegt einen Platz | keiner |
+| S3 | auswaehlende Wirkung an der Lage | **erfuellt** - 230 Weltpunkte Umkreis, `foerderFaktor(x, y)` fragt den Ort des Gegners | keiner |
+| S6 | stapelt sich nicht ins Unsinnige | **erfuellt** - `FOERDER_DECKEL` bei 0,75 | keiner |
+| S5 | echte Wette | **hier ist der Fund** - siehe unten | ganz |
+| S2, S4 | Bauverteilung, sichtbar ohne Zahl | unveraendert offen | ganz |
+
+**Und S5 hat die Messung von v285 beantwortet, indem sie ihn durchfallen
+liess.** Derselbe Bot einmal mit und einmal ohne Foerderer, ueber alle vier
+Karten: **-1,8 bis +2,4 % Gold**. Das ist keine Wette, das ist Rauschen - fuer
+90 Gold und einen Bauplatz. Vier Eichungen sind davor gefahren, und beim
+vierten Punkt lag das Rauschen der Kennzahl UEBER dem Messwert.
+
+**Die Ursache ist die FORM des Vorbilds, nicht seine Zahl.** Defense Grids
+Command Tower gibt seine 25 % **global**; ich habe einen Umkreis von 230
+Weltpunkten gebaut und dieselbe Referenz zitiert. Regel 10 sagt, das Soll kommt
+aus der Referenz - sie gilt auch fuer die Form, nicht nur fuer den Prozentsatz.
+Und die drei Vorbilder dieses Abgleichs sagen dasselbe von der anderen Seite:
+Monkey Village, Torchwood und Buff Beam wirken alle auf **Tuerme**, nicht auf
+Gegner. Ein Umkreis um Gegner herum trifft, wer gerade vorbeilaeuft; ein
+Umkreis um Tuerme herum trifft, was der Spieler gestellt hat - und nur das
+Zweite ist eine Entscheidung.
+
+Damit steht C3 weiter offen, aber die Frage ist enger geworden: nicht mehr
+„ein Gebaeude, das nicht schiesst" (das steht), sondern „**eine Umkreiswirkung
+auf die eigenen Tuerme**".
 
 **Nachgesehen in v279:** unveraendert offen als C3. Die Schliessbedingung des Punktes ist nachgefahren - `"Bannturm"` kommt in `src/data/towers.ts` **null mal** vor.
 

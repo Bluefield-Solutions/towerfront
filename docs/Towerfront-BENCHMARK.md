@@ -1,6 +1,15 @@
 # Towerfront — Genre-Abgleich
 
-Stand: v279 · 09.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+Stand: v286 · 09.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+
+**Nachgesehen in v286:** nachgefahren, nicht geglaubt - `npm run bericht` meldet
+im heutigen Baum **30 von 30, gewichtet 100 %, davon 68 von 68 Gewichtspunkten
+ueber 28 Kriterien gemessen**. Von Hand beurteilt bleiben P6 und P7 (5 von 73
+Gewichtspunkten, 7 %). Unveraendert gegen v279 - und das ist die Auskunft, um
+die es hier geht: sieben Fassungen mit Weichen, einem Foerderer und einem
+umgebauten Wellenband haben die Zahl nicht bewegt. **Der wichtigste Satz des
+Katalogs steht damit zum wiederholten Mal belegt da:** der Genre-Abgleich ist
+voll, und das sagt ueber den Spielspass nichts.
 
 **Nachgesehen in v279:** nachgefahren, nicht geglaubt - `npm run bericht` meldet im heutigen Baum **30 von 30, gewichtet 100 %, davon 68 von 68 Gewichtspunkten ueber 28 Kriterien gemessen**. Von Hand beurteilt bleiben P6 und P7.
 

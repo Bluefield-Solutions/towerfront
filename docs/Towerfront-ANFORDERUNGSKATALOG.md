@@ -1,6 +1,14 @@
 # Towerfront — Anforderungskatalog
 
-Stand: v279 · 09.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+Stand: v286 · 09.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+
+**Nachgesehen in v286:** unveraendert ueberholt - `docs/Towerfront-NEUBAU.md`
+steht weiter ueber diesem Katalog. Die Messbefunde gelten; Abschnitt 2.1 ist
+seit v279 sogar zweimal bestaetigt worden, und beide Male hat er Arbeit
+verhindert statt sie zu machen: in v285 lag beim vierten Eichpunkt des
+Foerderers das Rauschen der Kennzahl (11,0) UEBER dem Messwert (9), und die
+Eichung ist abgebrochen worden statt gegen Zufall weiterzudrehen. Das ist die
+Regel dieses Abschnitts in Anwendung.
 
 **Nachgesehen in v279:** die Messbefunde stehen unveraendert, die RICHTUNG ist seit v269 ueberholt - `docs/Towerfront-NEUBAU.md` steht ueber diesem Katalog, und `Towerfront-STORIES.md` ist dort vollstaendig ersetzt worden. Turmzweige, Grade und Sterne, die mehrere Pakete hier verbessern wollten, entfallen. Was inhaltlich ueberlebt hat, steht im neuen Katalog als Paket N6.
 

@@ -284,7 +284,13 @@ npm run uxaudit     nimmt das GEBAUTE Spiel in den Zustaenden auf, die man
                     beim Spielen wirklich erreicht, und misst die Belegung
                     des Bildschirms mit `elementFromPoint` statt ueber
                     Umrisskaesten - die lassen sich durch Verschachteln
-                    kleinrechnen. `--tor` prueft die Grenzen.
+                    kleinrechnen. `--tor` prueft die Grenzen. **Seit v286 je
+                    WURZEL aufgeschluesselt**, im Bericht wie im Befund. Die
+                    nackte Prozentzahl nannte den Verursacher nicht: der
+                    Befund zu v285 ("welle 16,5 gegen 16") sah nach dem
+                    fuenften Bauknopf aus, und das Dock stand in Ruhe und
+                    Welle bei denselben 10,4 %. Es war `#b-wave` mit 3,0
+                    gegen 4,4.
 npm run bahnfit     zieht die Bahnen auf die gemalte Strasse (schreibt
                     maps.ts). `--umleiten` aendert Routen, nicht nur Lagen.
 npm run bahntreue   prueft am Kartenbild, ob jede Bahn auf der GEMALTEN
@@ -668,6 +674,17 @@ ab Hub 3 verdient der durchgehend ueberlappende Bot mehr Gold als der
 vorsichtige, und damit waere der Fruehstart eine Einnahmequelle statt eines
 Risikos. Gesetzt ist 2,0.
 
+**Der Zustand faengt den Finger nicht mehr (v286).** v268 hat Zustand und
+Handlung im Wellenknopf getrennt - aber nur den SATZ, nicht die FLAECHE. Der
+laufende Strom stand als Kind IM Knopf: er machte ihn von 208 auf 317 Punkte
+breit, und wer auf die Anzeige tippte, startete eine Welle. Gemessen 1,4 % des
+Bildschirms, und `uxaudittor` wurde daran rot, sobald der Foerderer als
+fuenfter Bauknopf dazukam - der Auslöser, nicht die Ursache. Der Strom steht
+jetzt daneben und ist durchlaessig; `welle` faellt von 16,5 auf 15,1 % und
+liegt gleichauf mit `ruhe`. Eine Torpruefung stand dabei auf dem Kopf und ist
+umgedreht worden (K1): sie verlangte, dass der Strom den Knopf BREITER macht -
+als Beweis, dass er ueberhaupt gelegt wird. Genau das war der Schaden.
+
 **Das Wellenband trennt Zustand und Handlung (v268).** Der Hauptknopf stand
 auf "Welle 3 - noch 12" und startete Welle 4 - `waveNumber` zeigt die neueste
 laufende, `startWelle` die naechste startbare. Links steht jetzt der Zustand,
@@ -687,7 +704,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v285. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v286. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

@@ -149,7 +149,11 @@ const schuss = async (seite, name) => {
  *  ueberdeckt - auch dann, wenn es Tipps durchlaesst wie der Verlauf der
  *  Kopfzeile. */
 const belegung = (seite) => seite.evaluate(() => {
-  const WURZELN = '#hud, #dock, #b-wave, #inspector, #pick, #coach, #perf, #v-version, #werkzeuge';
+  // `#b-wave-l` steht hier, obwohl es durchlaessig IST: sonst kaeme die
+  // Trennung von v286 still zurueck. Wer dem Strom wieder `pointer-events`
+  // gibt, faellt damit sofort auf - eine Regel, die nur im Kommentar steht,
+  // wird gebrochen.
+  const WURZELN = '#hud, #dock, #b-wave, #b-wave-l, #inspector, #pick, #coach, #perf, #v-version, #werkzeuge';
   const w = innerWidth, h = innerHeight, S = 4;
   let gesperrt = 0, bemalt = 0, gesamt = 0;
   const malt = new Set();
@@ -160,11 +164,22 @@ const belegung = (seite) => seite.evaluate(() => {
     const hatBild = cs.backgroundImage !== 'none';
     if ((g && a > 0.12) || hatBild) malt.add(e);
   }
+  // **Je Wurzel getrennt** - eine Gesamtzahl sagt nicht, wer die Flaeche
+  // nimmt. In v285 stand "16,5 % gegen 16" da, und die Ursache (ein
+  // fuenfter Bauknopf) liess sich nur durch Nachrechnen von Hand finden.
+  // Eine Ratsche, die anschlaegt, ohne den Verursacher zu nennen, kostet
+  // jedes Mal dieselbe halbe Stunde.
+  const teile = {};
   for (let y = S / 2; y < h; y += S) {
     for (let x = S / 2; x < w; x += S) {
       gesamt += 1;
       const e = document.elementFromPoint(x, y);
-      if (e && e.closest(WURZELN)) gesperrt += 1;
+      const wurzel = e && e.closest(WURZELN);
+      if (wurzel) {
+        gesperrt += 1;
+        const n = wurzel.id ? `#${wurzel.id}` : wurzel.tagName.toLowerCase();
+        teile[n] = (teile[n] ?? 0) + 1;
+      }
       // Bemalt: irgendein malendes Element deckt diesen Punkt.
       for (const m of malt) {
         const r = m.getBoundingClientRect();
@@ -172,7 +187,8 @@ const belegung = (seite) => seite.evaluate(() => {
       }
     }
   }
-  return { gesperrt: 100 * gesperrt / gesamt, bemalt: 100 * bemalt / gesamt };
+  for (const k of Object.keys(teile)) teile[k] = 100 * teile[k] / gesamt;
+  return { gesperrt: 100 * gesperrt / gesamt, bemalt: 100 * bemalt / gesamt, teile };
 });
 
 /** Welche Schriftgroessen zeigt die Spielansicht wirklich - an den Blaettern?
@@ -430,6 +446,10 @@ if (c && await insSpiel(c, 1400, 900)) {
 console.log('\nBelegung des Bildschirms (844 x 390, Raster 4):');
 for (const [k, v] of Object.entries(messwerte.belegung ?? {})) {
   console.log(`  ${k.padEnd(11)} gesperrt ${v.gesperrt.toFixed(1)} %   bemalt ${v.bemalt.toFixed(1)} %`);
+  const teile = Object.entries(v.teile ?? {}).sort((a, b) => b[1] - a[1]);
+  if (teile.length) {
+    console.log(`              ${teile.map(([n, p]) => `${n} ${p.toFixed(1)}`).join(' · ')}`);
+  }
 }
 
 writeFileSync(join(AUS, 'messwerte.json'), JSON.stringify(messwerte, null, 1));
@@ -441,9 +461,12 @@ if (TOR) {
     const w = messwerte.belegung?.[zustand];
     if (!w) { fail(`Belegung "${zustand}" wurde gar nicht gemessen.`); continue; }
     if (w.gesperrt > grenze) {
+      const gross = Object.entries(w.teile ?? {}).sort((a, b) => b[1] - a[1])
+        .map(([n, p]) => `${n} ${p.toFixed(1)} %`).join(', ');
       fail(`Belegung "${zustand}": die Bedienung sperrt ${w.gesperrt.toFixed(1)} % des `
         + `Bildschirms, erlaubt sind ${grenze} %. Auf dem Zielgeraet ist das Feld `
-        + 'das Spiel; was darueber liegt, nimmt es weg.');
+        + 'das Spiel; was darueber liegt, nimmt es weg.'
+        + (gross ? ` Verteilt auf: ${gross}.` : ''));
     }
   }
   for (const [zustand, liste] of Object.entries(messwerte.doppelt ?? {})) {

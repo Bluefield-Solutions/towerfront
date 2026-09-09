@@ -367,6 +367,20 @@ npm run fruehstart  was die Ueberlappung bringt und was sie kostet: derselbe
                     drei Bots faehrt, die alle drei NICHT ueberlappen - wer den
                     Bonus dort einstellt, misst gegen einen Lauf, in dem er nie
                     anfaellt. Kein Tor: es misst, es urteilt nicht.
+npm run inspektor   stellt die Beweismittel fuer den INSPEKTOR: Aufnahmen des
+                    gebauten Spiels und den Bericht, in `schleife/inspektion/`.
+                    Der Bericht wird um seinen Abschnitt "Umfang" beschnitten -
+                    der nennt die geaenderten Dateien und damit die Absicht der
+                    Runde, und wer die kennt, sieht das Bild nicht mehr.
+                    **Es prueft mechanisch, dass kein Quelltext im Ordner
+                    liegt**; "sieht keinen Code" waere sonst eine Zusage, die
+                    niemand nachsieht. `--urteil <Freigabe|Schleife|Rueckbau>
+                    "<Grund>"` haelt das Urteil fest (ohne Begruendung wird es
+                    abgelehnt - ein Urteil ohne Begruendung ist ein Stempel),
+                    `--pruefen` sagt, ob eines fuer DIESE Fassung vorliegt.
+                    Zwei Selbsttests bei jedem Lauf, weil es nicht in der
+                    Torkette steht (v229: ein Werkzeug, dessen Eingang niemand
+                    prueft, ist im Ernstfall kaputt).
 npm run kritik      Wertung nach Testerkategorien, Ziel über 90
 npm run c18         die C18-Frage allein: ist die erste Karte ohne
                     Verbesserungen zu gewinnen? Zwei Sekunden statt zwei
@@ -596,7 +610,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v270. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v271. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

@@ -1,6 +1,6 @@
 # Towerfront — Stories
 
-Stand: v273 · 09.09.2026
+Stand: v274 · 09.09.2026
 
 **Dieses Dokument ist das Lenkrad.** `npm run naechste` liest die Reihenfolge
 hier und wählt die erste offene Story — über Stunden und über Kontextgrenzen
@@ -918,6 +918,47 @@ Ursache steht aufgeschrieben, nicht nur die Behebung.
 fest und ist mechanisch, kommt sie in `tools/probes.mjs`.
 
 **Schliesst, wenn:** `blick: was ein Zeichen im Bild bedeutet, beantwortet kein Tor - beide Befunde stammen aus einem Blick, und nur ein Blick kann sagen, dass sie weg sind`
+
+---
+
+### S-N0-06 · Der Inspektor sagt, ob es überhaupt etwas Neues zu sehen gibt
+
+**Paket:** N0 · **Aufwand:** S · **Hängt an:** — · **Herkunft:** gemessen in v274
+
+**Problem.** Drei Runden hintereinander hat der Inspektor dieselben Kernbefunde
+geliefert, weil sich das Bild nicht geändert hatte — eine Runde, die nur an
+Werkzeugen und Dokumenten arbeitet, kann es gar nicht ändern. Jedes dieser
+Urteile hat einen vollen Durchgang gekostet und nichts Neues gebracht.
+
+**Ein Urteil über ein unverändertes Bild ist kein Urteil, sondern eine
+Wiederholung.** Es ist aber auch keine Erlaubnis, den Blick zu überspringen:
+gesagt werden darf nur, ob es etwas **zu sehen gibt**, und das muss gemessen
+sein, nicht behauptet.
+
+**Ein erster Entwurf ist in v274 gebaut und wieder zurückgenommen worden**, und
+der Grund gehört hierher: er hat einen sha1 über die Bytes der Aufnahmen
+gelegt und mit dem letzten beurteilten Lauf verglichen. Gemessen taugt das
+nicht — `src/ui/ui.ts:393` schreibt `VERSION` in die Kopfzeile, also steht die
+Fassungsnummer **in jedem Bild**, und sie ändert sich in jeder Runde. Der
+Abdruck wäre jedes Mal verschieden gewesen, die Prüfung hätte nie angeschlagen
+und dabei ausgesehen wie eine Prüfung (Regel 5). Lieber keine als eine, die
+schweigt.
+
+**Was gebaut wird.** Ein Vergleich, der den Fassungsstempel nicht mitzählt.
+Zwei Wege sind zu messen, bevor einer gewählt wird: das Stempelfeld vor dem
+Hashen ausblenden, oder statt der Bildpunkte die **Eingänge** des Bildes
+vergleichen (alles unter `src/gfx`, `src/ui`, `src/game`, `index.html`,
+`src/style.css` und der Bildvorrat).
+
+**Abnahme.**
+* Zwei Läufe ohne Änderung am Bild werden als **unverändert** gemeldet,
+  obwohl die Fassungsnummer dazwischen gestiegen ist.
+* Eine Änderung, die einen einzigen Bildpunkt bewegt, wird als **neu**
+  gemeldet. Beide Richtungen, sonst beweist es nichts (Regel 13).
+
+**Gegenprobe.** Ist selbst eine: der Lauf muss beide Fälle unterscheiden.
+
+**Schliesst, wenn:** `text tools/inspektor.mjs "beweisAbdruck" >= 2`
 
 ---
 

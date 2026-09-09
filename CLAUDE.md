@@ -480,7 +480,8 @@ docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 einen Splitter und laeuft seine Bahn mit 2,4-fachem Tempo zurueck zum Tor. Der
 Kristall faellt sofort; erwischt man den Raeuber, schwebt der Splitter zurueck
 und schreibt die Punkte wieder gut. Solange er lebt, ist nichts endgueltig
-verloren.
+verloren. Er traegt seinen Splitter sichtbar, und ein Faden zum Kristall
+sagt, wohin das Stueck gehoert - er wird mit der Strecke schwaecher.
 
 **Kein Gitter mehr.** Wege sind Catmull-Rom-Kurven mit
 Bogenlängen-Tabelle; ein Gegner hat als einzige Zustandsgröße die
@@ -491,7 +492,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v262. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v263. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

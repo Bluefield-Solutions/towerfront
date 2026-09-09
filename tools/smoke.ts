@@ -2137,6 +2137,44 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// **Der Riss geht auch wieder zu** (S-P3-03).
+//
+// Die Rissstufe ist keine gespeicherte Zahl, sondern eine ABLEITUNG aus
+// `lives / maxLives` - dieselbe Bauart wie `ui.sync()` bei Regel 6: es gibt
+// keine Stelle, an der man das Zuruecksetzen vergessen kann. Genau deshalb
+// steht hier eine Pruefung: eine Ableitung, die niemand nachfaehrt, ist eine
+// Behauptung. Vor dem Kernraub konnte der Kristall nur fallen, die Richtung
+// nach oben war also nie gefahren.
+{
+  const { rissStufe } = await import('../src/gfx/sprites');
+  const probe = new GameState();
+  probe.reset();
+  const voll = rissStufe(probe.lives / probe.maxLives);
+  const e = probe.spawnZumPruefen('brute', 0);
+  if (!e) {
+    problems.push('Riss: der Koloss liess sich nicht stellen - die Probe misst nichts.');
+  } else {
+    // Weit genug herunter, dass sich die Stufe ueberhaupt bewegt.
+    probe.lives = Math.round(probe.maxLives * 0.4);
+    const beschaedigt = rissStufe(probe.lives / probe.maxLives);
+    if (beschaedigt <= voll) {
+      problems.push(`Riss: bei ${probe.lives} von ${probe.maxLives} Kristall steht die `
+        + `Rissstufe auf ${beschaedigt}, bei vollem Kristall auf ${voll} - der Riss waechst nicht.`);
+    }
+    // Und wieder hinauf, so wie es eine Rueckholung tut.
+    probe.splitter.push({
+      x: probe.goal.x, y: probe.goal.y, punkte: probe.maxLives - probe.lives,
+      rest: 0.01, dauer: 1.1, welle: 0,
+    });
+    for (let i = 0; i < 30; i++) probe.update(1 / 60);
+    const geheilt = rissStufe(probe.lives / probe.maxLives);
+    if (geheilt >= beschaedigt) {
+      problems.push(`Riss: nach der Rueckholung steht die Rissstufe auf ${geheilt}, `
+        + `vorher auf ${beschaedigt} - der Riss geht nicht wieder zu.`);
+    }
+  }
+}
+
 // **Der Kristall darf durch Rueckgabe nie ueber seinen Hoechstwert steigen.**
 //
 // Das ist die Zusage aus v174, von der anderen Seite: dort wurde der Abzug

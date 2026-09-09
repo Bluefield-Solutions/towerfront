@@ -1574,7 +1574,10 @@ export class GameState {
         this.stats.leaksByWave[w] = Math.max(0, (this.stats.leaksByWave[w] ?? 0) - gut);
         this.float(this.goal.x, this.goal.y - 44, `+${gut}`, C.crystal, 26);
         this.ring(this.goal.x, this.goal.y, 100, C.crystal, 0.4, 4);
-        Sfx.play('ready');
+        // Die Rueckholung ist die Belohnung und muss sich anders anfuehlen
+        // als "Welle geschafft" - deshalb der Aufbau-Klang, nicht der
+        // Fertig-Klang (S-P3-03).
+        Sfx.play('build');
       }
       sp.punkte = 0;
     }

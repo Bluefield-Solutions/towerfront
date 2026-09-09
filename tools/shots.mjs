@@ -84,7 +84,8 @@ const ersterTurm = (g) => g.gebaute[0];
 // dass irgendetwas rot wurde. Ein Tor, das weniger prueft als das Werkzeug,
 // das es bewacht, laesst genau die Luecke.
 const TOR = ['menu-karte', 'menu-einweisung', 'menu-fortschritt', 'menu-sieg',
-  'menu-niederlage', 'welle8', 'kristall-riss', 'zier-beruehrung', 'menu-tastatur'];
+  'menu-niederlage', 'welle8', 'kristall-riss', 'kernraub', 'zier-beruehrung',
+  'menu-tastatur'];
 const nurTor = process.argv.includes('--tor');
 
 /** Eine Aufnahme: Zustand herstellen, ein paar Bilder laufen lassen, ausgeben.
@@ -642,6 +643,39 @@ takes.push(['kristall-riss', () => shot('kristall-riss', 844, 390, (s) => {
   return 60 * 4;
 })]);
 
+takes.push(['kernraub', () => shot('kernraub', 844, 390, (s) => {
+  // **Der Kernraub, wie man ihn sehen muss** (S-P3-03).
+  //
+  // Eine Mechanik, die man nicht sieht, gibt es nicht - der Schildtraeger
+  // hat es vorgemacht. Hier laeuft ein Raeuber mit seinem Splitter zurueck,
+  // und der Faden zum Kristall sagt, wohin das Stueck gehoert.
+  //
+  // Der Fall wird GESTELLT und nicht abgewartet: ein Bild, das darauf
+  // hofft, dass in Welle 8 zufaellig gerade jemand durchkommt, zeigt an den
+  // meisten Tagen eine gewoehnliche Welle - und beweist dann nichts
+  // (dieselbe Lehre wie die vier Funde aus v219).
+  s.reset(1, 'normal', 'spiralhain');
+  stock(s, 10);
+  s.waveIndex = 7;
+  s.startWave();
+  // Drei Raeuber stellen.
+  //
+  // **Nicht ueber `s.enemies` nach `startWave()`** - der erste Entwurf tat
+  // genau das und lieferte ein Bild ganz ohne Raeuber: `startWave` fuellt
+  // die Warteschlange, nicht das Feld, und im Bild null ist noch kein
+  // Gegner da. Angesehen, nicht gerechnet (Regel 8).
+  for (let i = 0; i < 3; i++) {
+    const e = s.spawnZumPruefen('brute', 0);
+    if (!e) continue;
+    const bahn = s.lanes[e.lane] ?? s.lanes[0];
+    e.travelled = bahn.length;
+    e.side = (i - 1) * 0.7;
+  }
+  // Genug Bilder, dass der Stillstand aus `leak()` vorbei ist und die drei
+  // ein Stueck weit zurueckgelaufen sind.
+  return 420;
+})]);
+
 takes.push(['r4-bollwerk', () => shot('r4-bollwerk', 844, 390, (s) => {
   s.reset(5, 'normal', 'spiralhain');
   // Seit C18 haengen drei der vier Faehigkeiten an gewonnenen Karten. Diese
@@ -938,6 +972,63 @@ pruefungen.push(async () => {
 // zwei Pruefungen, die das Gegenteil verlangten - DASS sich die Tuerme
 // bewegen, und WO die Bewegung sitzt.
 //
+// **Sieht man dem Bild an, dass gerade etwas fortgetragen wird?** (S-P3-03)
+//
+// Eine Mechanik, die man nicht sieht, gibt es nicht. Geprueft wird deshalb
+// nicht, DASS die Aufnahme entsteht - das bewiese nur, dass sie entsteht -,
+// sondern dass sie sich von derselben Karte OHNE Raeuber unterscheidet.
+// Zweimal dieselbe gestellte Lage, einmal mit `kernraub` und einmal ohne;
+// was sich unterscheidet, IST die Marke (Regel 13, und dasselbe Verfahren
+// wie bei der Ruhepruefung des Turms daneben).
+pruefungen.push(async () => {
+  const rig = async (mitRaub) => {
+    const canvas = createCanvas(844 * 2, 390 * 2);
+    Object.defineProperty(canvas, 'clientWidth', { get: () => 844 });
+    Object.defineProperty(canvas, 'clientHeight', { get: () => 390 });
+    const s = new GameState();
+    const r = new Renderer(canvas);
+    r.menu = null;
+    s.reset(1, 'normal', 'spiralhain');
+    s.quality = 'niedrig';
+    for (let i = 0; i < 3; i++) {
+      const e = s.spawnZumPruefen('brute', 0);
+      if (!e) continue;
+      const bahn = s.lanes[e.lane] ?? s.lanes[0];
+      e.travelled = bahn.length;
+      e.side = (i - 1) * 0.7;
+    }
+    for (let i = 0; i < 420; i++) s.update(1 / 60);
+    // Der Unterschied ist NUR die Marke: dieselben Figuren, dieselbe Lage,
+    // dieselbe Uhr. Ohne diesen Griff verglichen sich zwei verschiedene
+    // Spielverlaeufe, und der Unterschied waere alles Moegliche.
+    if (!mitRaub) for (const e of s.enemies) e.kernraub = 0;
+    r.resize();
+    r.draw(s);
+    getBackground(s.map.id);
+    await settle();
+    r.kartenaufbauAbschliessen(s);
+    const g = canvas.getContext('2d');
+    r.draw(s);
+    return g.getImageData(0, 0, canvas.width, canvas.height).data;
+  };
+  const a = await rig(true), b = await rig(false);
+  let anders = 0;
+  for (let i = 0; i < a.length; i += 4) {
+    if (Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]) > 30) {
+      anders++;
+    }
+  }
+  // Die Grenze ist von der Messung genommen, nicht gesetzt: mit Splitter und
+  // Faden sind es gemessen mehrere Tausend Bildpunkte, ohne sie null.
+  console.log(`  Kernraub sichtbar: ${anders} Bildpunkte tragen die Marke.`);
+  if (anders < 500) {
+    throw new Error(
+      `Kernraub: die Aufnahme unterscheidet sich nur an ${anders} Bildpunkten von `
+      + 'derselben Karte ohne Raeuber - Splitter und Faden sind nicht zu sehen.',
+    );
+  }
+});
+
 // Ersatzlos zu streichen waere falsch: dann waere der Rueckbau eine Zeile,
 // die beim naechsten Umbau versehentlich zurueckkommt und die niemand
 // bemerkt (Regel 5). Also dieselbe Messstelle, umgekehrte Frage.

@@ -729,6 +729,24 @@ const PROBEN = [
     tor: 'smoke',
     meldet: 'Splitter',
   },
+  {
+    // **Man muss SEHEN, dass etwas fortgetragen wird (S-P3-03, v263).**
+    //
+    // Der Schildtraeger hat es vorgemacht: gestrichelter Ring und Faeden zu
+    // denen, die er versorgt - die Reihenfolge muss man sehen, nicht
+    // erschliessen. Ohne Marke ist ein Raeuber ein Gegner, der aus
+    // unerfindlichen Gruenden in die falsche Richtung laeuft.
+    //
+    // Der Eingriff nimmt dem Raeuber seinen Splitter. Geprueft wird nicht,
+    // dass die Aufnahme entsteht - das bewiese nur, dass sie entsteht -,
+    // sondern dass sie sich von derselben Karte OHNE Raeuber unterscheidet.
+    name: 'Der Raeuber traegt seine Beute unsichtbar',
+    datei: 'src/gfx/renderer.ts',
+    suche: '      if (e.kernraub > 0) {',
+    ersatz: '      if (false) {',
+    tor: 'bildtor',
+    meldet: 'nicht zu sehen',
+  },
   // **Die andere Richtung hat KEINE Gegenprobe, und das steht hier statt in
   // einer Fussnote.**
   //

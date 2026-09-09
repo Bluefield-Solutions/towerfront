@@ -1951,19 +1951,55 @@ export class Renderer {
       // dem Kopf, in der Warnfarbe des Kristallverlusts - dieselbe Farbe wie
       // die Zahl, die beim Raub aufsteigt, damit man beides zusammenbringt.
       if (e.kernraub > 0) {
+        // **Der Faden zurueck zum Kristall** (S-P3-03).
+        //
+        // Der Splitter allein sagt "der traegt etwas". Der Faden sagt
+        // WOHIN es gehoert, und damit, dass es zurueckkommen kann - genau
+        // dieselbe Aufgabe wie die Faeden des Schildtraegers: die
+        // Reihenfolge muss man sehen, nicht erschliessen.
+        //
+        // Er wird mit der Strecke schwaecher: je weiter der Raeuber kommt,
+        // desto duenner der Faden, und wenn er reisst, ist es zu spaet.
+        // **Gebacken, nicht geleuchtet** (Regel 11) - kein `lighter`, kein
+        // `blur` auf sich selbst, sonst ist das Bild auf iOS nach einer
+        // Sekunde schwarz.
+        const zx = s.goal.x, zy = s.goal.y;
+        const weit = Math.hypot(zx - e.x, zy - e.y);
+        const naehe = Math.max(0, 1 - weit / 900);
+        if (naehe > 0.02) {
+          ctx.save();
+          ctx.strokeStyle = hexA(C.crystal, 0.15 + 0.45 * naehe);
+          ctx.lineWidth = 1 + 2 * naehe;
+          ctx.setLineDash([9, 7]);
+          ctx.lineDashOffset = -s.time * 40;
+          ctx.beginPath();
+          ctx.moveTo(e.x, e.y - alt);
+          ctx.lineTo(zx, zy);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+        }
         ctx.save();
         ctx.translate(e.x, e.y - alt - sicht * 1.5);
         const puls = 0.7 + 0.3 * Math.sin(s.time * 5 + e.wobble);
         ctx.rotate(Math.sin(s.time * 2 + e.wobble) * 0.25);
-        ctx.fillStyle = hexA(C.danger, 0.55 + 0.45 * puls);
+        // Die Farbe des Kristalls, nicht die der Warnung: was er traegt,
+        // IST der Kristall. Der dunkle Saum darunter haelt ihn auf hellem
+        // Boden lesbar - gebacken als zwei Fuellungen, nicht als Schein.
         const r = 7 + Math.min(4, e.kernraub);
-        ctx.beginPath();
-        ctx.moveTo(0, -r);
-        ctx.lineTo(r * 0.6, 0);
-        ctx.lineTo(0, r);
-        ctx.lineTo(-r * 0.6, 0);
-        ctx.closePath();
-        ctx.fill();
+        const splitter = (gr: number) => {
+          ctx.beginPath();
+          ctx.moveTo(0, -gr);
+          ctx.lineTo(gr * 0.6, 0);
+          ctx.lineTo(0, gr);
+          ctx.lineTo(-gr * 0.6, 0);
+          ctx.closePath();
+          ctx.fill();
+        };
+        ctx.fillStyle = hexA(C.crystalDeep, 0.85);
+        splitter(r + 2);
+        ctx.fillStyle = hexA(C.crystal, 0.6 + 0.4 * puls);
+        splitter(r);
         ctx.restore();
       }
 

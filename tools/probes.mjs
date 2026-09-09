@@ -55,22 +55,62 @@ const LEERES_SYMBOL = await (async () => {
 const PROBEN = [
   {
     name: 'Weg knickt scharf ab',
-    datei: 'src/data/maps.ts',
-    // Der zweite Stuetzpunkt der ersten Bahn wird weit nach unten gezogen.
+    datei: 'src/data/wegnetz.ts',
+    // **Umgezogen in v278.** Bis v277 stand die Punktliste in `maps.ts`, und
+    // die Probe griff dort zu. Seit die Bahnen aus `WEGNETZ` folgen, gibt es
+    // in `maps.ts` keine Punkte mehr - die alte Regel haette auf KEINER Karte
+    // mehr getroffen. Genau die Verfallsart, die dieselbe Probe schon in v233
+    // hatte (K1: ein Tor, das seinen Gegenstand verliert, wird in derselben
+    // Runde nachgezogen oder gestrichen).
+    //
     // Als Regel, nicht als fester Wert: Wegkoordinaten aendern sich mit jeder
     // neuen Karte, und eine Probe, die daran haengt, veraltet lautlos.
-    // **Kommentarzeilen ueberspringen (v233).** Bis dahin stand hier
-    // `lanes: \[\n\s*\[\n` - und `\s*` faengt Leerraum, nicht Text. Seit
-    // v232/v233 traegt jeder Bahnblock einen Kommentar zwischen `lanes: [`
-    // und der ersten Bahn, und damit traf die Regel auf KEINER der vier
-    // Karten mehr. Gemeldet hat es `npm run muster` in demselben Lauf, in
-    // dem der Kommentar dazukam.
-    regel: /(lanes: \[\n(?:\s*\/\/[^\n]*\n)*\s*\[\n\s*\{[^}]*\}, \{ x: \d+, y: )(\d+)/,
+    regel: /(punkte: \[\n\s*\{ x: \d+, y: )(\d+)/,
     // Nicht 950: bei Karten, deren erste Bahn ohnehin unten verlaeuft, waere
     // das kaum eine Aenderung. Null zieht den Punkt zuverlaessig an den
     // oberen Rand und erzeugt damit den scharfen Knick, den die Probe braucht.
     ersatz: '$10',
     tor: 'guards',
+  },
+  {
+    // **Das Netz ist seit v278 die einzige Punktliste.** Verschiebt sie sich,
+    // laufen die Gegner woanders - und niemand saehe es, weil `maps.ts` keine
+    // zweite Liste mehr haelt, gegen die man vergleichen koennte. Der Stand in
+    // `tools/wegnetz-stand.txt` ist aus den Bahnen von v277 erzeugt und haelt
+    // genau das.
+    name: 'Das Wegenetz ist verschoben',
+    datei: 'src/data/wegnetz.ts',
+    // Der erste Knoten wandert 200 Weltpunkte nach rechts. Als Regel, damit
+    // die Probe eine neue Karte ueberlebt.
+    regel: /(knoten: \[\n\s*\{ id: '[a-z0-9]+', x: )(-?\d+)/,
+    ersatz: '$1900',
+    tor: 'netztor',
+    meldet: 'Weltpunkte neben dem Stand',
+  },
+  {
+    // **Die Nullprobe der Ausweichprobe (Regel 13).** Das Tor behauptet, es
+    // merke, wenn die Ableitung nach dem Wegfall einer Kante stillschweigend
+    // die alte Route behaelt. Beweisen laesst sich das nur, indem man ihm den
+    // Fall STELLT: wird gar keine Kante entfernt, MUSS es anschlagen. Ohne
+    // diese Probe waere die Ausweichprobe eine Zeile, die nie etwas meldet.
+    name: 'Die Ausweichprobe entfernt gar keine Kante',
+    datei: 'tools/netz.ts',
+    regel: /netz\.kanten\.filter\(\(k\) => k\.id !== weg\)/,
+    ersatz: 'netz.kanten.filter(() => true)',
+    tor: 'netztor',
+    meldet: 'stillschweigend',
+  },
+  {
+    // **Der Rundlauf haelt die beiden Richtungen zusammen.** `netzAusBahnen`
+    // und `bahnenAusNetz` muessen zueinander invers sein; ist eine von beiden
+    // falsch, faellt es sonst erst auf, wenn `npm run bahnbau` eine Karte
+    // eintraegt - also genau an dem Tag, an dem eine neue Karte kommt.
+    name: 'Netz aus Bahnen verliert einen Punkt',
+    datei: 'src/data/wegnetz.ts',
+    regel: /bahn\.slice\(vonIdx \+ 1, i\)/,
+    ersatz: 'bahn.slice(vonIdx + 1, i - 1)',
+    tor: 'netztor',
+    meldet: 'Rundlauf',
   },
   {
     // **Der Waechter war blind, wo das Projekt steht.** Seine Zahlwort-Tabelle
@@ -3521,7 +3561,11 @@ const PROBEN = [
   {
     // Und die Gegenrichtung: die Strasse schrumpft unter die Figuren.
     name: 'Strasse schrumpft unter die Gegner',
-    datei: 'src/data/maps.ts',
+    // **Mit den Punkten umgezogen (v278).** Die Wegbreite steht seit dem
+    // Umbau auf `WEGNETZ` in `wegnetz.ts` - in `maps.ts` gibt es kein `w`
+    // mehr, und die Regel traf ins Leere. Gemeldet hat es `npm run muster`
+    // in demselben Lauf, in dem der Umzug stattfand.
+    datei: 'src/data/wegnetz.ts',
     regel: /w: (\d+) \}/g,
     ersatz: 'w: 18 }',
     tor: 'gedraengetor',

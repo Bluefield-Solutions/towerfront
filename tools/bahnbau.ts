@@ -24,11 +24,13 @@
  *   npm run bahnbau -- --suche      probiert `skala` durch und nennt das Fenster
  *   npm run bahnbau -- --schreiben  traegt das Ergebnis in src/data/maps.ts ein
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LanePath } from '../src/core/path';
 import { MAPS } from '../src/data/maps';
+import { netzAusBahnen } from '../src/data/wegnetz';
+import { netzEintragen } from './netzschrift';
 import {
   bahnenAus, bauplaetze, kreuzdeckung, verschmelzung, geometrie, gemeinsamePunkte,
 } from './bahnmass';
@@ -143,17 +145,6 @@ function messen(kartenId: string, lanes: { x: number; y: number; w: number }[][]
   return { zeilen, verstoesse, kreuz: kreuz.schwaechste, misch: misch.staerkste };
 }
 
-/** Die Punktliste so schreiben, wie sie in `maps.ts` steht. */
-function block(l: { x: number; y: number; w: number }[]): string {
-  const zeilen: string[] = []; let puffer: string[] = [];
-  for (const pt of l) {
-    puffer.push(`{ x: ${pt.x}, y: ${pt.y}, w: ${pt.w} }`);
-    if (puffer.length === 3) { zeilen.push('      ' + puffer.join(', ') + ','); puffer = []; }
-  }
-  if (puffer.length) zeilen.push('      ' + puffer.join(', ') + ',');
-  return zeilen.join('\n');
-}
-
 let fehler = 0;
 let gesucht = false;
 for (const [id, roh] of Object.entries(beschreibung.karten) as [string, Entwurf][]) {
@@ -190,15 +181,15 @@ for (const [id, roh] of Object.entries(beschreibung.karten) as [string, Entwurf]
     if (m.verstoesse.length) {
       console.error('  NICHT eingetragen - erst muessen alle Regeln halten.');
     } else {
-      const p = join(ROOT, 'src/data/maps.ts');
-      const s = readFileSync(p, 'utf8');
-      const i = s.indexOf(`export const MAP_${id.toUpperCase()}`);
-      const a = s.indexOf('  lanes: [\n', i) + '  lanes: [\n'.length;
-      const kopf = s.slice(a, s.indexOf('    [\n', a));
-      const b = s.indexOf('\n  ],\n  rough: [', a);
-      const neu = kopf + lanes.map((l) => `    [\n${block(l)}\n    ],`).join('\n');
-      writeFileSync(p, s.slice(0, a) + neu.replace(/,\n?$/, '') + ',' + s.slice(b));
-      console.log(`  eingetragen in src/data/maps.ts (${lanes.length} Bahnen).`);
+      // **Eingetragen wird seit v278 das NETZ, nicht die Punktliste.** Die
+      // Bahnen in `maps.ts` sind abgeleitet; wer dort noch Punktlisten
+      // sucht, schreibt ins Leere. `netzAusBahnen` macht aus den erzeugten
+      // Bahnen dieselbe Form, die `wegnetz.ts` haelt - gemeinsame Punkte
+      // werden wieder zu Knoten.
+      netzEintragen(id, netzAusBahnen(lanes));
+      console.log(`  eingetragen in src/data/wegnetz.ts (${lanes.length} Bahnen).`);
+      console.log('  Danach `npm run netz -- --schreiben`, sonst meldet das Tor die Abweichung -'
+        + ' und genau das soll es.');
     }
   }
 }

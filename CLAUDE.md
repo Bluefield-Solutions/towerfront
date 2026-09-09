@@ -160,7 +160,7 @@ npm run vorlauf     nur `tsc`, gemessen 4,4 s. **Kein Tor** - die Weigerung,
                     sonst einen vollen Runner-Durchlauf (3-4 min) fuer eine
                     Auskunft von vier Sekunden. Seit v269 ist das der einzige
                     Schritt, der je Runde hier laeuft.
-npm run gate        zweiunddreissig Prüfungen. Läuft seit v269 auf dem Runner;
+npm run gate        dreiunddreissig Prüfungen. Läuft seit v269 auf dem Runner;
                     hier nur noch von Hand, wenn eine Frage es verlangt.
                     **Gemessen 426 s (7:06) in v268** — Schritt für Schritt
                     einzeln, nacheinander, auf demselben warmen Baum.
@@ -193,6 +193,16 @@ npm run bildtor     der Querschnitt, den die Torkette prüft - und seit v273
                     fiel auf die gezeichnete Ersatzform zurueck, und die
                     sieht ordentlich aus.
 npm run pack-art    Bildvorrat aus art/roh/ neu einbacken
+npm run netz        haelt die abgeleiteten Bahnen gegen einen eingefrorenen
+                    Stand. Seit v278 stehen die Punkte nicht mehr in
+                    `maps.ts`, sondern als Knoten und Kanten in
+                    `src/data/wegnetz.ts`; die Bahnen FOLGEN daraus. Gemessen
+                    werden 64 Abtastpunkte je Bahn - die Kurve, nicht die
+                    Kontrollpunkte -, dazu zwei Selbsttests: der Rundlauf
+                    (`netzAusBahnen` und `bahnenAusNetz` sind invers) und die
+                    Ausweichprobe (jede benutzte Kante einzeln entfernt; die
+                    Ableitung muss ausweichen oder melden, nie schweigen).
+                    `--schreiben` setzt den Stand neu.
 npm run eichen      einen Wert durchprobieren, alle Kennzahlen nebeneinander.
                     `--kurve` die Schwierigkeitskurve, `--knie` das Knie der
                     Lebenspunktkurve (seit v258), `--leben` die Groesse des
@@ -486,7 +496,7 @@ npm run kartenwechsel  was ein Kartenaufbau an Bildpunkten kostet
                     (mit `-- --browser` zusätzlich im Browser mit Telefondrossel)
 ```
 
-Die Torkette: `tsc` → `guards` → `doku` → `muster` → `art` → `determinism` → `sim` →
+Die Torkette: `tsc` → `guards` → `netztor` → `doku` → `muster` → `art` → `determinism` → `sim` →
 `konter` → `geschosse` → `muendung` → `gedraenge` → `bahntreue` → `bauflaeche` →
 `wegdeckung` → `bench` →
 `bench-draw` → `kartenwechsel` → `grafiktor` → `einbettung` → `zielplatte` → `kristall` → `speicher` → `gelaende` → `lesbarkeit` → `beruehrung` → `streifen` → `bildtor` → `smoke` →
@@ -661,7 +671,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v277. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v278. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

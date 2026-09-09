@@ -15,7 +15,7 @@
     "autarkie": "node tools/check-autarkie.mjs",
     "vorlauf": "npm run tsc",
     "inspektor": "node tools/inspektor.mjs",
-    "gate": "npm run tsc && npm run guards && npm run doku && npm run muster && npm run art && npm run determinism && npm run sim && npm run kontertor && npm run geschossetor && npm run muendungstor && npm run gedraengetor && npm run bahntreuetor && npm run bauflaechetor && npm run wegdeckungtor && npm run bench && npm run bench-draw && npm run kartenwechsel && npm run grafiktor && npm run einbettungstor && npm run zielplattentor && npm run kristalltor && npm run speichertor && npm run gelaendetor && npm run lesbarkeit && npm run beruehrung && npm run streifentor && npm run bildtor && npm run smoke && npm run build && npm run autarkie && npm run browser && npm run uxaudittor && npm run bericht",
+    "gate": "npm run tsc && npm run guards && npm run netztor && npm run doku && npm run muster && npm run art && npm run determinism && npm run sim && npm run kontertor && npm run geschossetor && npm run muendungstor && npm run gedraengetor && npm run bahntreuetor && npm run bauflaechetor && npm run wegdeckungtor && npm run bench && npm run bench-draw && npm run kartenwechsel && npm run grafiktor && npm run einbettungstor && npm run zielplattentor && npm run kristalltor && npm run speichertor && npm run gelaendetor && npm run lesbarkeit && npm run beruehrung && npm run streifentor && npm run bildtor && npm run smoke && npm run build && npm run autarkie && npm run browser && npm run uxaudittor && npm run bericht",
     "bench-draw": "tsx tools/bench-draw.ts",
     "determinism": "tsx tools/determinism.ts",
     "pack-art": "node tools/pack-art.mjs",
@@ -85,7 +85,9 @@
     "fruehstart": "tsx tools/fruehstart.ts",
     "naechste": "node tools/naechste.mjs",
     "baukarte": "tsx tools/baukarte.mjs",
-    "wellenbau": "tsx tools/wellenbau.ts"
+    "wellenbau": "tsx tools/wellenbau.ts",
+    "netz": "tsx tools/netz.ts",
+    "netztor": "tsx tools/netz.ts --tor"
   },
   "keywords": [],
   "author": "",

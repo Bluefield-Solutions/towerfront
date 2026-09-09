@@ -1,5 +1,6 @@
 import type { Vec } from '../core/math';
 import { LanePath, type PathPoint } from '../core/path';
+import { WEGNETZ, bahnenAusNetz } from './wegnetz';
 import {
   PLAN_SPIRALHAIN, PLAN_ASCHESCHLUCHT, PLAN_FROSTSPALTE, PLAN_FARNKESSEL, type Wave,
 } from './waves';
@@ -253,39 +254,20 @@ export const MAP_SPIRALHAIN: GameMap = {
   name: 'Spiralhain',
   blurb: 'Ein Weg, viel Platz. Der Pfad windet sich um den Kristall.',
   palette: MOOS,
-  lanes: [
-    // **Neu gezogen, seit das Spiel den Weg selbst zeichnet.** Vorher folgte
-    // die Bahn der gemalten Strasse - Umwegfaktor 1,11, eine fast gerade
-    // Diagonale, und die obere linke Kartenhaelfte wurde nie betreten. Ohne
-    // gemalte Strasse gibt es nichts mehr, dem zu folgen waere.
-    //
-    // Gewunden statt verlaengert: das Tor rueckt von links unten in die
-    // Mitte des unteren Randes, die Luftlinie faellt von 1400 auf rund 900,
-    // und der Umweg steigt, ohne dass viel mehr Gegner gleichzeitig
-    // unterwegs sind. Genau daran sind v209 und v210 gescheitert - eine
-    // anderthalb mal so lange Bahn verlangte hpMul 0,55 gegen erlaubte 0,85.
-    //
-    // Die Bahn haelt Abstand zu jedem unwegsamen Fleck: ein Weg mitten durch
-    // ein Felsfeld sieht falsch aus, und die Bausperre lag ohnehin darum.
-    [
-      { x: -60, y: 1035, w: 38 }, { x: 160, y: 1050, w: 44 },
-      { x: 380, y: 1042, w: 46 }, { x: 520, y: 1000, w: 48 },
-      { x: 524, y: 860, w: 50 }, { x: 528, y: 700, w: 50 },
-      { x: 540, y: 580, w: 48 }, { x: 590, y: 516, w: 44 },
-      { x: 690, y: 500, w: 44 }, { x: 790, y: 548, w: 46 },
-      { x: 816, y: 680, w: 50 }, { x: 820, y: 820, w: 50 },
-      { x: 826, y: 950, w: 48 }, { x: 886, y: 1016, w: 44 },
-      { x: 996, y: 1030, w: 44 }, { x: 1096, y: 980, w: 46 },
-      { x: 1116, y: 850, w: 50 }, { x: 1120, y: 700, w: 50 },
-      { x: 1128, y: 570, w: 48 }, { x: 1182, y: 502, w: 44 },
-      { x: 1288, y: 490, w: 44 }, { x: 1390, y: 542, w: 46 },
-      { x: 1408, y: 680, w: 50 }, { x: 1414, y: 820, w: 52 },
-      { x: 1444, y: 940, w: 52 }, { x: 1540, y: 1004, w: 52 },
-      { x: 1646, y: 978, w: 54 }, { x: 1700, y: 850, w: 56 },
-      { x: 1716, y: 700, w: 58 }, { x: 1726, y: 570, w: 62 },
-      { x: 1730, y: 514, w: 68 },
-    ],
-  ],
+  // **Neu gezogen, seit das Spiel den Weg selbst zeichnet.** Vorher folgte
+  // die Bahn der gemalten Strasse - Umwegfaktor 1,11, eine fast gerade
+  // Diagonale, und die obere linke Kartenhaelfte wurde nie betreten. Ohne
+  // gemalte Strasse gibt es nichts mehr, dem zu folgen waere.
+  //
+  // Gewunden statt verlaengert: das Tor rueckt von links unten in die
+  // Mitte des unteren Randes, die Luftlinie faellt von 1400 auf rund 900,
+  // und der Umweg steigt, ohne dass viel mehr Gegner gleichzeitig
+  // unterwegs sind. Genau daran sind v209 und v210 gescheitert - eine
+  // anderthalb mal so lange Bahn verlangte hpMul 0,55 gegen erlaubte 0,85.
+  //
+  // Die Bahn haelt Abstand zu jedem unwegsamen Fleck: ein Weg mitten durch
+  // ein Felsfeld sieht falsch aus, und die Bausperre lag ohnehin darum.
+  lanes: bahnenAusNetz(WEGNETZ.spiralhain),
   // **Aus dem Bild gelesen, dann angesehen.** `npm run gelaendesuche -- spiralhain`
   // schlaegt vor, sein Kontaktbogen zeigt die Vorschlaege - von vierzehn waren
   // sechs blanke Wiese. Kein Kriterium trennt die beiden (siehe Kopf des
@@ -326,43 +308,26 @@ export const MAP_ASCHESCHLUCHT: GameMap = {
   // Zeile darunter sagte es richtig. Ein Waechter haelt das jetzt fest.
   blurb: 'Der Boden glüht noch. Die Zuwege münden früh ineinander — danach zählt jede Stellung doppelt.',
   palette: LAUB,
-  lanes: [
-    // **Neu gezogen, seit die Karte ihren Weg selbst zeichnet (v233).** Die
-    // alten drei Bahnen folgten der gemalten Strasse des vorigen Bildes -
-    // Umweg 1,10 / 1,12 / 1,65 gegen verlangte 1,8, und zwei von ihnen liefen
-    // durch einen unwegsamen Fleck hindurch (4 und 39 Weltpunkte hinein).
-    //
-    // **Gewunden statt verlaengert**, zum vierten Mal (v217, v219, v232): die
-    // drei Tore liegen NAHE am Ziel statt weit weg. Luftlinien 1256 / 862 /
-    // 1050 gegen vorher 1807 / 1827 / 1409 - der Umweg steigt damit auf
-    // 2,00 / 2,51 / 2,29, ohne dass die Bahnen laenger werden als vorher
-    // (2510 / 2165 / 2401 gegen 1986 / 2044 / 2329).
-    //
-    // **Die Laengen muessen zusammenpassen, die Luftlinien nicht.** Der
-    // Waechter erlaubt hoechstens 30 % Unterschied zwischen den Bahnen, sonst
-    // ist die kuerzeste eine Abkuerzung; hier stehen sie auf 1,16. Genau
-    // deshalb windet sich die kurze zweite Bahn am staerksten: sie hat den
-    // kuerzesten Weg zum Ziel und muss ihn selbst lang machen.
-    //
-    // Die letzten sechs Punkte teilen sich alle drei - das ist die Gabelung,
-    // die der Waechter verlangt (256 gemeinsame Punkte, noetig sind 10).
-    [
-      { x: 1250, y: 1180, w: 40 }, { x: 1280, y: 1090, w: 44 }, { x: 1300, y: 1020, w: 48 },
-      { x: 1330, y: 980, w: 40 }, { x: 1264, y: 905, w: 44 }, { x: 1094, y: 605, w: 48 },
-      { x: 959, y: 691, w: 52 }, { x: 859, y: 599, w: 56 }, { x: 746, y: 515, w: 52 },
-      { x: 668, y: 470, w: 44 }, { x: 714, y: 424, w: 40 }, { x: 885, y: 323, w: 44 },
-      { x: 1080, y: 354, w: 48 }, { x: 1198, y: 502, w: 52 }, { x: 1308, y: 595, w: 56 },
-      { x: 1459, y: 576, w: 44 }, { x: 1591, y: 515, w: 40 }, { x: 1690, y: 480, w: 40 },
-    ],
-    [
-      { x: 1550, y: 1180, w: 40 }, { x: 1470, y: 1075, w: 44 }, { x: 1370, y: 1000, w: 48 },
-      { x: 1330, y: 980, w: 40 }, { x: 1291, y: 828, w: 44 }, { x: 1221, y: 645, w: 48 },
-      { x: 1021, y: 608, w: 52 }, { x: 839, y: 687, w: 56 }, { x: 651, y: 660, w: 52 },
-      { x: 512, y: 470, w: 44 }, { x: 808, y: 435, w: 40 }, { x: 872, y: 431, w: 44 },
-      { x: 990, y: 496, w: 48 }, { x: 1136, y: 583, w: 52 }, { x: 1292, y: 665, w: 56 },
-      { x: 1481, y: 644, w: 44 }, { x: 1609, y: 545, w: 40 }, { x: 1690, y: 480, w: 40 },
-    ],
-  ],
+  // **Neu gezogen, seit die Karte ihren Weg selbst zeichnet (v233).** Die
+  // alten drei Bahnen folgten der gemalten Strasse des vorigen Bildes -
+  // Umweg 1,10 / 1,12 / 1,65 gegen verlangte 1,8, und zwei von ihnen liefen
+  // durch einen unwegsamen Fleck hindurch (4 und 39 Weltpunkte hinein).
+  //
+  // **Gewunden statt verlaengert**, zum vierten Mal (v217, v219, v232): die
+  // drei Tore liegen NAHE am Ziel statt weit weg. Luftlinien 1256 / 862 /
+  // 1050 gegen vorher 1807 / 1827 / 1409 - der Umweg steigt damit auf
+  // 2,00 / 2,51 / 2,29, ohne dass die Bahnen laenger werden als vorher
+  // (2510 / 2165 / 2401 gegen 1986 / 2044 / 2329).
+  //
+  // **Die Laengen muessen zusammenpassen, die Luftlinien nicht.** Der
+  // Waechter erlaubt hoechstens 30 % Unterschied zwischen den Bahnen, sonst
+  // ist die kuerzeste eine Abkuerzung; hier stehen sie auf 1,16. Genau
+  // deshalb windet sich die kurze zweite Bahn am staerksten: sie hat den
+  // kuerzesten Weg zum Ziel und muss ihn selbst lang machen.
+  //
+  // Die letzten sechs Punkte teilen sich alle drei - das ist die Gabelung,
+  // die der Waechter verlangt (256 gemeinsame Punkte, noetig sind 10).
+  lanes: bahnenAusNetz(WEGNETZ.ascheschlucht),
   rough: [
     // **Farbe und Art sind am GEBACKENEN Boden gelesen, nicht am Rohbild
     // (v233)** - dieselbe Lehre wie bei der Frostspalte in v232: als die
@@ -446,46 +411,20 @@ export const MAP_FROSTSPALTE: GameMap = {
   name: 'Frostspalte',
   blurb: 'Späte Vereinigung, wenig Platz. Jede Stellung muss sitzen.',
   palette: FROST,
-  lanes: [
-    // **Neu gezogen, seit die Karte ihren Weg selbst zeichnet (v232).** Die
-    // alten Bahnen folgten der gemalten Strasse - Umweg 1,35 und 1,43, und
-    // Bahn 1 lief sogar durch einen unwegsamen Fleck hindurch (44 Weltpunkte
-    // hinein). Ohne gemalte Strasse gibt es nichts mehr, dem zu folgen waere.
-    //
-    // **Gewunden statt verlaengert**, die Lehre aus v217 und v209/v210: beide
-    // Tore ruecken an den unteren Rand, nahe an das Ziel. Die Luftlinie faellt
-    // von 1813 und 1864 auf rund 1490 und 920 - der Umweg steigt damit, ohne
-    // dass mehr Gegner gleichzeitig unterwegs sind. Eine anderthalb mal so
-    // lange Bahn verlangte in v210 `hpMul` 0,55 gegen erlaubte 0,85.
-    //
-    // Vorbild ist der Farnkessel: er besteht nicht, weil seine Bahnen laenger
-    // sind, sondern weil seine Tore naeher liegen (Luftlinie 1492 und 873).
-    [
-      { x: 400, y: 1180, w: 40 }, { x: 392, y: 1030, w: 44 },
-      { x: 352, y: 900, w: 48 }, { x: 300, y: 770, w: 52 },
-      { x: 286, y: 620, w: 56 }, { x: 340, y: 490, w: 52 },
-      { x: 452, y: 400, w: 44 }, { x: 592, y: 356, w: 40 },
-      { x: 730, y: 352, w: 40 }, { x: 862, y: 396, w: 44 },
-      { x: 972, y: 470, w: 48 }, { x: 1052, y: 574, w: 52 },
-      { x: 1080, y: 704, w: 56 }, { x: 1008, y: 806, w: 48 },
-      { x: 1092, y: 884, w: 40 }, { x: 1232, y: 922, w: 44 },
-      { x: 1372, y: 900, w: 48 }, { x: 1482, y: 832, w: 52 },
-      { x: 1570, y: 730, w: 56 }, { x: 1626, y: 636, w: 48 },
-      { x: 1664, y: 546, w: 40 }, { x: 1669, y: 525, w: 40 },
-    ],
-    [
-      { x: 1100, y: 1180, w: 40 }, { x: 1128, y: 1020, w: 44 },
-      { x: 1234, y: 908, w: 48 }, { x: 1348, y: 826, w: 52 },
-      { x: 1408, y: 698, w: 56 }, { x: 1364, y: 574, w: 52 },
-      { x: 1238, y: 512, w: 44 }, { x: 1102, y: 528, w: 40 },
-      { x: 1008, y: 620, w: 44 }, { x: 984, y: 736, w: 48 },
-      { x: 1044, y: 830, w: 52 }, { x: 1170, y: 858, w: 56 },
-      { x: 1310, y: 862, w: 48 }, { x: 1444, y: 824, w: 44 },
-      { x: 1540, y: 764, w: 48 }, { x: 1570, y: 730, w: 56 },
-      { x: 1626, y: 636, w: 48 }, { x: 1664, y: 546, w: 40 },
-      { x: 1669, y: 525, w: 40 },
-    ],
-  ],
+  // **Neu gezogen, seit die Karte ihren Weg selbst zeichnet (v232).** Die
+  // alten Bahnen folgten der gemalten Strasse - Umweg 1,35 und 1,43, und
+  // Bahn 1 lief sogar durch einen unwegsamen Fleck hindurch (44 Weltpunkte
+  // hinein). Ohne gemalte Strasse gibt es nichts mehr, dem zu folgen waere.
+  //
+  // **Gewunden statt verlaengert**, die Lehre aus v217 und v209/v210: beide
+  // Tore ruecken an den unteren Rand, nahe an das Ziel. Die Luftlinie faellt
+  // von 1813 und 1864 auf rund 1490 und 920 - der Umweg steigt damit, ohne
+  // dass mehr Gegner gleichzeitig unterwegs sind. Eine anderthalb mal so
+  // lange Bahn verlangte in v210 `hpMul` 0,55 gegen erlaubte 0,85.
+  //
+  // Vorbild ist der Farnkessel: er besteht nicht, weil seine Bahnen laenger
+  // sind, sondern weil seine Tore naeher liegen (Luftlinie 1492 und 873).
+  lanes: bahnenAusNetz(WEGNETZ.frostspalte),
   // **Die Farben stehen am GEBACKENEN Boden, nicht am Rohbild (v232).** Als
   // die Backhelligkeit von 0,52 auf 0,37 fiel, wanderten alle zehn
   // Eintragungen um 0,12 bis 0,16 davon - `npm run gelaendetor` meldete zehn
@@ -540,39 +479,9 @@ export const MAP_FARNKESSEL: GameMap = {
   name: 'Farnkessel',
   blurb: 'Zwei Wege, einer kurz. Der Kessel liegt im Schatten.',
   palette: FARN,
-  lanes: [
-    // Die lange: von unten rechts durch den ganzen Kessel, drei Saeulen im
-    // Abstand von 350 - dazwischen steht ein Turm und sieht beide Seiten.
-    [
-      { x: 1500, y: 1160, w: 44 }, { x: 1440, y: 1020, w: 48 },
-      { x: 1420, y: 870, w: 50 }, { x: 1416, y: 720, w: 50 },
-      { x: 1430, y: 600, w: 48 }, { x: 1370, y: 530, w: 44 },
-      { x: 1260, y: 520, w: 44 }, { x: 1150, y: 575, w: 46 },
-      { x: 1090, y: 700, w: 50 }, { x: 1086, y: 860, w: 50 },
-      { x: 1090, y: 1000, w: 48 }, { x: 1020, y: 1062, w: 44 },
-      { x: 910, y: 1062, w: 44 }, { x: 820, y: 990, w: 46 },
-      { x: 770, y: 860, w: 50 }, { x: 766, y: 710, w: 50 },
-      { x: 780, y: 590, w: 48 }, { x: 700, y: 520, w: 44 },
-      { x: 570, y: 520, w: 46 }, { x: 440, y: 540, w: 48 },
-      { x: 310, y: 510, w: 52 }, { x: 241, y: 479, w: 60 },
-    ],
-    // Die zweite: von unten links durch den Kessel, und ab dem Farnriegel
-    // laufen beide dieselbe Strecke. Eine Gabelung, keine zwei Strassen -
-    // der Waechter verlangt beides: hoechstens 30 % Laengenunterschied und
-    // ein gemeinsames Stueck.
-    [
-      { x: 700, y: 1160, w: 44 }, { x: 720, y: 1020, w: 46 },
-      { x: 640, y: 910, w: 48 }, { x: 500, y: 880, w: 48 },
-      { x: 380, y: 935, w: 48 }, { x: 285, y: 845, w: 48 },
-      { x: 290, y: 705, w: 50 }, { x: 340, y: 585, w: 48 },
-      { x: 460, y: 530, w: 46 }, { x: 590, y: 570, w: 46 },
-      { x: 660, y: 690, w: 48 }, { x: 780, y: 730, w: 48 },
-      { x: 880, y: 660, w: 46 }, { x: 850, y: 560, w: 44 },
-      { x: 780, y: 590, w: 48 }, { x: 700, y: 520, w: 44 },
-      { x: 570, y: 520, w: 46 }, { x: 440, y: 540, w: 48 },
-      { x: 310, y: 510, w: 52 }, { x: 241, y: 479, w: 60 },
-    ],
-  ],
+  // Die lange: von unten rechts durch den ganzen Kessel, drei Saeulen im
+  // Abstand von 350 - dazwischen steht ein Turm und sieht beide Seiten.
+  lanes: bahnenAusNetz(WEGNETZ.farnkessel),
   rough: [
     { x: 435, y: 214, r: 147, art: 'locker', farbe: '#171604' },
     { x: 1607, y: 780, r: 134, art: 'locker', farbe: '#181708' },

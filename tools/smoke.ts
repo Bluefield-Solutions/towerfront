@@ -906,6 +906,8 @@ step('Konter-Satz erscheint einmal und rechtzeitig', () => {
         // genau das eine Viertelstunde gekostet.
         const wer = (win.document.getElementById('coach-text') as HTMLElement | null)
           ?.dataset.step ?? 'unbekannt';
+        console.log('DEBUG', { i, aktiv: state.waveActive, kann: state.canStartWave,
+          phase: state.phase, laufende: JSON.stringify(state.laufende) });
         problems.push(`Konter W${i + 1}: die Blase steht noch, obwohl die Welle laeuft `
           + `(Schritt "${wer}").`);
       }

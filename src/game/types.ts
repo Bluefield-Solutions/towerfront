@@ -52,6 +52,25 @@ export interface Enemy {
   wobble: number;
   dead: boolean;
   leaked: boolean;
+  /** **Der Kernraub** (S-P3-01): wieviele Kristallpunkte dieser Gegner
+   *  gerade nach draussen traegt.
+   *
+   *  `0` ist der Normalfall. Ueber null heisst: er hat den Kristall erreicht,
+   *  ist NICHT gestorben, sondern umgekehrt und laeuft seine Bahn rueckwaerts
+   *  zum Tor. Erreicht er es, sind die Punkte endgueltig weg.
+   *
+   *  Bis v261 war ein Durchbruch ein Abzug: Kristall herunter, Ruckeln,
+   *  Gegner tot. Ein Abzug ist kein Ereignis - der schlimmste Augenblick des
+   *  Spiels war der ereignisloseste. */
+  kernraub: number;
+  /** In welcher Welle der Raub verbucht wurde (S-P3-02).
+   *
+   *  Ein Raeuber kann in einer spaeteren Welle sterben als der, in der er
+   *  gestohlen hat. Wird die Rueckgabe dann der LAUFENDEN Welle
+   *  gutgeschrieben, steht in der Bilanz ein Verlust, den es nicht gab -
+   *  und in einer anderen Welle eine Gutschrift ohne Verlust. Gemessen
+   *  meldete der Rauchtest genau das: 17 verbucht, 5 wirklich weg. */
+  raubWelle: number;
 }
 
 /** Wonach ein Turm sein Ziel aussucht.

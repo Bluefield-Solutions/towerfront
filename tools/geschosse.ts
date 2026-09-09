@@ -56,15 +56,27 @@ function aufbauen(seed: number): GameState {
  *  Kegel: ein Schuss, der ein Ziel HINTER sich annimmt, macht kehrt, und das
  *  waere ein Zauber und keine Waffe. Ohne diese Zahl wuerde ein weit
  *  geoeffneter Kegel den Verpuffungsanteil verbessern und dabei unbemerkt
- *  die Waffe ersetzen. */
-function messen(seed: number): { ab: number; weg: number; grad: number } {
+ *  die Waffe ersetzen.
+ *
+ *  **Ein Raeuber zaehlt hier nicht mit** (v262). Seit dem Kernraub kehrt ein
+ *  Gegner am Kristall um und laeuft dieselbe Bahn zurueck; ein Schuss, der
+ *  ihm folgt, dreht mit - gemessen 99 Grad. Das ist kein Zauber, sondern
+ *  die Welt, die sich geaendert hat.
+ *
+ *  Die Grenze bleibt trotzdem bei 90, statt auf 100 gehoben zu werden: eine
+ *  Grenze, die man einmal fuer den eigenen Fall lockert, bleibt gelockert,
+ *  bis niemand mehr weiss, dass sie es ist (dieselbe Lehre wie die
+ *  Kaelteschwelle in v235). Ausgenommen wird deshalb genau der Fall, nicht
+ *  der Wert - und die Zahl der ausgenommenen Schuesse steht daneben, damit
+ *  die Ausnahme nicht still waechst. */
+function messen(seed: number): { ab: number; weg: number; grad: number; raeuber: number } {
   const s = aufbauen(seed);
   s.stats.schuesse = 0;
   s.stats.schuesseOhneWirkung = 0;
   s.waveIndex = 11;
   s.startWave();
   const start = new Map<object, { x: number; y: number }>();
-  let grad = 0;
+  let grad = 0, raeuber = 0;
   for (let i = 0; i < 60 * 90; i++) {
     s.update(DT);
     const jetzt = new Set<object>();
@@ -74,7 +86,11 @@ function messen(seed: number): { ab: number; weg: number; grad: number } {
       const a = start.get(p);
       if (!a) { start.set(p, { x: p.dirX, y: p.dirY }); continue; }
       const cos = Math.min(1, Math.max(-1, a.x * p.dirX + a.y * p.dirY));
-      grad = Math.max(grad, (Math.acos(cos) * 180) / Math.PI);
+      const dreh = (Math.acos(cos) * 180) / Math.PI;
+      // Ein Schuss auf einen Raeuber darf mitdrehen - der Gegner ist
+      // umgekehrt, nicht das Geschoss verrueckt geworden.
+      if (p.target && p.target.kernraub > 0) { if (dreh > KEHRE) raeuber++; continue; }
+      grad = Math.max(grad, dreh);
     }
     // Geschosse aus dem Lager werden wiederverwendet - was nicht mehr
     // fliegt, muss raus, sonst wird der Nachfolger mit fremdem Start
@@ -82,14 +98,14 @@ function messen(seed: number): { ab: number; weg: number; grad: number } {
     for (const k of start.keys()) if (!jetzt.has(k)) start.delete(k);
     if (!s.enemies.length && !s.waveActive) break;
   }
-  return { ab: s.stats.schuesse, weg: s.stats.schuesseOhneWirkung, grad };
+  return { ab: s.stats.schuesse, weg: s.stats.schuesseOhneWirkung, grad, raeuber };
 }
 
 const SAATEN = [20260807, 4711, 99123];
-let ab = 0, weg = 0, grad = 0;
+let ab = 0, weg = 0, grad = 0, raeuber = 0;
 for (const seed of SAATEN) {
   const m = messen(seed);
-  ab += m.ab; weg += m.weg; grad = Math.max(grad, m.grad);
+  ab += m.ab; weg += m.weg; grad = Math.max(grad, m.grad); raeuber += m.raeuber;
   const q = m.ab ? m.weg / m.ab : 0;
   console.log(`  Saat ${seed}: ${m.ab} Schuesse, ${m.weg} ohne Wirkung (${(q * 100).toFixed(1)} %)` +
     `, groesste Richtungsaenderung ${m.grad.toFixed(0)} Grad`);
@@ -100,6 +116,7 @@ console.log(`GESCHOSSE: ${ab} zielsuchende Schuesse, ${weg} ohne Wirkung — ${(
 console.log(`Messstelle: Spiellogik in Node, Spiralhain, normal, Welle 12, sechs Salventuerme Stufe 3.`);
 
 console.log(`Groesste Richtungsaenderung eines Schusses: ${grad.toFixed(0)} Grad (Grenze ${KEHRE} Grad).`);
+console.log(`Davon ausgenommen: ${raeuber} Schuss/Schuesse auf einen Raeuber, der umgekehrt ist.`);
 
 // ---------------------------------------------------------------------------
 // Der Luftfilter im Ersatzziel.

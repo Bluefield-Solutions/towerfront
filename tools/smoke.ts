@@ -2023,6 +2023,178 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
           + `verbucht ${verbucht} statt 1. Die Bilanz meldet mehr, als das Spiel verliert.`,
         );
       }
+      // **Die Ersatzpruefung fuer denselben Aufbau** (S-P3-01).
+      //
+      // Mit dem Kernraub trifft dieser gestellte Fall etwas Neues: der
+      // Koloss stirbt nicht mehr, er TRAEGT. Was er traegt, muss genau das
+      // sein, was der Kristall verloren hat - nie mehr, nie weniger. Ein
+      // Raeuber, der drei Punkte durch die Gegend traegt, waehrend der
+      // Kristall nur einen verloren hat, verspricht eine Rueckgabe, die es
+      // nicht geben kann (S-P3-02).
+      if (e.kernraub !== verbucht) {
+        problems.push(
+          `Kernraub: der Raeuber traegt ${e.kernraub}, der Kristall hat aber ${verbucht} `
+          + 'verloren. Was er traegt, muss genau der Verlust sein.',
+        );
+      }
+    }
+  }
+}
+
+// **Der Kernraub: wer den Kristall erreicht, lebt und kehrt um** (S-P3-01).
+//
+// Gestellt, nicht abgewartet - dieselbe Lehre wie oben und wie die vier
+// Funde aus v219. Ein Messplatz, der auf einen Zufall wartet, hoert leise
+// auf zu pruefen, sobald sich die Karte aendert.
+{
+  const probe = new GameState();
+  probe.reset();
+  const e = probe.spawnZumPruefen('brute', 0);
+  if (!e) {
+    problems.push('Kernraub: der Koloss liess sich nicht stellen - die Probe misst nichts.');
+  } else {
+    const bahn = probe.lanes[e.lane] ?? probe.lanes[0];
+    e.travelled = bahn.length;
+    probe.update(1 / 60);
+    if (e.dead) {
+      problems.push('Kernraub: der Gegner ist am Kristall gestorben, statt zu rauben.');
+    } else if (e.kernraub <= 0) {
+      problems.push('Kernraub: der Gegner hat den Kristall erreicht, traegt aber nichts.');
+    } else {
+      // **Laeuft er wirklich ZURUECK?**
+      //
+      // Nicht im naechsten Bild messen: `leak()` haelt das Spiel 0,8
+      // Sekunden an (`stop(0.8)`), damit man den Einschlag sieht. Wer
+      // gleich danach misst, misst den Stillstand und nennt ihn
+      // "kehrt nicht um" - genau das hat der erste Entwurf dieser Probe
+      // getan.
+      for (let i = 0; i < 60; i++) probe.update(1 / 60);
+      const vor = e.travelled;
+      for (let i = 0; i < 10; i++) probe.update(1 / 60);
+      if (e.travelled >= vor) {
+        problems.push(
+          `Kernraub: der Raeuber laeuft weiter vorwaerts (${vor.toFixed(1)} -> `
+          + `${e.travelled.toFixed(1)}) - er kehrt nicht um.`,
+        );
+      }
+      // Und erreicht er sein Tor? Ans Ende der Rueckreise setzen.
+      e.travelled = 1;
+      probe.update(1 / 60);
+      if (!e.dead) {
+        problems.push('Kernraub: der Raeuber hat sein Tor erreicht und ist immer noch da.');
+      }
+      void bahn;
+    }
+  }
+}
+
+// **Der Splitter kommt zurueck, wenn der Traeger stirbt** (S-P3-02).
+//
+// Ohne die Rueckholung ist der Kernraub nur ein langsamerer Abzug - und
+// gemessen sogar schlechter als vorher: die Tuerme schiessen auf einen
+// Fliehenden, der niemandem mehr schaden kann. Mit Raub ohne Rueckgabe
+// verlor der Durchlauf die erste Karte in Welle 14 (C18 rot); mit Rueckgabe
+// gewinnt er sie mit 37 von 42.
+{
+  const probe = new GameState();
+  probe.reset();
+  const e = probe.spawnZumPruefen('brute', 0);
+  if (!e) {
+    problems.push('Splitter: der Koloss liess sich nicht stellen - die Probe misst nichts.');
+  } else {
+    const bahn = probe.lanes[e.lane] ?? probe.lanes[0];
+    e.travelled = bahn.length;
+    probe.update(1 / 60);
+    const nachRaub = probe.lives;
+    const beute = e.kernraub;
+    if (beute <= 0) {
+      problems.push('Splitter: der Gegner traegt nichts - die Probe misst nichts.');
+    } else {
+      // Ihn toeten, statt auf einen Turm zu warten (gestellt, nicht
+      // abgewartet).
+      probe.trefferZumPruefen(e, e.hp * 4 + 100);
+      if (!e.dead) {
+        problems.push('Splitter: der Raeuber ist nicht gestorben - der Fall ist nicht gestellt.');
+      } else if (!probe.splitter.length) {
+        problems.push('Splitter: der Raeuber ist gestorben, aber kein Splitter ist entstanden.');
+      } else {
+        for (let i = 0; i < 180; i++) probe.update(1 / 60);
+        if (probe.lives !== nachRaub + beute) {
+          problems.push(
+            `Splitter: der Kristall steht nach der Rueckgabe auf ${probe.lives}, `
+            + `erwartet waren ${nachRaub + beute} (${nachRaub} plus ${beute} getragene).`,
+          );
+        }
+        const verbucht = probe.stats.leaksByWave.reduce((a, b) => a + (b ?? 0), 0);
+        if (verbucht !== probe.maxLives - probe.lives) {
+          problems.push(
+            `Splitter: die Bilanz meldet ${verbucht} Verlust, am Kristall fehlen aber `
+            + `${probe.maxLives - probe.lives}. Zurueckgeholtes ist kein Verlust.`,
+          );
+        }
+      }
+    }
+  }
+}
+
+// **Der Kristall darf durch Rueckgabe nie ueber seinen Hoechstwert steigen.**
+//
+// Das ist die Zusage aus v174, von der anderen Seite: dort wurde der Abzug
+// bei null gedeckelt, hier die Gutschrift beim Hoechstwert. Geprueft wird
+// mit DREI Splittern auf einen vollen Kristall - einer allein koennte auch
+// durch Zufall passen.
+{
+  const probe = new GameState();
+  probe.reset();
+  for (let i = 0; i < 3; i++) {
+    probe.splitter.push({ x: probe.goal.x, y: probe.goal.y, punkte: 5, rest: 0.01, dauer: 1.1, welle: 0 });
+  }
+  for (let i = 0; i < 30; i++) probe.update(1 / 60);
+  if (probe.lives > probe.maxLives) {
+    problems.push(
+      `Splitter: der Kristall steht auf ${probe.lives} von ${probe.maxLives} - `
+      + 'die Rueckgabe hat ihn ueber seinen Hoechstwert gehoben.',
+    );
+  }
+}
+
+// **Und der fliegende Raeuber** (S-P3-01) - der Sonderfall, der in v219
+// schon einmal eine Gegenprobe blind gemacht hat.
+//
+// Flieger folgen keiner Bahn: ihr `travelled` wird aus der Luftlinie
+// zurueckgerechnet und in jedem Bild ueberschrieben. Ein gesetztes
+// `travelled` bewegt sie also nicht - sie muessen ueber ihre LAGE gestellt
+// werden.
+{
+  const probe = new GameState();
+  probe.reset();
+  const e = probe.spawnZumPruefen('flyer', 0);
+  if (!e) {
+    problems.push('Kernraub: der Gleiter liess sich nicht stellen - die Probe misst nichts.');
+  } else {
+    e.x = probe.goal.x; e.y = probe.goal.y;
+    probe.update(1 / 60);
+    if (e.kernraub <= 0) {
+      problems.push('Kernraub: der Gleiter hat den Kristall erreicht, traegt aber nichts.');
+    } else {
+      const tor = (probe.lanes[e.lane] ?? probe.lanes[0]).at(0);
+      // Auch hier erst den Stillstand aus `leak()` abwarten.
+      for (let i = 0; i < 60; i++) probe.update(1 / 60);
+      const vor = Math.hypot(tor.x - e.x, tor.y - e.y);
+      for (let i = 0; i < 30; i++) probe.update(1 / 60);
+      const nach = Math.hypot(tor.x - e.x, tor.y - e.y);
+      if (nach >= vor) {
+        problems.push(
+          `Kernraub: der fliegende Raeuber kommt seinem Tor nicht naeher `
+          + `(${vor.toFixed(0)} -> ${nach.toFixed(0)} Weltpunkte).`,
+        );
+      }
+      // Und er verschwindet dort auch wirklich.
+      e.x = tor.x; e.y = tor.y;
+      probe.update(1 / 60);
+      if (!e.dead) {
+        problems.push('Kernraub: der fliegende Raeuber hat sein Tor erreicht und ist noch da.');
+      }
     }
   }
 }

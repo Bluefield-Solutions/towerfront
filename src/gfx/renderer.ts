@@ -1943,6 +1943,30 @@ export class Renderer {
       // sagen, WOHER der Schild kommt, und damit, wen man zuerst nehmen
       // muss. Das ist der ganze Sinn von G5: die Reihenfolge muss man
       // SEHEN, nicht erschliessen.
+      // **Der Raeuber traegt seine Beute sichtbar** (S-P3-01).
+      //
+      // Ohne Marke ist er ein Gegner, der aus unerfindlichen Gruenden in die
+      // falsche Richtung laeuft. Mit ihr ist er das Wichtigste im Bild:
+      // solange er lebt, ist der Kristall nicht wieder da. Ein Splitter ueber
+      // dem Kopf, in der Warnfarbe des Kristallverlusts - dieselbe Farbe wie
+      // die Zahl, die beim Raub aufsteigt, damit man beides zusammenbringt.
+      if (e.kernraub > 0) {
+        ctx.save();
+        ctx.translate(e.x, e.y - alt - sicht * 1.5);
+        const puls = 0.7 + 0.3 * Math.sin(s.time * 5 + e.wobble);
+        ctx.rotate(Math.sin(s.time * 2 + e.wobble) * 0.25);
+        ctx.fillStyle = hexA(C.danger, 0.55 + 0.45 * puls);
+        const r = 7 + Math.min(4, e.kernraub);
+        ctx.beginPath();
+        ctx.moveTo(0, -r);
+        ctx.lineTo(r * 0.6, 0);
+        ctx.lineTo(0, r);
+        ctx.lineTo(-r * 0.6, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
       if (e.traeger > 0) {
         ctx.save();
         const puls = 0.55 + 0.35 * Math.sin(s.time * 3 + e.wobble);

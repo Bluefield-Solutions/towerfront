@@ -1,6 +1,9 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v255 · 08.09.2026
+Stand: v262 · 09.09.2026
+
+**Nachgemessen in v262** (`npm run uxtor`): 14,2 / 20,8 / **32,9** / 14,3 % —
+unveraendert gegenueber v255. Die Zahlen der Tabelle unten gelten weiter.
 
 Ausgelöst durch drei Sätze des Nutzers:
 

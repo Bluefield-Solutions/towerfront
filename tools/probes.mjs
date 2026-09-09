@@ -488,8 +488,8 @@ const PROBEN = [
     // muss es sagen.
     name: 'Die Spannung faellt und niemand sagt es',
     datei: 'src/data/difficulty.ts',
-    suche: 'hpEnd: 19.5',
-    ersatz: 'hpEnd: 12.0',
+    suche: 'hpEnd: 24.0',
+    ersatz: 'hpEnd: 14.0',
     tor: 'sim',
     meldet: 'Spannungsratsche',
   },
@@ -667,10 +667,67 @@ const PROBEN = [
     // Zustand, den diese Runde behoben hat - und nicht nur irgendeinen.
     name: 'Der Grad Ruhig wird wieder folgenlos',
     datei: 'src/data/difficulty.ts',
-    suche: 'hpEnd: 12.0, hpCurve: 2.4',
+    suche: 'hpEnd: 17.0, hpCurve: 2.4',
     ersatz: 'hpEnd: 4.0, hpCurve: 2.4',
     tor: 'sim',
     meldet: 'verlustfrei',
+  },
+  {
+    // **Die vier Proben zum Kernraub (S-P3-01/02, v262).**
+    //
+    // Ein durchgekommener Gegner war bis v261 ein Abzug: Kristall herunter,
+    // Ruckeln, Gegner tot. Ein Abzug ist kein Ereignis - der schlimmste
+    // Augenblick des Spiels war der ereignisloseste. Jetzt nimmt er einen
+    // Splitter und laeuft damit hinaus, und solange er lebt, ist nichts
+    // endgueltig verloren.
+    //
+    // Erstens: die Umkehr. Ohne sie laeuft der Raeuber weiter vorwaerts und
+    // erreicht sein Tor nie.
+    name: 'Der Raeuber kehrt nicht um',
+    datei: 'src/game/state.ts',
+    suche: 'const richtung = e.kernraub > 0 ? -GameState.KERNRAUB_TEMPO : 1;',
+    ersatz: 'const richtung = 1;',
+    tor: 'smoke',
+    meldet: 'er kehrt nicht um',
+  },
+  {
+    // Zweitens: der Kristall faellt SOFORT, nicht erst am Tor. Sonst zeigte
+    // die Anzeige eine Zahl, die noch nicht wahr ist, und die Bilanz eine
+    // andere als der Bildschirm - gemessen "91 Kristallverlust verbucht,
+    // aber 0 fehlen".
+    //
+    // Erwartet wird deshalb die BILANZ-Meldung und nicht das Wort
+    // "Kernraub": der erste Entwurf dieser Probe verlangte es und schwieg
+    // zu Recht, weil der Raeuber ja weiter traegt, was verbucht wurde
+    // (Regel 3 - der Eingriff kam an, nur meldete ein anderer Satz).
+    name: 'Der Kristall faellt erst am Tor',
+    datei: 'src/game/state.ts',
+    suche: '    this.lives -= wirklich;',
+    ersatz: '    /* kein Abzug beim Raub */',
+    tor: 'smoke',
+    meldet: 'Kristallverlust verbucht',
+  },
+  {
+    // Drittens: die Deckelung auf `maxLives`. Das ist die Zusage aus v174
+    // von der anderen Seite - dort der Abzug bei null, hier die Gutschrift
+    // beim Hoechstwert.
+    name: 'Die Rueckgabe hebt den Kristall ueber sein Maximum',
+    datei: 'src/game/state.ts',
+    suche: 'const gut = Math.min(sp.punkte, Math.max(0, this.maxLives - this.lives));',
+    ersatz: 'const gut = sp.punkte;',
+    tor: 'smoke',
+    meldet: 'ueber seinen Hoechstwert',
+  },
+  {
+    // Viertens: die Gutschrift wird verdoppelt. Dann steht am Kristall mehr,
+    // als der Raeuber getragen hat, und die Bilanz meldet einen Verlust, den
+    // es nicht mehr gibt.
+    name: 'Die Rueckgabe wird verdoppelt',
+    datei: 'src/game/state.ts',
+    suche: '      this.lives += gut;',
+    ersatz: '      this.lives += gut * 2;',
+    tor: 'smoke',
+    meldet: 'Splitter',
   },
   // **Die andere Richtung hat KEINE Gegenprobe, und das steht hier statt in
   // einer Fussnote.**

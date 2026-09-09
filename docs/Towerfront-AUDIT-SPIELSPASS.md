@@ -1,6 +1,14 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v255 · 08.09.2026
+Stand: v262 · 09.09.2026
+
+**Der schlimmste Augenblick des Spiels war der ereignisloseste — seit v262
+nicht mehr.** Ein durchgekommener Gegner war ein Abzug: Kristall herunter,
+Ruckeln, Gegner tot. Jetzt nimmt er einen Splitter und laeuft damit hinaus;
+wer ihn erwischt, bekommt die Punkte zurueck. Gemessen hebt das den
+Stilabstand von 9,3 auf **12,4** und die erste Karte von 7 auf **15 von 42**
+Kristall (C18). Die Zahlen der Teile 2 und 3 unten sind damit teilweise
+ueberholt; was gilt, sagt `npm run sim`.
 
 > „Es kommt kaum Spielspaß auf."
 

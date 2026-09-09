@@ -131,6 +131,10 @@ export interface SaveGame {
     EnemyId, number, number, number, number, number,
     (string | number)[] | number,
     number, number, number, number, number?, number?,
+    // Seit v262 angehaengt: was ein Raeuber nach draussen traegt (S-P3-01).
+    // Angehaengte Felder waren immer vertraeglich - ein aelterer Stand laedt
+    // ohne dieses Feld und faengt mit null Beute an, was fuer ihn stimmt.
+    number?, number?,
   ][];
 }
 

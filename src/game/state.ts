@@ -434,6 +434,42 @@ export class GameState {
   idleTime = 0;      // Sekunden seit Ende der letzten Welle
   leakedTotal = 0;
 
+  /** **Splitter auf dem Rueckweg zum Kristall** (S-P3-02).
+   *
+   *  Stirbt ein Raeuber, faellt seine Beute nicht zu Boden - sie schwebt
+   *  zurueck. Ohne diese Rueckholung waere der Kernraub nur ein langsamerer
+   *  Abzug, und der ganze Wert der Mechanik liegt in dem Fenster, in dem die
+   *  Entscheidung noch offen ist.
+   *
+   *  **Gemessen war das kein Feinschliff, sondern die Bedingung dafuer, dass
+   *  die Mechanik ueberhaupt traegt:** mit Raub allein und ohne Rueckgabe
+   *  verlor der Durchlauf die erste Karte in Welle 14 (C18 rot) und der
+   *  Endlosmodus kam nur bis Welle 14 von 15. Die Tuerme schiessen auf einen
+   *  Fliehenden, der niemandem mehr schaden kann - jeder Schuss auf ihn war
+   *  verschwendet. Erst die Rueckgabe macht ihn wieder zu einem Ziel, das
+   *  sich lohnt.
+   *
+   *  Die Schwebezeit ist FEST und nicht von der Strecke abhaengig: sonst
+   *  waere ein Raeuber am Tor wertvoller als einer am Kristall, und das ist
+   *  genau falsch herum. */
+  splitter: {
+    x: number; y: number; punkte: number; rest: number; dauer: number; welle: number;
+  }[] = [];
+  static readonly SPLITTER_DAUER = 1.1;
+
+  /** **Wie schnell ein Raeuber flieht** (S-P3-01/02).
+   *
+   *  Bei einfachem Tempo ist der Rueckweg eine Schiessbude: er laeuft die
+   *  ganze Bahn durch jeden Turm zurueck, und gemessen wurde fast jeder
+   *  Raub wieder eingesammelt - alle drei Spielstile kamen auf 94 bis 98
+   *  von 100 Punkten, und die Ratsche aus v253 hat es gemeldet (Stellen mit
+   *  Verlust von 2 auf 1, Stilabstand von 9,3 auf 3,6).
+   *
+   *  Eine Mechanik, die jeden Fehler zurueckgibt, hat kein Fenster - und das
+   *  Fenster ist ihr ganzer Wert. Der Wert steht deshalb hier und ist
+   *  durchprobiert, nicht gewaehlt. */
+  static readonly KERNRAUB_TEMPO = 2.4;
+
   private pending: PendingSpawn[] = [];
   private waveTime = 0;
   private nextId = 1;
@@ -1215,7 +1251,19 @@ export class GameState {
         const p = this.pending.shift()!;
         this.spawnEnemy(p.enemy, p.hpMul, this.offeneBahn(p.lane), p.shield ?? 0, p.traeger ?? 0);
       }
-      if (!this.pending.length && !this.enemies.length) this.finishWave();
+      // **Ein fliehender Raeuber haelt die Welle nicht auf** (S-P3-01).
+      //
+      // Er laeuft die ganze Bahn zurueck - auf dem Spiralhain sind das
+      // gemessen ueber 3900 Weltpunkte und damit fast eine Minute. Solange
+      // er als "noch unterwegs" zaehlte, konnte die naechste Welle nicht
+      // starten, und der Endlosmodus kam nur bis Welle 14 von 15.
+      //
+      // Die Welle ist vorbei, wenn nichts mehr ANGREIFT. Wer mit Beute nach
+      // draussen laeuft, greift nicht an - er wird verfolgt, und genau das
+      // soll er, waehrend die naechste Welle schon kommt.
+      if (!this.pending.length && !this.enemies.some((e) => e.kernraub === 0)) {
+        this.finishWave();
+      }
     }
 
     for (const id of ABILITY_ORDER) {
@@ -1226,6 +1274,7 @@ export class GameState {
     }
 
     this.updateEnemies(dt);
+    this.splitterZurueck(dt);
     this.rebuildGrid();
     this.updateTowers(dt);
     this.updateProjectiles(dt);
@@ -1298,7 +1347,7 @@ export class GameState {
       side: (this.rng.next() * 2 - 1) * 0.85, travelled: 0,
       wirkungen: null, auraIn: 0, shield, traeger,
       hitFlash: 0, squash: 0, hpShown: hp, wobble: this.rng.next() * 9,
-      dead: false, leaked: false,
+      dead: false, leaked: false, kernraub: 0, raubWelle: -1,
     });
   }
 
@@ -1324,7 +1373,7 @@ export class GameState {
         // sich Erzeuger und Bruchstueck dieselbe Liste.
         wirkungen: parent.wirkungen ? parent.wirkungen.map((w) => ({ ...w })) : null,
         hitFlash: 0, squash: 0, hpShown: hp, wobble: this.rng.next() * 9,
-        dead: false, leaked: false,
+        dead: false, leaked: false, kernraub: 0, raubWelle: -1,
       });
     }
     this.ring(parent.x, parent.y, 46, child.trim, 0.3, 3);
@@ -1366,6 +1415,19 @@ export class GameState {
     this.updateTraeger(dt);
     let leaked = false;
     for (const e of this.enemies) {
+      // **Tote werden nicht mehr bewegt** (v262).
+      //
+      // Sie liegen bis zum `compact` am Ende dieser Schleife noch in der
+      // Liste. Bisher fiel das nicht auf: wer in `updateEnemies` starb,
+      // wurde im selben Durchlauf entfernt. Wer aber in `updateTowers` oder
+      // an einem Geschoss stirbt - also NACH dieser Schleife -, wurde im
+      // naechsten Bild noch einmal bewegt.
+      //
+      // Mit dem Kernraub kostete das echtes Geld: ein erschossener Raeuber
+      // verlor seine Beute (`kernraub` faellt auf 0), lief im naechsten Bild
+      // wieder vorwaerts, stand weiter am Bahnende - und stahl ein zweites
+      // Mal. Gemessen fehlten dem Kristall 6 statt 3 Punkte.
+      if (e.dead) continue;
       // Die Uhr aller anliegenden Wirkungen (TF-015). Abgelaufene fallen an
       // Ort und Stelle heraus; die Liste wird nicht neu erzeugt, weil dieser
       // Zweig in JEDEM Bild ueber JEDEN Gegner laeuft.
@@ -1384,10 +1446,31 @@ export class GameState {
 
       const edef = ENEMIES[e.def];
       if (edef.flying) {
-        // Luftlinie zum Herzkristall - kein Pfad, keine Kurven.
-        const dx = this.goal.x - e.x, dy = this.goal.y - e.y;
+        // **Ein fliegender Raeuber kehrt zu seinem Torpunkt zurueck**
+        // (S-P3-01). Flieger folgen keiner Bahn: ihr `travelled` wird aus
+        // der Luftlinie zurueckgerechnet und in jedem Bild ueberschrieben
+        // (gemessen in v219, als eine Gegenprobe darauf hereinfiel). Ein
+        // gesetztes `travelled` haette hier also keine Wirkung - der
+        // Sonderfall steht deshalb im Quelltext und nicht in einer
+        // Vermutung: er fliegt die Luftlinie zum Anfang seiner Bahn.
+        const ziel = e.kernraub > 0
+          ? (this.lanes[e.lane] ?? this.lanes[0]).at(0)
+          : this.goal;
+        const dx = ziel.x - e.x, dy = ziel.y - e.y;
         const d = Math.hypot(dx, dy) || 1;
         const step = e.speed * tempoFaktor(e.wirkungen) * dt;
+        if (e.kernraub > 0) {
+          // Beim Rueckflug zaehlt der Fortschritt rueckwaerts, damit
+          // "vorderstes Ziel" weiter bedeutet, was es bedeutet.
+          e.travelled = this.pathTotal * (d / (this.airTotal || d));
+          const flucht = step * GameState.KERNRAUB_TEMPO;
+          if (d <= flucht + 6) { this.entkommen(e); } else {
+            e.x += (dx / d) * flucht;
+            e.y += (dy / d) * flucht;
+          }
+          continue;
+        }
+        // Luftlinie zum Herzkristall - kein Pfad, keine Kurven.
         // Fortschritt auf denselben Massstab wie am Boden bringen, damit
         // "vorderstes Ziel" fuer beide dasselbe bedeutet.
         e.travelled = this.pathTotal * (1 - d / (this.airTotal || d));
@@ -1407,8 +1490,28 @@ export class GameState {
       // laeuft ein Gegner in einer engen Kurve genauso schnell wie auf der
       // Geraden, und er dreht sich weich mit.
       const path = this.lanes[e.lane] ?? this.lanes[0];
-      e.travelled += e.speed * tempoFaktor(e.wirkungen) * dt;
-      if (e.travelled >= path.length) {
+      // **Ein Raeuber laeuft dieselbe Bahn rueckwaerts** (S-P3-01). Die
+      // zurueckgelegte Strecke ist die einzige Zustandsgroesse; das
+      // Vorzeichen des Schritts genuegt, und die Figur dreht sich mit,
+      // weil die Blickrichtung aus dem Weg folgt.
+      const richtung = e.kernraub > 0 ? -GameState.KERNRAUB_TEMPO : 1;
+      e.travelled += richtung * e.speed * tempoFaktor(e.wirkungen) * dt;
+      if (e.kernraub > 0) {
+        // **Ein Raeuber raubt nicht zweimal.** Er steht beim Umkehren am
+        // Ende der Bahn, also weiter oberhalb von `path.length` - ohne
+        // diese Trennung liefe er in jedem Bild erneut durch `leak()` und
+        // zoege den Kristall Bild um Bild leer.
+        if (e.travelled <= 0) this.entkommen(e);
+        else {
+          const p = path.at(Math.min(e.travelled, path.length - 1));
+          const platz = Math.max(0, p.half - edef.radius * 0.55 - 4);
+          const quer = e.side * platz;
+          e.x = p.x + Math.cos(p.angle + Math.PI / 2) * quer;
+          e.y = p.y + Math.sin(p.angle + Math.PI / 2) * quer;
+          // Er laeuft rueckwaerts, also schaut er auch dorthin.
+          e.heading = p.angle + Math.PI;
+        }
+      } else if (e.travelled >= path.length) {
         e.x = this.goal.x; e.y = this.goal.y;
         this.leak(e, edef);
         leaked = true;
@@ -1440,8 +1543,56 @@ export class GameState {
   }
 
   /** Ein Gegner erreicht den Kristall. */
+  /** Aus einem sterbenden Raeuber wird ein Splitter (S-P3-02). */
+  private splitterLoesen(e: Enemy): void {
+    this.splitter.push({
+      x: e.x, y: e.y, punkte: e.kernraub,
+      rest: GameState.SPLITTER_DAUER, dauer: GameState.SPLITTER_DAUER,
+      welle: e.raubWelle,
+    });
+    e.kernraub = 0;
+  }
+
+  /** Die Splitter schweben heim und schreiben gut, was sie tragen.
+   *
+   *  **Der Kristall kann dabei nie ueber seinen Hoechstwert steigen**, und
+   *  der Abzug bei null bleibt gedeckelt - das ist die Zusage aus v174, und
+   *  sie darf nicht still wegfallen. Gutgeschrieben wird deshalb hoechstens
+   *  bis `maxLives`, und die Bilanz wird um genau denselben Betrag
+   *  zurueckgenommen: sonst meldete `stats.leaksByWave` am Ende der Welle
+   *  einen Verlust, den es nicht gab. */
+  private splitterZurueck(dt: number): void {
+    for (const sp of this.splitter) {
+      sp.rest -= dt;
+      if (sp.rest > 0) continue;
+      const gut = Math.min(sp.punkte, Math.max(0, this.maxLives - this.lives));
+      this.lives += gut;
+      if (gut > 0) {
+        // Zurueckgenommen wird in der Welle, in der GESTOHLEN wurde - nicht
+        // in der laufenden. Ein Raeuber kann eine Welle spaeter sterben.
+        const w = sp.welle >= 0 ? sp.welle : this.waveIndex;
+        this.stats.leaksByWave[w] = Math.max(0, (this.stats.leaksByWave[w] ?? 0) - gut);
+        this.float(this.goal.x, this.goal.y - 44, `+${gut}`, C.crystal, 26);
+        this.ring(this.goal.x, this.goal.y, 100, C.crystal, 0.4, 4);
+        Sfx.play('ready');
+      }
+      sp.punkte = 0;
+    }
+    compact(this.splitter, (sp) => sp.rest <= 0);
+  }
+
+  /** Ein Raeuber erreicht sein Tor - die Beute ist endgueltig weg.
+   *
+   *  Abgezogen wurde sie schon beim Raub (siehe `leak`); hier verschwindet
+   *  nur noch die Figur. Ein zweiter Abzug an dieser Stelle waere der
+   *  naechstliegende Fehler und wuerde jeden Durchbruch doppelt zaehlen. */
+  private entkommen(e: Enemy): void {
+    e.dead = true;
+    this.float(e.x, e.y - 30, `-${e.kernraub}`, C.danger, 22);
+  }
+
   private leak(e: Enemy, def: typeof ENEMIES[EnemyId]): void {
-    e.leaked = true; e.dead = true;
+    e.leaked = true;
     // Verbucht wird, was WIRKLICH verloren geht, nicht was der Gegner
     // mitbringt.
     //
@@ -1461,6 +1612,23 @@ export class GameState {
     this.stop(0.8);
     this.float(this.goal.x, this.goal.y - 44, `-${wirklich}`, C.danger, 28);
     this.ring(this.goal.x, this.goal.y, 120, C.danger, 0.5, 5);
+
+    // **Er stirbt nicht, er nimmt und kehrt um** (S-P3-01, Kernraub).
+    //
+    // Der Kristall faellt SOFORT und nicht erst am Tor: sonst zeigte die
+    // Anzeige eine Zahl, die noch nicht wahr ist, und die Bilanz eine
+    // andere als der Bildschirm.
+    //
+    // Traegt er nichts - weil der Kristall schon leer ist -, dann gibt es
+    // auch nichts zu tragen, und er verschwindet wie vorher. Ein Raeuber mit
+    // null Beute waere ein Gegner, der aus dem Bild laeuft, ohne dass etwas
+    // passiert ist.
+    if (wirklich > 0) {
+      e.kernraub = wirklich;
+      e.raubWelle = this.waveIndex;
+    } else {
+      e.dead = true;
+    }
   }
 
   private updateTowers(dt: number): void {
@@ -1889,6 +2057,7 @@ export class GameState {
     Sfx.play('hit');
     if (e.hp <= 0) {
       e.dead = true;
+      if (e.kernraub > 0) this.splitterLoesen(e);
       const bounty = Math.max(1, Math.round(def.bounty * this.diff.bountyMul * this.map.balance.goldMul));
       this.gold += bounty;
       this.stats.goldEarned += bounty;
@@ -2104,6 +2273,7 @@ export class GameState {
     this.paused = false;
     this.idleTime = 0;
     this.leakedTotal = 0;
+    this.splitter.length = 0;
     this.hitStop = 0;
     this.shake = 0;
     this.stats = emptyStats();
@@ -2204,6 +2374,10 @@ export class GameState {
         // Vorher standen hier zwei Zahlen fuer die einzigen zwei Felder.
         e.wirkungen ? e.wirkungen.flatMap((w) => [w.art, w.staerke, w.rest]) : [],
         e.wobble, e.lane, e.auraIn, e.side, e.shield, e.traeger,
+        // Seit v262: was er nach draussen traegt (S-P3-01). Ohne dieses Feld
+        // liefe ein geladener Raeuber wieder auf den Kristall zu, den er
+        // gerade bestohlen hat - und zoege ein zweites Mal ab.
+        e.kernraub, e.raubWelle,
       ]),
     };
   }
@@ -2314,7 +2488,7 @@ export class GameState {
     });
 
     for (const [def, x, y, hp, hpMax, travelled, roh, wobble, lane, auraIn, side,
-      shield, traeger] of zeilen) {
+      shield, traeger, kernraub, raubWelle] of zeilen) {
       const wirkungen: Wirkung[] = [];
       const liste = roh as (string | number)[];
       for (let i = 0; i + 2 < (liste?.length ?? 0); i += 3) {
@@ -2327,6 +2501,7 @@ export class GameState {
         speed: ENEMIES[def].speed, lane: lane ?? 0, heading: 0, travelled,
         wirkungen: wirkungen.length ? wirkungen : null,
         auraIn: auraIn ?? 0, shield: shield ?? 0, traeger: traeger ?? 0,
+        kernraub: kernraub ?? 0, raubWelle: raubWelle ?? -1,
         hitFlash: 0, squash: 0, hpShown: hp,
         side: side ?? 0,
         wobble,

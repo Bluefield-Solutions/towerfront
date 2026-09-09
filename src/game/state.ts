@@ -434,6 +434,17 @@ export class GameState {
   idleTime = 0;      // Sekunden seit Ende der letzten Welle
   leakedTotal = 0;
 
+  /** **Wie oft geraubt und wie oft gerettet wurde** (S-P3-04).
+   *
+   *  Der Kernraub verschiebt jede Zahl in zwei Richtungen zugleich: ein Leck
+   *  ist nicht mehr endgueltig, also ist das Spiel leichter - und ein
+   *  Raeuber laeuft ein zweites Mal durch die Tuerme, also ist es schwerer.
+   *  Welche ueberwiegt, sagt nur diese Zaehlung. Eine gebaute Mechanik ohne
+   *  Messung ist eine Vermutung mit Quelltext. */
+  raubTotal = 0;
+  rettungTotal = 0;
+  rettungPunkte = 0;
+
   /** **Splitter auf dem Rueckweg zum Kristall** (S-P3-02).
    *
    *  Stirbt ein Raeuber, faellt seine Beute nicht zu Boden - sie schwebt
@@ -1545,6 +1556,7 @@ export class GameState {
   /** Ein Gegner erreicht den Kristall. */
   /** Aus einem sterbenden Raeuber wird ein Splitter (S-P3-02). */
   private splitterLoesen(e: Enemy): void {
+    this.rettungTotal++;
     this.splitter.push({
       x: e.x, y: e.y, punkte: e.kernraub,
       rest: GameState.SPLITTER_DAUER, dauer: GameState.SPLITTER_DAUER,
@@ -1567,6 +1579,7 @@ export class GameState {
       if (sp.rest > 0) continue;
       const gut = Math.min(sp.punkte, Math.max(0, this.maxLives - this.lives));
       this.lives += gut;
+      this.rettungPunkte += gut;
       if (gut > 0) {
         // Zurueckgenommen wird in der Welle, in der GESTOHLEN wurde - nicht
         // in der laufenden. Ein Raeuber kann eine Welle spaeter sterben.
@@ -1629,6 +1642,7 @@ export class GameState {
     if (wirklich > 0) {
       e.kernraub = wirklich;
       e.raubWelle = this.waveIndex;
+      this.raubTotal++;
     } else {
       e.dead = true;
     }
@@ -2276,6 +2290,7 @@ export class GameState {
     this.paused = false;
     this.idleTime = 0;
     this.leakedTotal = 0;
+    this.raubTotal = 0; this.rettungTotal = 0; this.rettungPunkte = 0;
     this.splitter.length = 0;
     this.hitStop = 0;
     this.shake = 0;

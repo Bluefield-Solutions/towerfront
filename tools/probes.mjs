@@ -747,6 +747,32 @@ const PROBEN = [
     tor: 'bildtor',
     meldet: 'nicht zu sehen',
   },
+  {
+    // **Die zwei Proben zu den Rettungen (S-P3-04, v264), und sie treffen
+    // das Band von beiden Raendern.**
+    //
+    // Unter einem Drittel ist der Kernraub Dekoration - der Raeuber laeuft
+    // davon, und man sieht nur zu. Ueber zwei Dritteln ist ein Leck
+    // folgenlos, und dann ist G1 von der anderen Seite kaputt: es koennte
+    // nichts mehr passieren, weil alles zurueckkommt.
+    //
+    // Zehnfaches Fluchttempo: er erreicht sein Tor immer.
+    name: 'Der Raeuber ist nicht mehr einzuholen',
+    datei: 'src/game/state.ts',
+    suche: 'static readonly KERNRAUB_TEMPO = 2.4;',
+    ersatz: 'static readonly KERNRAUB_TEMPO = 24;',
+    tor: 'sim',
+    meldet: 'Rettungen',
+  },
+  {
+    // Und Tempo null: er kommt nie an, jeder Raub wird gerettet.
+    name: 'Der Raeuber bleibt stehen',
+    datei: 'src/game/state.ts',
+    suche: 'static readonly KERNRAUB_TEMPO = 2.4;',
+    ersatz: 'static readonly KERNRAUB_TEMPO = 0;',
+    tor: 'sim',
+    meldet: 'Rettungen',
+  },
   // **Die andere Richtung hat KEINE Gegenprobe, und das steht hier statt in
   // einer Fussnote.**
   //

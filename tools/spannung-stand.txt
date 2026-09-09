@@ -8,6 +8,7 @@ leereWellen tief 0.00 0
 leerlaufAnteil tief 0.09 0
 duennAnteil tief 15.06 10
 knappheitsAnteil hoch 44.66 -
+rettungen hoch 53.00 -
 goldUebrig tief 35.18 20
 stilAbstand hoch 12.43 20
 zweigWirkung hoch UNBELEGT 9

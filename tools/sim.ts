@@ -316,6 +316,10 @@ interface Result {
   duennAnteil: number;
   /** Anteil der Entscheidungszeitpunkte, an denen das Gold nicht reichte. */
   knappheitsAnteil: number;
+  /** Wieviele Raeuber es gab und wieviele davon gerettet wurden (S-P3-04). */
+  raeuber: number;
+  gerettet: number;
+  geretteteFunken: number;
 }
 
 type BranchPick = (id: TowerId) => 0 | 1;
@@ -507,6 +511,7 @@ function play(
     dauer: t, leerlaufAnteil: frame > 0 ? leerlaufBilder / frame : 0,
     duennAnteil: frame > 0 ? duennBilder / frame : 0,
     knappheitsAnteil: entscheidungsBilder > 0 ? knappeBilder / entscheidungsBilder : 0,
+    raeuber: s.raubTotal, gerettet: s.rettungTotal, geretteteFunken: s.rettungPunkte,
     maxLives: s.maxLives,
     earned: s.stats.goldEarned, spent: s.stats.goldSpent,
   };
@@ -788,6 +793,55 @@ for (const bot of BOTS) {
       (r) => (r.earned > 0 ? ((r.earned - r.spent) / r.earned) * 100 : 0)));
     console.log(`  dieselbe Zahl ohne Deckel (Bestleistung, 24 Tuerme, Stufe `
       + `${MAX_LEVEL}): ${u.mittel.toFixed(1)} % (Spanne ${u.spanne.toFixed(1)})`);
+  }
+
+  // --- Rettungen (S-P3-04).
+  //
+  // **Das Band ist 33 bis 67 %, und beide Raender haben einen Grund.** Unter
+  // einem Drittel ist die Mechanik Dekoration - der Raeuber laeuft davon,
+  // und man sieht nur zu. Ueber zwei Dritteln ist ein Leck folgenlos, und
+  // dann waere G1 von der anderen Seite kaputt: es koennte nichts mehr
+  // passieren, weil alles zurueckkommt.
+  {
+    const o = overVariants((variant, aussaat) => play(
+      mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { variant, seed: aussaat },
+    ));
+    // **Erst ueber die Abwandlungen mitteln, dann die Spanne ueber die
+    // Aussaaten nehmen** - so definiert diese Datei ihre Rauschgrenze seit
+    // v251 (`overVariants`). Die Spanne ueber alle neun Laeufe enthielte die
+    // Streuung der Bauverlaeufe, und die ist gewollt, nicht Rauschen: roh
+    // gerechnet meldete diese Zahl eine Spanne von 41 bei einem Band von 34.
+    const anteile = AUSSAATEN.map((_aussaat, i) => {
+      const je = o.runs.slice(i * VARIANTS.length, (i + 1) * VARIANTS.length)
+        .filter((r) => r.raeuber > 0)
+        .map((r) => (r.gerettet / r.raeuber) * 100);
+      return je.length ? je.reduce((x, y) => x + y, 0) / je.length : null;
+    }).filter((v): v is number => v !== null);
+    const raeuber = o.runs.reduce((a, r) => a + r.raeuber, 0) / o.runs.length;
+    const punkte = o.runs.reduce((a, r) => a + r.geretteteFunken, 0) / o.runs.length;
+    if (!anteile.length) {
+      console.log('\nRettungen: in keinem Lauf kam ein Gegner durch - nichts zu retten.');
+    } else {
+      const a = mittelUndSpanne(anteile);
+      console.log(
+        `\nRettungen: ${a.mittel.toFixed(0)} % der Raeuber werden erwischt `
+        + `(Spanne ${a.spanne.toFixed(0)}), ${raeuber.toFixed(1)} Raeuber je Partie, `
+        + `${punkte.toFixed(1)} Kristall zurueckgeholt`,
+      );
+      spannungGemessen('rettungen', a.mittel, a.spanne,
+        `Anteil der Raeuber, die vor ihrem Tor sterben, Meister, ${MAPS[0].id}, normal, `
+        + `${AUSSAATEN.length} Aussaaten x ${VARIANTS.length} Abwandlungen`);
+      if (a.mittel < 33) {
+        errors.push(`Rettungen: nur ${a.mittel.toFixed(0)} % der Raeuber werden erwischt `
+          + '(mindestens 33 %). Unter einem Drittel ist der Kernraub Dekoration - der '
+          + 'Raeuber laeuft davon, und man sieht nur zu.');
+      }
+      if (a.mittel > 67) {
+        errors.push(`Rettungen: ${a.mittel.toFixed(0)} % der Raeuber werden erwischt `
+          + '(hoechstens 67 %). Ueber zwei Dritteln ist ein Leck folgenlos, und dann ist '
+          + 'G1 von der anderen Seite kaputt.');
+      }
+    }
   }
 
   // --- Der Knappheitsanteil.
@@ -1472,11 +1526,14 @@ if (hot.length) {
   // bleibt als HINWEIS in der Tabelle stehen, weil sie die Zahl ist, die im
   // Audit steht - aber sie haelt nichts mehr.
   const ORDNUNG = ['stellen', 'ruhe', 'leereWellen', 'leerlaufAnteil', 'duennAnteil',
-    'knappheitsAnteil', 'goldUebrig', 'stilAbstand', 'zweigWirkung'];
-  const NUR_HINWEIS = ['goldUebrig'];
+    'knappheitsAnteil', 'rettungen', 'goldUebrig', 'stilAbstand', 'zweigWirkung'];
+  // `rettungen` steht in der Tabelle, haelt aber nichts: die Zahl hat ihr
+  // eigenes Band (33 bis 67 %) ein paar Zeilen weiter oben, und zwei Tore
+  // auf dieselbe Zahl waeren eines zu viel (Regel 15).
+  const NUR_HINWEIS = ['goldUebrig', 'rettungen'];
   const NAMEN: Record<string, string> = {
     stellen: 'Stellen mit Verlust', ruhe: 'laengste folgenlose Strecke',
-    leereWellen: 'Wellen ohne Entscheidung', leerlaufAnteil: 'Leerlauf der Partie',
+    leereWellen: 'Wellen ohne Entscheidung', leerlaufAnteil: 'Leerlauf der Partie', rettungen: 'Rettungen',
     duennAnteil: 'duenne Zeit (<=1 Gegner)', knappheitsAnteil: 'Knappheit',
     goldUebrig: 'Gold uebrig am Ende', stilAbstand: 'Abstand der Spielstile',
     zweigWirkung: 'kleinste Zweigwirkung',
@@ -1487,15 +1544,39 @@ if (hot.length) {
   // fallen. Deshalb ist `--spannung-schreiben` ein ausdruecklicher Griff.
   if (SPANNUNG_SCHREIBEN) {
     const alt2 = leseSpannungsstand();
+    // **Der Schreiber senkt keinen Stand.**
+    //
+    // Das ist keine Vorsicht, sondern eine Reparatur: in v262 hat dieser
+    // Griff die Kennzahl "Stellen mit Verlust" von 2,00 auf 1,67
+    // heruntergeschrieben - genau die eine Zahl, die schlechter geworden
+    // war. Ein Schreiber, der Staende senkt, macht aus der Ratsche eine
+    // Anzeige. Wer wirklich senken will, aendert die Datei von Hand und
+    // schreibt daneben, warum.
+    const gesenkt: string[] = [];
     const zeilen = ORDNUNG.map((k) => {
       const m = spannung.get(k)!;
       const a = alt2.get(k);
       const tiefer = ['ruhe', 'goldUebrig', 'leereWellen', 'leerlaufAnteil',
         'duennAnteil'].includes(k);
-      return `${k} ${a?.richtung ?? (tiefer ? 'tief' : 'hoch')} `
-        + `${m.wert === null ? 'UNBELEGT' : m.wert.toFixed(2)} `
+      const richtung = a?.richtung ?? (tiefer ? 'tief' : 'hoch');
+      let wert = m.wert;
+      if (a && a.stand !== null && wert !== null) {
+        // Auf zwei Stellen vergleichen - in der Datei stehen zwei, und ein
+        // Rundungsrest hinter der zweiten meldete sonst "44,66 statt 44,66".
+        const gerundet = Number(wert.toFixed(2));
+        const schlechter = richtung === 'hoch' ? gerundet < a.stand : gerundet > a.stand;
+        if (schlechter) {
+          gesenkt.push(`${k} ${wert.toFixed(2)} statt ${a.stand.toFixed(2)}`);
+          wert = a.stand;
+        }
+      }
+      return `${k} ${richtung} `
+        + `${wert === null ? 'UNBELEGT' : wert.toFixed(2)} `
         + `${a === undefined ? 0 : (a.soll === null ? '-' : a.soll)}`;
     });
+    if (gesenkt.length) {
+      console.log(`  Nicht gesenkt (der alte Stand bleibt): ${gesenkt.join(', ')}.`);
+    }
     writeFileSync(SPANNUNG_DATEI, KOPF + zeilen.join('\n') + '\n');
     console.log(`\nSpannungsratsche: Stand geschrieben (${SPANNUNG_DATEI}).`);
   }

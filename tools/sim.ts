@@ -11,7 +11,8 @@ import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../src/data/d
 const START_LIVES = DIFFICULTIES.normal.startLives;
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, type TowerId } from '../src/data/towers';
 
-import { MAPS } from '../src/data/maps';
+import { MAPS, lanePaths } from '../src/data/maps';
+import { REICHWEITE } from './bahnmass';
 import { ALL_PERKS, NO_PERKS, starsFor } from '../src/data/perks';
 import { ABILITIES } from '../src/data/abilities';
 import { candidateSpots } from './spots';
@@ -226,6 +227,22 @@ interface Bot {
   decideEvery: number;
   /** Ab welchem Anteil der Turmzahl in die Tiefe statt in die Breite investiert wird. */
   deepenAt: number;
+  /** Wie dieser Stil mit den Weichen umgeht (S-N2-06).
+   *
+   *  **Warum das eine vierte Dimension braucht und keine vierte Zeile in der
+   *  Turmlogik ist:** die Weiche ist die einzige Entscheidung des Spiels, die
+   *  nicht Gold kostet. Ein Bot, der sie nicht benutzt, misst ein anderes
+   *  Spiel als das ausgelieferte - dieselbe Luecke, die v267 fuer die
+   *  Ueberlappung ein eigenes Werkzeug gekostet hat.
+   *
+   *   `offen`    ruehrt keine Weiche an. Das ist der Zustand, gegen den die
+   *              ganze Balance geeicht ist - er MUSS weiter vertreten sein,
+   *              sonst misst der naechste Lauf gegen eine andere Karte.
+   *   `lang`     macht alles zu, was zugeht: der laengste Weg, den die Karte
+   *              hergibt. Defense Grids Labyrinth in einem Satz.
+   *   `deckung`  waehlt die Stellung, von der seine Tuerme am meisten sehen -
+   *              also die Entscheidung, die die Weiche eigentlich sein soll. */
+  weichenStil: 'offen' | 'lang' | 'deckung';
 }
 
 /** Die Stile bilden unterschiedliche *Entscheidungen* ab, keine Fehler.
@@ -248,14 +265,17 @@ interface Bot {
 const BOTS: Bot[] = [
   {
     name: 'Meister', maxTowers: 12, maxLevel: 3, reserve: 40, decideEvery: 30, deepenAt: 0.65,
+    weichenStil: 'deckung',
   },
   {
     // Erst alle Stellungen besetzen, dann ausbauen.
     name: 'Breite', maxTowers: 12, maxLevel: 3, reserve: 15, decideEvery: 20, deepenAt: 1,
+    weichenStil: 'offen',
   },
   {
     // Nur die Haelfte der Plaetze, dafuer frueh tief und mit Ruecklage.
     name: 'Sparsam', maxTowers: 12, maxLevel: 3, reserve: 140, decideEvery: 30, deepenAt: 0.5,
+    weichenStil: 'lang',
   },
 ];
 
@@ -281,6 +301,8 @@ const BOTS: Bot[] = [
 const BESTLEISTUNG: Bot = {
   name: 'Bestleistung', maxTowers: 24, maxLevel: MAX_LEVEL,
   reserve: 40, decideEvery: 20, deepenAt: 0.8,
+  // Der Spieler, der alles richtig macht, stellt auch die Weichen richtig.
+  weichenStil: 'deckung',
 };
 
 const MEISTER = BOTS[0];
@@ -334,6 +356,60 @@ function stelleZiel(s: GameState, f?: (t: Tower, i: number, s: GameState) => Zie
   if (!f) return;
   const i = s.towers.length - 1;
   if (i >= 0) s.towers[i].zielwahl = f(s.towers[i], i, s);
+}
+
+/** Die Reichweite, mit der die Deckung gerechnet wird.
+ *
+ *  Dieselbe Zahl wie in `tools/bahnmass.ts`, und zwar von dort geholt: eine
+ *  zweite Reichweite neben der ersten liefe beim naechsten Turmwert
+ *  auseinander (Regel 15). Sie ist bewusst die des mittleren Turms und nicht
+ *  die des gerade gebauten - der Bot entscheidet ueber die STELLUNG, nicht
+ *  ueber einen einzelnen Turm.
+ */
+/** Die Welle, der eine Entscheidung zugeschlagen wird.
+ *
+ *  Dieselbe Rechnung wie im Entscheidungszaehler weiter unten - nur an einer
+ *  Stelle, an der `welle` noch nicht in Reichweite ist. */
+function welleNr(s: GameState): number {
+  return Math.max(0, Math.min(s.waves.length - 1, s.waveIndex));
+}
+
+/** Welche Weichen dieser Stil gestellt haben will.
+ *
+ *  **`deckung` ist die eigentliche Entscheidung**, und sie wird gerechnet,
+ *  nicht geraten: fuer jede Stellung wird gemessen, wieviel der entstehenden
+ *  Bahnen die schon gebauten Tuerme sehen (`coveredLength`, dieselbe Rechnung,
+ *  aus der `bahnentwurf` seine Deckungszahl macht). Genommen wird die beste.
+ *
+ *  Solange noch kein Turm steht, gibt es nichts zu decken - dann bleibt alles
+ *  offen. Das ist kein Sonderfall, sondern die richtige Antwort: eine Weiche
+ *  vor dem ersten Turm umzulegen hiesse, gegen eine Verteidigung zu planen,
+ *  die es nicht gibt.
+ *
+ *  Die Zahl der Stellungen ist 2^Weichen; der Weichenfenster-Waechter laesst
+ *  hoechstens zwoelf Weichen zu, also 4096 - hier wird bei acht abgebrochen,
+ *  weil diese Schleife je Welle laeuft und nicht einmal je Torkette. */
+function weichenWahl(s: GameState, bot: Bot): Set<string> {
+  const alle = s.weichenPunkte();
+  if (!alle.length || bot.weichenStil === 'offen') return new Set();
+  if (bot.weichenStil === 'lang') {
+    // Alles zu, was zugeht - und was nicht zugeht, meldet `weicheStellen`
+    // selbst, indem es die Stellung zuruecknimmt.
+    return new Set(alle.map((w) => w.id));
+  }
+  if (!s.towers.length || alle.length > 8) return new Set();
+  let beste = new Set<string>(); let bestwert = -1;
+  for (let maske = 0; maske < 2 ** alle.length; maske++) {
+    const gestellt = new Set(alle.filter((_, i) => (maske >> i) & 1).map((w) => w.id));
+    let bahnen;
+    try { bahnen = lanePaths(s.map, gestellt); } catch { continue; }
+    let wert = 0;
+    for (const bahn of bahnen) {
+      for (const t of s.towers) wert += bahn.coveredLength(t.x, t.y, REICHWEITE);
+    }
+    if (wert > bestwert) { bestwert = wert; beste = gestellt; }
+  }
+  return beste;
 }
 
 function play(
@@ -514,6 +590,18 @@ function play(
     // Die Ueberlappung ist eine Entscheidung des Spielers. Die Balance ist gegen
     // einen Bot geeicht, der sie nicht trifft; wer sie messen will, misst sie
     // eigens (S-P4-02).
+    // **Die Weichen werden zwischen den Wellen gestellt** (S-N2-06) - also
+    // genau hier, unmittelbar bevor die naechste losgeht. `weicheStellen`
+    // verweigert ohnehin, solange jemand auf dem Feld steht; der Aufruf an
+    // einer anderen Stelle waere lautlos wirkungslos gewesen.
+    if (s.canStartWave && !s.waveActive) {
+      const gestellt = weichenWahl(s, bot);
+      for (const w of s.weichenPunkte()) {
+        if (w.zu !== gestellt.has(w.id)) {
+          if (s.weicheStellen(w.id, gestellt.has(w.id))) entscheidungenJeWelle[welleNr(s)]++;
+        }
+      }
+    }
     if (s.canStartWave && !s.waveActive) s.startWave();
     s.update(DT);
     t += DT;

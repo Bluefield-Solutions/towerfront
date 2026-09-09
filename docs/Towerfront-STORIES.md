@@ -665,6 +665,14 @@ das UX-Tor muss die gestiegene Belegung melden.
 
 ---
 
+**Nachgetragen aus dem Inspektorlauf v273:** die drei Fähigkeitsfelder laufen
+zu **einem grauen Block** zusammen. Zwischen „2 KARTEN" und „Ernte" liegen 45
+Punkte ohne erkennbare Rahmentrennung; die gestrichelten Kästen berühren
+einander. Drei Entscheidungen, die aussehen wie eine Fläche — nachgesehen in
+`browser.png`, der Befund trägt.
+
+---
+
 ### S-N4-02 · Tiefe am Ort: der Ring am Turm
 
 **Paket:** N4 · **Aufwand:** L · **Hängt an:** S-N4-01
@@ -848,6 +856,18 @@ der drei Nachbarn eine Zahl tragen, steht bei einem ein Wort. Der Inspektor
 hat es wörtlich als *„zwei Leisten für dieselbe Wahl, und in einer davon fehlt
 die Zahl"* gelesen.
 
+**Und der nächste Durchgang hat genau das Gegenteil gesagt** (v273): *„Die
+Bauwahl ist verständlich: Preis unter jedem Namen, der nicht baubare Mörser
+trägt statt einer Zahl den Grund `RAND` in Rot. Das erklärt sich von
+selbst."* — aufgeführt unter **was gut aussieht.**
+
+Dieselbe Aufnahme, zwei Durchgänge, entgegengesetzte Urteile. Das steht hier,
+weil es die Story nicht erledigt, sondern ihre Prämisse in Frage stellt: wenn
+ein unbefangener Blick es zweimal verschieden liest, ist „unlesbar" nicht
+gemessen, sondern eine von zwei Meinungen. Bevor hier gebaut wird, braucht es
+einen dritten Blick oder eine Messung — **nicht meine Entscheidung, welcher
+der beiden recht hatte.**
+
 **Was gebaut wird.** Eine Leiste. Die Ortsauskunft (`warumNicht`) wandert an
 die Kacheln, die es ohnehin gibt, und sie sagt sie als **Zustand**, nicht als
 Ersatz für den Preis: der Preis bleibt stehen, die Kachel wird gesperrt und
@@ -898,6 +918,90 @@ Ursache steht aufgeschrieben, nicht nur die Behebung.
 fest und ist mechanisch, kommt sie in `tools/probes.mjs`.
 
 **Schliesst, wenn:** `blick: was ein Zeichen im Bild bedeutet, beantwortet kein Tor - beide Befunde stammen aus einem Blick, und nur ein Blick kann sagen, dass sie weg sind`
+
+---
+
+### S-N4-09 · Der Kristall gehört ganz ins Bild
+
+**Paket:** N4 · **Aufwand:** M · **Hängt an:** — · **Herkunft:** Inspektorlauf v273
+
+**Problem.** Das Ding, das man verteidigt, ragt in **beiden**
+Schreibtischformaten aus dem Bild:
+
+* `browser.png` (2532 × 1170): die Ringstation liegt bei x 0–330 und ist am
+  **linken** Rand angeschnitten. Selbst nachgesehen — sie trägt.
+* `14-notebook-spiel.png`: dieselbe Station bei x 1780–2000+, am **rechten**
+  Rand angeschnitten, rund ein Drittel fehlt.
+
+Im Telefonformat (`02`, `12`) steht sie vollständig da. Der Fehler ist also
+**formatabhängig**, und das ist die Sorte, die kein Standardfall zeigt — genau
+wie die verdeckte Zeile `SCHADEN/REICHWEITE` in S-N4-04.
+
+Dazu ein zweiter Weg zum selben Schaden: in `05-pruefsteg.png` und `06` legt
+sich die Turmkarte **vollständig** über die Station; solange man einen Turm
+ansieht, sieht man den Kristall nicht.
+
+**Der Zusammenhang mit der Kamera ist bekannt und alt.** Die Zielplattform
+steht in der Ecke, und seit v219 steht im Verzeichnis, was das kostet: *„der
+Ausweg ist eine Bestellung, kein Code — die Zielplattform im nächsten
+Kartenbild näher zur Mitte."* Hier ist der zweite Beleg dafür, und er kommt
+aus einer anderen Richtung.
+
+**Was gebaut wird.** Der Bildausschnitt hält den Kristall vollständig im Bild,
+in jedem Format, das das Browsertor fährt. Ob das über die Kamerauntergrenze
+geht oder über die Lage der Plattform im nächsten Kartenbild, entscheidet die
+Messung — nicht die Vermutung.
+
+**Abnahme.**
+* In allen Formaten des Browsertores liegt der Kristall mitsamt seinem
+  Warnring vollständig im sichtbaren Bereich.
+* Die aufgeklappte Turmkarte verdeckt ihn nicht.
+
+**Gegenprobe.** Die Kamera so setzen, dass der Kristall am Rand liegt: das Tor
+muss das Format namentlich melden.
+
+**Schliesst, wenn:** `text tools/browser.mjs "kristallSichtbar" >= 1`
+
+---
+
+### S-N4-10 · Ein Ding, ein Wort
+
+**Paket:** N4 · **Aufwand:** S · **Hängt an:** — · **Herkunft:** Inspektorlauf v273
+
+**Problem.** Für dieselbe Sache stehen drei Wörter im Bild, und eines davon ist
+das einzige englische in einer sonst durchgehend deutschen Oberfläche:
+
+| wo | Wort |
+|---|---|
+| `10-pause.png` | „**Level** neu starten" |
+| `10-pause.png`, eine Zeile tiefer | „Zurück zur **Karte**" |
+| `01-landkarte.png` | „Wähle ein **Land**" |
+
+Der Inspektor hat sie nebeneinander gesehen und gefragt, was der Unterschied
+ist. Es gibt keinen. Das ist Regel 15 in der Oberfläche: was dreimal dasteht,
+meint zweimal etwas anderes, als der Leser denkt.
+
+**Was gebaut wird.** Ein Wort, überall. Welches, entscheidet der Bestand —
+`Karte` steht in `maps.ts`, im Quelltext, in den Dokumenten und in der
+Landkarte; `Level` und `Land` stehen je einmal in der Oberfläche.
+
+**Abnahme.** In der ganzen Oberfläche kommt für diese Sache genau ein Wort
+vor, und es ist deutsch.
+
+**Gegenprobe.** Eines der Wörter wieder einsetzen: der Rauchtest muss es
+melden.
+
+**Die Schliessbedingung zeigt auf `index.html`, und das ist nachgesehen, nicht
+geraten.** Der erste Entwurf hiess `text src/ui/ui.ts "Level" == 0` — und war
+**vom ersten Augenblick an erfüllt**, weil das Wort dort gar nicht steht.
+`npm run naechste` hätte die Story sofort als zugefallen geführt, ohne dass
+jemand etwas getan hätte; genau die Lücke, vor der die Doku-Wächter-Regel aus
+v224 warnt (*ein offener Punkt kann still zufallen*). Gemessen steht
+`Level neu starten` als Knopftext in `index.html:113`, dazu je einmal als
+Kommentar in `style.css` und `main.ts`. Der Knopftext ist das, was der Spieler
+sieht — also hängt die Bedingung daran.
+
+**Schliesst, wenn:** `text index.html "Level" == 0`
 
 ---
 
@@ -998,6 +1102,21 @@ sie sind: die Baukante, gezeichnet nur während der Turmwahl. Eine Linie, die
 eine Regel des Spiels zeigt, ist richtig; eine reinweiße Kontur ohne Schatten
 und ohne Perspektive über einem Foto ist die falsche Art, sie zu zeigen.
 
+**Und der dritte Durchgang hat dieselbe Fläche ein drittes Mal gemeldet, als
+etwas anderes** (v273): *„eine harte rechteckige Kante im Untergrund … darunter
+liegt das Gras merklich milchiger und flauer als darüber. Eine gerade
+Rechteckkante mitten in einer gemalten Landschaft — das kann kein Wetter und
+kein Nebel sein."*
+
+**Nachgesehen, und die Diagnose stimmt nicht ganz:** eine gerade Rechteckkante
+ist es nicht, die Grenze folgt dem Weg. Es ist die **Baukante** — derselbe
+Schleier, den v272 als weiße Konturlinien meldete, nur diesmal an seiner
+Fläche statt an seinem Umriss erkannt. Damit haben zwei unbefangene Durchgänge
+dieselbe Anzeige unabhängig voneinander für einen technischen Fehler gehalten,
+einmal als Gekritzel und einmal als Rechteck. Das ist das stärkste Argument
+dieser Story: die Anzeige sagt eine richtige Sache auf eine Art, die als Panne
+gelesen wird.
+
 **Was gebaut wird.** Eine Farbregel, die einmal dasteht (Regel 15): welche
 Farbe welchen Zustand meint, und keine Farbe zwei. Das Tor rückt so weit ins
 Feld, dass es ganz zu sehen ist. Die Geländelinien bekommen entweder eine
@@ -1009,6 +1128,42 @@ Bedeutung, die man sieht, oder sie verschwinden.
 genau dafür gibt es den Inspektor.
 
 **Schliesst, wenn:** `blick: ob eine Farbe zwei Dinge sagt und ob ein Tor im Bild steht, beantwortet kein Tor - das ist Regel 8, und die drei Befunde stammen selbst aus einem Blick`
+
+---
+
+### S-N5-06 · Der Meteor sagt nicht, wohin er fällt
+
+**Paket:** N5 · **Aufwand:** S · **Hängt an:** — · **Herkunft:** Inspektorlauf v273
+
+**Problem.** Der Inspektor meldete zwei Anzeigen für dieselbe Handlung, die an
+verschiedene Orte zeigen: ein violetter Bogen endet mit einem weißen Punkt bei
+(835, 1078), der rote Wirkkreis liegt bei (1300, 880) — der markierte Punkt
+liegt **außerhalb** seines eigenen Kreises. In `02` derselbe Abstand.
+
+**Nachgesehen im Quelltext, und die Sache ist anders als der Befund, aber der
+Befund bleibt richtig.** Es sind nicht zwei widersprüchliche Anzeigen: der
+weiße Punkt ist der **fliegende Brocken**, gezeichnet bei
+`(m.x + 340·(1−t), m.y − 620·(1−t))`. Er wandert im Lauf des Fluges in den
+Kreis hinein, und bei `t = 1` liegt er genau in dessen Mitte. Die Anzeige ist
+also korrekt.
+
+Der Fehler ist, dass sie das nicht **sagt**: gezeichnet wird nur ein Stummel
+von 46 × 84 Punkten hinter dem Brocken, keine Linie zum Ziel. Über
+drei Viertel des Fluges steht damit ein leuchtender Punkt irgendwo im Bild,
+ohne sichtbaren Bezug zu dem Kreis, den er meint — und ein unbefangener Blick
+liest genau das, was er gemeldet hat.
+
+**Was gebaut wird.** Der Brocken bekommt eine sichtbare Verbindung zu seinem
+Einschlagpunkt — Anflugbahn statt Stummel, oder eine Führungslinie, die mit
+dem Aufschlag verschwindet.
+
+**Abnahme.** Zu jedem Zeitpunkt des Fluges ist im Bild zu sehen, **wohin** der
+Brocken fällt, ohne dass man auf ihn warten muss.
+
+**Gegenprobe.** Die Verbindung entfernen: das Bildtor muss die Aufnahme mit
+fliegendem Meteor namentlich melden.
+
+**Schliesst, wenn:** `text src/gfx/renderer.ts "anflugbahn" >= 1`
 
 ---
 

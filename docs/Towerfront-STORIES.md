@@ -1,6 +1,6 @@
 # Towerfront — Stories
 
-Stand: v277 · 09.09.2026
+Stand: v284 · 09.09.2026
 
 **Dieses Dokument ist das Lenkrad.** `npm run naechste` liest die Reihenfolge
 hier und wählt die erste offene Story — über Stunden und über Kontextgrenzen
@@ -529,9 +529,19 @@ und der Weichenfenster-Wächter aus S-N2-04.
 * `npm run netz` misst weiter 0,00 Weltpunkte Abweichung im Grundzustand —
   die Balance ist gegen ihn geeicht.
 * `npm run sim` bleibt in seinen Ratschen.
-* Auf der Karte mit zwei Weichen bekommt ein dritter Weichenstil (`deckung`)
-  seinen Gegenstand zurück und gewinnt irgendwo allein — sonst war die
-  Diagnose aus v283 falsch.
+* **Auf jeder Karte, die eine Weiche trägt, gewinnt ein Weichenstil irgendwo
+  allein.** Das ist die Abnahme, die trägt — und sie ist schärfer als die
+  ursprünglich hier stehende.
+
+  Ursprünglich stand hier: „auf der Karte mit zwei Weichen bekommt ein
+  dritter Stil (`deckung`) seinen Gegenstand zurück und gewinnt irgendwo
+  allein — sonst war die Diagnose aus v283 falsch". **Die Diagnose war
+  falsch, und die Messung hat es gesagt.** `deckung` ist in v284 mit vier
+  Stellungen gefahren, vor dem ersten Turm entscheidend, einmal gegen zwölf
+  und einmal gegen vier Türme gerechnet — und hat nie allein gewonnen. Was
+  daraus folgt, ist eine Aussage über die **Kennzahl**: gedeckte Länge sagt
+  den Verlust nicht vorher (M17). Ein dritter Stil braucht keine dritte
+  Strategie, sondern eine Kennzahl, die Verluste vorhersagt.
 
 **Gegenprobe.** Zwei Weichen einer Karte auf dieselbe Kante legen: der
 Wächter muss melden, dass eine von beiden nichts entscheidet.

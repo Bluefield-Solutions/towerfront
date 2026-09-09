@@ -2,14 +2,14 @@
 
 Stand: v279 · 09.09.2026
 
-**Nachgesehen in v279:** die sechzehn Luecken stehen unveraendert. **M16 hat
-seinen zweiten Fall bekommen, und er war vorhersehbar:** `kuerzesteRoute`
-(v279) rechnet die Route ueber das Netz - und keine der vier Karten hat heute
-eine zweite Route. An den ausgelieferten Netzen koennte die Rechnung die
-laengste nehmen, die erstbeste oder wuerfeln, und alle sieben Bahnen blieben
-deckungsgleich. Das Tor stellt den Fall deshalb selbst: ein eigenes Netz mit
-zwei Wegen. Dieselbe Bewegung wie bei `bench` in v272 - nur diesmal, bevor
-das Tor jahrelang geschwiegen hat.
+**Nachgesehen in v284:** siebzehn Luecken, und die letzten beiden sind in
+dieser Kette entstanden statt gesammelt worden. **M16** (ein Tor kann in der
+Kette stehen, ohne je etwas bewiesen zu haben) hat seinen zweiten Fall
+bekommen: `kuerzesteRoute` haette an den ausgelieferten Netzen nichts
+beweisen koennen, weil keine Karte eine zweite Route hatte - das Tor stellt
+den Fall seitdem selbst. **M17** ist der teuerste Fund der Kette: zwei
+Anlaeufe fuer einen dritten Bot-Stil sind an einer Kennzahl gescheitert, die
+klingt, als muesste sie stimmen.
 
 
 Zu `KATALOG.md` und `STORIES.md`. Stand des Spiels **v248** (`5623c3b`).
@@ -480,6 +480,39 @@ nicht.
 ---
 
 ## Was das für die Reihenfolge bedeutet
+
+## M17 · Gedeckte Länge sagt den Verlust nicht vorher
+
+**Die Frage.** Welche Weichenstellung ist die bessere?
+
+**Warum die Werkzeuge sie nicht beantworten.** Die naheliegende Zahl ist die
+**gedeckte Länge**: wieviel der Bahn die eigenen Türme zusammen sehen.
+`bahnentwurf` misst sie seit v217, und sie klingt richtig — mehr Strecke unter
+Feuer heisst mehr Schaden.
+
+**Gemessen in v284 stimmt das nicht.** Auf dem Spiralhain decken die zwölf
+besten Plätze mit gestellter Weiche **4896 statt 3864** Weltpunkte, die
+Wegvielfachheit steigt von 0,87 auf 1,23 — und der Stil `offen` gewinnt
+trotzdem die Wellen 11, 14 und 15 allein. Zweimal nachgerechnet, einmal gegen
+zwölf Türme und einmal gegen vier: der Stil, der auf gedeckte Länge hin
+optimiert, gewinnt **nirgends** allein.
+
+Damit ist ein ganzer Bot-Stil zweimal an dieser Zahl gescheitert (v283 und
+v284), und die Ursache liegt nicht bei ihm.
+
+**Was fehlt.** Eine Kennzahl, die aus der Geometrie einer Stellung den
+erwarteten Verlust schätzt — Zeit unter Feuer je Gegner, gewichtet nach der
+Zahl der Türme, die eine Stelle sehen, und danach, WANN sie im Lauf steht.
+Solange es sie nicht gibt, kann kein Bot eine Weichenstellung *bewerten*; er
+kann sie nur fest wählen (`offen`, `lang`) und das Ergebnis abwarten.
+
+**Warum das mehr ist als eine fehlende Zahl.** Der Spieler steht vor derselben
+Frage, und ihm hilft heute niemand: die Karte zeigt seit v282 beide Routen,
+aber nicht, welche die bessere ist. Eine Entscheidung, deren Folgen man nicht
+abschätzen kann, ist ein Ratespiel — genau der Vorwurf, den das
+Spielspaß-Audit dem alten Turmausbau macht.
+
+---
 
 **M1, M3 und M4 sind keine Nebenbefunde, sondern die Begründung dafür, dass
 Paket P1 vor allem anderen steht.** Drei der vier Zahlen, an denen dieser

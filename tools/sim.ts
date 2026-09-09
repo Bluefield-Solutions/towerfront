@@ -399,6 +399,10 @@ function stelleZiel(s: GameState, f?: (t: Tower, i: number, s: GameState) => Zie
  *  Weiche hat, koennen sich die Stile auf den anderen dreien gar nicht
  *  unterscheiden. Das steht als Zahl da, statt als stille Null in der
  *  Statistik zu verschwinden. */
+/** Wieviele Tuerme `deckung` seiner Rechnung zugrunde legt. Vier ist die
+ *  Zahl, die der Bot bis Welle 5 gemessen wirklich stehen hat. */
+const FRUEHE_TUERME = 4;
+
 const WEICHENSTILE = ['offen', 'lang', 'deckung'] as const;
 
 /** Der Grad, auf dem die Weichenstile verglichen werden.
@@ -520,7 +524,15 @@ function weichenWahl(s: GameState, bot: Bot): Set<string> {
     const probe = new GameState(s.map.id);
     probe.reset(s.seed, s.difficulty, s.map.id, { perks: NO_PERKS, karten: MAPS.length });
     for (const w of alle) probe.weicheStellen(w.id, gestellt.has(w.id));
-    const plaetze = candidateSpots(probe).slice(0, bot.maxTowers);
+    // **Gerechnet wird mit den Tuermen, die der Bot in den ERSTEN Wellen hat,
+    // nicht mit dem vollen Ausbau.** Der erste Entwurf nahm alle zwoelf, und
+    // gemessen hat er damit nie gewonnen: die zwoelf besten Plaetze decken auf
+    // dem laengeren Weg mehr (4896 gegen 3864 Weltpunkte), aber die ersten
+    // vier decken WENIGER - sie liegen weiter auseinander. Der Kristall
+    // faellt in den fruehen Wellen, und dort stehen vier Tuerme, keine
+    // zwoelf. Eine Kennzahl, die den vollen Ausbau misst, beantwortet die
+    // falsche Frage.
+    const plaetze = candidateSpots(probe).slice(0, FRUEHE_TUERME);
     let wert = 0;
     for (const bahn of bahnen) {
       for (const p of plaetze) wert += bahn.coveredLength(p.x, p.y, REICHWEITE);

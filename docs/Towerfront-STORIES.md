@@ -507,6 +507,39 @@ um die es geht.
 
 ---
 
+### S-N2-08 · Weichen auf den anderen drei Karten
+
+**Paket:** N2 · **Aufwand:** L · **Hängt an:** S-N2-04
+
+**Problem.** Die Weiche steht auf **einer von vier** Karten, und das ist keine
+Kleinigkeit, sondern hält zwei Messungen an. In v283 gemessen: ein dritter
+Bot-Weichenstil ist unmöglich, solange es je Karte nur eine Weiche gibt — bei
+zwei Stellungen fällt „wähle die bessere" zwangsläufig mit einer der festen
+Strategien zusammen. Und der Abstand der Spielstile steht bei 13,15 gegen ein
+Soll von 20.
+
+**Was gebaut wird.** Je eine Weiche für Ascheschlucht, Frostspalte und
+Farnkessel, und **eine zweite** für den Spiralhain. Die Geometrie wird
+gemessen, bevor sie in die Karte kommt — Freiraumraster, `tools/bahnmass.ts`,
+und der Weichenfenster-Wächter aus S-N2-04.
+
+**Abnahme.**
+* Jede Karte hält den Weichenfenster-Wächter: jede Stellung lässt eine Route,
+  keine fällt unter den Umwegfaktor, die Spreizung liegt im Band 1,10–2,50.
+* `npm run netz` misst weiter 0,00 Weltpunkte Abweichung im Grundzustand —
+  die Balance ist gegen ihn geeicht.
+* `npm run sim` bleibt in seinen Ratschen.
+* Auf der Karte mit zwei Weichen bekommt ein dritter Weichenstil (`deckung`)
+  seinen Gegenstand zurück und gewinnt irgendwo allein — sonst war die
+  Diagnose aus v283 falsch.
+
+**Gegenprobe.** Zwei Weichen einer Karte auf dieselbe Kante legen: der
+Wächter muss melden, dass eine von beiden nichts entscheidet.
+
+**Schliesst, wenn:** `text src/data/wegnetz.ts "weichen:" >= 4`
+
+---
+
 ## Paket N3 — Knappheit
 
 ### S-N3-01 · Einkommen wird eine Bauentscheidung

@@ -87,7 +87,8 @@
     "baukarte": "tsx tools/baukarte.mjs",
     "wellenbau": "tsx tools/wellenbau.ts",
     "netz": "tsx tools/netz.ts",
-    "netztor": "tsx tools/netz.ts --tor"
+    "netztor": "tsx tools/netz.ts --tor",
+    "weichenbau": "tsx tools/weichenbau.ts"
   },
   "keywords": [],
   "author": "",

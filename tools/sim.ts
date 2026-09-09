@@ -11,7 +11,8 @@ import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../src/data/d
 const START_LIVES = DIFFICULTIES.normal.startLives;
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, type TowerId } from '../src/data/towers';
 
-import { MAPS } from '../src/data/maps';
+import { MAPS, lanePaths } from '../src/data/maps';
+import { REICHWEITE } from './bahnmass';
 import { WEGNETZ } from '../src/data/wegnetz';
 import { ALL_PERKS, NO_PERKS, starsFor } from '../src/data/perks';
 import { ABILITIES } from '../src/data/abilities';
@@ -240,8 +241,23 @@ interface Bot {
    *              sonst misst der naechste Lauf gegen eine andere Karte.
    *   `lang`     macht alles zu, was zugeht: der laengste Weg, den die Karte
    *              hergibt. Defense Grids Labyrinth in einem Satz.
-   *   `deckung`  waehlt die Stellung, von der seine Tuerme am meisten sehen -
-   *              also die Entscheidung, die die Weiche eigentlich sein soll. */
+   *   `deckung`  waehlt die Stellung mit der laengsten GEDECKTEN Strecke -
+   *              nicht dem laengsten Weg, sondern dem laengsten, den zwoelf
+   *              Tuerme noch sehen.
+   *
+   *  **`deckung` war in v283 schon einmal da und ist gemessen gescheitert.**
+   *  Er hinterliess auf allen Karten denselben Verlust je Welle wie `offen`,
+   *  und der Waechter aus v219 hat es gemeldet. Zwei Ursachen, beide behoben:
+   *
+   *   1. **Die Zahl der Weichen.** Bei einer Weiche gibt es zwei Stellungen,
+   *      und "waehle die bessere" faellt zwangslaeufig mit einer der beiden
+   *      festen Strategien zusammen. Seit v284 hat der Spiralhain zwei
+   *      Weichen und damit vier Stellungen - jetzt ist die Teilmenge eine
+   *      Wahl.
+   *   2. **Der Zeitpunkt.** Er entschied erst, wenn Tuerme standen - und
+   *      Tuerme, die fuer den offenen Weg gestellt wurden, sehen den offenen
+   *      Weg am besten. Jetzt entscheidet er wie `lang` VOR dem ersten Turm,
+   *      gegen die zwoelf besten Plaetze der jeweiligen Stellung. */
   weichenStil: 'offen' | 'lang' | 'deckung';
 }
 
@@ -383,7 +399,7 @@ function stelleZiel(s: GameState, f?: (t: Tower, i: number, s: GameState) => Zie
  *  Weiche hat, koennen sich die Stile auf den anderen dreien gar nicht
  *  unterscheiden. Das steht als Zahl da, statt als stille Null in der
  *  Statistik zu verschwinden. */
-const WEICHENSTILE = ['offen', 'lang'] as const;
+const WEICHENSTILE = ['offen', 'lang', 'deckung'] as const;
 
 /** Der Grad, auf dem die Weichenstile verglichen werden.
  *
@@ -480,9 +496,38 @@ function welleNr(s: GameState): number {
 function weichenWahl(s: GameState, bot: Bot): Set<string> {
   const alle = s.weichenPunkte();
   if (!alle.length || bot.weichenStil === 'offen') return new Set();
-  // Alles zu, was zugeht - und was nicht zugeht, meldet `weicheStellen`
-  // selbst, indem es die Stellung zuruecknimmt.
-  return new Set(alle.map((w) => w.id));
+  if (bot.weichenStil === 'lang') {
+    // Alles zu, was zugeht - und was nicht zugeht, meldet `weicheStellen`
+    // selbst, indem es die Stellung zuruecknimmt.
+    return new Set(alle.map((w) => w.id));
+  }
+  // **`deckung`: der laengste Weg, den zwoelf Tuerme noch sehen.**
+  //
+  // Der laengste Weg allein nuetzt nichts - `bahnentwurf` misst seit v217,
+  // dass zwoelf Plaetze ueberall ungefaehr dieselbe ABSOLUTE Strecke decken.
+  // Wer den Weg verlaengert, ohne die Deckung mitzunehmen, schickt die Gegner
+  // durch eine Gegend, in der niemand steht.
+  if (alle.length > 8) return new Set();
+  let beste = new Set<string>(); let bestwert = -1;
+  for (let maske = 0; maske < 2 ** alle.length; maske++) {
+    const gestellt = new Set(alle.filter((_, i) => (maske >> i) & 1).map((w) => w.id));
+    let bahnen;
+    try { bahnen = lanePaths(s.map, gestellt); } catch { continue; }
+    // Gefragt wird an einem EIGENEN Spielstand, nicht am laufenden: die
+    // Bauplaetze haengen an der Weichenstellung, und wer sie am echten
+    // Zustand durchprobiert, legt dabei die Weichen um, ueber die er noch
+    // entscheidet.
+    const probe = new GameState(s.map.id);
+    probe.reset(s.seed, s.difficulty, s.map.id, { perks: NO_PERKS, karten: MAPS.length });
+    for (const w of alle) probe.weicheStellen(w.id, gestellt.has(w.id));
+    const plaetze = candidateSpots(probe).slice(0, bot.maxTowers);
+    let wert = 0;
+    for (const bahn of bahnen) {
+      for (const p of plaetze) wert += bahn.coveredLength(p.x, p.y, REICHWEITE);
+    }
+    if (wert > bestwert) { bestwert = wert; beste = gestellt; }
+  }
+  return beste;
 }
 
 function play(

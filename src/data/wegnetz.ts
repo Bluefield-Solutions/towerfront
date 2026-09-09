@@ -228,6 +228,8 @@ export const WEGNETZ: Record<string, Wegnetz> = {
       { id: 'tor1', x: -60, y: 1035, w: 38, art: 'tor' },
       { id: 'kreuz1', x: 528, y: 700, w: 50, art: 'kreuz' },
       { id: 'kreuz2', x: 690, y: 500, w: 44, art: 'kreuz' },
+      { id: 'kreuz3', x: 1120, y: 700, w: 50, art: 'kreuz' },
+      { id: 'kreuz4', x: 1288, y: 490, w: 44, art: 'kreuz' },
     ],
     kanten: [
       {
@@ -253,12 +255,29 @@ export const WEGNETZ: Record<string, Wegnetz> = {
         ],
       },
       {
-        id: 'kreuz2-ziel', von: 'kreuz2', nach: 'ziel',
+        id: 'kreuz2-kreuz3', von: 'kreuz2', nach: 'kreuz3',
         punkte: [
           { x: 790, y: 548, w: 46 }, { x: 816, y: 680, w: 50 }, { x: 820, y: 820, w: 50 },
           { x: 826, y: 950, w: 48 }, { x: 886, y: 1016, w: 44 }, { x: 996, y: 1030, w: 44 },
-          { x: 1096, y: 980, w: 46 }, { x: 1116, y: 850, w: 50 }, { x: 1120, y: 700, w: 50 },
-          { x: 1128, y: 570, w: 48 }, { x: 1182, y: 502, w: 44 }, { x: 1288, y: 490, w: 44 },
+          { x: 1096, y: 980, w: 46 }, { x: 1116, y: 850, w: 50 },
+        ],
+      },
+      {
+        id: 'kreuz3-kreuz4', von: 'kreuz3', nach: 'kreuz4',
+        punkte: [
+          { x: 1128, y: 570, w: 48 }, { x: 1182, y: 502, w: 44 },
+        ],
+      },
+      {
+        id: 'kreuz3-kreuz4-2', von: 'kreuz3', nach: 'kreuz4',
+        punkte: [
+          { x: 1050, y: 560, w: 46 }, { x: 960, y: 430, w: 44 }, { x: 980, y: 300, w: 44 },
+          { x: 1100, y: 230, w: 44 }, { x: 1240, y: 260, w: 44 }, { x: 1310, y: 370, w: 44 },
+        ],
+      },
+      {
+        id: 'kreuz4-ziel', von: 'kreuz4', nach: 'ziel',
+        punkte: [
           { x: 1390, y: 542, w: 46 }, { x: 1408, y: 680, w: 50 }, { x: 1414, y: 820, w: 52 },
           { x: 1444, y: 940, w: 52 }, { x: 1540, y: 1004, w: 52 }, { x: 1646, y: 978, w: 54 },
           { x: 1700, y: 850, w: 56 }, { x: 1716, y: 700, w: 58 }, { x: 1726, y: 570, w: 62 },
@@ -266,14 +285,8 @@ export const WEGNETZ: Record<string, Wegnetz> = {
       },
     ],
     weichen: [
-      // **Die Nordschleife** schickt die Gegner durch die obere linke
-      // Kartenhaelfte, die seit v219 gemessen nie betreten wird. Zu heisst
-      // laenger: die Bahn waechst von 3882 auf 4914 Weltpunkte (+25 %), der
-      // Umwegfaktor von 2,08 auf 2,64. Gemessen mit `tools/bahnmass.ts`,
-      // also derselben Rechnung wie der Waechter: Knick 6,3 Grad wie heute,
-      // engster Fleckabstand unveraendert, und KEIN Punkt laeuft mehr aus
-      // dem Feld (heute neun).
       { id: 'saeule1', kante: 'kreuz1-kreuz2', name: 'Nordschleife' },
+      { id: 'saeule3', kante: 'kreuz3-kreuz4', name: 'Kammbogen' },
     ],
   },
   ascheschlucht: {
@@ -281,17 +294,36 @@ export const WEGNETZ: Record<string, Wegnetz> = {
       { id: 'ziel', x: 1690, y: 480, w: 40, art: 'ziel' },
       { id: 'tor1', x: 1250, y: 1180, w: 40, art: 'tor' },
       { id: 'tor2', x: 1550, y: 1180, w: 40, art: 'tor' },
+      { id: 'kreuz1', x: 668, y: 470, w: 44, art: 'kreuz' },
+      { id: 'kreuz2', x: 885, y: 323, w: 44, art: 'kreuz' },
     ],
     kanten: [
       {
-        id: 'tor1-ziel', von: 'tor1', nach: 'ziel',
+        id: 'tor1-kreuz1', von: 'tor1', nach: 'kreuz1',
         punkte: [
           { x: 1280, y: 1090, w: 44 }, { x: 1300, y: 1020, w: 48 }, { x: 1330, y: 980, w: 40 },
           { x: 1264, y: 905, w: 44 }, { x: 1094, y: 605, w: 48 }, { x: 959, y: 691, w: 52 },
-          { x: 859, y: 599, w: 56 }, { x: 746, y: 515, w: 52 }, { x: 668, y: 470, w: 44 },
-          { x: 714, y: 424, w: 40 }, { x: 885, y: 323, w: 44 }, { x: 1080, y: 354, w: 48 },
-          { x: 1198, y: 502, w: 52 }, { x: 1308, y: 595, w: 56 }, { x: 1459, y: 576, w: 44 },
-          { x: 1591, y: 515, w: 40 },
+          { x: 859, y: 599, w: 56 }, { x: 746, y: 515, w: 52 },
+        ],
+      },
+      {
+        id: 'kreuz1-kreuz2', von: 'kreuz1', nach: 'kreuz2',
+        punkte: [
+          { x: 714, y: 424, w: 40 },
+        ],
+      },
+      {
+        id: 'kreuz1-kreuz2-2', von: 'kreuz1', nach: 'kreuz2',
+        punkte: [
+          { x: 520, y: 430, w: 44 }, { x: 400, y: 330, w: 44 }, { x: 380, y: 200, w: 44 },
+          { x: 500, y: 120, w: 44 }, { x: 660, y: 140, w: 44 }, { x: 760, y: 230, w: 44 },
+        ],
+      },
+      {
+        id: 'kreuz2-ziel', von: 'kreuz2', nach: 'ziel',
+        punkte: [
+          { x: 1080, y: 354, w: 48 }, { x: 1198, y: 502, w: 52 }, { x: 1308, y: 595, w: 56 },
+          { x: 1459, y: 576, w: 44 }, { x: 1591, y: 515, w: 40 },
         ],
       },
       {
@@ -306,6 +338,9 @@ export const WEGNETZ: Record<string, Wegnetz> = {
         ],
       },
     ],
+    weichen: [
+      { id: 'nordhaken', kante: 'kreuz1-kreuz2', name: 'Nordhaken' },
+    ],
   },
   frostspalte: {
     knoten: [
@@ -313,17 +348,37 @@ export const WEGNETZ: Record<string, Wegnetz> = {
       { id: 'tor1', x: 400, y: 1180, w: 40, art: 'tor' },
       { id: 'tor2', x: 1100, y: 1180, w: 40, art: 'tor' },
       { id: 'kreuz1', x: 1570, y: 730, w: 56, art: 'kreuz' },
+      { id: 'kreuz2', x: 340, y: 490, w: 52, art: 'kreuz' },
+      { id: 'kreuz3', x: 592, y: 356, w: 40, art: 'kreuz' },
     ],
     kanten: [
       {
-        id: 'tor1-kreuz1', von: 'tor1', nach: 'kreuz1',
+        id: 'tor1-kreuz2', von: 'tor1', nach: 'kreuz2',
         punkte: [
           { x: 392, y: 1030, w: 44 }, { x: 352, y: 900, w: 48 }, { x: 300, y: 770, w: 52 },
-          { x: 286, y: 620, w: 56 }, { x: 340, y: 490, w: 52 }, { x: 452, y: 400, w: 44 },
-          { x: 592, y: 356, w: 40 }, { x: 730, y: 352, w: 40 }, { x: 862, y: 396, w: 44 },
-          { x: 972, y: 470, w: 48 }, { x: 1052, y: 574, w: 52 }, { x: 1080, y: 704, w: 56 },
-          { x: 1008, y: 806, w: 48 }, { x: 1092, y: 884, w: 40 }, { x: 1232, y: 922, w: 44 },
-          { x: 1372, y: 900, w: 48 }, { x: 1482, y: 832, w: 52 },
+          { x: 286, y: 620, w: 56 },
+        ],
+      },
+      {
+        id: 'kreuz2-kreuz3', von: 'kreuz2', nach: 'kreuz3',
+        punkte: [
+          { x: 452, y: 400, w: 44 },
+        ],
+      },
+      {
+        id: 'kreuz2-kreuz3-2', von: 'kreuz2', nach: 'kreuz3',
+        punkte: [
+          { x: 300, y: 380, w: 44 }, { x: 250, y: 250, w: 44 }, { x: 330, y: 140, w: 44 },
+          { x: 480, y: 110, w: 44 }, { x: 620, y: 150, w: 44 }, { x: 660, y: 250, w: 44 },
+        ],
+      },
+      {
+        id: 'kreuz3-kreuz1', von: 'kreuz3', nach: 'kreuz1',
+        punkte: [
+          { x: 730, y: 352, w: 40 }, { x: 862, y: 396, w: 44 }, { x: 972, y: 470, w: 48 },
+          { x: 1052, y: 574, w: 52 }, { x: 1080, y: 704, w: 56 }, { x: 1008, y: 806, w: 48 },
+          { x: 1092, y: 884, w: 40 }, { x: 1232, y: 922, w: 44 }, { x: 1372, y: 900, w: 48 },
+          { x: 1482, y: 832, w: 52 },
         ],
       },
       {
@@ -343,6 +398,9 @@ export const WEGNETZ: Record<string, Wegnetz> = {
         ],
       },
     ],
+    weichen: [
+      { id: 'nordkehre', kante: 'kreuz2-kreuz3', name: 'Nordkehre' },
+    ],
   },
   farnkessel: {
     knoten: [
@@ -350,13 +408,32 @@ export const WEGNETZ: Record<string, Wegnetz> = {
       { id: 'tor1', x: 1500, y: 1160, w: 44, art: 'tor' },
       { id: 'tor2', x: 700, y: 1160, w: 44, art: 'tor' },
       { id: 'kreuz1', x: 780, y: 590, w: 48, art: 'kreuz' },
+      { id: 'kreuz2', x: 1430, y: 600, w: 48, art: 'kreuz' },
+      { id: 'kreuz3', x: 1260, y: 520, w: 44, art: 'kreuz' },
     ],
     kanten: [
       {
-        id: 'tor1-kreuz1', von: 'tor1', nach: 'kreuz1',
+        id: 'tor1-kreuz2', von: 'tor1', nach: 'kreuz2',
         punkte: [
           { x: 1440, y: 1020, w: 48 }, { x: 1420, y: 870, w: 50 }, { x: 1416, y: 720, w: 50 },
-          { x: 1430, y: 600, w: 48 }, { x: 1370, y: 530, w: 44 }, { x: 1260, y: 520, w: 44 },
+        ],
+      },
+      {
+        id: 'kreuz2-kreuz3', von: 'kreuz2', nach: 'kreuz3',
+        punkte: [
+          { x: 1370, y: 530, w: 44 },
+        ],
+      },
+      {
+        id: 'kreuz2-kreuz3-2', von: 'kreuz2', nach: 'kreuz3',
+        punkte: [
+          { x: 1540, y: 580, w: 44 }, { x: 1700, y: 500, w: 44 }, { x: 1740, y: 390, w: 44 },
+          { x: 1650, y: 300, w: 44 }, { x: 1500, y: 290, w: 44 }, { x: 1380, y: 370, w: 44 },
+        ],
+      },
+      {
+        id: 'kreuz3-kreuz1', von: 'kreuz3', nach: 'kreuz1',
+        punkte: [
           { x: 1150, y: 575, w: 46 }, { x: 1090, y: 700, w: 50 }, { x: 1086, y: 860, w: 50 },
           { x: 1090, y: 1000, w: 48 }, { x: 1020, y: 1062, w: 44 }, { x: 910, y: 1062, w: 44 },
           { x: 820, y: 990, w: 46 }, { x: 770, y: 860, w: 50 }, { x: 766, y: 710, w: 50 },
@@ -379,6 +456,9 @@ export const WEGNETZ: Record<string, Wegnetz> = {
           { x: 850, y: 560, w: 44 },
         ],
       },
+    ],
+    weichen: [
+      { id: 'ostschleife', kante: 'kreuz2-kreuz3', name: 'Ostschleife' },
     ],
   },
 };

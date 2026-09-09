@@ -68,15 +68,17 @@ const opt = (name) => {
 
 const kurve = opt('--kurve');
 const knie = opt('--knie');
+const leben = opt('--leben');
 const karte = opt('--karte');
 const hp = opt('--hp');
 const gold = opt('--gold');
 
-if (!kurve && !knie && !hp && !gold) {
+if (!kurve && !knie && !leben && !hp && !gold) {
   console.log(`Eichen — einen Wert durchprobieren, alle Kennzahlen sehen.
 
   npm run eichen -- --kurve 30,34,38          Schwierigkeitskurve (hpEnd)
   npm run eichen -- --knie 0.35,0.40,0.45     Knie der Lebenskurve (KNIE_ANFANG)
+  npm run eichen -- --leben 30,40,50          Groesse des Kristalls (startLives)
   npm run eichen -- --karte X --hp 0.85,0.9   Ausgleich einer Karte
   npm run eichen -- --karte X --gold 1.0,1.1  Einkommen einer Karte
 
@@ -126,6 +128,27 @@ function setKurve(v) {
 function setKnie(v) {
   writeFileSync(DIFF, backup.get(DIFF).replace(
     /const KNIE_ANFANG = [0-9.]+;/, `const KNIE_ANFANG = ${v};`));
+}
+
+/** Die Groesse des Kristalls setzen (S-P2-03).
+ *
+ *  Ein Durchbruch soll wehtun. Der schwerste Gegner nimmt 5 Punkte; bei 60
+ *  Kristall sind das 8,3 %, und Kingdom Rush arbeitet mit 20 Leben, wo ein
+ *  einziger Durchbruch sichtbar teuer ist.
+ *
+ *  Die anderen zwei Grade folgen ANTEILIG - ruhig steht auf dem 1,333fachen
+ *  von normal, erbarmungslos auf dem 0,867fachen. Drei Zahlen einzeln zu
+ *  setzen hiesse, drei Dinge auf einmal zu eichen; und die Sternschwellen
+ *  sind Anteile (`starsFor`), wandern also von selbst mit (Regel 2). */
+function setLeben(v) {
+  let s = backup.get(DIFF);
+  s = s.replace(/startLives: \d+,\n(\s*)hpEnd: ([0-9.]+), hpCurve: 2\.4/,
+    `startLives: ${Math.round(v * 80 / 60)},\n$1hpEnd: $2, hpCurve: 2.4`);
+  s = s.replace(/startLives: \d+,\n(\s*)hpEnd: ([0-9.]+), hpCurve: 2\.6/,
+    `startLives: ${v},\n$1hpEnd: $2, hpCurve: 2.6`);
+  s = s.replace(/startLives: \d+,\n(\s*)hpEnd: ([0-9.]+), hpCurve: 2\.7/,
+    `startLives: ${Math.round(v * 52 / 60)},\n$1hpEnd: $2, hpCurve: 2.7`);
+  writeFileSync(DIFF, s);
 }
 
 /** Welche Kennung zu welcher Konstante gehört — **abgelesen, nicht
@@ -203,14 +226,15 @@ function messen() {
 }
 
 const rows = [];
-const werte = (kurve ?? knie ?? hp ?? gold).split(',').map((v) => Number(v.trim()));
-const was = kurve ? 'Kurve' : knie ? 'KNIE_ANFANG' : `${karte} ${hp ? 'hpMul' : 'goldMul'}`;
+const werte = (kurve ?? knie ?? leben ?? hp ?? gold).split(',').map((v) => Number(v.trim()));
+const was = kurve ? 'Kurve' : knie ? 'KNIE_ANFANG' : leben ? 'startLives' : `${karte} ${hp ? 'hpMul' : 'goldMul'}`;
 
 console.log(`Eichen: ${was}, ${werte.length} Werte\n`);
 for (const v of werte) {
   restore();
   if (kurve) setKurve(v);
   else if (knie) setKnie(v);
+  else if (leben) setLeben(v);
   else setKarte(karte, hp ? 'hp' : 'gold', v);
   const m = messen();
   rows.push([v, m]);

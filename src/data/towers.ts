@@ -373,7 +373,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
  *  Mehrere Foerderer im selben Umkreis addieren sich NICHT unbegrenzt: der
  *  Zuschlag ist gedeckelt, sonst waere die Antwort auf jede Karte "erst sechs
  *  Foerderer, dann Tuerme". */
-export const FOERDER_BONUS = 0.40;
+export const FOERDER_BONUS = 0.25;
 export const FOERDER_DECKEL = 0.75;
 
 /** Welcher Zweig des Foerderers der Ertrags-Zweig ist.

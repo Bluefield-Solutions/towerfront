@@ -122,12 +122,24 @@ ohne Quelltext, ohne die Absicht der Runde. Urteil in drei Stufen:
 * Der Durchgang bekommt nachweislich keinen Quelltext zu sehen.
 * Sein Urteil steht als Datei, nicht nur auf der Ausgabe — die Kette muss es
   in der nächsten Runde lesen können.
-* Ein absichtlich kaputtes Bild (Leiste über der Landkarte) muss „Rückbau"
-  ergeben; ein normales „Freigabe".
+* Der gestellte Fehler muss im Urteil **namentlich** vorkommen, und im echten
+  Lauf darf er **nicht** vorkommen.
 
-**Gegenprobe.** Dem Inspektor ein Bild der letzten grünen Runde vorlegen und
-eines mit verdeckter Spielfläche: fällt das Urteil gleich aus, urteilt er
-nicht.
+**Gegenprobe.** Zwei Durchgänge auf denselben Auftrag: einer sieht den echten
+Stand, einer eine gestellte Fassung mit einer Leiste über der Spielfläche.
+Nennt der gestellte Lauf die Leiste nicht, sieht der Inspektor nicht hin;
+nennt der echte Lauf sie doch, halluziniert er.
+
+> **Diese Abnahme stand in v271 zuerst falsch da, und der Durchgang hat es
+> bewiesen.** Sie verlangte, das gestellte Bild müsse „Rückbau" ergeben und
+> das echte „Freigabe" — beide urteilten `Schleife`, und beide zu Recht: die
+> drei Urteile sagen, **was als Nächstes zu tun ist**, nicht wie schlimm es
+> ist. Eine Leiste über dem Feld ist ein Mangel am selben Ziel, kein Beleg,
+> dass das Ziel nicht trägt. Nach dem Buchstaben wäre der Inspektor
+> durchgefallen; nach der Sache haben die zwei Berichte fast nichts
+> gemeinsam — der gestellte nennt die Leiste im ersten Satz und auf allen
+> 16 Aufnahmen, der echte erwähnt sie **kein einziges Mal**. Das ist das
+> Maß, nicht die Urteilsstufe.
 
 **Schliesst, wenn:** `text tools/inspektor.mjs "Freigabe" >= 2`
 
@@ -624,8 +636,13 @@ Ort dafür.
 Nachdenken braucht. Alles andere wandert auf Anforderung an den Ort, an dem es
 gilt.
 
-**Abnahme.** `npm run uxtor`: Belegung im Ruhezustand fällt gegen die Ratsche
-von heute; fünf Schriftgrößen, null Doppelungen, Trefferflächen ≥ 44.
+**Abnahme.**
+* `npm run uxtor`: Belegung im Ruhezustand fällt gegen die Ratsche von heute;
+  fünf Schriftgrößen, null Doppelungen, Trefferflächen ≥ 44.
+* **Die Leiste bleibt eine Reihe, auch während einer Welle.** Der
+  Inspektorlauf v271 hat gemessen, dass sie beim Wellenstart von rund 130 auf
+  **210 Punkte** umbricht — ein Viertel der Bildhöhe für Knöpfe, während
+  darunter die Gegner laufen.
 
 **Gegenprobe.** Ein Element aus der Ruheebene in die Randleiste zurückholen:
 das UX-Tor muss die gestiegene Belegung melden.
@@ -678,6 +695,75 @@ bewirkt hat: Panzerung, Schild, Luftziel.
 zeigen: der Rauchtest muss melden, dass Anzeige und Messung auseinanderlaufen.
 
 **Schliesst, wenn:** `text src/ui/ui.ts "wirkungsBilanz" >= 2`
+
+---
+
+### S-N4-04 · Kein Element verdeckt den Text eines anderen
+
+**Paket:** N4 · **Aufwand:** M · **Hängt an:** — · **Herkunft:** Inspektorlauf v271
+
+**Problem.** Der erste Inspektorlauf hat zwei Zustände gefunden, in denen
+**Bedienung Bedienung verdeckt — und beide Male genau die Zahlen, wegen derer
+man hinsieht**:
+
+* In `browser.png` (2532 × 1170, also am Zielgerät) liegen die
+  Aufwertungskarten „Scharfschütze" und „Salve" über der Kennzahlenzeile des
+  Turms. Von `SCHADEN 8` und `REICHWEITE 326` stehen nur noch die untersten
+  Pixelreihen hervor. **In `05-pruefsteg.png` bei gleicher Punktgröße steht
+  dieselbe Zeile vollständig da** — der Fehler ist formatabhängig und damit
+  genau die Sorte, die kein Standardfall zeigt.
+* Das Einweisungsband schneidet die obere Kante des Ressourcenkastens ab:
+  `GOLD`, `KRISTALL`, `WELLE` liegen dahinter, sichtbar bleiben `102 36 1/15`
+  — drei nackte Zahlen, und zwar **beim ersten Betreten einer Karte**, wenn
+  niemand weiß, was sie bedeuten.
+
+Das UX-Tor misst heute **Belegung** — wieviel Fläche die Bedienung nimmt. Es
+misst nicht, ob ein Element den *Text* eines anderen zudeckt. Beide Zustände
+sind grün durchgegangen.
+
+**Was gebaut wird.** `textVerdeckung` im UX-Audit: für jedes Element mit Text
+wird geprüft, ob ein anderes Element darüberliegt — mit `elementFromPoint` an
+den Textzeilen selbst, nicht über Umrisskästen (die lassen sich durch
+Verschachteln kleinrechnen, das ist seit v248 die Messstelle dieses Tores).
+
+**Abnahme.**
+* Beide gefundenen Zustände werden gemeldet, bevor sie behoben sind — sonst
+  misst die Prüfung nicht, was sie messen soll.
+* Gemessen wird in **allen** Formaten, die das Browsertor fährt, nicht nur im
+  Standardfenster: der Fehler war formatabhängig.
+* Nach der Behebung: null verdeckte Textzeilen, und das ist eine Ratsche.
+
+**Gegenprobe.** Ein Element über eine Textzeile schieben: das Tor muss es
+namentlich melden.
+
+**Schliesst, wenn:** `text tools/uxaudit.mjs "textVerdeckung" >= 2`
+
+---
+
+### S-N4-05 · Jede Zeile der Wellenvorschau trägt ihren Namen
+
+**Paket:** N4 · **Aufwand:** S · **Hängt an:** — · **Herkunft:** Inspektorlauf v271
+
+**Problem.** Zwischen den Wellen steht in der Vorschau „6× *Erste Fühler*".
+Sobald eine Welle läuft, wird daraus „**9×**" — eine nackte Zahl ohne
+Gegnernamen und ohne Symbol. Der Inspektor hat es zweimal unabhängig
+gefunden, im Spiel und im Werkzeugblatt `wellenvorschau.png`, wo mehrere
+Zeilen gar keinen erklärenden Satz tragen.
+
+Eine Vorschau, die nicht sagt, **was** kommt, ist eine Zahl ohne Gegenstand —
+und sie steht ausgerechnet an der Stelle, an der man entscheidet, wofür das
+nächste Gold ausgegeben wird.
+
+**Was gebaut wird.** `vorschauName`: jede Zeile der Vorschau trägt Zahl,
+Symbol und Namen, in jedem Zustand — auch während einer laufenden Welle.
+
+**Abnahme.** `npm run streifen` prüft es für **jede** Welle jeder Karte, nicht
+nur die erste; die Bandhöhe hält ihre Grenze von 86 Punkten.
+
+**Gegenprobe.** Den Namen in einer Zeile weglassen: `streifen` muss die Welle
+namentlich melden.
+
+**Schliesst, wenn:** `text src/ui/ui.ts "vorschauName" >= 2`
 
 ---
 
@@ -745,6 +831,42 @@ Silhouetten-Ähnlichkeit fällt unter 0,65.
 Werkzeug muss sie nennen.
 
 **Schliesst, wenn:** `blick: ob eine Figur im neuen Stil zu ihrer Karte gehoert, ist genau die Frage, die kein Tor beantwortet (Regel 8)`
+
+---
+
+### S-N5-05 · Rot bedeutet eine Sache, und das Tor steht im Bild
+
+**Paket:** N5 · **Aufwand:** M · **Hängt an:** — · **Herkunft:** Inspektorlauf v271
+
+**Problem.** Zwei Befunde, die nur der Blick sieht, und beide sind
+Verwechslungen:
+
+* **Dieselbe Farbe sagt Gegensätzliches.** In `02-spiel-ruhe.png` trägt die
+  Bauvorschau einen rot gestrichelten Fußring und einen großen roten Kreis —
+  Rot liest sich als „verboten". In `04-turm-gebaut.png` trägt der **fertig
+  gebaute** Turm denselben roten Ring. In `03` und `05` ist der Vorschauring
+  dagegen gelb. Drei Zustände, zwei Farben, keine Regel.
+* **Das Tor, aus dem die Gegner kommen, ist angeschnitten.** Der Steinbogen
+  unten links ist zu zwei Dritteln vom unteren Bildrand abgeschnitten — auch
+  in `12-dock-zu.png`, wo nichts im Weg ist. Wo die Welle herkommt, sieht man
+  nicht.
+
+Dazu ein dritter: über der Karte liegen weiße Schlaufen um Baumgruppen und
+Felsfelder, ohne Verlauf und ohne Legende. Auf dem Notebook-Bild beherrschen
+sie das Bild und lesen sich als Gekritzel. Der Inspektor konnte nicht sagen,
+was sie darstellen sollen — und das ist der Befund.
+
+**Was gebaut wird.** Eine Farbregel, die einmal dasteht (Regel 15): welche
+Farbe welchen Zustand meint, und keine Farbe zwei. Das Tor rückt so weit ins
+Feld, dass es ganz zu sehen ist. Die Geländelinien bekommen entweder eine
+Bedeutung, die man sieht, oder sie verschwinden.
+
+**Abnahme.** Der nächste Inspektorlauf nennt keinen dieser drei Punkte mehr.
+
+**Gegenprobe.** Entfällt: was hier zu prüfen ist, sieht nur das Auge — und
+genau dafür gibt es den Inspektor.
+
+**Schliesst, wenn:** `blick: ob eine Farbe zwei Dinge sagt und ob ein Tor im Bild steht, beantwortet kein Tor - das ist Regel 8, und die drei Befunde stammen selbst aus einem Blick`
 
 ---
 

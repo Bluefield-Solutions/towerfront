@@ -40,6 +40,24 @@ Regel, die nur behauptet wird, gilt nicht.
 **Höchstens drei Schleifen je Ziel.** Danach ist nicht die Ausführung das
 Problem, sondern das Ziel — dann zurück zum Nutzer.
 
+### Was ein Urteil für die Auslieferung heißt
+
+Das hat beim ersten Inspektorlauf gefehlt und wurde sofort gebraucht:
+
+| Urteil | wird ausgeliefert? | und dann? |
+|---|---|---|
+| `Freigabe` | ja | nächste Story |
+| `Schleife` | **ja** | die Befunde werden Stories und kommen nach vorn |
+| `Rueckbau` | **nein** | zurück zum Nutzer, das Ziel trägt nicht |
+
+**Warum `Schleife` ausliefert.** Der Inspektor urteilt über den **Zustand**,
+nicht über das Ziel der Runde — er weiß ja gar nicht, woran gearbeitet wurde.
+Würde eine Schleife die Auslieferung anhalten, ginge nichts mehr live, bis das
+Spiel fehlerfrei ist; und dann gäbe es keinen spielbaren Zwischenstand mehr,
+also auch keinen Blick, also auch keinen Inspektor. Nur `Rueckbau` hält an:
+dort sagt der Blick, dass das Ziel selbst nicht trägt, und das ist eine Frage
+an den Nutzer.
+
 ---
 
 ## Warum die Torkette nicht mehr hier läuft

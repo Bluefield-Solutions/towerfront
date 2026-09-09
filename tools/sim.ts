@@ -13,6 +13,7 @@ import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, type TowerId } from '../src/da
 
 import { MAPS, lanePaths } from '../src/data/maps';
 import { REICHWEITE } from './bahnmass';
+import { WEGNETZ } from '../src/data/wegnetz';
 import { ALL_PERKS, NO_PERKS, starsFor } from '../src/data/perks';
 import { ABILITIES } from '../src/data/abilities';
 import { candidateSpots } from './spots';
@@ -356,6 +357,82 @@ function stelleZiel(s: GameState, f?: (t: Tower, i: number, s: GameState) => Zie
   if (!f) return;
   const i = s.towers.length - 1;
   if (i >= 0) s.towers[i].zielwahl = f(s.towers[i], i, s);
+}
+
+
+/** **Die Weichenstile gegeneinander** (S-N2-06).
+ *
+ *  Gefahren wird DERSELBE Bot mit drei Weichenstilen, nicht die drei Bots
+ *  gegeneinander: die unterscheiden sich in Ruecklage, Ausbautiefe und
+ *  Entscheidungstakt, und ihr Unterschied im Verlust waere dann die
+ *  Turmlogik, nicht die Weiche. Wer eine Wirkung misst, schaltet alles andere
+ *  ab (Regel 13).
+ *
+ *  Zwei Pruefungen, beide aus v219 uebernommen und dort begruendet:
+ *
+ *   - **Kein Stil darf ueberall hinten liegen.** Eine Wahl, die nirgends
+ *     etwas bringt, ist keine.
+ *   - **Zwei Stile mit gleichem Verlust je Welle auf ALLEN Karten sind ein
+ *     Stil mit zwei Namen.** Bei 15 Wellen und vier Karten treffen 60 Zahlen
+ *     nicht versehentlich aufeinander.
+ *
+ *  **Und eine Zeile sagt, was heute nicht geht:** solange nur EINE Karte eine
+ *  Weiche hat, koennen sich die Stile auf den anderen dreien gar nicht
+ *  unterscheiden. Das steht als Zahl da, statt als stille Null in der
+ *  Statistik zu verschwinden. */
+const WEICHENSTILE = ['offen', 'lang', 'deckung'] as const;
+
+function weichenstileMessen(): void {
+  const mitWeiche = MAPS.filter((m) => (WEGNETZ[m.id]?.weichen?.length ?? 0) > 0);
+  console.log(`\nWeichenstile (derselbe Bot, drei Stellungsstrategien) - `
+    + `${mitWeiche.length} von ${MAPS.length} Karten haben ueberhaupt eine Weiche:`);
+  if (!mitWeiche.length) {
+    errors.push('Weichenstile: keine Karte hat eine Weiche - die Stile messen nichts.');
+    return;
+  }
+  const siege: Record<string, number> = {};
+  const geteilt: Record<string, number> = {};
+  const verlauf: Record<string, string> = {};
+  for (const w of WEICHENSTILE) { siege[w] = 0; geteilt[w] = 0; verlauf[w] = ''; }
+  let entschieden = 0;
+  for (const mm of mitWeiche) {
+    const proStil: Record<string, number[]> = {};
+    for (const w of WEICHENSTILE) {
+      proStil[w] = play(mixedPlanBase, () => 0, { ...MEISTER, weichenStil: w }, 'normal', mm.id)
+        .leakByWave;
+    }
+    for (const w of WEICHENSTILE) verlauf[w] += `|${proStil[w].join(',')}`;
+    const wellen = Math.max(...WEICHENSTILE.map((w) => proStil[w].length));
+    const zeile: string[] = [];
+    for (let i = 0; i < wellen; i++) {
+      const werte = WEICHENSTILE.map((w) => proStil[w][i] ?? 0);
+      const min = Math.min(...werte), max = Math.max(...werte);
+      if (min === max) continue;
+      entschieden++;
+      const beste = WEICHENSTILE.filter((_w, k) => werte[k] === min);
+      if (beste.length === 1) { siege[beste[0]]++; zeile.push(`W${i + 1}:${beste[0]}`); }
+      else for (const w of beste) geteilt[w]++;
+    }
+    console.log(`  ${mm.id.padEnd(15)} ${zeile.join('  ') || 'keine Welle trennt die Stile'}`);
+  }
+  for (let i = 0; i < WEICHENSTILE.length; i++) {
+    for (let j = i + 1; j < WEICHENSTILE.length; j++) {
+      const a = WEICHENSTILE[i], b = WEICHENSTILE[j];
+      if (verlauf[a] === verlauf[b]) {
+        errors.push(`Weichenstil: "${a}" und "${b}" hinterlassen auf allen Karten `
+          + 'denselben Verlust je Welle - das sind zwei Namen fuer denselben Stil.');
+      }
+    }
+  }
+  console.log(`  Alleinsiege: ${WEICHENSTILE.map((w) => `${w} ${siege[w]}`).join('  ')}`
+    + `   (${entschieden} Wellen trennen ueberhaupt)`);
+  console.log(`  geteilt:     ${WEICHENSTILE.map((w) => `${w} ${geteilt[w]}`).join('  ')}`);
+  for (const w of WEICHENSTILE) {
+    if (siege[w] + geteilt[w] === 0) {
+      errors.push(`Weichenstil "${w}": in keiner Welle auf keiner Karte vorn - `
+        + 'eine Wahl ohne Folgen.');
+    }
+  }
 }
 
 /** Die Reichweite, mit der die Deckung gerechnet wird.
@@ -1302,6 +1379,7 @@ const mixedPlan = mixedPlanBase;
       }
     }
   }
+  weichenstileMessen();
   console.log(`  Alleinsiege: ${ZIELWAHL_ORDNUNG.map((z) => `${z} ${siege[z]}`).join('  ')}`
     + `   (${entschieden} Wellen trennen ueberhaupt)`);
   console.log(`  geteilt:     ${ZIELWAHL_ORDNUNG.map((z) => `${z} ${geteilt[z]}`).join('  ')}`);

@@ -595,6 +595,21 @@ const PROBEN = [
     tor: 'sim',
     meldet: 'Knappheit',
   },
+  {
+    // **Das Knie darf nicht zum Sprung werden (S-P2-02, v258).**
+    //
+    // `KNIE_ANFANG` sagt, ab welchem Anteil des Wellenplans die
+    // Lebenspunkte anziehen; `KNIE_ENDE` bei 0,92, wo sie ihre volle Hoehe
+    // haben. Setzt man beide gleich, ist der Uebergang keine Kurve mehr,
+    // sondern eine Stufe - die Wellen davor sind alle gleich leicht, die
+    // danach alle gleich schwer.
+    name: 'Die Lebenskurve springt statt zu steigen',
+    datei: 'src/data/difficulty.ts',
+    suche: 'const KNIE_ANFANG = 0.55;',
+    ersatz: 'const KNIE_ANFANG = 0.92;',
+    tor: 'guards',
+    meldet: 'Kurve',
+  },
   // **Die andere Richtung hat KEINE Gegenprobe, und das steht hier statt in
   // einer Fussnote.**
   //

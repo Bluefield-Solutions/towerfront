@@ -1,6 +1,11 @@
 # Towerfront — Stories
 
-Stand: v251 · 08.09.2026
+Stand: v258 · 08.09.2026
+
+**Welche Story dran ist, sagt `npm run naechste`, nicht dieses Dokument.** Es
+liest die Reihenfolge hier und wertet jede Schließbedingung aus; ein von Hand
+gepflegter Fortschrittsstand daneben wäre Regel 15. Stand v258: **10 von 42 zu**,
+fünf bedingt (Rückbau-Stories, „Nur fahren, wenn").
 
 Zu `KATALOG.md`. **42 Stories in acht Paketen, in der Reihenfolge, in der sie
 gefahren werden.** Jede Story ist eine Runde Arbeit: eine Änderung, eine

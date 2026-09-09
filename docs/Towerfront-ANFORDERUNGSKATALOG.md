@@ -1,6 +1,6 @@
 # Towerfront — Anforderungskatalog
 
-Stand: v251 · 08.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+Stand: v258 · 08.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
 Ziel des Nutzers, wörtlich: *„kein kommerzielles Spiel — einfach ein Spiel,
 das möglichst viel Spaß macht und das beste Tower-Defense-Spiel der Welt
 ist."*
@@ -62,6 +62,13 @@ Messverfahren** — und das ändert, womit angefangen werden muss.
 
 ### 2.1 `npm run sim` fährt genau eine Aussaat, und die Zweigtabelle mittelt gar nicht
 
+> **Erledigt in v251 bis v257, und dieser Abschnitt bleibt als Befund stehen.**
+> Er beschreibt den Zustand, aus dem der Katalog entstanden ist. `AUSSAATEN`
+> sind seit v251 drei, die Zweigtabelle mittelt, und **jedes der vier
+> Zweigpaare ist gemessen UNBELEGT** — der Abstand liegt unter der eigenen
+> Streuung. Die Kennzahlen darunter sind seit v253 Ratschen
+> (`tools/spannung-stand.txt`), also nicht mehr nur aufgeschrieben.
+
 `tools/sim.ts` Zeile 21: `const SEEDS = [20260807];` — eine einzige Zahl. Die
 drei „Abwandlungen" (`VARIANTS = [0, 1, 2]`, Zeile 30) verstellen die Rücklage
 des Bots (+0/15/30 Gold) und seinen Startplatz, **nicht** den Zufallsgeber des
@@ -122,11 +129,11 @@ misst, schaltet sie zuerst ab") schon fünfmal bezahlt hat.
 
 ### 2.2 Was sonst bestätigt ist
 
-| Messung | Wert (eigener Lauf, Klon `5623c3b`) | Soll |
-|---|---|---|
-| Verluste verteilt über | 2 von 15 Wellen (W14:10 W15:7) | ≥ 5 |
-| ungenutztes Gold am Ende | 42,7 % (2687 von 6297) | < 20 % |
-| Abstand bester/schwächster Stil | 6 von 100 | ≥ 20 |
+| Messung | Wert (eigener Lauf, Klon `5623c3b`) | **im Baum, v258** | Soll |
+|---|---|---|---|
+| Verluste verteilt über | 2 von 15 Wellen (W14:10 W15:7) | **2,0** (drei Aussaaten) | ≥ 5 |
+| ungenutztes Gold am Ende | 42,7 % (2687 von 6297) | **35,2 %** — und **14,6 %** ohne den Deckel des Bots | < 20 % |
+| Abstand bester/schwächster Stil | 6 von 100 | **6,5** (Rauschen 5,0) | ≥ 20 |
 | Zielmodi mit einem Alleinsieg | 3 von 4 (stark: 0) | 4 von 4 |
 | Genre-Abgleich (`npm run bericht`) | 30/30, gewichtet 100 % | — |
 | Daten-Wächter (`npm run guards`) | 0 Fehler, 13 Hinweise | — |
@@ -175,7 +182,9 @@ sieben Pakete weiterlaufen.
 
 ### P2 · Knappheit — die eine Schraube, an der alles andere hängt
 
-**Problem.** 42,7 % des verdienten Goldes werden nie ausgegeben, dreizehn von
+**Problem.** 42,7 % des verdienten Goldes werden nie ausgegeben (im Baum
+gemessen **35,2 %**, und **14,6 %** beim ungedeckelten Bestleistungs-Bot —
+mehr als die Hälfte der Zahl war der Deckel des Bots, v257), dreizehn von
 fünfzehn Wellen kosten nichts, und der sparsamste Stil gewinnt. Ein Spiel, in
 dem nichts knapp ist, hat keine Entscheidung, die etwas kostet — und ohne eine
 solche verpufft jede Rückmeldung, so gut sie gebaut ist (Audit 2.10:

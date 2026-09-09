@@ -1,6 +1,10 @@
 # Marktrecherche — was moderne Tower-Defense-Spiele ausmacht
 
-Stand: v251 · 08.09.2026
+Stand: v258 · 08.09.2026
+
+**Nachgesehen in v258:** das Dokument hält Marktbefunde mit Quellen und keine
+Zahlen aus diesem Baum — es kann durch eine Fassung des Spiels nicht veralten.
+Diese Zeile hält fest, dass nachgesehen wurde, statt nur das Datum zu setzen.
 
 Erhoben am 08.09.2026 als Vorarbeit zum Anforderungskatalog. Quellen unten.
 **Nicht als Meinung notiert, sondern als Befund mit Herkunft** — wo eine

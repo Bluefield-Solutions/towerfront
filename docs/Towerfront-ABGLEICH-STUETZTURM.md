@@ -1,6 +1,11 @@
 # Referenzabgleich — Stützturm (C3, „Bannturm")
 
-Stand: v251 · 08.09.2026
+Stand: v258 · 08.09.2026
+
+**Nachgesehen in v258:** unverändert offen als C3 — den Bannturm gibt es nicht,
+und die Schließbedingung des Punktes sagt es (`"Bannturm" >= 1` in
+`src/data/towers.ts`, gemessen 0). Der Verbund aus v244 ist etwas anderes: er
+verstärkt über Turm-VIELFALT, nicht über einen eigenen Turm.
 
 Schritt 0 des Durchgangs, nach `docs/Towerfront-SOLL-UND-BETRIEB.md` Teil 2.
 Er stand aus: C3 ist seit v40 im Rückstandsverzeichnis, und ein Soll dafür

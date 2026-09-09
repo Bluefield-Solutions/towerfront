@@ -1,6 +1,9 @@
 # Towerfront — Art Bible
 
-Stand: v251 · 08.09.2026
+Stand: v258 · 08.09.2026
+
+**Nachgesehen in v258:** die Zahlen dieses Dokuments hängen an `npm run art`,
+`grafiktor`, `lesbarkeit` und `einbettung` — alle vier in jeder Torkette grün.
 
 **Dieses Dokument ist verbindlich.** Wer ein Bild bestellt, malt oder einbaut,
 richtet sich danach. Es ist die einzige Stelle, an der die Festlegungen

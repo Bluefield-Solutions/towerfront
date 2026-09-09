@@ -1,6 +1,9 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v251 · 08.09.2026
+Stand: v258 · 08.09.2026
+
+**Nachgesehen in v258:** alle sieben Punkte hängen an `bauflaechetor` und dem
+Browsertor, beide in jeder Torkette grün.
 
 Schritt 0 des Durchgangs, nach `docs/Towerfront-SOLL-UND-BETRIEB.md` Teil 2.
 Ausgelöst durch vier Befunde vom Zielgerät:

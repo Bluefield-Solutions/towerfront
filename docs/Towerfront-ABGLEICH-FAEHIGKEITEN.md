@@ -1,6 +1,9 @@
 # Referenzabgleich — Fähigkeiten freischalten (C18)
 
-Stand: v251 · 08.09.2026
+Stand: v258 · 08.09.2026
+
+**Nachgesehen in v258:** unverändert. Die Fähigkeiten werden von `npm run sim`
+und dem Rauchtest gefahren, beide grün.
 
 Schritt 0 des Durchgangs, nach `docs/Towerfront-SOLL-UND-BETRIEB.md` Teil 2.
 Er stand aus: C18 steht seit v40 im Rückstandsverzeichnis, und das Soll war

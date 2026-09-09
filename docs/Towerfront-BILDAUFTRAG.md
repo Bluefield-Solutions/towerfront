@@ -1,6 +1,11 @@
 # Towerfront — Bildauftrag
 
-Stand: v251 · 08.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v258 · 08.09.2026 · **Auftragsdokument für den Bild-Agenten**
+
+**Nachgesehen in v258:** die Abnahmegrenzen dieses Dokuments liest
+`npm run guards` bei jedem Lauf mit (v229), und `npm run bildprompt` gibt die
+Aufträge daraus aus. Beide grün. Offen ist weiterhin Abschnitt 6.8 — die acht
+Zweigsymbole sind bestellt und noch nicht geliefert (S-P1-00).
 
 Dieses Dokument ist die vollständige Bestellung. Es enthält alles, was zum
 Erzeugen der Bilder nötig ist: Stil, Maße, Blickrichtung, Dateinamen,

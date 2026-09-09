@@ -1,6 +1,6 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v251 · 08.09.2026
+Stand: v258 · 08.09.2026
 
 Zu `KATALOG.md` und `STORIES.md`. Stand des Spiels **v248** (`5623c3b`).
 
@@ -24,6 +24,12 @@ eingebautem Fehler stand (Regel 12).
 ---
 
 ## M1 · Die gemessenen Effekte sind kleiner als die Streuung des Messverfahrens
+
+> **Geschlossen in v251/v253.** `AUSSAATEN` sind drei, jede Kennzahl trägt ihre
+> Spanne, und wo ein Effekt kleiner ist als sie, steht **UNBELEGT** statt einer
+> Zahl — gemessen gilt das für **alle vier** Zweigpaare. Seit v253 sind die
+> Kennzahlen Ratschen (`tools/spannung-stand.txt`) und halten gegen ihr eigenes
+> Rauschen.
 
 **Die Frage.** Wenn `npm run sim` meldet, dass der Brecher elf Kristall mehr
 bringt als die Streubombe — ist das eine Eigenschaft des Spiels oder ein
@@ -94,6 +100,12 @@ kein Mangel, sondern die richtige Arbeitsteilung (Regel 8).
 
 ## M3 · Die Goldzahl misst zu einem unbekannten Teil den Bot
 
+> **Geschlossen in v257, und die Lücke war größer als vermutet.** Neben der
+> gedeckelten Zahl steht jetzt die ungedeckelte: der Bestleistungs-Bot (24 Türme,
+> Stufe 6) lässt **14,6 %** liegen gegen 35,2 % — **mehr als die Hälfte der Zahl
+> war der Deckel des Bots.** An ihre Stelle tritt der **Knappheitsanteil**
+> (Meister 45,0 %), der nicht daran hängt, wieviel der Bot bauen darf.
+
 **Die Frage.** Ist Gold in diesem Spiel knapp?
 
 **Warum die Werkzeuge sie nicht beantworten.** „42,7 % des verdienten Goldes
@@ -160,6 +172,12 @@ trifft. Story S-P5-07 verlangt beides.
 
 ## M6 · Wie lange eine Partie dauert und wieviel davon Warten ist, misst niemand
 
+> **Geschlossen in v255 — mit einem Befund über die Messstelle.** Dauer je Karte:
+> Spiralhain **470 s**, Frostspalte 398, Ascheschlucht 287, Farnkessel 276. Der
+> Leerlaufanteil kommt auf **0,1 %**, misst aber den Bot: der startet jede Welle
+> in demselben Bild, in dem er es darf. Was ein Spieler als Warten erlebt, steht
+> daneben als **dünne Zeit** (höchstens ein Gegner, 17–23 %).
+
 **Die Frage.** Zieht sich das Spiel?
 
 **Warum die Werkzeuge sie nicht beantworten.** Der reine Gegnerausstoß aller
@@ -178,6 +196,11 @@ nicht bewegt, misst etwas anderes.
 ---
 
 ## M7 · Wann eine Entscheidung fällt, misst niemand
+
+> **Geschlossen in v254, und die alte Zahl war falsch.** Gezählt am Bot über drei
+> Aussaaten × drei Abwandlungen: **55,2** Entscheidungen, **3,7 je Welle**,
+> **51 %** in der ersten Hälfte — gegen „36, gut zwei je Welle, meistens früh".
+> **Keine Welle** ist entscheidungslos.
 
 **Die Frage.** Enthält jede Welle eine Entscheidung (G7)?
 
@@ -246,6 +269,10 @@ Ausnahme ein Loch, durch das jedes Dokument schlüpfen kann. Story S-P1-05.
 ---
 
 ## M10 · Ein Rückstandspunkt wird von einem Großbuchstaben offengehalten — und zwei Dokumente messen dieselbe Sache verschieden
+
+> **Geschlossen in v249 und v256.** E6 ist zu; und der Doku-Wächter meldet seit
+> v256 den Fall selbst, an dem es hing: das gesuchte Wort steht nur in **anderer
+> Schreibweise** in der Zieldatei. Kommt es gar nicht vor, schweigt die Meldung.
 
 **Die Frage.** Ist E6 („Das Wellenband: Vorschau, Fortschritt, lebender
 Hauptknopf") noch offen?

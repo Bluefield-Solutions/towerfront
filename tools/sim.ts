@@ -511,7 +511,21 @@ function play(
   s.reset(opts.seed ?? AUSSAATEN[0], difficulty, mapId,
     { endless: opts.endless, perks: opts.perks ?? NO_PERKS,
       karten: opts.karten ?? MAPS.length });
-  const spots = buildSpots(s);
+  // **Der Stil "lang" stellt VOR dem ersten Turm** (S-N2-06).
+  //
+  // Das ist keine Feinheit, sondern der Unterschied zwischen einer Weiche und
+  // einer Selbstverletzung: `candidateSpots` bewertet jeden Platz danach,
+  // wieviel er von den HEUTIGEN Bahnen sieht. Wer erst baut und dann umlegt,
+  // hat seine Tuerme an einer Strasse stehen, die es nicht mehr gibt - und
+  // gemessen war genau das der erste Lauf: "lang" lag auf allen Karten und in
+  // allen Wellen hinten, null Alleinsiege, null geteilte. Das sah aus wie ein
+  // schlechter Stil und war ein schlechter Messaufbau (Regel 13).
+  //
+  // Defense Grid macht es andersherum: erst das Labyrinth, dann die Tuerme.
+  if (bot.weichenStil === 'lang') {
+    for (const w of s.weichenPunkte()) s.weicheStellen(w.id, true);
+  }
+  let spots = buildSpots(s);
   // Die Abwandlung verschiebt Startreihenfolge und Ruecklage leicht. Damit
   // entstehen mehrere Spielverlaeufe, die alle vernuenftig sind - und der
   // Mittelwert misst die Balance statt einer einzelnen Bahn durch das Chaos.
@@ -673,11 +687,18 @@ function play(
     // einer anderen Stelle waere lautlos wirkungslos gewesen.
     if (s.canStartWave && !s.waveActive) {
       const gestellt = weichenWahl(s, bot);
+      let umgelegt = false;
       for (const w of s.weichenPunkte()) {
         if (w.zu !== gestellt.has(w.id)) {
-          if (s.weicheStellen(w.id, gestellt.has(w.id))) entscheidungenJeWelle[welleNr(s)]++;
+          if (s.weicheStellen(w.id, gestellt.has(w.id))) {
+            entscheidungenJeWelle[welleNr(s)]++; umgelegt = true;
+          }
         }
       }
+      // **Die Bauplaetze folgen der Bahn.** Sie sind danach sortiert, wieviel
+      // ein Platz vom Weg sieht - eine Liste, die zur alten Bahn gehoert,
+      // stellt die naechsten Tuerme ins Leere.
+      if (umgelegt) { spots = buildSpots(s); spotIdx = variant % 2; }
     }
     if (s.canStartWave && !s.waveActive) s.startWave();
     s.update(DT);

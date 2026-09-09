@@ -70,17 +70,19 @@ const kurve = opt('--kurve');
 const knie = opt('--knie');
 const leben = opt('--leben');
 const beute = opt('--beute');
+const ruhig = opt('--ruhig');
 const karte = opt('--karte');
 const hp = opt('--hp');
 const gold = opt('--gold');
 
-if (!kurve && !knie && !leben && !beute && !hp && !gold) {
+if (!kurve && !knie && !leben && !beute && !ruhig && !hp && !gold) {
   console.log(`Eichen — einen Wert durchprobieren, alle Kennzahlen sehen.
 
   npm run eichen -- --kurve 30,34,38          Schwierigkeitskurve (hpEnd)
   npm run eichen -- --knie 0.35,0.40,0.45     Knie der Lebenskurve (KNIE_ANFANG)
   npm run eichen -- --leben 30,40,50          Groesse des Kristalls (startLives)
   npm run eichen -- --beute 0.7,0.85,1.0      Einkommen im Grad normal (bountyMul/bonusMul)
+  npm run eichen -- --ruhig 11,13,15          Lebenskurve NUR im Grad Ruhig (hpEnd)
   npm run eichen -- --karte X --hp 0.85,0.9   Ausgleich einer Karte
   npm run eichen -- --karte X --gold 1.0,1.1  Einkommen einer Karte
 
@@ -167,6 +169,17 @@ function setBeute(v) {
     /bountyMul: 1(\.0)?, bonusMul: 1(\.0)?,/, `bountyMul: ${v}, bonusMul: ${v},`));
 }
 
+/** Die Lebenskurve NUR im Grad "Ruhig" setzen (S-P2-05).
+ *
+ *  `--kurve` zieht alle drei Grade in festem Verhaeltnis; hier geht es
+ *  gerade darum, einen einzelnen zu bewegen. Der Grad endete gemessen fuer
+ *  alle drei Spielstile mit dem vollen Kristall - sanft ist er damit nicht,
+ *  sondern folgenlos. */
+function setRuhig(v) {
+  writeFileSync(DIFF, backup.get(DIFF).replace(
+    /hpEnd: [0-9.]+, hpCurve: 2\.4/, `hpEnd: ${v}, hpCurve: 2.4`));
+}
+
 /** Welche Kennung zu welcher Konstante gehört — **abgelesen, nicht
  *  aufgeschrieben**.
  *
@@ -241,14 +254,15 @@ function messen() {
     // Gold der Engpass ist; "uebrig" sagt, wieviel liegen bleibt.
     knapp: line(/^ {2}Meister\s+([0-9.]+) % \(Spanne/m),
     uebrig: line(/Gold uebrig am Ende: ([0-9.]+) %/),
+    ruhigZeile: line(/^ {2}Ruhig\s+(.+?)\s*$/m),
     sterne,
     fehler,
   };
 }
 
 const rows = [];
-const werte = (kurve ?? knie ?? leben ?? beute ?? hp ?? gold).split(',').map((v) => Number(v.trim()));
-const was = kurve ? 'Kurve' : knie ? 'KNIE_ANFANG' : leben ? 'startLives' : beute ? 'bountyMul/bonusMul' : `${karte} ${hp ? 'hpMul' : 'goldMul'}`;
+const werte = (kurve ?? knie ?? leben ?? beute ?? ruhig ?? hp ?? gold).split(',').map((v) => Number(v.trim()));
+const was = kurve ? 'Kurve' : knie ? 'KNIE_ANFANG' : leben ? 'startLives' : beute ? 'bountyMul/bonusMul' : ruhig ? 'hpEnd (Ruhig)' : `${karte} ${hp ? 'hpMul' : 'goldMul'}`;
 
 console.log(`Eichen: ${was}, ${werte.length} Werte\n`);
 for (const v of werte) {
@@ -257,6 +271,7 @@ for (const v of werte) {
   else if (knie) setKnie(v);
   else if (leben) setLeben(v);
   else if (beute) setBeute(v);
+  else if (ruhig) setRuhig(v);
   else setKarte(karte, hp ? 'hp' : 'gold', v);
   const m = messen();
   rows.push([v, m]);
@@ -266,7 +281,8 @@ for (const v of werte) {
     : `  ${String(v).padEnd(6)} ${m.verteilung.padEnd(22)} ` +
       `knapp ${(m.knapp + ' %').padStart(7)}  uebrig ${(m.uebrig + ' %').padStart(7)}  ` +
       `Robust ${m.robust.padStart(5)}  Stile ${m.stile.padStart(3)}  ` +
-      `Sterne ${m.sterne.padEnd(6)} Fehler ${m.fehler.length}`);
+      `Sterne ${m.sterne.padEnd(6)} Fehler ${m.fehler.length}` +
+      (ruhig ? `\n         Ruhig: ${m.ruhigZeile}` : ''));
 }
 
 fertig();

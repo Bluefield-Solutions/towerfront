@@ -652,6 +652,26 @@ const PROBEN = [
     tor: 'guards',
     meldet: 'Goldbindung',
   },
+  {
+    // **Kein Grad darf folgenlos sein (S-P2-05, v261).**
+    //
+    // "Ruhig" endete gemessen fuer alle drei Spielstile mit dem vollen
+    // Kristall - nicht ein Punkt ging verloren. Derselbe Defekt wie G1, eine
+    // Ebene tiefer: ein Grad, auf dem nichts passieren KANN, ist kein Grad,
+    // sondern ein Abspielmodus. Kein Tor hat etwas gesagt; die Pruefungen
+    // verlangten nur, dass nicht zu viele Stile scheitern.
+    //
+    // **Die Nullprobe dazu ist die Vorgeschichte selbst und braucht keinen
+    // Eingriff:** mit dem alten Wert 10,7 schlug die Pruefung an, von Hand
+    // nachgefahren, bevor der Wert auf 12,0 stieg. Sie meldet also den
+    // Zustand, den diese Runde behoben hat - und nicht nur irgendeinen.
+    name: 'Der Grad Ruhig wird wieder folgenlos',
+    datei: 'src/data/difficulty.ts',
+    suche: 'hpEnd: 12.0, hpCurve: 2.4',
+    ersatz: 'hpEnd: 4.0, hpCurve: 2.4',
+    tor: 'sim',
+    meldet: 'verlustfrei',
+  },
   // **Die andere Richtung hat KEINE Gegenprobe, und das steht hier statt in
   // einer Fussnote.**
   //

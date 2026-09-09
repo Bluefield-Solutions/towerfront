@@ -51,7 +51,7 @@ export const DIFFICULTIES: Record<DifficultyId, DifficultyDef> = {
     id: 'ruhig', name: 'Ruhig',
     blurb: 'Mehr Kristall, mehr Gold, sanftere Kurve. Zum Kennenlernen.',
     startGold: 300, startLives: 48,
-    hpEnd: 10.7, hpCurve: 2.4, densityRamp: 0.11,
+    hpEnd: 12.0, hpCurve: 2.4, densityRamp: 0.11,
     bountyMul: 1.3, bonusMul: 1.3,
   },
   normal: {

@@ -1008,6 +1008,27 @@ for (const id of DIFFICULTY_ORDER) {
   console.log(`  ${DIFFICULTIES[id].name.padEnd(15)} ${line.join('   ')}`);
 }
 
+// **Kein Grad darf fuer alle Spielstile verlustfrei enden** (S-P2-05).
+//
+// Gemessen endete "Ruhig" fuer alle drei Stile mit dem vollen Kristall -
+// nicht ein Punkt ging verloren. Das ist derselbe Defekt wie G1, eine Ebene
+// tiefer: ein Grad, auf dem nichts passieren KANN, ist kein Grad, sondern
+// ein Abspielmodus. Kein Tor hat etwas gesagt; die Pruefungen verlangten
+// nur, dass nicht zu viele Stile scheitern.
+//
+// Sanft heisst nicht folgenlos. Verlangt wird ein einziger Punkt bei einem
+// einzigen Stil - wer auf "Ruhig" gut spielt, darf weiter makellos
+// durchkommen.
+for (const id of DIFFICULTY_ORDER) {
+  const laeufe = BOTS.map((b) => diffRuns.get(`${id}:${b.name}`)!);
+  const verlustfrei = laeufe.every((r) => r.won && r.lives >= r.maxLives);
+  if (verlustfrei) {
+    errors.push(`Grad "${DIFFICULTIES[id].name}": alle ${BOTS.length} Spielstile enden `
+      + 'verlustfrei mit dem vollen Kristall. Ein Grad, auf dem nichts passieren kann, '
+      + 'ist kein Grad, sondern ein Abspielmodus.');
+  }
+}
+
 // Kein toter Zweig.
 //
 // Die naheliegende Pruefung - einmal alles auf Zweig A, einmal alles auf

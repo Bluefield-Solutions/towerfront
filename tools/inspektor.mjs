@@ -72,6 +72,12 @@ const QUELLTEXT = ['.ts', '.tsx', '.js', '.mjs', '.cjs', '.css', '.html', '.json
  *  und wird **genannt**, nicht verschwiegen. */
 const TOLERANZ_MS = 5 * 60 * 1000;
 
+/** Die eine Stelle, an der ueber das Alter entschieden wird - fuer die
+ *  Aufnahmen wie fuer den Bericht (v272). Der Selbsttest fasst sie an, nicht
+ *  den Vergleich daneben: eine Regel, die zweimal dasteht, veraltet einmal
+ *  (Regel 15), und der Selbsttest bewiese dann nur die eine Haelfte. */
+const zuAlt = (alterMs) => alterMs > TOLERANZ_MS;
+
 
 const version = () => (readFileSync(join(ROOT, 'src/data/config.ts'), 'utf8')
   .match(/VERSION = '(v\d+)'/) ?? [])[1] ?? 'v?';
@@ -115,15 +121,17 @@ const selbsttest = () => {
   // Oberflaeche zeigte. Ohne Selbsttest waere sie eine Zusage: der Inspektor
   // kann eine Leiche nicht bemerken, weil er ja gerade nicht wissen soll,
   // was gebaut wurde.
-  const jung = TOLERANZ_MS - 1000;
-  const alt = TOLERANZ_MS + 1000;
-  if (!(alt > TOLERANZ_MS) || jung > TOLERANZ_MS) {
+  //
+  // Geprueft wird `zuAlt` selbst, nicht ein nachgebauter Vergleich - seit
+  // v272 haengen zwei Stellen daran (Aufnahmen und Bericht).
+  if (!zuAlt(TOLERANZ_MS + 1000) || zuAlt(TOLERANZ_MS - 1000) || zuAlt(0)) {
     console.error('INSPEKTOR: der Selbsttest der Altersregel ist gescheitert.');
     process.exit(1);
   }
   console.log(`  Selbsttest: die Quelltext-Sperre trifft .ts und laesst .png und .md `
-    + `durch; es gibt genau ${URTEILE.length} Urteile; Aufnahmen aelter als `
-    + `${TOLERANZ_MS / 60000} min gegen den Lauf bleiben draussen.`);
+    + `durch; es gibt genau ${URTEILE.length} Urteile; was mehr als `
+    + `${TOLERANZ_MS / 60000} min hinter dem Lauf liegt, bleibt draussen - `
+    + 'Aufnahmen wie Bericht.');
 };
 selbsttest();
 
@@ -227,7 +235,7 @@ for (const q of QUELLEN) {
   const zeit = laufZeit(q);
   for (const f of readdirSync(q.ordner).filter((x) => q.muster.test(x)).sort()) {
     const alter = zeit - statSync(join(q.ordner, f)).mtimeMs;
-    if (alter > TOLERANZ_MS) {
+    if (zuAlt(alter)) {
       veraltet.push(`${f} (${Math.round(alter / 3600000)} h aelter als der Lauf)`);
       continue;
     }
@@ -236,10 +244,30 @@ for (const q of QUELLEN) {
   }
 }
 
+/** **Der Bericht steht unter derselben Altersregel wie die Aufnahmen** (v272).
+ *
+ *  In v271 bekamen die Bilder eine Marke, weil eine Aufnahme aus v237
+ *  zwischen lauter v270 lag. Der Bericht blieb ungeprueft - und genau der
+ *  faellt als Naechstes zurueck: er entsteht nur im vollen `npm run
+ *  schleife`, die Aufnahmen dagegen in jedem `npm run uxaudit`. Wer die
+ *  Bilder neu aufnimmt, hat danach frische Bilder und einen alten Bericht
+ *  nebeneinander liegen - dieselbe Mappe, zwei Fassungen, und der Inspektor
+ *  kann es nicht sehen.
+ *
+ *  Verglichen wird gegen die JUENGSTE Aufnahme, nicht gegen die Uhr: der
+ *  Bericht darf aelter sein als heute, aber nicht aelter als der Stand, den
+ *  er beschreibt. */
 const berichtDatei = join(ROOT, 'schleife/bericht.md');
 if (existsSync(berichtDatei)) {
-  writeFileSync(join(ORDNER, 'bericht.md'),
-    berichtOhneAbsicht(readFileSync(berichtDatei, 'utf8')));
+  const juengste = bilder.length
+    ? Math.max(...bilder.map((f) => statSync(join(ORDNER, f)).mtimeMs)) : 0;
+  const alter = juengste - statSync(berichtDatei).mtimeMs;
+  if (zuAlt(alter)) {
+    veraltet.push(`bericht.md (${Math.round(alter / 3600000)} h aelter als die Aufnahmen)`);
+  } else {
+    writeFileSync(join(ORDNER, 'bericht.md'),
+      berichtOhneAbsicht(readFileSync(berichtDatei, 'utf8')));
+  }
 }
 
 writeFileSync(AUFTRAG, [

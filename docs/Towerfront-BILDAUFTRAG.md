@@ -2688,3 +2688,66 @@ dorthin. Es zu senken verschiebt `grafiktor` (Bodenband 0,30–0,36),
 in einem Zug — das ist eine eigene Runde und steht als **S-N5-07** aus. Käme
 das Bild vorher, würde es beim Backen wieder aufgehellt, und die Bestellung
 wäre umsonst.
+
+### 8d.2 `31_foerderer.png` — der Förderer, das erste Gebäude ohne Waffe
+
+**Warum er anders aussehen muss als jeder Turm**: er ist das einzige Bauwerk
+des Spiels, das nicht schiesst. Wer ihn für einen Turm hält, wartet auf Feuer,
+das nie kommt — und hält ihn für kaputt. Die Silhouette muss das auf den
+ersten Blick sagen: **kein Rohr, kein Lauf, keine Kuppel, keine Richtung.**
+
+**Maße im Prompt selbst** (v230): 512 × 512, quadratisch, freigestellt auf
+Transparenz.
+
+```
+[STILBLOCK NEUBAU EINFÜGEN]
+
+SUBJECT: a single industrial extraction building seen from above at a slight
+angle, 512 x 512 pixels, square, isolated on full transparency with no
+background and no ground shadow - the game bakes its own shadow.
+
+A squat, wide processing plant: a low drum or hopper on a poured base, ore
+chutes, a conveyor stub that ends after half a metre, coolant piping, a
+collection sump. It is clearly WORKING - a faint amber glow inside the
+hopper, one lit gauge - but it is just as clearly UNARMED.
+
+NO WEAPON OF ANY KIND. This is the single most important requirement of this
+order. No barrel, no muzzle, no turret ring, no dish, no dome, no aimed
+device, nothing that points anywhere. Every other building in this game
+shoots; this one is the only one that does not, and a player who mistakes it
+for a gun will wait for fire that never comes. Its silhouette must say
+"machine that processes" and never "machine that aims".
+
+It reads as WIDE AND LOW, not tall: the four gun towers of this game are
+vertical, and this one has to be recognisable as a different kind of thing
+from across the field, at roughly 96 pixels on screen.
+
+The saturated accent is amber and it belongs to the material being processed
+- inside the hopper, along the chute lip - not to a sight or a sensor.
+
+[AUSGABE-BLOCK EINFÜGEN]
+```
+
+### Abnahme 8d.2
+
+Gemessen wird mit `npm run probebild -- <ordner>`; die Grenzen für Format,
+Alpha, Rand, reines Schwarz, Feindetail und Lichtwinkel stehen **einmal** in
+Abschnitt 5 und gelten unverändert (Regel 15).
+
+| Prüfung | Gefordert | Womit |
+|---|---|---|
+| Silhouetten-Abstand zu den vier Türmen | Überdeckung **höchstens 0,60** | `npm run probebild` |
+| Breiter als hoch | Verhältnis **mindestens 1,15** | `npm run probebild` |
+| Anteil gesättigter Akzente | höchstens 5 % der Fläche | Stilblock 8d |
+
+**Der Silhouetten-Abstand ist die eigentliche Abnahme, und er ist strenger
+als der übliche.** Für zwei Gegnerarten gilt 0,65; hier sind es 0,60, weil
+der Unterschied nicht „zwei Arten derselben Rolle" ist, sondern „schiesst"
+gegen „schiesst nicht". Der ausgelieferte Gegnersatz verletzt seine eigene
+0,65-Regel gemessen achtmal (Abschnitt 4.3) — ein Bild, das erst nach der
+Lieferung gemessen wird, hält seine Grenze nicht von selbst.
+
+**Bis das Bild da ist, baut das Spiel gegen den Platzhalter** (K5), und
+`npm run bildtor` nennt `foerderer_1_1` bei jedem Lauf als offene Bestellung.
+Der Platzhalter ist erkennbar: Silhouette in der richtigen Grösse, Schraffur,
+Marke #FF00E5.

@@ -665,7 +665,21 @@ function play(
       // geradewegs dorthin. Gemessen kostete das Normal/Meister 23 -> 11 von
       // 60, und das war kein Balancebefund, sondern ein Botfehler.
       const welle = Math.min(s.waveIndex, s.waves.length - 1);
-      const gebaut = s.gebaute;
+      // **Gegen den Baudeckel zaehlen nur die GESCHUETZE** (S-N3-01).
+      //
+      // `maxTowers` ist die Selbstbeschraenkung des Bots ("bewusst
+      // bescheiden", siehe BESTLEISTUNG), nicht eine Regel des Spiels - die
+      // Karten halten rund zweihundert Bauplaetze. Der erste Entwurf zaehlte
+      // den Foerderer mit, und damit kostete jedes Einkommensgebaeude ein
+      // ganzes Geschuetz von zwoelfen: gemessen wurden zwei Karten
+      // unspielbar, und alle vier Zweigpaare fielen unter das Rauschen, weil
+      // dem Bot das Feuer fehlte, um zwischen zwei Zweigen zu unterscheiden.
+      //
+      // Bezahlt wird der Foerderer mit GOLD, und das ist der Tausch, um den
+      // es geht - genau wie beim Command Tower, der 300 kostet und damit
+      // mehrere Ausbauten. Um die Flaeche konkurriert er im Spiel weiterhin;
+      // nur der Deckel des Bots ist keine Flaeche.
+      const gebaut = s.gebaute.filter((tw) => tw.def !== 'foerderer');
       const wantBuild = gebaut.length < bot.maxTowers * bot.deepenAt &&
         spotIdx < spots.length && s.gold >= TOWERS[id].base.cost + reserve;
 

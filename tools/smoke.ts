@@ -3943,12 +3943,16 @@ step('Weiche laesst sich waehrend einer Welle nicht umlegen', () => {
   // Jetzt mit laufender Welle - und zwar so weit, dass wenigstens einer die
   // Weiche schon PASSIERT hat.
   //
-  // **Der erste Entwurf mass an der falschen Stelle.** Er liess 400 Bilder
-  // laufen und pruefte dann; nach 400 Bildern steht der vorderste Gegner
-  // aber noch auf dem gemeinsamen Anfang, und der ist bei jeder
-  // Weichenstellung derselbe. Der Sprung war null - mit und ohne Fehler.
+  // **Zwei Anlaeufe haben an der falschen Stelle gemessen.** Der erste liess
+  // 400 Bilder laufen und prueft dann; da steht der vorderste Gegner noch auf
+  // dem gemeinsamen Anfang, und der ist bei jeder Weichenstellung derselbe.
+  // Der zweite wartete auf 900 Weltpunkte - die Abzweigung liegt bei 885, der
+  // Gegner stand also 15 Weltpunkte dahinter, und dort laufen beide Aeste noch
+  // nebeneinander. Beide Male war der Sprung null, mit und ohne Fehler
+  // (Regel 3). Gewartet wird jetzt auf 1100: zwei Drittel in den kurzen Ast
+  // hinein, wo die Nordschleife rund 300 Weltpunkte daneben liegt.
   g.startWave();
-  const abzweig = 900;
+  const abzweig = 1100;
   for (let i = 0; i < 4000 && !g.enemies.some((e) => e.travelled > abzweig); i++) g.update(DT);
   if (!g.enemies.some((e) => e.travelled > abzweig)) {
     throw new Error('Kein Gegner hinter der Weiche - die Probe misst nichts.');

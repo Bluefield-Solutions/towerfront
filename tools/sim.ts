@@ -382,6 +382,21 @@ function stelleZiel(s: GameState, f?: (t: Tower, i: number, s: GameState) => Zie
  *  Statistik zu verschwinden. */
 const WEICHENSTILE = ['offen', 'lang', 'deckung'] as const;
 
+/** Der Grad, auf dem die Weichenstile verglichen werden.
+ *
+ *  **Nicht "normal", und der Grund ist gemessen.** Auf `normal` gewinnt der
+ *  Spiralhain mit 42 von 42 Kristallpunkten - es gibt fast keinen Verlust,
+ *  und was es nicht gibt, kann keine Stile trennen: der erste Lauf meldete
+ *  "keine Welle trennt die Stile", obwohl die Deckung sich messbar
+ *  unterscheidet (die zwoelf besten Plaetze sehen mit gestellter Weiche 4896
+ *  statt 3864 Weltpunkte, Wegvielfachheit 1,23 statt 0,87).
+ *
+ *  Verglichen wird deshalb dort, wo die Karte wirklich weh tut. Das ist eine
+ *  Messstelle, keine Erleichterung (Regel 12): die Balance selbst bleibt
+ *  gegen `normal` geeicht, hier wird nur die Frage gestellt, ob die
+ *  Entscheidung ueberhaupt eine ist. */
+const WEICHEN_GRAD: DifficultyId = 'erbarmungslos';
+
 function weichenstileMessen(): void {
   const mitWeiche = MAPS.filter((m) => (WEGNETZ[m.id]?.weichen?.length ?? 0) > 0);
   console.log(`\nWeichenstile (derselbe Bot, drei Stellungsstrategien) - `
@@ -398,8 +413,8 @@ function weichenstileMessen(): void {
   for (const mm of mitWeiche) {
     const proStil: Record<string, number[]> = {};
     for (const w of WEICHENSTILE) {
-      proStil[w] = play(mixedPlanBase, () => 0, { ...MEISTER, weichenStil: w }, 'normal', mm.id)
-        .leakByWave;
+      proStil[w] = play(mixedPlanBase, () => 0, { ...MEISTER, weichenStil: w },
+        WEICHEN_GRAD, mm.id).leakByWave;
     }
     for (const w of WEICHENSTILE) verlauf[w] += `|${proStil[w].join(',')}`;
     const wellen = Math.max(...WEICHENSTILE.map((w) => proStil[w].length));

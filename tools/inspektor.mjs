@@ -29,6 +29,7 @@
 import {
   copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync,
 } from 'node:fs';
+import { statSync } from 'node:fs';
 import { join, dirname, extname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -50,6 +51,27 @@ const URTEILE = ['Freigabe', 'Schleife', 'Rueckbau'];
  *  den Code. Markdown ist ausgenommen - der Bericht ist ein Ergebnis, kein
  *  Bauplan -, aber auch er wird beschnitten (siehe `berichtOhneAbsicht`). */
 const QUELLTEXT = ['.ts', '.tsx', '.js', '.mjs', '.cjs', '.css', '.html', '.json', '.yml', '.yaml'];
+
+/** **Wie alt eine Aufnahme sein darf** - und warum es diese Zeile gibt.
+ *
+ *  Der erste Entwurf kopierte alles, was auf das Muster passt. Die
+ *  Gegenprobe hat ihn beim ersten Lauf erwischt: in `/tmp/lab/ux` lag
+ *  `07-welle-fruch.png` - eine Datei mit Tippfehler im Namen, vom Vortag,
+ *  die **v237** zeigte, waehrend alle anderen v270 trugen. Der Durchgang
+ *  schrieb woertlich: *"In derselben Mappe liegen zwei Fassungen
+ *  nebeneinander; ich haette beinahe die alte beurteilt."*
+ *
+ *  Das ist die schlimmste Art Fehler fuer dieses Werkzeug: der Inspektor
+ *  kann sie nicht bemerken, weil er ja gerade NICHT wissen soll, was gebaut
+ *  wurde. Er haette ueber eine 33 Fassungen alte Oberflaeche geurteilt und
+ *  es fuer den heutigen Stand gehalten.
+ *
+ *  Der Lauf wird deshalb datiert: die Marke (`messwerte.json` schreibt das
+ *  UX-Audit am Ende) sagt, wann die Aufnahmen entstanden sind; ohne Marke
+ *  gilt die neueste Aufnahme des Ordners. Was aelter ist, bleibt draussen -
+ *  und wird **genannt**, nicht verschwiegen. */
+const TOLERANZ_MS = 5 * 60 * 1000;
+
 
 const version = () => (readFileSync(join(ROOT, 'src/data/config.ts'), 'utf8')
   .match(/VERSION = '(v\d+)'/) ?? [])[1] ?? 'v?';
@@ -86,8 +108,22 @@ const selbsttest = () => {
     console.error('INSPEKTOR: der Selbsttest der Urteilsliste ist gescheitert.');
     process.exit(1);
   }
+  // 3. Sortiert die Altersregel eine Leiche aus - und laesst frische durch?
+  //
+  // Diese Regel gibt es, weil die erste Gegenprobe eine 39 Stunden alte
+  // Aufnahme in der Mappe gefunden hat, die eine 33 Fassungen aeltere
+  // Oberflaeche zeigte. Ohne Selbsttest waere sie eine Zusage: der Inspektor
+  // kann eine Leiche nicht bemerken, weil er ja gerade nicht wissen soll,
+  // was gebaut wurde.
+  const jung = TOLERANZ_MS - 1000;
+  const alt = TOLERANZ_MS + 1000;
+  if (!(alt > TOLERANZ_MS) || jung > TOLERANZ_MS) {
+    console.error('INSPEKTOR: der Selbsttest der Altersregel ist gescheitert.');
+    process.exit(1);
+  }
   console.log(`  Selbsttest: die Quelltext-Sperre trifft .ts und laesst .png und .md `
-    + `durch; es gibt genau ${URTEILE.length} Urteile.`);
+    + `durch; es gibt genau ${URTEILE.length} Urteile; Aufnahmen aelter als `
+    + `${TOLERANZ_MS / 60000} min gegen den Lauf bleiben draussen.`);
 };
 selbsttest();
 
@@ -169,17 +205,32 @@ const berichtOhneAbsicht = (text) => {
  *  die einzigen, die die Frage "kann man das spielen?" ueberhaupt zeigen;
  *  ein Werkzeugbild aus `bilder/` zeigt eine Messung, kein Spiel. */
 const QUELLEN = [
-  { ordner: '/tmp/lab/ux', muster: /^\d\d-.*\.png$/ },
+  { ordner: '/tmp/lab/ux', muster: /^\d\d-.*\.png$/, marke: 'messwerte.json' },
   { ordner: join(ROOT, 'bilder'), muster: /^(browser|wellenvorschau)\.png$/ },
 ];
+
+const laufZeit = (q) => {
+  const marke = q.marke && join(q.ordner, q.marke);
+  if (marke && existsSync(marke)) return statSync(marke).mtimeMs;
+  const treffer = readdirSync(q.ordner).filter((f) => q.muster.test(f));
+  if (!treffer.length) return 0;
+  return Math.max(...treffer.map((f) => statSync(join(q.ordner, f)).mtimeMs));
+};
 
 if (existsSync(ORDNER)) rmSync(ORDNER, { recursive: true, force: true });
 mkdirSync(ORDNER, { recursive: true });
 
 const bilder = [];
+const veraltet = [];
 for (const q of QUELLEN) {
   if (!existsSync(q.ordner)) continue;
+  const zeit = laufZeit(q);
   for (const f of readdirSync(q.ordner).filter((x) => q.muster.test(x)).sort()) {
+    const alter = zeit - statSync(join(q.ordner, f)).mtimeMs;
+    if (alter > TOLERANZ_MS) {
+      veraltet.push(`${f} (${Math.round(alter / 3600000)} h aelter als der Lauf)`);
+      continue;
+    }
     copyFileSync(join(q.ordner, f), join(ORDNER, f));
     bilder.push(f);
   }
@@ -252,6 +303,9 @@ if (!bilder.length) {
   process.exit(1);
 }
 
+if (veraltet.length) {
+  console.log(`  Uebergangen, weil aelter als der Lauf: ${veraltet.join(', ')}.`);
+}
 console.log(`INSPEKTOR: ${bilder.length} Aufnahme(n) und `
   + `${existsSync(join(ORDNER, 'bericht.md')) ? 'ein Bericht' : 'kein Bericht'} `
   + `liegen in schleife/inspektion/ - kein Quelltext (${QUELLTEXT.length} Endungen geprueft).`);

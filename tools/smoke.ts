@@ -898,9 +898,7 @@ step('Konter-Satz erscheint einmal und rechtzeitig', () => {
       // Und er verschwindet, sobald die Welle laeuft: danach ist er kein Rat
       // mehr, sondern ein Vorwurf.
       state.wellenZumPruefen([state.waveIndex]);
-      (globalThis as { TF_DEBUG?: boolean }).TF_DEBUG = i === 2;
       ui.sync();
-      (globalThis as { TF_DEBUG?: boolean }).TF_DEBUG = false;
       if (!blase.hidden) {
         // **Mit dem Schritt, der stehen bleibt.** Ohne ihn sagt die Meldung
         // nur, dass etwas steht - und die Blase traegt zwei Bewohner, den
@@ -908,9 +906,6 @@ step('Konter-Satz erscheint einmal und rechtzeitig', () => {
         // genau das eine Viertelstunde gekostet.
         const wer = (win.document.getElementById('coach-text') as HTMLElement | null)
           ?.dataset.step ?? 'unbekannt';
-        console.log(`DEBUG i=${i} aktiv=${state.waveActive} kann=${state.canStartWave} `
-          + `phase=${state.phase} laufende=${state.laufende.length} `
-          + `verborgen=${blase.hidden}`);
         problems.push(`Konter W${i + 1}: die Blase steht noch, obwohl die Welle laeuft `
           + `(Schritt "${wer}").`);
       }

@@ -505,10 +505,6 @@ export class UI {
       else { this.showCoach(this.konterStep); return; }
     }
     const frisch = this.neuerKonter();
-    if ((globalThis as { TF_DEBUG?: boolean }).TF_DEBUG) {
-      console.log(`TUT konter=${this.konterStep?.id ?? '-'} frisch=${frisch?.id ?? '-'} `
-        + `tutStep=${this.tutStep}`);
-    }
     if (frisch) { this.konterStep = frisch; this.showCoach(frisch); return; }
 
     if (this.tutStep < 0) { this.hideCoach(); return; }
@@ -534,7 +530,24 @@ export class UI {
    *  betrachtet und nicht gezeigt haben, gilt sonst als erklaert. */
   private neuerKonter(): TutorialStep | null {
     const s = this.s;
-    if (!s.canStartWave) return null;
+    // **`canStartWave` heisst seit v266 nicht mehr "es laeuft nichts".**
+    //
+    // Bis dahin war es `!waveActive && phase === 'playing'`, und diese Zeile
+    // meinte damit genau, was der Absatz darueber sagt: gefragt wird, solange
+    // sich noch bauen laesst. Seit ueberlappende Wellen erlaubt sind, ist es
+    // `laufende.length < 2` - waehrend einer laufenden Welle also WAHR.
+    //
+    // Die Folge war doppelt schaedlich und in v285 vom Rauchtest gefunden:
+    // der Satz kam nach dem Wellenstart zurueck (dann ist er kein Rat mehr,
+    // sondern eine Beileidsbekundung), und `ersterGegner` vermerkt beim
+    // Fragen - eine Art konnte also waehrend einer laufenden Welle als
+    // "erklaert" abgehakt werden, ohne dass der Spieler den Satz je gesehen
+    // hat.
+    //
+    // Dieselbe Klasse wie `idleTime` in v267: eine Ableitung aendert ihre
+    // Bedeutung, und die Stellen, die sie als Abkuerzung benutzt haben, sagen
+    // seitdem etwas anderes.
+    if (s.waveActive || !s.canStartWave) return null;
     const w = s.nextWave;
     if (!w) return null;
     for (const g of w.groups) {

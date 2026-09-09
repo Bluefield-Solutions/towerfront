@@ -118,6 +118,22 @@ function probenetz(kurz: number, lang: number): Wegnetz {
   };
 }
 
+/** Zwei Kanten derselben Laenge: an y = 500 gespiegelt. */
+function gleichstandsnetz(): Wegnetz {
+  const punkte = (y: number) =>
+    Array.from({ length: 6 }, (_, i) => ({ x: 100 + (i + 1) * 40, y, w: 40 }));
+  return {
+    knoten: [
+      { id: 'tor1', x: 100, y: 500, w: 40, art: 'tor' },
+      { id: 'ziel', x: 100 + 7 * 40, y: 500, w: 40, art: 'ziel' },
+    ],
+    kanten: [
+      { id: 'a-oben', von: 'tor1', nach: 'ziel', punkte: punkte(400) },
+      { id: 'b-unten', von: 'tor1', nach: 'ziel', punkte: punkte(600) },
+    ],
+  };
+}
+
 {
   const netz = probenetz(2, 12);
   const kurz = kuerzesteRoute(netz, 'tor1');
@@ -134,7 +150,14 @@ function probenetz(kurz: number, lang: number): Wegnetz {
   // Gleichstand: dieselbe Antwort, gleich in welcher Reihenfolge die Kanten
   // in der Datei stehen. Sonst haengt der Verlauf einer Partie daran, wer
   // zuletzt sortiert hat - und das Determinismus-Tor faende es nie.
-  const gleich = probenetz(6, 6);
+  //
+  // **Der erste Entwurf war gar kein Gleichstand.** Er nahm `probenetz(6, 6)`,
+  // und dessen zwei Kanten haben zwar gleich viele Punkte, laufen aber auf
+  // verschiedenen Hoehen: die eine weicht nach oben aus und ist damit
+  // laenger. Die Probe schwieg zu Recht, und sie bewies nichts (Regel 3).
+  // Jetzt sind die beiden Kanten zueinander gespiegelt - gleiche Laenge auf
+  // die letzte Stelle.
+  const gleich = gleichstandsnetz();
   const gedreht: Wegnetz = { ...gleich, kanten: [...gleich.kanten].reverse() };
   const a = kuerzesteRoute(gleich, 'tor1')?.join();
   const b = kuerzesteRoute(gedreht, 'tor1')?.join();

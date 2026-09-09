@@ -373,7 +373,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
  *  Mehrere Foerderer im selben Umkreis addieren sich NICHT unbegrenzt: der
  *  Zuschlag ist gedeckelt, sonst waere die Antwort auf jede Karte "erst sechs
  *  Foerderer, dann Tuerme". */
-export const FOERDER_BONUS = 0.25;
+export const FOERDER_BONUS = 0.40;
 export const FOERDER_DECKEL = 0.75;
 
 /** Welcher Zweig des Foerderers der Ertrags-Zweig ist.
@@ -471,7 +471,7 @@ const REICHWEITE_GRUND: Record<TowerId, number> = {
   // Der Foerderer sieht enger als jedes Geschuetz. Das ist die Entscheidung:
   // sein Zuschlag gilt nur dort, wo wirklich gestorben wird, und ein Platz,
   // der viel Beute UND viel Feuer sieht, ist damit doppelt umkaempft.
-  foerderer: 0.100,   // 192 px
+  foerderer: 0.120,   // 230 px
   // Die Zielunit deckt ihren eigenen Vorplatz, nicht die Karte. Sie steht
   // dort, wo alle Bahnen enden - mit der Weite eines Moersers waere sie der
   // beste Turm im Spiel und noch dazu geschenkt.

@@ -303,7 +303,7 @@ interface Bot {
  *  Obergrenze benachteiligt. */
 const BOTS: Bot[] = [
   {
-    name: 'Meister', foerderer: 2, maxTowers: 12, maxLevel: 3, reserve: 40, decideEvery: 30, deepenAt: 0.65,
+    name: 'Meister', foerderer: 1, maxTowers: 12, maxLevel: 3, reserve: 40, decideEvery: 30, deepenAt: 0.65,
     // Der Meister laesst offen - und zwar bewusst der, gegen den alle
     // uebrigen Zahlen dieses Werkzeugs geeicht sind. Wer ihn umstellt,
     // verschiebt jede andere Messung mit.
@@ -316,7 +316,7 @@ const BOTS: Bot[] = [
   },
   {
     // Nur die Haelfte der Plaetze, dafuer frueh tief und mit Ruecklage.
-    name: 'Sparsam', foerderer: 3, maxTowers: 12, maxLevel: 3, reserve: 140, decideEvery: 30, deepenAt: 0.5,
+    name: 'Sparsam', foerderer: 2, maxTowers: 12, maxLevel: 3, reserve: 140, decideEvery: 30, deepenAt: 0.5,
     weichenStil: 'lang',
   },
 ];
@@ -341,7 +341,7 @@ const BOTS: Bot[] = [
  *  Er zaehlt bewusst NICHT bei "keine Karte darf muehelos sein" - dort geht
  *  es um den gewoehnlichen Spieler, und der ist einer der drei. */
 const BESTLEISTUNG: Bot = {
-  name: 'Bestleistung', foerderer: 3, maxTowers: 24, maxLevel: MAX_LEVEL,
+  name: 'Bestleistung', foerderer: 2, maxTowers: 24, maxLevel: MAX_LEVEL,
   reserve: 40, decideEvery: 20, deepenAt: 0.8,
   // **In der Sache Weichen ist auch die Bestleistung nicht die beste - und
   // das ist kein Versehen, sondern M17.**

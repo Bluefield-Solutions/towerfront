@@ -1,12 +1,15 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v272 · 08.09.2026
+Stand: v279 · 09.09.2026
 
-**Nachgesehen in v272:** die fuenfzehn Luecken stehen unveraendert. Dazu ist
-**M16** gekommen, und der Weg dorthin ist der eigentliche Befund - dieses
-Verzeichnis konnte die Luecke nicht kennen, weil es aus dem gesammelt ist, wovon
-wir WISSEN, dass wir es nicht messen. Ein Tor, das nichts beweist, weiss man
-nicht.
+**Nachgesehen in v279:** die sechzehn Luecken stehen unveraendert. **M16 hat
+seinen zweiten Fall bekommen, und er war vorhersehbar:** `kuerzesteRoute`
+(v279) rechnet die Route ueber das Netz - und keine der vier Karten hat heute
+eine zweite Route. An den ausgelieferten Netzen koennte die Rechnung die
+laengste nehmen, die erstbeste oder wuerfeln, und alle sieben Bahnen blieben
+deckungsgleich. Das Tor stellt den Fall deshalb selbst: ein eigenes Netz mit
+zwei Wegen. Dieselbe Bewegung wie bei `bench` in v272 - nur diesmal, bevor
+das Tor jahrelang geschwiegen hat.
 
 
 Zu `KATALOG.md` und `STORIES.md`. Stand des Spiels **v248** (`5623c3b`).

@@ -1,8 +1,8 @@
 # Referenzabgleich — Stützturm (C3, „Bannturm")
 
-Stand: v272 · 08.09.2026
+Stand: v279 · 09.09.2026
 
-**Nachgesehen in v272:** unveraendert offen als C3. Die Schliessbedingung des Punktes ist nachgefahren - `"Bannturm"` kommt in `src/data/towers.ts` **null mal** vor.
+**Nachgesehen in v279:** unveraendert offen als C3. Die Schliessbedingung des Punktes ist nachgefahren - `"Bannturm"` kommt in `src/data/towers.ts` **null mal** vor.
 
 **Nachgesehen in v265:** unveraendert offen als C3 — den Bannturm gibt es nicht.
 

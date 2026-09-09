@@ -1,4 +1,8 @@
 import type { PathPoint } from '../core/path';
+import {
+  kuerzesteRoute, zielKnotenVon,
+  type RouteKante, type RouteKnoten, type RoutenNetz,
+} from '../core/route';
 
 /** Das Wegenetz einer Karte: Knoten und Kanten als Daten.
  *
@@ -12,10 +16,12 @@ import type { PathPoint } from '../core/path';
  *  die Ableitung setzt sie zu Bahnen zusammen. Was sich aendert, ist allein,
  *  WOHER die Route kommt - und dass es mehr als eine gibt.
  *
- *  **Die Belegung ist die Entscheidung.** Das Netz spannt den Raum auf, die
- *  Belegung waehlt daraus je Bahn eine Kantenfolge. Die heutigen vier Karten
- *  sind eine solche Belegung und nichts weiter; eine Weiche verschiebt sie,
- *  ohne am Netz etwas zu aendern.
+ *  **Die Route wird gerechnet (v279).** Bis v278 stand hier je Bahn eine
+ *  `belegung` - die Kantenfolge, von Hand hingeschrieben. Das war der Weg
+ *  weiterhin gesetzt, nur in anderer Schreibweise. Jetzt sagt das Netz, was
+ *  moeglich ist, und `kuerzesteRoute` sagt, was ein Gegner davon nimmt; eine
+ *  gesperrte Kante aendert die Antwort, ohne dass irgendwo eine Liste
+ *  nachzuziehen waere.
  *
  *  **Es steht nur einmal da (Regel 15).** `netzAusBahnen` und
  *  `bahnenAusNetz` sind zueinander invers, und `npm run netz` faehrt beide
@@ -25,129 +31,53 @@ import type { PathPoint } from '../core/path';
 
 /** Ein Knoten des Netzes: ein Punkt, an dem eine Route anfaengt, aufhoert
  *  oder sich entscheidet. */
-export interface WegKnoten {
-  id: string;
-  x: number; y: number; w?: number;
-  /** `tor` beginnt eine Route (der Punkt darf ausserhalb des Feldes liegen),
-   *  `ziel` beendet sie, `kreuz` ist alles dazwischen. */
-  art: 'tor' | 'kreuz' | 'ziel';
-}
+export type WegKnoten = RouteKnoten;
 
 /** Eine Kante: der Verlauf zwischen zwei Knoten.
  *
  *  `punkte` sind die ZWISCHENpunkte - die beiden Knoten stehen nicht darin.
  *  Sonst stuende jeder Knotenpunkt so oft da, wie Kanten an ihm haengen, und
  *  liefe beim ersten Verschieben auseinander. */
-export interface WegKante {
-  id: string;
-  von: string; nach: string;
-  punkte: PathPoint[];
-}
+export type WegKante = RouteKante;
 
-/** Welche Kantenfolge eine Bahn heute benutzt. */
-export interface Bahnbelegung {
-  /** Der Torknoten, an dem diese Bahn beginnt. */
-  tor: string;
-  /** Die Kanten in Laufrichtung. */
-  kanten: string[];
-}
-
-export interface Wegnetz {
+export interface Wegnetz extends RoutenNetz {
   knoten: WegKnoten[];
   kanten: WegKante[];
-  belegung: Bahnbelegung[];
 }
 
 const schluessel = (p: PathPoint | WegKnoten): string => `${p.x}:${p.y}:${p.w ?? ''}`;
 
-/** Der Zielknoten eines Netzes. Es gibt genau einen - alle Bahnen enden am
- *  selben Kristall. */
+/** Der Zielknoten eines Netzes. */
 export function zielKnoten(netz: Wegnetz): WegKnoten {
-  const z = netz.knoten.find((k) => k.art === 'ziel');
-  if (!z) throw new Error('WEGNETZ: das Netz hat keinen Zielknoten.');
-  return z;
+  return zielKnotenVon(netz);
 }
 
-/** Die kuerzeste noch vorhandene Route von einem Tor zum Ziel.
+/** Die Tore in der Reihenfolge, in der sie im Netz stehen.
  *
- *  Breitensuche ueber die Kanten, gewichtet nach der Zahl der Kontrollpunkte -
- *  eine Kantenzahl allein wuerde einen langen Umweg mit einer kurzen
- *  Abkuerzung verwechseln. Gibt `null` zurueck, wenn es keine mehr gibt; das
- *  ist eine Meldung, kein Ausweichen. */
-export function routeSuchen(netz: Wegnetz, torId: string): string[] | null {
-  const ziel = zielKnoten(netz).id;
-  const beste = new Map<string, { kosten: number; weg: string[] }>();
-  beste.set(torId, { kosten: 0, weg: [] });
-  const rand = [torId];
-  while (rand.length) {
-    // Immer den billigsten offenen Knoten zuerst - sonst findet die Suche
-    // irgendeine Route und nennt sie die kuerzeste.
-    rand.sort((a, b) => beste.get(a)!.kosten - beste.get(b)!.kosten);
-    const hier = rand.shift()!;
-    const stand = beste.get(hier)!;
-    for (const k of netz.kanten) {
-      if (k.von !== hier) continue;
-      const kosten = stand.kosten + k.punkte.length + 1;
-      const alt = beste.get(k.nach);
-      if (alt && alt.kosten <= kosten) continue;
-      beste.set(k.nach, { kosten, weg: [...stand.weg, k.id] });
-      if (!rand.includes(k.nach)) rand.push(k.nach);
-    }
-  }
-  const treffer = beste.get(ziel);
-  return treffer && treffer.weg.length ? treffer.weg : null;
-}
-
-/** Haelt die eingetragene Belegung gegen das Netz.
- *
- *  Gibt die Kantenfolge zurueck, wenn sie durchgehend ist - sonst `null`.
- *  Geprueft wird alles drei: dass es jede Kante gibt, dass sie aneinander
- *  anschliessen, und dass die Folge wirklich vom Tor zum Ziel fuehrt. Eine
- *  Folge, die irgendwo im Feld endet, ist keine Bahn. */
-function belegungPruefen(netz: Wegnetz, b: Bahnbelegung): WegKante[] | null {
-  const kette: WegKante[] = [];
-  let hier = b.tor;
-  for (const id of b.kanten) {
-    const k = netz.kanten.find((e) => e.id === id);
-    if (!k || k.von !== hier) return null;
-    kette.push(k); hier = k.nach;
-  }
-  if (!kette.length || hier !== zielKnoten(netz).id) return null;
-  return kette;
+ *  Diese Reihenfolge ist die Bahnnummer - daran haengen die Wellenplaene.
+ *  Sie kommt aus der Datei, nicht aus einer Suche: eine Nummer, die von der
+ *  Suchreihenfolge abhaengt, verschiebt sich beim naechsten Umbau lautlos. */
+export function tore(netz: Wegnetz): WegKnoten[] {
+  return netz.knoten.filter((k) => k.art === 'tor');
 }
 
 /** Die Bahnen, die aus dem Netz folgen.
  *
- *  **Die Ableitung behaelt die alte Route nicht stillschweigend.** Faellt eine
- *  Kante weg, wird die Belegung ungueltig - dann sucht sie eine ANDERE Route
- *  und sagt es, oder sie meldet, dass es keine mehr gibt. Das ist der Punkt
- *  des ganzen Umbaus: ein Netz, das den Wegfall einer Kante verschweigt, ist
- *  wieder eine feste Bahnliste. */
-export function bahnenAusNetz(netz: Wegnetz, meldungen?: string[]): PathPoint[][] {
+ *  Je Tor die kuerzeste OFFENE Route. Gibt es von einem Tor aus keine mehr,
+ *  wirft es - eine Sperre, die eine Bahn ganz zumacht, ist ein Datenfehler
+ *  und darf nicht als "dann eben eine Bahn weniger" durchgehen. */
+export function bahnenAusNetz(netz: Wegnetz, gesperrt?: ReadonlySet<string>): PathPoint[][] {
   const knoten = new Map(netz.knoten.map((k) => [k.id, k]));
   const bahnen: PathPoint[][] = [];
-  for (let i = 0; i < netz.belegung.length; i++) {
-    const b = netz.belegung[i];
-    let kette = belegungPruefen(netz, b);
-    if (!kette) {
-      const ersatz = routeSuchen(netz, b.tor);
-      if (!ersatz) {
-        throw new Error(`WEGNETZ: von "${b.tor}" fuehrt keine Route mehr zum Ziel.`);
-      }
-      kette = belegungPruefen(netz, { tor: b.tor, kanten: ersatz });
-      if (!kette) throw new Error(`WEGNETZ: die Ersatzroute ab "${b.tor}" schliesst nicht an.`);
-      meldungen?.push(
-        `Bahn ${i}: die eingetragene Belegung (${b.kanten.join(' > ') || 'leer'}) `
-        + `traegt nicht mehr - ausgewichen auf ${ersatz.join(' > ')}.`,
-      );
-    }
-    const anfang = knoten.get(b.tor);
-    if (!anfang) throw new Error(`WEGNETZ: den Torknoten "${b.tor}" gibt es nicht.`);
-    const punkte: PathPoint[] = [{ x: anfang.x, y: anfang.y, w: anfang.w }];
-    for (const k of kette) {
-      for (const p of k.punkte) punkte.push({ ...p });
-      const ende = knoten.get(k.nach);
-      if (!ende) throw new Error(`WEGNETZ: die Kante "${k.id}" zeigt auf den unbekannten Knoten "${k.nach}".`);
+  for (const tor of tore(netz)) {
+    const route = kuerzesteRoute(netz, tor.id, gesperrt);
+    if (!route) throw new Error(`WEGNETZ: von "${tor.id}" fuehrt keine Route zum Ziel.`);
+    const punkte: PathPoint[] = [{ x: tor.x, y: tor.y, w: tor.w }];
+    for (const id of route) {
+      const kante = netz.kanten.find((k) => k.id === id)!;
+      for (const p of kante.punkte) punkte.push({ ...p });
+      const ende = knoten.get(kante.nach);
+      if (!ende) throw new Error(`WEGNETZ: die Kante "${id}" zeigt auf den unbekannten Knoten "${kante.nach}".`);
       punkte.push({ x: ende.x, y: ende.y, w: ende.w });
     }
     bahnen.push(punkte);
@@ -157,67 +87,72 @@ export function bahnenAusNetz(netz: Wegnetz, meldungen?: string[]): PathPoint[][
 
 /** Der Rueckweg: aus einer Bahnliste ein Netz.
  *
- *  Knoten wird ein Punkt, der eine Bahn beginnt, eine Bahn beendet oder in
- *  mehr als einer Bahn vorkommt - genau dort steht eine Entscheidung. Zwei
- *  Kanten mit denselben Enden UND denselben Zwischenpunkten sind dieselbe
- *  Kante; zwei mit gleichen Enden und verschiedenem Verlauf sind zwei.
+ *  **Ein Knoten ist eine Verzweigung oder eine Vereinigung - eine KREUZUNG
+ *  ist keins.** Das ist die Verfeinerung, die v279 gebraucht hat, und sie
+ *  kam aus einer Messung: auf der Ascheschlucht laufen beide Bahnen durch
+ *  den Punkt 1330:980, aber die eine kommt von rechts und geht nach
+ *  links-oben, die andere kommt von links und geht nach oben. Sie kreuzen
+ *  sich dort, sie treffen sich nicht. Wer daraus einen Knoten macht, gibt
+ *  dem Netz eine Wahl, die es im Bild nicht gibt - und die gerechnete Route
+ *  nimmt fuer BEIDE Tore die kuerzere Fortsetzung (2504,8 statt 2814,3), also
+ *  eine Bahn, die es nie gab.
  *
- *  Gebraucht wird das an zwei Stellen: `npm run netz` faehrt damit den
- *  Rundlauf (Netz aus Bahnen aus Netz muss dasselbe ergeben), und
- *  `npm run bahnbau` traegt seine erzeugten Bahnen darueber ein. */
+ *  Gezaehlt wird deshalb nicht, wieviele Bahnen den Punkt beruehren, sondern
+ *  ob dort wirklich etwas zusammenlaeuft: hat ein Vorgaenger mehr als einen
+ *  Nachfolger (Verzweigung) oder ein Nachfolger mehr als einen Vorgaenger
+ *  (Vereinigung)? Bei einer Kreuzung ist beides eins zu eins.
+ *
+ *  Zwei Kanten mit denselben Enden UND denselben Zwischenpunkten sind
+ *  dieselbe Kante; zwei mit gleichen Enden und verschiedenem Verlauf sind
+ *  zwei. */
 export function netzAusBahnen(bahnen: PathPoint[][]): Wegnetz {
-  // **Ein Knoten ist eine Entscheidung, kein gemeinsamer Punkt.** Der erste
-  // Entwurf machte jeden Punkt zum Knoten, der in mehr als einer Bahn
-  // vorkommt - und weil sich zwei Bahnen ihre letzten sechs Punkte teilen,
-  // hatte der Farnkessel acht Knoten und sieben Kanten, davon vier ohne einen
-  // einzigen Zwischenpunkt. Eine Kette von Knoten, an denen es nichts zu
-  // waehlen gibt, ist ein Verlauf und gehoert in EINE Kante.
-  //
-  // Gezaehlt wird deshalb, was am Punkt zusammenlaeuft: mehr als ein
-  // Vorgaenger oder mehr als ein Nachfolger.
-  const vor = new Map<string, Set<string>>();
-  const nach = new Map<string, Set<string>>();
-  const merken = (karte: Map<string, Set<string>>, a: string, b: string): void => {
+  const paare = new Map<string, { vor: Map<string, Set<string>>; nach: Map<string, Set<string>> }>();
+  const eintrag = (s: string) => {
+    let e = paare.get(s);
+    if (!e) { e = { vor: new Map(), nach: new Map() }; paare.set(s, e); }
+    return e;
+  };
+  const dazu = (karte: Map<string, Set<string>>, a: string, b: string) => {
     let s = karte.get(a); if (!s) { s = new Set(); karte.set(a, s); }
     s.add(b);
   };
   for (const bahn of bahnen) {
-    for (let i = 1; i < bahn.length; i++) {
-      merken(vor, schluessel(bahn[i]), schluessel(bahn[i - 1]));
-      merken(nach, schluessel(bahn[i - 1]), schluessel(bahn[i]));
+    for (let i = 1; i < bahn.length - 1; i++) {
+      const hier = eintrag(schluessel(bahn[i]));
+      dazu(hier.nach, schluessel(bahn[i - 1]), schluessel(bahn[i + 1]));
+      dazu(hier.vor, schluessel(bahn[i + 1]), schluessel(bahn[i - 1]));
     }
   }
   const zielS = schluessel(bahnen[0][bahnen[0].length - 1]);
   const istKnoten = (p: PathPoint, i: number, bahn: PathPoint[]): boolean => {
     if (i === 0 || i === bahn.length - 1) return true;
-    const s = schluessel(p);
-    return (vor.get(s)?.size ?? 0) > 1 || (nach.get(s)?.size ?? 0) > 1;
+    const e = paare.get(schluessel(p));
+    if (!e) return false;
+    for (const s of e.nach.values()) if (s.size > 1) return true;   // Verzweigung
+    for (const s of e.vor.values()) if (s.size > 1) return true;    // Vereinigung
+    return false;
   };
 
   const knoten: WegKnoten[] = [];
   const nachId = new Map<string, string>();
-  let tore = 0; let kreuze = 0;
+  let tor = 0; let kreuz = 0;
   const knotenFuer = (p: PathPoint, art: WegKnoten['art']): string => {
     const s = schluessel(p);
     const da = nachId.get(s);
     if (da) return da;
-    const id = art === 'ziel' ? 'ziel' : art === 'tor' ? `tor${++tore}` : `kreuz${++kreuze}`;
+    const id = art === 'ziel' ? 'ziel' : art === 'tor' ? `tor${++tor}` : `kreuz${++kreuz}`;
     nachId.set(s, id);
     knoten.push({ id, x: p.x, y: p.y, w: p.w, art });
     return id;
   };
 
-  // Die Tore zuerst, damit sie in der Reihenfolge der Bahnen durchnummeriert
-  // sind - eine Kennung, die von der Suchreihenfolge abhaengt, aendert sich
-  // beim naechsten Umbau ohne Grund.
+  // Ziel und Tore zuerst, damit die Tornummern der Reihenfolge der Bahnen
+  // folgen und nicht der Suchreihenfolge.
   knotenFuer(bahnen[0][bahnen[0].length - 1], 'ziel');
   for (const bahn of bahnen) knotenFuer(bahn[0], 'tor');
 
   const kanten: WegKante[] = [];
-  const belegung: Bahnbelegung[] = [];
   for (const bahn of bahnen) {
-    const tor = nachId.get(schluessel(bahn[0]))!;
-    const folge: string[] = [];
     let vonIdx = 0;
     for (let i = 1; i < bahn.length; i++) {
       if (!istKnoten(bahn[i], i, bahn)) continue;
@@ -233,12 +168,10 @@ export function netzAusBahnen(bahnen: PathPoint[][]): Wegnetz {
         treffer = { id: gleiche ? `${von}-${nach}-${gleiche + 1}` : `${von}-${nach}`, von, nach, punkte };
         kanten.push(treffer);
       }
-      folge.push(treffer.id);
       vonIdx = i;
     }
-    belegung.push({ tor, kanten: folge });
   }
-  return { knoten, kanten, belegung };
+  return { knoten, kanten };
 }
 
 /** Die Netze der vier heutigen Karten.
@@ -249,9 +182,10 @@ export function netzAusBahnen(bahnen: PathPoint[][]): Wegnetz {
  *  Abweichung bei jedem Lauf gegen `tools/wegnetz-stand.txt` und laesst sie
  *  nicht wachsen.
  *
- *  Was hier heute steht, ist noch keine Entscheidung: jedes Netz hat genau so
- *  viele Routen, wie es Bahnen hat. Die Weichen kommen in S-N2-02 dazu - sie
- *  brauchen diese Form, nicht mehr. */
+ *  Was hier heute steht, ist noch keine Entscheidung: von jedem Tor fuehrt
+ *  genau eine Route zum Ziel, die gerechnete ist also zwangslaeufig die
+ *  heutige. Das ist der Zustand, den S-N2-03 aufbricht - die Weichen legen
+ *  Kanten dazu, und erst dann hat `kuerzesteRoute` etwas zu waehlen. */
 export const WEGNETZ: Record<string, Wegnetz> = {
   spiralhain: {
     knoten: [
@@ -275,27 +209,18 @@ export const WEGNETZ: Record<string, Wegnetz> = {
         ],
       },
     ],
-    belegung: [
-      { tor: 'tor1', kanten: ['tor1-ziel'] },
-    ],
   },
   ascheschlucht: {
     knoten: [
       { id: 'ziel', x: 1690, y: 480, w: 40, art: 'ziel' },
       { id: 'tor1', x: 1250, y: 1180, w: 40, art: 'tor' },
       { id: 'tor2', x: 1550, y: 1180, w: 40, art: 'tor' },
-      { id: 'kreuz1', x: 1330, y: 980, w: 40, art: 'kreuz' },
     ],
     kanten: [
       {
-        id: 'tor1-kreuz1', von: 'tor1', nach: 'kreuz1',
+        id: 'tor1-ziel', von: 'tor1', nach: 'ziel',
         punkte: [
-          { x: 1280, y: 1090, w: 44 }, { x: 1300, y: 1020, w: 48 },
-        ],
-      },
-      {
-        id: 'kreuz1-ziel', von: 'kreuz1', nach: 'ziel',
-        punkte: [
+          { x: 1280, y: 1090, w: 44 }, { x: 1300, y: 1020, w: 48 }, { x: 1330, y: 980, w: 40 },
           { x: 1264, y: 905, w: 44 }, { x: 1094, y: 605, w: 48 }, { x: 959, y: 691, w: 52 },
           { x: 859, y: 599, w: 56 }, { x: 746, y: 515, w: 52 }, { x: 668, y: 470, w: 44 },
           { x: 714, y: 424, w: 40 }, { x: 885, y: 323, w: 44 }, { x: 1080, y: 354, w: 48 },
@@ -304,14 +229,9 @@ export const WEGNETZ: Record<string, Wegnetz> = {
         ],
       },
       {
-        id: 'tor2-kreuz1', von: 'tor2', nach: 'kreuz1',
+        id: 'tor2-ziel', von: 'tor2', nach: 'ziel',
         punkte: [
-          { x: 1470, y: 1075, w: 44 }, { x: 1370, y: 1000, w: 48 },
-        ],
-      },
-      {
-        id: 'kreuz1-ziel-2', von: 'kreuz1', nach: 'ziel',
-        punkte: [
+          { x: 1470, y: 1075, w: 44 }, { x: 1370, y: 1000, w: 48 }, { x: 1330, y: 980, w: 40 },
           { x: 1291, y: 828, w: 44 }, { x: 1221, y: 645, w: 48 }, { x: 1021, y: 608, w: 52 },
           { x: 839, y: 687, w: 56 }, { x: 651, y: 660, w: 52 }, { x: 512, y: 470, w: 44 },
           { x: 808, y: 435, w: 40 }, { x: 872, y: 431, w: 44 }, { x: 990, y: 496, w: 48 },
@@ -319,10 +239,6 @@ export const WEGNETZ: Record<string, Wegnetz> = {
           { x: 1609, y: 545, w: 40 },
         ],
       },
-    ],
-    belegung: [
-      { tor: 'tor1', kanten: ['tor1-kreuz1', 'kreuz1-ziel'] },
-      { tor: 'tor2', kanten: ['tor2-kreuz1', 'kreuz1-ziel-2'] },
     ],
   },
   frostspalte: {
@@ -361,10 +277,6 @@ export const WEGNETZ: Record<string, Wegnetz> = {
         ],
       },
     ],
-    belegung: [
-      { tor: 'tor1', kanten: ['tor1-kreuz1', 'kreuz1-ziel'] },
-      { tor: 'tor2', kanten: ['tor2-kreuz1', 'kreuz1-ziel'] },
-    ],
   },
   farnkessel: {
     knoten: [
@@ -401,10 +313,6 @@ export const WEGNETZ: Record<string, Wegnetz> = {
           { x: 850, y: 560, w: 44 },
         ],
       },
-    ],
-    belegung: [
-      { tor: 'tor1', kanten: ['tor1-kreuz1', 'kreuz1-ziel'] },
-      { tor: 'tor2', kanten: ['tor2-kreuz1', 'kreuz1-ziel'] },
     ],
   },
 };

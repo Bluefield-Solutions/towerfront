@@ -101,6 +101,45 @@ const PROBEN = [
     meldet: 'stillschweigend',
   },
   {
+    // **Die Kostenfunktion muss die KUERZESTE Route nehmen.** Heute hat keine
+    // der vier Karten eine zweite Route - `kuerzesteRoute` koennte an ihnen
+    // die laengste nehmen, die erstbeste oder wuerfeln, und alle sieben
+    // Bahnen blieben deckungsgleich. Deshalb stellt das Tor den Fall an einem
+    // eigenen Netz mit zwei Wegen; diese Probe prueft, dass es ihn wirklich
+    // sieht (Regel 5).
+    name: 'Die Route nimmt den laengsten Weg',
+    datei: 'src/core/route.ts',
+    regel: /alt\.kosten < kosten/,
+    ersatz: 'alt.kosten > kosten',
+    tor: 'netztor',
+    meldet: 'kuerzeste Route',
+  },
+  {
+    // **Bei Gleichstand darf nicht die Zeilenfolge entscheiden.** Sonst
+    // haengt der Verlauf einer Partie daran, wer die Datei zuletzt sortiert
+    // hat - und das Determinismus-Tor faende es nie, weil es zweimal
+    // DIESELBE Datei fuehrt.
+    name: 'Gleich lange Routen entscheidet die Zeilenfolge',
+    datei: 'src/core/route.ts',
+    regel: /\|\| \(alt\.kosten === kosten && alt\.weg\.join\(\) <= \[\.\.\.stand\.weg, kante\.id\]\.join\(\)\)/,
+    ersatz: '|| alt.kosten === kosten',
+    tor: 'netztor',
+    meldet: 'Zeilenfolge',
+  },
+  {
+    // **Eine Kreuzung ist kein Knoten**, und das ist keine Feinheit: auf der
+    // Ascheschlucht laufen beide Bahnen durch 1330:980, kommen aber aus
+    // verschiedenen Richtungen und gehen in verschiedene. Wer daraus einen
+    // Knoten macht, gibt dem Netz eine Wahl, die es im Bild nicht gibt - und
+    // die gerechnete Route nimmt fuer BEIDE Tore die kuerzere Fortsetzung,
+    // also eine Bahn, die es nie gab.
+    name: 'Jeder geteilte Punkt wird zum Knoten',
+    datei: 'src/data/wegnetz.ts',
+    regel: /(for \(const s of e\.vor\.values\(\)\) if \(s\.size > 1\) return true;    \/\/ Vereinigung\n    )return false;/,
+    ersatz: '$1return true;',
+    tor: 'netztor',
+  },
+  {
     // **Der Rundlauf haelt die beiden Richtungen zusammen.** `netzAusBahnen`
     // und `bahnenAusNetz` muessen zueinander invers sein; ist eine von beiden
     // falsch, faellt es sonst erst auf, wenn `npm run bahnbau` eine Karte

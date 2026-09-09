@@ -35,8 +35,9 @@ import { fileURLToPath } from 'node:url';
 import { MAPS } from '../src/data/maps';
 import { LanePath, type PathPoint } from '../src/core/path';
 import {
-  WEGNETZ, bahnenAusNetz, netzAusBahnen, type Wegnetz,
+  WEGNETZ, bahnenAusNetz, netzAusBahnen, tore, type Wegnetz,
 } from '../src/data/wegnetz';
+import { kuerzesteRoute } from '../src/core/route';
 
 const TOR = process.argv.includes('--tor');
 const SCHREIBEN = process.argv.includes('--schreiben');
@@ -89,6 +90,61 @@ const meldung = (t: string): void => { console.log(`  ! ${t}`); fehler++; };
 
 console.log('NETZ - die Bahnen folgen aus dem Wegenetz.\n');
 
+// ------------------------------------------------------- die Rechnung selbst
+//
+// **Der Fall wird gestellt, nicht abgewartet (Regel 5).** Heute hat KEINE der
+// vier Karten eine zweite Route - von jedem Tor fuehrt genau ein Weg zum
+// Ziel. Damit wuerde `kuerzesteRoute` an den ausgelieferten Netzen alles
+// beweisen, was man will: sie koennte die laengste nehmen, die erstbeste,
+// oder wuerfeln, und alle sieben Bahnen blieben deckungsgleich. Geprueft
+// wird deshalb an einem eigens gebauten Netz mit einer echten Wahl.
+//
+// Das ist auch der Grund, warum die Gegenprobe aus der Story (die
+// Kostenfunktion umdrehen, der Rauchtest meldet einen Umweg) heute NICHTS
+// meldet: es gibt keinen Umweg, den man nehmen koennte. Sie wird tragen,
+// sobald S-N2-03 Weichen dazulegt.
+function probenetz(kurz: number, lang: number): Wegnetz {
+  const punkte = (n: number, y: number) =>
+    Array.from({ length: n }, (_, i) => ({ x: 100 + (i + 1) * 40, y, w: 40 }));
+  return {
+    knoten: [
+      { id: 'tor1', x: 100, y: 500, w: 40, art: 'tor' },
+      { id: 'ziel', x: 100 + (Math.max(kurz, lang) + 1) * 40, y: 500, w: 40, art: 'ziel' },
+    ],
+    kanten: [
+      { id: 'a-lang', von: 'tor1', nach: 'ziel', punkte: punkte(lang, 300) },
+      { id: 'b-kurz', von: 'tor1', nach: 'ziel', punkte: punkte(kurz, 500) },
+    ],
+  };
+}
+
+{
+  const netz = probenetz(2, 12);
+  const kurz = kuerzesteRoute(netz, 'tor1');
+  if (kurz?.join() !== 'b-kurz') {
+    meldung(`Selbsttest: die kuerzeste Route ist "${kurz?.join(' > ')}" statt "b-kurz".`);
+  }
+  const ohneKurz = kuerzesteRoute(netz, 'tor1', new Set(['b-kurz']));
+  if (ohneKurz?.join() !== 'a-lang') {
+    meldung(`Selbsttest: gesperrte kurze Kante fuehrt auf "${ohneKurz?.join(' > ')}" statt "a-lang".`);
+  }
+  if (kuerzesteRoute(netz, 'tor1', new Set(['a-lang', 'b-kurz'])) !== null) {
+    meldung('Selbsttest: bei zwei gesperrten Kanten meldet die Rechnung eine Route.');
+  }
+  // Gleichstand: dieselbe Antwort, gleich in welcher Reihenfolge die Kanten
+  // in der Datei stehen. Sonst haengt der Verlauf einer Partie daran, wer
+  // zuletzt sortiert hat - und das Determinismus-Tor faende es nie.
+  const gleich = probenetz(6, 6);
+  const gedreht: Wegnetz = { ...gleich, kanten: [...gleich.kanten].reverse() };
+  const a = kuerzesteRoute(gleich, 'tor1')?.join();
+  const b = kuerzesteRoute(gedreht, 'tor1')?.join();
+  if (a !== b) meldung(`Selbsttest: bei Gleichstand entscheidet die Zeilenfolge ("${a}" gegen "${b}").`);
+  console.log(`  Selbsttest: kuerzeste von zwei Routen "${kurz?.join()}", `
+    + `gesperrt weicht sie auf "${ohneKurz?.join()}" aus, beide zu meldet sie keine. `
+    + `Gleichstand entscheidet die Kennung ("${a}").\n`);
+}
+
+
 const stand = standLesen();
 const neu: string[] = [
   '# Der eingefrorene Verlauf der abgeleiteten Bahnen.',
@@ -107,16 +163,18 @@ for (const map of MAPS) {
   console.log(`── ${map.name}`);
   if (!netz) { meldung(`${map.id}: kein Wegenetz eingetragen.`); continue; }
 
-  const meldungen: string[] = [];
   let bahnen: PathPoint[][];
-  try { bahnen = bahnenAusNetz(netz, meldungen); } catch (e) {
+  try { bahnen = bahnenAusNetz(netz); } catch (e) {
     meldung(`${map.id}: ${(e as Error).message}`); continue;
   }
-  for (const m of meldungen) meldung(`${map.id}: ${m}`);
 
   const kreuze = netz.knoten.filter((k) => k.art === 'kreuz').length;
-  console.log(`  ${netz.knoten.length} Knoten (${netz.belegung.length} Tore, ${kreuze} Kreuzungen), `
-    + `${netz.kanten.length} Kanten, ${netz.belegung.length} belegte Routen`);
+  const wege = tore(netz).map((t) => kuerzesteRoute(netz, t.id));
+  console.log(`  ${netz.knoten.length} Knoten (${tore(netz).length} Tore, ${kreuze} Knotenpunkte), `
+    + `${netz.kanten.length} Kanten`);
+  for (let i = 0; i < wege.length; i++) {
+    console.log(`  Route ${i}: ${wege[i]?.join(' > ') ?? 'KEINE'}`);
+  }
 
   // Selbsttest 1: der Rundlauf.
   const zurueck = netzAusBahnen(bahnen);
@@ -128,16 +186,16 @@ for (const map of MAPS) {
 
   // Selbsttest 2: die Ausweichprobe (Regel 13).
   //
-  // Jede Kante, die die erste Bahn benutzt, wird einmal entfernt. Die
-  // Ableitung muss dann eine ANDERE Bahn liefern oder melden, dass keine
-  // Route mehr existiert - sie darf die alte nicht stillschweigend behalten.
+  // Jede Kante, die die erste Route benutzt, wird einmal gesperrt. Die
+  // Rechnung muss dann eine ANDERE Bahn liefern oder melden, dass keine Route
+  // mehr existiert - sie darf die alte nicht stillschweigend behalten.
   let ausgewichen = 0; let ohneRoute = 0;
-  for (const weg of netz.belegung[0].kanten) {
+  for (const weg of wege[0] ?? []) {
     const ohne: Wegnetz = { ...netz, kanten: netz.kanten.filter((k) => k.id !== weg) };
     try {
-      const ersatz = bahnenAusNetz(ohne, []);
+      const ersatz = bahnenAusNetz(ohne);
       if (JSON.stringify(ersatz[0]) === JSON.stringify(bahnen[0])) {
-        meldung(`${map.id}: ohne die Kante "${weg}" liefert die Ableitung dieselbe `
+        meldung(`${map.id}: ohne die Kante "${weg}" liefert die Rechnung dieselbe `
           + 'Bahn - sie behaelt die alte Route stillschweigend.');
       } else ausgewichen++;
     } catch {
@@ -146,8 +204,8 @@ for (const map of MAPS) {
       ohneRoute++;
     }
   }
-  console.log(`  Ausweichprobe: ${netz.belegung[0].kanten.length} benutzte Kante(n) einzeln `
-    + `entfernt - ${ausgewichen} mal eine andere Route, ${ohneRoute} mal gar keine mehr`);
+  console.log(`  Ausweichprobe: ${wege[0]?.length ?? 0} benutzte Kante(n) einzeln `
+    + `gesperrt - ${ausgewichen} mal eine andere Route, ${ohneRoute} mal gar keine mehr`);
 
   for (let i = 0; i < bahnen.length; i++) {
     const kurve = new LanePath(bahnen[i]);

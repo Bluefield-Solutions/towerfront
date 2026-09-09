@@ -1,8 +1,8 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v272 · 08.09.2026
+Stand: v279 · 09.09.2026
 
-**Nachgesehen in v272:** unveraendert. Die sieben Punkte haengen an `bauflaechetor` und dem Browsertor; beide liefen im Runner-Lauf zu v271 gruen, und v272 hat an keinem von beiden etwas angefasst.
+**Nachgesehen in v279:** unveraendert. Die sieben Punkte haengen an `bauflaechetor` und dem Browsertor; an beiden hat seit v272 keine Runde etwas angefasst, und beide liefen im Runner-Lauf zu v278 gruen.
 
 **Nachgesehen in v265:** unveraendert, alle sieben Punkte haengen an gruenen Toren.
 

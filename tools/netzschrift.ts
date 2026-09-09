@@ -35,10 +35,6 @@ export function netzText(id: string, netz: Wegnetz): string {
     }
     z.push('      },');
   }
-  z.push('    ],', '    belegung: [');
-  for (const b of netz.belegung) {
-    z.push(`      { tor: '${b.tor}', kanten: [${b.kanten.map((x) => `'${x}'`).join(', ')}] },`);
-  }
   z.push('    ],', '  },');
   return z.join('\n');
 }

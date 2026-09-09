@@ -196,12 +196,17 @@ npm run pack-art    Bildvorrat aus art/roh/ neu einbacken
 npm run netz        haelt die abgeleiteten Bahnen gegen einen eingefrorenen
                     Stand. Seit v278 stehen die Punkte nicht mehr in
                     `maps.ts`, sondern als Knoten und Kanten in
-                    `src/data/wegnetz.ts`; die Bahnen FOLGEN daraus. Gemessen
+                    `src/data/wegnetz.ts`; seit v279 wird die Route dazu
+                    GERECHNET (`kuerzesteRoute` in `src/core/route.ts`,
+                    Dijkstra nach Bogenlaenge) statt eingetragen. Gemessen
                     werden 64 Abtastpunkte je Bahn - die Kurve, nicht die
-                    Kontrollpunkte -, dazu zwei Selbsttests: der Rundlauf
-                    (`netzAusBahnen` und `bahnenAusNetz` sind invers) und die
-                    Ausweichprobe (jede benutzte Kante einzeln entfernt; die
-                    Ableitung muss ausweichen oder melden, nie schweigen).
+                    Kontrollpunkte -, dazu drei Selbsttests: der Rundlauf
+                    (`netzAusBahnen` und `bahnenAusNetz` sind invers), die
+                    Ausweichprobe (jede benutzte Kante einzeln gesperrt; die
+                    Rechnung muss ausweichen oder melden, nie schweigen) und
+                    die Wahl selbst an einem GESTELLTEN Netz mit zwei Wegen -
+                    keine der vier Karten hat heute eine zweite Route, an
+                    ihnen bewiese die Rechnung gar nichts (Regel 5).
                     `--schreiben` setzt den Stand neu.
 npm run eichen      einen Wert durchprobieren, alle Kennzahlen nebeneinander.
                     `--kurve` die Schwierigkeitskurve, `--knie` das Knie der
@@ -671,7 +676,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v278. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v279. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

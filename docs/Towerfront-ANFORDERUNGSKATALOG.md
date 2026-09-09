@@ -1,11 +1,8 @@
 # Towerfront — Anforderungskatalog
 
-Stand: v272 · 08.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+Stand: v279 · 09.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
 
-**Nachgesehen in v272:** die Messbefunde stehen unveraendert, die RICHTUNG ist seit v269 ueberholt - `docs/Towerfront-NEUBAU.md` steht ueber diesem Katalog, und `Towerfront-STORIES.md` ist dort vollstaendig ersetzt worden. Turmzweige, Grade und Sterne, die mehrere Pakete hier verbessern wollten, entfallen. Was inhaltlich ueberlebt hat, steht im neuen Katalog als Paket N6.
-Ziel des Nutzers, wörtlich: *„kein kommerzielles Spiel — einfach ein Spiel,
-das möglichst viel Spaß macht und das beste Tower-Defense-Spiel der Welt
-ist."*
+**Nachgesehen in v279:** die Messbefunde stehen unveraendert, die RICHTUNG ist seit v269 ueberholt - `docs/Towerfront-NEUBAU.md` steht ueber diesem Katalog, und `Towerfront-STORIES.md` ist dort vollstaendig ersetzt worden. Turmzweige, Grade und Sterne, die mehrere Pakete hier verbessern wollten, entfallen. Was inhaltlich ueberlebt hat, steht im neuen Katalog als Paket N6.
 
 ---
 

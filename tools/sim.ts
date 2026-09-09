@@ -78,9 +78,11 @@ const KOPF = `# Die Spannungsratsche - der Stand, unter den kein Lauf fallen dar
 /** Den Stand lesen. Eine fehlende oder leere Datei gibt eine leere Karte
  *  zurueck - der Aufrufer meldet das, statt sie fuer sauber zu halten. */
 function leseSpannungsstand(): Map<string, {
-  richtung: 'hoch' | 'tief'; stand: number | null; soll: number;
+  richtung: 'hoch' | 'tief'; stand: number | null; soll: number | null;
 }> {
-  const karte = new Map<string, { richtung: 'hoch' | 'tief'; stand: number | null; soll: number }>();
+  const karte = new Map<string, {
+    richtung: 'hoch' | 'tief'; stand: number | null; soll: number | null;
+  }>();
   let text: string;
   try { text = readFileSync(SPANNUNG_DATEI, 'utf8'); } catch { return karte; }
   for (const zeile of text.split('\n')) {
@@ -88,8 +90,13 @@ function leseSpannungsstand(): Map<string, {
     if (!z || z.startsWith('#')) continue;
     const [k, richtung, stand, soll] = z.split(/\s+/);
     if (!k || (richtung !== 'hoch' && richtung !== 'tief') || soll === undefined) continue;
+    // **Ein Soll darf fehlen, und das steht als `-` da.** Regel 10: das Soll
+    // kommt aus der Referenz, nicht aus mir. Fuer die Knappheit gibt es
+    // keine Zahl aus einem Vorbild - sie laeuft deshalb als reine Ratsche,
+    // und eine ausgedachte Linie stuende hier sonst wie eine gemessene.
     karte.set(k, {
-      richtung, stand: stand === 'UNBELEGT' ? null : Number(stand), soll: Number(soll),
+      richtung, stand: stand === 'UNBELEGT' ? null : Number(stand),
+      soll: soll === '-' ? null : Number(soll),
     });
   }
   return karte;
@@ -307,6 +314,8 @@ interface Result {
   leerlaufAnteil: number;
   /** Anteil der Spielzeit, in dem hoechstens ein Gegner auf dem Feld steht. */
   duennAnteil: number;
+  /** Anteil der Entscheidungszeitpunkte, an denen das Gold nicht reichte. */
+  knappheitsAnteil: number;
 }
 
 type BranchPick = (id: TowerId) => 0 | 1;
@@ -385,6 +394,24 @@ function play(
    *  da faellt keine Entscheidung, und genau die will die Ueberlappung
    *  fuellen. */
   let duennBilder = 0;
+  /** **Knappheit** (S-P2-01): an wievielen Entscheidungszeitpunkten der Bot
+   *  den Kauf, den er WOLLTE, nicht bezahlen konnte.
+   *
+   *  Die Kernzahl von G5 heisst "42,7 % des verdienten Goldes bleiben
+   *  liegen" - und das Spielspass-Audit traegt ihre Einschraenkung selbst:
+   *  der Bot baut hoechstens zwoelf Tuerme und 24 Ausbauten, er KANN also
+   *  gar nicht alles ausgeben. Die Zahl beschreibt zu einem unbekannten
+   *  Teil den Deckel des Bots.
+   *
+   *  Genau diese Klasse hat in v246 einen ganzen Rueckstandspunkt als
+   *  Messfehler entlarvt: "auch der beste Spielstil holt nur zwei Sterne"
+   *  hiess in Wahrheit "auch der beste der drei bescheidenen Stile".
+   *
+   *  Die Knappheit haengt nicht daran, wieviel der Bot bauen DARF, sondern
+   *  daran, ob Gold der Engpass ist. Gezaehlt wird der VORZUG: was der Bot
+   *  in diesem Bild als naechstes getan haette, und ob das Gold dafuer
+   *  gereicht hat. */
+  let entscheidungsBilder = 0, knappeBilder = 0;
   let lastLives = s.lives;
 
   while (s.phase === 'playing' && t < 60 * 45) {
@@ -408,6 +435,33 @@ function play(
       const gebaut = s.gebaute;
       const wantBuild = gebaut.length < bot.maxTowers * bot.deepenAt &&
         spotIdx < spots.length && s.gold >= TOWERS[id].base.cost + reserve;
+
+      // Was WOLLTE der Bot, und hat das Gold dafuer gereicht?
+      //
+      // Der Vorzug ist bauen, solange er unter seinem Baudeckel liegt und
+      // ein Platz frei ist; sonst ausbauen. Gefragt wird nur nach dem
+      // Vorzug - ein Bot, der ausbaut, weil er nicht bauen kann, hat den
+      // Kauf, den er wollte, nicht getan.
+      entscheidungsBilder++;
+      const bauVorzug = gebaut.length < bot.maxTowers * bot.deepenAt && spotIdx < spots.length;
+      if (bauVorzug) {
+        if (s.gold < TOWERS[id].base.cost + reserve) knappeBilder++;
+      } else {
+        // Der teuerste Schritt, den er sich gerade NICHT leisten kann,
+        // zaehlt nicht - gefragt ist der, den er nehmen wuerde: der Turm mit
+        // dem meisten Schaden. Ohne diese Einschraenkung waere fast jedes
+        // Bild knapp, weil irgendein Ausbau immer zu teuer ist.
+        let vorzug: (typeof s.towers)[number] | null = null;
+        for (const tw of gebaut) {
+          if (tw.level >= Math.min(bot.maxLevel, MAX_LEVEL)) continue;
+          if (!nextFor(TOWERS[tw.def], tw.branch ?? pick(tw.def), tw.level)) continue;
+          if (!vorzug || tw.damageDone > vorzug.damageDone) vorzug = tw;
+        }
+        if (vorzug) {
+          const n = nextFor(TOWERS[vorzug.def], vorzug.branch ?? pick(vorzug.def), vorzug.level);
+          if (n && s.gold < n.cost + reserve) knappeBilder++;
+        }
+      }
 
       if (wantBuild) {
         const sp = spots[spotIdx];
@@ -452,6 +506,7 @@ function play(
     towers: s.gebaute.length, upgrades, peakEnemies, peakFx, leakByWave, entscheidungenJeWelle,
     dauer: t, leerlaufAnteil: frame > 0 ? leerlaufBilder / frame : 0,
     duennAnteil: frame > 0 ? duennBilder / frame : 0,
+    knappheitsAnteil: entscheidungsBilder > 0 ? knappeBilder / entscheidungsBilder : 0,
     maxLives: s.maxLives,
     earned: s.stats.goldEarned, spent: s.stats.goldSpent,
   };
@@ -721,6 +776,51 @@ for (const bot of BOTS) {
     + `${MAPS[0].id}, normal`);
   console.log(`  Gold uebrig am Ende: ${gold.mittel.toFixed(1)} % `
     + `(je Stil ${uebrigJeStil.map((v) => v.toFixed(0)).join(' / ')} %)`);
+
+  // **Die ungedeckelte Zahl daneben** (S-P2-01). Der Bestleistungs-Bot darf
+  // 24 Tuerme auf Stufe 6 bauen; bleibt auch bei ihm Gold liegen, ist es
+  // nicht sein Deckel, sondern das Spiel.
+  {
+    const o = overVariants((variant, aussaat) => play(
+      mixedPlanBase, () => 0, BESTLEISTUNG, 'normal', MAPS[0].id, { variant, seed: aussaat },
+    ));
+    const u = mittelUndSpanne(o.runs.map(
+      (r) => (r.earned > 0 ? ((r.earned - r.spent) / r.earned) * 100 : 0)));
+    console.log(`  dieselbe Zahl ohne Deckel (Bestleistung, 24 Tuerme, Stufe `
+      + `${MAX_LEVEL}): ${u.mittel.toFixed(1)} % (Spanne ${u.spanne.toFixed(1)})`);
+  }
+
+  // --- Der Knappheitsanteil.
+  const knappJeStil = BOTS.map((b) => {
+    const o = overVariants((variant, aussaat) => play(
+      mixedPlanBase, () => 0, b, 'normal', MAPS[0].id, { variant, seed: aussaat },
+    ));
+    return { name: b.name, ...mittelUndSpanne(o.runs.map((r) => r.knappheitsAnteil * 100)) };
+  });
+  console.log(`\nKnappheit - Anteil der Entscheidungszeitpunkte ohne Geld fuer den `
+    + `gewollten Kauf\n  (${MAPS[0].id}, normal, ${AUSSAATEN.length} Aussaaten x `
+    + `${VARIANTS.length} Abwandlungen):`);
+  for (const k of knappJeStil) {
+    console.log(`  ${k.name.padEnd(11)} ${k.mittel.toFixed(1).padStart(5)} % `
+      + `(Spanne ${k.spanne.toFixed(1)})`);
+  }
+  {
+    const jeKarte = MAPS.map((m) => {
+      const o = overVariants((variant, aussaat) => play(
+        mixedPlanBase, () => 0, MEISTER, 'normal', m.id, { variant, seed: aussaat },
+      ));
+      return { name: m.name, ...mittelUndSpanne(o.runs.map((r) => r.knappheitsAnteil * 100)) };
+    });
+    for (const k of jeKarte) {
+      console.log(`  ${k.name.padEnd(15)} ${k.mittel.toFixed(1).padStart(5)} % `
+        + `(Meister, Spanne ${k.spanne.toFixed(1)})`);
+    }
+    const meister = knappJeStil.find((k) => k.name === MEISTER.name)!;
+    spannungGemessen('knappheitsAnteil', meister.mittel, meister.spanne,
+      `Anteil der Entscheidungszeitpunkte, an denen das Gold fuer den gewollten `
+      + `Kauf nicht reichte, Meister, ${MAPS[0].id}, normal, ${AUSSAATEN.length} `
+      + `Aussaaten x ${VARIANTS.length} Abwandlungen`);
+  }
   console.log(
     `\nAbstand der Spielstile: ` + runs.map((r) => `${r.name} ${r.mean.toFixed(0)}`).join('   ') +
     `   Spanne ${stilAbstand.toFixed(0)}` +
@@ -1323,12 +1423,17 @@ if (hot.length) {
 // Sie steht hier unten, weil sie alle fuenf Kennzahlen braucht, und vor dem
 // Urteil, weil ihr Befund in dasselbe Urteil gehoert.
 {
+  // **`knappheitsAnteil` tritt an die Stelle von `goldUebrig`** (S-P2-01):
+  // die alte Zahl misst zu einem unbekannten Teil den Deckel des Bots. Sie
+  // bleibt als HINWEIS in der Tabelle stehen, weil sie die Zahl ist, die im
+  // Audit steht - aber sie haelt nichts mehr.
   const ORDNUNG = ['stellen', 'ruhe', 'leereWellen', 'leerlaufAnteil', 'duennAnteil',
-    'goldUebrig', 'stilAbstand', 'zweigWirkung'];
+    'knappheitsAnteil', 'goldUebrig', 'stilAbstand', 'zweigWirkung'];
+  const NUR_HINWEIS = ['goldUebrig'];
   const NAMEN: Record<string, string> = {
     stellen: 'Stellen mit Verlust', ruhe: 'laengste folgenlose Strecke',
     leereWellen: 'Wellen ohne Entscheidung', leerlaufAnteil: 'Leerlauf der Partie',
-    duennAnteil: 'duenne Zeit (<=1 Gegner)',
+    duennAnteil: 'duenne Zeit (<=1 Gegner)', knappheitsAnteil: 'Knappheit',
     goldUebrig: 'Gold uebrig am Ende', stilAbstand: 'Abstand der Spielstile',
     zweigWirkung: 'kleinste Zweigwirkung',
   };
@@ -1344,7 +1449,8 @@ if (hot.length) {
       const tiefer = ['ruhe', 'goldUebrig', 'leereWellen', 'leerlaufAnteil',
         'duennAnteil'].includes(k);
       return `${k} ${a?.richtung ?? (tiefer ? 'tief' : 'hoch')} `
-        + `${m.wert === null ? 'UNBELEGT' : m.wert.toFixed(2)} ${a?.soll ?? 0}`;
+        + `${m.wert === null ? 'UNBELEGT' : m.wert.toFixed(2)} `
+        + `${a === undefined ? 0 : (a.soll === null ? '-' : a.soll)}`;
     });
     writeFileSync(SPANNUNG_DATEI, KOPF + zeilen.join('\n') + '\n');
     console.log(`\nSpannungsratsche: Stand geschrieben (${SPANNUNG_DATEI}).`);
@@ -1375,15 +1481,20 @@ if (hot.length) {
       continue;
     }
     const besser = z.richtung === 'hoch' ? '>=' : '<=';
-    const sollErreicht = m.wert !== null
+    const sollErreicht = z.soll !== null && m.wert !== null
       && (z.richtung === 'hoch' ? m.wert >= z.soll : m.wert <= z.soll);
     console.log(
       `  ${NAMEN[k].padEnd(30)} ${wert.padStart(9)}   Stand `
-      + `${z.stand === null ? 'UNBELEGT' : z.stand.toFixed(2)}   Soll ${besser} ${z.soll}`
+      + `${z.stand === null ? 'UNBELEGT' : z.stand.toFixed(2)}   `
+      + `${z.soll === null ? 'kein Soll (Regel 10)' : `Soll ${besser} ${z.soll}`}`
       + `${sollErreicht ? '   ERREICHT' : ''}   (Rauschen ${m.rauschen.toFixed(2)})`,
     );
-    if (!sollErreicht) {
+    if (z.soll !== null && !sollErreicht) {
       console.log(`    OFFEN: ${NAMEN[k]} liegt noch nicht beim Soll (${besser} ${z.soll}).`);
+    }
+    if (NUR_HINWEIS.includes(k)) {
+      console.log('    (nur Hinweis - diese Zahl haelt nichts, siehe S-P2-01)');
+      continue;
     }
     // Der Vergleich selbst - und er laesst das Rauschen der Kennzahl zu.
     if (z.stand === null || m.wert === null) {

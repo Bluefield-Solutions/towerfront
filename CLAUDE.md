@@ -280,6 +280,11 @@ npm run sim         Balance kopflos, drei Aussaaten - und seit v253 die
                     Welle im selben Bild - 0,1 %. Was ein Spieler als Warten
                     erlebt, steht daneben als DUENNE Zeit: hoechstens ein
                     Gegner auf dem Feld, gemessen 17 bis 23 %.
+                    Seit v257 der KNAPPHEITSANTEIL: an wievielen
+                    Entscheidungszeitpunkten das Gold fuer den gewollten Kauf
+                    nicht reichte (Meister 45 %). Er tritt an die Stelle von
+                    "Gold uebrig" - jene Zahl mass zur Haelfte den Deckel des
+                    Bots: ungedeckelt bleiben 14,6 % liegen statt 35,2.
 npm run kritik      Wertung nach Testerkategorien, Ziel über 90
 npm run c18         die C18-Frage allein: ist die erste Karte ohne
                     Verbesserungen zu gewinnen? Zwei Sekunden statt zwei
@@ -473,7 +478,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v256. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v257. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

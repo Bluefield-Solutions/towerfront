@@ -576,6 +576,40 @@ const PROBEN = [
     meldet: 'andere Schreibweise',
   },
   {
+    // **Die zwei Proben zur Knappheit (S-P2-01, v257), und sie ziehen in
+    // entgegengesetzte Richtungen.**
+    //
+    // "42,7 % des verdienten Goldes bleiben liegen" ist die Kernzahl von G5 -
+    // und das Spielspass-Audit traegt ihre Einschraenkung selbst: der Bot
+    // baut hoechstens zwoelf Tuerme und 24 Ausbauten, er KANN gar nicht
+    // alles ausgeben. Gemessen sind es beim ungedeckelten Bestleistungs-Bot
+    // nur 14,6 % - mehr als die Haelfte der Zahl war der Deckel.
+    //
+    // Die Knappheit haengt nicht am Deckel. Mit 5000 Startgold faellt sie
+    // fast auf null; eine Kennzahl, die sich in beide Richtungen nicht
+    // bewegt, misst etwas anderes (Regel 13).
+    name: 'Gold ist ploetzlich im Ueberfluss da',
+    datei: 'src/data/difficulty.ts',
+    suche: 'startGold: 220, startLives: 60',
+    ersatz: 'startGold: 5000, startLives: 60',
+    tor: 'sim',
+    meldet: 'Knappheit',
+  },
+  // **Die andere Richtung hat KEINE Gegenprobe, und das steht hier statt in
+  // einer Fussnote.**
+  //
+  // Zwei Gruende, beide gemessen. Erstens faengt die Ratsche nur den FALL
+  // einer Kennzahl - ein Anstieg der Knappheit ist eine Verbesserung, und
+  // ein Tor, das bei Verbesserungen anschlaegt, gibt es hier zu Recht
+  // nicht. Zweitens ist der Anstieg zu klein: mit 60 statt 220 Startgold
+  // steigt sie von 45,0 auf 55,4 % - um 10 Punkte, bei einer eigenen
+  // Spanne von 17 bis 23. Nach dem Massstab dieses Projekts (S-P1-01) ist
+  // dieser Anstieg damit UNBELEGT.
+  //
+  // Die Kennzahl beweist also zuverlaessig, DASS Knappheit da ist (mit 5000
+  // Startgold faellt sie auf gemessene 0,0 %), taugt aber nicht, um kleine
+  // Veraenderungen daran zu messen. Beide Zahlen sind von Hand gefahren.
+  {
     // **Der Nachtlauf braucht einen Weg zurueck ins Tor.** Bis v226 landete
     // sein Befund nur im Protokoll auf dem Runner. In der Sitzung zu v226 ist
     // er dreimal gefahren, zweimal rot, und beide Befunde habe ich nur

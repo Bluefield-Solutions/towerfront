@@ -4061,6 +4061,24 @@ const PROBEN = [
     //
     // Der Eingriff nimmt die Wegflaeche heraus, indem die Schlauchgrenze
     // unerreichbar wird. Das Tor muss es NENNEN.
+    // **Seit v277 hat der Bildauftrag zwei Stilbloecke** - den alten fuer den
+    // ausgelieferten Vorrat, den neuen fuer alles, was ab jetzt bestellt
+    // wird. `npm run bildprompt` steht nicht in der Torkette, also holt
+    // `guards` das Lesen beider Bloecke in die Kette (dieselbe Bewegung wie
+    // in v229 fuer die Abnahmegrenzen: ein Werkzeug, dessen Eingang niemand
+    // prueft, ist im Ernstfall kaputt - und der Ernstfall ist genau der Tag,
+    // an dem ein Bild bestellt wird).
+    //
+    // Der Eingriff nimmt dem Abschnitt seine Ueberschrift. Der Block ist
+    // dann nicht mehr zu finden, die neuen Prompts gingen mit stehendem
+    // Platzhalter heraus - also mit einem Bruchstueck an den Bild-Agenten.
+    name: 'Der Stilblock Neubau ist nicht mehr zu finden',
+    datei: 'docs/Towerfront-BILDAUFTRAG.md',
+    regel: /### 8d\.0 Der Stilblock Neubau/,
+    ersatz: '### 8d.0 Stilangaben',
+    tor: 'guards',
+  },
+  {
     name: 'Lesbarkeit findet die Wegflaeche nicht mehr',
     datei: 'tools/readability.mjs',
     regel: /if \(nah <= 0\) \{ wr \+= d\[j\];/,

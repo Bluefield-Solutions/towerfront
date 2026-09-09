@@ -25,7 +25,7 @@ const START_LIVES = NORMAL.startLives;
 import { MAPS, goalOf, lanePaths } from '../src/data/maps';
 import { bauplaetze, kreuzdeckung, verschmelzung } from './bahnmass';
 import { abstand, ausstoss, druck, hoechstverlust, kurve, mischung } from './wellenmass';
-import { abnahmegrenzen, einsetzen, promptAbschnitte, stilBlock } from './auftrag';
+import { abnahmegrenzen, einsetzen, neubauBlock, promptAbschnitte, stilBlock } from './auftrag';
 import { GameState } from '../src/game/state';
 import { projektilform } from '../src/gfx/renderer';
 import type { Tower } from '../src/game/types';
@@ -91,16 +91,25 @@ const isHex = (s: string) => /^#[0-9A-Fa-f]{6}$/.test(s);
   if (stil.length < 200) {
     fail(`Der Stil-Block ist nur ${stil.length} Zeichen lang - so kurz war er nie.`);
   }
+  // **Seit v277 gibt es zwei Stilbloecke**, und der zweite braucht dieselbe
+  // Wache. `neubauBlock` bricht selbst ab, wenn sein Abschnitt fehlt; der
+  // Aufruf holt diesen Abbruch in die Kette - `npm run bildprompt` steht
+  // nicht darin, und ein Werkzeug, dessen Eingang niemand prueft, ist im
+  // Ernstfall kaputt (v229).
+  const neubau = neubauBlock();
+  if (neubau.length < 200) {
+    fail(`Der Stilblock Neubau ist nur ${neubau.length} Zeichen lang - so kurz war er nie.`);
+  }
   let kuerzester = Infinity;
   for (const a of abschnitte) {
     const fertig = einsetzen(a.prompt, stil);
     kuerzester = Math.min(kuerzester, fertig.length);
-    if (fertig.includes('[STYLE-BLOCK')) {
+    if (fertig.includes('[STYLE-BLOCK') || fertig.includes('[STILBLOCK')) {
       fail(`Der Prompt "${a.titel}" geht ohne Stil-Block heraus.`);
     }
   }
   warn(`Bildauftrag: ${abschnitte.length} Prompts, der kuerzeste ${kuerzester} Zeichen `
-    + `mit eingesetztem Stil-Block (${stil.length} Zeichen).`);
+    + `mit eingesetztem Stil-Block (alt ${stil.length}, Neubau ${neubau.length} Zeichen).`);
 }
 
 for (const map of MAPS) {

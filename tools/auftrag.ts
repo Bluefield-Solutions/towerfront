@@ -18,6 +18,18 @@ export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const DOK = join(ROOT, 'docs/Towerfront-BILDAUFTRAG.md');
 export const PLATZHALTER = '[STYLE-BLOCK EINFÜGEN]';
 export const AUSGABE_PLATZHALTER = '[AUSGABE-BLOCK EINFÜGEN]';
+/** Der Stilblock des Neubaus (v277).
+ *
+ *  **Zwei Stilbloecke sind hier kein Regel-15-Verstoss, sondern zwei
+ *  Gegenstaende.** Der alte gilt fuer den ausgelieferten Bildvorrat, der
+ *  weiter im Spiel steht; der neue fuer alles, was ab v277 bestellt wird.
+ *  Sie in einen zusammenzuziehen hiesse, den heutigen Vorrat gegen einen
+ *  Stil zu messen, den er nicht hat.
+ *
+ *  Getrennt sind sie mechanisch, nicht durch Disziplin: jeder Prompt traegt
+ *  genau einen der beiden Platzhalter, und `einsetzen` bricht ab, wenn einer
+ *  im Ergebnis stehen bleibt. */
+export const NEUBAU_PLATZHALTER = '[STILBLOCK NEUBAU EINFÜGEN]';
 
 const text = readFileSync(DOK, 'utf8');
 const zeilen = text.split('\n');
@@ -58,6 +70,22 @@ export function stilBlock(): string {
  *  auch fuer Figuren und Tuerme - und die haben andere Masse. Der Ausgabe-Block
  *  gilt nur fuer Karten. Zwei Fassungen davon in den drei Kartenauftraegen
  *  waeren dreimal derselbe Text, von dem zwei veralten (Regel 15). */
+/** Der Stilblock des Neubaus: der erste Block unter Abschnitt 8d.0. */
+export function neubauBlock(): string {
+  const zeile = zeilen.findIndex((z) => z.startsWith('### 8d.0 Der Stilblock Neubau'));
+  if (zeile < 0) {
+    console.error('AUFTRAG: der Abschnitt "8d.0 Der Stilblock Neubau" fehlt im '
+      + 'Auftragsdokument.');
+    process.exit(1);
+  }
+  const b = blockNach(zeile + 1);
+  if (!b) {
+    console.error('AUFTRAG: unter "8d.0 Der Stilblock Neubau" steht kein Block.');
+    process.exit(1);
+  }
+  return b.inhalt;
+}
+
 export function ausgabeBlock(): string {
   const zeile = zeilen.findIndex((z) => z.startsWith('## 1b. Der Ausgabe-Block'));
   if (zeile < 0) {
@@ -80,7 +108,9 @@ export function promptAbschnitte(): Abschnitt[] {
   for (let i = 0; i < zeilen.length; i++) {
     if (!/^### /.test(zeilen[i])) continue;
     const b = blockNach(i + 1);
-    if (!b || !b.inhalt.includes(PLATZHALTER)) continue;
+    // Ein Prompt ist ein Block mit EINEM der beiden Stil-Platzhalter. Der
+    // Stilblock selbst traegt keinen und faellt damit von allein heraus.
+    if (!b || !(b.inhalt.includes(PLATZHALTER) || b.inhalt.includes(NEUBAU_PLATZHALTER))) continue;
     aus.push({ titel: zeilen[i].replace(/^###\s*/, ''), zeile: i + 1, prompt: b.inhalt });
   }
   return aus;
@@ -93,10 +123,14 @@ export function promptAbschnitte(): Abschnitt[] {
  *  ihn nicht ersetzt bekaeme, faellt hier durch. */
 export function einsetzen(prompt: string, stil: string, ausgabe?: string): string {
   let fertig = prompt.split(PLATZHALTER).join(stil);
+  if (fertig.includes(NEUBAU_PLATZHALTER)) {
+    fertig = fertig.split(NEUBAU_PLATZHALTER).join(neubauBlock());
+  }
   if (fertig.includes(AUSGABE_PLATZHALTER)) {
     fertig = fertig.split(AUSGABE_PLATZHALTER).join(ausgabe ?? ausgabeBlock());
   }
-  if (fertig.includes(PLATZHALTER) || fertig.includes(AUSGABE_PLATZHALTER)) {
+  if (fertig.includes(PLATZHALTER) || fertig.includes(AUSGABE_PLATZHALTER)
+    || fertig.includes(NEUBAU_PLATZHALTER)) {
     console.error('AUFTRAG: ein Platzhalter steht noch im Ergebnis - '
       + 'ein Block wurde nicht eingesetzt.');
     process.exit(1);

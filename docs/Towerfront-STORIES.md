@@ -1,6 +1,6 @@
 # Towerfront — Stories
 
-Stand: v276 · 09.09.2026
+Stand: v277 · 09.09.2026
 
 **Dieses Dokument ist das Lenkrad.** `npm run naechste` liest die Reihenfolge
 hier und wählt die erste offene Story — über Stunden und über Kontextgrenzen
@@ -1276,6 +1276,60 @@ Brocken fällt, ohne dass man auf ihn warten muss.
 fliegendem Meteor namentlich melden.
 
 **Schliesst, wenn:** `text src/gfx/renderer.ts "anflugbahn" >= 1`
+
+---
+
+### S-N5-07 · Der Grund wird dunkel
+
+**Paket:** N5 · **Aufwand:** M · **Hängt an:** S-N5-01 · **Herkunft:** gemessen in v274/v276
+
+**Problem.** `BODEN_HELL` steht auf 0,355 und zieht **jeden** Untergrund
+dorthin — auch einen, der dunkel geliefert wird. Solange das so ist, wäre die
+Bestellung aus Abschnitt 8d umsonst: das Bild käme dunkel an und würde beim
+Backen wieder aufgehellt.
+
+Was das kostet, ist gemessen (`npm run lesbarkeit`, Durchlauf über
+`BODEN_HELL`):
+
+| gebackener Boden | Figuren mit Kante unter 1,5 | schwächste Kante |
+|---|---|---|
+| **0,355** (heute) | **20 von 20** | 1,10 |
+| 0,30 | 14 von 20 | 1,27 |
+| 0,24 | **1 von 20** | 1,49 |
+| 0,18 | **0 von 20** | 1,74 |
+
+**Was gebaut wird.** `BODEN_HELL` sinkt, und alles, was daran hängt, wird in
+derselben Runde nachgezogen. Vier Tore hängen daran, und keines davon darf
+stummgeschaltet werden (K1):
+
+* `grafiktor` — Bodenband 0,30–0,36. Das Band stammt aus **einer** Szene
+  („warmer Sandboden in Ocker") und trägt seine eigene Warnung im Quelltext:
+  *„für eine Schneelandschaft ist es keine Vorgabe, sondern eine
+  Fehlanzeige"*. Es kommt aus der alten Referenz und muss aus der neuen neu
+  hergeleitet werden (Regel 10) — nicht einfach verschoben.
+* `wegdeckung` — Weg gegen Boden, 40–90 Farbschritte. Der Weg kommt aus
+  `pal.path`, also von uns; er muss mitwandern, sonst kippt der Abstand.
+* `kristall` — der Farbabstand des Kristalls gegen seinen Grund.
+* `einbettung` — die Klimawirkung je Karte, drei Ratschen.
+
+**Und der Weg ist die eigentliche Arbeit, nicht der Boden.** Seit v276
+gemessen: 14 von 20 Figuren liegen im Körperkontrast unter dem Soll, **alle
+gegen einen Weg**. Den Boden zu verdunkeln hilft der Figur auf der Fläche und
+**schadet** der auf einem dunklen Weg (Spiralhain 2,4 %). `pal.path` und
+`pal.pathEdge` gehören deshalb im selben Zug durchprobiert — Regel 9, alle
+Kennzahlen nebeneinander, nicht eine nach der anderen.
+
+**Abnahme.**
+* Höchstens **2 von 20** Figuren mit einer Kante unter 1,5, und keine unter 1,2.
+* Der Körperkontrast verfehlt das Soll bei höchstens **4 von 20** statt heute 14.
+* Alle vier genannten Tore grün, mit neu hergeleiteten Grenzen statt
+  verschobener.
+
+**Gegenprobe.** Die vorhandene Probe „Lesbarkeit sieht die Helligkeit des
+Bodens nicht" fährt schon gegen `BODEN_HELL`; sie muss nach dem Umbau
+weiterhin anschlagen, mit dem neuen Wert als Ausgangspunkt.
+
+**Schliesst, wenn:** `text src/gfx/terrain.ts "BODEN_HELL = 0.2" >= 1`
 
 ---
 

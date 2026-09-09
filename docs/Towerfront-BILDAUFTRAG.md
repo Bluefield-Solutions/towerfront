@@ -1,6 +1,6 @@
 # Towerfront — Bildauftrag
 
-Stand: v272 · 08.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v277 · 08.09.2026 · **Auftragsdokument für den Bild-Agenten**
 
 **Nachgesehen in v272:** unveraendert. Die Abnahmegrenzen dieses Dokuments werden seit v229 bei jedem `npm run guards` mitgelesen (0 Fehler im heutigen Baum) - genau deshalb, weil `kartenprobe` nicht in der Torkette steht und ein Werkzeug, dessen Eingang niemand prueft, im Ernstfall kaputt ist.
 
@@ -2489,3 +2489,193 @@ ohne Rückfrage klappt:
 | Silhouetten-Ähnlichkeit, Mittel | 0,49 | unter 0,65 halten |
 | Figuren-Helligkeit | 0,35 | im Band 0,33–0,40 halten |
 | Figuren-Sättigung | 0,42 | im Band 0,35–0,45 halten |
+
+---
+
+## 8d. Der Neubau — **Stilblock Neubau** und die erste Karte (v277)
+
+**Der Beschluss steht in `docs/Towerfront-NEUBAU.md` Abschnitt 3.3:** leichte
+Schrägsicht, gemalt; industriell, dunkler Grund, leuchtende Akzente. Dieser
+Abschnitt macht daraus eine Bestellung — und er tut es erst jetzt, weil drei
+Runden Messung nötig waren, um die Zahlen ehrlich hinschreiben zu können.
+
+### Was diese Bestellung von 8b und 8c unterscheidet
+
+**Der Grund wird dunkel — und das ist gemessen, nicht Geschmack.** Die
+Begründung im Beschluss lautete „Figuren verschwinden auf hellem Boden". Bis
+v273 konnte kein Werkzeug das bestätigen: `npm run lesbarkeit` rechnete gegen
+das gepackte **Rohbild** des Untergrunds statt gegen das gebackene Terrain und
+sah die Helligkeit des Bodens gar nicht. Seit der Reparatur steht der
+Durchlauf da (`BODEN_HELL` durchprobiert):
+
+| gebackener Boden | Figuren mit Kante unter 1,5 | schwächste Kante |
+|---|---|---|
+| **0,355** (heute) | **20 von 20** | 1,10 |
+| 0,30 | 14 von 20 | 1,27 |
+| 0,24 | **1 von 20** | 1,49 |
+| 0,18 | **0 von 20** | 1,74 |
+
+Ein dunklerer Grund repariert die Lesbarkeit jeder einzelnen Figur, **ohne
+dass ein Bild angefasst wird**.
+
+**Aber der Weg ist nicht der Boden, und das kehrt die Hälfte der Abhilfe um.**
+Seit v276 misst `lesbarkeit` beide Flächen getrennt, und sie gehen in beide
+Richtungen auseinander:
+
+| Karte | Boden | Weg |
+|---|---|---|
+| Spiralhain | 7,0 % | **2,4 %** — dreimal dunkler |
+| Ascheschlucht | 7,2 % | **14,2 %** — doppelt so hell |
+| Frostspalte | 7,6 % | **14,0 %** |
+| Farnkessel | 7,3 % | 5,1 % |
+
+**14 von 20 Figuren** liegen im Körperkontrast unter dem Soll — und **jede
+einzelne davon gegen einen Weg**, keine gegen einen Boden. Der schlechteste
+ist der Mörser mit **1,00** gegen die Frostspalte: exakt die Helligkeit des
+Untergrunds, auf dem er steht.
+
+**Was daraus für diese Bestellung folgt, ist eine Abgrenzung — und sie muss
+hier stehen, damit niemand das Falsche bestellt:** seit 8c malt keine Karte
+mehr eine Straße. Der Weg kommt aus `pal.path` in `src/data/maps.ts`, also von
+**uns**, nicht vom Bild. Der Bild-Agent liefert allein den **Boden**; ob Weg
+und Figuren sich vertragen, ist eine Palettenfrage und wird im Code
+entschieden. Wer beides in einen Auftrag schreibt, bekommt eine gemalte Straße
+zurück — dreimal passiert.
+
+### 8d.0 Der Stilblock Neubau
+
+**Er ersetzt den globalen Stil-Block aus Abschnitt 1 nicht, er tritt neben
+ihn.** Der alte gilt für den ausgelieferten Bildvorrat, der weiter im Spiel
+steht; der neue für alles, was ab v277 bestellt wird. Zwei Blöcke sind hier
+kein Regel-15-Verstoß, sondern zwei verschiedene Gegenstände — und sie sind
+mechanisch getrennt: die alten Prompts tragen `[STYLE-BLOCK EINFÜGEN]`, die
+neuen `[STILBLOCK NEUBAU EINFÜGEN]`, und `npm run bildprompt` bricht ab, wenn
+ein Platzhalter im Ergebnis stehen bleibt.
+
+```
+STYLE: Industrial near-future, painted. Dark ground, few bright accents. Hand
+painted game art in the manner of a high-end tower-defense map, NOT a 3D
+render, NOT photobashed, NOT cel-shaded with outlines.
+
+CAMERA — read this twice, it is the most common mistake. A LOW OBLIQUE view,
+roughly 20 degrees off vertical: almost a plan view, tilted just enough that
+walls, rocks and machinery show a sliver of their side and cast a short
+shadow. It is NOT isometric, NOT a 45-degree bird view, NOT a horizon shot.
+Nothing may lean or converge: no perspective vanishing point, no foreshortening
+across the canvas, no visible horizon, no sky. A rectangle drawn on the ground
+in the top-left corner must have the same size and shape as the same rectangle
+in the bottom-right corner. The tilt lives in the OBJECTS, not in the ground
+plane.
+
+GROUND VALUE: dark. The overall brightness of the terrain sits around 20
+percent, and the game does NOT brighten it afterwards. Think night-time
+industrial yard under working lights, not a sunlit field. Keep it dark
+without going black: the darkest areas still read as a dark grey-brown around
+10 percent, never near-black.
+
+ACCENTS: a handful of small, saturated, GLOWING elements - warning strips,
+coolant lines, lit windows, indicator lamps - covering at most about five
+percent of the canvas. They are what makes the picture readable. Paint them
+as bright surfaces, NOT as glow: no bloom, no halo, no light bleeding onto
+the surrounding ground. The game bakes its own glow over the picture, and a
+painted one would sit there twice.
+
+LIGHT: a single sun from the UPPER LEFT, roughly 130 degrees. Soft key light,
+gentle ambient fill. No rim light - the game adds it per map. No lens flare.
+
+FLAT LIGHTING ACROSS THE CANVAS: no vignette, no corner darkening, no
+spotlight in the centre. The corners must be as bright as the middle. The
+game lays its own atmosphere over the picture.
+
+CALM SURFACES: large readable shapes, few but deliberate details. Panel
+lines, hatches, weld seams and vents are allowed; surface grime, rivet
+fields, scratched micro-texture and noise are NOT. Variation in the ground
+must be BLOTCHY AND DIRECTIONLESS - no bands, no streaks, no stripes running
+across the field. A directional pattern reads as a road, and this map must
+not contain one.
+
+NO OUTLINES: do not draw a dark contour line around objects or around
+individual plates. Shapes are separated by value and by light, the way a
+painting does it.
+
+MATERIALS: painted steel, concrete, rust, glass and lit optics, rubber and
+cable. No fantasy stone, no wood, no crystal, no vegetation as the main
+surface.
+```
+
+**Warum jede Zeile dort steht — jede ist gemessen:**
+
+| Zeile | Grund | Messstelle |
+|---|---|---|
+| „low oblique, 20 degrees, no vanishing point" | Die Weltkoordinaten bleiben flach. Eine echte Projektion entwertet `bahnmass`, `bauflaeche`, `wegdeckung`, `gedraenge`, `beruehrung`, `zielplatte` und `einbettung` in einem Zug | `docs/Towerfront-NEUBAU.md` 3.3 |
+| „ground around 20 percent, not brightened afterwards" | Bei 0,24 fällt die Zahl der unlesbaren Figuren von 20 auf 1, bei 0,18 auf 0 | `npm run lesbarkeit`, Durchlauf oben |
+| „darkest still around 10 percent, never near-black" | Reines Schwarz höchstens 2 % der Fläche | `npm run grafik` |
+| „accents at most five percent" | Ein dunkler Grund trägt nur wenige helle Flächen, sonst kippt die mittlere Helligkeit zurück nach oben | `npm run grafik`, Untergrundhelligkeit |
+| „paint them as surfaces, not as glow" | Regel 11: alles Leuchten wird gebacken. Ein mitgeliefertes läge doppelt und käme aus der falschen Richtung | `npm run einbettungstor` |
+| „single sun, upper left, ~130°" | Das Spiel wirft jeden Schatten aus `LICHT` = −128° | `npm run grafik`, „Lichtrichtung" |
+| „no rim light" | Das Randlicht backt das Spiel selbst (v156) | `npm run einbettungstor` |
+| „no vignette, corners as bright as the middle" | Das Spiel legt Bodennebel und Wetterton selbst auf; ein gebackener läge zweimal | `npm run wegdeckung`, „im Bild" gegen „gebacken" |
+| „blotchy and directionless, no bands" | Die 17,0 Wegfreiheit des ersten Ascheschlucht-Kandidaten kamen von **waagerechten Aschebändern in Laufrichtung**, nicht von einer gemalten Straße | `npm run kartenprobe`, v230 |
+| „calm surfaces, no noise" | Detaildichte im Band 1,5–3,0; Figuren trugen einmal 5,1-mal so viel Feindetail wie der Untergrund | `npm run grafik` · `npm run probebild` |
+| „no outlines" | Die zweite Probelieferung war cel-shaded und lag bei 14,3–25,2 % reinem Schwarz | `npm run probebild` |
+
+### 8d.1 `20_werkhof.png` — Werkhof, die erste Karte im neuen Stil
+
+**Ersetzt den Spiralhain**, und die Wahl ist gemessen: sein Weg ist mit 2,4 %
+der dunkelste des Spiels und damit der schlechteste Fall für die Lesbarkeit —
+dreimal dunkler als sein eigener Boden.
+
+**Maße im Prompt selbst**, nicht nur im Ausgabe-Block: 2400 × 1350, exakt
+16:9. Das war der Fund aus v230 — was nur unten steht, wird überlesen.
+
+```
+[STILBLOCK NEUBAU EINFÜGEN]
+
+SUBJECT: a top-down industrial yard, 2400 x 1350 pixels, exactly 16:9,
+filling the whole canvas edge to edge.
+
+An abandoned heavy-industry site seen from almost directly above: poured
+concrete aprons, rusted steel decking, low machine housings, cable runs,
+drainage channels, spoil heaps of dark gravel. Everything is dark and matt.
+A handful of small fittings still have power - amber warning strips along a
+gantry, a few lit portholes in a machine housing, a cyan coolant line - and
+they are the only saturated colour in the picture.
+
+NO PATH, NO ROAD, NO TRACK. This is the single most important requirement of
+this order. Do not paint a route, a lane, a walkway, a cleared strip, a
+paved corridor or anything else that reads as somewhere to walk. The game
+draws its own path over this picture, and a painted one underneath would
+contradict it. The ground runs evenly across the whole surface.
+
+IMPASSABLE GROUND belongs in the picture, and only where the reference sheet
+marks a red ring: collapsed structures, deep pits, stacked containers, tanks.
+Nowhere else. In the game a unit walks straight over anything that is not
+marked, and then the picture is lying.
+
+THE TARGET PLATFORM belongs in the picture where the reference sheet marks
+the blue circle: a raised circular platform, roughly 260 pixels across, with
+its own colour - cooler and lighter than everything around it - and a clearly
+raised rim. It must read as a disc from above, not as a flat painted mark.
+
+[AUSGABE-BLOCK EINFÜGEN]
+```
+
+### Abnahme 8d
+
+Gemessen wird mit `npm run kartenprobe -- <datei>`; die Grenzen für
+Wegfreiheit, Seitenverhältnis und Zielplatte stehen **einmal** in Abschnitt 8c
+und gelten unverändert weiter (Regel 15). Neu ist allein die Helligkeit:
+
+| Prüfung | heute | Gefordert nach 8d |
+|---|---|---|
+| Gebackener Boden, Helligkeit | 0,26–0,32 | **0,18–0,24** |
+| Figuren mit Kante unter 1,5 | 20 von 20 | **höchstens 2 von 20** |
+| Anteil gesättigter Akzente | — | **höchstens 5 % der Fläche** |
+
+**Die erste Zeile ist noch keine Abnahme, sondern eine Ankündigung**, und das
+gehört dazu: `BODEN_HELL` steht heute auf 0,355 und zieht **jeden** Boden
+dorthin. Es zu senken verschiebt `grafiktor` (Bodenband 0,30–0,36),
+`wegdeckung` (Weg gegen Boden 40–90 Farbschritte), `kristall` und `einbettung`
+in einem Zug — das ist eine eigene Runde und steht als **S-N5-07** aus. Käme
+das Bild vorher, würde es beim Backen wieder aufgehellt, und die Bestellung
+wäre umsonst.

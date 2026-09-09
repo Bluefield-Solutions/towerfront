@@ -1,6 +1,19 @@
 # Towerfront — der Neubau
 
-Stand: v274 · beschlossen am 09.09.2026
+Stand: v281 · beschlossen am 09.09.2026
+
+**Nachgesehen in v281 — der Weg-Beschluss ist gebaut, und die Zahlen stehen
+jetzt daneben.** Aus „an mehreren Knoten sitzen Weichen" ist in v278 bis v281
+das geworden: das Wegenetz steht als Knoten und Kanten (`WEGNETZ`), die Route
+wird gerechnet statt eingetragen (`kuerzesteRoute`, Dijkstra nach Bogenlänge),
+und **eine** Weiche steht im Spiel — die Nordschleife des Spiralhains, die den
+Weg von 3942 auf 4974 Weltpunkte verlängert (Spreizung 1,26). Der Rest des
+Beschlusses steht aus: **mehrere** Weichen, die anderen drei Karten, die
+Weiche im Bild (S-N2-05) und der Bot, der sie umlegt (S-N2-06). Was der
+Beschluss versprochen hat, hält bisher: das Messgerät ist ganz geblieben —
+`bahnmass`, `bauflaeche`, `wegdeckung`, `bahntreue` und die Kreuzdeckung
+rechnen unverändert, sie werden nur je Weichenstellung ausgewertet statt
+einmal.
 
 **Dieses Dokument ist ab v269 die oberste Arbeitsgrundlage.** Es steht über
 `Towerfront-ANFORDERUNGSKATALOG.md`: wo beide etwas sagen, gilt dieses hier.

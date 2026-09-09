@@ -23,6 +23,8 @@ const NORMAL = DIFFICULTIES.normal;
 const START_GOLD = NORMAL.startGold;
 const START_LIVES = NORMAL.startLives;
 import { MAPS, goalOf, lanePaths } from '../src/data/maps';
+import { WEGNETZ, bahnenAusNetz } from '../src/data/wegnetz';
+import { LanePath } from '../src/core/path';
 import { bauplaetze, kreuzdeckung, verschmelzung } from './bahnmass';
 import { abstand, ausstoss, druck, hoechstverlust, kurve, mischung } from './wellenmass';
 import { abnahmegrenzen, einsetzen, neubauBlock, promptAbschnitte, stilBlock } from './auftrag';
@@ -110,6 +112,109 @@ const isHex = (s: string) => /^#[0-9A-Fa-f]{6}$/.test(s);
   }
   warn(`Bildauftrag: ${abschnitte.length} Prompts, der kuerzeste ${kuerzester} Zeichen `
     + `mit eingesetztem Stil-Block (alt ${stil.length}, Neubau ${neubau.length} Zeichen).`);
+}
+
+// ---------------------------------------------------- Das Weichenfenster
+//
+// **Eine Karte, auf der man alles zumachen kann, ist keine Entscheidung,
+// sondern ein Knopf mit der Aufschrift "gewinnen".** Defense Grid und
+// Infinitode loesen das, indem Gegner DURCH Tuerme laufen; Towerfront hat
+// keine Tuerme als Mauern, hier sperrt die Weiche. Also muss der Waechter
+// es halten.
+//
+// Geprueft wird ueber ALLE Stellungen, nicht ueber die eine, die gerade
+// gesetzt ist: `map.lanes` ist der Grundzustand, und der ist trivial in
+// Ordnung - er ist der, gegen den die ganze Balance geeicht ist. Was
+// schiefgehen kann, geht in einer der anderen schief.
+//
+// Drei Fragen je Stellung:
+//
+//  1. **Gibt es ueberhaupt noch eine Route?** Die einzige Frage, die ein
+//     Abbruch ist, ohne dass eine Zahl daran haengt.
+//  2. **Faellt der Umweg unter die Linie?** Dieselbe 1,8 wie fuer die
+//     Bahnen selbst - eine Weiche darf den Weg nicht zu einer Geraden
+//     machen. Sie kann das gar nicht (zu heisst laenger), aber eine
+//     falsch verdrahtete Weiche, die die falsche Kante sperrt, kann es.
+//  3. **Liegt die Spreizung im Band?** Kuerzeste gegen laengste Stellung.
+//
+// **Das Band, und woher seine zwei Zahlen kommen** (Regel 2: anteilig,
+// nicht absolut - eine Spreizung in Weltpunkten waere auf einer langen
+// Karte etwas anderes als auf einer kurzen):
+//
+//  - **Unten 1,10.** Eine Weiche, die den Weg um weniger als ein Zehntel
+//    aendert, ist Dekoration - dieselbe Begruendung, aus der `npm run netz`
+//    seit v280 jede Stellung mitmisst. Ein Spieler, der zwischen zwei
+//    Wellen etwas umlegt und nichts davon hat, legt es kein zweites Mal um.
+//  - **Oben 2,50.** Aus der Referenz (Regel 10), nicht aus mir: Defense
+//    Grids Labyrinth verdoppelt den Weg ungefaehr, und darum herum ist das
+//    Spiel gebaut. Wer ihn ver-zweieinhalb-facht, hat keine Entscheidung
+//    mehr getroffen, sondern die Welle abgeschaltet.
+//
+// Gemessen steht der Spiralhain heute auf 1,27.
+const WEICHEN_UMWEG = 1.8;
+const SPREIZUNG_MIN = 1.10;
+const SPREIZUNG_MAX = 2.50;
+/** Mehr Weichen als das ergaeben mehr als 4096 Stellungen. Dann prueft der
+ *  Waechter nicht mehr alle, und das muss er sagen statt still zu stichproben. */
+const WEICHEN_MAX = 12;
+
+for (const map of MAPS) {
+  const netz = WEGNETZ[map.id];
+  const weichen = netz?.weichen ?? [];
+  if (!weichen.length) continue;
+  if (weichen.length > WEICHEN_MAX) {
+    fail(`${map.id}: ${weichen.length} Weichen ergeben ${2 ** weichen.length} Stellungen - `
+      + `der Weichenfenster-Waechter faehrt hoechstens ${2 ** WEICHEN_MAX}.`);
+    continue;
+  }
+
+  const goal = goalOf(map);
+  let kuerzeste = Infinity, laengste = 0;
+  let woKurz = '', woLang = '';
+  let geprueft = 0;
+  for (let maske = 0; maske < 2 ** weichen.length; maske++) {
+    const gestellt = new Set(weichen.filter((_, i) => (maske >> i) & 1).map((w) => w.id));
+    const name = gestellt.size ? [...gestellt].join('+') : 'alles offen';
+    let bahnen;
+    try {
+      bahnen = bahnenAusNetz(netz, gestellt);
+    } catch {
+      fail(`${map.id}: die Stellung "${name}" sperrt alles zu - von einem Tor fuehrt `
+        + 'keine Route mehr zum Kristall.');
+      continue;
+    }
+    geprueft++;
+    let summe = 0;
+    for (let i = 0; i < bahnen.length; i++) {
+      const kurve = new LanePath(map.ziel
+        ? [...bahnen[i].slice(0, -1), { ...bahnen[i][bahnen[i].length - 1], ...map.ziel }]
+        : bahnen[i]);
+      summe += kurve.length;
+      const luft = Math.hypot(kurve.pts[0].x - goal.x, kurve.pts[0].y - goal.y);
+      const umweg = kurve.length / Math.max(1, luft);
+      if (umweg < WEICHEN_UMWEG) {
+        fail(`${map.id}, Stellung "${name}", Bahn ${i + 1}: Umwegfaktor ${umweg.toFixed(2)} `
+          + `unter ${WEICHEN_UMWEG} - diese Weiche macht den Weg gerader statt laenger.`);
+      }
+    }
+    if (summe < kuerzeste) { kuerzeste = summe; woKurz = name; }
+    if (summe > laengste) { laengste = summe; woLang = name; }
+  }
+
+  const spreizung = laengste / Math.max(1, kuerzeste);
+  if (spreizung < SPREIZUNG_MIN) {
+    fail(`${map.id}: Weichenfenster ${spreizung.toFixed(2)} unter ${SPREIZUNG_MIN} - `
+      + `zwischen "${woKurz}" und "${woLang}" liegen nur ${(laengste - kuerzeste).toFixed(0)} `
+      + 'Weltpunkte. Die Weichen sind Dekoration.');
+  }
+  if (spreizung > SPREIZUNG_MAX) {
+    fail(`${map.id}: Weichenfenster ${spreizung.toFixed(2)} ueber ${SPREIZUNG_MAX} - `
+      + `"${woLang}" macht den Weg gegenueber "${woKurz}" mehr als zweieinhalbmal so lang. `
+      + 'Das ist keine Entscheidung mehr, sondern ein Knopf.');
+  }
+  warn(`Weichenfenster ${map.name}: ${geprueft} von ${2 ** weichen.length} Stellungen tragen, `
+    + `Spreizung ${spreizung.toFixed(2)} (${kuerzeste.toFixed(0)} bei "${woKurz}" bis `
+    + `${laengste.toFixed(0)} bei "${woLang}", Band ${SPREIZUNG_MIN}-${SPREIZUNG_MAX}).`);
 }
 
 for (const map of MAPS) {

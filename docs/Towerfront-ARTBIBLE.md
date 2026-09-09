@@ -1,8 +1,13 @@
 # Towerfront — Art Bible
 
-Stand: v274 · 08.09.2026
+Stand: v281 · 09.09.2026
 
-**Nachgesehen in v272:** unveraendert. Die Zahlen dieses Dokuments haengen an `npm run art`, `grafiktor`, `lesbarkeit` und `einbettung` - alle vier im Runner-Lauf zu v271 gruen, und v272 hat kein Bild und keine Grenze angefasst.
+**Nachgesehen in v281 — und Abschnitt 4 war falsch.** Er stand seit v153 auf
+„9 von 20 Figuren unter 1,5" und einer Ratsche bei 10. Seit v274 misst
+`npm run lesbarkeit` gegen das **gebackene** Terrain statt gegen das gepackte
+Rohbild, und seit v276 gegen **zwei Flächen je Karte** (Weg und Boden) statt
+gegen den Kartenmittelwert. Beide Male hat sich der Messwert selbst geändert,
+nicht die Grafik. Die Zahlen sind unten nachgezogen, mit ihrer Messstelle.
 
 **Nachgesehen in v265:** unveraendert. Neu dazugekommen ist die Marke des
 Raeubers (Splitter in der Kristallfarbe, Faden zum Kristall) — gebacken, kein
@@ -88,15 +93,24 @@ Grafik-Audit. Nachbearbeitung hilft nicht — nachgewiesen mit
 
 | Festlegung | Wert | Herkunft | Messstelle |
 |---|---|---|---|
-| **Saumkontrast** | höchstens **10 von 20** Figuren unter 1,5 — Ratsche | Gemessen wird der äußerste Ring der Figur gegen den Boden. Ein Soll gibt es nicht; die alte Grenze war für die alte Messung gedacht und hätte alle zwanzig gerissen | `npm run lesbarkeit` |
+| **Saumkontrast** | höchstens **20 von 20** Figuren unter 1,5 — Ratsche, Stand 20 | Gemessen wird der äußerste Ring der Figur gegen den Grund, auf dem sie steht. Seit v274 gegen das **gebackene** Terrain, nicht gegen das gepackte Rohbild: derselbe Satz Figuren fiel damit von 8 auf 20 Treffer, ohne dass sich ein Bild geändert hätte (Regel 12) | `npm run lesbarkeit` |
+| **Körperkontrast** | mindestens **1,15** — Ratsche, Stand 14 von 20 darunter | Seit v276 gegen **zwei Flächen je Karte**: den Weg, auf dem die Gegner laufen, und den Boden daneben. Der Mittelwert mittelte genau den Fall weg, der zählt — alle 14 Treffer stehen gegen einen **Weg**, keiner gegen einen Boden | `npm run lesbarkeit` |
 | Prüfung der Prüfung | liefert die Messung für alle Figuren fast denselben Wert, misst sie nicht die Figur | v148: sie rechnete die Kartenfarbe statt der Figur — zwanzig grüne Zeilen über eine Farbe, die kein Bildpunkt je trug | `npm run lesbarkeit`, Spannenprüfung |
 | Silhouettenbreite | jede Gegnerfigur passt auf die engste Wegstelle | gemessen am gepackten Bild, nicht an der Kachel | `npm run gedraengetor` |
 | Farbe **oder** Form trennt | zwei Arten dürfen nicht zugleich unter 12 (CIE76) und über 0,65 Überdeckung liegen | Seit den Fraktionsfarben (TF-024) tragen zwei Gegner **derselben Rolle** denselben Akzent — das ist gewollt. Getrennt werden sie dann an der Form | `npm run lesbarkeit` |
 | Messstelle der Gegnerfarbe | mittlere Farbe der **gebackenen** Figur, Körperfarbe mit 15 % darüber | v168: das Tor rechnete mit 38 % — dem Wert des Alt-Zweigs, der seit v147 nicht mehr läuft. Es maß eine Figur, die niemand sieht | `FARBSCHLEIER` in `src/gfx/enemyart.ts`, von `lesbarkeit` importiert |
 
-**Gemessen (v153):** 9 von 20 Figuren unter 1,5. Der Koloss liegt auf der
-Frostspalte bei **1,02** — seine Kante hat praktisch die Helligkeit des
-Bodens. Am Bild zu beheben oder durch das Randlicht aus TF-012.
+**Gemessen (v281, gegen das gebackene Terrain):** **20 von 20** Figuren unter
+1,5, Spanne 1,00 bis 1,22 — der Span steht bei 1,00, der Mörser bei 1,01.
+Im **Körperkontrast** liegen **14 von 20** unter dem Soll 1,15, der
+schlechteste ist der Mörser mit **1,00** gegen den Weg der Frostspalte: exakt
+die Helligkeit des Untergrunds, auf dem er steht. **Jeder einzelne der 14
+steht gegen einen Weg, keiner gegen einen Boden.**
+
+Das ist Befund **B1** und **am Bild zu beheben, nicht am Code** — beide
+Ratschen halten deshalb den Stand, statt die Kette dauerhaft rot zu stellen.
+Der Weg dorthin ist bestellt: Abschnitt 8d des Bildauftrags und **S-N5-07**
+(`BODEN_HELL` senken), an dem vier Tore hängen.
 Der Koloss füllt die engste Straße zu **96 %** — viel bleibt nicht.
 
 ### 4.3 Bestellung: die Silhouetten des ausgelieferten Satzes

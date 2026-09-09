@@ -101,6 +101,30 @@ const PROBEN = [
     meldet: 'stillschweigend',
   },
   {
+    // **Eine Stellung, die alles zumacht, ist ein Knopf mit der Aufschrift
+    // "gewinnen".** Der Waechter faehrt deshalb ALLE Stellungen, nicht die
+    // eine, die gerade gesetzt ist - der Grundzustand ist trivial in Ordnung,
+    // was schiefgeht, geht in einer der anderen schief.
+    name: 'Eine Weichenstellung sperrt alles zu',
+    datei: 'src/data/wegnetz.ts',
+    regel: /\{ id: 'saeule1', kante: '[a-z0-9-]+', name: 'Nordschleife' \}/,
+    ersatz: "{ id: 'saeule1', kante: 'tor1-kreuz1', name: 'Nordschleife' }",
+    tor: 'guards',
+    meldet: 'sperrt alles zu',
+  },
+  {
+    // **Eine Weiche, die den Weg nicht messbar aendert, ist Dekoration.**
+    // Der Eingriff laesst sie den UMWEG sperren statt des kurzen Astes -
+    // dann bleibt der kurze Ast, die Bahn aendert sich nicht, und die
+    // Spreizung faellt auf 1,00.
+    name: 'Die Weiche sperrt den Umweg statt des kurzen Wegs',
+    datei: 'src/data/wegnetz.ts',
+    regel: /\{ id: 'saeule1', kante: '[a-z0-9-]+', name: 'Nordschleife' \}/,
+    ersatz: "{ id: 'saeule1', kante: 'kreuz1-kreuz2-2', name: 'Nordschleife' }",
+    tor: 'guards',
+    meldet: 'Dekoration',
+  },
+  {
     // **Eine Weiche wird nur zwischen den Wellen umgelegt.** Ohne die Sperre
     // springt jeder Gegner auf die neue Kurve - dieselbe zurueckgelegte
     // Strecke, anderer Ort. Der Rauchtest misst den Sprung, nicht den

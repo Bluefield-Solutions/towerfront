@@ -230,13 +230,10 @@ for (const map of MAPS) {
   console.log(`  Ausweichprobe: ${wege[0]?.length ?? 0} benutzte Kante(n) einzeln `
     + `gesperrt - ${ausgewichen} mal eine andere Route, ${ohneRoute} mal gar keine mehr`);
 
-  // Was die Weichen ausmachen - und ob sie ueberhaupt etwas ausmachen.
-  //
-  // **Eine Weiche, die den Weg nicht messbar aendert, ist Dekoration.** Die
-  // Abnahme aus S-N2-03 verlangt einen messbaren Unterschied zwischen der
-  // kuerzesten und der laengsten erlaubten Stellung; hier steht die Zahl.
-  // Ein Band daraus zu machen ist S-N2-04 (der Weichenfenster-Waechter) -
-  // dieses Tor MISST, es urteilt noch nicht.
+  // Was die Weichen ausmachen. **Gemessen, nicht beurteilt** - das Urteil
+  // steht seit v281 im Weichenfenster-Waechter (`npm run guards`), und zwar
+  // an genau einer Stelle: eine Grenze, die in zwei Werkzeugen steht,
+  // veraltet in einem von beiden (Regel 15).
   for (const w of netz.weichen ?? []) {
     try {
       const zu = bahnenAusNetz(netz, new Set([w.id]));
@@ -245,15 +242,8 @@ for (const map of MAPS) {
       console.log(`  Weiche "${w.id}" (${w.name}, sperrt ${w.kante}): `
         + `Bahn 0 ${auf.toFixed(0)} -> ${dann.toFixed(0)} Weltpunkte `
         + `(${dann > auf ? '+' : ''}${(100 * (dann / auf - 1)).toFixed(0)} %)`);
-      if (Math.abs(dann - auf) < 1) {
-        meldung(`${map.id}: die Weiche "${w.id}" aendert die Bahn nicht - sie ist Dekoration.`);
-      }
-      if (dann < auf) {
-        meldung(`${map.id}: die Weiche "${w.id}" VERKUERZT die Bahn - zu muss laenger heissen, `
-          + 'sonst legt sie niemand um.');
-      }
     } catch (e) {
-      meldung(`${map.id}: mit der Weiche "${w.id}" gibt es keine Route mehr - ${(e as Error).message}`);
+      console.log(`  Weiche "${w.id}" (${w.name}): keine Route mehr - ${(e as Error).message}`);
     }
   }
 

@@ -186,7 +186,18 @@ console.log(`Davon ausgenommen: ${raeuber} Schuss/Schuesse auf einen Raeuber, de
       // Sobald ein Schuss unterwegs ist, faellt sein Ziel: genau der Fall,
       // um den es geht.
       if (!gestellt && s.projectiles.length && boden.hp > 0) {
-        boden.hp = 0; gestellt = true;
+        // **Ueber den echten Schadensweg toeten, nicht `hp = 0` setzen**
+        // (v265). Ein Gegner mit null Lebenspunkten ist noch nicht `dead`,
+        // und genau daran haengt die Ersatzsuche.
+        //
+        // Bis v261 fiel das nicht auf: der gestellte Bodengegner steht am
+        // Bahnende - der erste Bauplatz dieser Karte liegt beim Kristall -,
+        // und dort starb er von selbst. Seit dem Kernraub stirbt er dort
+        // NICHT mehr, sondern kehrt um und laeuft mit seiner Beute davon.
+        // Das Ziel fiel also nie, die Ersatzsuche lief nie, und die
+        // Gegenprobe "Ersatzziel nimmt auch Flieger" bewies nichts mehr.
+        s.trefferZumPruefen(boden, boden.hp * 4 + 100);
+        gestellt = true;
       }
       if (flieger.hp < vollFlieger) fliegerSchaden++;
       // Der Gleiter soll stehen bleiben, nicht davonfliegen - sonst ist er

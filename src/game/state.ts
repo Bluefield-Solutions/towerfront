@@ -646,8 +646,8 @@ export class GameState {
     return this.enemies[this.enemies.length - 1];
   }
 
-  trefferZumPruefen(e: Enemy, schaden: number): void {
-    this.damage(e, schaden, null, '#fff', 0, 0);
+  trefferZumPruefen(e: Enemy, schaden: number, durchschlag = 0): void {
+    this.damage(e, schaden, null, '#fff', 0, 0, durchschlag);
   }
 
   /** Einen Lauf beenden, ohne ihn zu spielen - fuer den Rauchtest.

@@ -362,11 +362,24 @@ const PROBEN = [
     tor: 'smoke',
   },
   {
+    // **Die Probe hat in v264 ihren Gegenstand verloren, und der volle Lauf
+    // hat es gemeldet.**
+    //
+    // Sie verlangte, dass `npm run sim` rot wird, wenn Panzerung gar nichts
+    // mehr schluckt. Gemessen blieb sim gruen - auf jeder einzelnen
+    // Kennzahl. Panzerung als Spielelement war damit von KEINEM Tor
+    // gehalten, und das war schon vorher so; die Probe hatte es nur
+    // verdeckt, weil sim aus anderen Gruenden rot wurde.
+    //
+    // Sie zeigt jetzt auf die Eigenschaft selbst: derselbe Schaden auf
+    // denselben gepanzerten Gegner, einmal ohne und einmal mit Durchschlag.
+    // Ohne Panzerungswirkung sind beide gleich, und der Rauchtest sagt es.
     name: 'Panzerung wieder als fester Abzug',
     datei: 'src/game/state.ts',
     regel: /const schluck = Math\.min\(0\.66, rest \* 0\.11\);/,
     ersatz: 'const schluck = 0;',
-    tor: 'sim',
+    tor: 'smoke',
+    meldet: 'Panzerung macht keinen Unterschied',
   },
   {
     name: 'Tuerme ueberdecken einander',
@@ -1809,10 +1822,22 @@ const PROBEN = [
     // Ohne diese Probe bewiese die darueber nichts - eine Pruefung, die nur
     // nach unten sichert, laesst den dritten Stern still wertlos werden.
     // Der Eingriff macht die drei Stile so stark wie die Bestleistung.
+    // **Der Eingriff greift seit v265 an der STERNSCHWELLE, nicht am Bot.**
+    //
+    // Vorher machte er den Meister so stark wie die Bestleistung. Der volle
+    // Lauf zu v264 hat gemeldet, dass das nichts mehr beweist: sim wird
+    // dabei zwar rot, aber aus drei ANDEREN Gruenden (Rettungen ueber dem
+    // Band, Endlos zu flach, gemischt ohne Verlust) - die gemeinte Regel
+    // schweigt, weil der Farnkessel auch fuer einen starken Bot bei zwei
+    // Sternen bleibt. Ein Eingriff, der ein Tor aus einem anderen Grund rot
+    // macht, sieht aus wie ein Beweis und ist keiner (Regel 3).
+    //
+    // Die Schwelle ist der richtige Griff: "der dritte Stern ist wertlos"
+    // ist eine Aussage ueber die Schwelle, nicht ueber den Bot.
     name: 'Bescheidener Aufbau holt ueberall drei Sterne',
-    datei: 'tools/sim.ts',
-    regel: /    name: 'Meister', maxTowers: 12, maxLevel: 3, reserve: 40, decideEvery: 30, deepenAt: 0\.65,/,
-    ersatz: "    name: 'Meister', maxTowers: 24, maxLevel: 6, reserve: 40, decideEvery: 20, deepenAt: 0.8,",
+    datei: 'src/data/perks.ts',
+    regel: /  if \(share >= 0\.66\) return 3;/,
+    ersatz: '  if (share >= 0.05) return 3;',
     tor: 'sim',
     meldet: 'dann ist der dritte wertlos',
   },

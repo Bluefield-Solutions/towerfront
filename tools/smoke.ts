@@ -2137,6 +2137,53 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
+// **Panzerung muss auf jeder Stufe etwas ausmachen - und Durchschlag auch.**
+//
+// Panzerung ist seit Langem ein ANTEIL und kein Abzug: jeder Punkt nimmt
+// 11 %, gedeckelt bei zwei Dritteln. Der Grund steht an der Rechnung: als
+// Abzug schluckte Panzerung 6 am Anfang drei Viertel eines Bogenschusses und
+// am Ende, nach sechs Ausbaustufen, noch zwei Prozent - Panzerung
+// verschwand als Spielelement genau dann, wenn der Boss kam, und der Moerser
+// verlor seine Rolle als Panzerbrecher.
+//
+// **Gehalten hat das bis v264 kein einziges Tor.** Der volle Probenlauf hat
+// es gemeldet: mit `schluck = 0` - Panzerung ohne jede Wirkung - blieb
+// `npm run sim` gruen, und zwar auf jeder Kennzahl. Die Gegenprobe
+// "Panzerung wieder als fester Abzug" bewies damit nichts mehr.
+//
+// Geprueft wird die Eigenschaft selbst, an einem gestellten Fall: derselbe
+// Schaden auf denselben Gegner, einmal ohne und einmal mit Durchschlag.
+{
+  const probe = new GameState();
+  probe.reset();
+  const { ENEMIES: E } = await import('../src/data/enemies');
+  const gepanzert = Object.keys(E).find((id) => E[id as keyof typeof E].armor >= 5);
+  if (!gepanzert) {
+    problems.push('Panzerung: kein Gegner mit mindestens 5 Panzerung - die Probe misst nichts.');
+  } else {
+    const messen = (durchschlag: number): number => {
+      const g = new GameState();
+      g.reset();
+      const e = g.spawnZumPruefen(gepanzert as never, 0);
+      if (!e) return -1;
+      const vorher = e.hp;
+      g.trefferZumPruefen(e, 100, durchschlag);
+      return vorher - e.hp;
+    };
+    const ohne = messen(0);
+    const mit = messen(E[gepanzert as keyof typeof E].armor);
+    if (ohne < 0 || mit < 0) {
+      problems.push('Panzerung: der gepanzerte Gegner liess sich nicht stellen.');
+    } else if (mit <= ohne * 1.2) {
+      problems.push(
+        `Panzerung: 100 Schaden richten ohne Durchschlag ${ohne.toFixed(1)} an, mit `
+        + `vollem Durchschlag ${mit.toFixed(1)} - Panzerung macht keinen Unterschied, `
+        + 'und damit hat der Moerser seine Rolle als Panzerbrecher verloren.',
+      );
+    }
+  }
+}
+
 // **Der Riss geht auch wieder zu** (S-P3-03).
 //
 // Die Rissstufe ist keine gespeicherte Zahl, sondern eine ABLEITUNG aus

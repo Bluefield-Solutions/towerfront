@@ -292,6 +292,13 @@ npm run sim         Balance kopflos, drei Aussaaten - und seit v253 die
                     nicht reichte (Meister 45 %). Er tritt an die Stelle von
                     "Gold uebrig" - jene Zahl mass zur Haelfte den Deckel des
                     Bots: ungedeckelt bleiben 14,6 % liegen statt 35,2.
+npm run fruehstart  was die Ueberlappung bringt und was sie kostet: derselbe
+                    Bot dreimal ueber alle Karten - nie ueberlappend, selektiv
+                    und durchgehend. `--hub 0,1,2,3` probiert den Risikoaufschlag
+                    durch. Es braucht ein eigenes Werkzeug, weil `npm run sim`
+                    drei Bots faehrt, die alle drei NICHT ueberlappen - wer den
+                    Bonus dort einstellt, misst gegen einen Lauf, in dem er nie
+                    anfaellt. Kein Tor: es misst, es urteilt nicht.
 npm run kritik      Wertung nach Testerkategorien, Ziel über 90
 npm run c18         die C18-Frage allein: ist die erste Karte ohne
                     Verbesserungen zu gewinnen? Zwei Sekunden statt zwei
@@ -490,6 +497,18 @@ Gegner traegt seine Welle: daran haengen seine Lebenspunkte, die Verbuchung
 seines Durchbruchs und das Ende seiner Welle. Die Bots ueberlappen NICHT - die
 Balance ist gegen einen Spieler geeicht, der diese Entscheidung nicht trifft.
 
+**Der Fruehstart wiegt die Lage (v267).** Der Bonus fuer eine frueh
+gestartete Welle hing bis dahin allein an der Uhr - und seit Wellen
+ueberlappen duerfen, war das wirkungslos: `idleTime` waechst nur, wenn keine
+Welle laeuft. `fruehstartRisiko` misst jetzt, wieviel der laufenden Wellen
+noch auf dem Feld steht (Lebenspunkte, nicht Koepfe), und `EARLY_RISIKO_HUB`
+sagt, um wieviel der Bonus dadurch steigt. Gemessen mit `npm run fruehstart`:
+Ueberlappen kostet bei jedem Hub 22 bis 34 Punkte Kristall - die Stelle, an
+der es sich "gerade lohnt", gibt es nicht. Entschieden hat der andere Rand:
+ab Hub 3 verdient der durchgehend ueberlappende Bot mehr Gold als der
+vorsichtige, und damit waere der Fruehstart eine Einnahmequelle statt eines
+Risikos. Gesetzt ist 2,0.
+
 **Kein Gitter mehr.** Wege sind Catmull-Rom-Kurven mit
 Bogenlängen-Tabelle; ein Gegner hat als einzige Zustandsgröße die
 zurückgelegte Strecke. Gebaut wird frei, begrenzt durch Platzbedarf je
@@ -499,7 +518,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v266. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v267. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

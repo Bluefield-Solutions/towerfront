@@ -788,6 +788,33 @@ const PROBEN = [
     meldet: 'Obergrenze von zwei haelt nicht',
   },
   {
+    // **Die zwei Proben zum Fruehstart-Risiko (S-P4-02, v267).**
+    //
+    // Erstens die Lage selbst - das ist die Gegenprobe, die die Story
+    // verlangt: den Lageanteil auf konstant setzen. Dann ist der Bonus bei
+    // vollem und bei leerem Feld gleich, und genau das ist der Zustand vor
+    // v267. Ein fester Wert und nicht null: bei null bliebe die Nullprobe
+    // heil, und der Rauchtest meldete nur die Haelfte des Schadens.
+    name: 'Die Lage zaehlt beim Fruehstart nicht mit',
+    datei: 'src/game/state.ts',
+    suche: '    return Math.min(1, steht / ganz);',
+    ersatz: '    return 0.5;',
+    tor: 'smoke',
+    meldet: 'Lage',
+  },
+  {
+    // Zweitens der Hub. Steht er auf null, ist der Bonus wieder allein die
+    // Uhr - und die steht bei laufender Welle fest auf 1,0. Das ist die
+    // Klasse, die von v266 bis v267 unbemerkt bestand: der Fruehstart HATTE
+    // eine Zahl, sie bewegte sich nur nicht mehr.
+    name: 'Der Fruehstart zahlt fuer Risiko nichts',
+    datei: 'src/data/waves.ts',
+    suche: 'export const EARLY_RISIKO_HUB = 2.0;',
+    ersatz: 'export const EARLY_RISIKO_HUB = 0;',
+    tor: 'smoke',
+    meldet: 'Der Bonus folgt der Lage nicht',
+  },
+  {
     // **Die zwei Proben zu den Rettungen (S-P3-04, v264), und sie treffen
     // das Band von beiden Raendern.**
     //
@@ -2076,8 +2103,11 @@ const PROBEN = [
     // Rauchtest misst beide Haelften an derselben Stelle: Gold UND Anteil.
     name: 'Fruehstart-Bonus faellt nicht mehr',
     datei: 'src/game/state.ts',
-    regel: /    return \{ gold: Math\.round\(anteil \* EARLY_BONUS_MAX\), rest, anteil \};/,
-    ersatz: '    return { gold: EARLY_BONUS_MAX, rest, anteil };',
+    // **In v267 nachgezogen**: der Bonus haengt seitdem auch an der Lage,
+    // die Zeile ist also eine andere. Der Eingriff bleibt derselbe - der
+    // Anteil wird herausgenommen, die Zahl steht fest.
+    regel: /    const gold = Math\.round\(anteil \* EARLY_BONUS_MAX \* \(1 \+ EARLY_RISIKO_HUB \* risiko\)\);/,
+    ersatz: '    const gold = Math.round(EARLY_BONUS_MAX * (1 + EARLY_RISIKO_HUB * risiko));',
     tor: 'smoke',
   },
   {

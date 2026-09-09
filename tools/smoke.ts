@@ -100,7 +100,7 @@ const { wirkungAnlegen, wirkungenTicken, tempoFaktor } = await import('../src/da
 type EnemyId = Parameters<typeof konterSatz>[0];
 const { candidateSpots } = await import('./spots');
 const { WORLD_W, WORLD_H } = await import('../src/data/config');
-const { EARLY_BONUS_WINDOW } = await import('../src/data/waves');
+const { EARLY_BONUS_WINDOW, EARLY_BONUS_MAX, EARLY_RISIKO_HUB } = await import('../src/data/waves');
 const { VERBUND_UMKREIS } = await import('../src/game/verbund');
 const { werteAmTurm } = await import('../src/game/turmwerte');
 
@@ -4043,6 +4043,71 @@ step('Fruehstart zeigt sein Fenster', () => {
   if (plus.textContent !== '' || plus.getAttribute('data-an') !== '0') {
     throw new Error(`Nach dem Fenster steht im Knopf noch "${plus.textContent}"`
       + ` (data-an ${plus.getAttribute('data-an')}).`);
+  }
+});
+
+/** **Der Fruehstart wiegt die Lage** (S-P4-02, `fruehstartRisiko`).
+ *
+ *  Bis v266 hing der Bonus allein an der Uhr - und seit Wellen ueberlappen
+ *  duerfen, war das wirkungslos: `idleTime` waechst nur, wenn KEINE Welle
+ *  laeuft, also stand der Anteil waehrend einer laufenden Welle fest auf 1,0.
+ *  Wer nachlegte, bekam immer denselben vollen Bonus, ob die alte Welle noch
+ *  ganz stand oder ihr letzter Nachzuegler lief.
+ *
+ *  Gestellt, nicht abgewartet: die Welle wird gestartet und ihr Anmarsch
+ *  gekuerzt. Auf ihr Abarbeiten zu warten hiesse, auf einen Zufall zu warten
+ *  - genau die Klasse, an der v219 vier Messplaetze verloren hat.
+ *
+ *  Die Nullprobe steht mit drin (Regel 13): bei leerem Feld muss der Bonus
+ *  GENAU der von frueher sein. Ohne sie bewiese die Messung nur, dass
+ *  irgendeine Zahl groesser ist als eine andere. */
+step('Fruehstart wiegt die Lage', () => {
+  const g = new GameState();
+  g.reset(4242, 'normal', 'spiralhain');
+  g.startWave();
+  // Nichts ist ausgestossen, nichts erledigt: die Welle steht ganz da.
+  const voll = g.fruehstart;
+  if (Math.abs(voll.risiko - 1) > 0.001) {
+    throw new Error(`Gleich nach dem Start steht die Lage auf ${voll.risiko.toFixed(3)} statt 1.`);
+  }
+  // Die Haelfte des Anmarschs herausnehmen.
+  const ganz = g.anmarschZumPruefen(0, 999);
+  g.anmarschZumPruefen(0, Math.floor(ganz / 2));
+  const halb = g.fruehstart;
+  if (halb.risiko <= 0.2 || halb.risiko >= 0.8) {
+    throw new Error(`Halb abgearbeitet steht die Lage auf ${halb.risiko.toFixed(3)} - `
+      + 'das ist keine halbe Welle.');
+  }
+  // Und leer: nichts mehr im Anmarsch, nichts mehr auf dem Feld.
+  g.anmarschZumPruefen(0, 0);
+  const leer = g.fruehstart;
+  if (leer.risiko !== 0) {
+    throw new Error(`Bei leerem Feld steht die Lage auf ${leer.risiko.toFixed(3)} statt 0.`);
+  }
+
+  // **Der Bonus folgt der Lage, und bei leerem Feld ist er der heutige.**
+  if (leer.gold !== EARLY_BONUS_MAX) {
+    throw new Error(`Bei leerem Feld ${leer.gold} Gold statt der heutigen ${EARLY_BONUS_MAX}.`);
+  }
+  if (!(voll.gold > halb.gold && halb.gold > leer.gold)) {
+    throw new Error(`Der Bonus folgt der Lage nicht: voll ${voll.gold}, halb ${halb.gold}, `
+      + `leer ${leer.gold}.`);
+  }
+  // Messbar hoeher heisst: nicht im Rundungsrauschen. Bei vollem Feld ist es
+  // der Hub, und der steht in den Daten - nicht hier ein zweites Mal.
+  if (voll.gold !== Math.round(EARLY_BONUS_MAX * (1 + EARLY_RISIKO_HUB))) {
+    throw new Error(`Bei vollem Feld ${voll.gold} Gold - der Hub ${EARLY_RISIKO_HUB} `
+      + `verlangt ${Math.round(EARLY_BONUS_MAX * (1 + EARLY_RISIKO_HUB))}.`);
+  }
+
+  // **Die Zahl entsteht an EINER Stelle.** Die Fuellung des Knopfes ist eine
+  // Ableitung des Goldes, keine zweite Rechnung - sonst liefe der Balken bei
+  // jeder Ueberlappung voll, waehrend die Zahl steigt (Regel 15).
+  if (Math.abs(leer.fuellung - leer.gold / EARLY_BONUS_MAX) > 0.001) {
+    throw new Error(`Fuellung ${leer.fuellung.toFixed(3)} passt nicht zu ${leer.gold} Gold.`);
+  }
+  if (voll.fuellung !== 1) {
+    throw new Error(`Bei vollem Feld steht die Fuellung auf ${voll.fuellung} statt 1.`);
   }
 });
 

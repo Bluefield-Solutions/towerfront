@@ -1265,10 +1265,15 @@ export class UI {
     const f = s.fruehstart;
     // Die Fuellung laeuft jedes Bild - sie ist die Uhr. `transform` kostet
     // dabei kein Neuberechnen der Leiste.
-    if (f.anteil !== this.fruehstartAnteil) {
-      this.fruehstartAnteil = f.anteil;
-      this.bWaveF.style.transform = `scaleX(${f.anteil})`;
-      this.bWaveF.dataset.an = f.anteil > 0 ? '1' : '0';
+    // **Sie folgt der ZAHL, nicht der Uhr** (S-P4-02). Bis v266 stand hier
+    // `f.anteil`, und solange der Bonus allein an der Uhr hing, war das
+    // dasselbe. Seit die Lage mitzaehlt, ist es das nicht mehr - und die
+    // Fuellung kommt fertig aus `state.fruehstart`, damit Balken und Zahl
+    // nicht zwei Rechnungen sind (Regel 15).
+    if (f.fuellung !== this.fruehstartAnteil) {
+      this.fruehstartAnteil = f.fuellung;
+      this.bWaveF.style.transform = `scaleX(${f.fuellung})`;
+      this.bWaveF.dataset.an = f.fuellung > 0 ? '1' : '0';
     }
     // Die Zahl nur, wenn sie sich aendert - das ist einmal je Sekunde statt
     // sechzig Mal.

@@ -6,7 +6,7 @@ import {
   TOWERS, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor, hatZweigwahl,
   guenstigsterTurm, type BranchIndex, type TowerId,
 } from '../data/towers';
-import { EARLY_BONUS_MAX, EARLY_BONUS_WINDOW } from '../data/waves';
+import { EARLY_BONUS_MAX, EARLY_BONUS_WINDOW, EARLY_RISIKO_HUB } from '../data/waves';
 import { VERBUND_MAX, VERBUND_STUFE, VERBUND_UMKREIS } from './verbund';
 import {
   DIFFICULTIES, hpScale, type DifficultyDef, type DifficultyId,
@@ -694,6 +694,21 @@ export class GameState {
     this.laufende = laufend.map((welle) => ({ welle, uhr: 0 }));
   }
 
+  /** Nur zum Pruefen: den Anmarsch einer Welle kuerzen; gibt zurueck, wieviel
+   *  danach noch aussteht.
+   *
+   *  Eine halb abgearbeitete Welle laesst sich sonst nur ABWARTEN, und ein
+   *  Messplatz, der auf einen Zufall wartet, hoert leise auf zu pruefen,
+   *  sobald sich die Karte aendert - viermal gemessen in v219. Gekuerzt wird
+   *  die Warteschlange, nicht die Zahl: `fruehstartRisiko` rechnet danach
+   *  dieselbe Rechnung wie im Spiel. */
+  anmarschZumPruefen(welle: number, behalten: number): number {
+    const eigene = this.pending.filter((p) => p.welle === welle);
+    this.pending = this.pending.filter((p) => p.welle !== welle)
+      .concat(eigene.slice(0, behalten));
+    return this.pending.filter((p) => p.welle === welle).length;
+  }
+
   trefferZumPruefen(e: Enemy, schaden: number, durchschlag = 0): void {
     this.damage(e, schaden, null, '#fff', 0, 0, durchschlag);
   }
@@ -1029,11 +1044,69 @@ export class GameState {
    *
    *  Die erste Welle traegt keinen Bonus: dort baut man ueberhaupt erst
    *  seinen ersten Turm, und ein Anreiz zur Eile waere eine Falle. */
-  get fruehstart(): { gold: number; rest: number; anteil: number } {
-    if (!this.canStartWave || this.waveIndex === 0) return { gold: 0, rest: 0, anteil: 0 };
+  get fruehstart(): { gold: number; rest: number; anteil: number;
+    risiko: number; fuellung: number } {
+    const leer = { gold: 0, rest: 0, anteil: 0, risiko: 0, fuellung: 0 };
+    if (!this.canStartWave || this.waveIndex === 0) return leer;
     const rest = Math.max(0, EARLY_BONUS_WINDOW - this.idleTime);
     const anteil = rest / EARLY_BONUS_WINDOW;
-    return { gold: Math.round(anteil * EARLY_BONUS_MAX), rest, anteil };
+    const risiko = this.fruehstartRisiko;
+    const gold = Math.round(anteil * EARLY_BONUS_MAX * (1 + EARLY_RISIKO_HUB * risiko));
+    // **Die Fuellung ist eine Ableitung der Zahl, keine zweite Rechnung.**
+    // Bis v266 stand dort `anteil`, und das war dasselbe - seit der Bonus
+    // ueber `EARLY_BONUS_MAX` hinausgehen kann, ist es das nicht mehr. Waere
+    // die Fuellung in der Oberflaeche gerechnet, haetten Balken und Zahl
+    // zwei Quellen (Regel 15), und der Balken liefe bei jeder Ueberlappung
+    // voll, waehrend die Zahl steigt.
+    return { gold, rest, anteil, risiko, fuellung: Math.min(1, gold / EARLY_BONUS_MAX) };
+  }
+
+  /** **Wieviel der laufenden Wellen noch auf dem Feld steht** (S-P4-02).
+   *
+   *  0 heisst: nichts laeuft oder nichts ist mehr uebrig - der Fruehstart
+   *  ist dann genau der von frueher. 1 heisst: die laufende Welle steht noch
+   *  ganz da, und wer JETZT die naechste dazustellt, traegt zwei volle
+   *  Wellen.
+   *
+   *  Gezaehlt werden Lebenspunkte, nicht Koepfe: zwoelf Krabbler und ein
+   *  Koloss sind nicht dieselbe Lage, obwohl beides "ein Dutzend Gegner"
+   *  sein kann.
+   *
+   *  **Warum nicht `wellenDruck` aus den Daten.** Das beantwortet die Frage
+   *  des PLANS - mit den Bruchstuecken der Spalter und ohne die Kurve des
+   *  Grades. Hier zaehlt, was wirklich auf dem Feld steht; Zaehler und
+   *  Nenner muessen dieselbe Einheit haben, sonst steht die Zahl beim
+   *  Wellenstart nicht auf 1. Der Spalter treibt sie kurz darueber, wenn er
+   *  zerfaellt - deshalb der Deckel. */
+  get fruehstartRisiko(): number {
+    if (!this.laufende.length) return 0;
+    const laeuft = new Set(this.laufende.map((l) => l.welle));
+    let steht = 0;
+    for (const e of this.enemies) {
+      if (!e.dead && !e.leaked && laeuft.has(e.welle)) steht += e.hp;
+    }
+    for (const p of this.pending) {
+      if (laeuft.has(p.welle)) steht += this.huelle(p.enemy, p.hpMul, p.welle);
+    }
+    let ganz = 0;
+    for (const l of this.laufende) {
+      for (const g of this.waveAt(l.welle).groups) {
+        ganz += g.count * this.huelle(g.enemy, g.hpMul ?? 1, l.welle);
+      }
+    }
+    if (ganz <= 0) return 0;
+    return Math.min(1, steht / ganz);
+  }
+
+  /** Die Lebenspunkte, mit denen ein geplanter Gegner das Feld betritt.
+   *
+   *  Dieselbe Rechnung wie in `spawnEnemy`, und sie steht deshalb nur hier:
+   *  liefe die Lagemessung auf einer eigenen Formel, zeigte sie beim
+   *  Wellenstart irgendetwas neben 1,0 an, ohne dass jemand sagen koennte,
+   *  woher der Unterschied kommt. */
+  private huelle(id: EnemyId, hpMul: number, welle: number): number {
+    const ramp = hpScale(this.diff, welle, this.waves.length, this.map.balance.hpMul);
+    return Math.round(ENEMIES[id].hp * hpMul * ramp);
   }
 
   /** Gold fuer einen frueh gestarteten Angriff. Faellt linear auf null. */
@@ -1439,8 +1512,7 @@ export class GameState {
     // Zaehler des Spiels** (S-P4-01). Bei Ueberlappung zeigt der Zaehler auf
     // die neuere Welle - die Nachzuegler der aelteren waeren sonst still
     // haerter, als ihr Plan sagt.
-    const ramp = hpScale(this.diff, welle, this.waves.length, this.map.balance.hpMul);
-    const hp = Math.round(def.hp * hpMul * ramp);
+    const hp = this.huelle(id, hpMul, welle);
     // Flieger starten leicht versetzt, damit ein Schwarm nicht als eine Linie
     // uebereinander liegt.
     const off = def.flying ? (this.rng.next() - 0.5) * 200 : 0;

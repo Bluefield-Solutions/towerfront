@@ -88,6 +88,61 @@ export function istSprung(plan: Wave[], i: number): boolean {
 export const EARLY_BONUS_MAX = 30;
 export const EARLY_BONUS_WINDOW = 22; // Sekunden
 
+/** **Wieviel der Fruehstart mehr wert ist, wenn noch etwas steht**
+ *  (S-P4-02, `fruehstartRisiko`).
+ *
+ *  Bis v266 hing der Bonus allein an der Uhr: `EARLY_BONUS_WINDOW` laeuft
+ *  ab, der Bonus faellt linear auf null. Das ist eine Belohnung fuer Eile,
+ *  kein Risiko - die Hoehe haengt an der Zeit, nicht an der Lage. Und seit
+ *  Wellen ueberlappen duerfen (v266) war es sogar wirkungslos: `idleTime`
+ *  waechst nur, wenn KEINE Welle laeuft, also steht der Anteil waehrend
+ *  einer laufenden Welle fest auf 1,0. Wer ueberlappt, bekam immer genau
+ *  denselben vollen Bonus - ob die alte Welle noch ganz stand oder ihr
+ *  letzter Nachzuegler lief.
+ *
+ *  Der Hub sagt, um welchen Anteil der Bonus steigt, wenn die laufende
+ *  Welle noch VOLL auf dem Feld steht. Bei 0 ist alles wie vorher.
+ *
+ *  **Gemessen, nicht gesetzt** (Regel 9): `npm run fruehstart` faehrt
+ *  denselben Bot dreimal ueber alle vier Karten und drei Aussaaten - ohne
+ *  Ueberlappung, mit selektiver (die laufende Welle halb abgearbeitet) und
+ *  mit durchgehender - und legt sie nebeneinander. Vier Hubwerte, gemessen
+ *  am Kristall, der am Ende steht:
+ *
+ *    Hub   selektiv   durchgehend   Gold selektiv / durchgehend
+ *      0    -31,3 %      -33,7 %          -1397 / -1792
+ *      1    -27,4 %      -30,0 %          -1139 / -1144
+ *      2    -22,2 %      -30,0 %           -627 /  -633
+ *      3    -24,0 %      -22,6 %           -343 /   +96
+ *
+ *  Rauschen zwischen den Aussaaten: 10,7 Punkte Kristall.
+ *
+ *  **Zwei Dinge stehen darin, und das erste war nicht erwartet.**
+ *
+ *  Erstens: Ueberlappen ist bei JEDEM Hub teuer - 22 bis 34 Punkte Kristall,
+ *  also immer weit ueber dem Rauschen. Kein Goldbetrag kauft den Schaden
+ *  zurueck. Der Plan, den Hub dort zu setzen, wo Ueberlappen "sich gerade
+ *  lohnt", geht damit nicht auf: diese Stelle gibt es nicht. Das ist kein
+ *  Fehler des Bonus, sondern die Auskunft ueber die Mechanik - wer
+ *  ueberlappt, kauft Gold mit Kristall, und der Preis ist hoch.
+ *
+ *  Zweitens hat der Raum trotzdem einen Rand, und der entscheidet: bei Hub 3
+ *  verdient der durchgehend ueberlappende Bot ZUM ERSTEN MAL mehr Gold als
+ *  der vorsichtige (+96 statt -633). Ab dort ist der Fruehstart kein Risiko
+ *  mehr, sondern eine Einnahmequelle - und die frisst genau die Knappheit
+ *  auf, die P2 hergestellt hat.
+ *
+ *  Also 2,0: der groesste gemessene Ausgleich fuer das Risiko (-22,2 statt
+ *  -31,3), einen Schritt unter dem Rand, an dem er zur Einnahme wird. Bei
+ *  vollem Feld sind das 90 statt 30 Gold - ungefaehr ein ganzer Turm.
+ *
+ *  **Fuer den Spieler, der NICHT ueberlappt, aendert sich nichts.** Steht
+ *  keine Welle mehr, ist die Lage 0 und der Bonus genau der von frueher -
+ *  deshalb bewegt diese Zahl `npm run sim` nicht, dessen drei Bots alle
+ *  nicht ueberlappen. Die Messstelle steht im Kopf von
+ *  `tools/fruehstart.ts` (Regel 12). */
+export const EARLY_RISIKO_HUB = 2.0;
+
 export const PLAN_SPIRALHAIN: Wave[] = [
   { bonus: 92, note: 'Erste Fühler', groups: [
     { enemy: 'crawler', count: 6, gap: 1.1, delay: 0 } ] },

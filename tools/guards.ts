@@ -33,6 +33,7 @@ import { projektilform } from '../src/gfx/renderer';
 import type { Tower } from '../src/game/types';
 import {
   TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, DRAW_SCALE, TURM_BREITE, TURM_HOEHE, rangeFor, statsFor,
+  FOERDER_DECKEL, foerderZuschlag,
 } from '../src/data/towers';
 import {
   VERBUND_MAX, VERBUND_STUFE, VERBUND_UMKREIS,
@@ -112,6 +113,38 @@ const isHex = (s: string) => /^#[0-9A-Fa-f]{6}$/.test(s);
   }
   warn(`Bildauftrag: ${abschnitte.length} Prompts, der kuerzeste ${kuerzester} Zeichen `
     + `mit eingesetztem Stil-Block (alt ${stil.length}, Neubau ${neubau.length} Zeichen).`);
+}
+
+// ------------------------------------------------------------ Der Foerderer
+//
+// **Ein Einkommensgebaeude, das schiesst, ist kein Tausch mehr.** Der ganze
+// Sinn des Foerderers ist, dass er einen Bauplatz belegt und nichts dafuer
+// tut ausser Gold - wer ihm Schaden gibt, macht ihn zum fuenften Turm mit
+// Bonus, und dann baut man ihn immer.
+{
+  const f = TOWERS.foerderer;
+  if (f.attack !== 'keiner') {
+    fail(`Der Foerderer greift mit "${f.attack}" an - ein Einkommensgebaeude schiesst nicht, `
+      + 'sonst ist es kein Tausch, sondern ein Turm mit Bonus.');
+  }
+  if (f.base.damage !== 0 || f.branches.some((b) => b.levels.some((l) => l.damage !== 0))) {
+    fail('Der Foerderer traegt Schadenswerte - er schiesst nicht, also gehoert dort ueberall null hin.');
+  }
+  if (!TOWER_ORDER.includes('foerderer')) {
+    // Absichtlich so, und hier steht, warum - sonst traegt es der naechste
+    // wieder ein und macht zwanzig Torpruefungen rot.
+    warn('Der Foerderer steht in BAU_ORDER, nicht in TOWER_ORDER: an TOWER_ORDER haengen '
+      + 'die Pruefungen ueber Schaden, Reichweite und Zweige, und auf ein Gebaeude, das nicht '
+      + 'schiesst, ist keine davon anwendbar.');
+  }
+  // **Was er bringt, wird gemessen und hier nur berichtet.** Eine Grenze
+  // waere heute eine Grenze auf Zufall: der eigene Messabschnitt in
+  // `npm run sim` weist -1,8 bis +2,4 % Gold aus, und das Rauschen der
+  // Balance-Kennzahlen liegt darueber (M1).
+  warn(`Foerderer: Zuschlag ${(foerderZuschlag(null, 1) * 100).toFixed(0)} % auf Stufe 1, `
+    + `${(foerderZuschlag(1, MAX_LEVEL) * 100).toFixed(0)} % im Ertragszweig auf Stufe ${MAX_LEVEL}, `
+    + `gedeckelt bei ${(FOERDER_DECKEL * 100).toFixed(0)} %; Umkreis `
+    + `${rangeFor('foerderer', null, 1)} bis ${rangeFor('foerderer', 0, MAX_LEVEL)} Weltpunkte.`);
 }
 
 // ---------------------------------------------------- Das Weichenfenster

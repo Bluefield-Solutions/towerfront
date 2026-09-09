@@ -101,6 +101,28 @@ const PROBEN = [
     meldet: 'stillschweigend',
   },
   {
+    // **Ein Einkommensgebaeude, das schiesst, ist kein Tausch mehr.** Der
+    // ganze Sinn des Foerderers ist, dass er einen Bauplatz belegt und nichts
+    // dafuer tut ausser Gold. Wer ihm einen Angriff gibt, macht ihn zum
+    // fuenften Turm mit Bonus - und dann baut man ihn immer.
+    name: 'Der Foerderer schiesst',
+    datei: 'src/data/towers.ts',
+    regel: /attack: 'keiner', hitsAir: false/,
+    ersatz: "attack: 'single', hitsAir: false",
+    tor: 'guards',
+    meldet: 'schiesst nicht',
+  },
+  {
+    // **Und er darf auch keine Schadenszahl tragen.** Der Angriffstyp allein
+    // reicht nicht: eine Zahl, die heute niemand liest, wird morgen gelesen.
+    name: 'Der Foerderer traegt Schaden',
+    datei: 'src/data/towers.ts',
+    regel: /base: \{ cost: 90, damage: 0, cooldown: 0 \}/,
+    ersatz: 'base: { cost: 90, damage: 7, cooldown: 0 }',
+    tor: 'guards',
+    meldet: 'Schadenswerte',
+  },
+  {
     // **Zwei Weichen auf derselben Kante: eine von beiden entscheidet nichts.**
     // Der Eingriff haengt den Kammbogen auf die Kante der Nordschleife um.
     // Dann fallen zwei der vier Stellungen zusammen, und die Spreizung faellt
@@ -742,8 +764,9 @@ const PROBEN = [
     // dann ist jede Welle entscheidungslos, und die Ratsche muss es sagen.
     name: 'Der Bot trifft keine Entscheidung mehr',
     datei: 'tools/sim.ts',
-    suche: "name: 'Meister', maxTowers: 12, maxLevel: 3, reserve: 40",
-    ersatz: "name: 'Meister', maxTowers: 12, maxLevel: 3, reserve: 9999",
+    // Mit dem Foerderer umgezogen (v285): die Zeile traegt ein Feld mehr.
+    suche: "maxTowers: 12, maxLevel: 3, reserve: 40",
+    ersatz: "maxTowers: 12, maxLevel: 3, reserve: 9999",
     tor: 'sim',
     meldet: 'Wellen ohne Entscheidung',
   },
@@ -2093,8 +2116,11 @@ const PROBEN = [
     // ueberhaupt eines ist.
     name: 'Sterne sind nicht mehr erreichbar',
     datei: 'tools/sim.ts',
-    regel: /  name: 'Bestleistung', maxTowers: 24, maxLevel: MAX_LEVEL,/,
-    ersatz: "  name: 'Bestleistung', maxTowers: 2, maxLevel: 1,",
+    // **Mit dem Foerderer umgezogen (v285).** Die Zeile traegt seitdem ein
+    // Feld mehr; die Regel greift jetzt an dem Teil, der sie ausmacht, und
+    // nicht an ihrer ganzen Laenge.
+    regel: /(name: 'Bestleistung', foerderer: \d+, )maxTowers: 24, maxLevel: MAX_LEVEL,/,
+    ersatz: '$1maxTowers: 2, maxLevel: 1,',
     tor: 'sim',
     meldet: 'unerreichbar',
   },

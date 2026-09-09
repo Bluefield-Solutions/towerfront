@@ -1,6 +1,12 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v262 · 09.09.2026
+Stand: v269 · 09.09.2026
+
+**Nachgesehen in v269:** dieses Audit hat die Diagnose gestellt, aus der der
+Neubau folgt — „der Genre-Abgleich steht auf 30 von 30, und das Spiel macht
+trotzdem wenig Spaß". Seine Befunde gelten unverändert. Was der Referenzabgleich
+in `Towerfront-NEUBAU.md` hinzufügt, ist die **Ursache**, die hier noch fehlte:
+alle drei Vorbilder machen den WEG zur Entscheidung, keiner den Turm.
 
 **Der schlimmste Augenblick des Spiels war der ereignisloseste — seit v262
 nicht mehr.** Ein durchgekommener Gegner war ein Abzug: Kristall herunter,

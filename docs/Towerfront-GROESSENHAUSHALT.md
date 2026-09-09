@@ -1,6 +1,14 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v262 · 09.09.2026
+Stand: v269 · 09.09.2026
+
+**Nachgesehen in v269:** die Haushaltszahlen sind unverändert gültig — sie
+messen den ausgelieferten Bildvorrat, und an dem hat sich nichts geändert. Der
+Neubau wird sie bewegen (neuer Stil, neue Karten), aber erst wenn ein Bild
+wirklich eingebaut ist; bis dahin wäre jede Vorwegnahme eine Behauptung statt
+einer Messung. Neu hinzugekommen ist `web/v268.html` (1468 KB) — die
+eingefrorene Rücklinie zählt NICHT zum Haushalt: sie wird nicht gebaut, sondern
+kopiert, und sie lädt nur, wer sie ausdrücklich aufruft.
 
 **Nachgemessen in v262:** die gebaute Datei wiegt **1430,5 KB** gegen die 1429,
 die unten stehen — das Dokument stimmt, und diese Zeile hält fest, dass

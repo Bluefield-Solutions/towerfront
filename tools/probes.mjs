@@ -471,7 +471,12 @@ const PROBEN = [
     // hoeher stehen geblieben sind.
     name: 'Story ohne Schliessbedingung',
     datei: 'docs/Towerfront-STORIES.md',
-    regel: /\*\*Schliesst, wenn:\*\* `text tools\/sim\.ts "entscheidungenJeWelle" >= 2`/,
+    // **In v269 nachgezogen**: der Katalog ist mit dem Neubau ersetzt worden,
+    // und die alte Story gibt es nicht mehr. Gegriffen wird jetzt an einer
+    // REGEL statt an einer festen Zeile - die erste Bedingung des Dokuments,
+    // welche das auch sei. Eine Probe, die auf eine bestimmte Story zeigt,
+    // veraltet mit ihr; das ist v269 zum zweiten Mal passiert.
+    regel: /\*\*Schliesst, wenn:\*\* `[^`]+`/,
     ersatz: '',
     tor: 'doku',
     meldet: 'keine Schliessbedingung',
@@ -4237,6 +4242,24 @@ const fassung = () => (readFileSync(join(ROOT, 'src/data/config.ts'), 'utf8')
  *  schwerer ist es, den Tag zu finden, an dem es passiert ist. */
 const STAND_ABSTAND = 3;
 
+/** **Wie alt der letzte volle Lauf sein darf** (S-N0-02, v269).
+ *
+ *  Bis v268 war die Ratsche eine FASSUNGSratsche: hoechstens drei Fassungen
+ *  Abstand. Das trug, solange eine Fassung ungefaehr ein Tag war. Im Neubau
+ *  ist sie das nicht mehr - sechs Runden in einer Nacht sind moeglich, und
+ *  dann blockiert die Regel die Kette zweimal selbst, fuer je 50 Minuten,
+ *  ausgerechnet wenn niemand da ist, der den Lauf anstossen koennte.
+ *
+ *  **Wovor die Ratsche schuetzt, ist eine Frage von Zeit.** Eine Probe hoert
+ *  leise auf zu beweisen; je laenger das verborgen bleibt, desto schwerer ist
+ *  der Tag zu finden, an dem es passiert ist. Ob dazwischen zwei Fassungen
+ *  liegen oder acht, aendert daran nichts - die Nacht dazwischen schon,
+ *  denn nachts faehrt der Runner den vollen Lauf.
+ *
+ *  Die Fassungszahl bleibt daneben stehen und wird gemeldet. Sie urteilt
+ *  nur nicht mehr. */
+const STAND_HOECHSTALTER_H = 24;
+
 /** Ist der Abstand zum letzten vollen Lauf zu gross - und was ist zu sagen?
  *
  *  Als eigene Funktion, damit sie sich pruefen laesst, ohne ein Tor zu
@@ -4247,6 +4270,45 @@ const standAbstandFehler = (jetzt, damals) => (jetzt - damals > STAND_ABSTAND
   ? `der letzte volle Probenlauf war v${damals}, jetzt ist v${jetzt} `
     + `- ${jetzt - damals} Fassungen dazwischen, erlaubt sind ${STAND_ABSTAND}.`
   : null);
+
+/** Die Zeitratsche. `alterH` ist das Alter des letzten vollen Laufs in
+ *  Stunden, oder `null`, wenn es sich nicht ermitteln laesst.
+ *
+ *  **Unbekannt ist kein Freispruch.** Ein Stand ohne Zeitangabe sieht sonst
+ *  aus wie ein frischer - und das ist genau die Verfallsart, gegen die die
+ *  ganze Ratsche gebaut ist. */
+const zeitRatscheFehler = (alterH) => {
+  if (alterH === null) {
+    return 'der letzte volle Probenlauf traegt keine Zeit, und sie laesst sich '
+      + 'auch nicht aus seinem Commit lesen. Unbekanntes Alter zaehlt als zu alt.';
+  }
+  return alterH > STAND_HOECHSTALTER_H
+    ? `der letzte volle Probenlauf ist ${alterH.toFixed(1)} Stunden her, `
+      + `erlaubt sind ${STAND_HOECHSTALTER_H}.`
+    : null;
+};
+
+/** Wann der vermerkte Stand entstanden ist.
+ *
+ *  Drei Wege, in dieser Reihenfolge: die Zeitangabe in der Datei; sonst das
+ *  Commit-Datum des vermerkten Standes (der Commit ist ohnehin da, und er
+ *  sagt genau, wann jener Baum aktuell war); sonst nichts.
+ *
+ *  Der zweite Weg ist der Grund, warum diese Aenderung keine Umstellung
+ *  braucht: der Stand von v265 traegt keine Zeit, sein Commit aber schon. */
+const standZeit = (roh) => {
+  const teile = roh.trim().split(/\s+/);
+  const ausDatei = teile[2] && !Number.isNaN(Date.parse(teile[2]))
+    ? Date.parse(teile[2]) : null;
+  if (ausDatei !== null) return ausDatei;
+  if (!teile[1]) return null;
+  try {
+    const d = execSync(`git log -1 --format=%cI ${teile[1]}`,
+      { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' }).trim();
+    const t = Date.parse(d);
+    return Number.isNaN(t) ? null : t;
+  } catch { return null; }
+};
 
 /** Die Regel selbst pruefen, ohne ein Tor und ohne Ringschluss.
  *
@@ -4279,6 +4341,23 @@ const standSelbsttest = () => {
       + `${STAND_ABSTAND} ${gerade ? 'schlagen AN' : 'schweigen'}.`);
     process.exit(1);
   }
+  // Und dieselbe Prüfung fuer die Zeitratsche, aus demselben Grund: sie kann
+  // nicht ueber ein Tor bezeugt werden, weil sie sich selbst im Weg steht.
+  // Geprueft wird beides UND der unbekannte Fall - der galt im ersten
+  // Entwurf als frisch, und damit haette ein Stand ohne Zeit die Ratsche
+  // still abgeschaltet.
+  const zuAlt = zeitRatscheFehler(STAND_HOECHSTALTER_H + 1);
+  const geradeNoch = zeitRatscheFehler(STAND_HOECHSTALTER_H);
+  const ohneZeit = zeitRatscheFehler(null);
+  if (!zuAlt || geradeNoch || !ohneZeit) {
+    console.error('PROBEN: der Selbsttest der Zeitratsche ist gescheitert - '
+      + `${STAND_HOECHSTALTER_H + 1} h ${zuAlt ? 'schlagen an' : 'schlagen NICHT an'}, `
+      + `${STAND_HOECHSTALTER_H} h ${geradeNoch ? 'schlagen AN' : 'schweigen'}, `
+      + `unbekannt ${ohneZeit ? 'schlaegt an' : 'schlaegt NICHT an'}.`);
+    process.exit(1);
+  }
+  console.log(`  Selbsttest: die Zeitratsche schlaegt bei ${STAND_HOECHSTALTER_H + 1} h `
+    + `an, schweigt bei ${STAND_HOECHSTALTER_H} und wertet ein unbekanntes Alter als zu alt.`);
   console.log(`  Selbsttest: die Standregel schlaegt bei ${STAND_ABSTAND + 1} Fassungen `
     + `Abstand an und schweigt bei ${STAND_ABSTAND}.`);
 };
@@ -4371,13 +4450,17 @@ if (process.argv.includes('--muster')) {
   // v31 sagt genau darueber: eine Regel, die nur aufgeschrieben ist, wird
   // gebrochen. Deshalb steht sie hier, wo sie weh tut.
   const jetzt = Number(fassung());
-  const damals = existsSync(STAND_DATEI)
-    ? Number(readFileSync(STAND_DATEI, 'utf8').trim().split(/\s+/)[0].replace(/^v/, '')) : 0;
+  const roh = existsSync(STAND_DATEI) ? readFileSync(STAND_DATEI, 'utf8') : '';
+  const damals = roh
+    ? Number(roh.trim().split(/\s+/)[0].replace(/^v/, '')) : 0;
   const abstand = jetzt - damals;
+  // **Seit v269 urteilt die Zeit, nicht die Fassungszahl** (S-N0-02).
+  const zeit = roh ? standZeit(roh) : null;
+  const alterH = zeit === null ? null : (Date.now() - zeit) / 3600000;
   // Waehrend `npm run proben` laeuft, ist diese Forderung gegenstandslos:
   // der Lauf, den sie verlangt, laeuft gerade. Ohne die Ausnahme stehen
   // sich beide im Weg - siehe den Kasten an `standSelbsttest`.
-  const meldung = process.env.PROBENLAUF ? null : standAbstandFehler(jetzt, damals);
+  const meldung = process.env.PROBENLAUF ? null : zeitRatscheFehler(alterH);
   if (meldung) {
     console.error(`\nMUSTERLAUF: ${meldung}`);
     console.error('  `npm run proben` faehrt ihn (rund 33 Minuten). Der Musterlauf prueft nur,');
@@ -4386,8 +4469,9 @@ if (process.argv.includes('--muster')) {
   }
   console.log(`MUSTERLAUF: alle ${liste.length} Proben greifen noch, `
     + `${mehrdeutig.length} davon auf den ersten von mehreren Treffern. `
-    + `Voller Lauf zuletzt bei v${damals}, ${abstand} Fassung(en) her (erlaubt `
-    + `${STAND_ABSTAND}).`);
+    + `Voller Lauf zuletzt bei v${damals}, ${abstand} Fassung(en) her, `
+    + `${alterH === null ? 'Alter unbekannt' : `${alterH.toFixed(1)} h alt`} `
+    + `(erlaubt ${STAND_HOECHSTALTER_H} h).`);
   process.exit(0);
 }
 
@@ -4522,8 +4606,13 @@ if (VOLL && !filter.length) {
   // Fassung UND Commit: die Fassung traegt die Drei-Fassungs-Regel, der
   // Commit sagt dem naechsten Standardlauf, wogegen er `git diff` rechnet.
   const kopf = execSync('git rev-parse HEAD', { cwd: ROOT, encoding: 'utf8' }).trim();
-  writeFileSync(STAND_DATEI, `v${fassung()} ${kopf}\n`);
-  console.log(`  Stand festgehalten: v${fassung()} ${kopf.slice(0, 8)} (tools/proben-stand.txt).`);
+  // Drittes Feld seit v269: wann dieser Lauf gefahren ist. Der Commit
+  // taugt als Ersatz (siehe `standZeit`), aber nur ungefaehr - ein Lauf
+  // kann Stunden nach seinem Commit starten. Die eigene Zeit ist genauer.
+  const zeit = new Date().toISOString();
+  writeFileSync(STAND_DATEI, `v${fassung()} ${kopf} ${zeit}\n`);
+  console.log(`  Stand festgehalten: v${fassung()} ${kopf.slice(0, 8)} ${zeit} `
+    + '(tools/proben-stand.txt).');
 } else if (!filter.length) {
   console.log('  Stand NICHT fortgeschrieben - das war ein Umfangslauf, kein voller.');
   console.log('  Der volle Lauf faehrt nachts auf dem Runner, oder hier mit `-- --voll`.');

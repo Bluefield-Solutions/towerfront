@@ -6,6 +6,40 @@ Browser-Tower-Defense, deutsch, eine autarke HTML-Datei. TypeScript 5 + Vite +
 **Diese Datei wird zu Beginn jeder Sitzung gelesen. Sie ist kurz gehalten, weil
 eine lange Datei nicht gelesen wird. Alles Ausführliche steht in `docs/`.**
 
+---
+
+## Ab v269: das Spiel wird neu gebaut
+
+**Der Nutzer hat in v269 entschieden, Level, Spielregeln und Oberfläche von
+Grund auf neu zu bauen.** Der Unterbau bleibt: Kurvenmodell, Renderer-Gerüst,
+Bildvorrat, Buildkette und das ganze Messgerät.
+
+| Datei | was drinsteht |
+|---|---|
+| `docs/Towerfront-NEUBAU.md` | **die oberste Arbeitsgrundlage.** Der Referenzabgleich, alle Beschlüsse mit Begründung, und was ausdrücklich verworfen wurde |
+| `docs/Towerfront-KETTE.md` | wie eine Runde läuft, wenn niemand zusieht |
+| `docs/Towerfront-STORIES.md` | **38 Stories** in der Reihenfolge, in der sie gefahren werden. `npm run naechste` liest sie |
+
+**Die vier Sätze, aus denen alles folgt:**
+
+* **Der Weg wird die Entscheidung.** Alle drei Vorbilder (Defense Grid,
+  Infinitode 2, Rogue Tower) machen den Weg zur Entscheidung, keiner den
+  Turm. Towerfront legt ihn fest — das ist die Ursache hinter „folgenlos".
+  Gebaut werden **Weichen** im gemalten Netz: keine neue Wegfindung, kein
+  Gitter, das Messgerät bleibt gültig.
+* **Der Bogen wird ein Roguelite-Lauf** mit Kartenzug je Welle und Kartenwahl
+  je Abschnitt. Turmzweige, Stufen, Grade und Sterne entfallen dafür.
+* **Der Bauplatz wird knapp**: Einkommensgebäude, teurere Wiederholung,
+  reparierbarer Kristall — dieselbe Fläche für drei Zwecke.
+* **Leichte Schrägsicht, industrieller Stil, dunkler Grund.** Gemalt, nicht
+  projiziert: die Weltkoordinaten bleiben flach, sonst verlieren `bahnmass`,
+  `bauflaeche`, `wegdeckung`, `gedraenge`, `beruehrung` und `einbettung` in
+  einem Zug ihren Gegenstand.
+
+**Die Torkette läuft seit v269 auf dem Runner, nicht mehr hier** (gemessen
+426 s je Lauf). Hier läuft `npm run vorlauf` — 4,4 s, nur `tsc`. Was das für
+eine Runde heißt, steht in `docs/Towerfront-KETTE.md`.
+
 ## Nach dem Umzug: Rohbilder liegen nicht in Git
 
 `art/roh/` ist ausgenommen (79 MB gegen 1,2 MB gepackt). Zum Bauen und Spielen
@@ -44,16 +78,28 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 
 | Wann | Was | Dauer |
 |---|---|---|
-| **jede Runde** | `npm run gate` — enthält den Musterlauf | **gemessen 7:06** (v268) |
-| **jede Runde** | `npm run proben` — nur die betroffenen Proben | **wenige Minuten** |
+| **jede Runde** | `npm run vorlauf` — nur `tsc`, kein Tor | **4,4 s** |
+| jeder Push auf `master` | die volle Torkette auf dem Runner | 3–4 min, ohne mich |
 | **jede Nacht** | `npm run proben -- --voll` auf dem Runner | rund 50 min, ohne mich |
-| jeder Push auf `master` | die volle Kette auf dem Runner | 3–4 min, ohne mich |
+| bei Bedarf | `npm run gate` von Hand | **gemessen 426 s (7:06)** in v268 |
 
-**Die Drei ist erzwungen, nicht aufgeschrieben.** `npm run muster` liest
-`tools/proben-stand.txt` und bricht ab, wenn der letzte volle Lauf mehr als
-drei Fassungen zurückliegt — und der Musterlauf steht in der Kette. Eine
-Regel, die nur in einem Dokument steht, wird gebrochen; das hat dieses
-Projekt sechsmal gekostet.
+**Seit v269 ist es eine ZEITratsche, keine Fassungsratsche.** `npm run muster`
+liest `tools/proben-stand.txt` und bricht ab, wenn der letzte volle Lauf älter
+als **24 Stunden** ist. Vorher waren es drei Fassungen; das trug, solange eine
+Fassung ungefähr ein Tag war, und blockierte die Kette, sobald sie schneller
+wurde — sechs Runden in einer Nacht hätten sie zweimal für je 50 Minuten
+angehalten. Wovor die Ratsche schützt (eine Probe hört leise auf zu beweisen),
+ist ohnehin eine Frage von Zeit. Die Fassungszahl steht weiter in der Meldung,
+sie urteilt nur nicht mehr.
+
+Das Alter kommt aus einem dritten Feld in der Standdatei — und wo das fehlt,
+aus dem **Commit-Datum** des vermerkten Standes. Deshalb brauchte die
+Umstellung keine Migration. **Ein unbekanntes Alter zählt als zu alt:** ein
+Stand ohne Zeit sähe sonst aus wie ein frischer, und das ist genau die
+Verfallsart, gegen die die ganze Ratsche gebaut ist.
+
+Erzwungen, nicht aufgeschrieben — eine Regel, die nur in einem Dokument steht,
+wird gebrochen; das hat dieses Projekt sechsmal gekostet.
 
 **Seit v221 muss der volle Lauf dafür niemandem die Zeit stehlen.** Er läuft
 nachts auf dem Runner (`.github/workflows/proben.yml`) und schreibt bei
@@ -102,7 +148,13 @@ schwerer ist der Tag zu finden, an dem es passiert ist.
 ## Befehle
 
 ```
-npm run gate        zweiunddreissig Prüfungen. Muss vor jedem Commit grün sein.
+npm run vorlauf     nur `tsc`, gemessen 4,4 s. **Kein Tor** - die Weigerung,
+                    etwas hochzuschieben, das gar nicht uebersetzt. Das kostet
+                    sonst einen vollen Runner-Durchlauf (3-4 min) fuer eine
+                    Auskunft von vier Sekunden. Seit v269 ist das der einzige
+                    Schritt, der je Runde hier laeuft.
+npm run gate        zweiunddreissig Prüfungen. Läuft seit v269 auf dem Runner;
+                    hier nur noch von Hand, wenn eine Frage es verlangt.
                     **Gemessen 426 s (7:06) in v268** — Schritt für Schritt
                     einzeln, nacheinander, auf demselben warmen Baum.
                     Dieselbe Falle zum dritten Mal: hier stand „rund 190 s"
@@ -537,7 +589,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v268. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v269. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
@@ -1584,10 +1636,15 @@ Rauchtest sagt es.
 
 ---
 
-## Der Anforderungskatalog — was als Nächstes gebaut wird
+## Der Anforderungskatalog — überholt von v269
 
-Seit v249 liegt der Plan als Katalog vor, und er ist die Arbeitsgrundlage für
-jede weitere Runde:
+**Diese Dokumente gelten weiter, aber `docs/Towerfront-NEUBAU.md` steht über
+ihnen.** Ihre Messbefunde sind unverändert richtig; was umgeworfen ist, ist die
+Richtung. `Towerfront-STORIES.md` ist in v269 vollständig ersetzt worden — der
+alte Katalog verbesserte Turmzweige, Grade und Sterne, und alle drei entfallen.
+Was inhaltlich überlebt hat, steht dort als Paket N6 und ist umgewidmet.
+
+Seit v249 liegt der Plan als Katalog vor:
 
 | Datei | was drinsteht |
 |---|---|

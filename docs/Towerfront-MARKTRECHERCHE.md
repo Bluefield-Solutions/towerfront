@@ -1,6 +1,12 @@
 # Marktrecherche — was moderne Tower-Defense-Spiele ausmacht
 
-Stand: v265 · 08.09.2026
+Stand: v269 · 09.09.2026
+
+**Erweitert in v269: der Referenzabgleich zu den drei benannten Vorbildern.**
+Bis dahin hielt dieses Dokument Marktbefunde allgemein — „modern, nicht
+comicartig" —, aber keine Mechanik zu einem einzelnen Spiel. Fuer den Neubau
+(`Towerfront-NEUBAU.md`) sind drei Vorbilder benannt und einzeln aufgeschrieben
+worden, was sie TUN. Abschnitt 9 unten.
 
 **Nachgesehen in v265:** unveraendert — Marktbefunde mit Quellen, keine Zahlen
 aus diesem Baum. Der Kernraub (v262) folgt Defense Grid, das hier als Vorbild
@@ -128,3 +134,124 @@ Anomaly, Sanctum 2) ist das Wiederkehrende:
 * https://www.pcgamesn.com/best-tower-defense-games
 * https://parachutedesign.ca/blog/thumb-zone-ux/
 * https://www.uxpin.com/studio/blog/responsive-design-touch-devices-key-considerations/
+
+---
+
+## 9. Der Referenzabgleich zu den drei Vorbildern (v269)
+
+Erhoben am 09.09.2026. **Vorbehalt zur Beweislage, und er gehoert an die
+Zahlen** (Regel 12): der Volltext der einschlaegigen Seiten war aus dieser
+Umgebung nicht erreichbar; alle Angaben stammen aus Suchmaschinen-Auszuegen
+dieser Seiten. Wo ein Auszug die Zahl nicht hergab, steht **unbelegt** — nicht
+geraten.
+
+### 9.1 Defense Grid: The Awakening (2008)
+
+* **Entscheidung je Welle:** Labyrinth verlaengern gegen Turm aufwerten. Tuerme
+  haben genau **drei Stufen**. Die Obergrenze ist eingebaut: ist keine Route zu
+  einem noch besetzten Kernlager offen, laufen die Gegner **durch die Tuerme
+  hindurch**.
+* **Knappheit:** Gold nur aus Abschuessen, Start rund **10 000 Rohstoffe**,
+  keine Zinsen, **Verkauf gibt 75 %** zurueck. Der **Command Tower** hebt die
+  Bergung auf **125 / 135 / 145 %** fuer je **300** und **schiesst nicht** —
+  Einkommen kostet Bauplatz und Feuerkraft.
+* **Der Orbitallaser toetet, aber von so getoeteten Gegnern wird kein Rohstoff
+  geborgen.** Der Panikknopf kostet Einkommen; das ist eine bezifferte
+  Verzweigung, kein Freischuss.
+* **Durchbruch:** Gegner laufen zum Kernlager, greifen **ein bis drei
+  Energiekerne** und tragen sie zum Ausgang. **Der Kern ist erst verloren, wenn
+  er die Karte verlaesst.** Toetet man den Traeger, schwebt der Kern zurueck —
+  und kann unterwegs erneut geraubt werden. Verloren ist das Level erst, wenn
+  alle Kerne fort sind. **Das ist der Kernraub aus v262.**
+* **Bogen:** 20 Karten, rund 10 h, 15 Gegnerarten, 100+ Herausforderungen,
+  Medaillen. Wellenzahl je Karte: unbelegt.
+* **HUD:** Bedienung links am Rand; oben ein **Ticker als Wellenvorschau** —
+  Farbe gibt die Staerke (gruen/bernstein/rot), Symbol die Sonderfaehigkeit.
+  Reichweitenvorschau beim Markieren einer Aufwertung.
+* **Bild:** 3D, feste Schraegsicht, drei Zoomstufen, **nicht drehbar** — in
+  Rezensionen als Mangel genannt.
+
+### 9.2 Infinitode 2
+
+* **Entscheidung je Welle:** die Fruehwelle, ausgerechnet — *die Hoechstzahl
+  der Bonusmuenzen wird mit dem Anteil der noch lebenden Gegner und mit dem
+  Anteil der verbleibenden Zeit multipliziert.* Dazu 50x Punkte und **doppeltes
+  Foerdertempo fuer genau so viele Sekunden, wie man vorgezogen hat**.
+* **Knappheit:** die **Kachel**. Tuerme und Modifikatoren wirken als Mauern und
+  bestimmen die Route; auf denselben Kacheln stehen die **Miner**, die das
+  Meta-Einkommen foerdern, und jeder weitere Miner kostet mehr. Aufwertungen
+  standardmaessig bis **Stufe 3**, per Forschung bis **10**.
+* **Der Weg:** Gegner nehmen **immer die kuerzeste Route** und rechnen sie
+  laufend neu. Gibt es keinen Weg ausser ueber Tuerme, laufen sie hindurch und
+  **schalten den beruehrten Turm dabei ab**. Die Zahl der Kartenaenderungen je
+  Level ist **gedeckelt** — darueber behalten alle Gegner ihre zuletzt
+  berechnete Route.
+* **Durchbruch:** Basis-Schadenskapazitaet (im Tutorial **20**), die meisten
+  Gegner machen 1 Schaden. Nichts wird geklaut.
+* **Zielprioritaet je Turm aus sechs Modi** — First, Last, Weakest, Strongest,
+  Nearest, Random. Als einziges der drei.
+* **Bogen:** 7 Stufen, **58 Kampagnenkarten**, **400+ Forschungen**, Quests,
+  Endlosmodus (Schwierigkeit x1,5, Beute 150 %) mit eigener Bestenliste, die
+  **nur die erste Stunde** wertet.
+* **Bild:** reine 2D-Draufsicht, minimalistisch-geometrisch, Chiptune. Von den
+  dreien das, was einem Browser-Canvas am naechsten liegt.
+
+### 9.3 Rogue Tower (2022)
+
+* **Entscheidung je Welle, und sie ist erzwungen:** *zu Beginn jeder Runde muss
+  der Spieler die Karte erweitern, indem er genau einen offenen Pfad auswaehlt,
+  an den eine neue Kachel angesetzt wird.* Was kommt, ist zufaellig — gerade,
+  gewunden, Kreuzung, Schleife. **Wer einen Pfad vernachlaessigt, bekommt dort
+  staerkere Gegner unmittelbar vor der Basis.**
+* **Kartenzug:** anfangs alle 3 Wellen 1 aus 3, mit Meta-Aufwertungen **jede
+  Welle 1 aus 6**; ueber **400 Karten**.
+* **Knappheit dreifach:** Gold (ein Monster laesst so viel fallen, wie die
+  Welle nummeriert ist, in der es zuerst auftaucht — **plus 1 Gold je Turmart,
+  die es beschaedigt hat**), Mana (sieben Turmarten brauchen es; Siphon neben
+  Kristall gibt 1/s, nur auf gleicher Hoehenstufe), und **Hoehenlage**
+  (+1 x Stufe Grundschaden, +0,5 x Stufe Reichweite; Rohstoffknoten nur von
+  gleicher oder hoeherer Ebene anzapfbar).
+* **Kosten steigen in beide Richtungen:** ein Turm wird teurer, je mehr Tuerme
+  derselben Art stehen; eine Aufwertung teurer je Stufe.
+* **Durchbruch:** Basisturm hat Lebenspunkte, jedes Monster macht 1 Schaden,
+  ein Boss toetet sofort — aber **Lebenspunkte sind reparierbar** (Mine neben
+  Eisenader: +1 Hoechstleben, +10 % je Stufe auf Wiederherstellung).
+* **Bogen:** ein gewonnener Lauf sind **45 Wellen**, danach endlos; ein guter
+  Lauf dauert **rund eine Stunde**. XP zwischen den Laeufen kauft Tuerme,
+  Gebaeude und Karten ins Deck — **450 / 900 / 1350 XP** fuer einen Sieg bei
+  ein, zwei, drei Pfaden. Die Zahl der Pfade ist die **Schwierigkeitswahl vor
+  dem Lauf**.
+* **Bild:** 3D low-poly, feste Schraegsicht, nicht drehbar.
+
+### 9.4 Was die drei gemeinsam haben
+
+1. **Alle drei machen den WEG zur Entscheidung, keiner den Turm.**
+2. Zwei von drei lassen Gegner **durch** Tuerme laufen, statt Sperren zu
+   verbieten; Infinitode schaltet den beruehrten Turm dabei ab.
+3. **Kein einziges zieht bei einem Durchbruch einfach ein Leben ab.**
+4. Defense Grid ist das einzige mit **Rueckholbarkeit** — genau die Mechanik,
+   die Towerfront seit v262 hat.
+5. Zwei von drei belohnen frueh gerufene Wellen; nur Infinitode mit einer
+   ausgerechneten Formel.
+6. **Alle drei machen Einkommen zu einer Bauentscheidung**, nicht zu einem
+   Tropf.
+7. Zwei von drei **verteuern Wiederholung** ausdruecklich; Rogue Tower belohnt
+   Vielfalt zusaetzlich in der Beute.
+8. Aufwertungstiefe ist **umgekehrt** zur Kartenzahl: 3 Stufen bei 20 festen
+   Karten, 3–10 bei 58, unbegrenzt bei gar keiner festen Karte.
+9. Nur eines der drei ist reine 2D-Draufsicht (Infinitode). Die anderen beiden
+   sind Schraegsicht **ohne drehbare Kamera** — in beiden Faellen in
+   Rezensionen als Mangel genannt.
+
+### 9.5 Quellen zu Abschnitt 9
+
+Codex Gamicus (Defense Grid) · Steam-Guide „How to Defense Grid" ·
+AyumiLove Defense-Grid-Guide · Steam-Seite und GameFAQs-Daten zu Defense Grid ·
+GameSpot-Rezension · anykeytostart und GamingNexus zur Bedienung ·
+TV Tropes YMMV · gamepressure ·
+Infinitode-2-Wiki: Graphical game interface, Enemies Walk on Platforms, Towers,
+Abilities, Miners, Mode, Level Overview, Level 0.1, Fighter ·
+Steam- und RAWG-Seite zu Infinitode 2 ·
+Rogue-Tower-Wiki: Gold, Towers, Monsters, Map features, Upgrades, Upgrade
+Cards, Mana Siphon, Mine · Steam-Seite zu Rogue Tower ·
+Newsminer und Indie Hell Zone zu Rogue Tower · gamepressure.

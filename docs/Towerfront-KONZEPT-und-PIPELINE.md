@@ -1,6 +1,15 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v262 · 09.09.2026
+Stand: v269 · 09.09.2026
+
+> **Nachgesehen in v269 — und teilweise überholt.** Der Nutzer hat entschieden,
+> Level, Spielregeln und Oberfläche neu zu bauen; die Beschlüsse stehen in
+> `Towerfront-NEUBAU.md` und **stehen über diesem Dokument**. Überholt sind
+> damit: die feste Bahn je Karte (es werden Weichen im Netz), Turmzweige und
+> Stufen (es wird ein Kartenzug), die drei Grade und die Sternwertung (es wird
+> ein Roguelite-Lauf), und die Draufsicht (es wird leichte Schrägsicht).
+> Unverändert gültig: die Pipeline, die Messverfahren, das Fundregister ab 3.5
+> und die eisernen Regeln — sie sind der Grund, warum der Unterbau bleibt.
 Arbeitsverzeichnis: `/home/claude/tower-defense` · Auslieferung: `/mnt/user-data/outputs/Towerfront.html`
 
 > **Aufbau dieses Dokuments.** Die Abschnitte 1 bis 3.4 beschreiben den

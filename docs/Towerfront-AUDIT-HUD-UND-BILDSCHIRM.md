@@ -1,6 +1,13 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v262 · 09.09.2026
+Stand: v269 · 09.09.2026
+
+**Nachgesehen in v269:** die Messungen gelten unverändert — Belegung, Typoskala
+und Trefferflächen sind gemessen in Ordnung, und genau das ist der Grund, warum
+„HUD extrem verbessern" nicht „aufgeräumter" heißen kann. Der Neubau
+(`Towerfront-NEUBAU.md`) zieht daraus den Schluss, den dieses Audit nicht
+gezogen hat: es fehlt nicht Platz, sondern **Tiefe am Ort**. Der Prüfsteg mit
+seinen gemessenen 32,9 % ist dafür der erste Kandidat (Story S-N4-02).
 
 **Nachgemessen in v262** (`npm run uxtor`): 14,2 / 20,8 / **32,9** / 14,3 % —
 unveraendert gegenueber v255. Die Zahlen der Tabelle unten gelten weiter.

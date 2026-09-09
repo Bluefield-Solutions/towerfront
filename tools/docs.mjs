@@ -52,9 +52,29 @@ const alle = [['CLAUDE.md', claude], ...dateien.map((f) => [f, readFileSync(join
 // Zahlwort-Tabelle in v230: eine Prüfung, deren Zeichenvorrat hinter ihrem
 // Gegenstand zurückbleibt, sieht aus wie eine Prüfung. Gefunden hat es
 // `npm run c18` — der erste Befehl des Baums mit einer Ziffer im Namen.
+// **Der Storykatalog ist die eine Ausnahme, und sie ist begruendet** (v269).
+//
+// Eine Story beschreibt Arbeit, die noch NICHT getan ist - sie nennt den
+// Befehl, den sie selbst anlegen wird. Genau dieselbe Unterscheidung trifft
+// `npm run naechste` schon bei der Zieldatei: fuer das Rueckstandsverzeichnis
+// heisst eine fehlende Datei "die Bedingung zeigt ins Leere", fuer eine Story
+// heisst sie "hier faengt die Arbeit an".
+//
+// **Es bleibt trotzdem sichtbar.** Ein Hinweis statt eines Fehlers, und der
+// nennt den Befehl beim Namen: ein Tippfehler in einer Story faellt sonst
+// erst auf, wenn jemand ihn abtippen will - und das ist der Tag, an dem er
+// teuer wird (dieselbe Lehre wie `kartenprobe` in v229, dessen Eingang
+// niemand prueft).
+const NENNT_KUENFTIGES = 'Towerfront-STORIES.md';
 for (const [name, text] of alle) {
   for (const m of text.matchAll(/`npm run ([a-z0-9-]+)`|npm run ([a-z0-9-]+)/g)) {
     const cmd = m[1] ?? m[2];
+    if (!befehle.has(cmd) && name === NENNT_KUENFTIGES) {
+      hinweise.push(`${name}: nennt "npm run ${cmd}" - den Befehl gibt es noch `
+        + 'nicht. In einer Story ist das der Normalfall (sie legt ihn an); '
+        + 'in jedem anderen Dokument waere es ein Fehler.');
+      continue;
+    }
     if (!befehle.has(cmd)) fail(`${name}: nennt "npm run ${cmd}" - den Befehl gibt es nicht.`);
   }
 }

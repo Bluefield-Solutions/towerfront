@@ -1,5 +1,1 @@
-BEFUND vom 2026-09-09T09:21Z auf 5a54110f:
-PROBEN: 3 von 314 Toren beweisen nichts
-  - Panzerung wieder als fester Abzug: "sim" bleibt grün, obwohl der Fehler eingebaut ist.
-  - Bescheidener Aufbau holt ueberall drei Sterne: "sim" meldet "dann ist der dritte wertlos" nicht, obwohl der Fehler eingebaut ist.
-  - Ersatzziel nimmt auch Flieger: "geschossetor" bleibt grün, obwohl der Fehler eingebaut ist.
+sauber 2026-09-09 b2ec0c5a

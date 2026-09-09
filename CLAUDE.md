@@ -44,7 +44,7 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 
 | Wann | Was | Dauer |
 |---|---|---|
-| **jede Runde** | `npm run gate` — enthält den Musterlauf | **gemessen 4:49** (v251) |
+| **jede Runde** | `npm run gate` — enthält den Musterlauf | **gemessen 7:06** (v268) |
 | **jede Runde** | `npm run proben` — nur die betroffenen Proben | **wenige Minuten** |
 | **jede Nacht** | `npm run proben -- --voll` auf dem Runner | rund 50 min, ohne mich |
 | jeder Push auf `master` | die volle Kette auf dem Runner | 3–4 min, ohne mich |
@@ -103,14 +103,23 @@ schwerer ist der Tag zu finden, an dem es passiert ist.
 
 ```
 npm run gate        zweiunddreissig Prüfungen. Muss vor jedem Commit grün sein.
-                    **Gemessen 289 s (4:49) in v251** — auf demselben Baum, warm.
-                    Die alte Angabe „rund 190 s" stammt aus v154 und stand
-                    danach 97 Fassungen lang da, während die Kette von 26 auf
-                    32 Tore wuchs; „rund 2,5 min" in der Tabelle oben war
-                    schon damals eine Schätzung. Eine Laufzeit, die niemand
-                    nachmisst, wird nicht länger — sie wird nur falscher.
-                    Davon entfallen 56 s auf `sim` (drei Aussaaten seit v251,
-                    vorher 17 s bei einer).
+                    **Gemessen 426 s (7:06) in v268** — Schritt für Schritt
+                    einzeln, nacheinander, auf demselben warmen Baum.
+                    Dieselbe Falle zum dritten Mal: hier stand „rund 190 s"
+                    (v154, 97 Fassungen lang), dann „289 s (4:49)" (v251,
+                    17 Fassungen lang) — und beide Male steht darunter der
+                    Satz, dass eine Laufzeit, die niemand nachmisst, nicht
+                    länger wird, sondern nur falscher. Sie ist seit v251 um
+                    137 s gewachsen, ohne dass jemand etwas gemerkt hätte.
+                    **Sechs Schritte tragen 85 % davon**, und das ist der
+                    Ansatzpunkt für jede Beschleunigung:
+                      sim 127 s · browser 76 s · wegdeckungtor 64 s ·
+                      bildtor 41 s · smoke 29 s · uxaudittor 26 s
+                    Die übrigen 27 Schritte zusammen: 63 s.
+                    Messstelle (Regel 12): dieser Rechner, warmer Baum,
+                    `grafiktor` und `zielplattentor` gegen einen gefüllten
+                    `.abdruck/`-Zwischenspeicher — die zwei 0,7-s-Zahlen sind
+                    Treffer im Speicher, kein voller Lauf.
 npm run schleife    Torkette + Bildabnahme + Bericht + rechenbares Urteil
 npm run bilder      alle 13 Aufnahmen (echte PNG ohne Browser)
 npm run bildtor     der Querschnitt, den die Torkette prüft

@@ -109,7 +109,10 @@ const PROBEN = [
     name: 'Zwei Weichenstile tun dasselbe',
     datei: 'tools/sim.ts',
     regel: /if \(!alle\.length \|\| bot\.weichenStil === 'offen'\) return new Set\(\);/,
-    ersatz: 'if (alle.length >= 0) return new Set();',
+    // Ohne den Stiltest will JEDER Stil alles zu - und weil `weichenWahl`
+    // seit v283 die einzige Stelle ist, an der das entschieden wird, trifft
+    // der Eingriff beide Zeitpunkte: vor dem ersten Turm und vor jeder Welle.
+    ersatz: 'if (!alle.length) return new Set();',
     tor: 'sim',
     meldet: 'zwei Namen fuer denselben Stil',
   },

@@ -518,9 +518,13 @@ function play(
   // schlechter Stil und war ein schlechter Messaufbau (Regel 13).
   //
   // Defense Grid macht es andersherum: erst das Labyrinth, dann die Tuerme.
-  if (bot.weichenStil === 'lang') {
-    for (const w of s.weichenPunkte()) s.weicheStellen(w.id, true);
-  }
+  // **Gefragt wird dieselbe Funktion wie spaeter je Welle** (Regel 15). Der
+  // erste Entwurf schrieb hier `weichenStil === 'lang'` noch einmal hin - und
+  // die Gegenprobe hat es sofort gefunden: sie legt `weichenWahl` lahm, und
+  // der Stil stellte trotzdem, weil die zweite Stelle unberuehrt blieb. Zwei
+  // Stellen, die dasselbe entscheiden, sind eine zu viel.
+  const start = weichenWahl(s, bot);
+  for (const w of s.weichenPunkte()) s.weicheStellen(w.id, start.has(w.id));
   let spots = buildSpots(s);
   // Die Abwandlung verschiebt Startreihenfolge und Ruecklage leicht. Damit
   // entstehen mehrere Spielverlaeufe, die alle vernuenftig sind - und der

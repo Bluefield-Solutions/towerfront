@@ -192,16 +192,46 @@ export const PROBEN = [
     meldet: 'sperrt alles zu',
   },
   {
-    // **Eine Weiche, die den Weg nicht messbar aendert, ist Dekoration.**
-    // Der Eingriff laesst sie den UMWEG sperren statt des kurzen Astes -
-    // dann bleibt der kurze Ast, die Bahn aendert sich nicht, und die
-    // Spreizung faellt auf 1,00.
-    name: 'Die Weiche sperrt den Umweg statt des kurzen Wegs',
+    // **Das Weichenfenster, von oben gehalten** (v313).
+    //
+    // Vorher stand hier "Die Weiche sperrt den Umweg statt des kurzen Wegs":
+    // sie liess `saeule1` den UMWEG sperren, damit der kurze Ast bleibt, die
+    // Bahn sich nicht aendert und die Spreizung auf 1,00 faellt - erwartet
+    // wurde "Dekoration". Gemessen tut der Eingriff das heute nicht mehr: er
+    // laesst zwei STELLUNGEN zusammenfallen, und das meldet die Pruefung eine
+    // Zeile hoeher ("entscheidet nichts"), die ihre eigene Gegenprobe hat.
+    //
+    // **Fuenf Eingriffe sind fuer die untere Schranke gebaut und gemessen,
+    // keiner traegt** (Spiralhain, Band 1,1 bis 2,5):
+    //
+    //   Umleitung auf die kurze Geometrie      1,17   (saeule3 haelt das Fenster)
+    //   saeule3-Umleitung begradigt            1,34   (die Route rechnet um)
+    //   gemeinsame Kante verlaengert           1,23   (dito - es ist ein VERHAELTNIS)
+    //   saeule1 auf die Umleitung                --   faellt vorher als Dublette
+    //   beide Umleitungen zugleich               --   ein Ersatz kann nur EINE Stelle treffen
+    //
+    // Der Grund ist strukturell und kein Versehen: vier unabhaengige Weichen
+    // halten das Fenster auf, und die Rechnung sucht nach jedem Eingriff die
+    // kuerzeste Route neu. Mit EINEM Eingriff ist die untere Schranke auf
+    // diesem Netz nicht mehr zu stellen.
+    //
+    // **Gehalten wird die Rechnung deshalb von oben**, und das ist dieselbe
+    // Rechnung: `laengste / kuerzeste` ueber alle Stellungen. Eine aufgeblaehte
+    // Umleitung treibt sie ueber 2,5, und das Tor meldet den Knopf. Bricht die
+    // Rechnung, fallen beide Schranken - die obere schlaegt dann an.
+    //
+    // **Was NICHT mehr gehalten ist, steht als N4W im Verzeichnis** statt hier
+    // still zu bleiben: die untere Schranke selbst.
+    //
+    // Die Punkte werden VOR die vorhandenen gesetzt, nicht an ihre Stelle -
+    // damit ueberlebt der Eingriff jede Umzeichnung der Umleitung.
+    name: 'Das Weichenfenster wird zum Knopf',
     datei: 'src/data/wegnetz.ts',
-    regel: /\{ id: 'saeule1', kante: '[a-z0-9-]+', name: 'Nordschleife' \}/,
-    ersatz: "{ id: 'saeule1', kante: 'kreuz1-kreuz2-2', name: 'Nordschleife' }",
+    regel: /(id: 'kreuz1-kreuz2-2', von: '[a-z0-9]+', nach: '[a-z0-9]+',\n\s*punkte: \[\n)/,
+    ersatz: '$1          { x: 300, y: 990, w: 46 }, { x: 1700, y: 990, w: 46 },\n'
+      + '          { x: 1700, y: 120, w: 46 }, { x: 300, y: 120, w: 46 },\n',
     tor: 'guards',
-    meldet: 'Dekoration',
+    meldet: 'sondern ein Knopf',
   },
   {
     // **Eine Weiche wird nur zwischen den Wellen umgelegt.** Ohne die Sperre

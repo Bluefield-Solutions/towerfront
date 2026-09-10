@@ -698,6 +698,19 @@ ab Hub 3 verdient der durchgehend ueberlappende Bot mehr Gold als der
 vorsichtige, und damit waere der Fruehstart eine Einnahmequelle statt eines
 Risikos. Gesetzt ist 2,0.
 
+**Die Turmwahl macht sechs Punkte aus (v293, M18).** Die Vermutung stand seit
+v287: die drei Spielstile fahren dieselbe Turmliste, deshalb misst "Abstand
+der Spielstile" nur drei Einstellungen desselben Bots. `Breite` hat ein
+eigenes Sortiment bekommen - und der Abstand blieb bei **8,20**, Punkt fuer
+Punkt derselbe Wert. Das Sortiment aendert das Ergebnis kaum; dieselbe Ursache
+steht eine Zeile tiefer als "kleinste Zweigwirkung UNBELEGT". **Solange die
+Turmwahl sechs Punkte ausmacht, kann keine Kennzahl ueber Spielstile mehr als
+sechs Punkte finden.** Dabei ist eine echte Luecke der Ratsche aufgefallen:
+mit einem VERLIERENDEN Stil sprang der Abstand von 8 auf 28 und meldete zum
+ersten Mal "ERREICHT". `npm run sim` verlangt seitdem, dass jeder Stil die
+erste Karte in JEDEM Lauf gewinnt - eine Kennzahl, die sich durch
+Verschlechtern verbessern laesst, ist keine.
+
 **Gold ist knapp, sobald man es ausgibt - die Knappheit fehlt beim BEDARF
 (v291).** Drei Runden lang stand "bei 28 % uebrigem Gold entscheidet ein Preis
 nichts" als Erklaerung da, und diese Zahl war gar keine Aussage ueber das
@@ -777,7 +790,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v292. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v293. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

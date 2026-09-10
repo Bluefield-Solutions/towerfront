@@ -1,6 +1,21 @@
 # Towerfront — Genre-Abgleich
 
-Stand: v286 · 09.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+Stand: v293 · 09.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+
+**Nachgesehen in v293:** nachgefahren, nicht geglaubt — `npm run bericht`
+meldet unveraendert **30 von 30, gewichtet 100 %, davon 68 von 68
+Gewichtspunkten ueber 28 Kriterien gemessen**. Sieben Fassungen mit Werft,
+Wiederholungsaufschlag und einem umgebauten Wellenband haben die Zahl nicht
+bewegt.
+
+**Und v293 hat dazu die Gegenprobe geliefert, die diesem Dokument immer
+gefehlt hat.** Der Genre-Abgleich prueft, ob eine Sache DA ist — nicht, ob sie
+etwas entscheidet. Gemessen macht die Turmwahl **sechs Punkte** aus (drei
+Bogentuerme statt der gemischten Liste aendern den Abstand der Spielstile um
+null), und die Zweigwahl steht auf **UNBELEGT**. Vier Tuerme, zwei Zweige,
+sechs Stufen sind vollstaendig vorhanden und im Ergebnis kaum zu
+unterscheiden. **Genau das ist der wichtigste Satz des Katalogs, jetzt mit
+einer Zahl daneben.**
 
 **Nachgesehen in v286:** nachgefahren, nicht geglaubt - `npm run bericht` meldet
 im heutigen Baum **30 von 30, gewichtet 100 %, davon 68 von 68 Gewichtspunkten

@@ -1028,6 +1028,24 @@ export const PROBEN = [
     meldet: 'laufende Strom steht auf dem Zielgerät nicht im Bild',
   },
   {
+    // **Ein Spielstil, der nicht gewinnt** (v293, M18).
+    //
+    // "Abstand der Spielstile" laesst sich hochtreiben, indem man einen Bot
+    // VERSCHLECHTERT - genau das ist beim Bau dieser Runde passiert:
+    // `Sparsam` bekam die teuren Tuerme, verlor in Welle 14, und der Abstand
+    // sprang von 8 auf 28. "ERREICHT", zum ersten Mal ueberhaupt. Eine
+    // Kennzahl, die sich durch Verschlechtern verbessern laesst, ist keine.
+    //
+    // Der Eingriff stellt genau diesen Fall wieder her.
+    name: 'Ein Spielstil gewinnt die erste Karte nicht',
+    datei: 'tools/sim.ts',
+    suche: "    name: 'Sparsam', foerderer: 0, maxTowers: 12, maxLevel: 3, reserve: 140,",
+    ersatz: "    plan: ['prism', 'mortar', 'prism', 'frost'],\n"
+      + "    name: 'Sparsam', foerderer: 0, maxTowers: 12, maxLevel: 3, reserve: 140,",
+    tor: 'sim',
+    meldet: 'gewinnt spiralhain nicht in jedem Lauf',
+  },
+  {
     // **Ersatzschreibung im ANGEZEIGTEN Text** (v292).
     //
     // Die Werft trug "ein Stueck des Kristalls" in ihrem `blurb` - also im

@@ -1,6 +1,6 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v286 · 09.09.2026
+Stand: v293 · 09.09.2026
 
 **Nachgesehen in v286 — achtzehn Luecken, und M1 hat seine erste Zahl aus dem
 laufenden Betrieb bekommen.** Die achtzehnte (**M18**) ist in derselben Runde
@@ -534,12 +534,38 @@ die nachweislich tut, was sie soll — und sie haette dieselbe Mechanik bei
 Zuschlag 0,25 durchgelassen. Eine Pruefung, deren Urteil vom Wuerfel abhaengt,
 ist schlimmer als keine: sie sieht aus wie ein Beweis.
 
-**Was fehlt.** Stile, die sich im Sortiment unterscheiden — ein Bot, der auf
-Wucht spielt, einer auf Schnellfeuer, einer auf Kontrolle. Dann ist der
-Abstand zwischen ihnen eine Aussage ueber das Spiel statt ueber drei
-Einstellungen desselben Bots. **Nicht in derselben Runde angefasst**, in der
-die eigene Aenderung an dieser Ratsche scheitert: eine Pruefung, die man
-lockert, waehrend sie einen selbst aufhaelt, ist kein Beweis mehr (v219).
+**Gemessen in v293 — und die Ursache liegt tiefer als der Messplatz.** Die
+Vermutung war: gebt den Stilen eigene Sortimente, dann trennt der Abstand
+etwas. `Breite` hat seins bekommen (drei Bogentuerme statt der gemischten
+Liste — wer in die Breite geht, kauft Stueckzahl), und **der Abstand blieb bei
+8,20.** Punkt fuer Punkt derselbe Wert wie mit gemeinsamer Liste.
+
+**Das Sortiment aendert das Ergebnis kaum.** Vier Geschuetze, und welches man
+baut, macht sechs Punkte aus. Damit ist M18 keine Luecke des Messgeraets
+allein: die drei Stile lassen sich nicht trennen, weil es zwischen ihnen wenig
+zu trennen gibt. Dieselbe Ursache steht eine Zeile tiefer schon als **kleinste
+Zweigwirkung UNBELEGT** — die Zweigwahl bewegt nichts ueber der Streuung, und
+die Turmwahl offenbar auch nicht.
+
+**Ein zweiter Anlauf ist gemessen und verworfen:** `Sparsam` bekam die teuren
+Tuerme („wer wenige Stellungen haelt, will dass jede zaehlt") und **verlor** in
+Welle 14, bei 91 % Knappheit und 4045 statt 6300 Gold. Teure Tuerme frueh und
+eine Ruecklage von 140 heisst zu wenig Verteidigung, zu wenig Beute, und von da
+an kommt er nicht mehr in Fahrt. Seine dritte Achse ist die **Tiefe**, nicht
+das Sortiment.
+
+**Der Versuch hat dabei eine echte Luecke der Ratsche gefunden, und die ist
+geschlossen.** Mit dem verlierenden `Sparsam` sprang der Abstand von 8 auf 28
+und meldete zum ersten Mal ueberhaupt **ERREICHT** — eine Kennzahl, die sich
+durch **Verschlechtern** eines Bots verbessern laesst, ist keine.
+`npm run sim` verlangt seitdem, dass **jeder** Stil die erste Karte in
+**jedem** Lauf gewinnt; sonst misst der Abstand die Schwaeche des
+schlechtesten statt die Verschiedenheit der drei.
+
+**Was bleibt.** Nicht mehr „der Messplatz sieht nichts", sondern: es ist wenig
+da. Solange die Turmwahl sechs Punkte ausmacht, kann keine Kennzahl ueber
+Spielstile mehr als sechs Punkte finden — und das ist eine Aussage ueber das
+Spiel, die in kein Werkzeug gehoert, sondern in den Katalog.
 
 ---
 

@@ -1,6 +1,27 @@
 # Towerfront — Anforderungskatalog
 
-Stand: v286 · 09.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+Stand: v293 · 09.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+
+**Nachgesehen in v293 — der wichtigste Satz dieses Katalogs hat endlich seine
+Zahl.** Er lautet: der Genre-Abgleich steht auf 30 von 30, und das Spiel macht
+trotzdem wenig Spass. Gemessen ist jetzt, woran das liegt:
+
+* Die **Turmwahl** macht **sechs Punkte** aus — `Breite` mit drei
+  Bogentuermen statt der gemischten Liste aendert den Abstand der Spielstile
+  um null (v293).
+* Die **Zweigwahl** steht auf **UNBELEGT** — sie bewegt nichts ueber der
+  Streuung des Verfahrens (seit v253).
+* Preisregeln entscheiden nichts: Foerderer −1,8 bis +2,4 % Gold (v285),
+  Wiederholungsaufschlag 0/−6/0/+1 Kristall (v287).
+* Und Gold ist knapp, **sobald man es ausgibt** (−3 bis 16 % statt 40 bis 47),
+  nur reichen zwoelf Tuerme, und wer 29 bis 41 baut, verliert (v291).
+
+**Vier Tuerme, zwei Zweige, sechs Stufen sind vollstaendig vorhanden und im
+Ergebnis kaum zu unterscheiden.** Abschnitt 2.1 warnt davor, gegen Zufall zu
+justieren; die Runden v285 bis v293 sagen dazu den naechsten Satz: es ist
+nicht nur das Rauschen zu gross, es ist auch das Signal zu klein. Was fehlt,
+ist kein weiterer Kostenpunkt und keine ruhigere Messung, sondern ein Grund,
+warum eine Entscheidung anders ausgeht als die andere.
 
 **Nachgesehen in v286:** unveraendert ueberholt - `docs/Towerfront-NEUBAU.md`
 steht weiter ueber diesem Katalog. Die Messbefunde gelten; Abschnitt 2.1 ist

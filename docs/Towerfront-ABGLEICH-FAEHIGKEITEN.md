@@ -1,6 +1,18 @@
 # Referenzabgleich — Fähigkeiten freischalten (C18)
 
-Stand: v286 · 09.09.2026
+Stand: v293 · 09.09.2026
+
+**Nachgesehen in v293:** unveraendert. Die vier Faehigkeiten sind seit v286
+nicht angefasst worden; `npm run sim` und der Rauchtest fahren sie weiter,
+beide gruen. Werft (v290) und Wiederholungsaufschlag (v287) beruehren sie
+nicht - beides sind Regeln ueber den Preis, und keine Faehigkeit kostet Gold.
+
+**Ein Befund aus v293 gilt hier aber mit:** die Turmwahl macht gemessen sechs
+Punkte aus, die Zweigwahl gar nichts. Ob die Faehigkeiten mehr entscheiden,
+ist nie eigens gemessen worden - sie stehen in `npm run sim` als Teil des
+Bots, nicht als eigene Kennzahl. Das ist keine Luecke dieses Abgleichs,
+sondern eine Frage an das Messgeraet.
+
 
 **Nachgesehen in v286:** unveraendert. Die vier Faehigkeiten sind zwischen
 v279 und v286 nicht angefasst worden; `npm run sim` und der Rauchtest fahren

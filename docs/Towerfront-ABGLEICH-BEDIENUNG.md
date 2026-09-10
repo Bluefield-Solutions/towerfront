@@ -1,6 +1,14 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v286 · 09.09.2026
+Stand: v293 · 09.09.2026
+
+**Nachgesehen in v293:** unveraendert seit v286. Die Bedienung ist in v290
+um einen sechsten Bauknopf gewachsen (die Werft), und das UX-Tor haelt: die
+Belegung im Zustand "welle" steht auf 15,1 % gegen erlaubte 16, gleichauf mit
+dem Ruhezustand. Die zwei fehlenden Bilder tragen seit v290 ihren
+Anfangsbuchstaben (F und W) - ein Platzhalter, der zwei Bauwerke gleich
+aussehen laesst, ist im Bauband eine Falle.
+
 
 **Nachgesehen in v286 — und einer der sieben Punkte hat eine Messung
 bekommen.** v286 hat den laufenden Strom aus dem Wellenknopf herausgeloest:

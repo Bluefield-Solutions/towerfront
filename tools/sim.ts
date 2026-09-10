@@ -217,6 +217,20 @@ function score(r: Result): number {
  *  gegen mehrere Stile gemessen. */
 interface Bot {
   name: string;
+  /** **Was dieser Stil BAUT** (v293, M18).
+   *
+   *  Bis v292 fuhren alle drei Stile dieselbe Turmliste und unterschieden
+   *  sich nur in Ruecklage, Ausbautiefe und Entscheidungstakt. Ihr "Abstand"
+   *  war damit der Unterschied zwischen drei fast gleichen Bots - und die
+   *  Ratsche, die daran haengt, hat sich entsprechend verhalten: ueber einen
+   *  Parameter, der die drei GAR NICHT unterscheidet (den
+   *  Wiederholungsaufschlag), sprang sie von 1,46 auf 11,64 und zurueck auf
+   *  4,50, bei einem angegebenen Rauschen von 3 bis 5.
+   *
+   *  Ohne Angabe bleibt es bei der gemischten Liste. Der **Meister** behaelt
+   *  sie ausdruecklich: er ist der, gegen den jede andere Zahl dieses
+   *  Werkzeugs geeicht ist, und wer ihn umstellt, verschiebt sie alle mit. */
+  plan?: TowerId[];
   /** Wie viele Tuerme dieser Stil hoechstens stellt. */
   maxTowers: number;
   /** Bis zu welcher Stufe ausgebaut wird. */
@@ -334,12 +348,29 @@ const BOTS: Bot[] = [
     weichenStil: 'offen',
   },
   {
-    // Erst alle Stellungen besetzen, dann ausbauen.
+    // Erst alle Stellungen besetzen, dann ausbauen - und dafuer die BILLIGEN
+    // Tuerme (v293). Wer in die Breite geht, kauft Stueckzahl; der Bogenturm
+    // kostet 55, das Prisma 140. Bis v292 baute dieser Stil dieselbe
+    // Mischung wie die anderen zwei und war damit nur eine andere
+    // Einstellung desselben Bots (M18).
     name: 'Breite', foerderer: 0, maxTowers: 12, maxLevel: 3, reserve: 15, decideEvery: 20, deepenAt: 1,
+    plan: ['arrow', 'arrow', 'frost', 'arrow', 'mortar'],
     weichenStil: 'offen',
   },
   {
     // Nur die Haelfte der Plaetze, dafuer frueh tief und mit Ruecklage.
+    //
+    // **Er behaelt die gemischte Liste, und das ist gemessen** (v293). Der
+    // erste Entwurf gab ihm die TEUREN Tuerme - "wer wenige Stellungen
+    // haelt, will dass jede zaehlt" -, und er verlor damit in Welle 14, bei
+    // 91 % Knappheit und 4045 statt 6300 Gold. Teure Tuerme frueh UND eine
+    // Ruecklage von 140 heisst: zu wenig Verteidigung, zu wenig Beute, und
+    // von da an kommt er nicht mehr in Fahrt. Auch mit einem milderen Plan
+    // (Moerser statt Prisma zuerst) blieb es dabei.
+    //
+    // Seine dritte Achse ist die TIEFE, nicht das Sortiment - und die ist
+    // real verschieden. Was M18 kritisiert hat, war, dass ALLE drei dasselbe
+    // bauen; mit `Breite` auf einer eigenen Liste ist die Trennung da.
     name: 'Sparsam', foerderer: 0, maxTowers: 12, maxLevel: 3, reserve: 140, decideEvery: 30, deepenAt: 0.5,
     weichenStil: 'lang',
   },
@@ -1210,7 +1241,7 @@ const mixedPlanBase: TowerId[] = ['arrow', 'arrow', 'mortar', 'frost', 'prism'];
 console.log('\nSpielstile (gemischtes Feld):');
 const styleRuns = new Map<string, Result>();
 for (const bot of BOTS) {
-  const r = play(mixedPlanBase, () => 0, bot);
+  const r = play(bot.plan ?? mixedPlanBase, () => 0, bot);
   styleRuns.set(bot.name, r);
   const verdict = r.won ? `gewonnen, Kristall ${r.lives}/${START_LIVES}` : `verloren in Welle ${r.wave}`;
   console.log(
@@ -1311,13 +1342,27 @@ for (const bot of BOTS) {
 {
   const runs = BOTS.map((b) => {
     const o = overVariants((variant, aussaat) => play(
-      mixedPlanBase, () => 0, b, 'normal', MAPS[0].id, { variant, seed: aussaat },
+      b.plan ?? mixedPlanBase, () => 0, b, 'normal', MAPS[0].id, { variant, seed: aussaat },
     ));
     const avg = (f: (r: Result) => number) => o.runs.reduce((a, r) => a + f(r), 0) / o.runs.length;
     return {
       name: b.name, mean: o.mean, rauschen: o.spanne,
       towers: avg((r) => r.towers), ups: avg((r) => r.upgrades),
       earned: avg((r) => r.earned), left: avg((r) => r.earned - r.spent),
+      // Gewinnt dieser Stil die Karte in der MEHRHEIT der Laeufe?
+      //
+      // "In jedem" war der erste Entwurf und zu streng: die neun Laeufe sind
+      // drei Aussaaten mal drei ABWANDLUNGEN, und eine Abwandlung ist eine
+      // absichtliche Stoerung des Bauverhaltens. Dass ein Stil daran
+      // gelegentlich scheitert, ist der Sinn der Sache - `Sparsam` steht bei
+      // Punktzahl 71 und faellt trotzdem durch.
+      //
+      // Gefangen werden soll der Stil, der GAR NICHT traegt: der kaputte
+      // `Sparsam` dieser Runde gewann null von neun. Die Mehrheit trennt
+      // beides und ist keine geratene Feinheit, sondern die Aussage "dieser
+      // Stil geht normalerweise auf".
+      gewinnt: o.runs.filter((r) => r.won).length * 2 > o.runs.length,
+      siege: `${o.runs.filter((r) => r.won).length} von ${o.runs.length}`,
     };
   });
   for (const r of runs) {
@@ -1336,6 +1381,25 @@ for (const bot of BOTS) {
   // mit welcher Aussaat man rechnet. Eine Zahl ohne ihre Streuung daneben
   // laedt dazu ein, den naechsten Zufall fuer eine Verbesserung zu halten.
   const stilRauschen = Math.max(...runs.map((r) => r.rauschen));
+  // **Ein Abstand zwischen drei Stilen sagt nur etwas, wenn alle drei
+  //   spielbar sind** (v293).
+  //
+  // Sonst misst die Zahl die Schwaeche des schlechtesten statt die
+  // Verschiedenheit der drei - und sie laesst sich beliebig hochtreiben,
+  // indem man einen Bot verschlechtert. Genau das ist beim ersten Entwurf
+  // dieser Runde passiert: `Sparsam` bekam nur teure Tuerme, verlor in Welle
+  // 14, und der Abstand sprang von 8 auf 28 - "ERREICHT", zum ersten Mal
+  // ueberhaupt. Eine Kennzahl, die sich durch Verschlechtern verbessern
+  // laesst, ist keine.
+  for (const r of runs) {
+    if (!r.gewinnt) {
+      errors.push(`Der Spielstil "${r.name}" gewinnt ${MAPS[0].id} nicht in jedem Lauf `
+        + `(${r.siege} Laeufe, Punktzahl ${r.mean.toFixed(0)}). Der Abstand der Spielstile `
+        + 'misst dann '
+        + 'die Schwaeche des schlechtesten statt die Verschiedenheit der drei - und er '
+        + 'laesst sich hochtreiben, indem man einen Bot verschlechtert.');
+    }
+  }
   const stilAbstand = best - worst;
   spannungGemessen('stilAbstand', stilAbstand, stilRauschen,
     `bester minus schlechtester Stil, ${MAPS[0].id}, normal, `
@@ -1417,7 +1481,7 @@ for (const bot of BOTS) {
   // --- Der Knappheitsanteil.
   const knappJeStil = BOTS.map((b) => {
     const o = overVariants((variant, aussaat) => play(
-      mixedPlanBase, () => 0, b, 'normal', MAPS[0].id, { variant, seed: aussaat },
+      b.plan ?? mixedPlanBase, () => 0, b, 'normal', MAPS[0].id, { variant, seed: aussaat },
     ));
     return { name: b.name, ...mittelUndSpanne(o.runs.map((r) => r.knappheitsAnteil * 100)) };
   });

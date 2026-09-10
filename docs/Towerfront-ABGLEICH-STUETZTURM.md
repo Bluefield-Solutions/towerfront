@@ -1,6 +1,24 @@
 # Referenzabgleich — Stützturm (C3, „Bannturm")
 
-Stand: v286 · 09.09.2026
+Stand: v293 · 09.09.2026
+
+**Nachgesehen in v293 — C3 ist zur Haelfte gebaut, und die andere Haelfte ist
+jetzt genau benannt.** Seit v290 steht mit der **Werft** ein zweites Gebaeude
+im Spiel, das nicht schiesst: sie belegt einen Bauplatz, kostet 150 (mehr als
+jedes Geschuetz) und setzt nach jeder Welle Kristall zusammen. Damit sind S1,
+S3 und S6 zum zweiten Mal erfuellt — und S5, die echte Wette, zum ersten Mal:
+gemessen 27→21 Kristall auf dem Spiralhain (dort ersetzt sie Feuerkraft) gegen
+35→38, 23→28 und 14→15 auf den anderen drei. Sie ist also *manchmal* richtig
+und *manchmal* falsch, und das ist genau, was S5 verlangt.
+
+**Was offen bleibt, ist S2 und S4 — und damit der Bannturm selbst.** Weder
+Foerderer noch Werft wirken auf **Tuerme**; beide wirken auf Gegner oder auf
+den Kristall. Die drei Vorbilder dieses Abgleichs (Monkey Village, Torchwood,
+Buff Beam) tun alle dasselbe: sie machen die NACHBARN besser, und deshalb
+aendern sie, **wohin** gebaut wird. Das ist die Frage, die nach v293 zaehlt:
+gemessen macht die Turmwahl heute sechs Punkte aus, die Zweigwahl gar nichts —
+ein Gebaeude, das die Wahl des Nachbarn belohnt, waere der erste Grund, warum
+eine Stellung anders ausgeht als die andere.
 
 **Nachgesehen in v286 — und diesmal nicht unveraendert: seit v285 steht ein
 Gebaeude im Spiel, das nicht schiesst.** Der **Foerderer** ist nicht der

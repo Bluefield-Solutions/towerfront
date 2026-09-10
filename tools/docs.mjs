@@ -462,8 +462,34 @@ const offeneIds = new Set();
         + 'sich geaendert, und dann prueft hier nichts mehr.');
     }
     let gepruefte = 0;
+    // **Die Kennung durfte bis v313 nicht auf einen Buchstaben enden** - und
+    // genau daran waren N1K und N1G unsichtbar. Beide stehen seit v309 als
+    // offene Punkte in der Tabelle, beide tragen eine Schliessbedingung, und
+    // keine der beiden ist je ausgewertet worden: `[A-Z]+\d+(?:-[A-Z])?`
+    // verlangt hinter der Ziffer entweder nichts oder einen Bindestrich.
+    // Dieselbe Klasse wie die Zahlwort-Tabelle in v230 - eine Pruefung,
+    // deren Wertebereich hinter ihrem Gegenstand zurueckbleibt, sieht aus
+    // wie eine Pruefung.
+    //
+    // Gefunden hat es eine Gegenprobe, die daran scheiterte: sie ersetzte
+    // die erste `text`-Bedingung des Dokuments durch eine erfuellte, und der
+    // Waechter schwieg - weil die erste eben N1K gehoert.
+    const KENNUNG = /^\| ([A-Z]+\d+[A-Z]?(?:-[A-Z])?) \| (.+?) \|[^|]*\|[^|]*\|\s*$/gm;
+    // **Und die Luecke wird nicht nur breiter, sie wird laut.** Eine Zeile,
+    // die wie eine Tabellenzeile aussieht und deren Kennung der Waechter
+    // nicht lesen kann, wird nicht mehr uebergangen: sonst kommt derselbe
+    // blinde Fleck mit der naechsten Namensform zurueck, und wieder merkt es
+    // niemand. Kopfzeile und Trennzeile sind die zwei Ausnahmen.
     for (const block of bloecke) {
-      for (const z of block.matchAll(/^\| ([A-Z]+\d+(?:-[A-Z])?) \| (.+?) \|[^|]*\|[^|]*\|\s*$/gm)) {
+      for (const zeile of block.split('\n')) {
+        if (!zeile.startsWith('|')) continue;
+        if (/^\| # \| /.test(zeile) || /^\|[-|]+\|\s*$/.test(zeile)) continue;
+        if (new RegExp(KENNUNG.source).test(zeile)) continue;
+        fail('Towerfront-BACKLOG.md: Zeile ohne lesbare Kennung im Abschnitt "Offen" '
+          + `- "${zeile.slice(0, 60)}...". Der Waechter uebergeht sie sonst still, `
+          + 'und dann steht ein offener Punkt da, den nichts mehr prueft.');
+      }
+      for (const z of block.matchAll(KENNUNG)) {
         const [, id, inhalt] = z;
         offeneIds.add(id);
         gepruefte++;

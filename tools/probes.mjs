@@ -701,6 +701,26 @@ export const PROBEN = [
     meldet: 'keine Schliessbedingung',
   },
   {
+    // **Und die Zeile, die der Waechter gar nicht erst liest** (v313).
+    //
+    // Bis v313 verlangte die Kennung hinter der Ziffer entweder nichts oder
+    // einen Bindestrich - `N1K` und `N1G` fielen durch, standen seit v309
+    // offen da und sind nie ausgewertet worden. Der Waechter uebergeht so
+    // eine Zeile still, und still ist hier das Schlimmste: die Zeile sieht
+    // aus wie geprueft.
+    //
+    // Der Eingriff verdoppelt die Kennung der ersten Zeile, die eine
+    // Schliessbedingung traegt - solche Zeilen gibt es nur in den
+    // Offen-Tabellen, also trifft er sicher dort und nicht in einer
+    // Fundtabelle.
+    name: 'Offene Zeile mit unlesbarer Kennung',
+    datei: 'docs/Towerfront-BACKLOG.md',
+    regel: /^\| ([A-Z]+\d+[A-Z]?(?:-[A-Z])?) (\| .*\*\*Schliesst, wenn:\*\*)/m,
+    ersatz: '| $1$1 $2',
+    tor: 'doku',
+    meldet: 'ohne lesbare Kennung',
+  },
+  {
     // **Die zwei Proben zum Storykatalog (v252).**
     //
     // `npm run naechste` liest die Reihenfolge aus dem Katalog und waehlt die

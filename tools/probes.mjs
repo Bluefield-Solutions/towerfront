@@ -52,7 +52,7 @@ const LEERES_SYMBOL = await (async () => {
   return b.toString('base64');
 })();
 
-const PROBEN = [
+export const PROBEN = [
   {
     name: 'Weg knickt scharf ab',
     datei: 'src/data/wegnetz.ts',
@@ -1026,6 +1026,21 @@ const PROBEN = [
       + '  /* **Die Skala schrumpft',
     tor: 'browsertor',
     meldet: 'laufende Strom steht auf dem Zielgerät nicht im Bild',
+  },
+  {
+    // **Der Umlaut im ausgelieferten HTML-Kommentar** (v288).
+    //
+    // v286 hat ihn hinterlassen, und der Runner ist daran rot geworden:
+    // HTML-Kommentare gehen mit ins Buendel, und im ausgelieferten Text
+    // steht ein echter Umlaut, waehrend der Quelltext durchweg `ae/oe/ue`
+    // schreibt. Der Waechter kann das - er hat es gemeldet -, geprueft war
+    // aber nie, dass er es kann: es gab keine Probe darauf.
+    name: 'Ersatzschreibung im ausgelieferten Kommentar',
+    datei: 'index.html',
+    suche: 'nicht die Fläche.',
+    ersatz: 'nicht die Flaeche.',
+    tor: 'autarkie',
+    meldet: 'Ersatzschreibung statt Umlaut',
   },
   {
     // **Der Wiederholungsaufschlag** (v287, S-N3-02).
@@ -4429,6 +4444,15 @@ const PROBEN = [
 // Genau das ist sein Zweck - er soll waehrend der Arbeit laufen koennen,
 // nicht erst danach. Wer ihn hinter den Sauberkeits-Waechter sperrt, macht
 // aus einer Zwei-Sekunden-Pruefung wieder eine, die man verschiebt.
+// **Wer die Liste nur LIEST, faehrt nichts** (v288).
+//
+// `npm run beruehrt` importiert PROBEN, um zu sagen, welche Tore an den
+// geaenderten Dateien haengen - und lief dabei in den Sauberkeits-Waechter,
+// obwohl es keinen einzigen Eingriff macht. Die Zuordnung Datei -> Tor steht
+// hier und soll auch nur hier stehen (Regel 15); dann muss sie sich lesen
+// lassen, ohne den Lauf mitzustarten.
+const NUR_LESEN = !process.argv[1]?.endsWith('probes.mjs');
+if (!NUR_LESEN) {
 const dreckig = process.argv.includes('--muster')
   ? '' : execSync('git status --porcelain', { cwd: ROOT, encoding: 'utf8' }).trim();
 if (dreckig) {
@@ -5074,4 +5098,5 @@ if (VOLL && !filter.length) {
 } else if (!filter.length) {
   console.log('  Stand NICHT fortgeschrieben - das war ein Umfangslauf, kein voller.');
   console.log('  Der volle Lauf faehrt nachts auf dem Runner, oder hier mit `-- --voll`.');
+}
 }

@@ -1,6 +1,27 @@
 # Towerfront — der Neubau
 
-Stand: v281 · beschlossen am 09.09.2026
+Stand: v288 · beschlossen am 09.09.2026
+
+**Nachgesehen in v288 — der Weg-Beschluss ist fertig, der Bauplatz-Beschluss
+hat seine erste harte Zahl.** Aus „eine Weiche" sind vier geworden (v284):
+alle vier Karten tragen eine, der Spiralhain zwei, gebaut über
+`npm run weichenbau` statt von Hand, und der Grundzustand misst weiterhin
+**0,00 Weltpunkte** Abweichung. Der Bot legt sie um (v283), sie steht im Bild
+(v282), der Wächter fährt jede Stellung (v281). **Damit ist N2 zu.**
+
+**N3 — „der Bauplatz wird knapp" — steht auf zwei von drei Sätzen, und beide
+sagen dasselbe.** Der **Förderer** (v285) belegt einen Bauplatz, schiesst
+nicht und bringt gemessen −1,8 bis +2,4 % Gold. Die **teurere Wiederholung**
+(v287) nimmt dem Häufer 693 Gold ab und ändert am Ergebnis 0 / −6 / 0 / +1
+Kristall. Beide wirken, beide entscheiden nichts — und die Ursache ist
+dieselbe: **bei 28 % übrigem Gold ist ein Preis folgenlos.**
+
+Der Beschluss sagt „dieselbe Fläche für drei Zwecke", und gemeint war, dass
+die Fläche knapp wird. Gemessen ist sie es nicht: die Karten halten rund
+zweihundert Bauplätze, und die Bots bauen zwölf. **Der dritte Satz
+(reparierbarer Kristall) ist damit nicht der letzte, sondern der erste** — was
+N3 wirklich braucht, ist eine Verwendung für Gold, die mit dem Bauen
+konkurriert. Solange es die nicht gibt, sind Preisregeln Buchhaltung.
 
 **Nachgesehen in v281 — der Weg-Beschluss ist gebaut, und die Zahlen stehen
 jetzt daneben.** Aus „an mehreren Knoten sitzen Weichen" ist in v278 bis v281

@@ -1,6 +1,21 @@
 # Towerfront — Art Bible
 
-Stand: v281 · 09.09.2026
+Stand: v288 · 09.09.2026
+
+**Nachgesehen in v288:** unverändert. Zwischen v281 und v288 ist kein Bild
+dazugekommen und kein Backwert geändert worden — `npm run lesbarkeit` und
+`npm run grafiktor` liefen in jedem Runner-Lauf grün. Was neu ist, betrifft
+die Bedienung, nicht den Bildvorrat: der laufende Strom neben dem Wellenknopf
+(v286) und die Preismarke auf den Bauknöpfen (v287). Beide nutzen Zeichen und
+Farben, die es schon gibt — das Dreieck der Warnfarbe stammt vom Sprung im
+Wellendruck, und eine zweite Marke für dieselbe Aussage wäre eine Sprache zu
+viel.
+
+**Offen bleibt die eine Bestellung, die K5 als Platzhalter im Bild stehen
+lässt:** `31_foerderer.png` (Auftrag 8d.2). Der Förderer wird seit v285
+gegen `getPlatzhalter` gebaut — Silhouette in richtiger Grösse, Schraffur,
+Marke #FF00E5 —, und `npm run bildtor` meldet ihn bei jedem Lauf als laufende
+Bestellung.
 
 **Nachgesehen in v281 — und Abschnitt 4 war falsch.** Er stand seit v153 auf
 „9 von 20 Figuren unter 1,5" und einer Ratsche bei 10. Seit v274 misst

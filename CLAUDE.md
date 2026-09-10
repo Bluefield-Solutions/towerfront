@@ -291,6 +291,15 @@ npm run uxaudit     nimmt das GEBAUTE Spiel in den Zustaenden auf, die man
                     fuenften Bauknopf aus, und das Dock stand in Ruhe und
                     Welle bei denselben 10,4 %. Es war `#b-wave` mit 3,0
                     gegen 4,4.
+npm run beruehrt    welche Tore an dem haengen, was gerade geaendert ist -
+                    gelesen aus den 346 Gegenproben, die ohnehin `datei` und
+                    `tor` tragen, nicht aus einer zweiten Liste (Regel 15).
+                    Dazu die Tore, die am gebauten BUENDEL messen und
+                    deshalb keine Probe mit Zieldatei haben. Entstanden,
+                    weil v286 `index.html` anfasste, fuenf passende Tore
+                    lokal fuhr und `autarkie` nicht - genau das wurde auf dem
+                    Runner rot, an einem Umlaut in einem HTML-Kommentar, der
+                    mitausgeliefert wird. Es nennt, es faehrt nicht.
 npm run bahnfit     zieht die Bahnen auf die gemalte Strasse (schreibt
                     maps.ts). `--umleiten` aendert Routen, nicht nur Lagen.
 npm run bahntreue   prueft am Kartenbild, ob jede Bahn auf der GEMALTEN
@@ -725,7 +734,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v287. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v288. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

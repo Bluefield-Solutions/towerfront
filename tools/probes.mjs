@@ -1130,7 +1130,7 @@ export const PROBEN = [
     // woertlich genauso, seit die Verbesserungen keine Sterne mehr kosten
     // (S-N1-05). Ein Suchtext wirkt nur bei GENAU einem Treffer, also greift
     // die Probe jetzt an der Funktion, zu der sie gehoert.
-    regel: /(karteFreischalten[\s\S]*?)  if \(laufErfahrung\(\) < kosten\) return false;/,
+    regel: /(export function karteFreischalten[\s\S]*?)  if \(laufErfahrung\(\) < kosten\) return false;/,
     ersatz: '$1  if (false) return false;',
     tor: 'smoke',
     meldet: 'kostet nichts',

@@ -1,6 +1,24 @@
 # Towerfront — Bildauftrag
 
-Stand: v291 · 09.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v298 · 10.09.2026 · **Auftragsdokument für den Bild-Agenten**
+
+**Nachgesehen in v298 — es sind jetzt DREI offene Bestellungen, und die dritte
+verschärft die Regel, die schon für die ersten beiden galt.** Dazugekommen ist
+`8d.4` (`33_bannturm.png`, seit v295). Damit hat das Spiel drei Bauwerke, die
+**nicht schiessen**, und sie müssen sich gegenseitig auf den ersten Blick
+trennen: jede der drei Bestellungen trägt **0,55** Silhouetten-Ähnlichkeit als
+Grenze — gegen jedes schon gelieferte Bauwerk **und gegen die anderen zwei**.
+
+Der Bannturm trägt zusätzlich die schärfste Formforderung des ganzen
+Dokuments: **55 % leere Fläche**, ein offener Dreibeinmast, ausdrücklich kein
+Rohr und keine Mündung. Was zielt, sieht aus wie ein Geschütz — und dieser
+Turm schiesst nicht.
+
+**Alle drei sind gebaut, gemessen und im Spiel** (Förderer v285, Werft v290,
+Bannturm v295 — letzterer als Mechanik, nicht in der Bauleiste, weil sieben
+Bauknöpfe alle vier UX-Zustände reissen). Es fehlt nur das Bild. `npm run
+bildtor` nennt sie bei jedem Lauf als laufende Bestellung: grün, aber nie
+verschwiegen.
 
 **Nachgesehen in v291 — zwei offene Bestellungen, und sie hängen aneinander.**
 `8d.2` (`31_foerderer.png`, seit v285) und `8d.3` (`32_werft.png`, seit v290)

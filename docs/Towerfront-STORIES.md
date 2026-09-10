@@ -1,6 +1,6 @@
 # Towerfront — Stories
 
-Stand: v302 · 10.09.2026
+Stand: v303 · 10.09.2026
 
 **Nachgesehen in v291 — Paket N3 ist zu drei Vierteln gebaut, und die
 Diagnose hat sich dabei umgedreht.** Förderer (v285), Wiederholungsaufschlag
@@ -919,8 +919,65 @@ Quelltext.
   wird.
 * Der Zug unterbricht die Welle nicht — er liegt zwischen den Wellen.
 
-**Gegenprobe.** Allen Karten dieselbe Wirkung geben: `sim` muss melden, dass
-die Wahl folgenlos ist.
+**Gebaut in v303 — und zwei der drei Funde kamen vom Blick, nicht von einem
+Tor.**
+
+`src/data/karten.ts` hält **zwölf Karten als Daten**: Name, Satz, Achse, Wert.
+Vier Achsen (was die Türme austeilen, was hereinkommt, was aushält), je zwei
+Stärken. Wer eine dazulegt, schreibt keine Logik — und das ist die Bedingung
+dafür, dass `npm run sim` über alle Karten messen kann, ohne für jede einen
+Zweig zu kennen.
+
+**Der Zug ist eine reine Funktion aus Aussaat UND Welle**, kein laufender
+Zufallszustand. Zwei Läufe mit derselben Aussaat ziehen in Welle 7 dieselben
+drei Karten, gleich was dazwischen passiert ist; ein Zug aus dem laufenden
+`Rng` hinge an jedem Schuss, der vorher gefallen ist. Verwoben statt addiert,
+sonst zöge Lauf A in Welle 8, was Lauf B in Welle 7 gezogen hat.
+
+**Gemessen über einen ganzen Lauf und drei Stile:**
+
+| Stil | die drei häufigsten | verschiedene |
+|---|---|---|
+| Meister | wucht 17, schliff 16, kadenz 10 | 12 von 12 |
+| Breite | hort 15, pacht 14, zoll 9 | 11 von 12 |
+| Sparsam | warte 19, linse 10, kitt 10 | 11 von 12 |
+
+**12 von 12 Karten werden von mindestens einem Stil genommen, 0 von jedem
+immer.** Die Bewertung des Bots hängt dabei am **Stil**, nicht an der Stärke
+(Regel 4): eine Bewertung nach gemessener Wirkung machte aus der Messung einen
+Zirkel — sie nähme immer die stärkste, und die Messung fände genau das.
+
+**Der Zug liegt zwischen den Wellen, als Ableitung.** `zugFaellig()` ist die
+eine Stelle, an der die Frage beantwortet wird; Oberfläche und Rauchtest
+fragen dieselbe (Regel 6). Vier Bedingungen, jede mit ihrer Nullprobe.
+
+**Die Bauleiste weicht dem Zug — und die Zahl sagt, dass es keinen dritten Weg
+gibt.** Mit beiden zugleich sperrt die Bedienung im Ruhezustand **21,7 %** des
+Bildschirms gegen erlaubte 16; die Leiste allein sind 10,8, der Zug 6,2. Jede
+für sich passt, beide nicht. Vorher ist geholt worden, was zu holen war: der
+Zug trägt Name und Zahl statt Name, Zahl und Satz, und das hat ihn von 11,7
+auf 6,2 % gebracht (der Satz steht weiter im `title`). Es ist aber nicht nur
+Platz, sondern Reihenfolge: zwischen zwei Wellen ist die Karte die **erste**
+Entscheidung.
+
+**Zwei Funde vom Blick (Regel 8):**
+
+* **„Geölter Lauf −5 %"** stand als Minus an einer Karte, die man nehmen soll.
+  Der Takt ist eine Nachladezeit; ein Faktor unter eins ist dort das Gute. Das
+  Vorzeichen sagt jetzt **besser**, nicht größer — für eine Messung sind beide
+  Zeichen gleich lang.
+* **Das UX-Audit maß ohne den Zug alle Zustände ohne Bauleiste.** Die vier
+  Ratschen wären still lockerer geworden, ohne dass der Bildschirm besser
+  geworden ist — genau die Verfallsart, gegen die dieses Verzeichnis seit v219
+  anschreibt. Der Zug kommt jetzt vor dem Ruhezustand und wird gezogen; danach
+  stehen alle vier Zahlen wieder da, wo sie standen.
+
+**Gegenprobe.** Drei: die Verwebung von Aussaat und Welle herausnehmen (`sim`
+meldet, dass zwei Aussaaten dasselbe ziehen), die Wellenbedingung aus
+`zugFaellig` nehmen (der Rauchtest meldet, dass der Zug die Welle
+unterbricht), und die Ableitung der Bauleiste zurücknehmen (das UX-Tor meldet
+die Belegung). Dazu zwei **bestehende** Proben, die `npm run muster` im selben
+Lauf gemeldet hat, weil ihre Zeile sich geändert hat.
 
 **Schliesst, wenn:** `text src/data/karten.ts "KARTENSTAPEL" >= 2`
 

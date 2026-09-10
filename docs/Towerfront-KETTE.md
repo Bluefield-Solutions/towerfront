@@ -1,6 +1,37 @@
 # Towerfront — die Kette
 
-Stand: v296 · 10.09.2026
+Stand: v303 · 10.09.2026
+
+**Nachgesehen in v303 — die Kette hat acht Runden am Stueck getragen, und der
+Ablauf hat dabei dreimal etwas gefangen, das kein Tor gesehen haette.**
+
+**Schritt 5 (Gegenprobe) ist der Schritt, der arbeitet.** In v296 bis v303 hat
+er sechs Entwuerfe zurueckgewiesen, die nichts bewiesen haetten - zuletzt drei
+in zwei Runden: ein Zweig, der von Bauart nicht anschlagen kann (v301, der
+Wert ist zugleich Schalter und weitergereichter Wert), eine Probe, die am
+Eingriff vorbeisah (v301, beide Seiten gewinnen, die Differenz bleibt gross),
+und zwei Proben, deren Zeile sich geaendert hatte (v303).
+
+**Schritt 8 (Inspektor) hat in v298 zum ersten Mal SCHLEIFE geurteilt**, und
+er hatte recht: ein rotes „Weg" lag hinter zwei Bauwerksnamen. Vier Messungen
+an derselben Leiste hatten vorher null gemeldet, weil sie alle nach der LEISTE
+fragten und das Kaestchen nicht zu ihr gehoert. **Regel 8 irrt in beide
+Richtungen** - in derselben Runde hatte mein Auge einen Ueberlauf gesehen, den
+es nicht gab.
+
+**`npm run muster` ist der billigste Schritt und faengt am meisten.** 0,4 s je
+Lauf, und in diesen acht Runden hat er dreimal eine Probe gemeldet, die ihren
+Gegenstand verloren hatte, und einmal die Zeitratsche gezogen: der naechtliche
+Probenlauf war am 10.09. nicht angesprungen (zuletzt am 09.09.), und ohne
+diese Zeile waere es niemandem aufgefallen. Ein Nachtlauf, der still ausfaellt,
+ist genau die Klasse, gegen die dieses Verzeichnis anschreibt.
+
+**Was eine Runde kostet, gemessen ueber v296 bis v303:** `npm run vorlauf`
+4,4 s, `npm run sim` inzwischen **2:29** (v300 hat 22 s dazugelegt: 24 Laeufe
+statt 8 fuer die Verteiler-Zusage), die beruehrten Tore zwei bis dreizehn, der
+Runner-Lauf danach 6 bis 7 Minuten. Eine Balancerunde mit Durchprobieren
+kostet ein Vielfaches davon - v297 hat sieben `sim`-Laeufe gebraucht, v301
+sechs C18-Laeufe und drei `sim`.
 
 **Nachgesehen in v296 — der Ablauf trägt, und Schritt 5 hat in v290 bis v296
 sechsmal etwas zurückgewiesen, das nichts bewiesen hätte.** Zuletzt zweimal in

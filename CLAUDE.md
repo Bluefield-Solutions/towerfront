@@ -696,6 +696,29 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der Befund hat sich selbst am Leben gehalten (v313).** Ueber der
+Befund-Pruefung stand seit v227, sie sei - anders als die Standregel - nicht
+unter `PROBENLAUF` ausgenommen, denn *„dort gibt es einen Ringschluss, hier
+nicht"*. Drei Laeufe am 10.09.2026 messen das Gegenteil:
+
+    ein roter Lauf schreibt einen Befund
+      -> `muster` ist rot
+      -> jede Scheibe mit einer `muster`-Probe arbeitet gar nicht erst
+      -> der Lauf ist rot
+      -> er schreibt einen Befund. Von vorn.
+
+**Der Befund geht nur weg, wenn ein Lauf gruen ist, und kein Lauf kann gruen
+sein, solange er dasteht.** Daher stand der Stand seit dem 09.09. auf v265, und
+daher kamen die 5-Minuten-Scheiben in allen drei Laeufen — zweimal gesehen und
+nicht erklaert.
+
+Der Ring hatte zwei Straenge. Unter `PROBENLAUF` wird jetzt ein Befund
+uebergangen, den dieser Lauf **nicht selbst angerichtet** hat; ein eingebauter
+unterscheidet sich vom eingecheckten Stand und wird geprueft wie immer.
+Ausserhalb bleibt alles wie seit v227. Und dieselben drei Gegenproben griffen
+die Zeile `sauber ...` — steht dort ein Befund, gibt es das Muster nicht; sie
+verloren ihren Gegenstand immer dann, wenn man sie am dringendsten braucht.
+
 **Vier Rauchtest-Schritte konnten still scheitern (v313).** Der zweite volle
 Probenlauf meldete `Der Kartenzug unterbricht die Welle: "smoke" meldet nicht`
 — und hier bewies dieselbe Probe einwandfrei. Die Klasse aus v225, und die

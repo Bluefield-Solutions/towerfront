@@ -82,7 +82,7 @@
     "wegdeckungtor": "tsx tools/wegdeckung.ts --tor",
     "bauflaechetor": "tsx tools/bauflaeche.mjs --tor",
     "uxaudit": "tsx tools/uxaudit.mjs",
-    "uxaudittor": "tsx tools/uxaudit.mjs --tor",
+    "uxaudittor": "npm run build && tsx tools/uxaudit.mjs --tor",
     "uxtor": "npm run build && npm run uxaudittor",
     "c18": "tsx tools/c18probe.ts",
     "fruehstart": "tsx tools/fruehstart.ts",

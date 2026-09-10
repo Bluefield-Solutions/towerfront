@@ -1,6 +1,29 @@
 # Towerfront — Art Bible
 
-Stand: v288 · 09.09.2026
+Stand: v295 · 10.09.2026
+
+**Nachgesehen in v295:** am Stil unverändert, am Vorrat auch — zwischen v288
+und v295 ist kein Bild dazugekommen und kein Backwert geändert worden.
+Geändert hat sich, wieviel der Vorrat **schuldet**: aus einer offenen
+Bestellung sind drei geworden. `31_foerderer.png` (Auftrag 8d.2, seit v285),
+`32_werft.png` (8d.3, seit v290) und `33_bannturm.png` (8d.4, seit v295).
+Alle drei Bauwerke sind gegen `getPlatzhalter` gebaut (K5), und
+`npm run bildtor` nennt sie bei jedem Lauf als laufende Bestellung — grün,
+aber nie verschwiegen.
+
+**Der Platzhalter trägt seit v294 den Anfangsbuchstaben.** Bis dahin war er
+für alle drei dieselbe Schraffur in derselben Grösse, und zwei Bauwerke
+nebeneinander sahen aus wie ein Bauwerk zweimal — beim Messen fielen die
+Prüfsummen zusammen. Er zeichnet jetzt den Anfangsbuchstaben des Schlüssels;
+damit ist ein Platzhalter von einem anderen zu unterscheiden, ohne ein Bild zu
+sein.
+
+**Die drei Aufträge trennen sich gegenseitig durch die Silhouette**, und das
+ist die einzige Formforderung, die alle drei teilen: höchstens 0,55
+Ähnlichkeit zu jedem schon gelieferten Bauwerk. Der Bannturm hat dazu die
+schärfste des ganzen Dokuments — **55 % leere Fläche**, offener Dreibeinmast,
+ausdrücklich kein Rohr und keine Mündung: was zielt, sieht aus wie ein
+Geschütz, und dieser Turm schiesst nicht.
 
 **Nachgesehen in v288:** unverändert. Zwischen v281 und v288 ist kein Bild
 dazugekommen und kein Backwert geändert worden — `npm run lesbarkeit` und

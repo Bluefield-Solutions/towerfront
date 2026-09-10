@@ -12,7 +12,7 @@ import { WORLD_W } from './config';
  *  gewesen, und Nachbauten veralten. Jede Torpruefung laeuft ueber
  *  `TOWER_ORDER`, also sieht keine von ihnen die Zielunit - und keine
  *  musste dafuer angefasst werden. */
-export type TowerId = 'arrow' | 'frost' | 'mortar' | 'prism' | 'foerderer' | 'werft' | 'core';
+export type TowerId = 'arrow' | 'frost' | 'mortar' | 'prism' | 'foerderer' | 'werft' | 'bann' | 'core';
 
 /** Wie ein Turm angreift. Der Angriffstyp bestimmt die Rolle im Feld,
  *  nicht die Zahlenhoehe - sonst waeren es nur Varianten voneinander. */
@@ -374,6 +374,58 @@ export const TOWERS: Record<TowerId, TowerDef> = {
       },
     ],
   },
+  /** **Der Bannturm** (v295, C3) - er macht die NACHBARN besser.
+   *
+   *  Der Punkt steht seit v40 im Verzeichnis, und der Referenzabgleich liegt
+   *  seit v258 vor. Was ihn von Foerderer und Werft trennt, ist die
+   *  Richtung: die beiden wirken auf Gegner und auf den Kristall, dieser
+   *  wirkt auf die eigenen TUERME - und aendert damit, **wohin** gebaut
+   *  wird. Alle drei Vorbilder des Abgleichs (Monkey Village, Torchwood,
+   *  Buff Beam) tun genau das.
+   *
+   *  **Warum das jetzt zaehlt und nicht irgendwann:** v293 hat gemessen,
+   *  dass die Turmwahl sechs Punkte ausmacht und die Zweigwahl gar nichts.
+   *  Ein Gebaeude, das die Lage des Nachbarn belohnt, ist der erste Grund,
+   *  warum eine Stellung anders ausgeht als die andere.
+   *
+   *  **Die Zahlen sind gemessen, nicht gesetzt** (Abgleich, Abschnitt "Daraus
+   *  die Stärke"): in einem Umkreis von 190 Weltpunkten stehen unbedacht 2,2
+   *  Tuerme und absichtlich gebaut 5,3 - Faktor 2,4. Bei 90 Gold kostet er
+   *  1,64 Bogentuerme; +40 % Feuerrate bringen damit unbedacht 0,88 (ein
+   *  spuerbarer Verlust) und absichtlich 2,12 (ein klarer Gewinn). Genau die
+   *  Spanne, die S5 des Abgleichs verlangt: es darf keine Lage geben, in der
+   *  er immer richtig ist. */
+  bann: {
+    id: 'bann', footprint: FOOTPRINT, name: 'Bannturm', role: 'Verstärkung',
+    blurb: 'Schiesst nicht. Nachbartürme in seinem Umkreis feuern schneller.',
+    color: '#A88FD0', accent: '#C9A7FF',
+    attack: 'keiner', hitsAir: false, projectileSpeed: 0,
+    base: { cost: 90, damage: 0, cooldown: 0 },
+    branches: [
+      {
+        id: 'weite', name: 'Weite', color: '#7FE7E0',
+        blurb: 'Mehr Fläche, kleinerer Zuschlag. Lohnt über einer weiten Stellung.',
+        levels: [
+          { cost: 110, damage: 0, cooldown: 0 },
+          { cost: 170, damage: 0, cooldown: 0 },
+          { cost: 250, damage: 0, cooldown: 0 },
+          { cost: 360, damage: 0, cooldown: 0 },
+          { cost: 500, damage: 0, cooldown: 0 },
+        ],
+      },
+      {
+        id: 'bann', name: 'Bann', color: '#C9A7FF',
+        blurb: 'Mehr Feuerrate, kleinere Fläche. Lohnt über einem dichten Nest.',
+        levels: [
+          { cost: 110, damage: 0, cooldown: 0 },
+          { cost: 170, damage: 0, cooldown: 0 },
+          { cost: 250, damage: 0, cooldown: 0 },
+          { cost: 360, damage: 0, cooldown: 0 },
+          { cost: 500, damage: 0, cooldown: 0 },
+        ],
+      },
+    ],
+  },
   core: {
     id: 'core', footprint: 200, name: 'Zielunit', role: 'Letzte Linie',
     blurb: 'Steht von Anfang an und schiesst mit. Ausbau kostet ein Vielfaches.',
@@ -528,6 +580,34 @@ export function foerderZuschlag(branch: 0 | 1 | null, level: number): number {
   return FOERDER_BONUS + Math.max(0, level - 1) * schritt;
 }
 
+/** **Um wieviel EIN Bannturm die Feuerrate eines Nachbarn hebt** (v295, C3).
+ *
+ *  0,40 auf Stufe 1 ist gemessen und nicht gewaehlt: bei 90 Gold kostet der
+ *  Turm 1,64 Bogentuerme, und in einem Umkreis von 190 Weltpunkten stehen
+ *  unbedacht 2,2 Nachbarn, absichtlich gebaut 5,3. Damit bringt er unbedacht
+ *  0,88 und absichtlich 2,12 - die Wette aus S5.
+ *
+ *  Der Bann-Zweig steigt je Stufe um 10 Prozentpunkte, der weite um 4 -
+ *  dafuer waechst dessen Reichweite staerker. Mehr je Turm gegen mehr
+ *  Tuerme, dieselbe Frage wie beim Foerderer. */
+export const BANN_ZWEIG = 1;
+export const BANN_GRUND = 0.40;
+
+export function bannZuschlag(branch: 0 | 1 | null, level: number): number {
+  const schritt = branch === BANN_ZWEIG ? 0.10 : 0.04;
+  return BANN_GRUND + Math.max(0, level - 1) * schritt;
+}
+
+/** **Zwei Bannmale ueber demselben Turm summieren sich nicht** (S6).
+ *
+ *  Der zweite zaehlt halb, jeder weitere gar nicht - sonst wird aus der
+ *  Wette eine Rechenaufgabe, und die Antwort heisst "so viele wie moeglich".
+ *  Bloons deckelt sein Dorf aus demselben Grund ausdruecklich. */
+export function bannStapel(zuschlaege: number[]): number {
+  const sortiert = [...zuschlaege].sort((a, b) => b - a);
+  return (sortiert[0] ?? 0) + (sortiert[1] ?? 0) * 0.5;
+}
+
 /** **Wieviel Kristall EINE Werft je abgeschlossener Welle zurueckgibt.**
  *
  *  Zwei Zweige, zwei Fragen: `Takt` setzt mehr je Welle zusammen, `Schmelze`
@@ -583,6 +663,27 @@ export const TOWER_ORDER: TowerId[] = ['arrow', 'frost', 'mortar', 'prism'];
  *
  *  Gefragt wird diese Liste ueberall dort, wo es um die BAULEISTE geht:
  *  Bedienung, Bildvorrat, Bildbestellung. */
+/** **Der Bannturm steht hier NICHT, und das ist gemessen** (v295).
+ *
+ *  Er ist vollstaendig gebaut: `bannVon` rechnet, der Waechter haelt vier
+ *  Zusagen, `npm run sim` faehrt ihn mit einem Bot, der absichtlich um ihn
+ *  herum baut. Kaufbar ist er trotzdem noch nicht - die BAULEISTE traegt kein
+ *  siebtes Bauwerk.
+ *
+ *  Gemessen mit `npm run uxaudit`: mit sieben Knoepfen steht die Belegung bei
+ *  16,3 / 27,0 / 35,0 / 16,3 % gegen Grenzen von 16 / 26 / 35 / 16 - alle
+ *  vier Zustaende reissen. v294 hat die Knoepfe schon auf 46 Punkte gebracht,
+ *  zwei ueber der Beruehrungsgrenze, und dabei stand der Satz: wer ein
+ *  siebtes Bauwerk will, braucht eine andere Anordnung, keine schmaleren
+ *  Knoepfe.
+ *
+ *  Zwei Reihen helfen nicht - gemessen wird FLAECHE, und sieben Knoepfe
+ *  brauchen mehr davon als sechs, ob unter- oder nebeneinander. Was hier
+ *  fehlt, ist eine Entscheidung ueber die Bedienung (ein Aufklapper fuer die
+ *  Gebaeude? weniger Faehigkeitsknoepfe?), und die gehoert dem Nutzer.
+ *
+ *  Bis dahin steht die Mechanik da wie der Wiederholungsaufschlag seit v287:
+ *  gebaut, geprueft, mit ihrem Grund daneben. */
 export const BAU_ORDER: TowerId[] = [...TOWER_ORDER, 'foerderer', 'werft'];
 
 /** Der guenstigste Turm - er entscheidet, ob ein Platz ueberhaupt taugt.
@@ -642,6 +743,8 @@ const REICHWEITE_GRUND: Record<TowerId, number> = {
   foerderer: 0.120,   // 230 px
   // Die Werft wirkt global; ihre Reichweite zeichnet nur den Platzbedarf.
   werft: 0.060,       // 115 px
+  // 190 Weltpunkte - der Radius, an dem der Abgleich gemessen hat.
+  bann: 0.099,        // 190 px
   // Die Zielunit deckt ihren eigenen Vorplatz, nicht die Karte. Sie steht
   // dort, wo alle Bahnen enden - mit der Weite eines Moersers waere sie der
   // beste Turm im Spiel und noch dazu geschenkt.
@@ -684,6 +787,9 @@ const WUCHT_AUSGLEICH: Record<TowerId, number> = {
   // Ebenso die Werft: ihre Zweige heissen Takt und Schmelze, und beide
   // rechnen an Kristall statt an Schaden.
   werft: 1,
+  // Und der Bannturm: seine Zweige heissen Weite und Bann, beide ohne
+  // Schadenszahl.
+  bann: 1,
   // Die Zielunit hat nur einen Zweig, also greift der Ausgleich nie. Der
   // Eintrag steht hier, weil der Typ ihn verlangt, und nicht, weil er wirkt.
   core: 1.00,

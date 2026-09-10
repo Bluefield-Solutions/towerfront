@@ -29,11 +29,13 @@ import { bauplaetze, kreuzdeckung, verschmelzung } from './bahnmass';
 import { abstand, ausstoss, druck, hoechstverlust, kurve, mischung } from './wellenmass';
 import { abnahmegrenzen, einsetzen, neubauBlock, promptAbschnitte, stilBlock } from './auftrag';
 import { GameState } from '../src/game/state';
+import { candidateSpots } from './spots';
 import { projektilform } from '../src/gfx/renderer';
 import type { Tower } from '../src/game/types';
 import {
   TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, DRAW_SCALE, TURM_BREITE, TURM_HOEHE, rangeFor, statsFor,
   FOERDER_DECKEL, foerderZuschlag, werftErtrag, werftHoechstmass, WERFT_TAKT_ZWEIG,
+  bannZuschlag, bannStapel, BANN_ZWEIG,
 } from '../src/data/towers';
 import {
   VERBUND_MAX, VERBUND_STUFE, VERBUND_UMKREIS,
@@ -189,6 +191,87 @@ const isHex = (s: string) => /^#[0-9A-Fa-f]{6}$/.test(s);
     + `Stufe ${MAX_LEVEL}, ${schmelze} in der Schmelze - deren Hoechstmass steigt um `
     + `${(werftHoechstmass(1 - WERFT_TAKT_ZWEIG as 0 | 1, MAX_LEVEL) * 100).toFixed(0)} % `
     + 'des Startkristalls.');
+}
+
+// ------------------------------------------------------------ Der Bannturm
+//
+// **Dieselbe Regel wie bei Foerderer und Werft** - und eine eigene dazu.
+{
+  const b = TOWERS.bann;
+  if (b.attack !== 'keiner') {
+    fail(`Der Bannturm greift mit "${b.attack}" an - er verstaerkt Nachbarn, und wer `
+      + 'ihm dazu eine Waffe gibt, macht ihn zum Turm mit Bonus.');
+  }
+  if (b.base.damage !== 0 || b.branches.some((z) => z.levels.some((l) => l.damage !== 0))) {
+    fail('Der Bannturm traegt Schadenswerte - er schiesst nicht, also gehoert dort '
+      + 'ueberall null hin.');
+  }
+  // **Die Stapelung muss gedeckelt sein** (S6 des Abgleichs).
+  //
+  // Zwei Bannmale ueber demselben Turm duerfen sich nicht summieren, sonst
+  // wird aus der Wette eine Rechenaufgabe mit der Antwort "so viele wie
+  // moeglich". Geprueft wird die Funktion, nicht die Absicht: drei gleiche
+  // Zuschlaege muessen weniger ergeben als ihre Summe.
+  const einer = bannZuschlag(null, 1);
+  const drei = bannStapel([einer, einer, einer]);
+  if (drei >= einer * 3 - 1e-9) {
+    fail(`Drei Bannmale ergeben ${drei.toFixed(2)} statt gedeckelt - sie summieren sich. `
+      + 'Dann ist die Antwort immer "noch einer", und die Wette ist keine.');
+  }
+  if (drei <= einer) {
+    fail(`Drei Bannmale ergeben ${drei.toFixed(2)} und einer ${einer.toFixed(2)} - der `
+      + 'zweite bringt gar nichts. Ein Deckel, der bei eins greift, ist ein Verbot.');
+  }
+  // **Der Bann-Zweig muss der staerkere sein** - dieselbe Falle wie bei
+  // "Weite" (v285) und "Takt" (v290): ein Zweig, dessen Name das Gegenteil
+  // seiner Wirkung sagt, liest sich andersherum, als er wirkt.
+  const bannZ = bannZuschlag(BANN_ZWEIG, MAX_LEVEL);
+  const weitZ = bannZuschlag(1 - BANN_ZWEIG as 0 | 1, MAX_LEVEL);
+  if (bannZ <= weitZ) {
+    fail(`Der Bann-Zweig gibt auf Stufe ${MAX_LEVEL} ${(bannZ * 100).toFixed(0)} %, der `
+      + `weite ${(weitZ * 100).toFixed(0)} %. Ein Zweig namens "Bann" muss der staerkere sein.`);
+  }
+  if (rangeFor('bann', 1 - BANN_ZWEIG as 0 | 1, MAX_LEVEL) <= rangeFor('bann', BANN_ZWEIG, MAX_LEVEL)) {
+    fail('Der weite Zweig des Bannturms reicht nicht weiter als der Bann-Zweig - dann '
+      + 'ist er kein Handel, sondern der schlechtere.');
+  }
+  // **Und er verstaerkt sich selbst nie** - gemessen am gestellten Fall,
+  // nicht an der Absicht (Regel 13).
+  //
+  // Ohne diesen Riegel waere die beste Stellung "zwei Bannturme
+  // nebeneinander", und das ist keine Stellung, sondern eine Schleife.
+  // Dieselbe Regel wie beim Schildtraeger der Gegner (v110), der seinen
+  // eigenen Schild nie nachlaedt.
+  {
+    const probe = new GameState(MAPS[0].id);
+    probe.reset(1, 'normal', MAPS[0].id, { karten: 0 });
+    probe.gold = 9999;
+    // Zwei Bannturme dicht nebeneinander, dazu ein Geschuetz daneben. Gebaut
+    // wird ueber `build`, also mit Platzbedarf und Wegabstand - ein von Hand
+    // in die Liste geschobener Turm bewiese nichts ueber das Spiel.
+    const plaetze = candidateSpots(probe).slice(0, 40);
+    const gesetzt: { x: number; y: number }[] = [];
+    for (const p of plaetze) {
+      if (gesetzt.length >= 2) break;
+      if (probe.build(p.x, p.y, 'bann')) gesetzt.push(p);
+    }
+    if (gesetzt.length < 2) {
+      warn('Bannturm-Selbstriegel nicht gefahren: es liessen sich keine zwei Bannturme '
+        + 'setzen. Die Zusage steht damit ungeprueft da.');
+    } else {
+      const banne = probe.towers.filter((t) => t.def === 'bann');
+      const auf = banne.map((t) => probe.bannVon(t));
+      if (auf.some((z) => z > 0)) {
+        fail(`Ein Bannturm traegt selbst ${Math.max(...auf).toFixed(2)} Bann. Dann ist die `
+          + 'beste Stellung "zwei Bannturme nebeneinander" - eine Schleife, keine Stellung.');
+      }
+    }
+  }
+  warn(`Bannturm: +${(bannZuschlag(null, 1) * 100).toFixed(0)} % Feuerrate auf Stufe 1, `
+    + `+${(bannZ * 100).toFixed(0)} % im Bann-Zweig auf Stufe ${MAX_LEVEL}; Umkreis `
+    + `${rangeFor('bann', null, 1)} bis ${rangeFor('bann', 1 - BANN_ZWEIG as 0 | 1, MAX_LEVEL)} `
+    + `Weltpunkte. Zwei Bannmale ergeben ${bannStapel([einer, einer]).toFixed(2)} statt `
+    + `${(einer * 2).toFixed(2)}.`);
 }
 
 // ---------------------------------------------------- Das Weichenfenster

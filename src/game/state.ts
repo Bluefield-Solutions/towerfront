@@ -6,7 +6,7 @@ import {
   TOWERS, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor, hatZweigwahl,
   guenstigsterTurm, type BranchIndex, type TowerId,
   FOERDER_DECKEL, foerderZuschlag, wiederholungsFaktor, WIEDERHOLUNG_ZUSCHLAG,
-  werftErtrag, werftHoechstmass,
+  werftErtrag, werftHoechstmass, bannZuschlag, bannStapel,
 } from '../data/towers';
 import { EARLY_BONUS_MAX, EARLY_BONUS_WINDOW, EARLY_RISIKO_HUB } from '../data/waves';
 import { VERBUND_MAX, VERBUND_STUFE, VERBUND_UMKREIS } from './verbund';
@@ -1097,8 +1097,49 @@ export class GameState {
   towerStats(t: Tower) {
     const st = statsFor(TOWERS[t.def], t.branch, t.level);
     const v = this.verbundVon(t);
-    if (v <= 0) return st;
-    return { ...st, damage: st.damage * (1 + VERBUND_STUFE * v) };
+    const bann = this.bannVon(t);
+    if (v <= 0 && bann <= 0) return st;
+    return {
+      ...st,
+      damage: v > 0 ? st.damage * (1 + VERBUND_STUFE * v) : st.damage,
+      // **Der Bann greift an der Abklingzeit, nicht am Schaden** (v295, C3).
+      //
+      // Zwei Gruende. Erstens ist der Verbund (v244) schon eine
+      // Schadenszahl, und zwei Verstaerker auf derselben Groesse waeren
+      // multiplikativ - dann ist "beides zugleich" die einzige richtige
+      // Antwort. Zweitens sagen es die Vorbilder so: Torchwood und der Buff
+      // Beam machen Schuesse HAEUFIGER oder staerker, das Dorf gibt
+      // Reichweite - keines davon verrechnet sich mit einem anderen Bonus
+      // desselben Spiels.
+      //
+      // Und es ist im Bild zu sehen, ohne eine Zahl zu lesen: ein Turm im
+      // Bann feuert sichtbar schneller.
+      cooldown: bann > 0 ? st.cooldown / (1 + bann) : st.cooldown,
+    };
+  }
+
+  /** **Wieviel Bann auf diesem Turm liegt** (v295, C3).
+   *
+   *  Die eine Stelle, an der die Verstaerkung entsteht. Sie fragt die
+   *  Bannturme, nicht den Turm - ein Turm weiss nicht, wer ihn deckt, und
+   *  eine zweite Buchhaltung darueber waere eine, die veraltet, sobald
+   *  jemand einen Bannturm verkauft (Regel 15).
+   *
+   *  **Der Bannturm verstaerkt sich selbst nie**, und auch keinen anderen,
+   *  der nicht schiesst: sonst waere die Antwort "zwei Bannturme
+   *  nebeneinander", und das ist keine Stellung, sondern eine Schleife.
+   *  Dieselbe Regel wie beim Schildtraeger der Gegner (v110), der seinen
+   *  eigenen Schild nie nachlaedt. */
+  bannVon(t: Tower): number {
+    if (TOWERS[t.def].attack === 'keiner') return 0;
+    const zuschlaege: number[] = [];
+    for (const b of this.towers) {
+      if (b.def !== 'bann') continue;
+      const st = statsFor(TOWERS.bann, b.branch, b.level);
+      if (Math.hypot(b.x - t.x, b.y - t.y) > st.range) continue;
+      zuschlaege.push(bannZuschlag(b.branch, b.level));
+    }
+    return zuschlaege.length ? bannStapel(zuschlaege) : 0;
   }
 
   // ---------------------------------------------------------------- Wellen

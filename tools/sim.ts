@@ -9,7 +9,7 @@ import { ZIELWAHL_ORDNUNG, type Zielwahl, type Tower } from '../src/game/types';
 import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../src/data/difficulty';
 
 const START_LIVES = DIFFICULTIES.normal.startLives;
-import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, type TowerId } from '../src/data/towers';
+import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, rangeFor, type TowerId } from '../src/data/towers';
 
 import { MAPS } from '../src/data/maps';
 import { WEGNETZ } from '../src/data/wegnetz';
@@ -217,6 +217,10 @@ function score(r: Result): number {
  *  gegen mehrere Stile gemessen. */
 interface Bot {
   name: string;
+  /** Ob dieser Stil absichtlich um einen Bannturm herum baut (v295, C3).
+   *  Ohne Angabe: nein - die geeichten drei Stile bleiben, wie sie sind. */
+  bannStil?: 'egal' | 'nest';
+
   /** **Was dieser Stil BAUT** (v293, M18).
    *
    *  Bis v292 fuhren alle drei Stile dieselbe Turmliste und unterschieden
@@ -594,6 +598,43 @@ function foerdererMessen(): void {
       + `   Kristall ${ohne.lives}/${ohne.maxLives} -> ${mit.lives}/${mit.maxLives}`);
   }
   console.log('  (misst, urteilt nicht - die Eichung braucht ein ruhigeres Messgeraet, siehe M1)');
+}
+
+/** **Ist der Bannturm eine Wette?** (v295, C3)
+ *
+ *  S5 des Referenzabgleichs verlangt genau das: bei wenigen Tuermen ein
+ *  Verlust, bei vielen dichten ein Gewinn - es darf keine Lage geben, in der
+ *  er immer richtig ist. Gerechnet ist die Spanne im Abgleich (unbedacht 0,88
+ *  Bogentuerme fuer 1,64, absichtlich 2,12); hier wird sie GEFAHREN.
+ *
+ *  Zwei Bauplaene, derselbe Bot: einer stellt den Bannturm irgendwo in die
+ *  Reihe, der andere gar keinen. Der Unterschied ist die Zahl, um die es
+ *  geht - und sie muss klein bleiben, solange niemand ABSICHTLICH um ihn
+ *  herum baut. Ein Bot, der das taete, waere ein anderer Bot; dass es sich
+ *  dann lohnt, sagt die Geometrie (Faktor 2,4 im Abgleich, gemessen an
+ *  `GameState.build`).
+ *
+ *  Kein Tor: es misst, es urteilt nicht. */
+function bannMessen(): void {
+  console.log('\nBannturm (derselbe Bot, einmal mit und einmal ohne):');
+  // Der Bannturm ZUERST: wer fuer ihn baut, stellt ihn nicht als dritten.
+  // Der Bannturm kommt als VIERTER: er verstaerkt Nachbarn, und vorher gibt
+  // es keine. Wer ihn als ersten stellt, kauft einen Bonus auf nichts.
+  const mitBann: TowerId[] = ['arrow', 'arrow', 'mortar', 'bann', 'frost', 'prism'];
+  const nest = { ...MEISTER, bannStil: 'nest' as const };
+  for (const mm of MAPS) {
+    const ohne = play(mixedPlanBase, () => 0, MEISTER, 'normal', mm.id);
+    const blind = play(mitBann, () => 0, MEISTER, 'normal', mm.id);
+    const klug = play(mitBann, () => 0, nest, 'normal', mm.id);
+    console.log(`  ${mm.id.padEnd(15)} ohne ${ohne.lives}   unbedacht ${blind.lives} `
+      + `(${blind.lives - ohne.lives >= 0 ? '+' : ''}${blind.lives - ohne.lives})   `
+      + `ins Nest gebaut ${klug.lives} `
+      + `(${klug.lives - ohne.lives >= 0 ? '+' : ''}${klug.lives - ohne.lives})`
+      + `   von ${ohne.maxLives}`);
+  }
+  console.log('  (misst, urteilt nicht - unbedacht gestellt SOLL er sich nicht lohnen,');
+  console.log('   das ist S5 des Abgleichs. Wer absichtlich um ihn herum baut, erreicht');
+  console.log('   gemessen 5,3 statt 2,2 Tuerme im Umkreis - Faktor 2,4.)');
 }
 
 /** **Ist Gold in diesem Spiel ueberhaupt knapp?** (v291)
@@ -1037,7 +1078,55 @@ function play(
         // Platz HINTER dem Baudeckel: gut genug, um Abschuesse zu sehen,
         // ohne der Verteidigung ihre beste Stellung wegzunehmen.
         const fIdx = bot.maxTowers + stehen;
-        const nimm = willFoerdern && fIdx < spots.length ? fIdx : spotIdx;
+        let nimm = willFoerdern && fIdx < spots.length ? fIdx : spotIdx;
+        // **Der Nest-Bot baut ABSICHTLICH um den Bannturm herum** (v295, C3).
+        //
+        // Ohne ihn ist die Haelfte der Wette aus S5 ungeprueft: dass ein
+        // unbedacht gestellter Bannturm sich nicht lohnt, sagt der Lauf
+        // sofort (-4 bis -6 Kristall). Dass er sich lohnt, wenn man fuer ihn
+        // baut, sagt bisher nur die Geometrie. Ein Bot, der die Entscheidung
+        // nicht trifft, misst die Mechanik nicht - das ist die Lehre aus
+        // v285 und v283, beide Male woertlich derselbe Fehler.
+        //
+        // Gefragt wird allein die LAGE, nicht der Nutzen: welcher der
+        // naechsten Plaetze liegt im Umkreis eines stehenden Bannturms?
+        // Haengt die Wahl an Schaden je Gold, misst der Lauf zwei Dinge auf
+        // einmal (Regel 4).
+        if (bot.bannStil === 'nest' && !willFoerdern) {
+          if (id === 'bann') {
+            // **Der Bannturm gehoert dorthin, wo er die meisten TUERME
+            // erreicht - nicht auf den besten Bauplatz.**
+            //
+            // Der erste Entwurf stellte ihn als ersten in den Plan, also auf
+            // Platz eins der nach Wegdeckung sortierten Liste. Gemessen
+            // verlor der Bot damit ALLES (0 von 42 auf dem Spiralhain): ein
+            // Turm, der nicht schiesst, hatte die beste Stellung besetzt,
+            // und die Nachbarn mussten in seinen Umkreis statt dorthin, wo
+            // sie etwas sehen.
+            //
+            // Das ist woertlich der Modellfehler aus v285, wo der Foerderer
+            // auf die besten Plaetze kam - zweimal derselbe Griff, und beide
+            // Male hat erst der Lauf es gesagt.
+            let bestIdx = spotIdx; let bestN = -1;
+            const reich = rangeFor('bann', null, 1);
+            for (let k = spotIdx; k < Math.min(spots.length, spotIdx + 60); k++) {
+              const p = spots[k];
+              const n = s.gebaute.filter((tw) => TOWERS[tw.def].attack !== 'keiner'
+                && Math.hypot(tw.x - p.x, tw.y - p.y) <= reich).length;
+              if (n > bestN) { bestN = n; bestIdx = k; }
+            }
+            nimm = bestIdx;
+          } else {
+            const banne = s.gebaute.filter((tw) => tw.def === 'bann');
+            if (banne.length) {
+              for (let k = spotIdx; k < Math.min(spots.length, spotIdx + 40); k++) {
+                const p = spots[k];
+                if (banne.some((bt) => Math.hypot(bt.x - p.x, bt.y - p.y)
+                  <= s.towerStats(bt).range)) { nimm = k; break; }
+              }
+            }
+          }
+        }
         const sp = spots[nimm];
         if (s.build(sp.x, sp.y, id)) { stelleZiel(s, opts.ziel); si++; entscheidungenJeWelle[welle]++; }
         if (!willFoerdern || nimm === spotIdx) spotIdx++;
@@ -1833,6 +1922,7 @@ const mixedPlan = mixedPlanBase;
   wiederholungMessen();
   werftMessen();
   knappheitMessen();
+  bannMessen();
   console.log(`  Alleinsiege: ${ZIELWAHL_ORDNUNG.map((z) => `${z} ${siege[z]}`).join('  ')}`
     + `   (${entschieden} Wellen trennen ueberhaupt)`);
   console.log(`  geteilt:     ${ZIELWAHL_ORDNUNG.map((z) => `${z} ${geteilt[z]}`).join('  ')}`);

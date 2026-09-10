@@ -1,6 +1,48 @@
 # Towerfront — der Neubau
 
-Stand: v288 · beschlossen am 09.09.2026
+Stand: v295 · beschlossen am 09.09.2026
+
+**Nachgesehen in v295 — N3 steht auf drei von drei Sätzen, und die Antwort
+auf die eigene Frage von v288 ist gemessen: sie lautet nicht „Preis", sondern
+„Lage".**
+
+Der dritte Satz ist gebaut: die **Werft** (v290) setzt den Kristall nach jeder
+Welle stückweise zusammen, wirkt global und lässt am Ende der besten Partie
+gemessen vier Kristallpunkte fehlen — sie mildert einen Durchbruch, sie kauft
+ihn nicht zurück. Damit belegt derselbe Bauplatz Feuerkraft, Einkommen und
+Kristall.
+
+**Der Satz von v288 („bei 28 % übrigem Gold ist ein Preis folgenlos") war
+richtig gedacht und falsch gemessen** (v291): die 28 % kamen von `maxTowers:
+12` — einer Selbstbeschränkung der Bots gegen rund zweihundert Bauplätze. Ohne
+Deckel bleiben **−3 bis 16 %** liegen. Gold ist knapp, sobald man es ausgibt.
+Nur: wer 29 bis 41 Türme baut, **verliert** (Spiralhain 27 → 0), weil die
+weiteren Plätze zu wenig sehen und das Gold beim Ausbauen fehlt. Es fehlt kein
+Kostenpunkt, es fehlt ein Grund, den dreizehnten Turm zu wollen.
+
+**Und die Turmwahl ist dieser Grund nicht** (v293): ein eigenes Sortiment für
+den Stil `Breite` liess „Abstand der Spielstile" Punkt für Punkt auf **8,20**
+stehen. Solange die Turmwahl sechs Punkte ausmacht, kann keine Kennzahl über
+Spielstile mehr als sechs finden — das steht als M18 in den Messlücken.
+
+**Der Bannturm (v295) ist der erste Gegenbeleg, und er zeigt in eine andere
+Richtung.** Derselbe Turm, dasselbe Gold, dieselbe Welle — auf dem Spiralhain
+**11 Kristall unbedacht gebaut gegen 29 ins Nest gebaut**, gegen 27 ganz ohne
+ihn. **18 Punkte Spanne durch die Lage**, wo die ganze Turmwahl sechs
+entscheidet. Auf zwei der vier Karten kostet er, auf einer trägt er.
+
+Daraus folgt für N3 und für alles, was danach kommt: **die knappe Grösse ist
+nicht das Gold und nicht der Platz, sondern die gute Stelle.** Eine Regel, die
+den Preis verändert, verschiebt Buchhaltung; eine Regel, die den Wert einer
+Stelle von ihren Nachbarn abhängig macht, verändert das Spiel. Der Bannturm
+tut das, der Förderer und der Wiederholungsaufschlag tun es nicht — und beide
+stehen deshalb bis heute auf null bzw. am unteren Rand ihrer Wirkung.
+
+**Was das kostet, steht offen da:** der Bannturm ist gebaut, von fünf Zusagen
+gehalten und gemessen — und **nicht kaufbar**, weil sieben Bauknöpfe alle vier
+UX-Zustände reissen (16,3 / 27,0 / 35,0 / 16,3 % gegen 16 / 26 / 35 / 16). Die
+nächste Entscheidung ist damit eine über die Oberfläche, nicht über eine
+Mechanik: eine Bauleiste, die mehr als sechs Bauwerke trägt.
 
 **Nachgesehen in v288 — der Weg-Beschluss ist fertig, der Bauplatz-Beschluss
 hat seine erste harte Zahl.** Aus „eine Weiche" sind vier geworden (v284):

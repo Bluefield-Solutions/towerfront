@@ -808,7 +808,17 @@ export const PROBEN = [
     // Meldung schweigt, wenn ein Punkt einfach nur offen ist (Regel 13).
     name: 'Schliessbedingung nur in anderer Schreibweise',
     datei: 'docs/Towerfront-BACKLOG.md',
-    suche: 'text src/data/towers.ts "Bannturm" >= 1',
+    // **Der Anker ist in v295 umgezogen, und das ist genau die Verfallsart,
+    //   die `npm run muster` fangen soll.** Er hing an C3 (`Bannturm`); C3
+    //   ist in v295 zugefallen und in die Erledigt-Tabelle gewandert, also
+    //   kam der Eingriff nicht mehr an. Gemeldet hat es der Musterlauf, nicht
+    //   ich. Jetzt haengt er an C16 (`Flakstellung`) - dem naechsten offenen
+    //   Punkt, dessen Schliessbedingung auf `src/data/towers.ts` zeigt.
+    //   **Die Nullprobe zieht mit um und braucht weiterhin keinen Eingriff:**
+    //   `Flakstellung` kommt in `src/data/towers.ts` in keiner Schreibweise
+    //   vor (gemessen 0), und jeder gruene Doku-Lauf zeigt damit, dass die
+    //   Meldung dann schweigt.
+    suche: 'text src/data/towers.ts "Flakstellung" >= 1',
     ersatz: 'text src/data/towers.ts "bogenturm" >= 1',
     tor: 'doku',
     meldet: 'andere Schreibweise',
@@ -1026,6 +1036,35 @@ export const PROBEN = [
       + '  /* **Die Skala schrumpft',
     tor: 'browsertor',
     meldet: 'laufende Strom steht auf dem Zielgerät nicht im Bild',
+  },
+  {
+    // **Zwei Bannmale summieren sich** (v295, C3, S6).
+    //
+    // Der Deckel ist die eine Zusage, an der die Wette haengt: summieren sie
+    // sich, heisst die Antwort auf jede Lage "noch ein Bannturm", und aus
+    // einer Entscheidung wird eine Rechenaufgabe. Bloons deckelt sein Dorf
+    // aus demselben Grund ausdruecklich.
+    name: 'Bannmale summieren sich',
+    datei: 'src/data/towers.ts',
+    suche: '  return (sortiert[0] ?? 0) + (sortiert[1] ?? 0) * 0.5;',
+    ersatz: '  return sortiert.reduce((a, b) => a + b, 0);',
+    tor: 'guards',
+    meldet: 'sie summieren sich',
+  },
+  {
+    // **Der Bannturm verstaerkt sich selbst** (v295).
+    //
+    // Dann waere die beste Stellung "zwei Bannturme nebeneinander", und das
+    // ist keine Stellung, sondern eine Schleife. Dieselbe Regel wie beim
+    // Schildtraeger der Gegner (v110), der seinen eigenen Schild nie
+    // nachlaedt - nur faengt sie hier der Rauchtest, nicht der Waechter:
+    // gemessen wird das VERHALTEN, nicht die Zahl.
+    name: 'Bannturm verstaerkt sich selbst',
+    datei: 'src/game/state.ts',
+    suche: "    if (TOWERS[t.def].attack === 'keiner') return 0;",
+    ersatz: '    // Eingriff: kein Riegel',
+    tor: 'guards',
+    meldet: 'Bannturm',
   },
   {
     // **Ein Spielstil, der nicht gewinnt** (v293, M18).

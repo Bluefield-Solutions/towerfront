@@ -2839,3 +2839,70 @@ sagen muss (Regel 8 arbeitet hier für uns, nicht gegen uns).
 
 **Bis das Bild da ist, baut das Spiel gegen den Platzhalter** (K5), und
 `npm run bildtor` nennt `werft_1_1` bei jedem Lauf als offene Bestellung.
+
+### 8d.4 `33_bannturm.png` — das dritte Gebäude ohne Waffe
+
+**Er ist der einzige, der nach OBEN arbeitet.** Förderer und Werft greifen
+nach unten und nach innen — Trichter, Rutsche, Sumpf; Gerüst, Greifarme,
+Schweisspunkt. Der Bannturm sendet: ein Mast mit einem offenen Ring darauf,
+und die Wirkung geht in die Fläche um ihn herum. Das ist im Bild zu sehen,
+ohne dass ein Wort dabeisteht — und es ist der Grund, warum er sich gegen
+**beide** anderen abheben lässt.
+
+**Er darf trotzdem kein Turm sein.** Kein Rohr, keine Mündung, nichts, was
+zielt. Der Ring ist waagerecht und geschlossen; ein Ring, der irgendwohin
+zeigt, liest sich als Schüssel und damit als Waffe.
+
+**Maße im Prompt selbst**: 512 × 512, quadratisch, freigestellt auf
+Transparenz.
+
+```
+[STILBLOCK NEUBAU EINFÜGEN]
+
+SUBJECT: a single industrial resonance mast seen from above at a slight
+angle, 512 x 512 pixels, square, isolated on full transparency with no
+background and no ground shadow - the game bakes its own shadow.
+
+A slim braced mast rising from a heavy anchored base, carrying ONE open
+horizontal ring at its top - a closed loop lying flat, like a halo seen from
+above. Cable runs spiral up the mast into the ring. Faint violet light sits
+IN the ring itself and in a thin band around the base, as if the whole plot
+of ground were being tuned. One lit gauge at the foot.
+
+NO WEAPON OF ANY KIND. No barrel, no muzzle, no turret, no dish, no dome,
+nothing that aims. The ring is FLAT and CLOSED: a ring that tilts or opens
+reads as a dish, and a dish reads as a gun. Every gun in this game points
+outward; this machine points at the air above itself.
+
+It must read as a DIFFERENT KIND OF MACHINE than the two other unarmed
+buildings already in this set. The extraction plant is a closed squat drum
+with chutes pointing DOWN and OUT. The repair gantry is an open cage with
+arms pointing IN. This one is TALL AND THIN and works UPWARD - three
+silhouettes, three directions, recognisable from across the field at roughly
+96 pixels on screen.
+
+The saturated accent is violet and it belongs to the ring and the ground
+band - not to a sight or a sensor. Amber is reserved for the extraction
+plant, cold blue for the repair gantry; do not use either here.
+
+[AUSGABE-BLOCK EINFÜGEN]
+```
+
+### Abnahme 8d.4
+
+| Prüfung | Gefordert | Womit |
+|---|---|---|
+| Silhouetten-Abstand zu den vier Türmen | Überdeckung **höchstens 0,60** | `npm run probebild` |
+| Silhouetten-Abstand zu Förderer **und** Werft | Überdeckung **höchstens 0,55** | `npm run probebild` |
+| Höher als breit | Verhältnis **mindestens 1,25** | `npm run probebild` |
+| Anteil gesättigter Akzente | höchstens 5 % der Fläche | Stilblock 8d |
+
+**„Höher als breit" ist die Abnahme, die man nicht diskutieren muss.** Der
+Förderer ist ausdrücklich breiter als hoch (mindestens 1,15 quer), die Werft
+ist ein offener Kasten — ein Mast trennt sich davon durch seine Proportion
+allein, und die ist eine Zahl statt eines Eindrucks.
+
+**Bis das Bild da ist, baut das Spiel gegen den Platzhalter** (K5). Der trägt
+seit v290 den Anfangsbuchstaben, hier also **B**; `npm run bildtor` prüft bei
+jedem Lauf, dass sich zwei Platzhalter um mindestens 12 % ihrer Punkte
+unterscheiden.

@@ -1,6 +1,23 @@
 # Towerfront — Stories
 
-Stand: v303 · 10.09.2026
+Stand: v310 · 10.09.2026
+
+**Nachgesehen in v310 — Paket N1 ist bis auf den Rückbau gebaut, und die
+Reihenfolge im Katalog hat gehalten.**
+
+| Story | gebaut | gemessen |
+|---|---|---|
+| S-N1-01 · der Lauf | v302 | vier Abschnitte, in `sim` fahrbar, 1316 s |
+| S-N1-02 · Kartenzug je Welle | v303 | 12 von 12 Karten werden genommen, 0 von jedem immer |
+| S-N1-03 · Abschnittswahl | v305 | Spreizung **142,4**, keine Auflage zweimal vorn |
+| S-N1-04 · Erfahrung | v306 | 1300 gewonnen gegen 340 verloren, Stapel 12 → 18 |
+| **S-N1-05 · Rückbau** | offen | Umfang gezählt, siehe dort |
+
+**Zwei Zahlen dieses Pakets sind unterwegs korrigiert worden, beide nach
+Regel 12** (die Messstelle): die Rampe von 14,89 war gegen einen Bot **ohne
+Deck** gemessen (v308), und die Kurvenform über sechzig Wellen machte die
+ersten Abschnitte folgenlos (v309). Seit v309 behält jeder Abschnitt seine
+geeichte Kurve und der Lauf legt einen Faktor darüber.
 
 **Nachgesehen in v291 — Paket N3 ist zu drei Vierteln gebaut, und die
 Diagnose hat sich dabei umgedreht.** Förderer (v285), Wiederholungsaufschlag

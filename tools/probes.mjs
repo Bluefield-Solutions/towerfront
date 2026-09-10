@@ -5051,7 +5051,27 @@ export const PROBEN = [
 // lassen, ohne den Lauf mitzustarten.
 const NUR_LESEN = !process.argv[1]?.endsWith('probes.mjs');
 if (!NUR_LESEN) {
-const dreckig = process.argv.includes('--muster')
+// **Wer keine Probe faehrt, braucht den Sauberkeitscheck nicht** - und darf
+// an ihm nicht scheitern (v310).
+//
+// Er schuetzt davor, dass eine Probe mit `git checkout` frische Arbeit
+// mitnimmt (Regel 1, viermal passiert). `--muster` liest nur, und
+// `--stand-schreiben` schreibt nur eine Zeile - keiner von beiden ruft je
+// `git checkout`.
+//
+// Gekostet hat das den ersten geteilten Lauf vollstaendig: alle SECHS
+// Scheiben waren gruen, und der zusammenfuehrende Schritt starb daran, dass
+// er zwei Zeilen vorher selbst `tools/proben-befund.txt` geschrieben hatte.
+// Ein Waechter, der an der eigenen Arbeit anschlaegt, haelt nichts - er
+// blockiert nur.
+//
+// **Keine Gegenprobe, und das steht hier statt in einer Fussnote:** der
+// Fehler tritt nur in einem Lauf auf, der wirklich zusammenfuehrt, und den
+// gibt es nur auf dem Runner. Dieselbe Lage wie bei der Budgetpruefung in
+// v233, die nur in einem echten Packlauf wirkt.
+const NUR_SCHREIBEN = process.argv.includes('--muster')
+  || process.argv.includes('--stand-schreiben');
+const dreckig = NUR_SCHREIBEN
   ? '' : execSync('git status --porcelain', { cwd: ROOT, encoding: 'utf8' }).trim();
 if (dreckig) {
   console.error('PROBEN: der Baum ist nicht sauber.\n');

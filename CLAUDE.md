@@ -689,6 +689,15 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der erste geteilte Probenlauf: sechs von sechs Scheiben gruen in 38 Minuten
+(v310)** - gegen "in zwei Stunden nicht fertig und abgebrochen". Rot geendet
+ist er trotzdem, an einem Waechter, der an der eigenen Arbeit anschlug: der
+zusammenfuehrende Schritt schreibt erst den Befund und ruft dann
+`--stand-schreiben`, und das prueft als erstes, ob der Baum sauber ist. Der
+Check schuetzt davor, dass eine PROBE mit `git checkout` frische Arbeit
+mitnimmt; wer keine Probe faehrt, braucht ihn nicht und darf an ihm nicht
+scheitern.
+
 **Ein Lauf hat zwei Kurven (v309, N1K).** Die eine laeuft INNERHALB eines
 Abschnitts (ruhiger Anfang, steiles Ende - `hpScale`, geeicht an EINER Karte
 mit fuenfzehn Wellen), die andere UEBER die Abschnitte. Bis v308 sollte eine
@@ -891,7 +900,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v309. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v310. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

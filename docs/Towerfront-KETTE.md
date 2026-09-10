@@ -1,6 +1,27 @@
 # Towerfront — die Kette
 
-Stand: v303 · 10.09.2026
+Stand: v310 · 10.09.2026
+
+**Nachgesehen in v310 — der Nachtlauf hat die Kette einen halben Tag lang
+angehalten, und die Reparatur ist der wichtigste Teil dieses Abschnitts.**
+
+Er ist am 10.09. um 13:15:35 an seiner eigenen `timeout-minutes: 120`
+gestorben, nach zwei Stunden ohne Ergebnis. Über der Werkstattdatei stand
+„rund fünfzig Minuten" — die Zahl von 249 Proben; heute sind es **378**.
+**Ein abgebrochener Lauf schreibt nicht einmal seinen Befund** (`if: always()`
+läuft bei einer Absage nicht mehr), also blieb weder Stand noch Meldung, die
+Zeitratsche schlug an, und die ganze Torkette war rot — fünf Fassungen lagen
+undelivered auf dem Zweig.
+
+Seit v307 fährt er in **sechs Scheiben** (`--teil=N/6`), reihum über die
+Liste. Gemessen: **38 Minuten**, alle 378 Proben schlagen an. Eine Scheibe
+schreibt den Stand nicht — sie hat die anderen nicht gesehen; das tut der
+zusammenführende Schritt, und eine **fehlende** Scheibe zählt dabei als rot.
+
+**Und der erste geteilte Lauf ist trotzdem rot geendet** (v310): der
+zusammenführende Schritt schreibt erst den Befund und ruft dann
+`--stand-schreiben`, und das prüfte als erstes, ob der Baum sauber ist. Ein
+Wächter, der an der eigenen Arbeit anschlägt, hält nichts.
 
 **Nachgesehen in v303 — die Kette hat acht Runden am Stueck getragen, und der
 Ablauf hat dabei dreimal etwas gefangen, das kein Tor gesehen haette.**
@@ -184,7 +205,7 @@ die nächste Runde beginnt. Ein roter Lauf ist dann die nächste Runde.
 | Wann | Was | Dauer |
 |---|---|---|
 | jeder Push auf `master` | die volle Torkette, 33 Schritte | 3–4 min |
-| jede Nacht | `npm run proben -- --voll` | rund 50 min |
+| jede Nacht | `npm run proben -- --voll`, in sechs Scheiben | **38 min** (gemessen v310) |
 
 Der Nachtlauf schreibt seinen Befund nach `tools/proben-befund.txt` und checkt
 ihn ein — auch nach einem roten Lauf. `npm run muster` liest die Datei in jeder

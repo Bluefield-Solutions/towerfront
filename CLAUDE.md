@@ -696,6 +696,35 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der erste Lauf, der rot werden konnte, war rot - und beide Befunde waren
+Proben, keine Tore (v313).** v312 hat `set -o pipefail` und den Protokollgriff
+eingebaut; der Lauf danach meldete sofort zwei Gegenproben ohne Gegenstand. Die
+Reparatur hat sich damit in der Runde nach ihrem Einbau selbst belegt.
+
+Beide waren an einem FORTSCHRITT gestorben, nicht an einem Fehler. Die eine
+machte aus dem Bogenturm einen Bannturm, damit war C3 erfuellt, waehrend es
+offen dastand — **C3 ist in v295 zugefallen**, und seitdem bewies sie nichts;
+der Kommentar darueber sagte den Verfall sogar voraus, rechnete aber nicht
+damit, dass der Punkt selbst verschwindet. Die andere haengte S-N3-04 an
+S-N3-02, und **S-N3-04 ist seit v290 zu**: eine zugefallene Story wird gar
+nicht erst auf ihre Abhaengigkeit angesehen, also **kam der Eingriff an und
+bewirkte nichts**. Das ist die stillste Verfallsart, die es gibt, und die
+einzige, die `npm run muster` nicht sieht — es prueft, ob das Muster noch
+trifft, nicht ob der Treffer noch etwas bewirkt. Beide greifen jetzt an etwas,
+das der Fortschritt nicht wegnimmt: die eine an der BEDINGUNG statt an ihrem
+Gegenstand, die andere an der letzten Story des Katalogs.
+
+**Und die erste Reparatur hat einen blinden Fleck des Doku-Waechters
+aufgedeckt.** Sie schlug nicht an, obwohl der Eingriff ankam: seine
+Kennungsregel `[A-Z]+\d+(?:-[A-Z])?` verlangt hinter der Ziffer entweder nichts
+oder einen Bindestrich. **N1K und N1G enden auf einen Buchstaben** — beide
+stehen seit v309 offen da, beide tragen eine Schliessbedingung, und keine ist
+je ausgewertet worden. Dieselbe Klasse wie die Zahlwort-Tabelle in v230. Die
+Kennung nimmt jetzt einen Buchstaben, und eine Zeile im Abschnitt „Offen",
+deren Kennung der Waechter nicht lesen kann, wird **gemeldet statt
+uebergangen** — sonst kommt derselbe Fleck mit der naechsten Namensform
+zurueck.
+
 **Der Nachtlauf konnte gar nicht rot werden - und das seit v221 (v312).** Der
 Schritt lautete `npm run proben -- --voll ... 2>&1 | tee /tmp/proben-lauf.log`.
 **Der Ausgang einer Rohrleitung ist der Ausgang des LETZTEN Gliedes**, also von
@@ -935,7 +964,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v312. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v313. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

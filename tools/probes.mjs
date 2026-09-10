@@ -1881,7 +1881,13 @@ export const PROBEN = [
     // gefunden, weil ich nachgesehen habe.
     name: 'Nachtlauf-Befund wird verschwiegen',
     datei: 'tools/proben-befund.txt',
-    regel: /^sauber .*$/m,
+    // **Nicht mehr an der `sauber`-Zeile** (v313): steht in der Datei ein
+    // BEFUND statt einer sauberen Zeile, gibt es dieses Muster nicht - und
+    // genau dann laeuft der naechste Lauf. Die drei Proben verloren ihren
+    // Gegenstand also immer dann, wenn man sie am dringendsten braucht, und
+    // machten `muster` ein zweites Mal rot. Gegriffen wird jetzt der ganze
+    // Inhalt, was auch immer darin steht.
+    regel: /[\s\S]+/,
     ersatz: 'BEFUND: eine Probe beweist nichts mehr.',
     tor: 'muster',
     meldet: 'hat einen Befund hinterlassen',
@@ -1893,7 +1899,13 @@ export const PROBEN = [
     // dauerrot und die Zeile in zwei Runden abgeschaltet.
     name: 'Sauberer Nachtlauf schweigt',
     datei: 'tools/proben-befund.txt',
-    regel: /^sauber .*$/m,
+    // **Nicht mehr an der `sauber`-Zeile** (v313): steht in der Datei ein
+    // BEFUND statt einer sauberen Zeile, gibt es dieses Muster nicht - und
+    // genau dann laeuft der naechste Lauf. Die drei Proben verloren ihren
+    // Gegenstand also immer dann, wenn man sie am dringendsten braucht, und
+    // machten `muster` ein zweites Mal rot. Gegriffen wird jetzt der ganze
+    // Inhalt, was auch immer darin steht.
+    regel: /[\s\S]+/,
     ersatz: 'sauber 2099-01-01 deadbeef',
     tor: 'muster',
     meldetNicht: 'hat einen Befund hinterlassen',
@@ -1909,7 +1921,13 @@ export const PROBEN = [
     // Hand nachgefahren; eine Gegenprobe hat sie nicht.
     name: 'Leere Befund-Datei gilt als sauber',
     datei: 'tools/proben-befund.txt',
-    regel: /^sauber .*$/m,
+    // **Nicht mehr an der `sauber`-Zeile** (v313): steht in der Datei ein
+    // BEFUND statt einer sauberen Zeile, gibt es dieses Muster nicht - und
+    // genau dann laeuft der naechste Lauf. Die drei Proben verloren ihren
+    // Gegenstand also immer dann, wenn man sie am dringendsten braucht, und
+    // machten `muster` ein zweites Mal rot. Gegriffen wird jetzt der ganze
+    // Inhalt, was auch immer darin steht.
+    regel: /[\s\S]+/,
     ersatz: '',
     tor: 'muster',
     meldet: 'hat einen Befund hinterlassen',
@@ -5661,12 +5679,38 @@ if (process.argv.includes('--muster')) {
   // stuetzen, also schlug zuerst "kein Gegenstand mehr" an. Ein Befund des
   // vollen Laufs ist ausserdem die dringendere Nachricht.
   //
-  // Nicht unter `PROBENLAUF` ausgenommen, anders als die Standregel weiter unten:
-  // dort gibt es einen Ringschluss (der Lauf, den die Regel verlangt, laeuft
-  // gerade), hier nicht. Ein Befund bleibt ein Befund, auch waehrend ein
-  // neuer Lauf faehrt - und die Gegenprobe dazu braucht genau das.
+  // **Der Satz "hier gibt es keinen Ringschluss" stand hier bis v313 - und er
+  // war falsch.** Gemessen an drei Laeufen am 10.09.2026:
+  //
+  //   ein roter Lauf schreibt einen Befund
+  //     -> `muster` ist rot
+  //     -> jede Scheibe mit einer `muster`-Probe arbeitet gar nicht erst
+  //        ("Eine Gegenprobe an einem roten Tor beweist nichts")
+  //     -> der Lauf ist rot
+  //     -> er schreibt einen Befund. Von vorn.
+  //
+  // Der Befund geht nur weg, wenn ein Lauf gruen ist, und kein Lauf kann gruen
+  // sein, solange er dasteht. Genau die Form, die eine Zeile tiefer fuer die
+  // Standregel schon erkannt war. Der Stand stand deshalb seit dem 09.09. auf
+  // v265, und die 5-Minuten-Scheiben in allen drei Laeufen kamen daher.
+  //
+  // **Ausgenommen wird trotzdem nur, was dieser Lauf nicht selbst angerichtet
+  // hat.** Ein Befund, den eine Gegenprobe gerade EINGEBAUT hat, unterscheidet
+  // sich vom eingecheckten Stand - dann wird er geprueft wie immer. Die drei
+  // Gegenproben aus v227 belegen das bei jedem vollen Lauf: sie bauen einen
+  // Befund ein und verlangen, dass `muster` ihn meldet. Sie sind der Beweis,
+  // dass diese Ausnahme nichts verschluckt.
+  //
+  // Ausserhalb eines Probenlaufs bleibt alles wie seit v227: die Torkette
+  // sieht den Befund und wird rot.
+  const befundIstEingebaut = () => {
+    try {
+      execSync(`git diff --quiet -- ${BEFUND_DATEI}`, { cwd: ROOT, stdio: 'pipe' });
+      return false;
+    } catch { return true; }
+  };
   const befund = befundOffen();
-  if (befund) {
+  if (befund && (!process.env.PROBENLAUF || befundIstEingebaut())) {
     console.error('\nMUSTERLAUF: der letzte volle Probenlauf hat einen Befund '
       + 'hinterlassen - eine Probe beweist nichts mehr.');
     for (const z of befund.split('\n')) console.error(`  ${z}`);

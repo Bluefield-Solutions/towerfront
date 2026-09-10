@@ -1,6 +1,6 @@
 # Towerfront — Stories
 
-Stand: v297 · 10.09.2026
+Stand: v299 · 10.09.2026
 
 **Nachgesehen in v291 — Paket N3 ist zu drei Vierteln gebaut, und die
 Diagnose hat sich dabei umgedreht.** Förderer (v285), Wiederholungsaufschlag
@@ -702,10 +702,58 @@ Zahl verschiedener Turmarten, die ihn getroffen haben.
 * `npm run sim`: der Knappheitsanteil bleibt in seinem Band — Vielfalt darf
   sich lohnen, aber nicht das Gold verdoppeln.
 
-**Gegenprobe.** Den Zuschlag auf null setzen: der Rauchtest muss melden, dass
-zwei Turmarten dieselbe Beute bringen wie eine.
+**Gebaut und gemessen in v299 — der Schalter steht auf Null.**
 
-**Schliesst, wenn:** `text src/game/state.ts "vielfaltsBeute" >= 2`
+Jeder Gegner trägt ein Bitmuster darüber, welche **Turmarten** ihn beschädigt
+haben (nach Schild und Panzerung, also nur wo Schaden ankam). Der Fall war
+gemessen, bevor die Zahl gesetzt wurde:
+
+| Turmarten je getötetem Gegner | Anteil |
+|---|---|
+| 0 (Fähigkeit, Kernraub, Zielunit) | 2,9 % |
+| 1 | 25,3 % |
+| 2 | **32,8 %** |
+| 3 | 23,5 % |
+| 4 | 15,5 % |
+| **Mittel** | **2,23** |
+
+Die Karten trennen sich dabei deutlich — Spiralhain 12 % Einzelart, Farnkessel
+46 %.
+
+**Rogue Towers Form trägt hier nicht, und das ist gemessen statt gemeint.**
+Dort gibt es **+1 Gold je Art**; hier liegt die Beute bei 1 bis 7 (Boss 48),
+ein flaches +1 wäre auf dem Schleicher eine Verdopplung — genau, was die
+Abnahme verbietet. Regel 10 gilt für die FORM des Vorbilds, Regel 2 für ihre
+Größe: anteilig, nicht absolut.
+
+**Die Wirkung ist sauber getrennt.** Bei 0,15 bekommt der Häufer auf *jeder*
+Karte **+0 Gold**, der Mischer **+100 bis +251**. Eine Regel, die den, der eine
+Turmart baut, von Bauart nicht erreicht.
+
+**Was blockiert, ist eine Zusage aus S-N3-02.** Ab Vielfalt 0,10 kostet der
+Wiederholungsaufschlag den perfekten Verteiler **2 von 42 Kristall**, und seine
+Zusage verlangt null. Das ist kein Wurf — durchprobiert von 0 bis 0,25
+erscheint der Verlust bei 0,10 und bleibt. Es ist auch kein Widerspruch: der
+Verteiler hat mit der Vielfaltsbeute mehr Gold, baut deshalb anders, und der
+Aufschlag trifft einen anderen Bauverlauf.
+
+**Diese Zusage steht auf EINEM Lauf je Karte und einer harten Null, ohne
+Rauschband** — zwei Kristall von 42 sind in diesem Werkzeug die übliche
+Wegabhängigkeit. Sie in derselben Runde zu reparieren, in der die eigene
+Änderung an ihr scheitert, wäre kein Beweis mehr (v219). Das ist die nächste
+Runde, nicht diese.
+
+Nach oben ist das Fenster ohnehin eng: bei 0,25 fällt die Trennung des
+Wiederholungsaufschlags von 599 auf 113 Gold und reisst ihre eigene Grenze von
+200. **Brauchbar sind 0,10 bis 0,20.**
+
+**Gegenprobe.** Zwei, und beide am GESTELLTEN Wert 0,15, nicht am
+ausgelieferten — der steht auf Null, und eine Zusage, die dann schweigt, ist
+keine (Regel 5): `arten - 1` zu `arten` machen (dann bekommt auch der Häufer
+seinen Zuschlag), und den Vermerk am Gegner wegnehmen (dann ist jeder von null
+Arten getroffen).
+
+**Schliesst, wenn:** `text src/data/towers.ts "VIELFALT_BEUTE: number = 0." >= 1`
 
 ---
 

@@ -3,9 +3,10 @@ import { muendung } from '../data/turmgestalt';
 import { tempoFaktor, wirkungAnlegen, wirkungenTicken, type Wirkung, type WirkungsArt } from '../data/wirkungen';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import {
-  TOWERS, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor, hatZweigwahl,
+  TOWERS, TOWER_ORDER, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor, hatZweigwahl,
   guenstigsterTurm, type BranchIndex, type TowerId,
   FOERDER_DECKEL, foerderZuschlag, wiederholungsFaktor, WIEDERHOLUNG_ZUSCHLAG,
+  VIELFALT_BEUTE, vielfaltsBeute,
   werftErtrag, werftHoechstmass, bannZuschlag, bannStapel,
 } from '../data/towers';
 import { EARLY_BONUS_MAX, EARLY_BONUS_WINDOW, EARLY_RISIKO_HUB } from '../data/waves';
@@ -56,11 +57,24 @@ interface PendingSpawn {
   shield?: number; traeger?: number;
 }
 
+/** Wieviele Bits in einer Zahl gesetzt sind - hier: wieviele Turmarten einen
+ *  Gegner beschaedigt haben. Vier Arten, also hoechstens vier Durchlaeufe. */
+export function zaehleBits(n: number): number {
+  let z = 0;
+  // **Vorzeichenlos schieben.** Mit `>>` bleibt das Vorzeichenbit stehen und
+  // die Schleife endet bei einer negativen Zahl nie. Die Ursache oben ist
+  // behoben; diese Zeile sorgt dafuer, dass derselbe Fehler beim naechsten
+  // Mal MELDET statt zu haengen - eine falsche Zahl findet man, eine
+  // stehende Schleife sucht man.
+  for (let m = n >>> 0; m; m >>>= 1) z += m & 1;
+  return z;
+}
+
 function emptyStats(): RunStats {
   return {
     goldEarned: 0, goldSpent: 0, damage: 0, damageBy: {},
     kills: 0, leaksByWave: [], damageByWave: [], abilityUses: {}, duration: 0, towersBuilt: 0,
-    schuesse: 0, schuesseOhneWirkung: 0,
+    artenJeKill: [], schuesse: 0, schuesseOhneWirkung: 0,
   };
 }
 
@@ -968,6 +982,9 @@ export class GameState {
    *  Story greift genau hier. Eine Wirkung, die sich nicht abschalten laesst,
    *  ist nicht gemessen, sondern behauptet. */
   wiederholungZuschlag = WIEDERHOLUNG_ZUSCHLAG;
+  /** Wie stark Vielfalt die Beute hebt - als Feld, damit eine Messung sie
+   *  abschalten kann, ohne die Daten zu aendern (Regel 13). */
+  vielfaltZuschlag = VIELFALT_BEUTE;
 
   wiederholungsAufschlag(id: TowerId): number {
     const gebaut = this.towers.reduce((n, t) => n + (t.def === id ? 1 : 0), 0);
@@ -1791,7 +1808,7 @@ export class GameState {
       id: this.nextId++, def: id, x: p0.x, y: p0.y + off,
       hp, hpMax: hp, speed: def.speed, lane: ln, heading: 0,
       side: (this.rng.next() * 2 - 1) * 0.85, travelled: 0,
-      wirkungen: null, auraIn: 0, shield, traeger,
+      wirkungen: null, auraIn: 0, arten: 0, shield, traeger,
       hitFlash: 0, squash: 0, hpShown: hp, wobble: this.rng.next() * 9,
       dead: false, leaked: false, kernraub: 0, welle,
     });
@@ -1811,7 +1828,7 @@ export class GameState {
         // Spaene erben den Schild NICHT. Ein Spalter mit Schild waere sonst
         // ein Gegner mit drei Schilden - einer fuer sich, zwei fuer die
         // Bruchstuecke -, und das steht in keiner Wellenzeile.
-        lane: parent.lane, heading: parent.heading, auraIn: 0, shield: 0, traeger: 0,
+        lane: parent.lane, heading: parent.heading, auraIn: 0, arten: 0, shield: 0, traeger: 0,
         // Spaene stieben zur Seite auseinander.
         side: Math.max(-1, Math.min(1, parent.side + (this.rng.next() - 0.5) * 0.9)),
         travelled: Math.max(0, parent.travelled - 6),
@@ -2522,6 +2539,21 @@ export class GameState {
     const schluck = Math.min(0.66, rest * 0.11);
     const dmg = Math.max(1, Math.round(raw * this.perks.damageMul * (1 - schluck)));
     e.hp -= dmg;
+    // **Welche Turmart hat hier gearbeitet?** (v299, S-N3-03)
+    //
+    // Vermerkt wird NACH Schild und Panzerung, also nur wo wirklich Schaden
+    // ankam: ein Turm, dessen Schuss der Schild geschluckt hat, hat den
+    // Gegner nicht beschaedigt. Sonst zaehlte ein wirkungsloser Schuss so
+    // viel wie ein toedlicher.
+    // `indexOf` gibt -1 fuer alles, was nicht in `TOWER_ORDER` steht - und
+    // das ist nicht theoretisch: die **Zielunit** schiesst und steht nicht
+    // darin (siehe `hatZweigwahl`). `1 << -1` ist in JavaScript `1 << 31`,
+    // also das Vorzeichenbit, und eine Zaehlschleife mit arithmetischem
+    // Schieben kommt darauf nie zum Ende. Der erste Entwurf hat genau so
+    // einen `npm run sim` fuer zwanzig Minuten aufgehaengt, ohne eine Zeile
+    // auszugeben - ein Fehler, der nicht meldet, sondern steht.
+    const artIndex = owner ? TOWER_ORDER.indexOf(owner.def) : -1;
+    if (artIndex >= 0) e.arten |= 1 << artIndex;
     e.hitFlash = 1;
     e.squash = Math.min(1, e.squash + 0.55);
     if (owner) owner.damageDone += dmg;
@@ -2544,13 +2576,35 @@ export class GameState {
     if (e.hp <= 0) {
       e.dead = true;
       if (e.kernraub > 0) this.splitterLoesen(e);
-      const bounty = Math.max(1, Math.round(def.bounty * this.diff.bountyMul
+      // **Vielfalt zahlt sich in der Beute aus** (v299, S-N3-03).
+      //
+      // Gerundet wird EINMAL, ganz am Ende: Grundbeute, Grad, Karte,
+      // Foerderer und Vielfalt sind Faktoren auf dieselbe Zahl. Wer den
+      // Vielfaltsanteil einzeln rundete, verloere ihn bei der haeufigsten
+      // Beute (2 Gold) vollstaendig.
+      const arten = zaehleBits(e.arten);
+      const bounty = Math.max(1, Math.round(vielfaltsBeute(def.bounty, arten,
+        this.vielfaltZuschlag) * this.diff.bountyMul
         * this.map.balance.goldMul * this.foerderFaktor(e.x, e.y)));
       this.gold += bounty;
       this.stats.goldEarned += bounty;
       this.stats.kills++;
+      // Die Verteilung, aus der die Beuteregel gefolgt ist - sie bleibt
+      // stehen, damit `npm run sim` sie weiter nennt.
+      this.stats.artenJeKill[arten] = (this.stats.artenJeKill[arten] ?? 0) + 1;
       if (owner) owner.kills++;
-      this.float(e.x, e.y - 12, `+${bounty}`, C.gold, def.boss ? 30 : 20);
+      // **Die Vielfalt steht IM BILD, nicht nur in der Bilanz** (S-N3-03).
+      //
+      // Der Zuschlag ist ein Faktor auf dieselbe Zahl, also waere er in
+      // `+3` nicht zu erkennen - der Spieler saehe eine groessere Zahl und
+      // wuesste nicht, warum. Angehaengt wird deshalb, WORAUS sie kommt,
+      // und nur dann, wenn wirklich etwas dazugekommen ist: bei einer Art
+      // steht dort nichts, und wo die Rundung den Anteil verschluckt, luegt
+      // die Marke nicht.
+      const ohne = Math.max(1, Math.round(def.bounty * this.diff.bountyMul
+        * this.map.balance.goldMul * this.foerderFaktor(e.x, e.y)));
+      const vielfalt = bounty > ohne ? ` ×${arten}` : '';
+      this.float(e.x, e.y - 12, `+${bounty}${vielfalt}`, C.gold, def.boss ? 30 : 20);
       // Der Funke traegt den AKZENT, nicht die Grundfarbe.
       //
       // Seit v168 ist `body` fuer alle acht dieselbe Familie (Gunmetal) -
@@ -3021,7 +3075,7 @@ export class GameState {
         id: this.nextId++, def, x, y, hp, hpMax,
         speed: ENEMIES[def].speed, lane: lane ?? 0, heading: 0, travelled,
         wirkungen: wirkungen.length ? wirkungen : null,
-        auraIn: auraIn ?? 0, shield: shield ?? 0, traeger: traeger ?? 0,
+        auraIn: auraIn ?? 0, arten: 0, shield: shield ?? 0, traeger: traeger ?? 0,
         kernraub: kernraub ?? 0, welle: welle ?? 0,
         hitFlash: 0, squash: 0, hpShown: hp,
         side: side ?? 0,

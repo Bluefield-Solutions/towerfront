@@ -20,6 +20,18 @@ export interface Enemy {
    *  gehoert er zum Gegner und nicht zur Bewegung. */
   side: number;
   /** Rest bis zum naechsten Heilpuls eines Webers. */
+  /** **Welche Turmarten diesen Gegner beschaedigt haben** (v299, S-N3-03).
+   *
+   *  Ein Bitmuster ueber `TOWER_ORDER`, kein `Set`: bei 320 Gegnern auf dem
+   *  Feld waere jedes Set eine eigene Zuweisung je Bild, und der
+   *  Determinismus haengt daran, dass hier nichts in wechselnder Reihenfolge
+   *  steht. Eine Zahl laesst sich ausserdem speichern, ohne dass der
+   *  Spielstand ein neues Format braucht.
+   *
+   *  Faehigkeiten und Kernschaden zaehlen NICHT mit - sie haben keinen
+   *  Turm als Urheber, und die Frage lautet, wieviele TURMARTEN am Gegner
+   *  gearbeitet haben. */
+  arten: number;
   /** Wieviele Treffer der Schild noch schluckt. 0 heisst: keiner mehr. */
   shield: number;
   /** Wieviel Schild dieser Gegner an NACHBARN vergibt. 0 = kein Traeger. */
@@ -302,6 +314,13 @@ export interface RunStats {
    *  Wirkung verschwunden sind (Ziel im Flug gestorben, kein Ersatz).
    *  Ballistische zaehlen nicht mit: die fliegen auf einen Punkt und
    *  detonieren dort immer. */
+  /** **Wieviele Turmarten die getoeteten Gegner beschaedigt haben** (v299).
+   *
+   *  Ein Eimer je Zahl: `artenJeKill[2]` ist die Zahl der Gegner, an denen
+   *  genau zwei Turmarten gearbeitet haben. Gemessen wird es, BEVOR
+   *  entschieden ist, was Vielfalt einbringen soll - eine Beuteregel fuer
+   *  einen Fall, den es kaum gibt, waere Buchhaltung (Regel 9). */
+  artenJeKill: number[];
   schuesse: number;
   schuesseOhneWirkung: number;
 }

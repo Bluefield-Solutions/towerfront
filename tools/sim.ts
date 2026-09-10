@@ -9,7 +9,7 @@ import { ZIELWAHL_ORDNUNG, type Zielwahl, type Tower } from '../src/game/types';
 import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../src/data/difficulty';
 
 const START_LIVES = DIFFICULTIES.normal.startLives;
-import { TOWERS, TOWER_ORDER, MAX_LEVEL, WIEDERHOLUNG_ZUSCHLAG, nextFor, rangeFor, type TowerId } from '../src/data/towers';
+import { TOWERS, TOWER_ORDER, MAX_LEVEL, WIEDERHOLUNG_ZUSCHLAG, VIELFALT_BEUTE, nextFor, rangeFor, type TowerId } from '../src/data/towers';
 
 import { MAPS } from '../src/data/maps';
 import { WEGNETZ } from '../src/data/wegnetz';
@@ -458,6 +458,8 @@ interface Result {
   raeuber: number;
   gerettet: number;
   geretteteFunken: number;
+  /** Wieviele Turmarten die getoeteten Gegner beschaedigt haben (S-N3-03). */
+  artenJeKill: number[];
 }
 
 type BranchPick = (id: TowerId) => 0 | 1;
@@ -751,6 +753,64 @@ const TRENNUNG_MIN = 200;
  *  haeuft, wird von einer Regel gegen das Haeufen nicht getroffen. */
 const VERTEILER_VERLUST_MAX = 0;
 
+/** **Was die Vielfaltsbeute dem MISCHER bringt und dem HAEUFER nicht**
+ *  (v299, S-N3-03).
+ *
+ *  Der Lauf oben zeigt, dass der Zuschlag Gold ins Spiel bringt - 35,2 auf
+ *  36,5 % uebriges Gold bei 0,15. Was er NICHT zeigt, ist, ob er eine
+ *  Entscheidung trennt: die Bots fahren einen festen Plan, ihre gemessene
+ *  Artenzahl bleibt bei 2,23, gleich wie hoch der Zuschlag steht. Ein
+ *  Messplatz, an dem sich das Gemessene nicht bewegen KANN, sagt nichts
+ *  (M18, dieselbe Klasse).
+ *
+ *  Gefragt wird deshalb wie beim Wiederholungsaufschlag: derselbe Bot,
+ *  dieselbe Karte, einmal mit einer Turmart und einmal mit vieren, jeweils
+ *  mit Zuschlag und ohne. Der Mischer muss mehr gewinnen als der Haeufer -
+ *  sonst ist es eine Geldspritze und keine Regel.
+ *
+ *  **Am gesetzten Wert gemessen, nicht an einem gestellten** - die Lehre aus
+ *  v297: eine Zusage, die etwas anderes misst als das, was ausgeliefert
+ *  wird, bezeugt die Sache, ohne sie je geprueft zu haben (Regel 13). */
+const VIELFALT_TRENNUNG_MIN = 50;
+/** Der GESTELLTE Wert, an dem gemessen wird, was die Regel taete - auch
+ *  wenn sie ausgeliefert auf Null steht. Dieselbe Bauart wie
+ *  `MESS_ZUSCHLAG`, und aus demselben Grund: eine abgeschaltete Mechanik,
+ *  die niemand mehr misst, verfaellt still (Regel 5). */
+const VIELFALT_MESS = 0.15;
+
+function vielfaltMessen(): void {
+  console.log('\nVielfaltsbeute (Haeufen gegen Mischen, mit Zuschlag und ohne):');
+  const haeufen: TowerId[] = ['arrow'];
+  const mischen: TowerId[] = ['arrow', 'frost', 'mortar', 'prism'];
+  const trennung: number[] = [];
+  const gold = (plan: TowerId[], mapId: string, v: number) =>
+    play(plan, () => 0, MEISTER, 'normal', mapId, { vielfalt: v }).earned;
+  for (const mm of MAPS) {
+    const h = gold(haeufen, mm.id, VIELFALT_MESS) - gold(haeufen, mm.id, 0);
+    const m = gold(mischen, mm.id, VIELFALT_MESS) - gold(mischen, mm.id, 0);
+    console.log(`  ${mm.id.padEnd(14)} Haeufen ${h >= 0 ? '+' : ''}${h} Gold, `
+      + `Mischen ${m >= 0 ? '+' : ''}${m} - trennt um ${m - h >= 0 ? '+' : ''}${m - h}`);
+    trennung.push(m - h);
+  }
+  const kleinste = Math.min(...trennung);
+  console.log(`  Kleinste Trennung: ${kleinste} Gold bei gestelltem Zuschlag `
+    + `${VIELFALT_MESS} (gefordert > ${VIELFALT_TRENNUNG_MIN}). `
+    + `Ausgeliefert steht er auf ${VIELFALT_BEUTE}.`);
+  // **Die Zusage haengt am GESTELLTEN Wert, nicht am ausgelieferten.**
+  //
+  // Der steht in v299 auf Null, und eine Zusage, die dann nichts mehr
+  // prueft, ist keine (Regel 5) - genau die Falle, in die der erste Entwurf
+  // gelaufen ist: `if (gesetzt > 0 && ...)` schweigt bei Null vollstaendig.
+  // Was hier gehalten wird, ist die MECHANIK: wer mischt, muss mehr
+  // bekommen als wer haeuft. Gemessen 100 bis 251 Gold je Karte.
+  if (kleinste <= VIELFALT_TRENNUNG_MIN) {
+    errors.push(`Die Vielfaltsbeute bringt dem Mischer auf einer Karte nur ${kleinste} Gold `
+      + `mehr als dem Haeufer (gestellter Zuschlag ${VIELFALT_MESS}). Sie belohnt dann nicht `
+      + 'Vielfalt, sondern schuettet Gold aus - und der Haeufer, der mit EINER Art toetet, '
+      + 'bekaeme es genauso.');
+  }
+}
+
 function wiederholungMessen(): void {
   console.log('\nWiederholung (Haeufen gegen Verteilen, mit Aufschlag und ohne):');
   const trennung: number[] = [];
@@ -941,10 +1001,15 @@ function play(
      *  Eine Wirkung, die sich nicht abschalten laesst, ist nicht gemessen,
      *  sondern behauptet (Regel 13). */
     zuschlag?: number;
+    /** Die Vielfaltsbeute abschalten oder anders setzen (v299, S-N3-03).
+     *  Dieselbe Begruendung wie eine Zeile hoeher: eine Wirkung, die sich
+     *  nicht abschalten laesst, ist nicht gemessen, sondern behauptet. */
+    vielfalt?: number;
   } = {},
 ): Result {
   const s = new GameState(mapId);
   if (opts.zuschlag !== undefined) s.wiederholungZuschlag = opts.zuschlag;
+  if (opts.vielfalt !== undefined) s.vielfaltZuschlag = opts.vielfalt;
   s.reset(opts.seed ?? AUSSAATEN[0], difficulty, mapId,
     { endless: opts.endless, perks: opts.perks ?? NO_PERKS,
       karten: opts.karten ?? MAPS.length });
@@ -1260,6 +1325,7 @@ function play(
     duennAnteil: frame > 0 ? duennBilder / frame : 0,
     knappheitsAnteil: entscheidungsBilder > 0 ? knappeBilder / entscheidungsBilder : 0,
     raeuber: s.raubTotal, gerettet: s.rettungTotal, geretteteFunken: s.rettungPunkte,
+    artenJeKill: s.stats.artenJeKill.slice(),
     maxLives: s.maxLives,
     earned: s.stats.goldEarned, spent: s.stats.goldSpent,
   };
@@ -2010,9 +2076,40 @@ const mixedPlan = mixedPlanBase;
       }
     }
   }
+  // **Wieviele Turmarten treffen einen Gegner ueberhaupt?** (v299, S-N3-03)
+  //
+  // Die Story will Beute nach Vielfalt vergeben. Bevor eine Zahl gesetzt
+  // wird, muss der Fall gemessen sein, auf den sie zielt (Regel 9): eine
+  // Regel fuer einen Fall, den es kaum gibt, ist Buchhaltung. Und die Form
+  // des Vorbilds traegt hier nicht ohne Pruefung - Rogue Tower gibt +1 Gold
+  // je Art, waehrend die Beute hier bei 1 bis 7 liegt; das waere eine
+  // Verdopplung, und die verbietet die Abnahme dieser Story ausdruecklich.
+  {
+    console.log('\nTurmarten je getoetetem Gegner (gemischtes Feld, alle vier Karten):');
+    let summe: number[] = [];
+    let kills = 0;
+    for (const m of MAPS) {
+      const r = play(mixedPlanBase, () => 0, MEISTER, 'normal', m.id);
+      const je = r.artenJeKill;
+      const gesamt = je.reduce((a, b) => a + (b ?? 0), 0);
+      kills += gesamt;
+      je.forEach((n, i) => { summe[i] = (summe[i] ?? 0) + (n ?? 0); });
+      console.log(`  ${m.id.padEnd(14)} `
+        + je.map((n, i) => `${i}:${(((n ?? 0) / Math.max(1, gesamt)) * 100).toFixed(0)} %`)
+          .filter((_, i) => (je[i] ?? 0) > 0).join('  ')
+        + `   (${gesamt} Kills)`);
+    }
+    const mittel = summe.reduce((a, n, i) => a + (n ?? 0) * i, 0) / Math.max(1, kills);
+    console.log(`  zusammen: `
+      + summe.map((n, i) => `${i} Art(en) ${(((n ?? 0) / Math.max(1, kills)) * 100).toFixed(1)} %`)
+        .filter((_, i) => (summe[i] ?? 0) > 0).join('  ')
+      + `   Mittel ${mittel.toFixed(2)}`);
+  }
+
   weichenstileMessen();
   foerdererMessen();
   wiederholungMessen();
+  vielfaltMessen();
   werftMessen();
   knappheitMessen();
   bannMessen();

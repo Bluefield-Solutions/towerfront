@@ -731,6 +731,37 @@ export const PROBEN = [
     meldet: 'Spannungsratsche',
   },
   {
+    // **Die Vielfaltsbeute trennt Mischen von Haeufen** (v299, S-N3-03).
+    //
+    // Gemessen am GESTELLTEN Wert 0,15, nicht am ausgelieferten - der steht
+    // auf Null, und eine Zusage, die dann schweigt, ist keine (Regel 5, und
+    // genau die Falle, in die der erste Entwurf dieser Runde gelaufen ist).
+    //
+    // Der Eingriff nimmt der Regel ihren Kern: `arten - 1` wird zu `arten`,
+    // dann bekommt auch der Haeufer mit EINER Turmart seinen Zuschlag, und
+    // die Trennung faellt von 100 bis 251 Gold auf fast nichts.
+    name: 'Die Vielfaltsbeute belohnt auch Haeufen',
+    datei: 'src/data/towers.ts',
+    suche: 'return grund * (1 + Math.max(0, arten - 1) * zuschlag);',
+    ersatz: 'return grund * (1 + Math.max(0, arten) * zuschlag);',
+    tor: 'sim',
+    meldet: 'schuettet Gold aus',
+  },
+  {
+    // **Und die Zaehlung selbst.**
+    //
+    // `e.arten` ist ein Bitmuster ueber `TOWER_ORDER`; vermerkt wird NACH
+    // Schild und Panzerung, also nur wo Schaden ankam. Faellt der Vermerk
+    // weg, ist jeder Gegner von null Arten getroffen, und die Vielfaltsbeute
+    // hebt nirgends etwas - auch beim Mischer nicht.
+    name: 'Die Turmart wird am Gegner nicht vermerkt',
+    datei: 'src/game/state.ts',
+    suche: 'if (artIndex >= 0) e.arten |= 1 << artIndex;',
+    ersatz: 'if (artIndex >= 999) e.arten |= 1 << artIndex;',
+    tor: 'sim',
+    meldet: 'schuettet Gold aus',
+  },
+  {
     // **Der Bauhinweis steht wieder unter der Bauwahl** (v298).
     //
     // Die Ableitung `hinweisSichtbar` haelt beide auseinander. Nimmt man

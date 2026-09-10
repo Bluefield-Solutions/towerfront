@@ -489,6 +489,69 @@ export const TOWERS: Record<TowerId, TowerDef> = {
  *  Messergebnis. */
 export const WIEDERHOLUNG_ZUSCHLAG: number = 0.10;
 
+/** **Wieviel jede WEITERE Turmart an einem Gegner seine Beute hebt**
+ *  (v299, S-N3-03).
+ *
+ *  Das Gegenstueck zum Wiederholungsaufschlag: der macht Haeufen teurer,
+ *  dies macht Mischen eintraeglicher. Rogue Tower gibt dafuer **+1 Gold je
+ *  Art** - und diese Form traegt hier nicht, das ist gemessen und nicht
+ *  gemeint: die Beute liegt bei 1 bis 7 Gold (Boss 48), ein flaches +1 waere
+ *  auf dem Schleicher eine Verdopplung. Regel 10 gilt fuer die Form eines
+ *  Vorbilds, Regel 2 fuer ihre Groesse - anteilig, nicht absolut.
+ *
+ *  **Der Fall ist gemessen, bevor die Zahl gesetzt wurde** (Regel 9):
+ *  im gemischten Feld beschaedigen im Mittel **2,23** Turmarten einen
+ *  Gegner, und die Verteilung ist keine Randerscheinung -
+ *  1 Art 25,3 %, 2 Arten 32,8 %, 3 Arten 23,5 %, 4 Arten 15,5 %
+ *  (2,9 % sterben ganz ohne Turm: Faehigkeiten, Kernraub, Zielunit).
+ *  Sie trennt die Karten deutlich: Spiralhain 12 % Einzelart, Farnkessel
+ *  46 %.
+ *
+ *  **Die Beute ist ganzzahlig, und das entscheidet ueber den Wert mit.** Bei
+ *  Beute 2 hebt ein Zuschlag von 0,10 auf 2,2 und rundet zurueck auf 2 - die
+ *  Regel waere fuer den haeufigsten Gegner unsichtbar. Was ankommt, faengt
+ *  bei zwei Arten erst ab 0,25 an; darunter belohnt sie die dicken Gegner
+ *  frueher als die duennen. */
+/** **Und er steht auf Null, obwohl die Mechanik traegt - das ist das
+ *  Ergebnis von v299.**
+ *
+ *  Gemessen WIRKT sie, und zwar sauber getrennt: bei 0,15 bekommt der
+ *  Haeufer auf jeder der vier Karten **+0 Gold** und der Mischer +100 bis
+ *  +251. Eine Regel, die den, der eine Turmart baut, von Bauart nicht
+ *  erreicht, ist genau das, was die Story wollte.
+ *
+ *  **Was blockiert, ist eine Zusage aus einer ANDEREN Story:** der
+ *  Wiederholungsaufschlag (S-N3-02) darf den perfekten Verteiler kein
+ *  Kristall kosten, und ab Vielfalt 0,10 kostet er ihn **2 von 42**. Das ist
+ *  kein Wurf - durchprobiert von 0 bis 0,25 erscheint der Verlust bei 0,10
+ *  und bleibt. Es ist auch kein Widerspruch: der Verteiler hat mit der
+ *  Vielfaltsbeute mehr Gold, baut deshalb anders, und der Aufschlag trifft
+ *  einen anderen Bauverlauf.
+ *
+ *  **Die Zusage steht dabei auf EINEM Lauf je Karte und einer harten Null,
+ *  ohne Rauschband** - zwei Kristall von 42 sind in diesem Werkzeug
+ *  gemessen die uebliche Wegabhaengigkeit. Sie in derselben Runde zu
+ *  reparieren, in der die eigene Aenderung an ihr scheitert, waere kein
+ *  Beweis mehr (v219, und dieselbe Ueberlegung hat v296 und v297
+ *  auseinandergehalten). Deshalb: Mechanik gebaut, gemessen, von einer
+ *  Zusage gehalten - Schalter auf Null.
+ *
+ *  Nach oben ist das Fenster ohnehin eng: bei 0,25 faellt die Trennung des
+ *  Wiederholungsaufschlags von 599 auf 113 Gold und reisst ihre eigene
+ *  Grenze von 200. Brauchbar sind 0,10 bis 0,20. */
+export const VIELFALT_BEUTE: number = 0;
+
+/** Die Beute eines Gegners samt Vielfaltsanteil.
+ *
+ *  `arten` ist die Zahl VERSCHIEDENER Turmarten, die ihn beschaedigt haben -
+ *  nicht die Zahl der Treffer. Wer mit einer Art toetet, bekommt genau die
+ *  Grundbeute; erst die zweite Art hebt etwas. */
+export function vielfaltsBeute(
+  grund: number, arten: number, zuschlag: number = VIELFALT_BEUTE,
+): number {
+  return grund * (1 + Math.max(0, arten - 1) * zuschlag);
+}
+
 /** **Auf Null, und das ist eine Messung, keine Abschaltung** (v286).
  *
  *  Die Mechanik steht vollstaendig: `baupreis` rechnet, der Knopf zeigt den

@@ -3,7 +3,7 @@
 
 /** Wird auf dem Titelbildschirm angezeigt - so ist immer sichtbar,
  *  welcher Stand gerade im Browser liegt. */
-export const VERSION = 'v298';
+export const VERSION = 'v299';
 
 /** Das Spielfeld ist ab v36 ein Bild im Verhaeltnis 16:9, kein Kachelraster.
  *  1920 x 1080 ist die Bezugsgroesse aller Weltkoordinaten - Bilder duerfen

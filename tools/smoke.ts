@@ -117,9 +117,40 @@ const { werteAmTurm } = await import('../src/game/turmwerte');
 const ersterTurm = (g: { gebaute: unknown[] }): any => g.gebaute[0];
 
 const problems: string[] = [];
-const step = (name: string, fn: () => void): void => {
-  try { fn(); } catch (e) { problems.push(`${name}: ${(e as Error).message}`); }
+
+// **Ein Schritt darf asynchron sein - und bis v313 war das eine Falle** (v313).
+//
+// `step` nahm `() => void` und rief `fn()` in einem try/catch. Vier Schritte
+// aus v303 bis v306 (Kartenzug, Lauf, Abschnittswahl, Erfahrung) sind aber
+// `async`: eine `async`-Funktion WIRFT nicht, sie gibt ein abgelehntes
+// Versprechen zurueck. Das try/catch fing also nie etwas, der Befund landete
+// nicht in `problems`, und ob er ueberhaupt irgendwo auftauchte, entschied ein
+// Wettlauf mit dem Ende des Prozesses.
+//
+// **Gemessen hat es die Gegenprobe "Der Kartenzug unterbricht die Welle":**
+// hier wurde der Rauchtest davon rot, auf dem Runner nicht. Dieselbe Klasse
+// wie v225 - eine Pruefung, die auf einem Rechner beweist und auf dem anderen
+// nicht, ist keine. Dass es ueberhaupt auffiel, war Glueck: die drei anderen
+// async Schritte haetten still nie geprueft.
+//
+// Die Versprechen werden jetzt gesammelt und VOR dem Urteil abgewartet.
+const offeneSchritte: Promise<void>[] = [];
+const step = (name: string, fn: () => void | Promise<void>): void => {
+  try {
+    const ergebnis = fn();
+    if (ergebnis && typeof (ergebnis as Promise<void>).then === 'function') {
+      offeneSchritte.push((ergebnis as Promise<void>).catch((e: Error) => {
+        problems.push(`${name}: ${e.message}`);
+      }));
+    }
+  } catch (e) { problems.push(`${name}: ${(e as Error).message}`); }
 };
+
+// **Und das wird bei JEDEM Lauf nachgewiesen, nicht behauptet** (Regel 5).
+//
+// Ein asynchron scheiternder Schritt muss im Befund landen. Die Marke wird vor
+// dem Urteil wieder herausgenommen - sie ist der Beweis, nicht ein Problem.
+const ASYNC_MARKE = 'Selbsttest: ein asynchron scheiternder Schritt';
 
 const canvas = win.document.getElementById('view') as unknown as HTMLCanvasElement;
 if (!canvas) { console.error('RAUCHTEST: Leinwand #view fehlt im HTML.'); process.exit(1); }
@@ -4875,6 +4906,33 @@ step('Welle ueberlebt das Sichern', () => {
     }
   });
 }
+
+// **Der Selbsttest steht GENAU hier, und der Ort ist gemessen** (Regel 13).
+//
+// Zuerst stand er oben bei `step`. Dann kam die Marke auch ohne das Abwarten
+// an: zwischen oben und hier liegen dutzende `await`s dieser Datei, und jedes
+// davon gibt dem Zeitgeber eine Runde. Die Nullprobe blieb gruen, der
+// Selbsttest bewies nur die Haelfte. Unmittelbar vor dem Abwarten gibt es
+// keine solche Runde mehr - fehlt das `await`, fehlt die Marke.
+step(ASYNC_MARKE, async () => {
+  // Ueber einen Zeitgeber, nicht bloss ueber ein Versprechen: eine
+  // Makroaufgabe laeuft nur ab, wenn wirklich gewartet wird.
+  await new Promise((fertig) => { setTimeout(fertig, 0); });
+  throw new Error('muss im Befund landen, sonst prueft kein async Schritt etwas.');
+});
+
+// Erst die offenen Schritte, dann das Urteil - sonst urteilt der Rauchtest
+// ueber eine Arbeit, die noch laeuft.
+await Promise.all(offeneSchritte);
+
+const markeIdx = problems.findIndex((p) => p.startsWith(ASYNC_MARKE));
+if (markeIdx === -1) {
+  console.error('RAUCHTEST: der Selbsttest zu den asynchronen Schritten ist NICHT '
+    + 'angekommen. Ein async Schritt kann damit scheitern, ohne dass es jemand '
+    + 'erfaehrt - und vier Schritte dieses Rauchtests sind async.');
+  process.exit(1);
+}
+problems.splice(markeIdx, 1);
 
 if (problems.length) {
   console.error('RAUCHTEST: nicht bestanden');

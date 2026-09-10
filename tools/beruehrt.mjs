@@ -32,8 +32,8 @@ const seit = process.argv[2] ?? 'HEAD';
  *  was in das Buendel geht, hat sie beruehrt - und `index.html` ist der
  *  Fall, der v286 gekostet hat: HTML-Kommentare werden mitausgeliefert. */
 const AM_BUENDEL = {
-  'index.html': ['autarkie', 'browsertor', 'uxaudittor'],
-  'src/style.css': ['autarkie', 'browsertor', 'uxaudittor', 'streifentor'],
+  'index.html': ['autarkietor', 'browsertor', 'uxaudittor'],
+  'src/style.css': ['autarkietor', 'browsertor', 'uxaudittor', 'streifentor'],
 };
 
 const geaendert = execSync(`git diff --name-only ${seit}`, { encoding: 'utf-8' })

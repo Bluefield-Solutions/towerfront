@@ -1039,7 +1039,7 @@ export const PROBEN = [
     datei: 'index.html',
     suche: 'nicht die Fläche.',
     ersatz: 'nicht die Flaeche.',
-    tor: 'autarkie',
+    tor: 'autarkietor',
     meldet: 'Ersatzschreibung statt Umlaut',
   },
   {

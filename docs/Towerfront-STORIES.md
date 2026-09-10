@@ -1179,7 +1179,7 @@ lesen (`sim` meldet Regel 4). Dazu eine **bestehende** Probe, die
 
 ### S-N1-05 · Zweige, Stufen, Grade und Sterne werden ausgebaut
 
-**Paket:** N1 · **Aufwand:** L · **Hängt an:** S-N1-02
+**Paket:** N1 · **Aufwand:** L · **Hängt an:** S-N1-07
 
 **Problem.** Sie sind ersetzt, nicht ergänzt. Solange beides nebeneinander
 steht, gibt es zwei Wege, denselben Turm stärker zu machen — und die Balance
@@ -2126,6 +2126,53 @@ es die Bahnen ableitbar macht.
 **Schliesst, wenn:** `text src/game/state.ts "weicheStellen" == 0`
 
 ---
+
+### S-N1-07 · Der Kartenstapel trägt die Machtkurve
+
+**Paket:** N1 · **Aufwand:** L · **Hängt an:** —
+
+**Problem — und es ist eine Zahl, keine Meinung.** S-N1-05 nimmt Stufen und
+Zweige heraus, „zugunsten des Kartenstapels". Gemessen in v314 kann der Stapel
+das heute nicht auffangen:
+
+| | über einen ganzen Lauf |
+|---|---|
+| was die Stufen trugen | **×5,4 bis ×39,1** (im Mittel rund ×24) |
+| was der Stapel trägt | **×1,48** Feuerkraft, ×1,19 Reichweite |
+
+*(Stufen: `statsFor` Stufe 1 gegen Stufe 6 je Zweig, DPS = Schaden/Takt.
+Stapel: 200 Aussaaten, `zieheKarten` mit dem Grundstapel aus zwölf Karten,
+je Welle drei Angebote und eines genommen, fünfzehn Wellen.)*
+
+**Faktor 16 dazwischen.** Der Grund steht in der Zusammensetzung: von zwölf
+Grundkarten wirken nur **vier** auf Feuerkraft — zwei Schaden, zwei Takt —,
+die übrigen acht geben Gold, Beute und Kristall. Die stärkste Schadenskarte
+ist ×1,16.
+
+**Was gebaut wird, ist eine Entscheidung des Nutzers**, weil jeder Weg das
+Spiel anders anfühlen lässt:
+
+| Weg | was er bedeutet |
+|---|---|
+| **A — mehr Züge** | mehrere Karten je Welle statt einer. Der Lauf wird ein Deckbau, die Wahl häufiger und einzeln kleiner |
+| **B — stärkere Karten** | dieselbe Zahl Züge, aber ×1,3 bis ×1,5 je Karte. Eine einzelne Karte entscheidet dann viel, und ein schlechtes Angebot tut weh |
+| **C — reiner Stapel** | Gold, Beute und Kristall raus aus dem Stapel, nur noch Feuerkraft. Dann trägt er ×4 bis ×6 statt ×1,48 — reicht allein nicht, kombiniert aber mit A oder B |
+| **D — Türme behalten einen Teil** | Stufen bleiben, aber flacher (etwa ×4 statt ×24). Der geringste Eingriff, aber S-N1-05 wäre dann nur halb gefahren |
+
+**Der Rest der Rechnung, damit die Wahl nicht im Dunkeln fällt:** ohne
+Ausbauten kostet ein Turm 55 bis 140 Gold statt 1205 bis 3010. Dasselbe Gold
+kauft also ein Vielfaches an Türmen — bei rund zweihundert Bauplätzen je Karte
+und einem Botdeckel von zwölf ist das ein zweiter Hebel, der schon da ist und
+heute nicht benutzt wird (siehe N3 und N1G).
+
+**Abnahme.** `npm run sim` gewinnt jede Karte mit jedem der drei Spielstile,
+und die Spannungsratsche fällt nicht. Dazu eine Messung, die den Stapel gegen
+die Stufen stellt, damit die Zahl nicht wieder auseinanderläuft.
+
+**Gegenprobe.** Die Messung selbst: fällt die Kurve des Stapels unter das, was
+sie tragen soll, meldet es der Lauf.
+
+**Schliesst, wenn:** `text tools/sim.ts "stapelKurve" >= 2`
 
 ### S-N1-06 · Rückbau: der Kartenzug wieder heraus
 

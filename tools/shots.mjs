@@ -53,7 +53,7 @@ const { wirkungAnlegen } = await import('../src/data/wirkungen.ts');
 const { candidateSpots } = await import('./spots.ts');
 const { Menu } = await import('../src/game/menu.ts');
 const { laufStarten, abschnittGeschafft } = await import('../src/game/lauf.ts');
-const { recordEndlos } = await import('../src/core/storage.ts');
+const { recordEndlos, laufErfahrungGutschreiben, karteFreischalten } = await import('../src/core/storage.ts');
 // Wichtig: nicht die has*-Funktionen. Die sagen nur, ob ein Bild im Verzeichnis
 // steht - nicht, ob es dekodiert wurde. Genau daran ist die erste Gegenprobe
 // vorbeigelaufen. Die get*-Funktionen liefern erst etwas, wenn das Bild da ist.
@@ -86,7 +86,7 @@ const ersterTurm = (g) => g.gebaute[0];
 // das es bewacht, laesst genau die Luecke.
 const TOR = ['menu-karte', 'menu-einweisung', 'menu-fortschritt', 'menu-sieg',
   'menu-niederlage', 'welle8', 'kristall-riss', 'kernraub', 'zier-beruehrung',
-  'menu-tastatur', 'weiche', 'menu-wahl'];
+  'menu-tastatur', 'weiche', 'menu-wahl', 'menu-stapel'];
 const nurTor = process.argv.includes('--tor');
 
 /** Eine Aufnahme: Zustand herstellen, ein paar Bilder laufen lassen, ausgeben.
@@ -301,6 +301,19 @@ takes.push(['menu-wahl', () => shot('menu-wahl', 844, 390, (s, r) => {
   r.menu = new Menu();
   r.menu.lauf = lauf;
   r.menu.view = 'wahl';
+  return 20;
+})]);
+
+takes.push(['menu-stapel', () => shot('menu-stapel', 844, 390, (s, r) => {
+  // **Der Kartenstapel** (S-N1-04). Mit Erfahrung auf dem Konto und einer
+  // gekauften Karte - sonst zeigt die Aufnahme nur den leeren Anfangsfall,
+  // und der beweist ueber den vollen nichts (dieselbe Ueberlegung wie bei
+  // der Endlos-Bestenliste in `menu-einweisung`).
+  s.reset(1, 'normal', 'spiralhain');
+  laufErfahrungGutschreiben(1300);
+  karteFreischalten('fernrohr', 500);
+  r.menu = new Menu();
+  r.menu.view = 'stapel';
   return 20;
 })]);
 

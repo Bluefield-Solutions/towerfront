@@ -200,6 +200,35 @@ export function laufLoeschen(): void {
   try { localStorage.removeItem(SCHLUESSEL); } catch { /* gesperrt */ }
 }
 
+// ------------------------------------------------------------ Die Erfahrung
+
+/** **Was ein Lauf einbringt** (v306, S-N1-04).
+ *
+ *  Ohne etwas, das einen VERLORENEN Lauf trotzdem lohnend macht, ist ein
+ *  Roguelite eine Kette von Niederlagen. Rogue Tower gibt XP fuers
+ *  Durchspielen, fuer einen Rekord und fuer den Sieg - 450 / 900 / 1350, also
+ *  ungefaehr eins zu drei zwischen "gefahren" und "gewonnen" (Regel 10: das
+ *  Soll kommt aus der Referenz, nicht aus mir).
+ *
+ *  Drei Posten, und jeder misst etwas anderes:
+ *
+ *  * **je gefahrene Welle** - dafuer, dass man ueberhaupt gespielt hat. Das
+ *    ist der Posten, der eine Niederlage von null trennt.
+ *  * **je gewonnenem Abschnitt** - dafuer, wie weit man gekommen ist.
+ *  * **fuer den ganzen Lauf** - dafuer, ihn zu Ende gebracht zu haben.
+ *
+ *  Gerechnet aus dem LAUF und nicht aus der Partie: ein Abschnitt allein
+ *  weiss nicht, der wievielte er war. */
+export const ERFAHRUNG_JE_WELLE = 10;
+export const ERFAHRUNG_JE_ABSCHNITT = 100;
+export const ERFAHRUNG_LAUF_GESCHAFFT = 300;
+
+export function erfahrungFuer(l: LaufZustand, geschafft: boolean): number {
+  return l.welleGesamt * ERFAHRUNG_JE_WELLE
+    + l.abschnitt * ERFAHRUNG_JE_ABSCHNITT
+    + (geschafft ? ERFAHRUNG_LAUF_GESCHAFFT : 0);
+}
+
 // --------------------------------------------------------- Die Abschnittswahl
 
 /** **Die Wahl zwischen den Abschnitten** (v305, S-N1-03).

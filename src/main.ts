@@ -16,8 +16,9 @@ import { messungAus, messungGewuenscht, messungLaeuft, messungStarten } from './
 import { bildspeicherByte } from './gfx/speicher';
 import {
   type LaufZustand, laufStarten, laufLaden, laufSpeichern, laufLoeschen,
-  abschnittGeschafft, abschnittWaehlen, laufendeKarte, istLaufZuEnde,
+  abschnittGeschafft, abschnittWaehlen, laufendeKarte, istLaufZuEnde, erfahrungFuer,
 } from './game/lauf';
+import { laufErfahrungGutschreiben } from './core/storage';
 import { MAPS } from './data/maps';
 
 // **Die Kostentabelle der Verbesserungen an die Ablage geben - beinahe
@@ -74,6 +75,23 @@ function laufSetzen(l: LaufZustand | null): void {
   if (l) laufSpeichern(l); else laufLoeschen();
 }
 
+/** **Einen Lauf beenden und seine Erfahrung gutschreiben** (v306, S-N1-04).
+ *
+ *  Die eine Stelle, an der ein Lauf endet - ob gewonnen, verloren oder
+ *  aufgegeben. Drei Stellen waeren drei Gelegenheiten, das Gutschreiben zu
+ *  vergessen, und dieses Verzeichnis hat genau diese Sorte Fehler sechsmal
+ *  bezahlt.
+ *
+ *  `welleGesamt` bekommt die Wellen des angefangenen Abschnitts noch mit:
+ *  wer in Welle neun eines Abschnitts faellt, hat neun Wellen gefahren, und
+ *  genau dieser Posten trennt eine Niederlage von null. */
+function laufBeenden(l: LaufZustand, geschafft: boolean, angefangeneWellen = 0): void {
+  const stand = { ...l, welleGesamt: l.welleGesamt + angefangeneWellen };
+  menu.erfahrungPlus = erfahrungFuer(stand, geschafft);
+  laufErfahrungGutschreiben(menu.erfahrungPlus);
+  laufSetzen(null);
+}
+
 /** Einen Abschnitt betreten - dieselbe Stelle fuer den ersten und jeden
  *  weiteren. Zwei Stellen waeren die naechste, die veraltet (Regel 15). */
 function abschnittBetreten(mapId: string, difficulty: typeof state.difficulty,
@@ -99,7 +117,10 @@ menu.onWahl = (angebotId) => {
   abschnittBetreten(karte, nachher.grad, undefined);
 };
 
-menu.onLaufEnde = () => { laufSetzen(null); };
+menu.onLaufEnde = () => {
+  // Aufgeben ist auch ein Ende: was gefahren wurde, bleibt angerechnet.
+  if (lauf) laufBeenden(lauf, false);
+};
 
 menu.onStart = (mapId, difficulty, endless) => {
   saveSettings({ map: mapId, difficulty });
@@ -159,12 +180,14 @@ function showResult(): void {
   // Nur nach einem Sieg: eine Niederlage beendet den Lauf. Das ist der
   // Beschluss aus `Towerfront-NEUBAU.md` - ein Roguelite, in dem man nach
   // einem verlorenen Abschnitt weiterzieht, hat keinen Einsatz.
+  menu.erfahrungPlus = null;
   if (lauf) {
     if (state.phase === 'won' && !state.endless) {
       const weiter = abschnittGeschafft(lauf, state.gold, state.lives, state.totalWaves);
-      laufSetzen(istLaufZuEnde(weiter) ? null : weiter);
+      if (istLaufZuEnde(weiter)) laufBeenden(weiter, true);
+      else laufSetzen(weiter);
     } else {
-      laufSetzen(null);
+      laufBeenden(lauf, false, state.waveIndex);
     }
   }
   menu.view = 'result';

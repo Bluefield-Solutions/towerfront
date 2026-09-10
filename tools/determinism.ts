@@ -103,7 +103,11 @@ function run(frames: number, pauseAt = -1): Run {
   // den Lauf erstmals innerhalb der 240 Sekunden gewinnen liess - vorher
   // endete er nie, also fiel es nie auf. Ein Werkzeug, das seinen eigenen
   // Nebeneffekt misst, misst nicht mehr das Spiel (Regel 4).
-  s.reset(SEED, 'normal', MAPS[0].id, { perks: NO_PERKS, karten: MAPS.length });
+  // `stapel: []` aus demselben Grund wie `perks` und `karten` daneben: zwei
+  // Laeufe mit derselben Aussaat duerfen nicht davon abhaengen, wieviel
+  // derjenige gespielt hat, der sie vergleicht (Regel 4, S-N1-04).
+  s.reset(SEED, 'normal', MAPS[0].id,
+    { perks: NO_PERKS, karten: MAPS.length, stapel: [] });
   const spots = candidateSpots(s).slice(0, 40);
   const prints: string[] = [];
   for (let f = 0; f < frames; f++) {

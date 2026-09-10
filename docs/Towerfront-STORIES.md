@@ -1074,9 +1074,77 @@ hält die Entscheidung im Mittelpunkt statt einer Wertschraube.
 * Die Simulation läuft weiterhin **ohne** Meta-Fortschritt (Regel 4: das
   Modell darf nicht vom Gemessenen abhängen).
 
-**Gegenprobe.** Die Erfahrung an den Determinismus-Lauf koppeln: das
-Determinismus-Tor muss melden, dass zwei Läufe mit derselben Aussaat
-auseinanderlaufen — genau der Fund aus v217.
+**Gebaut in v306 — und die Runde hat einen Fehler gefunden, der viele
+Fassungen lang dastand.**
+
+`laufErfahrung` liegt in `src/core/storage.ts`, gerechnet wird sie in
+`erfahrungFuer` aus dem **Lauf**: 10 je gefahrener Welle, 100 je gewonnenem
+Abschnitt, 300 für den ganzen Lauf. Gemessen **1300 gewonnen gegen 340 in
+Welle 9 des zweiten Abschnitts verloren — das 3,8-fache**; die Referenz gibt
+450 fürs Durchspielen gegen 1350 für den Sieg, also ungefähr das Dreifache
+(Regel 10). Der Posten je gefahrener Welle ist der, der eine Niederlage von
+null trennt.
+
+**Gekauft werden Karten, keine Zahlen.** Sechs neue, eine je Achse und je die
+stärkste: der Stapel wächst von zwölf auf achtzehn, angeboten werden weiter
+drei je Welle — die Auswahl wird breiter, nicht die Zahl auf dem Knopf größer.
+Der ganze Stapel kostet 4200, also **3,2 gewonnene Läufe**. Ein eigenes
+Menübild (`bilder/menu-stapel.png`, in der Torabnahme), nicht eine zweite
+Liste im Fortschritt: dort wird mit Sternen eine Wertschraube gekauft.
+
+**Sie machen die schwächere Karte derselben Achse nicht tot** — gemessen über
+beide Stände des Stapels:
+
+| | Karten | von mindestens einem Stil genommen | von jedem immer |
+|---|---|---|---|
+| Grundstapel | 12 | **12** | 0 |
+| voll freigeschaltet | 18 | **18** | 0 |
+
+**Regel 4 steht jetzt als Selbsttest da, nicht als Vorsatz.** `npm run sim`
+schaltet in seiner eigenen Ablage wirklich eine Karte frei und verlangt dann,
+dass ein Spiel mit `stapel: []` trotzdem aus zwölf zieht — **und** dass eines
+ohne die Angabe dreizehn sieht. Ohne die zweite Hälfte bewiese die erste nur,
+dass der Eingriff nicht angekommen ist (Regel 13).
+
+**Der Fund: drei gespeicherte Felder wurden nie zurückgelesen.** Der Leser der
+Ablage baute den Fortschritt aus **genau zwei** Feldern neu auf —
+`stars` und `perks`. Alles andere fiel weg:
+
+| Feld | wofür | was es hieß |
+|---|---|---|
+| `endlos` | die weitesten Endlosläufe (C27) | Bestenliste nach jedem Neuladen leer |
+| `seenMaps` | der Einweisungssatz je Karte (B15) | jeder Satz wieder neu |
+| `seenEnemies` | der Kontersatz je Gegnerart | derselbe Hinweis immer wieder |
+
+Nachgemessen: **`[17]` hinein, `[]` heraus.** Geschrieben wurden alle drei,
+gelesen keines, und keiner der dreiunddreissig Schritte sagte ein Wort — es
+sieht ja nach nichts aus, wenn eine Liste leer ist. Gefunden hat es nicht ein
+Verdacht, sondern die Frage dieser Story: „überlebt der Fortschritt einen
+Neustart?" ist genau dieselbe Frage.
+
+Der Leser ist jetzt eine **Ableitung** (`fortschrittAus`): er übernimmt, was
+gespeichert wurde, und bringt nur die zwei Pflichtfelder in Form. Ein neues
+Feld — `erfahrung` und `stapel` — braucht keine zweite Zeile mehr, und genau
+das Vergessen dieser zweiten Zeile war der Fehler (Regel 15). Als eigene,
+prüfbare Funktion, weil der Store beim Laden **einmal** gelesen wird: ein
+Neustart lässt sich im laufenden Prozess nicht stellen, und eine Zusage, die
+niemand nachfahren kann, ist keine.
+
+**Die vorgeschlagene Gegenprobe misst nichts, und der Grund gehört
+aufgeschrieben.** „Die Erfahrung an den Determinismus-Lauf koppeln" setzt
+voraus, dass ein Lauf den nächsten **von selbst** verändert — so war es in
+v217, wo ein Sieg einen Stern schrieb und der zweite Lauf mit anderen
+Verbesserungen startete. Freischalten ist aber ein **Kauf**: zwei Läufe mit
+derselben Aussaat ziehen denselben Stapel, ganz gleich wieviel Erfahrung
+dazwischen entstanden ist. An ihre Stelle tritt der Selbsttest in `sim`, der
+dieselbe Frage stellt und sie beantworten **kann**.
+
+**Gegenprobe.** Fünf: den Leser wieder auf zwei Felder zurückbauen (der
+Rauchtest meldet, dass der Fortschritt den Neustart nicht überlebt), den
+gekauften Stapel ignorieren, Karten nichts kosten lassen, die Erfahrung eines
+verlorenen Laufs auf null setzen, und den Stapel der Messung aus der Ablage
+lesen (`sim` meldet Regel 4). Dazu eine **bestehende** Probe, die
+`npm run muster` im selben Lauf gemeldet hat.
 
 **Schliesst, wenn:** `text src/core/storage.ts "laufErfahrung" >= 2`
 

@@ -9,15 +9,20 @@ import { ZIELWAHL_ORDNUNG, type Zielwahl, type Tower } from '../src/game/types';
 import { DIFFICULTIES, DIFFICULTY_ORDER, hpScale, type DifficultyId } from '../src/data/difficulty';
 import {
   laufStarten, abschnittGeschafft, laufendeKarte, istLaufZuEnde, wellenDesLaufs,
-  wellenDesAbschnitts, abschnittsWahl, abschnittWaehlen, WAHLARTEN,
+  wellenDesAbschnitts, abschnittsWahl, abschnittWaehlen, WAHLARTEN, erfahrungFuer,
   type AbschnittsAngebot,
 } from '../src/game/lauf';
+import {
+  laufErfahrung, laufErfahrungGutschreiben, karteFreischalten,
+} from '../src/core/storage';
 
 const START_LIVES = DIFFICULTIES.normal.startLives;
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, WIEDERHOLUNG_ZUSCHLAG, VIELFALT_BEUTE, nextFor, rangeFor, type TowerId } from '../src/data/towers';
 
 import { MAPS } from '../src/data/maps';
-import { KARTENSTAPEL, zieheKarten, type Karte, type KartenArt } from '../src/data/karten';
+import {
+  KARTENSTAPEL, GRUNDSTAPEL, zieheKarten, type Karte, type KartenArt,
+} from '../src/data/karten';
 import { WEGNETZ } from '../src/data/wegnetz';
 import { ALL_PERKS, NO_PERKS, starsFor } from '../src/data/perks';
 import { ABILITIES } from '../src/data/abilities';
@@ -875,8 +880,8 @@ function karteWaehlen(stil: string, angebot: Karte[]): Karte {
  *  haengt nur an Aussaat und Welle, und die Wahl nur am Stil. Eine Partie
  *  dazwischen brauchte diese Frage nicht und traege ihre Wegabhaengigkeit
  *  mit hinein. */
-function kartenzugMessen(): void {
-  console.log('\nKartenzug je Welle (S-N1-02):');
+function kartenzugMessen(stapel: readonly Karte[], was: string): void {
+  console.log(`\nKartenzug je Welle (S-N1-02) - ${was}, ${stapel.length} Karten:`);
   const wellen = MAPS.reduce((a, m) => a + m.waves.length, 0);
   const stile = Object.keys(KARTENSTIL);
   const genommen = new Map<string, Set<string>>();   // Karte -> Stile
@@ -884,7 +889,7 @@ function kartenzugMessen(): void {
   for (const stil of stile) {
     const zaehl = new Map<string, number>();
     for (let w = 0; w < wellen; w += 1) {
-      const angebot = zieheKarten(AUSSAATEN[0], w);
+      const angebot = zieheKarten(AUSSAATEN[0], w, undefined, stapel);
       for (const k of angebot) angeboten.set(k.id, (angeboten.get(k.id) ?? 0) + 1);
       const gewaehlt = karteWaehlen(stil, angebot);
       zaehl.set(gewaehlt.id, (zaehl.get(gewaehlt.id) ?? 0) + 1);
@@ -893,15 +898,15 @@ function kartenzugMessen(): void {
     }
     const oben = [...zaehl.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
     console.log(`  ${stil.padEnd(9)} ${oben.map(([id, n]) => `${id} ${n}`).join('  ')}`
-      + `   (${zaehl.size} verschiedene von ${KARTENSTAPEL.length})`);
+      + `   (${zaehl.size} verschiedene von ${stapel.length})`);
   }
 
   // **Erstens: der Zug ist deterministisch.** Zweimal dieselbe Aussaat, und
   // zwar an einer SPAETEN Welle - die erste zoege auch aus einem kaputten
   // Zufall dasselbe.
-  const a1 = zieheKarten(AUSSAATEN[0], 37).map((k) => k.id).join(',');
-  const a2 = zieheKarten(AUSSAATEN[0], 37).map((k) => k.id).join(',');
-  const b1 = zieheKarten(AUSSAATEN[1], 37).map((k) => k.id).join(',');
+  const a1 = zieheKarten(AUSSAATEN[0], 37, undefined, stapel).map((k) => k.id).join(',');
+  const a2 = zieheKarten(AUSSAATEN[0], 37, undefined, stapel).map((k) => k.id).join(',');
+  const b1 = zieheKarten(AUSSAATEN[1], 37, undefined, stapel).map((k) => k.id).join(',');
   console.log(`  Welle 38: Aussaat A "${a1}", noch einmal "${a2}", Aussaat B "${b1}".`);
   if (a1 !== a2) {
     errors.push(`Der Kartenzug ist nicht deterministisch: dieselbe Aussaat zieht in `
@@ -914,17 +919,17 @@ function kartenzugMessen(): void {
 
   // **Zweitens: keine Karte liegt tot im Stapel, und keine wird von allen
   //   genommen.** Das ist die Abnahme der Story, woertlich.
-  const nie = KARTENSTAPEL.filter((k) => !genommen.has(k.id));
+  const nie = stapel.filter((k) => !genommen.has(k.id));
   if (nie.length) {
     errors.push(`Diese Karten nimmt kein Stil je: ${nie.map((k) => k.id).join(', ')}. `
       + 'Eine Karte, die nie die richtige Wahl ist, ist keine Wahl, sondern Fuellmaterial '
       + '- sie macht das Angebot kleiner, ohne dass es jemand sieht.');
   }
-  const immer = KARTENSTAPEL.filter((k) => (genommen.get(k.id)?.size ?? 0) === stile.length
+  const immer = stapel.filter((k) => (genommen.get(k.id)?.size ?? 0) === stile.length
     && (angeboten.get(k.id) ?? 0) > 0
     && stile.every((stil) => {
       for (let w = 0; w < wellen; w += 1) {
-        const angebot = zieheKarten(AUSSAATEN[0], w);
+        const angebot = zieheKarten(AUSSAATEN[0], w, undefined, stapel);
         if (angebot.some((x) => x.id === k.id) && karteWaehlen(stil, angebot).id !== k.id) {
           return false;
         }
@@ -936,7 +941,7 @@ function kartenzugMessen(): void {
       + `${immer.map((k) => k.id).join(', ')}. Dann ist die Wahl keine - wer sie sieht, `
       + 'nimmt sie, und die anderen zwei Karten sind Dekoration.');
   }
-  console.log(`  ${KARTENSTAPEL.length - nie.length} von ${KARTENSTAPEL.length} Karten `
+  console.log(`  ${stapel.length - nie.length} von ${stapel.length} Karten `
     + `werden von mindestens einem Stil genommen, ${immer.length} von jedem immer.`);
 }
 
@@ -1028,6 +1033,87 @@ function abschnittswahlMessen(): void {
       + 'die dritte ist heute die Wand aus N1K, und geeicht wird die Auflage, sobald '
       + 'die Kurve des Laufs steht.');
   }
+}
+
+/** **Was ein Lauf einbringt - und dass die Messung nichts davon merkt**
+ *  (v306, S-N1-04).
+ *
+ *  Zwei Abnahmen der Story in einem Abschnitt, und die zweite ist die
+ *  wichtigere: `npm run sim` darf nicht davon abhaengen, wieviel derjenige
+ *  gespielt hat, der es fahren laesst (Regel 4). Sonst misst der Runner
+ *  etwas anderes als ich, und beide haetten recht.
+ *
+ *  Geprueft wird das MECHANISCH und mit Nullprobe (Regel 13): erst wird in
+ *  der Ablage wirklich eine Karte freigeschaltet, dann muss ein Spiel mit
+ *  `stapel: []` trotzdem den Grundstapel haben - und ein Spiel OHNE die
+ *  Angabe muss die freigeschaltete sehen. Ohne die zweite Haelfte bewiese
+ *  die erste nur, dass der Eingriff nicht angekommen ist. */
+function erfahrungMessen(): void {
+  console.log('\nErfahrung je Lauf (S-N1-04):');
+
+  // Ein ganzer Lauf, alle Abschnitte gewonnen - gerechnet, nicht gespielt:
+  // was ein Lauf EINBRINGT, haengt an seinen Zahlen und nicht am Bot.
+  let ganz = laufStarten('normal', AUSSAATEN[0]);
+  while (!istLaufZuEnde(ganz)) {
+    ganz = abschnittGeschafft(ganz, 0, 0, wellenDesAbschnitts(laufendeKarte(ganz) ?? ''));
+    const angebot = abschnittsWahl(ganz);
+    if (angebot.length) ganz = abschnittWaehlen(ganz, angebot[0].id);
+  }
+  const gewonnen = erfahrungFuer(ganz, true);
+
+  // Und ein Lauf, der im zweiten Abschnitt in Welle 9 endet.
+  let kurz = laufStarten('normal', AUSSAATEN[0]);
+  kurz = abschnittGeschafft(kurz, 0, 0, wellenDesAbschnitts(laufendeKarte(kurz) ?? ''));
+  const angebot = abschnittsWahl(kurz);
+  if (angebot.length) kurz = abschnittWaehlen(kurz, angebot[0].id);
+  const verloren = erfahrungFuer({ ...kurz, welleGesamt: kurz.welleGesamt + 9 }, false);
+
+  const stapelPreis = KARTENSTAPEL.reduce((a, k) => a + k.kosten, 0);
+  console.log(`  gewonnen ${gewonnen} · in Welle 9 des zweiten Abschnitts verloren `
+    + `${verloren} (${(gewonnen / Math.max(1, verloren)).toFixed(1)}-fach)`);
+  console.log(`  Der ganze Stapel kostet ${stapelPreis} - `
+    + `${(stapelPreis / Math.max(1, gewonnen)).toFixed(1)} gewonnene Laeufe.`);
+
+  if (verloren <= 0) {
+    errors.push('Ein verlorener Lauf bringt nichts. Dann ist ein Roguelite eine Kette '
+      + 'von Niederlagen, und die Story haelt ihre erste Abnahme nicht.');
+  }
+  // Das Verhaeltnis kommt aus der Referenz, nicht aus mir (Regel 10): Rogue
+  // Tower gibt 450 fuers Durchspielen und 1350 fuer den Sieg, also das
+  // Dreifache. Verlangt wird mindestens das Doppelte - eine Niederlage muss
+  // spuerbar weniger bringen, ohne dass sie sich nicht lohnt.
+  if (gewonnen < verloren * 2) {
+    errors.push(`Ein gewonnener Lauf bringt ${gewonnen}, ein verlorener ${verloren} - `
+      + 'weniger als das Doppelte. Dann lohnt sich das Gewinnen nicht.');
+  }
+
+  // **Regel 4, mechanisch.**
+  const vorher = laufErfahrung();
+  laufErfahrungGutschreiben(5000);
+  const gekauft = KARTENSTAPEL.find((k) => k.kosten > 0);
+  if (!gekauft || !karteFreischalten(gekauft.id, gekauft.kosten)) {
+    errors.push('Der Regel-4-Selbsttest konnte keine Karte freischalten - dann prueft '
+      + 'er nichts. Eine Pruefung, deren Eingriff nicht ankommt, sieht aus wie eine '
+      + 'bestandene (Regel 3).');
+  } else {
+    const mitAblage = new GameState(MAPS[0].id);
+    mitAblage.reset(1, 'normal', MAPS[0].id, { karten: MAPS.length });
+    const ohneAblage = new GameState(MAPS[0].id);
+    ohneAblage.reset(1, 'normal', MAPS[0].id, { karten: MAPS.length, stapel: [] });
+    console.log(`  Regel 4: mit Ablage ${mitAblage.kartenStapel.length} Karten, `
+      + `wie die Werkzeuge fahren ${ohneAblage.kartenStapel.length} `
+      + `(Grundstapel ${GRUNDSTAPEL.length}).`);
+    if (ohneAblage.kartenStapel.length !== GRUNDSTAPEL.length) {
+      errors.push(`Ein Spiel mit "stapel: []" zieht aus ${ohneAblage.kartenStapel.length} `
+        + `Karten statt aus ${GRUNDSTAPEL.length}. Dann haengt die Messung daran, wieviel `
+        + 'derjenige gespielt hat, der sie fahren laesst (Regel 4).');
+    }
+    if (mitAblage.kartenStapel.length !== GRUNDSTAPEL.length + 1) {
+      errors.push('Die Nullprobe traegt nicht: auch OHNE die Angabe sieht das Spiel die '
+        + 'freigeschaltete Karte nicht. Dann beweist die Zeile darueber nichts.');
+    }
+  }
+  void vorher;
 }
 
 function laufMessen(): void {
@@ -1428,6 +1514,10 @@ function play(
      *  sondern behauptet (Regel 13). */
     druck?: number;
     beute?: number;
+    /** Welche Karten ueber den Grundstapel hinaus im Zug liegen (S-N1-04).
+     *  Ohne Angabe KEINE - nie der Kontostand dessen, der gerade misst
+     *  (Regel 4). */
+    stapel?: readonly string[];
   } = {},
 ): Result {
   const s = new GameState(mapId);
@@ -1439,7 +1529,7 @@ function play(
   if (opts.beute !== undefined) s.laufBeute = opts.beute;
   s.reset(opts.seed ?? AUSSAATEN[0], difficulty, mapId,
     { endless: opts.endless, perks: opts.perks ?? NO_PERKS,
-      karten: opts.karten ?? MAPS.length });
+      karten: opts.karten ?? MAPS.length, stapel: opts.stapel ?? [] });
   // **Der Stil "lang" stellt VOR dem ersten Turm** (S-N2-06).
   //
   // Das ist keine Feinheit, sondern der Unterschied zwischen einer Weiche und
@@ -2536,6 +2626,9 @@ const mixedPlan = mixedPlanBase;
   if (NUR_LAUF) {
     laufMessen();
     abschnittswahlMessen();
+    kartenzugMessen(GRUNDSTAPEL, 'Grundstapel');
+    kartenzugMessen(KARTENSTAPEL, 'voll freigeschaltet');
+    erfahrungMessen();
     for (const e of errors) console.log(`FEHLER: ${e}`);
     process.exit(errors.length ? 1 : 0);
   }
@@ -2546,7 +2639,14 @@ const mixedPlan = mixedPlanBase;
   vielfaltMessen();
   laufMessen();
   abschnittswahlMessen();
-  kartenzugMessen();
+  // **Beide Staende des Stapels** (S-N1-04): der, mit dem gespielt wird, und
+  // der volle. Der erste ist die Abnahme der laufenden Partie; der zweite
+  // faengt eine freischaltbare Karte, die niemand je nehmen wuerde - sie
+  // waere ein Kaufangebot ohne Gegenwert, und ohne diesen zweiten Lauf
+  // faende es niemand.
+  kartenzugMessen(GRUNDSTAPEL, 'Grundstapel');
+  kartenzugMessen(KARTENSTAPEL, 'voll freigeschaltet');
+  erfahrungMessen();
   werftMessen();
   knappheitMessen();
   bannMessen();

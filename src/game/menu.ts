@@ -2,8 +2,10 @@ import { MAPS } from '../data/maps';
 import { DIFFICULTY_ORDER, DIFFICULTIES, type DifficultyId } from '../data/difficulty';
 import { PERK_ORDER, PERKS, type PerkId } from '../data/perks';
 import {
-  buyPerk, freeStars, getBest, getProgress, getSettings, getStars, saveSettings, totalStars,
+  buyPerk, freeStars, getBest, getProgress, getSettings, getStars, karteFreischalten,
+  laufErfahrung, freigeschalteteKarten, saveSettings, totalStars,
 } from '../core/storage';
+import { KARTENSTAPEL, type Karte } from '../data/karten';
 import { WORLD_H, WORLD_W } from '../data/config';
 import type { Auswertung } from './auswertung';
 import {
@@ -25,7 +27,7 @@ import {
  *  das Menü in der Bildabnahme sehen. Als HTML war es die einzige Fläche des
  *  Spiels, die ich nie selbst beurteilen konnte - und genau dort ist die
  *  Gestaltung abgesackt. */
-export type MenuView = 'map' | 'brief' | 'progress' | 'result' | 'wahl';
+export type MenuView = 'map' | 'brief' | 'progress' | 'result' | 'wahl' | 'stapel';
 
 /** Ein anklickbarer Bereich. Die Zeichenroutine legt sie an, die Bedienung
  *  liest sie - so kann es keine Schaltfläche geben, die man sieht, aber nicht
@@ -121,6 +123,27 @@ export class Menu {
    *  Wahl. */
   laufKarte(): string | null {
     return this.lauf ? laufendeKarte(this.lauf) : null;
+  }
+
+  /** Was der zuletzt beendete Lauf an Erfahrung eingebracht hat - oder
+   *  `null`, wenn keiner endete (S-N1-04). Steht auf dem Ergebnisbildschirm
+   *  neben Stern und Freischaltung. */
+  erfahrungPlus: number | null = null;
+
+  /** Der Kontostand an Erfahrung. Gelesen, nicht gehalten - eine zweite
+   *  Zahl daneben liefe nach dem ersten Kauf auseinander (Regel 15). */
+  erfahrung(): number { return laufErfahrung(); }
+
+  /** Der Stapel mit seinem Zustand: was drin ist, was zu haben ist, und was
+   *  man sich gerade leisten kann. */
+  stapelListe(): { karte: Karte; drin: boolean; leistbar: boolean }[] {
+    const frei = new Set(freigeschalteteKarten());
+    const punkte = laufErfahrung();
+    return KARTENSTAPEL.map((karte) => ({
+      karte,
+      drin: karte.kosten === 0 || frei.has(karte.id),
+      leistbar: punkte >= karte.kosten,
+    }));
   }
 
   /** Ein Angebot ist angenommen worden. */
@@ -258,6 +281,14 @@ export class Menu {
     if (id.startsWith('wahl:')) { this.onWahl(id.slice(5)); return true; }
     if (id === 'back') { this.view = 'map'; return true; }
     if (id === 'progress') { this.view = 'progress'; return true; }
+    if (id === 'stapel') { this.view = 'stapel'; return true; }
+    if (id.startsWith('karte:')) {
+      const k = KARTENSTAPEL.find((x) => x.id === id.slice(6));
+      // Die Pruefung steht in der Ablage, nicht am Knopf - dieselbe Haltung
+      // wie bei `buyPerk` und bei `karteNehmen`.
+      if (k) karteFreischalten(k.id, k.kosten);
+      return true;
+    }
     // Die Einstellungen sind kein Menue-Bild, sondern ein Dialog darueber.
     // Das Menue meldet nur, dass jemand danach gefragt hat.
     if (id === 'optionen') { this.onOptionen(); return true; }

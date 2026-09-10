@@ -3973,6 +3973,93 @@ step('Die Abschnittswahl ist reproduzierbar und geprueft', async () => {
   laufLoeschen();
 });
 
+// --- Die Erfahrung und der Stapel (v306, S-N1-04).
+//
+// **Drei Zusagen, und eine davon war jahrelang gebrochen, ohne dass etwas rot
+// wurde.**
+//
+// 1. Der Fortschritt ueberlebt einen Neustart. Bis v305 tat er das fuer DREI
+//    Felder nicht: `endlos`, `seenMaps` und `seenEnemies` wurden geschrieben
+//    und beim Lesen weggelassen - nachgemessen [17] hinein, [] heraus. Die
+//    Endlos-Bestenliste war nach jedem Neuladen leer, jeder Einweisungssatz
+//    wieder neu.
+// 2. Ein verlorener Lauf bringt weniger als ein gewonnener, aber nicht null.
+// 3. Eine gekaufte Karte liegt danach wirklich im Zug - und eine, fuer die
+//    das Konto nicht reicht, nicht.
+//
+// Geprueft wird 1. an `fortschrittAus`, nicht am Modulzustand: der Store wird
+// beim Laden EINMAL gelesen, ein Neustart laesst sich im laufenden Prozess
+// nicht stellen, und eine Zusage, die niemand nachfahren kann, ist keine.
+step('Erfahrung und Stapel ueberleben einen Neustart', async () => {
+  const { fortschrittAus, laufErfahrung, laufErfahrungGutschreiben,
+    karteFreischalten, freigeschalteteKarten } = await import('../src/core/storage');
+  const { erfahrungFuer } = await import('../src/game/lauf');
+  const { laufStarten } = await import('../src/game/lauf');
+  const { KARTENSTAPEL, GRUNDSTAPEL, stapelAus } = await import('../src/data/karten');
+
+  // 1. Alles, was gespeichert wurde, kommt zurueck.
+  const gespeichert = {
+    stars: { 'spiralhain|normal': 3 },
+    perks: ['gold'],
+    endlos: { spiralhain: [17, 12] },
+    seenMaps: ['spiralhain'],
+    seenEnemies: ['glider'],
+    erfahrung: 900,
+    stapel: ['fernrohr'],
+  };
+  const zurueck = fortschrittAus(gespeichert);
+  for (const feld of ['endlos', 'seenMaps', 'seenEnemies', 'erfahrung', 'stapel'] as const) {
+    if (JSON.stringify(zurueck[feld]) !== JSON.stringify(gespeichert[feld])) {
+      throw new Error(`Das Feld "${feld}" ueberlebt den Neustart nicht `
+        + `(${JSON.stringify(zurueck[feld])} statt ${JSON.stringify(gespeichert[feld])}). `
+        + 'Geschrieben und nicht zurueckgelesen ist schlimmer als gar nicht gespeichert: '
+        + 'niemand merkt es.');
+    }
+  }
+  // Und die Nullprobe: ein leerer Stand faellt trotzdem in Form.
+  const leer = fortschrittAus(undefined);
+  if (typeof leer.stars !== 'object' || !Array.isArray(leer.perks)) {
+    throw new Error('Ein leerer Stand kommt nicht in Form zurueck.');
+  }
+
+  // 2. Verloren bringt weniger als gewonnen, aber nicht null.
+  const lauf = laufStarten('normal', 4242);
+  const ganz = { ...lauf, welleGesamt: 60, abschnitt: 4 };
+  const kurz = { ...lauf, welleGesamt: 9, abschnitt: 0 };
+  const gewonnen = erfahrungFuer(ganz, true);
+  const verloren = erfahrungFuer(kurz, false);
+  if (verloren <= 0) throw new Error('Ein verlorener Lauf bringt nichts.');
+  if (gewonnen <= verloren) {
+    throw new Error(`Ein gewonnener Lauf bringt ${gewonnen}, ein verlorener ${verloren}.`);
+  }
+
+  // 3. Kaufen - und nicht kaufen koennen.
+  const teuer = KARTENSTAPEL.find((k) => k.kosten > 0);
+  if (!teuer) throw new Error('Es gibt keine freischaltbare Karte mehr.');
+  const vorher = laufErfahrung();
+  if (karteFreischalten(teuer.id, teuer.kosten) && laufErfahrung() >= vorher) {
+    throw new Error('Eine gekaufte Karte kostet nichts.');
+  }
+  laufErfahrungGutschreiben(teuer.kosten);
+  if (!karteFreischalten(teuer.id, teuer.kosten)) {
+    throw new Error(`"${teuer.id}" laesst sich nicht kaufen, obwohl das Konto reicht.`);
+  }
+  if (!freigeschalteteKarten().includes(teuer.id)) {
+    throw new Error('Die gekaufte Karte steht nicht in der Ablage.');
+  }
+  if (!stapelAus(freigeschalteteKarten()).some((k) => k.id === teuer.id)) {
+    throw new Error(`"${teuer.id}" ist gekauft und liegt trotzdem nicht im Stapel. `
+      + 'Dann ist der Kauf eine Zeile in der Ablage und sonst nichts.');
+  }
+  if (stapelAus([]).length !== GRUNDSTAPEL.length) {
+    throw new Error('Der Grundstapel haengt an der Ablage.');
+  }
+  // Zweimal kaufen geht nicht, und ein leeres Konto kauft nicht.
+  if (karteFreischalten(teuer.id, teuer.kosten)) {
+    throw new Error('Dieselbe Karte laesst sich zweimal kaufen.');
+  }
+});
+
 // --- Die Vielfaltsbeute steht IM BILD (v301, S-N3-03).
 //
 // Die Abnahme der Story verlangt es woertlich: "Die Zahl steht im Bild, nicht

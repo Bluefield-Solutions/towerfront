@@ -19,7 +19,8 @@ import {
   MAPS, mapById, goalOf, lanePaths, snap, PATH_CLEARANCE, type GameMap,
 } from '../data/maps';
 import {
-  KARTENSTAPEL, KEINE_KARTEN, kartenWirkung, zieheKarten,
+  KARTENSTAPEL, KEINE_KARTEN, kartenWirkung, zieheKarten, GRUNDSTAPEL, stapelAus,
+  KARTEN_JE_WELLE,
   type Karte, type KartenWirkung,
 } from '../data/karten';
 import { WEGNETZ } from '../data/wegnetz';
@@ -29,6 +30,7 @@ import { dist, dist2 } from '../core/math';
 import { Sfx } from '../core/audio';
 import { mischen } from '../gfx/glow';
 import {
+  freigeschalteteKarten,
   getProgress, getStars, gewonneneKarten, recordEndlos, recordRun, recordStars,
 } from '../core/storage';
 import {
@@ -1044,8 +1046,16 @@ export class GameState {
    *  wer denselben Lauf noch einmal faehrt, sieht in Welle 7 dieselben drei
    *  Karten. Ein gemerkter Zug muesste in den Spielstand, koennte davon
    *  abweichen und waere die zweite Wahrheit, die Regel 15 meint. */
+  /** **Der Stapel, aus dem dieser Lauf zieht** (v306, S-N1-04).
+   *
+   *  Voreingestellt der Grundstapel, nicht der Kontostand des Messenden.
+   *  Gesetzt wird er in `reset` - im Spiel aus der Ablage, in den Werkzeugen
+   *  ausdruecklich leer. Das ist Regel 4 in einer Zeile: das Modell darf
+   *  nicht davon abhaengen, wieviel derjenige gespielt hat, der es misst. */
+  kartenStapel: Karte[] = GRUNDSTAPEL;
+
   angeboteneKarten(): Karte[] {
-    return zieheKarten(this.seed, this.waveIndex);
+    return zieheKarten(this.seed, this.waveIndex, KARTEN_JE_WELLE, this.kartenStapel);
   }
 
   karteNehmen(id: string): void {
@@ -2884,7 +2894,11 @@ export class GameState {
       /** Nur fuer die Werkzeuge: die Zahl gewonnener Karten setzen, statt
        *  sie aus der Ablage zu lesen. Ohne das laesst sich C18 nicht
        *  messen, ohne die Ablage des Messenden zu faelschen. */
-      karten?: number } = {},
+      karten?: number;
+      /** Welche Karten ueber den Grundstapel hinaus im Zug liegen
+       *  (S-N1-04). Ohne Angabe die aus der Ablage; die Werkzeuge geben
+       *  `[]` und messen damit immer denselben Stapel (Regel 4). */
+      stapel?: readonly string[] } = {},
   ): void {
     this.seed = seed;
     this.rng.state = seed;
@@ -2911,6 +2925,7 @@ export class GameState {
     this.flashT = 0;
     this.abilityCd = { meteor: 0, freeze: 0, bollwerk: 0, ernte: 0 };
     this.karten = opts.karten ?? gewonneneKarten();
+    this.kartenStapel = stapelAus(opts.stapel ?? freigeschalteteKarten());
     this.freischaltung = null;
     this.laufNummer++;
     this.fortgesetzt = false;

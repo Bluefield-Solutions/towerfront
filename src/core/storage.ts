@@ -74,6 +74,14 @@ export interface Progress {
    *  Aus demselben Grund gilt es ueber Karten hinweg - der Gegner ist
    *  derselbe, gleich auf welcher Karte man ihm zuerst begegnet. */
   seenEnemies?: string[];
+  /** **Erfahrung aus gefahrenen Laeufen** (S-N1-04). Sie kauft Karten in den
+   *  Stapel, nicht Zahlen an den Tuermen. Fehlt in Staenden vor v306 -
+   *  deshalb optional, nicht als Bruch. */
+  erfahrung?: number;
+  /** Die dauerhaft freigeschalteten Karten. Die Grundkarten stehen NICHT
+   *  darin: sie sind an ihrem Preis 0 zu erkennen, und eine Liste, die sie
+   *  mitfuehrte, waere die zweite Wahrheit darueber (Regel 15). */
+  stapel?: string[];
 }
 
 interface Store { settings: Settings; best: BestMap; progress: Progress; }
@@ -100,6 +108,34 @@ const DEFAULTS: Store = {
   progress: { stars: {}, perks: [], seenMaps: [] },
 };
 
+/** **Was gespeichert wurde, kommt auch zurueck** (v306).
+ *
+ *  Bis v305 stand im Leser eine Liste aus GENAU ZWEI Feldern, und alles
+ *  andere fiel beim Lesen weg: `endlos` (die weitesten Endlosläufe, C27),
+ *  `seenMaps` (der Einweisungssatz je Karte, B15) und `seenEnemies` (der
+ *  Kontersatz je Gegnerart). Geschrieben wurden alle drei, gelesen keines -
+ *  nachgemessen: `[17]` hinein, `[]` heraus. Damit war die Bestenliste nach
+ *  jedem Neuladen leer und jeder Satz wieder neu, und keiner der
+ *  dreiunddreissig Schritte sagte ein Wort.
+ *
+ *  Jetzt wird der gespeicherte Fortschritt UEBERNOMMEN und nur die zwei
+ *  Pflichtfelder in Form gebracht. Das ist der Unterschied zwischen einer
+ *  Ableitung und einer Liste (Regel 15): ein neues Feld - `erfahrung` und
+ *  `stapel` aus S-N1-04 - braucht keine zweite Zeile mehr, und genau das
+ *  Vergessen dieser zweiten Zeile war der Fehler.
+ *
+ *  **Als eigene Funktion, damit der Rauchtest sie fassen kann.** Der Store
+ *  wird beim Laden des Moduls EINMAL gelesen; ein Neustart laesst sich im
+ *  laufenden Prozess nicht stellen, und eine Zusage, die niemand nachfahren
+ *  kann, ist keine. */
+export function fortschrittAus(p: Partial<Progress> | undefined): Progress {
+  return {
+    ...(p ?? {}),
+    stars: { ...(p?.stars ?? {}) },
+    perks: Array.isArray(p?.perks) ? [...p.perks] : [],
+  };
+}
+
 function read(): Store {
   try {
     const raw = localStorage.getItem(KEY);
@@ -108,10 +144,8 @@ function read(): Store {
     return {
       settings: { ...DEFAULTS.settings, ...(p.settings ?? {}) },
       best: typeof p.best === 'object' && p.best ? { ...p.best } : {},
-      progress: {
-        stars: { ...(p.progress?.stars ?? {}) },
-        perks: Array.isArray(p.progress?.perks) ? [...p.progress.perks] : [],
-      },
+      progress: fortschrittAus(p.progress),
+
     };
   } catch {
     return structuredCloneSafe(DEFAULTS);
@@ -126,7 +160,7 @@ function structuredCloneSafe(s: Store): Store {
   return {
     settings: { ...s.settings },
     best: { ...s.best },
-    progress: { stars: { ...s.progress.stars }, perks: [...s.progress.perks] },
+    progress: { ...s.progress, stars: { ...s.progress.stars }, perks: [...s.progress.perks] },
   };
 }
 
@@ -197,6 +231,53 @@ export function buyPerk(id: string, cost: number): boolean {
   if (store.progress.perks.includes(id)) return false;
   if (freeStars() < cost) return false;
   store.progress.perks.push(id);
+  write(store);
+  return true;
+}
+
+// ------------------------------------------------------ Erfahrung und Stapel
+
+/** **Was ein Lauf einbringt** (S-N1-04).
+ *
+ *  Der Kontostand, nicht der Ertrag eines einzelnen Laufs: `laufErfahrung`
+ *  liest, `laufErfahrungGutschreiben` legt dazu. Beides an einer Stelle, weil
+ *  beides dieselbe Zahl meint.
+ *
+ *  **Sie liegt in der Ablage und nicht im Lauf.** Ein Lauf endet - das ist
+ *  gerade der Augenblick, in dem die Erfahrung entsteht -, und ein Wert, der
+ *  im endenden Ding steht, ist mit ihm weg. */
+export function laufErfahrung(): number {
+  const e = store.progress.erfahrung;
+  return typeof e === 'number' && e >= 0 ? e : 0;
+}
+
+/** Erfahrung gutschreiben und den neuen Stand zurueckgeben. Negatives wird
+ *  nicht verrechnet: ein Lauf kann nichts kosten, nur nichts bringen. */
+export function laufErfahrungGutschreiben(punkte: number): number {
+  const neu = laufErfahrung() + Math.max(0, Math.round(punkte));
+  store.progress.erfahrung = neu;
+  write(store);
+  return neu;
+}
+
+/** Die dauerhaft freigeschalteten Karten. */
+export function freigeschalteteKarten(): string[] {
+  const l = store.progress.stapel;
+  return Array.isArray(l) ? [...l] : [];
+}
+
+/** Eine Karte kaufen. Gibt zurueck, ob es geklappt hat.
+ *
+ *  Dieselbe Haltung wie `buyPerk`: die Pruefung steht HIER und nicht am
+ *  Knopf. Ein Knopf, der sich auf seine eigene Sichtbarkeit verlaesst, ist
+ *  eine zweite Wahrheit ueber denselben Zustand. */
+export function karteFreischalten(id: string, kosten: number): boolean {
+  const frei = store.progress.stapel ?? (store.progress.stapel = []);
+  if (frei.includes(id)) return false;
+  if (kosten <= 0) return false;
+  if (laufErfahrung() < kosten) return false;
+  store.progress.erfahrung = laufErfahrung() - kosten;
+  frei.push(id);
   write(store);
   return true;
 }

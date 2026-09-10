@@ -929,6 +929,79 @@ export const PROBEN = [
     meldet: 'wird angenommen',
   },
   {
+    // **Der Fortschritt faellt beim Lesen wieder auseinander** (v306,
+    // S-N1-04) - und das ist die Probe auf einen Fehler, der bis v305
+    // wirklich dastand.
+    //
+    // `fortschrittAus` uebernimmt den gespeicherten Fortschritt und bringt
+    // nur die zwei Pflichtfelder in Form. Die alte Fassung baute ihn aus
+    // GENAU DIESEN ZWEI Feldern neu auf, und alles andere fiel weg: die
+    // Endlos-Bestenliste, die gesehenen Karten, die gesehenen Gegnerarten -
+    // gemessen [17] hinein, [] heraus, ueber viele Fassungen hinweg und ohne
+    // dass ein Tor ein Wort sagte.
+    name: 'Der Fortschritt faellt beim Lesen auseinander',
+    datei: 'src/core/storage.ts',
+    suche: '    ...(p ?? {}),\n',
+    ersatz: '',
+    tor: 'smoke',
+    meldet: 'ueberlebt den Neustart nicht',
+  },
+  {
+    // **Der gekaufte Stapel bleibt der Grundstapel** (v306, S-N1-04).
+    //
+    // Dann ist der Kauf eine Zeile in der Ablage und sonst nichts: das
+    // Konto sinkt, die Karte steht im Bild als "im Stapel", und im Zug
+    // taucht sie nie auf.
+    name: 'Die gekaufte Karte liegt nicht im Stapel',
+    datei: 'src/data/karten.ts',
+    suche: '  return KARTENSTAPEL.filter((k) => k.kosten === 0 || frei.has(k.id));',
+    ersatz: '  return KARTENSTAPEL.filter((k) => k.kosten === 0);',
+    tor: 'smoke',
+    meldet: 'liegt trotzdem nicht im Stapel',
+  },
+  {
+    // **Die Messung liest den Stapel aus der Ablage** (v306, S-N1-04).
+    //
+    // Regel 4 in einer Zeile: dann haengt `npm run sim` davon ab, wieviel
+    // derjenige gespielt hat, der es fahren laesst - der Runner maesse etwas
+    // anderes als ich, und beide haetten recht. Genau die Form des Fundes
+    // aus v217, wo `determinism` seinen eigenen Nebeneffekt mass.
+    name: 'Der Kartenstapel der Messung kommt aus der Ablage',
+    datei: 'src/game/state.ts',
+    suche: 'this.kartenStapel = stapelAus(opts.stapel ?? freigeschalteteKarten());',
+    ersatz: 'this.kartenStapel = stapelAus(freigeschalteteKarten());',
+    tor: 'sim',
+    meldet: 'Regel 4',
+  },
+  {
+    // **Ein verlorener Lauf bringt nichts** (v306, S-N1-04).
+    //
+    // Die erste Abnahme der Story, andersherum: ohne den Posten je gefahrener
+    // Welle ist ein Roguelite eine Kette von Niederlagen. Rogue Tower gibt
+    // 450 fuers Durchspielen gegen 1350 fuer den Sieg - nicht 0 gegen 1350.
+    name: 'Ein verlorener Lauf bringt keine Erfahrung',
+    datei: 'src/game/lauf.ts',
+    suche: '  return l.welleGesamt * ERFAHRUNG_JE_WELLE\n'
+      + '    + l.abschnitt * ERFAHRUNG_JE_ABSCHNITT\n'
+      + '    + (geschafft ? ERFAHRUNG_LAUF_GESCHAFFT : 0);',
+    ersatz: '  return geschafft ? ERFAHRUNG_LAUF_GESCHAFFT : 0;',
+    tor: 'sim',
+    meldet: 'bringt nichts',
+  },
+  {
+    // **Karten kosten nichts mehr** (v306, S-N1-04).
+    //
+    // Die Pruefung steht in der Ablage und nicht am Knopf - das ist die
+    // Zusage. Faellt sie weg, kauft ein leeres Konto den ganzen Stapel, und
+    // die Erfahrung ist eine Zahl auf einem Bild.
+    name: 'Karten kosten keine Erfahrung',
+    datei: 'src/core/storage.ts',
+    suche: '  if (laufErfahrung() < kosten) return false;',
+    ersatz: '  if (false) return false;',
+    tor: 'smoke',
+    meldet: 'kostet nichts',
+  },
+  {
     // **Die Vielfaltsmarke steht nicht mehr im Bild** (v301, S-N3-03).
     //
     // Die Abnahme der Story verlangt sie woertlich: "Die Zahl steht im Bild,
@@ -2430,7 +2503,10 @@ export const PROBEN = [
     // in den Fortschritt geschrieben und der eingebaute Fehler bleibt
     // folgenlos. Das haengt an der Bahnlaenge, nicht an diesem Werkzeug.
     haengtAn: ['src/data/maps.ts'],
-    regel: /  s\.reset\(SEED, 'normal', MAPS\[0\]\.id, \{ perks: NO_PERKS, karten: MAPS\.length \}\);/,
+    // Neu angesetzt in v306: der Aufruf traegt jetzt auch `stapel: []`
+    // (Regel 4, S-N1-04) und ist zweizeilig geworden. `npm run muster` hat
+    // es in derselben Runde gemeldet - genau wofuer es da ist.
+    regel: /  s\.reset\(SEED, 'normal', MAPS\[0\]\.id,\n\s*\{ perks: NO_PERKS, karten: MAPS\.length, stapel: \[\] \}\);/,
     ersatz: '  s.reset(SEED);',
     tor: 'determinism',
   },

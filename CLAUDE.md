@@ -677,6 +677,16 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Erfahrung zwischen den Laeufen (v306).** Ein Lauf bringt 10 je gefahrener
+Welle, 100 je gewonnenem Abschnitt und 300 fuers Durchbringen - gemessen 1300
+gewonnen gegen 340 verloren, das 3,8-fache. Gekauft werden **Karten, keine
+Zahlen**: sechs neue, eine je Achse, der Stapel waechst von zwoelf auf
+achtzehn, angeboten werden weiter drei je Welle. **Und die Runde hat einen
+Fehler gefunden, der viele Fassungen lang dastand:** der Leser der Ablage baute
+den Fortschritt aus GENAU ZWEI Feldern neu auf - `endlos`, `seenMaps` und
+`seenEnemies` wurden geschrieben und nie zurueckgelesen (`[17]` hinein, `[]`
+heraus). Er ist jetzt eine Ableitung (`fortschrittAus`), nicht eine Liste.
+
 **Die Abschnittswahl (v305).** Nach jedem gewonnenen Abschnitt stehen zwei bis
 drei Angebote zur Wahl - jedes eine KARTE mit einer AUFLAGE: Stille Schicht
 (−15 % Leben, −15 % Beute), Klarer Weg, Reiche Ader (+30 % / +35 %). Der Ort
@@ -819,7 +829,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v305. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v306. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

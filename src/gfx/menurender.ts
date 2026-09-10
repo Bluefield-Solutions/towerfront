@@ -1,6 +1,7 @@
 import { ABILITIES } from '../data/abilities';
 import { C, WORLD_H, WORLD_W } from '../data/config';
 import { MAPS } from '../data/maps';
+import { ACHSE_NAME, type Karte } from '../data/karten';
 import { DIFFICULTIES, DIFFICULTY_ORDER } from '../data/difficulty';
 import { PERKS } from '../data/perks';
 import type { Menu, Hotspot } from '../game/menu';
@@ -52,6 +53,7 @@ export function drawMenu(ctx: CanvasRenderingContext2D, m: Menu): void {
   else if (m.view === 'map') drawMap(ctx, m, add);
   else if (m.view === 'brief') drawBrief(ctx, m, add);
   else if (m.view === 'wahl') drawWahl(ctx, m, add);
+  else if (m.view === 'stapel') drawStapel(ctx, m, add);
   else drawProgress(ctx, m, add);
   ctx.restore();
 
@@ -268,6 +270,20 @@ function drawMap(
   ctx.fillStyle = zeiger === 'optionen' ? C.stone : C.stoneDark;
   ctx.fillText('Einstellungen ›', WORLD_W - 60, py + 86);
   ctx.restore();
+
+  // **Der Kartenstapel als eigener Einstieg** (v306, S-N1-04). Er steht auf
+  // der linken Seite und nicht unter "Fortschritt": dort wird mit Sternen
+  // eine Wertschraube gekauft, hier mit Erfahrung eine Entscheidung.
+  ctx.save();
+  ctx.textAlign = 'left';
+  ctx.font = '700 24px system-ui, sans-serif';
+  ctx.fillStyle = C.gold;
+  ctx.fillText(`${m.erfahrung()} Erfahrung`, 60, py + 4);
+  ctx.font = '400 19px system-ui, sans-serif';
+  ctx.fillStyle = zeiger === 'stapel' ? C.stone : C.stoneDark;
+  ctx.fillText('Kartenstapel ›', 60, py + 34);
+  ctx.restore();
+  add({ id: 'stapel', x: 40, y: py - 34, w: 250, h: 84 });
   // Dieselbe Trefferhoehe wie "Fortschritt" darueber: 48 Weltpunkte waren
   // auf dem Telefon gerechnet zu klein, und der Rauchtest hat es gemeldet.
   add({ id: 'optionen', x: px - 60, y: py + 52, w: 250, h: 76 });
@@ -503,6 +519,97 @@ function drawProgress(
   });
 }
 
+// ------------------------------------------------------------- Der Kartenstapel
+
+/** **Was ein Lauf einbringt, kauft Karten** (v306, S-N1-04).
+ *
+ *  Ein eigenes Bild und nicht eine zweite Liste im Fortschritt: dort stehen
+ *  die Verbesserungen, und die sind eine Wertschraube - Sterne gegen mehr
+ *  Gold, mehr Kristall, billigere Tuerme. Hier wird kein Wert gekauft,
+ *  sondern eine ENTSCHEIDUNG: der Stapel waechst von zwoelf auf achtzehn,
+ *  angeboten werden weiter drei je Welle.
+ *
+ *  Achtzehn Kacheln in drei Spalten, und jede sagt in einer Zeile, was sie
+ *  tut - dieselbe abgeleitete Zahl wie im Zug (Regel 15). */
+function drawStapel(
+  ctx: CanvasRenderingContext2D, m: Menu, add: (h: Hotspot) => Hotspot,
+): void {
+  const x0 = WORLD_W * 0.5 - 620, y0 = 110, w = 1240, h = 850;
+  ctx.save();
+  ctx.fillStyle = 'rgba(8,13,28,0.9)';
+  roundRect(ctx, x0, y0, w, h, 28); ctx.fill();
+  ctx.strokeStyle = hexA(C.crystal, 0.3); ctx.lineWidth = 2; ctx.stroke();
+  ctx.restore();
+
+  back(ctx, add, x0 + 34, y0 + 26, m.pressed === 'back');
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = C.stone;
+  ctx.font = '700 46px system-ui, sans-serif';
+  ctx.fillText('Kartenstapel', x0 + 60, y0 + 112);
+  ctx.font = '400 24px system-ui, sans-serif';
+  ctx.fillStyle = C.stoneDark;
+  const liste = m.stapelListe();
+  const drin = liste.filter((e) => e.drin).length;
+  ctx.fillText(`${drin} von ${liste.length} Karten im Stapel · drei stehen je Welle zur Wahl`,
+    x0 + 60, y0 + 152);
+
+  ctx.textAlign = 'right';
+  ctx.font = '700 30px system-ui, sans-serif';
+  ctx.fillStyle = C.gold;
+  ctx.fillText(`${m.erfahrung()} Erfahrung`, x0 + w - 60, y0 + 120);
+
+  const spalten = 3;
+  const kw = (w - 120 - 24 * (spalten - 1)) / spalten;
+  const kh = 96;
+  liste.forEach((e, i) => {
+    const kx = x0 + 60 + (i % spalten) * (kw + 24);
+    const ky = y0 + 196 + Math.floor(i / spalten) * (kh + 14);
+    const kaufbar = !e.drin && e.leistbar;
+    const ton = e.drin ? C.crystal : kaufbar ? C.gold : C.stoneDark;
+    ctx.save();
+    ctx.fillStyle = hexA(ton, e.drin ? 0.13 : 0.06);
+    roundRect(ctx, kx, ky, kw, kh, 14); ctx.fill();
+    ctx.strokeStyle = hexA(ton, e.drin ? 0.75 : 0.4); ctx.lineWidth = 2; ctx.stroke();
+
+    ctx.textAlign = 'left';
+    ctx.font = '700 26px system-ui, sans-serif';
+    ctx.fillStyle = C.stone;
+    ctx.fillText(e.karte.name, kx + 20, ky + 40);
+    ctx.font = '400 20px system-ui, sans-serif';
+    ctx.fillStyle = C.stoneDark;
+    ctx.fillText(kartenZahl(e.karte), kx + 20, ky + 72);
+
+    ctx.textAlign = 'right';
+    ctx.font = '700 22px system-ui, sans-serif';
+    ctx.fillStyle = e.drin ? C.crystal : kaufbar ? C.gold : C.stoneDark;
+    ctx.fillText(e.drin ? 'im Stapel' : `${e.karte.kosten}`, kx + kw - 20, ky + 58);
+    ctx.restore();
+
+    // Nur was zu haben UND zu bezahlen ist, ist ein Knopf. Eine Kachel, die
+    // sich auf Druck nicht ruehrt, ist schlimmer als eine, die kein Knopf
+    // sein will.
+    if (kaufbar) add({ id: `karte:${e.karte.id}`, x: kx, y: ky, w: kw, h: kh });
+  });
+}
+
+/** Die Zahl einer Karte - dieselbe Ableitung wie im Zug (`syncZug`).
+ *
+ *  **Das Vorzeichen sagt BESSER, nicht groesser**: der Takt ist eine
+ *  Nachladezeit, ein Faktor unter eins ist dort das Gute. Dieselbe Falle
+ *  hat v303 schon einmal einen Blick gekostet ("Geoelter Lauf −5 %" an einer
+ *  Karte, die man nehmen soll). */
+function kartenZahl(k: Karte): string {
+  // Die ACHSE steht davor, und zwar hier und nicht im Zug: dort liegen drei
+  // Karten nebeneinander und der Satz steht im `title`, hier achtzehn ohne
+  // jeden Zusammenhang. Ein blosses "+3" sagt nicht, ob Gold oder Kristall.
+  const was = ACHSE_NAME[k.art];
+  if (k.art === 'gold' || k.art === 'kristall') return `${was} +${k.wert}`;
+  const besserGross = k.art !== 'takt';
+  const zeichen = (k.wert > 1) === besserGross ? '+' : '−';
+  return `${was} ${zeichen}${Math.round(Math.abs(1 - k.wert) * 100)} %`;
+}
+
 // -------------------------------------------------------------- Das Ergebnis
 
 /** Der Bildschirm nach einer Partie.
@@ -572,6 +679,12 @@ function drawResult(
   // S5 des Abgleichs: die Freischaltung wird gezeigt, WENN sie passiert.
   if (r.freischaltung) {
     nachricht.push(`Neue Fähigkeit: ${ABILITIES[r.freischaltung].name}`);
+  }
+  // **Was der Lauf eingebracht hat** (v306, S-N1-04) - und zwar auch nach
+  // einer Niederlage. Genau dafuer gibt es die Zahl: ohne sie ist ein
+  // verlorener Lauf eine Niederlage und sonst nichts.
+  if (m.erfahrungPlus !== null) {
+    nachricht.push(`+${m.erfahrungPlus} Erfahrung für den Lauf`);
   }
   ctx.font = '700 26px system-ui, sans-serif';
   ctx.fillStyle = C.gold;

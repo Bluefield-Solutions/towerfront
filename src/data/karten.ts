@@ -32,9 +32,30 @@ export type KartenArt =
   /** Kristall sofort - gedeckelt am Hoechstmass wie jede Reparatur. */
   | 'kristall';
 
+/** **Wie eine Achse in einem Wort heisst.**
+ *
+ *  Sie steht hier und nicht im Bild: der Kartenstapel zeigt achtzehn Kacheln
+ *  nebeneinander, und ein blosses "+3" sagt dort nicht, ob Gold oder Kristall
+ *  gemeint ist. Eine Zuordnung im Zeichencode waere die zweite Wahrheit ueber
+ *  dieselbe Achse (Regel 15) - und die erste, die veraltet, sobald eine Achse
+ *  dazukommt. */
+export const ACHSE_NAME: Record<KartenArt, string> = {
+  schaden: 'Schaden',
+  takt: 'Takt',
+  reichweite: 'Reichweite',
+  gold: 'Gold',
+  beute: 'Beute',
+  kristall: 'Kristall',
+};
+
 export interface Karte {
   id: string;
   name: string;
+  /** Was sie kostet, um dauerhaft in den Stapel zu kommen (S-N1-04).
+   *  **0 heisst: von Anfang an dabei.** Bezahlt wird in Erfahrung, und die
+   *  entsteht in einem Lauf - nicht in einer Partie und nicht an einem
+   *  Grad. */
+  kosten: number;
   /** Ein Satz, der sagt, was sie TUT - nicht, wie stark sie ist. Die Zahl
    *  steht daneben und wird aus `wert` gebildet, damit Satz und Zahl nicht
    *  auseinanderlaufen koennen (Regel 15). */
@@ -60,19 +81,53 @@ export interface Karte {
  *  deterministisch ist, dass die Wahl Folgen hat, und dass keine Karte immer
  *  oder nie genommen wird. */
 export const KARTENSTAPEL: Karte[] = [
-  { id: 'schliff', name: 'Schliff', text: 'Alle Türme treffen härter.', art: 'schaden', wert: 1.06 },
-  { id: 'wucht', name: 'Wucht', text: 'Alle Türme treffen härter.', art: 'schaden', wert: 1.10 },
-  { id: 'lauf', name: 'Geölter Lauf', text: 'Alle Türme laden schneller nach.', art: 'takt', wert: 0.95 },
-  { id: 'kadenz', name: 'Kadenz', text: 'Alle Türme laden schneller nach.', art: 'takt', wert: 0.91 },
-  { id: 'linse', name: 'Linse', text: 'Alle Türme sehen weiter.', art: 'reichweite', wert: 1.05 },
-  { id: 'warte', name: 'Warte', text: 'Alle Türme sehen weiter.', art: 'reichweite', wert: 1.09 },
-  { id: 'fund', name: 'Fund', text: 'Gold sofort.', art: 'gold', wert: 60 },
-  { id: 'hort', name: 'Hort', text: 'Gold sofort.', art: 'gold', wert: 120 },
-  { id: 'zoll', name: 'Zoll', text: 'Jeder Gegner bringt mehr.', art: 'beute', wert: 1.08 },
-  { id: 'pacht', name: 'Pacht', text: 'Jeder Gegner bringt mehr.', art: 'beute', wert: 1.15 },
-  { id: 'kitt', name: 'Kitt', text: 'Kristall zurück.', art: 'kristall', wert: 3 },
-  { id: 'guss', name: 'Guss', text: 'Kristall zurück.', art: 'kristall', wert: 6 },
+  { id: 'schliff', name: 'Schliff', text: 'Alle Türme treffen härter.', art: 'schaden', wert: 1.06, kosten: 0 },
+  { id: 'wucht', name: 'Wucht', text: 'Alle Türme treffen härter.', art: 'schaden', wert: 1.10, kosten: 0 },
+  { id: 'lauf', name: 'Geölter Lauf', text: 'Alle Türme laden schneller nach.', art: 'takt', wert: 0.95, kosten: 0 },
+  { id: 'kadenz', name: 'Kadenz', text: 'Alle Türme laden schneller nach.', art: 'takt', wert: 0.91, kosten: 0 },
+  { id: 'linse', name: 'Linse', text: 'Alle Türme sehen weiter.', art: 'reichweite', wert: 1.05, kosten: 0 },
+  { id: 'warte', name: 'Warte', text: 'Alle Türme sehen weiter.', art: 'reichweite', wert: 1.09, kosten: 0 },
+  { id: 'fund', name: 'Fund', text: 'Gold sofort.', art: 'gold', wert: 60, kosten: 0 },
+  { id: 'hort', name: 'Hort', text: 'Gold sofort.', art: 'gold', wert: 120, kosten: 0 },
+  { id: 'zoll', name: 'Zoll', text: 'Jeder Gegner bringt mehr.', art: 'beute', wert: 1.08, kosten: 0 },
+  { id: 'pacht', name: 'Pacht', text: 'Jeder Gegner bringt mehr.', art: 'beute', wert: 1.15, kosten: 0 },
+  { id: 'kitt', name: 'Kitt', text: 'Kristall zurück.', art: 'kristall', wert: 3, kosten: 0 },
+  { id: 'guss', name: 'Guss', text: 'Kristall zurück.', art: 'kristall', wert: 6, kosten: 0 },
+  // **Sechs, die erst ein Lauf in den Stapel bringt** (S-N1-04).
+  //
+  // Eine je Achse, und je die staerkste. **Was gekauft wird, ist eine KARTE
+  // und keine Wertschraube:** der Stapel waechst von zwoelf auf achtzehn,
+  // angeboten werden weiter drei - die Auswahl wird breiter, nicht die Zahl
+  // auf dem Knopf groesser. Eine siebte Achse waere eine Mechanik und keine
+  // Karte; deshalb bleiben es die sechs, die es gibt.
+  //
+  // **Sie machen die schwaechere Karte derselben Achse nicht tot.** Der Zug
+  // legt drei aus achtzehn vor, und gewaehlt wird nach der Achse zuerst:
+  // eine schwache Karte wird genommen, sooft sie die einzige ihrer Achse im
+  // Angebot ist. `npm run sim` misst genau das ueber beide Staende des
+  // Stapels - den, mit dem gespielt wird, und den vollen.
+  { id: 'brandsatz', name: 'Brandsatz', text: 'Alle Türme treffen härter.', art: 'schaden', wert: 1.16, kosten: 700 },
+  { id: 'schlagzahl', name: 'Schlagzahl', text: 'Alle Türme laden schneller nach.', art: 'takt', wert: 0.86, kosten: 700 },
+  { id: 'fernrohr', name: 'Fernrohr', text: 'Alle Türme sehen weiter.', art: 'reichweite', wert: 1.14, kosten: 500 },
+  { id: 'spende', name: 'Spende', text: 'Gold sofort.', art: 'gold', wert: 220, kosten: 500 },
+  { id: 'schatzamt', name: 'Schatzamt', text: 'Jeder Gegner bringt mehr.', art: 'beute', wert: 1.22, kosten: 900 },
+  { id: 'bergung', name: 'Bergung', text: 'Kristall zurück.', art: 'kristall', wert: 12, kosten: 900 },
 ];
+
+/** **Der Stapel, mit dem ein frischer Spielstand anfaengt.**
+ *
+ *  Abgeleitet aus `kosten`, nicht als zweite Liste (Regel 15): wer eine
+ *  Karte dazulegt, entscheidet mit ihrem Preis, ob sie von Anfang an dabei
+ *  ist - eine gepflegte Grundliste daneben veraltete an genau dieser Zeile. */
+export const GRUNDSTAPEL: Karte[] = KARTENSTAPEL.filter((k) => k.kosten === 0);
+
+/** Der Stapel, aus dem gezogen wird: die Grundkarten und die
+ *  freigeschalteten. Unbekannte Kennungen fallen still weg - eine Ablage aus
+ *  einer spaeteren Fassung darf keinen Zug zum Absturz bringen. */
+export function stapelAus(freigeschaltet: readonly string[]): Karte[] {
+  const frei = new Set(freigeschaltet);
+  return KARTENSTAPEL.filter((k) => k.kosten === 0 || frei.has(k.id));
+}
 
 /** Die zusammengerechnete Wirkung der genommenen Karten.
  *
@@ -130,13 +185,14 @@ export const KARTEN_JE_WELLE = 3;
  *  zweimal dieselbe zur Wahl und die Entscheidung schrumpft still. */
 export function zieheKarten(
   saat: number, welle: number, anzahl = KARTEN_JE_WELLE,
+  stapel: readonly Karte[] = GRUNDSTAPEL,
 ): Karte[] {
   const rng = new Rng(((saat >>> 0) ^ Math.imul(welle + 1, 0x9e3779b1)) >>> 0);
   // Zwei Leerzuege: xorshift32 braucht ein paar Schritte, bis aus benachbarten
   // Startwerten wirklich verschiedene Folgen werden. Ohne sie zogen die Wellen
   // 1 und 2 gemessen dieselbe erste Karte.
   rng.next(); rng.next();
-  const rest = KARTENSTAPEL.slice();
+  const rest = stapel.slice();
   const gezogen: Karte[] = [];
   const wieviele = Math.min(anzahl, rest.length);
   for (let i = 0; i < wieviele; i += 1) {

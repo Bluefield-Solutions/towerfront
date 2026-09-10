@@ -1,5 +1,1 @@
-BEFUND vom 2026-09-10T16:16Z auf 143098af:
-PROBEN: 1 von 64 Toren beweisen nichts
-  - Zugefallener Punkt steht weiter offen: "doku" meldet "ist ERFUELLT" nicht, obwohl der Fehler eingebaut ist.
-PROBEN: 1 von 63 Toren beweisen nichts
-  - Kette liest die Abhaengigkeit nicht: "naechste" meldet "S-N3-04 wartet auf S-N3-02" nicht, obwohl der Fehler eingebaut ist.
+BEFUND vom 2026-09-10T17:25Z auf 310dadff:

@@ -89,8 +89,24 @@ const fail = (m) => befunde.push(m);
  *  Wort - genau die Klasse, an der `kartenprobe` in v229 gebrochen ist: ein
  *  Werkzeug, dessen Eingang niemand prueft, ist im Ernstfall kaputt. */
 const GRENZEN = {
-  ruhe: 16,        // gemessen 13,0 %
-  bauwahl: 24,     // gemessen 19,7 %
+  ruhe: 16,        // gemessen 13,0 % (v239), 15,5 % (v294)
+  // **26 seit v294, und der Verlauf steht dabei** - genau wie beim
+  // Pruefsteg eine Zeile tiefer, aus demselben Grund: eine Ratsche ohne ihn
+  // ist nur eine Zahl. v239 19,7 -> v285 23,3 (der Foerderer wurde der
+  // fuenfte Bauknopf) -> v294 25,5 (die Werft der sechste). Die Karte zeigt
+  // JEDES Bauwerk; wer eins hinzufuegt, verbreitert sie.
+  //
+  // **Vorher ist geholt worden, was zu holen war** (Regel: erst messen,
+  // dann die Zahl nachziehen). `.pick-btn` stand auf 62 Punkten
+  // Mindestbreite und `.tower-btn` auf 50 - beide Masse fuer ein ZIEL,
+  // waehrend die Beruehrungsgrenze bei 44 liegt. Auf 54 und 46 gesenkt
+  // bringt das 25,5 -> 24,5; gemessen sind die Knoepfe danach 46 x 46, und
+  // `npm run beruehrung` haelt. Ohne diesen Schritt stuende hier 27.
+  //
+  // 26 statt 25: eine Grenze, die auf dem Gemessenen sitzt, schlaegt beim
+  // naechsten Textwechsel an und wird dann hochgesetzt statt ernst
+  // genommen.
+  bauwahl: 26,     // gemessen 24,5 %
   // gemessen 32,9 % (v248). Der Verlauf steht dabei, weil eine Ratsche ohne
   // ihn nur eine Zahl ist: v239 31,9 -> v246 35,4 (der Verbund und die
   // Verbundzeile kamen dazu) -> v247 31,3 (der Steg endet an seinem Inhalt)
@@ -98,8 +114,11 @@ const GRENZEN = {
   // dem Gemessenen und nicht darauf: 33 waere eine Nadel gewesen, und eine
   // Ratsche, die beim naechsten Textwechsel von selbst anschlaegt, wird
   // nach zwei Runden hochgesetzt statt ernst genommen.
-  pruefsteg: 34,
-  welle: 16,       // gemessen 13,2 %
+  // v248 32,9 -> v294 **34,2**: der Foerderer und die Werft haben das Dock
+  // von 10,4 auf 11,2 % getrieben, und der Pruefsteg liegt darueber. Nach
+  // dem Schrumpfen der Knoepfe (siehe `bauwahl`) sind es 10,8 %.
+  pruefsteg: 35,
+  welle: 16,       // gemessen 13,2 % (v239), 15,5 % (v294)
 };
 /** Wieviele Beschriftungen zugleich doppelt im Bild stehen duerfen.
  *

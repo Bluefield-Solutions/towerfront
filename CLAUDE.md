@@ -698,6 +698,19 @@ ab Hub 3 verdient der durchgehend ueberlappende Bot mehr Gold als der
 vorsichtige, und damit waere der Fruehstart eine Einnahmequelle statt eines
 Risikos. Gesetzt ist 2,0.
 
+**Sechs Bauwerke sprengen eine Leiste, die fuer vier gemessen wurde (v294).**
+Foerderer und Werft trieben `#dock` von 10,4 auf 11,2 % der Bildschirmflaeche;
+die Belegung lief im Pruefsteg auf 34,6 % gegen erlaubte 34. **Zuerst geholt,
+was zu holen war, dann die Zahl nachgezogen:** `.pick-btn` stand auf 62 und
+`.tower-btn` auf 50 Punkten Mindestbreite - beides Masse fuer ein ZIEL,
+waehrend die Beruehrungsgrenze bei **44** liegt. Auf 54 und 46 gesenkt bringt
+25,5 -> 24,5 und 34,6 -> 34,2; die Knoepfe messen danach 46 x 46. Erst DANACH
+steigen die Ratschen (bauwahl 26, pruefsteg 35), mit ihrem Verlauf daneben.
+**Die eigentliche Lehre ist die Luecke im Werkzeug:** v292 hat die
+Buendel-Regel fuer `autarkietor` eingefuehrt und die anderen drei Tore in
+einer Liste aus zwei Dateinamen gelassen - Regel 15 in Reinform, und sie hat
+prompt eine Runde gekostet. Jetzt gilt sie fuer alle vier.
+
 **Die Turmwahl macht sechs Punkte aus (v293, M18).** Die Vermutung stand seit
 v287: die drei Spielstile fahren dieselbe Turmliste, deshalb misst "Abstand
 der Spielstile" nur drei Einstellungen desselben Bots. `Breite` hat ein
@@ -790,7 +803,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v293. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v294. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

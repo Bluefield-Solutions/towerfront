@@ -2229,10 +2229,14 @@ export const PROBEN = [
     // ZWEI `@media (max-height: 480px)`-Bloecke, und beide setzten
     // `.tower-btn`. Die zweite Fassung gewann, also war `padding: 3px 5px 2px`
     // geschrieben und wirkungslos (Regel 15). Sie ist weg.
+    // **Nachgezogen in v294**: die Zeile stand auf 50 Punkten, seit v294
+    // steht sie auf 46 - sechs Bauwerke statt vier, und die
+    // Beruehrungsgrenze liegt bei 44. Die Probe hat es selbst gemeldet
+    // ("Muster FEHLT"), bevor sie still ins Leere gezeigt haette.
     name: 'Turmleiste sprengt das Band',
     datei: 'src/style.css',
-    regel: /  \.tower-btn \{ min-width: 50px; padding: 3px 5px 2px; \}/,
-    ersatz: '  .tower-btn { min-width: 200px; padding: 3px 5px 2px; }',
+    regel: /  \.tower-btn \{ min-width: 46px; padding: 3px 3px 2px; \}/,
+    ersatz: '  .tower-btn { min-width: 200px; padding: 3px 3px 2px; }',
     tor: 'uxtor',
   },
   {

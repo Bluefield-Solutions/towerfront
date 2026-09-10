@@ -789,7 +789,7 @@ html, body {
    Knopf oeffnet - drei Stellen, an denen sie hingehoeren, und keine, an der
    sie die Leiste breit machen. */
 @media (max-width: 780px) {
-  .tower-btn { min-width: 50px; }
+  .tower-btn { min-width: 46px; }
 }
 
 /* ------------------------------------------------------- Technikanzeige */
@@ -1114,8 +1114,18 @@ html, body {
    * auf dem Telefon gibt es keinen Zeigerhinweis, in dem das Wort
    * nachzulesen waere. */
 
-  .tower-btn { min-width: 50px; padding: 3px 5px 2px; }
-  .tower-btn .t-bild { width: 30px; height: 30px; }
+  /* **46 statt 50 seit v294 - sechs Bauwerke statt vier.**
+     Der Foerderer (v285) und die Werft (v290) sind der fuenfte und sechste
+     Eintrag dieser Leiste, und gemessen stieg `#dock` damit von 10,4 auf
+     11,2 % der Bildschirmflaeche: die Belegung im Pruefsteg lief auf 34,6 %
+     gegen erlaubte 34, in der Bauwahl auf 25,5 gegen 24.
+
+     44 Punkte sind die Beruehrungsgrenze, und die ist nicht verhandelbar -
+     46 laesst zwei Punkte Luft und ist damit das Ende der Fahnenstange. Wer
+     ein siebtes Bauwerk will, braucht eine andere Anordnung, keine
+     schmaleren Knoepfe. */
+  .tower-btn { min-width: 46px; padding: 3px 3px 2px; }
+  .tower-btn .t-bild { width: 28px; height: 28px; }
   /* **Eng genug fuer EINE Reihe** (v239). Bei 844 Punkten teilen sich
      Einklappknopf, vier Turmknoepfe, vier Faehigkeiten und der Wellenknopf
      das Band; mit 58 Punkten Mindestbreite und 11-Punkt-Schrift brach die
@@ -1434,13 +1444,33 @@ html, body {
 }
 .pick-btn {
   display: flex; flex-direction: column; align-items: center; gap: 1px;
-  min-width: 62px; min-height: 56px; padding: 6px 4px;
+  /* **54 statt 62 seit v294**, aus demselben Grund wie bei `.tower-btn`:
+     die Karte zeigt seit v290 sechs Bauwerke statt vier, und 44 Punkte sind
+     die Beruehrungsgrenze. Die Hoehe bleibt - sie traegt Bild, Name und
+     Preis untereinander. */
+  min-width: 54px; min-height: 56px; padding: 6px 3px;
   font: inherit; color: var(--text);
   background: rgba(231, 236, 247, 0.07);
   border: 1px solid rgba(231, 236, 247, 0.16);
   border-radius: 11px; cursor: pointer;
 }
 .pick-btn:active { transform: scale(0.97); }
+/* **Ein gesperrter Eintrag braucht keine Trefferflaeche** (v294).
+ *
+ *  Er laesst sich nicht druecken - er sagt, WARUM hier nichts geht (RAND,
+ *  zu nah am Weg, zu teuer). Die 62 Punkte Mindestbreite sind das Mass fuer
+ *  ein ZIEL, und ein Eintrag, den niemand trifft, ist keins.
+ *
+ *  Der Anlass ist gemessen: mit dem sechsten Bauwerk (der Werft, v290) stieg
+ *  die Belegung im Zustand "bauwahl" auf 25,5 % gegen erlaubte 24 - `#pick`
+ *  allein von 8,2 auf 9,5. Die Knoepfe schmaler zu machen ginge nicht, 44
+ *  Punkte sind die Beruehrungsgrenze; die gesperrten schmaler zu machen
+ *  schon, denn fuer sie gilt sie nicht.
+ *
+ *  **Der Grund bleibt sichtbar.** Ihn wegzulassen waere der Rueckschritt,
+ *  den v202 ausdruecklich behoben hat: wer den Moerser waehlt, wo nur der
+ *  Bogenturm hinpasst, druckte bis dahin ins Leere. */
+.pick-btn:disabled { min-width: 46px; padding-left: 2px; padding-right: 2px; }
 /* Die in der Turmleiste vorgewaehlte Sorte. Seit v202 baut der Tipp aufs
    Feld nicht mehr, sondern oeffnet diese Wahl - dann muss man ohne Suchen
    sehen, was man vorhin gewaehlt hat. */

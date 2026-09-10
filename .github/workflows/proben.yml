@@ -167,12 +167,31 @@ jobs:
                 echo "Ohne Ergebnis geblieben:$fehlend (abgebrochen, abgestuerzt"
                 echo "oder zeitlich abgelaufen). Eine fehlende Scheibe zaehlt als rot."
               fi
+              # **Auch der vorzeitige Abbruch gehoert in den Befund** (v313).
+              #
+              # Bis v313 wurde nur ab "beweisen nichts" ausgeschnitten. Eine
+              # Scheibe, die gar nicht erst arbeitet, weil ein Tor schon OHNE
+              # eingebauten Fehler rot ist, hat diese Zeile nie - sie schreibt
+              # "sind schon OHNE eingebauten Fehler rot". Am 10.09.2026 stand
+              # deshalb ein Befund da, der NUR aus seiner Kopfzeile bestand:
+              # rot, ohne ein Wort dazu, warum. Die Ursache liess sich nur
+              # finden, indem jemand die Protokolle der Scheiben las - genau
+              # der Weg, den dieser Befund abschaffen soll.
               for i in 0 1 2 3 4 5; do
                 log="/tmp/scheiben/scheibe-$i/lauf.log"
                 [ -f "$log" ] || continue
-                sed -n '/beweisen nichts/,$p' "$log" | head -12
+                sed -n '/beweisen nichts\|sind schon OHNE eingebauten Fehler rot/,$p' \
+                  "$log" | head -12
               done
             } > tools/proben-befund.txt
+            # **Und ein Befund ohne Inhalt ist keiner.** Bleibt es bei der
+            # Kopfzeile, sagt die Datei das selbst, statt stumm rot zu sein.
+            if [ "$(wc -l < tools/proben-befund.txt)" -le 1 ]; then
+              echo "Rot, aber keine Scheibe nennt einen Grund. Das Protokoll der" \
+                >> tools/proben-befund.txt
+              echo "Scheiben steht als Artefakt am Lauf - dort nachsehen." \
+                >> tools/proben-befund.txt
+            fi
           else
             echo "sauber $(date -u +%Y-%m-%d) $kurz" > tools/proben-befund.txt
             # Das FORMAT der Standzeile steht in `tools/probes.mjs` und nur

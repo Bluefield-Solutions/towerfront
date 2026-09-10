@@ -696,6 +696,31 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Vier Rauchtest-Schritte konnten still scheitern (v313).** Der zweite volle
+Probenlauf meldete `Der Kartenzug unterbricht die Welle: "smoke" meldet nicht`
+— und hier bewies dieselbe Probe einwandfrei. Die Klasse aus v225, und die
+Ursache lag nicht in der Probe: `step` nahm `fn: () => void` und rief `fn()` in
+einem try/catch, aber **vier Schritte aus v303 bis v306 sind `async`**. Eine
+async-Funktion wirft nicht, sie lehnt ein Versprechen ab — das try/catch fing
+nie etwas, der Befund kam nie in `problems`, und ob die Ablehnung ueberhaupt
+auftauchte, entschied ein Wettlauf mit dem Ende des Prozesses. **Dass es
+auffiel, war Glueck**: vier Abnahmen aus vier Runden waren nur scheinbar
+gehalten.
+
+`step` nimmt jetzt auch ein Versprechen, haengt ein `catch` daran, und das
+Urteil wartet die offenen Schritte ab. **Der ORT des Selbsttests dazu ist
+gemessen, nicht gewaehlt** (Regel 13): oben bei `step` kam die Marke auch OHNE
+das Abwarten an, weil dutzende `await`s der Datei dazwischenliegen und jedes
+dem Zeitgeber eine Runde gibt — die Nullprobe blieb gruen und bewies nur die
+Haelfte. Unmittelbar vor dem Abwarten schlagen beide an.
+
+**Und der Befund hat ein Loch, das dieselbe Runde zweimal gekostet hat:** die
+Zusammenfuehrung schnitt nur ab „beweisen nichts" aus. Eine Scheibe, die wegen
+eines schon roten Tores gar nicht erst arbeitet, traegt damit NICHTS bei — am
+10.09.2026 stand ein Befund da, der nur aus seiner Kopfzeile bestand. Jetzt
+wird auch ab „sind schon OHNE eingebauten Fehler rot" ausgeschnitten, und ein
+Befund ohne Inhalt sagt das selbst.
+
 **Zwei Haushalte sind mit 0,2 KB Abstand zusammengestossen (v313).** Fuenf der
 sechs Probenscheiben haben gar nicht erst gearbeitet: `PROBEN: 1 Tor(e) sind
 schon OHNE eingebauten Fehler rot: autarkie` — eine Gegenprobe an einem roten

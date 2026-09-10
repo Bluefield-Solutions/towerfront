@@ -841,6 +841,14 @@ if (start) {
       };
       const mit = stellen('1');
       const ohne = stellen('0');
+      // Eine Zeile, GEMESSEN statt angenommen: derselbe Streifen mit einem
+      // Text, der garantiert nicht umbricht. Eine feste Punktzahl waere hier
+      // absolut statt anteilig (Regel 2) - sie haenge an der Schriftstufe,
+      // und die erste geratene Grenze (26 gegen gemessene 9 und 18) hat die
+      // Gegenprobe schweigen lassen.
+      lauf.dataset.an = '1';
+      lauf.textContent = 'W1';
+      const einzeilig = Math.round(lauf.getBoundingClientRect().height);
       // **Der Freiraum wird GESTELLT, nicht abgewartet** (v286).
       //
       // Der Knopf steht ganz rechts, weil `margin-left: auto` ihn dorthin
@@ -862,14 +870,14 @@ if (start) {
       const engOhne = stellen('0');
       skills.forEach((e, i) => { e.style.display = vorher[i]; });
       stellen('0');
-      return { mit, ohne, hoehe: mit.hoehe, eng: { mit: engMit, ohne: engOhne } };
+      return { mit, ohne, hoehe: mit.hoehe, einzeilig, eng: { mit: engMit, ohne: engOhne } };
     });
     if (!st) {
       fail('Der Wellenknopf traegt keinen laufenden Strom (#b-wave-l fehlt).');
     } else {
       console.log(`Laufender Strom neben dem Wellenknopf: ${st.mit.breite} Punkte `
         + `(${st.mit.anzeige}, ${st.mit.sichtbar}) · fängt den Finger: ${st.mit.faengt} `
-        + `· ${st.mit.eigen} Punkte hoch · Knopf ${st.mit.knopf} Punkte mit, ${st.ohne.knopf} ohne `
+        + `· ${st.mit.eigen} Punkte hoch (eine Zeile ${st.einzeilig}) · Knopf ${st.mit.knopf} Punkte mit, ${st.ohne.knopf} ohne `
         + `· rechte Kante ${st.mit.rechts}/${st.ohne.rechts}, mit Freiraum `
         + `${st.eng.mit.rechts}/${st.eng.ohne.rechts} · Knopfhöhe ${st.hoehe}`);
       if (st.mit.anzeige === 'none' || st.mit.sichtbar === 'hidden' || st.mit.breite < 30) {
@@ -892,9 +900,9 @@ if (start) {
         fail(`Der Wellenknopf ist mit dem laufenden Strom ${st.hoehe} Punkte hoch - `
           + 'er bricht damit auf zwei Zeilen um.');
       }
-      if (st.mit.eigen > 26) {
-        fail(`Der laufende Strom ist ${st.mit.eigen} Punkte hoch - `
-          + 'er bricht damit auf zwei Zeilen um.');
+      if (st.mit.eigen > st.einzeilig * 1.4) {
+        fail(`Der laufende Strom ist ${st.mit.eigen} Punkte hoch, eine Zeile misst `
+          + `${st.einzeilig} - er bricht damit auf zwei Zeilen um.`);
       }
       // **Und er darf den Finger nicht fangen** (v286).
       //

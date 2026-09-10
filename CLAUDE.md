@@ -696,6 +696,18 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der Nachtlauf konnte gar nicht rot werden - und das seit v221 (v312).** Der
+Schritt lautete `npm run proben -- --voll ... 2>&1 | tee /tmp/proben-lauf.log`.
+**Der Ausgang einer Rohrleitung ist der Ausgang des LETZTEN Gliedes**, also von
+`tee`, und das gelingt immer. Der Lauf vom 10.09.2026 meldete deshalb sechs
+gruene Scheiben, waehrend eine Probe ihren Gegenstand verloren hatte und der
+Lauf mit Ausgang 1 endete. Bis v306 rettete es ein Griff nach dem Protokoll
+(`grep "beweisen nichts"`); v307 hat den durch den Ausgang ersetzt und damit
+die einzige funktionierende Haelfte entfernt. Jetzt `set -o pipefail` UND der
+Protokollgriff - zwei unabhaengige Signale, an einer Stelle zu einem Urteil
+zusammengefuehrt. **Ein Tor, das nicht rot werden KANN, ist kein Tor**, und
+dieses konnte es anderthalb Jahre lang nicht.
+
 **Eine Gegenprobe hat sich selbst als wirkungslos erwiesen - und dabei ein Tor
 entlarvt, das seine eigene Arithmetik mass (v311).** Die Probe zum Lauffaktor
 baute den Fehler in `GameState` ein, und `npm run sim` meldete nichts:
@@ -916,7 +928,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v311. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v312. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

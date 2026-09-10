@@ -75,14 +75,42 @@ jobs:
       # Das Protokoll liegt unter /tmp und nicht im Baum: `npm run proben`
       # verweigert den Dienst bei schmutzigem Baum, und `git status
       # --porcelain` zaehlt auch unverfolgte Dateien mit.
+      #
+      # **`set -o pipefail` ist hier die ganze Miete** (v312). Ohne es ist der
+      # Ausgang einer Rohrleitung der Ausgang des LETZTEN Gliedes - also von
+      # `tee`, und das gelingt immer. Der Lauf vom 10.09.2026 meldete deshalb
+      # sechs gruene Scheiben, waehrend eine Probe ihren Gegenstand verloren
+      # hatte und der Lauf mit Ausgang 1 endete. Ein Tor, das nicht rot werden
+      # KANN, ist kein Tor - und dieses konnte es seit v221 nicht, denn schon
+      # der ungeteilte Lauf stand hinter demselben Rohr. Was es bis v307
+      # rettete, war der Griff nach dem Protokoll (`grep "beweisen nichts"`);
+      # v307 hat den durch den Ausgang ersetzt und damit die einzige
+      # funktionierende Haelfte entfernt.
       - name: Scheibe fahren
         id: lauf
         continue-on-error: true
-        run: npm run proben -- --voll --teil=${{ matrix.teil }}/6 2>&1 | tee /tmp/proben-lauf.log
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run proben -- --voll --teil=${{ matrix.teil }}/6 2>&1 | tee /tmp/proben-lauf.log
+      # **Zwei Quellen, eine Stelle.** Der Ausgang sagt, ob der Lauf gescheitert
+      # ist; das Protokoll sagt es noch einmal mit eigenen Worten. Beides hier
+      # zusammenzufuehren ist kein Verstoss gegen Regel 15 - es ist eine
+      # Stelle, an der zwei unabhaengige Signale zu EINEM Urteil werden. Wer
+      # nur den Ausgang liest, ist blind, sobald ein Rohr dazwischenkommt;
+      # wer nur das Protokoll liest, ist blind, sobald sich eine Meldung
+      # umformuliert.
       - name: Ergebnis der Scheibe festhalten
         if: always()
+        shell: bash
         run: |
-          echo "${{ steps.lauf.outcome }}" > /tmp/ausgang.txt
+          aus="${{ steps.lauf.outcome }}"
+          if grep -qE "beweisen nichts|Eingriff kam nicht an|Baum ist nicht sauber" \
+               /tmp/proben-lauf.log 2>/dev/null; then
+            echo "Das Protokoll meldet einen Befund - die Scheibe zaehlt als rot."
+            aus=failure
+          fi
+          echo "$aus" > /tmp/ausgang.txt
           mkdir -p /tmp/scheibe
           cp /tmp/proben-lauf.log /tmp/scheibe/lauf.log
           cp /tmp/ausgang.txt /tmp/scheibe/ausgang.txt
@@ -156,9 +184,43 @@ jobs:
           else
             git config user.name  "Gegenproben"
             git config user.email "noreply@anthropic.com"
-            git add tools/proben-stand.txt tools/proben-befund.txt
-            git commit -m "Probenlauf: $(head -1 tools/proben-befund.txt)"
-            git push
+            # **Der Zweig ist inzwischen weitergelaufen** (v312).
+            #
+            # Der Lauf dauert eine Dreiviertelstunde; in der Zeit wird
+            # weitergearbeitet und gepusht. Die Auscheckung dieses Schritts ist
+            # aber eine Momentaufnahme vom START des Laufs - `git push` wurde
+            # deshalb als nicht vorspulbar abgewiesen, und der Stand blieb
+            # ungeschrieben, obwohl alle sechs Scheiben gruen waren.
+            #
+            # Zusammengefuehrt wird NICHT: Stand und Befund sind Ausgaben
+            # dieses Laufs und keine geteilte Bearbeitung. Sie werden
+            # beiseitegelegt, der Zweig wird auf den Fernstand gezogen, und
+            # dann werden sie wieder hingeschrieben - der letzte Lauf gilt.
+            # Ein Rebase koennte an genau diesen zwei Dateien haengenbleiben
+            # und braeuchte eine Konfliktregel, die dasselbe sagt.
+            cp tools/proben-stand.txt /tmp/stand.txt
+            cp tools/proben-befund.txt /tmp/befund.txt
+            for versuch in 1 2 3; do
+              git fetch origin "$GITHUB_REF_NAME"
+              git reset --hard "origin/$GITHUB_REF_NAME"
+              cp /tmp/stand.txt tools/proben-stand.txt
+              cp /tmp/befund.txt tools/proben-befund.txt
+              if git diff --quiet -- tools/proben-stand.txt tools/proben-befund.txt; then
+                echo "Stand und Befund stehen schon so im Zweig."
+                break
+              fi
+              git add tools/proben-stand.txt tools/proben-befund.txt
+              git commit -m "Probenlauf: $(head -1 tools/proben-befund.txt)"
+              if git push origin "HEAD:$GITHUB_REF_NAME"; then
+                echo "Stand und Befund gepusht (Versuch $versuch)."
+                break
+              fi
+              echo "Push abgewiesen - der Zweig ist weitergelaufen. Neuer Versuch."
+              if [ "$versuch" = "3" ]; then
+                echo "Dreimal abgewiesen. Der Lauf war gruen, der Stand ist NICHT geschrieben."
+                exit 1
+              fi
+            done
           fi
           if [ "$rot" = "1" ]; then
             echo "Der volle Probenlauf ist rot. Der Befund steht in tools/proben-befund.txt."

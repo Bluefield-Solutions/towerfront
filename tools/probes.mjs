@@ -940,8 +940,12 @@ export const PROBEN = [
     // Uebersetzung fangen kann.
     name: 'Die Auflage wirkt nicht auf die Gegner',
     datei: 'src/game/state.ts',
-    suche: 'return Math.round(ENEMIES[id].hp * hpMul * ramp * this.laufDruck);',
-    ersatz: 'return Math.round(ENEMIES[id].hp * hpMul * ramp);',
+    // Neu angesetzt in v312: die Zeile heisst seit v311 `this.laufRampe(welle)`
+    // statt `ramp`. Gefunden hat es `npm run muster` - und dass der
+    // NACHTLAUF es nicht gefunden hat, obwohl er genau dafuer da ist, ist der
+    // eigentliche Fund dieser Runde (siehe proben.yml, `set -o pipefail`).
+    suche: 'return Math.round(ENEMIES[id].hp * hpMul * this.laufRampe(welle) * this.laufDruck);',
+    ersatz: 'return Math.round(ENEMIES[id].hp * hpMul * this.laufRampe(welle));',
     tor: 'sim',
     meldet: 'folgenlos',
   },

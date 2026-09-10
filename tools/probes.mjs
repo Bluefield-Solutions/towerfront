@@ -767,6 +767,41 @@ export const PROBEN = [
     meldet: 'schuettet Gold aus',
   },
   {
+    // **Der Wellenzaehler faengt beim Abschnittswechsel von vorn an**
+    // (v302, S-N1-01).
+    //
+    // Die Gegenprobe, die die Story selbst verlangt. `abschnittGeschafft`
+    // ADDIERT die gefahrenen Wellen; wer sie hier setzt statt addiert, macht
+    // aus einem Lauf vier Partien hintereinander - jeder Abschnitt faengt
+    // wieder am flachen Anfang der Lebenskurve an.
+    //
+    // Gemessen wird es an der RAMPE je Abschnitt, nicht an einem Ergebnis:
+    // `hpScale` ist eine Funktion, und diese Frage braucht die
+    // Wegabhaengigkeit einer Partie nicht. Ohne den Zaehler steht die Rampe
+    // in jedem Abschnitt bei rund 1,0 statt bei 1,00 / 1,12 / 1,82 / 15,17.
+    name: 'Der Lauf zaehlt die Wellen nicht durch',
+    datei: 'src/game/lauf.ts',
+    suche: 'welleGesamt: l.welleGesamt + gefahreneWellen,',
+    ersatz: 'welleGesamt: 0,',
+    tor: 'sim',
+    meldet: 'steigt im Lauf nicht durch',
+  },
+  {
+    // **Der Lauf wird gar nicht mehr geprueft, bevor er geladen wird**
+    // (v302, S-N1-01).
+    //
+    // Die zweite Abnahme: ein Stand, den niemand verstehen kann, wird GAR
+    // NICHT gelesen statt halb. Nimmt man die Fassungspruefung heraus, laedt
+    // ein Lauf aus einer fremden Fassung durch - und der Rauchtest faehrt
+    // vier gestellte Faelle dagegen.
+    name: 'Der Lauf prueft seine Fassung nicht',
+    datei: 'src/game/lauf.ts',
+    suche: 'if (l.v !== 1) return null;',
+    ersatz: 'if (false) return null;',
+    tor: 'smoke',
+    meldet: 'wird gelesen statt verworfen',
+  },
+  {
     // **Die Vielfaltsmarke steht nicht mehr im Bild** (v301, S-N3-03).
     //
     // Die Abnahme der Story verlangt sie woertlich: "Die Zahl steht im Bild,

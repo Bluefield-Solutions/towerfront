@@ -1,6 +1,6 @@
 # Towerfront — Stories
 
-Stand: v301 · 10.09.2026
+Stand: v302 · 10.09.2026
 
 **Nachgesehen in v291 — Paket N3 ist zu drei Vierteln gebaut, und die
 Diagnose hat sich dabei umgedreht.** Förderer (v285), Wiederholungsaufschlag
@@ -852,8 +852,48 @@ Der Spielstand sichert den Lauf, nicht die Partie.
 * Ein voller Lauf ist in der Simulation fahrbar und endet innerhalb eines
   festen Horizonts.
 
-**Gegenprobe.** Den Wellenzähler beim Abschnittswechsel zurücksetzen: `sim`
-muss melden, dass die Schwierigkeit im zweiten Abschnitt von vorn beginnt.
+**Gebaut in v302 — und der erste Lauf hat sofort etwas gesagt.**
+
+`LaufZustand` steht in `src/game/lauf.ts`: Aussaat, Grad, Abschnitte,
+Wellenzähler über alle Abschnitte, Gold, Kristall, Deck, Verbesserungen.
+**Türme stehen nicht darin**, und das ist die Stelle, an der man den Beschluss
+sieht.
+
+**Additiv gebaut, und das war die wichtigste Entscheidung der Runde.** Ohne
+Lauf steht der Versatz auf 0 und die Gesamtzahl auf der Wellenzahl der Karte —
+dann rechnet `hpScale` Zeichen für Zeichen dasselbe wie vorher. Die ganze
+Balance ist an EINZELNEN Karten geeicht (sim, C18, die Spannungsratsche); ein
+Lauf, der diesen Pfad mitverschiebt, hätte in derselben Runde jede dieser
+Zahlen bewegt und keine davon erklärbar gemacht.
+
+**Der Lauf ist fahrbar** (`laufMessen` in `npm run sim`) und endet in **1048 s**
+gegen einen Horizont von 3600.
+
+**Und hier ist der Befund:**
+
+| Abschnitt | Rampe | Ergebnis |
+|---|---|---|
+| Spiralhain | 1,00 | gewonnen, 42/42 |
+| Ascheschlucht | 1,12 | gewonnen, 42/42 |
+| Frostspalte | 1,82 | gewonnen, 42/42 |
+| **Farnkessel** | **15,17** | **verloren in Welle 7** |
+
+Die Lebenskurve ist an einer Karte mit **15** Wellen geeicht: flacher Anfang,
+Knie bei 55–92 %, Ende bei `hpEnd`. Über **60** Wellen gestreckt liegen die
+ersten drei Abschnitte im flachen Teil und der vierte mitten im Knie. Ein Lauf
+ist damit heute **drei Spaziergänge und eine Wand**.
+
+**Das ist kein Fehler dieser Story, sondern ihre erste Auskunft:** der
+Wellenzähler über die Abschnitte hinweg ist richtig, die **Kurvenform** dafür
+nicht. Sie steht als `OFFEN (N1-Kurve)` in jedem Lauf und macht die Kette
+nicht rot — der Lauf ist heute nur aus dem Werkzeug erreichbar, und ein Tor,
+das eine unfertige Mechanik rot macht, blockiert jede Runde danach, statt
+etwas zu halten.
+
+**Gegenprobe.** Zwei: den Wellenzähler beim Abschnittswechsel zurücksetzen
+(`sim` meldet, dass die Kurve nicht durchsteigt), und die Fassungsprüfung der
+Ablage herausnehmen (der Rauchtest fährt vier gestellte kaputte Stände
+dagegen, mit Nullprobe am heilen).
 
 **Schliesst, wenn:** `text src/game/lauf.ts "LaufZustand" >= 2`
 

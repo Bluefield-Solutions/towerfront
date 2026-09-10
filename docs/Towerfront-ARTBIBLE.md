@@ -1,6 +1,19 @@
 # Towerfront — Art Bible
 
-Stand: v295 · 10.09.2026
+Stand: v302 · 10.09.2026
+
+**Nachgesehen in v302:** am Stil unveraendert, am Vorrat auch - seit v288 ist
+kein Bild dazugekommen und kein Backwert geaendert worden. Die drei offenen
+Bestellungen stehen unveraendert: `31_foerderer.png` (8d.2, seit v285),
+`32_werft.png` (8d.3, seit v290), `33_bannturm.png` (8d.4, seit v295). Alle
+drei Bauwerke sind gebaut, gemessen und laufen gegen `getPlatzhalter` (K5).
+
+**Neu ist EIN Zeichen, und es kommt ohne Bild aus:** die Vielfaltsmarke
+`×N` hinter der Goldzahl (v301). Sie sagt, wieviele Turmarten an einem Gegner
+gearbeitet haben, und steht nur da, wo wirklich ein Gold mehr fliesst -
+gemessen auf fuenf von acht Gegnerarten. Kein neues Symbol, keine neue Farbe:
+dieselbe Goldschrift wie die Zahl, an der sie haengt. Ein zweites Zeichen fuer
+dieselbe Aussage waere eine Sprache zu viel.
 
 **Nachgesehen in v295:** am Stil unverändert, am Vorrat auch — zwischen v288
 und v295 ist kein Bild dazugekommen und kein Backwert geändert worden.

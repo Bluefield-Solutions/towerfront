@@ -1,6 +1,42 @@
 # Towerfront — der Neubau
 
-Stand: v295 · beschlossen am 09.09.2026
+Stand: v302 · beschlossen am 09.09.2026
+
+**Nachgesehen in v302 — N3 ist zu, und N1 hat angefangen zu antworten.**
+
+**Paket N3 ist vollstaendig.** Foerderer (v285), teurere Wiederholung (v287,
+scharf seit v297), reparierbarer Kristall (v290) und Vielfaltsbeute (v299,
+scharf seit v301) stehen alle vier im Spiel. Die Beute nach Vielfalt ist dabei
+die einzige der vier Regeln, die nicht ueber den PREIS geht - und die einzige,
+die sich sauber trennt: der Haeufer bekommt auf jeder Karte +0 Gold, der
+Mischer +58 bis +170.
+
+**Und der Satz aus v295 gilt weiter, jetzt mit vier Belegen:** die knappe
+Groesse ist nicht das Gold und nicht der Platz, sondern die gute Stelle. Der
+Bannturm macht 18 Kristall Unterschied durch die LAGE, wo die ganze Turmwahl
+sechs macht.
+
+**N1 hat in v302 seinen Zustand bekommen** - `LaufZustand` haelt den
+Wellenzaehler ueber die Abschnitte hinweg. Und der erste kopflos gefahrene
+Lauf hat sofort gesagt, was dem Beschluss noch fehlt:
+
+| Abschnitt | Rampe | Ergebnis |
+|---|---|---|
+| Spiralhain | 1,00 | gewonnen, 42/42 |
+| Ascheschlucht | 1,12 | gewonnen, 42/42 |
+| Frostspalte | 1,82 | gewonnen, 42/42 |
+| **Farnkessel** | **15,17** | **verloren in Welle 7** |
+
+**Der Bogen als Roguelite-Lauf braucht eine eigene Kurve.** Die heutige ist an
+EINER Karte mit 15 Wellen geeicht; ueber 60 gestreckt liegen drei Abschnitte
+im flachen Teil und einer im Knie. Das ist die naechste Balancefrage von N1 -
+und sie ist erst jetzt stellbar, weil es einen Lauf gibt, an dem man sie
+messen kann.
+
+**Vier Runden dieser Kette waren Messgeraet statt Spiel** (v296, v298, v300,
+und die halbe v301), und das ist kein Umweg gewesen: zweimal stand eine
+Ratsche neben ihrem eigenen Rauschen und hat Entscheidungen gewuerfelt. Beide
+Male war die Reparatur eine Messung und keine gelockerte Grenze.
 
 **Nachgesehen in v295 — N3 steht auf drei von drei Sätzen, und die Antwort
 auf die eigene Frage von v288 ist gemessen: sie lautet nicht „Preis", sondern

@@ -1348,9 +1348,25 @@ export class GameState {
    *  Wellenstart irgendetwas neben 1,0 an, ohne dass jemand sagen koennte,
    *  woher der Unterschied kommt. */
   private huelle(id: EnemyId, hpMul: number, welle: number): number {
-    const ramp = hpScale(this.diff, welle, this.waves.length, this.map.balance.hpMul);
+    // **Die Lebenskurve laeuft ueber den LAUF, nicht ueber die Karte**
+    // (v302, S-N1-01).
+    //
+    // Ohne Lauf steht der Versatz auf 0 und die Gesamtzahl auf der
+    // Wellenzahl dieser Karte - dann rechnet `hpScale` Zeichen fuer Zeichen
+    // dasselbe wie vorher, und die ganze an EINZELNEN Karten geeichte
+    // Balance bleibt unberuehrt. Mit Lauf faengt der zweite Abschnitt dort
+    // an, wo der erste aufgehoert hat, statt am flachen Anfang der Kurve.
+    const ramp = hpScale(this.diff, this.laufVersatz + welle,
+      this.laufWellen || this.waves.length, this.map.balance.hpMul);
     return Math.round(ENEMIES[id].hp * hpMul * ramp);
   }
+
+  /** Wieviele Wellen dieses Laufs VOR diesem Abschnitt schon gefahren sind.
+   *  0 heisst: einzelne Karte, kein Lauf (S-N1-01). */
+  laufVersatz = 0;
+  /** Wieviele Wellen der ganze Lauf traegt - der Nenner der Lebenskurve.
+   *  0 heisst: einzelne Karte, dann gilt die Wellenzahl dieser Karte. */
+  laufWellen = 0;
 
   /** Gold fuer einen frueh gestarteten Angriff. Faellt linear auf null. */
   get earlyBonus(): number {

@@ -3728,6 +3728,81 @@ step('Einrasten', () => {
   }
 });
 
+// --- Der Lauf ueberlebt einen Neustart (v302, S-N1-01).
+//
+// Die erste Abnahme der Story: "Ein unterbrochener Lauf laesst sich
+// fortsetzen, auch ueber einen Neustart." Der Lauf liegt in einer EIGENEN
+// Ablage und nicht im Spielstand der Partie - zwischen zwei Abschnitten gibt
+// es keine Partie, und ein Lauf, der nur dort stuende, waere in genau diesem
+// Augenblick weg.
+//
+// Geprueft wird beides: dass er wiederkommt, und dass ein Stand, den niemand
+// verstehen kann, GAR NICHT gelesen wird statt halb. Der Preis ist ein
+// verlorener Lauf, der Gegenwert ein Zustand, den niemand erraten muss.
+step('Der Lauf ueberlebt einen Neustart', async () => {
+  const { laufStarten, abschnittGeschafft, laufSpeichern, laufLaden, laufLoeschen,
+    laufendeKarte, istLaufZuEnde, wellenDesLaufs } = await import('../src/game/lauf');
+
+  laufLoeschen();
+  if (laufLaden() !== null) throw new Error('Eine leere Ablage liefert einen Lauf.');
+
+  let lauf = laufStarten('normal', 4242);
+  if (laufendeKarte(lauf) !== ALLE_KARTEN[0].id) {
+    throw new Error(`Ein frischer Lauf faengt nicht auf der ersten Karte an `
+      + `(${laufendeKarte(lauf)}).`);
+  }
+  // Einen Abschnitt abschliessen - Gold, Kristall und Wellen gehen mit.
+  lauf = abschnittGeschafft(lauf, 777, 31, ALLE_KARTEN[0].waves.length);
+  laufSpeichern(lauf);
+
+  const zurueck = laufLaden();
+  if (!zurueck) throw new Error('Ein gespeicherter Lauf kommt nicht zurueck.');
+  if (zurueck.abschnitt !== 1 || zurueck.gold !== 777 || zurueck.kristall !== 31) {
+    throw new Error(`Der geladene Lauf steht anders da als der gespeicherte `
+      + `(Abschnitt ${zurueck.abschnitt}, Gold ${zurueck.gold}, `
+      + `Kristall ${zurueck.kristall}).`);
+  }
+  if (zurueck.welleGesamt !== ALLE_KARTEN[0].waves.length) {
+    throw new Error(`Der Wellenzaehler des Laufs steht nach einem Abschnitt auf `
+      + `${zurueck.welleGesamt} statt auf ${ALLE_KARTEN[0].waves.length}. Ohne ihn faengt der `
+      + 'zweite Abschnitt am flachen Anfang der Lebenskurve wieder an.');
+  }
+  if (wellenDesLaufs(zurueck) !== ALLE_KARTEN.reduce((a, m) => a + m.waves.length, 0)) {
+    throw new Error('Die Wellenzahl des Laufs stimmt nicht mit den Karten ueberein.');
+  }
+
+  // **Gar nicht lesen statt falsch lesen** - vier gestellte Faelle.
+  const kaputt: [string, string][] = [
+    ['aeltere Fassung', JSON.stringify({ ...zurueck, v: 0 })],
+    ['unbekannte Karte', JSON.stringify({ ...zurueck, abschnitte: ['gibtesnicht'] })],
+    ['Abschnitt hinter dem Ende', JSON.stringify({ ...zurueck, abschnitt: 99 })],
+    ['kein JSON', '{'],
+  ];
+  for (const [was, roh] of kaputt) {
+    localStorage.setItem('towerfront.lauf-zustand', roh);
+    if (laufLaden() !== null) {
+      throw new Error(`Ein Lauf mit dem Fehler "${was}" wird gelesen statt verworfen. `
+        + 'Ein halb verstandener Zustand ist schlimmer als keiner.');
+    }
+  }
+
+  // Und die Nullprobe: der HEILE Stand muss danach weiterhin gelesen werden -
+  // sonst prueft die Schleife oben nur, dass `laufLaden` immer null gibt.
+  laufSpeichern(zurueck);
+  if (laufLaden() === null) {
+    throw new Error('Auch der heile Lauf wird verworfen - dann prueft die Ablage '
+      + 'nichts, sie lehnt nur ab.');
+  }
+
+  // Am Ende der Abschnitte ist der Lauf zu Ende, nicht vorher.
+  let ende = zurueck;
+  while (!istLaufZuEnde(ende)) ende = abschnittGeschafft(ende, 0, 0, 1);
+  if (ende.abschnitt !== ende.abschnitte.length) {
+    throw new Error('Ein Lauf endet nicht am letzten Abschnitt.');
+  }
+  laufLoeschen();
+});
+
 // --- Die Vielfaltsbeute steht IM BILD (v301, S-N3-03).
 //
 // Die Abnahme der Story verlangt es woertlich: "Die Zahl steht im Bild, nicht

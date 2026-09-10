@@ -6,7 +6,11 @@
 import { GameState } from '../src/game/state';
 import { ZIELWAHL_ORDNUNG, type Zielwahl, type Tower } from '../src/game/types';
 
-import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../src/data/difficulty';
+import { DIFFICULTIES, DIFFICULTY_ORDER, hpScale, type DifficultyId } from '../src/data/difficulty';
+import {
+  laufStarten, abschnittGeschafft, laufendeKarte, istLaufZuEnde, wellenDesLaufs,
+  wellenDesAbschnitts,
+} from '../src/game/lauf';
 
 const START_LIVES = DIFFICULTIES.normal.startLives;
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, WIEDERHOLUNG_ZUSCHLAG, VIELFALT_BEUTE, nextFor, rangeFor, type TowerId } from '../src/data/towers';
@@ -798,6 +802,107 @@ const VIELFALT_TRENNUNG_MIN = 30;
  *  eins gibt, und am gestellten Fall, wenn nicht (die Lehre aus v297). */
 const VIELFALT_MESS = VIELFALT_BEUTE > 0 ? VIELFALT_BEUTE : 0.15;
 
+/** **Ein ganzer Lauf, kopflos gefahren** (v302, S-N1-01).
+ *
+ *  Die Abnahme der Story verlangt drei Dinge, und dieses eine Werkzeug haelt
+ *  zwei davon: ein voller Lauf muss fahrbar sein und innerhalb eines festen
+ *  Horizonts enden, und der Wellenzaehler muss ueber die Abschnitte hinweg
+ *  durchlaufen.
+ *
+ *  **Die zweite Zahl ist die eigentliche Zusage, und sie ist gerechnet statt
+ *  erspielt:** die Lebenskurve am ANFANG jedes Abschnitts. Faengt Abschnitt 2
+ *  wieder bei rund 1,0 an, ist der Lauf vier Partien hintereinander; steigt
+ *  sie von Abschnitt zu Abschnitt, ist er eine Klammer. Gerechnet, weil ein
+ *  erspielter Wert die Wegabhaengigkeit mittraegt und diese Frage sie nicht
+ *  braucht - `hpScale` ist eine Funktion, keine Partie.
+ *
+ *  Der Horizont ist kein Sollwert aus einer Referenz, sondern eine Sperre
+ *  gegen das Haengenbleiben: ein Lauf, der nicht endet, ist ein Fehler, und
+ *  ohne Grenze wuerde er den Runner blockieren statt zu melden. */
+const LAUF_HORIZONT_S = 3600;
+
+function laufMessen(): void {
+  console.log('\nDer Lauf ueber alle Abschnitte (S-N1-01):');
+  let lauf = laufStarten('normal', AUSSAATEN[0]);
+  const gesamt = wellenDesLaufs(lauf);
+  const rampen: number[] = [];
+  let dauer = 0;
+  let gefahren = 0;
+  let abschnitte = 0;
+
+  while (!istLaufZuEnde(lauf)) {
+    const karte = laufendeKarte(lauf)!;
+    const mm = MAPS.find((m) => m.id === karte)!;
+    // Die Rampe der ERSTEN Welle dieses Abschnitts - gerechnet, nicht
+    // erspielt.
+    rampen.push(hpScale(DIFFICULTIES.normal, lauf.welleGesamt, gesamt, mm.balance.hpMul));
+    const r = play(mixedPlanBase, () => 0, MEISTER, 'normal', karte, {
+      seed: lauf.saat, laufVersatz: lauf.welleGesamt, laufWellen: gesamt,
+    });
+    dauer += r.dauer;
+    const wellen = r.won ? wellenDesAbschnitts(karte) : r.wave;
+    gefahren += wellen;
+    abschnitte += r.won ? 1 : 0;
+    console.log(`  ${String(lauf.abschnitt + 1)}. ${karte.padEnd(14)} `
+      + `Rampe ${rampen[rampen.length - 1].toFixed(2)}   `
+      + `${r.won ? 'gewonnen' : `verloren in Welle ${r.wave}`}, `
+      + `Kristall ${r.lives}/${r.maxLives}, ${r.dauer.toFixed(0)} s`);
+    // Weiter geht es auch nach einer Niederlage: gemessen wird hier der
+    // LAUF, nicht das Koennen des Bots. Ob eine Niederlage den Lauf beendet,
+    // entscheidet S-N1-03, nicht dieses Werkzeug.
+    lauf = abschnittGeschafft(lauf, r.earned - r.spent, r.lives, wellen);
+  }
+
+  console.log(`  ${abschnitte} von ${lauf.abschnitte.length} Abschnitten gewonnen, `
+    + `${gefahren} von ${gesamt} Wellen gefahren, ${dauer.toFixed(0)} s `
+    + `(Horizont ${LAUF_HORIZONT_S} s).`);
+  console.log(`  Rampe je Abschnitt: ${rampen.map((r) => r.toFixed(2)).join(' -> ')}`);
+
+  if (dauer > LAUF_HORIZONT_S) {
+    errors.push(`Ein voller Lauf dauert ${dauer.toFixed(0)} s und sprengt damit den `
+      + `Horizont von ${LAUF_HORIZONT_S} s. Ein Lauf, der nicht endet, blockiert den `
+      + 'Runner, statt etwas zu melden.');
+  }
+  // **Die Zusage: die Kurve steigt ueber die Abschnitte.**
+  //
+  // Nicht "irgendwie hoeher", sondern JEDER Abschnitt ueber seinem Vorgaenger
+  // - sonst genuegte ein einziger steiler Abschnitt am Ende, und die drei
+  // davor duerften von vorn anfangen. Der Kartenausgleich (`hpMul`) darf sie
+  // dabei nicht umdrehen; taete er es, waere das ein Befund ueber die Karten
+  // und nicht ueber den Lauf.
+  // **Und der Befund, den dieser erste Lauf sofort geliefert hat** (v302).
+  //
+  // Die Lebenskurve ist an einer Karte mit 15 Wellen geeicht: ein flacher
+  // Anfang, ein Knie bei 55 bis 92 % und ein Ende bei `hpEnd`. Ueber 60
+  // Wellen gestreckt liegen die ersten drei Abschnitte im flachen Teil und
+  // der vierte mitten im Knie - gemessen 1,00 / 1,12 / 1,82 / **15,17**.
+  // Der Bot gewinnt die ersten drei mit 42 von 42 Kristall und verliert den
+  // vierten in Welle 7.
+  //
+  // **Das ist kein Fehler dieser Story, sondern ihre erste Auskunft**: der
+  // Wellenzaehler ueber die Abschnitte hinweg ist richtig, die KURVENFORM
+  // dafuer nicht. Sie steht deshalb als Hinweis da und macht die Kette nicht
+  // rot - der Lauf ist heute nur aus diesem Werkzeug erreichbar, und ein Tor,
+  // das eine unfertige Mechanik rot macht, blockiert jede Runde danach statt
+  // etwas zu halten. Die Zahl steht im Verzeichnis.
+  const spanne = rampen[rampen.length - 1] / Math.max(0.01, rampen[0]);
+  if (spanne > 6 || abschnitte < lauf.abschnitte.length) {
+    console.log(`  OFFEN (N1-Kurve): die Rampe waechst ueber den Lauf um das `
+      + `${spanne.toFixed(0)}-fache, und ${lauf.abschnitte.length - abschnitte} von `
+      + `${lauf.abschnitte.length} Abschnitten sind so nicht zu gewinnen. Die `
+      + 'Lebenskurve ist an EINER Karte mit 15 Wellen geeicht; ueber 60 gestreckt '
+      + 'liegen die ersten Abschnitte im flachen Teil und der letzte im Knie.');
+  }
+  for (let i = 1; i < rampen.length; i += 1) {
+    if (rampen[i] <= rampen[i - 1]) {
+      errors.push(`Die Lebenskurve steigt im Lauf nicht durch: Abschnitt ${i + 1} faengt `
+        + `bei ${rampen[i].toFixed(2)} an, Abschnitt ${i} bei ${rampen[i - 1].toFixed(2)}. `
+        + 'Dann ist ein Lauf vier Partien hintereinander und keine Klammer - genau das, '
+        + 'was der Wellenzaehler ueber die Abschnitte hinweg verhindern soll.');
+    }
+  }
+}
+
 function vielfaltMessen(): void {
   console.log('\nVielfaltsbeute (Haeufen gegen Mischen, mit Zuschlag und ohne):');
   const haeufen: TowerId[] = ['arrow'];
@@ -1088,11 +1193,17 @@ function play(
      *  Dieselbe Begruendung wie eine Zeile hoeher: eine Wirkung, die sich
      *  nicht abschalten laesst, ist nicht gemessen, sondern behauptet. */
     vielfalt?: number;
+    /** Wieviele Wellen des Laufs vor diesem Abschnitt liegen (S-N1-01). */
+    laufVersatz?: number;
+    /** Wieviele Wellen der ganze Lauf traegt. */
+    laufWellen?: number;
   } = {},
 ): Result {
   const s = new GameState(mapId);
   if (opts.zuschlag !== undefined) s.wiederholungZuschlag = opts.zuschlag;
   if (opts.vielfalt !== undefined) s.vielfaltZuschlag = opts.vielfalt;
+  if (opts.laufVersatz !== undefined) s.laufVersatz = opts.laufVersatz;
+  if (opts.laufWellen !== undefined) s.laufWellen = opts.laufWellen;
   s.reset(opts.seed ?? AUSSAATEN[0], difficulty, mapId,
     { endless: opts.endless, perks: opts.perks ?? NO_PERKS,
       karten: opts.karten ?? MAPS.length });
@@ -2193,6 +2304,7 @@ const mixedPlan = mixedPlanBase;
   foerdererMessen();
   wiederholungMessen();
   vielfaltMessen();
+  laufMessen();
   werftMessen();
   knappheitMessen();
   bannMessen();

@@ -1,6 +1,6 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v293 · 09.09.2026
+Stand: v296 · 10.09.2026
 
 **Nachgesehen in v286 — achtzehn Luecken, und M1 hat seine erste Zahl aus dem
 laufenden Betrieb bekommen.** Die achtzehnte (**M18**) ist in derselben Runde
@@ -566,6 +566,38 @@ schlechtesten statt die Verschiedenheit der drei.
 da. Solange die Turmwahl sechs Punkte ausmacht, kann keine Kennzahl ueber
 Spielstile mehr als sechs Punkte finden — und das ist eine Aussage ueber das
 Spiel, die in kein Werkzeug gehoert, sondern in den Katalog.
+
+**Gemessen in v296 — das Band stand an der falschen Messstelle, und das ist
+die Ursache hinter dem Wuerfel.** `r.rauschen` war die Streuung EINES Stils
+ueber die Aussaaten. Geratscht wird aber die DIFFERENZ zweier Stile, und die
+hat eine eigene Streuung: der Verlauf ist wegabhaengig, also verschiebt schon
+eine Preisregel, die alle drei Stile gleich trifft, wer wann welchen Turm
+stellt — und damit den Abstand.
+
+| | gemessen am heutigen Baum |
+|---|---|
+| Wert | **8,20** |
+| Band je Stil (bis v295) | 4,4 |
+| **Band je Lauf (ab v296)** | **19,0** |
+
+Der Wert liegt vollstaendig in seiner eigenen Streuung. Und wie knapp das
+alte Band gehalten hat, sagt die dritte Zahl: der Stand steht auf 12,43, der
+Fall betraegt 4,23, das alte Band 4,37 — **die Ratsche bestand um 0,14
+Punkte.** Sie hat weder gehalten noch geschlagen; sie sass im Rauschen.
+
+**Die Probe darauf ist der Fall aus v287 selbst.** Derselbe
+Wiederholungsaufschlag von 0,15, der die Ratsche damals rot gemacht hat,
+laesst sie jetzt schweigen: 10,58 gegen Stand 12,43 bei einem Band von 23,81.
+Und der Lauf ist trotzdem rot — an zwei Befunden, die das SPIEL betreffen:
+die Ziellogik „stark" gewinnt keine Welle mehr, und die duenne Zeit steigt von
+15,06 auf 16,84 bei einem Band von 1,63. Das ist der Unterschied, um den es
+geht: **was uebrig bleibt, ist Arbeit statt eines Wurfs.**
+
+**Die Zahl selbst bleibt unbelegt, und der Lauf sagt es jetzt.** Bis v295 lag
+8,20 ueber dem angegebenen Band von 4,4, die Meldung „UNBELEGT" blieb also
+aus; mit dem richtigen Band kommt sie in jedem Lauf. M18 ist damit nicht
+geschlossen — die Ursache („es ist wenig da") ist unveraendert. Was zu ist:
+die Ratsche urteilt nicht mehr ueber etwas, das sie nicht messen kann.
 
 ---
 

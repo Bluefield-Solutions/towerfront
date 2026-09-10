@@ -1,6 +1,33 @@
 # Towerfront — die Kette
 
-Stand: v289 · 09.09.2026
+Stand: v296 · 10.09.2026
+
+**Nachgesehen in v296 — der Ablauf trägt, und Schritt 5 hat in v290 bis v296
+sechsmal etwas zurückgewiesen, das nichts bewiesen hätte.** Zuletzt zweimal in
+einer Runde: den Wert des Stilabstands auf UNBELEGT zu setzen (das löst den
+bestehenden Wächter „war belegt und ist es nicht mehr" aus) und einen zweiten
+Wächter dagegen, sich hinter UNBELEGT zu verstecken (der macht eine Kennzahl,
+die zwischen belegt und unbelegt springt, auf Dauer rot). Beides wäre ein
+zweiter Würfel gewesen, wo gerade einer abgeschafft wurde.
+
+**Zwei Ergänzungen aus diesen Runden gehören in den Ablauf selbst:**
+
+* **Schritt 2 fragt vor dem Ausliefern `npm run beruehrt`** — und seit v294
+  gilt für die vier Bündeltore eine **Regel** statt einer Liste: was unter
+  `src/` liegt oder `index.html` heisst, geht ins Bündel. Zweimal in drei
+  Runden ist der Runner genau an dieser Lücke rot geworden.
+* **Schritt 4 (Inspektor) läuft ohne Bericht**, seit die Torkette auf dem
+  Runner steht. Das ist kein Mangel: `npm run inspektor` sagt es selbst
+  („kein Bericht"), prüft mechanisch, dass kein Quelltext im Ordner liegt,
+  und nennt vorweg, ob sich die **Eingänge** des Bildes überhaupt geändert
+  haben. Was er beurteilt, sind die Aufnahmen — und dafür braucht er den
+  Bericht nicht.
+
+**Was eine Runde hier wirklich kostet, gemessen über v290 bis v296:**
+`npm run vorlauf` 4,4 s, die berührten Tore je nach Änderung zwei bis zwölf,
+`npm run sim` 127 s je Durchlauf — und der ist der Taktgeber, sobald an der
+Balance etwas hängt. v296 hat drei gebraucht (Grundlauf, neues Band, der
+gestellte Zuschlag von 0,15). Der Runner-Lauf danach: **6 Minuten.**
 
 **Nachgesehen in v289 — der Ablauf trägt weiter, und Schritt 3 hat gelernt,
 sich nicht selbst zu blockieren.** `npm run naechste` nahm bis v288 die erste

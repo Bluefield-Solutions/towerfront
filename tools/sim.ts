@@ -1436,6 +1436,10 @@ for (const bot of BOTS) {
     const avg = (f: (r: Result) => number) => o.runs.reduce((a, r) => a + f(r), 0) / o.runs.length;
     return {
       name: b.name, mean: o.mean, rauschen: o.spanne,
+      // Die neun Einzelwerte in fester Reihenfolge (Aussaat-Haupt-,
+      // Abwandlungs-Nebenordnung). Alle drei Stile fahren dieselbe
+      // Reihenfolge, also ist Zelle i bei allen dreien derselbe Lauf.
+      einzeln: o.runs.map((r) => score(r)),
       towers: avg((r) => r.towers), ups: avg((r) => r.upgrades),
       earned: avg((r) => r.earned), left: avg((r) => r.earned - r.spent),
       // Gewinnt dieser Stil die Karte in der MEHRHEIT der Laeufe?
@@ -1469,7 +1473,34 @@ for (const bot of BOTS) {
   // wird - und gemessen schwankt er selbst zwischen 6 und 10, je nachdem,
   // mit welcher Aussaat man rechnet. Eine Zahl ohne ihre Streuung daneben
   // laedt dazu ein, den naechsten Zufall fuer eine Verbesserung zu halten.
-  const stilRauschen = Math.max(...runs.map((r) => r.rauschen));
+  // **Und seit v296 steht daneben das Rauschen der Zahl SELBST, nicht das
+  //   ihrer Bestandteile** (M18, S-N3-02).
+  //
+  // `r.rauschen` ist die Streuung EINES Stils ueber die Aussaaten. Geratscht
+  // wird aber die DIFFERENZ zweier Stile, und die hat eine eigene Streuung:
+  // der Verlauf ist wegabhaengig, also verschiebt schon eine Preisregel, die
+  // alle drei Stile gleich trifft, wer wann welchen Turm stellt - und damit
+  // den Abstand. Genau das ist in v286 gemessen worden und steht als M18 in
+  // den Messluecken: ueber den Wiederholungsaufschlag sprang die Zahl auf
+  // 1,46 / 11,64 / 4,50, waehrend das angegebene Rauschen bei 3 bis 5 stand.
+  // Zehn Punkte Bewegung ueber einen Parameter, der die Stile gar nicht
+  // unterscheidet - gegen ein Band, das diese Bewegung nicht kennt.
+  //
+  // Gemessen wird deshalb der Abstand JE LAUF - drei Aussaaten mal drei
+  // Abwandlungen, neun Zellen - und die Spanne dieser neun ist das Band.
+  // Die Abwandlungen gehoeren hier ausdruecklich hinein, waehrend sie bei
+  // einer Kennzahl je Stil draussen bleiben (`overVariants`): dort ist der
+  // Bauverlauf das Gemessene, hier ist er die Stoerung.
+  //
+  // Regel 12 in einem Satz: das Band gehoert an dieselbe Messstelle wie der
+  // Wert.
+  const zellen = runs[0].einzeln.map((_, i) => {
+    const je = runs.map((r) => r.einzeln[i]);
+    return Math.max(...je) - Math.min(...je);
+  });
+  const stilRauschenZelle = Math.max(...zellen) - Math.min(...zellen);
+  const stilRauschenStil = Math.max(...runs.map((r) => r.rauschen));
+  const stilRauschen = Math.max(stilRauschenZelle, stilRauschenStil);
   // **Ein Abstand zwischen drei Stilen sagt nur etwas, wenn alle drei
   //   spielbar sind** (v293).
   //
@@ -1601,11 +1632,15 @@ for (const bot of BOTS) {
   console.log(
     `\nAbstand der Spielstile: ` + runs.map((r) => `${r.name} ${r.mean.toFixed(0)}`).join('   ') +
     `   Spanne ${stilAbstand.toFixed(0)}` +
-    `   (Rauschen ueber ${AUSSAATEN.length} Aussaaten: ${stilRauschen.toFixed(1)})`,
+    `   (Rauschen ${stilRauschen.toFixed(1)} = groesseres von `
+    + `${stilRauschenZelle.toFixed(1)} je Lauf und ${stilRauschenStil.toFixed(1)} je Stil)`,
   );
   if (stilAbstand < stilRauschen) {
     console.log('  UNBELEGT: der Abstand der Stile ist kleiner als die Streuung des '
-      + 'Verfahrens - er misst heute die Aussaat, nicht die Spielstile (G4).');
+      + 'Verfahrens - er misst heute den Bauverlauf, nicht die Spielstile (G4, M18).');
+    console.log('  Die Ratsche steht trotzdem daneben und haelt: sie faengt einen Fall, '
+      + 'der groesser ist als dieses Band. Innerhalb des Bandes urteilt sie nicht - '
+      + 'und genau das war bis v295 anders herum.');
   }
   if (best - worst > 18) {
     console.log(

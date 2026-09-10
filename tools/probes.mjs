@@ -731,6 +731,31 @@ export const PROBEN = [
     meldet: 'Spannungsratsche',
   },
   {
+    // **Das Rauschband des Stilabstands (v296, M18).**
+    //
+    // Was diese Probe haelt: dass die Ratsche ihr Band ueberhaupt LIEST.
+    // Setzt man es auf null, faellt "Abstand der Spielstile" von seinem
+    // Stand 12,43 auf gemessene 8,20 und die Ratsche schlaegt an - der
+    // heutige gruene Lauf haengt also wirklich an diesem Band und nicht
+    // daran, dass die Zahl zufaellig passt.
+    //
+    // **Was sie NICHT haelt, und das steht hier statt in einer Fussnote:**
+    // ob das Band aus der richtigen QUELLE kommt. Gemessen ist es 19,0 je
+    // Lauf gegen 4,4 je Stil - beide halten den heutigen Baum gruen (Fall
+    // 4,23), der Unterschied zeigt sich erst unter einer Aenderung. Genau
+    // das ist der Fall aus v287: mit dem alten Band wurde der
+    // Wiederholungsaufschlag rot, mit dem neuen bleibt er still (10,58 gegen
+    // Stand 12,43 bei Band 23,81). Ein Eingriff, der das auf dem heutigen
+    // Baum zeigt, ist nicht zu stellen - dieselbe Lage wie beim zweiten
+    // `bilderAbwarten` in v225.
+    name: 'Die Ratsche liest ihr Rauschband nicht',
+    datei: 'tools/sim.ts',
+    suche: 'const stilRauschen = Math.max(stilRauschenZelle, stilRauschenStil);',
+    ersatz: 'const stilRauschen = 0;',
+    tor: 'sim',
+    meldet: 'Abstand der Spielstile',
+  },
+  {
     // Und der leere Stand. Eine leere Datei galt in v227 schon einmal als
     // sauber, und `: > tools/proben-befund.txt` haette die Pruefung damit
     // still abgeschaltet - dieselbe Falle steht hier. Ein Lauf ohne Stand

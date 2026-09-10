@@ -325,7 +325,12 @@ html, body {
 .tower-btn:active { transform: scale(0.96); }
 
 .go {
-  margin-left: auto; pointer-events: auto; cursor: pointer;
+  /* `margin-left: auto` stand hier von v239 bis v286 und hat nie etwas
+     getan: `.dock-body` traegt `flex: 1 1 auto` und nimmt den Freiraum, es
+     gibt also keinen zu verteilen. Der Knopf steht rechts, weil der Koerper
+     waechst. Gemessen beim Bau des Stroms, der dieselbe Zeile bekam und
+     dessen Entfernung die rechte Kante um 0 Punkte bewegte. */
+  pointer-events: auto; cursor: pointer;
   font-family: var(--ui); font-size: var(--s-wert); font-weight: 700;
   letter-spacing: 0.02em; color: #06121A;
   background: var(--crystal); border: none; border-radius: 12px;
@@ -383,21 +388,24 @@ html, body {
    Zahlenflaeche oben links anzeigt, ohne zu handeln.
 
    Ausgeblendet mit `display: none`, nicht `visibility: hidden` - er soll
-   seine Breite zurueckgeben. Und weil er sie zurueckgibt, muss der Knopf im
-   Band weiterhin nach rechts rutschen: `margin-left: auto` traegt der
-   Strom, sobald er da ist, sonst der Knopf. Truegen es beide, teilte
-   Flexbox den Restraum zwischen ihnen auf und der Strom stuende in der
-   Mitte des Bandes. */
+   seine Breite zurueckgeben.
+
+   **Er braucht dafuer kein `margin-left: auto`, und der Knopf auch nicht.**
+   Der erste Entwurf gab es beiden und liess es zwischen ihnen wechseln;
+   die Gegenprobe hat gemessen, dass das Entfernen folgenlos bleibt - in
+   jeder Bandbreite. Der Grund steht in `.dock-body`: es traegt
+   `flex: 1 1 auto` und frisst den Freiraum, es gibt also nie einen zu
+   verteilen. Der Knopf steht rechts, weil der Koerper waechst, nicht weil
+   ihn etwas schiebt. Die Zeile stand seit v239 an `.go` und hat dort nie
+   etwas getan (Regel 5). */
 .go-lauf {
   font-size: var(--s-marke); letter-spacing: 0.08em; font-weight: 700;
   font-variant-numeric: tabular-nums; opacity: 0.72;
   color: var(--crystal);
   pointer-events: none;
-  margin-left: auto;
   padding-right: 8px; border-right: 1px solid currentColor;
 }
 .go-lauf[data-an="0"] { display: none; }
-.go-lauf[data-an="1"] ~ .go { margin-left: 0; }
 .go:disabled { background: rgba(137, 148, 176, 0.3); color: var(--muted); box-shadow: none; }
 /* **Waehrend der Welle ist der Knopf gesperrt, aber nicht tot** (v239, E6).
    Er traegt den Fortschritt, und dafuer braucht er einen eigenen Zustand:

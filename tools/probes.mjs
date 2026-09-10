@@ -1047,14 +1047,23 @@ const PROBEN = [
     meldet: 'laufende Strom fängt den Finger',
   },
   {
-    // Zweitens: `margin-left: auto` traegt der Strom, sobald er da ist, sonst
-    // der Knopf. Faellt die Uebergabe weg, tragen es BEIDE - Flexbox teilt
-    // dann den Restraum auf, der Strom steht mitten im Band und der Knopf
-    // rutscht unter dem Daumen weg.
+    // Zweitens: was den Knopf wirklich rechts haelt.
+    //
+    // Der erste Entwurf dieser Probe zog `margin-left: auto` heraus und
+    // bewies NICHTS - zweimal, auch mit gestelltem Freiraum im Band. Die
+    // Messung hat die Ursache genannt: `.dock-body` traegt `flex: 1 1 auto`
+    // und frisst den Freiraum, es gibt also nie einen zu verteilen. Der
+    // Knopf steht rechts, weil der Koerper waechst; die `margin`-Zeile stand
+    // seit v239 da und hat nie etwas getan.
+    //
+    // Also greift die Probe an der Sache: waechst der Koerper nicht mehr,
+    // dann schiebt die Breite des Stroms den Knopf nach rechts, sobald er
+    // erscheint - und unter dem Daumen ist er woanders. Genau das misst das
+    // Tor am gestellten Freiraum.
     name: 'Wellenknopf rutscht, wenn der Strom erscheint',
     datei: 'src/style.css',
-    suche: '.go-lauf[data-an="1"] ~ .go { margin-left: 0; }',
-    ersatz: '',
+    suche: '.dock-body {\n  display: flex; flex-direction: column; gap: 6px; flex: 1 1 auto;',
+    ersatz: '.dock-body {\n  display: flex; flex-direction: column; gap: 6px; flex: 0 1 auto;',
     tor: 'browsertor',
     meldet: 'Wellenknopf rutscht um',
   },

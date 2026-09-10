@@ -708,6 +708,13 @@ Protokollgriff - zwei unabhaengige Signale, an einer Stelle zu einem Urteil
 zusammengefuehrt. **Ein Tor, das nicht rot werden KANN, ist kein Tor**, und
 dieses konnte es anderthalb Jahre lang nicht.
 
+**Danach die naheliegende Frage gestellt: gibt es das noch einmal?** Alle
+vierunddreissig Schritte der Torkette durchgesehen, ob ihr Werkzeug ueberhaupt
+einen Ausgang 1 kennt. Drei fallen auf, alle drei zu Recht: `tsc` und `build`
+sind fremde Werkzeuge und melden selbst, und `bericht` ist ausdruecklich
+**kein Tor** - es sagt das in seiner eigenen ersten Zeile. Der Fund von v312
+lag im Ablaufplan, nicht in den Werkzeugen.
+
 **Eine Gegenprobe hat sich selbst als wirkungslos erwiesen - und dabei ein Tor
 entlarvt, das seine eigene Arithmetik mass (v311).** Die Probe zum Lauffaktor
 baute den Fehler in `GameState` ein, und `npm run sim` meldete nichts:

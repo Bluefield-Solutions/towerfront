@@ -840,7 +840,28 @@ if (start) {
       };
       const mit = stellen('1');
       const ohne = stellen('0');
-      return { mit, ohne, hoehe: mit.hoehe };
+      // **Der Freiraum wird GESTELLT, nicht abgewartet** (v286).
+      //
+      // Der Knopf steht ganz rechts, weil `margin-left: auto` ihn dorthin
+      // schiebt - und weil der Strom seine eigene Breite mitbringt, muss die
+      // Uebergabe stimmen: er traegt das `auto`, sobald er da ist, sonst der
+      // Knopf. Truegen es beide, teilte Flexbox den Restraum auf und der
+      // Strom stuende mitten im Band.
+      //
+      // Nur: mit fuenf Bauknoepfen ist das Band auf 844 Punkten VOLL. Es gibt
+      // keinen Restraum, also verteilt Flexbox nichts, und die Regel ist
+      // heute folgenlos - die Gegenprobe hat es gemessen. Eine Pruefung, die
+      // auf einen Zufall der Bandbreite wartet, hoert leise auf zu pruefen
+      // (v219, vier Faelle in einer Runde). Also wird der Fall gestellt: die
+      // Faehigkeiten kurz ausgeblendet, dann ist Raum da.
+      const skills = [...document.querySelectorAll('.skill-btn')];
+      const vorher = skills.map((e) => e.style.display);
+      for (const e of skills) e.style.display = 'none';
+      const engMit = stellen('1');
+      const engOhne = stellen('0');
+      skills.forEach((e, i) => { e.style.display = vorher[i]; });
+      stellen('0');
+      return { mit, ohne, hoehe: mit.hoehe, eng: { mit: engMit, ohne: engOhne } };
     });
     if (!st) {
       fail('Der Wellenknopf traegt keinen laufenden Strom (#b-wave-l fehlt).');
@@ -848,7 +869,8 @@ if (start) {
       console.log(`Laufender Strom neben dem Wellenknopf: ${st.mit.breite} Punkte `
         + `(${st.mit.anzeige}, ${st.mit.sichtbar}) · fängt den Finger: ${st.mit.faengt} `
         + `· Knopf ${st.mit.knopf} Punkte mit, ${st.ohne.knopf} ohne `
-        + `· rechte Kante ${st.mit.rechts}/${st.ohne.rechts} · Knopfhöhe ${st.hoehe}`);
+        + `· rechte Kante ${st.mit.rechts}/${st.ohne.rechts}, mit Freiraum `
+        + `${st.eng.mit.rechts}/${st.eng.ohne.rechts} · Knopfhöhe ${st.hoehe}`);
       if (st.mit.anzeige === 'none' || st.mit.sichtbar === 'hidden' || st.mit.breite < 30) {
         fail('Der laufende Strom steht auf dem Zielgerät nicht im Bild '
           + `(display ${st.mit.anzeige}, visibility ${st.mit.sichtbar}, `
@@ -884,11 +906,13 @@ if (start) {
           + `${st.ohne.knopf} - der Zustand trägt die Trefferfläche der Handlung mit.`);
       }
       // Der Knopf steht ganz rechts im Band und muss dort bleiben, ob der
-      // Strom nun da ist oder nicht: `margin-left: auto` wechselt zwischen
-      // beiden. Truegen es beide, teilte Flexbox den Restraum auf.
-      if (Math.abs(st.mit.rechts - st.ohne.rechts) > 1) {
-        fail(`Der Wellenknopf rutscht um ${Math.abs(st.mit.rechts - st.ohne.rechts)} Punkte, `
-          + 'wenn der Strom erscheint - unter dem Daumen ist er dann woanders.');
+      // Strom nun da ist oder nicht - gemessen am vollen Band UND am
+      // gestellten mit Freiraum (siehe oben).
+      for (const [wo, a, b] of [['', st.mit, st.ohne], [' (mit Freiraum im Band)', st.eng.mit, st.eng.ohne]]) {
+        if (Math.abs(a.rechts - b.rechts) > 1) {
+          fail(`Der Wellenknopf rutscht um ${Math.abs(a.rechts - b.rechts)} Punkte${wo}, `
+            + 'wenn der Strom erscheint - unter dem Daumen ist er dann woanders.');
+        }
       }
       // Er muss seine Breite zurueckgeben, wenn er verschwindet: sonst
       // stuende dort dauerhaft eine leere Flaeche.

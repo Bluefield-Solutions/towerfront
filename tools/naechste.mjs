@@ -52,8 +52,26 @@ if (abschnitte.length < 10) {
   process.exit(1);
 }
 
+/** **Woran eine Story haengt - gelesen, nicht gepflegt** (v289).
+ *
+ *  Jede Story traegt seit je eine Zeile `**Haengt an:** S-N3-01` oder `—`.
+ *  Bis v288 hat dieses Werkzeug sie nicht angesehen: es nahm die erste offene
+ *  in Dokumentreihenfolge. Damit blockiert eine Story, die auf eine SPAETERE
+ *  wartet, die ganze Kette - genau das ist in v287 passiert, als gemessen
+ *  herauskam, dass S-N3-02 an S-N3-04 haengt und nicht umgekehrt.
+ *
+ *  Die Zeile steht im Dokument, also wird sie von dort gelesen und nicht ein
+ *  zweites Mal hier gefuehrt (Regel 15). */
+const haengtAn = (a) => {
+  const m = a.text.join('\n').match(/\*\*H(?:ä|ae)ngt an:\*\*\s*([^\n]*)/);
+  if (!m) return [];
+  return [...m[1].matchAll(/S-[A-Z0-9-]+/g)].map((x) => x[0]);
+};
+
 let offen = null;
 const stand = [];
+const zustandVon = new Map();
+const wartend = [];
 for (const a of abschnitte) {
   const b = a.text.join('\n').match(/\*\*Schliesst, wenn:\*\* `([^`]+)`/);
   if (!b) {
@@ -75,10 +93,12 @@ for (const a of abschnitte) {
   // hat. Also stehen sie eigens da und werden nicht gewaehlt.
   if (/\*\*Nur fahren, wenn\*\*/.test(a.text.join('\n'))) {
     stand.push({ id: a.id, zustand: 'BEDINGT', bed });
+    zustandVon.set(a.id, 'BEDINGT');
     continue;
   }
   if (/^(blick|nutzer):/.test(bed)) {
     stand.push({ id: a.id, zustand: 'HANDARBEIT', bed });
+    zustandVon.set(a.id, 'HANDARBEIT');
     continue;
   }
   // **Eine fehlende Datei ist hier kein Fehler, sondern der Normalfall.**
@@ -92,7 +112,7 @@ for (const a of abschnitte) {
   const datei = bed.match(/^(?:text|liste) (\S+)/);
   if (datei && ausDatei(datei[1]) === null) {
     stand.push({ id: a.id, zustand: 'OFFEN', bed });
-    if (!offen) offen = a;
+    zustandVon.set(a.id, 'OFFEN');
     continue;
   }
   const e = werte(bed);
@@ -101,7 +121,27 @@ for (const a of abschnitte) {
     process.exit(1);
   }
   stand.push({ id: a.id, zustand: e.erfuellt ? 'zu' : 'OFFEN', bed });
-  if (!e.erfuellt && !offen) offen = a;
+  zustandVon.set(a.id, e.erfuellt ? 'zu' : 'OFFEN');
+}
+
+// **Die erste offene, deren Vorbedingungen ALLE zu sind.**
+//
+// Eine Story, die auf eine andere wartet, wird uebersprungen - aber nie
+// still: sie steht unten mit dem Grund. Ein Verweis auf eine Story, die es
+// nicht gibt, ist ein Fehler und kein Grund zum Weitergehen; sonst
+// verschwindet ein Tippfehler in der Reihenfolge.
+for (const a of abschnitte) {
+  if (zustandVon.get(a.id) !== 'OFFEN') continue;
+  const warten = [];
+  for (const v of haengtAn(a)) {
+    if (!zustandVon.has(v)) {
+      console.error(`NAECHSTE: Story ${a.id} haengt an ${v} - die gibt es nicht.`);
+      process.exit(1);
+    }
+    if (zustandVon.get(v) !== 'zu') warten.push(v);
+  }
+  if (warten.length) { wartend.push({ id: a.id, warten }); continue; }
+  if (!offen) offen = a;
 }
 
 if (ALLE) {
@@ -115,6 +155,14 @@ if (ALLE) {
   process.exit(0);
 }
 
+if (!offen && wartend.length) {
+  console.error('NAECHSTE: jede offene Story wartet auf eine andere - die Kette steht.');
+  for (const w of wartend) console.error(`  ${w.id} wartet auf ${w.warten.join(', ')}`);
+  console.error('Das ist ein Ring in den Abhaengigkeiten oder eine falsche Zeile');
+  console.error('"Haengt an" - beides gehoert im Katalog gerichtet, nicht hier.');
+  process.exit(1);
+}
+
 if (!offen) {
   console.log('NAECHSTE: keine offene Story mehr - der Katalog ist abgearbeitet.');
   console.log('Was bleibt, steht als HANDARBEIT da (`npm run naechste -- --alle`):');
@@ -125,5 +173,10 @@ if (!offen) {
 }
 
 const zu = stand.filter((s) => s.zustand === 'zu').length;
+if (wartend.length) {
+  console.log('Uebersprungen, weil sie auf eine andere warten:');
+  for (const w of wartend) console.log(`  ${w.id} wartet auf ${w.warten.join(', ')}`);
+  console.log('');
+}
 console.log(`Naechste Story: ${offen.id} (${zu} von ${stand.length} sind zu)\n`);
 console.log(offen.text.join('\n').replace(/\n+$/, ''));

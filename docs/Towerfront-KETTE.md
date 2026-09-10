@@ -1,6 +1,26 @@
 # Towerfront — die Kette
 
-Stand: v282 · 09.09.2026
+Stand: v289 · 09.09.2026
+
+**Nachgesehen in v289 — der Ablauf trägt weiter, und Schritt 3 hat gelernt,
+sich nicht selbst zu blockieren.** `npm run naechste` nahm bis v288 die erste
+offene Story in Dokumentreihenfolge und sah die Zeile `**Hängt an:**` nicht
+an. Damit hält eine Story, die auf eine **spätere** wartet, die ganze Kette
+an — in v287 genau passiert. Seit v289 wird die Zeile gelesen (aus dem
+Katalog, nicht aus einer zweiten Liste), Wartendes wird übersprungen und mit
+Grund genannt, und ein Ring bricht ab statt sich eine Story auszusuchen.
+
+**Schritt 5 hat in den Runden v286 bis v288 fünfmal eine Probe
+zurückgewiesen, die nichts bewies** — die `margin`-Zeile aus v239 (die seit
+zehn Fassungen tot war), der gestellte Freiraum im Band, die geratene
+Umbruchgrenze, die falsche Zusage der Freimenge, und `autarkie` ohne frischen
+Bau. Dreimal war nicht die Probe zu verbessern, sondern die geprüfte Sache
+falsch verstanden. Das ist der Schritt, der arbeitet.
+
+**Und Schritt 2 hat eine Ergänzung bekommen, die eine Runde gekostet hat:**
+`npm run beruehrt` nennt vor dem Ausliefern die Tore, die an den geänderten
+Dateien hängen. v286 fasste `index.html` an, fuhr fünf passende Tore und
+`autarkie` nicht — genau das wurde auf dem Runner rot.
 
 **Nachgesehen in v282 — der Ablauf trägt, und zwei Stellen sind schärfer
 geworden.** Schritt 8 ist seit v275 mechanisch (`npm run inspektor` sagt

@@ -1028,6 +1028,24 @@ export const PROBEN = [
     meldet: 'laufende Strom steht auf dem Zielgerät nicht im Bild',
   },
   {
+    // **Die Kette geht ueber eine wartende Story hinweg** (v289).
+    //
+    // `npm run naechste` nahm bis v288 die erste offene in Dokumentreihen-
+    // folge und sah die Zeile "Haengt an" gar nicht an. Damit blockiert eine
+    // Story, die auf eine SPAETERE wartet, die ganze Kette - in v287 genau
+    // passiert, als gemessen herauskam, dass S-N3-02 an S-N3-04 haengt.
+    //
+    // Der Eingriff laesst S-N3-04 auf S-N3-02 warten und macht daraus einen
+    // Ring: jede offene Story wartet dann auf eine andere, und das Werkzeug
+    // muss es sagen statt sich eine auszusuchen.
+    name: 'Kette laeuft in einen Ring der Abhaengigkeiten',
+    datei: 'docs/Towerfront-STORIES.md',
+    suche: '**Paket:** N3 · **Aufwand:** M · **Hängt an:** S-N3-01',
+    ersatz: '**Paket:** N3 · **Aufwand:** M · **Hängt an:** S-N3-02',
+    tor: 'naechste',
+    meldet: 'jede offene Story wartet auf eine andere',
+  },
+  {
     // **Der Umlaut im ausgelieferten HTML-Kommentar** (v288).
     //
     // v286 hat ihn hinterlassen, und der Runner ist daran rot geworden:

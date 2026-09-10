@@ -413,7 +413,15 @@ npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen - im
                     Minuten und läuft deshalb nachts auf dem Runner.
 npm run naechste    welche Story als naechste dran ist, mit ihrem vollen
                     Text - gelesen aus `docs/Towerfront-STORIES.md`, nicht
-                    gemerkt. Die Kette laeuft ueber Kontextgrenzen hinweg;
+                    gemerkt. **Seit v289 liest es auch "Haengt an"** und
+                    ueberspringt, was auf eine offene Story wartet - nie
+                    still, der Grund steht darueber. Vorher nahm es die erste
+                    offene in Dokumentreihenfolge, und damit blockierte eine
+                    Story, die auf eine SPAETERE wartet, die ganze Kette:
+                    genau das in v287, als gemessen herauskam, dass S-N3-02
+                    an S-N3-04 haengt und nicht umgekehrt. Warten alle
+                    aufeinander, ist es ein Ring - dann bricht es ab, statt
+                    sich eine auszusuchen. Die Kette laeuft ueber Kontextgrenzen hinweg;
                     wer sich den Stand merkt, hat nach dem ersten Neustart
                     nichts mehr in der Hand. `--alle` zeigt den Stand aller
                     42. Es entscheidet nicht: die Reihenfolge des Katalogs
@@ -734,7 +742,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v288. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v289. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

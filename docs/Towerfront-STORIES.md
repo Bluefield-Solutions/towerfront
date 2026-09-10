@@ -580,7 +580,14 @@ und `sim` muss melden, dass er in jedem Stil gebaut wird.
 
 ### S-N3-02 · Wiederholung wird teurer
 
-**Paket:** N3 · **Aufwand:** S · **Hängt an:** —
+**Paket:** N3 · **Aufwand:** S · **Hängt an:** S-N3-04
+
+> **Die Abhängigkeit ist in v287 gemessen worden und stand vorher auf „—".**
+> Der Aufschlag ist gebaut und wirkt (er nimmt dem Häufer 693 Gold ab), aber
+> er entscheidet nichts: 0 / −6 / 0 / +1 Kristall. Bei 28 % übrigem Gold ist
+> ein Preis folgenlos. Was fehlt, ist eine **Verwendung für Gold, die mit dem
+> Bauen konkurriert** — und die stellt S-N3-04 her, nicht S-N3-03. Letztere
+> gibt zusätzliches Gold in eine Wirtschaft, in der Gold nicht knapp ist.
 
 **Problem.** Nichts spricht heute dagegen, viermal denselben Turm zu bauen.
 Genau daran hängt die **Zweigwirkung** — seit v253 die schwächste aller

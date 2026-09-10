@@ -110,6 +110,44 @@ export function getPlatzhalter(
       g.stroke();
     }
     g.restore();
+    // **Der Platzhalter sagt, WAS fehlt** (v290).
+    //
+    // Solange ein einziges Bild fehlte, war das keine Frage. Seit v290 fehlen
+    // zwei - Foerderer und Werft -, und im Bild standen zwei Kacheln
+    // nebeneinander, die sich in nichts unterschieden. Gefunden hat es der
+    // Blick (Regel 8).
+    //
+    // **Der erste Entwurf drehte die Schraffur nach einem Hash des
+    // Schluessels, und die neue Pruefung hat ihn sofort verworfen:** bei zwei
+    // Richtungen trifft jede zweite Paarung dieselbe, und `foerderer_1_1`
+    // gegen `werft_1_1` war genau so eine - gemessen 0 % Unterschied. Eine
+    // Unterscheidung, die vom Zufall eines Hashes abhaengt, ist keine.
+    //
+    // Der Anfangsbuchstabe trennt garantiert, solange die Namen verschieden
+    // anfangen - und er sagt dem Betrachter obendrein, welches Bild fehlt,
+    // statt ihn nur wissen zu lassen, DASS eines fehlt.
+    // Nach dem LETZTEN Doppelpunkt: die Schluessel tragen ein Praefix
+    // (`turm:`, `gegner:`), und ohne diese Zeile stuende auf jedem
+    // Turm-Platzhalter dasselbe T. Genau das ist beim ersten Entwurf
+    // passiert - die Pruefung sah es nicht, weil sie mit `foerderer_1_1`
+    // statt mit `turm:foerderer_1_1` mass, also an der Anzeigestelle vorbei
+    // (Regel 12).
+    const wort = (schluessel.split(':').pop() ?? '').replace(/^[^a-zA-Z]*/, '');
+    if (wort) {
+      const zeichen = wort[0].toUpperCase();
+      g.save();
+      g.font = `700 ${Math.round(Math.min(B, H) * 0.46)}px system-ui, sans-serif`;
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      // Dunkler Kern mit hellem Saum: die Schraffur liegt darunter und ist
+      // selbst schon kraeftig - ein einfarbiger Buchstabe verschwaende darin.
+      g.lineWidth = Math.max(2, Math.min(B, H) * 0.09);
+      g.strokeStyle = 'rgba(6, 10, 22, 0.92)';
+      g.strokeText(zeichen, 0, 0);
+      g.fillStyle = '#FFFFFF';
+      g.fillText(zeichen, 0, 0);
+      g.restore();
+    }
     // Der Umriss bleibt ungeschnitten, damit die Silhouette scharf bleibt.
     g.strokeStyle = PLATZHALTER_FARBE;
     g.lineWidth = Math.max(1, Math.min(B, H) * 0.05);

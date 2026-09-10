@@ -1028,6 +1028,22 @@ export const PROBEN = [
     meldet: 'laufende Strom steht auf dem Zielgerät nicht im Bild',
   },
   {
+    // **Zwei Platzhalter sehen gleich aus** (v290).
+    //
+    // Solange ein einziges Bild fehlte, war das keine Frage. Seit v290 fehlen
+    // zwei, und sie standen als identische Kacheln nebeneinander in der
+    // Bauleiste. Gefunden hat es der Blick (Regel 8), das Tor kam danach.
+    //
+    // Der Eingriff nimmt den Buchstaben heraus - dann bleibt nur die
+    // Schraffur, und die ist fuer beide dieselbe.
+    name: 'Platzhalter unterscheidet zwei Bauwerke nicht',
+    datei: 'src/gfx/sprites.ts',
+    suche: "      g.fillStyle = '#FFFFFF';\n      g.fillText(zeichen, 0, 0);",
+    ersatz: "      g.fillStyle = '#FFFFFF';\n      void zeichen;",
+    tor: 'bildtor',
+    meldet: 'Zwei Platzhalter sehen gleich aus',
+  },
+  {
     // **Die Werft macht einen Durchbruch folgenlos** (v290, S-N3-04).
     //
     // Genau die Gegenprobe, die die Story verlangt: die Reparatur unbegrenzt

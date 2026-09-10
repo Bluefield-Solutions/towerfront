@@ -1673,6 +1673,46 @@ for (const pruefung of pruefungen) {
     }
   }
 
+  // **Und unterscheiden sich zwei Platzhalter voneinander?** (v290)
+  //
+  // Solange ein einziges Bild fehlte, war das keine Frage. Seit v290 fehlen
+  // ZWEI - Foerderer und Werft -, und im Bild standen zwei Kacheln
+  // nebeneinander, die sich in nichts unterschieden. Gefunden hat es der
+  // Blick (Regel 8); ein Platzhalter, der zwei Bauwerke gleich aussehen
+  // laesst, verdeckt genau den Unterschied, den die Bestellung dafuer messen
+  // soll (8d.3 fordert Silhouetten-Abstand 0,55 zwischen den beiden).
+  //
+  // Gemessen an den ECHTEN Schluesseln des Spiels, nicht an zwei erfundenen:
+  // die Richtung kommt aus dem Schluessel, und zwei erfundene koennten
+  // zufaellig dieselbe treffen, ohne dass es jemandem auffiele.
+  {
+    // **Mit dem Praefix, wie das Spiel sie bildet.** Ohne `turm:` misst die
+    // Pruefung an der Anzeigestelle vorbei - und genau so hat sie in ihrem
+    // ersten Lauf 20 % Unterschied gemeldet, waehrend im Bild zwei Kacheln
+    // mit demselben T standen (Regel 12).
+    const paar = ['turm:foerderer_1_1', 'turm:werft_1_1'];
+    const punkte = paar.map((k) => {
+      const cv = getPlatzhalter(k, 64, 64);
+      return cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
+    });
+    let anders = 0, zusammen = 0;
+    for (let i = 0; i < punkte[0].length; i += 4) {
+      const a = punkte[0], b = punkte[1];
+      if (a[i + 3] < 8 && b[i + 3] < 8) continue;
+      zusammen++;
+      if (Math.abs(a[i] - b[i]) > 24 || Math.abs(a[i + 3] - b[i + 3]) > 24) anders++;
+    }
+    const teil = zusammen ? anders / zusammen : 0;
+    console.log(`Platzhalter untereinander: ${(teil * 100).toFixed(0)} % der Punkte `
+      + `unterscheiden ${paar[0]} von ${paar[1]}.`);
+    if (teil < 0.12) {
+      probleme.push(`Zwei Platzhalter sehen gleich aus: nur ${(teil * 100).toFixed(0)} % der `
+        + `Punkte unterscheiden ${paar[0]} von ${paar[1]} (mindestens 12 % noetig). Im Spiel `
+        + 'stehen sie nebeneinander in der Bauleiste, und wer sie nicht trennen kann, kauft '
+        + 'das falsche Gebaeude.');
+    }
+  }
+
   const offen = offeneBestellungen();
   const gesamt = erwarteteBilder().length;
   if (offen.length) {

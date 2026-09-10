@@ -669,8 +669,14 @@ Zahl da statt als Vermutung.
 **Die Zusage sieht seit v297 den ausgelieferten Wert an**, nicht nur die
 gestellten 0,35: am gesetzten 0,10 zahlt der Häufer **+200 Gold**, der
 Verteiler **+8** — trennt um **192**, über drei Aussaaten mal drei
-Abwandlungen gemittelt. Zweiseitig gebaut: steht der Wert auf 0, MUSS die
-Trennung null sein, sonst greift ein Aufschlag, den niemand gesetzt hat.
+Abwandlungen gemittelt.
+
+**Die zweite Seite dieser Zusage ist gebaut und wieder ausgebaut.** „Steht der
+Wert auf 0, MUSS die Trennung null sein" klingt zweiseitig und ist es nicht:
+der gesetzte Wert ist zugleich der Schalter UND das, was die Messung an `play`
+weiterreicht — bei 0 sind beide Läufe derselbe Lauf, die Differenz ist von
+Bauart exakt null, und der Zweig kann nicht anschlagen. Die Gegenprobe hat es
+gemeldet, indem sie schwieg (Regel 3).
 
 **Gegenprobe.** Den Aufschlag auf null setzen: `wiederholungMessen` muss auf
 null Gold Unterschied fallen.

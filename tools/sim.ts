@@ -882,11 +882,20 @@ function wiederholungMessen(): void {
     + `trennt um ${trenntGesetzt >= 0 ? '+' : ''}${trenntGesetzt.toFixed(0)}.`);
   console.log(`  (${MAPS[0].id}, Meister, normal, ${AUSSAATEN.length} Aussaaten x `
     + `${VARIANTS.length} Abwandlungen gemittelt)`);
-  if (gesetzt === 0 && Math.abs(trenntGesetzt) > 1) {
-    errors.push(`Der Wiederholungsaufschlag steht auf 0, trennt aber um `
-      + `${trenntGesetzt.toFixed(0)} Gold. Dann greift ein Aufschlag, den niemand gesetzt `
-      + 'hat - oder die Messung nimmt ihren Wert woanders her.');
-  }
+  // **Die zweite Seite ist gebaut und wieder ausgebaut, und die Gegenprobe
+  //   hat es gesagt** (Regel 5).
+  //
+  // Sie sollte lauten: steht der Wert auf 0, MUSS die Trennung null sein -
+  // sonst greift ein Aufschlag, den niemand gesetzt hat. Das klingt wie eine
+  // zweiseitige Zusage und ist keine: `gesetzt` ist zugleich der Schalter
+  // UND der Wert, den `mittelAusgabe` an `play` weiterreicht. Steht er auf
+  // 0, sind beide Laeufe derselbe Lauf, die Differenz ist von Bauart exakt
+  // 0, und der Zweig kann nicht anschlagen.
+  //
+  // Nachgefahren mit dem Eingriff `const gesetzt = 0` bei laufendem 0,10:
+  // das Tor schwieg zu Recht - die Messung nimmt ihren Wert eben NICHT
+  // woanders her. Eine Pruefung, die nie etwas meldet, ist kein Beweis,
+  // also steht sie hier als Satz statt als Code.
   if (gesetzt > 0 && trenntGesetzt <= 0) {
     errors.push(`Der Wiederholungsaufschlag steht auf ${gesetzt}, trennt am gesetzten Wert `
       + `aber nur um ${trenntGesetzt.toFixed(0)} Gold. Er ist scharf gestellt und wirkt `

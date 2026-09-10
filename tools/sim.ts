@@ -475,6 +475,9 @@ interface Result {
   geretteteFunken: number;
   /** Wieviele Turmarten die getoeteten Gegner beschaedigt haben (S-N3-03). */
   artenJeKill: number[];
+  /** Wieviele Karten der Bot in diesem Abschnitt gezogen hat (v308, N1K).
+   *  0 heisst: er faehrt ohne Deck. */
+  gezogeneKarten: number;
 }
 
 type BranchPick = (id: TowerId) => 0 | 1;
@@ -1125,6 +1128,8 @@ function laufMessen(): void {
   let gefahren = 0;
   let abschnitte = 0;
   const gewaehlt: string[] = [];
+  let karten = 0;
+  const verluste: number[] = [];
 
   while (!istLaufZuEnde(lauf)) {
     const karte = laufendeKarte(lauf)!;
@@ -1134,8 +1139,14 @@ function laufMessen(): void {
     rampen.push(hpScale(DIFFICULTIES.normal, lauf.welleGesamt, gesamt, mm.balance.hpMul));
     const r = play(mixedPlanBase, () => 0, MEISTER, 'normal', karte, {
       seed: lauf.saat, laufVersatz: lauf.welleGesamt, laufWellen: gesamt,
+      // **Mit Deck** (v308, N1K). Bis v307 fuhr dieser Lauf ohne - und die
+      // Rampe von 14,89 war damit gegen einen Spieler gemessen, der in
+      // Welle 46 fuenfundvierzig Karten genommen haette.
+      zugStil: MEISTER.name,
     });
+    karten += r.gezogeneKarten;
     dauer += r.dauer;
+    verluste.push(r.maxLives - r.lives);
     const wellen = r.won ? wellenDesAbschnitts(karte) : r.wave;
     gefahren += wellen;
     abschnitte += r.won ? 1 : 0;
@@ -1162,6 +1173,12 @@ function laufMessen(): void {
     + `${gefahren} von ${gesamt} Wellen gefahren, ${dauer.toFixed(0)} s `
     + `(Horizont ${LAUF_HORIZONT_S} s).`);
   console.log(`  Rampe je Abschnitt: ${rampen.map((r) => r.toFixed(2)).join(' -> ')}`);
+  console.log(`  Karten gezogen: ${karten} von ${gefahren} gefahrenen Wellen.`);
+  if (karten < gefahren) {
+    errors.push(`Der Lauf hat ${karten} Karten bei ${gefahren} gefahrenen Wellen gezogen. `
+      + 'Je Welle steht eine zur Wahl; wer weniger zieht, misst die Kurve gegen einen '
+      + 'Spieler, den es nicht gibt.');
+  }
   if (gewaehlt.length) console.log(`  Gewaehlt an den Grenzen: ${gewaehlt.join(' -> ')}`);
   if (lauf.gewaehlt.length !== lauf.abschnitte.length - 1) {
     errors.push(`Der Lauf hat ${lauf.abschnitte.length} Abschnitte, aber nur `
@@ -1196,13 +1213,55 @@ function laufMessen(): void {
   // rot - der Lauf ist heute nur aus diesem Werkzeug erreichbar, und ein Tor,
   // das eine unfertige Mechanik rot macht, blockiert jede Runde danach statt
   // etwas zu halten. Die Zahl steht im Verzeichnis.
+  // **Die Nullprobe zum Deck** (Regel 13): derselbe letzte Abschnitt, mit
+  // demselben Versatz, einmal OHNE Karten. Ohne sie bezeugt der Lauf oben,
+  // dass ein Deck getragen hat, ohne es je geprueft zu haben.
+  const letzte = lauf.abschnitte[lauf.abschnitte.length - 1];
+  const versatzLetzte = gesamt - wellenDesAbschnitts(letzte);
+  const ohneDeck = play(mixedPlanBase, () => 0, MEISTER, 'normal', letzte, {
+    seed: lauf.saat, laufVersatz: versatzLetzte, laufWellen: gesamt,
+  });
+  const mitDeck = play(mixedPlanBase, () => 0, MEISTER, 'normal', letzte, {
+    seed: lauf.saat, laufVersatz: versatzLetzte, laufWellen: gesamt,
+    zugStil: MEISTER.name,
+  });
+  console.log(`  Letzter Abschnitt (${letzte}) ohne Deck: `
+    + `${ohneDeck.won ? 'gewonnen' : `verloren in Welle ${ohneDeck.wave}`}, `
+    + `Kristall ${ohneDeck.lives} - mit Deck: `
+    + `${mitDeck.won ? 'gewonnen' : `verloren in Welle ${mitDeck.wave}`}, `
+    + `Kristall ${mitDeck.lives} (${mitDeck.gezogeneKarten} Karten).`);
+  if (mitDeck.gezogeneKarten === 0) {
+    errors.push('Die Nullprobe zum Deck zieht selbst keine Karten - dann vergleicht '
+      + 'sie zweimal dasselbe und beweist nichts (Regel 3).');
+  }
+
+  // **N1K sagt seit v308 etwas anderes - und zwar, weil die Messung sich
+  //   geaendert hat, nicht das Spiel** (Regel 12).
+  //
+  // Bis v307 stand hier: "die Rampe waechst um das 15-fache, und der letzte
+  // Abschnitt ist so nicht zu gewinnen." Beide Haelften waren gegen einen Bot
+  // OHNE Deck gemessen - gegen einen Spieler, der in Welle 46 fuenfundvierzig
+  // Karten genommen haette. Mit Deck gewinnt derselbe Lauf alle vier
+  // Abschnitte, und die Nullprobe oben sagt, dass es das Deck war: derselbe
+  // letzte Abschnitt faellt ohne Karten in Welle 9 und geht mit Karten mit 36
+  // von 42 Kristall aus. Die Rampe von 14,89 ist damit nicht zu steil,
+  // sondern die Antwort auf ein Deck, das ueber sechzig Wellen waechst.
+  //
+  // **Was uebrig bleibt, ist die andere Haelfte, und die ist echt:** die
+  // ersten Abschnitte kosten NICHTS. Wer 45 Wellen ohne einen einzigen
+  // Kristall Verlust laeuft, spielt drei Spaziergaenge - und das misst diese
+  // Zeile jetzt, statt eine Rampe zu beurteilen, deren Groesse gar nicht das
+  // Problem war.
   const spanne = rampen[rampen.length - 1] / Math.max(0.01, rampen[0]);
-  if (spanne > 6 || abschnitte < lauf.abschnitte.length) {
-    console.log(`  OFFEN (N1-Kurve): die Rampe waechst ueber den Lauf um das `
-      + `${spanne.toFixed(0)}-fache, und ${lauf.abschnitte.length - abschnitte} von `
-      + `${lauf.abschnitte.length} Abschnitten sind so nicht zu gewinnen. Die `
-      + 'Lebenskurve ist an EINER Karte mit 15 Wellen geeicht; ueber 60 gestreckt '
-      + 'liegen die ersten Abschnitte im flachen Teil und der letzte im Knie.');
+  const makellos = verluste.filter((v) => v === 0).length;
+  console.log(`  Kristallverlust je Abschnitt: ${verluste.join(' / ')} `
+    + `(${makellos} von ${verluste.length} ohne einen Kratzer, Rampe ${spanne.toFixed(0)}-fach).`);
+  if (makellos > 1 || abschnitte < lauf.abschnitte.length) {
+    console.log(`  OFFEN (N1-Kurve): ${makellos} von ${lauf.abschnitte.length} `
+      + 'Abschnitten enden mit vollem Kristall, und '
+      + `${lauf.abschnitte.length - abschnitte} sind nicht zu gewinnen. Ein Lauf, `
+      + 'dessen erste Abschnitte nichts kosten, faengt erst in seiner zweiten '
+      + 'Haelfte an. Erlaubt ist EINER - der erste darf eine Einfuehrung sein.');
   }
   for (let i = 1; i < rampen.length; i += 1) {
     if (rampen[i] <= rampen[i - 1]) {
@@ -1518,6 +1577,20 @@ function play(
      *  Ohne Angabe KEINE - nie der Kontostand dessen, der gerade misst
      *  (Regel 4). */
     stapel?: readonly string[];
+    /** **Zieht der Bot je Welle eine Karte?** (v308, N1K)
+     *
+     *  Ohne Angabe NICHT - dann rechnet `play` Zeichen fuer Zeichen wie
+     *  vorher, und jede an einzelnen Karten geeichte Zahl bleibt unberuehrt.
+     *  Mit Angabe zieht er nach dem genannten Stil, genau dort, wo ein
+     *  Spieler zoege: zwischen zwei Wellen.
+     *
+     *  **Das ist die Voraussetzung dafuer, die Kurve eines LAUFS zu eichen.**
+     *  Bis v307 fuhr `laufMessen` einen Bot ohne Deck durch sechzig Wellen
+     *  und mass daran eine Rampe von 14,89 - gegen einen Spieler, der in
+     *  Welle 46 fuenfundvierzig Karten genommen haette. Eine Kurve gegen
+     *  diesen Bot zu formen hiesse, sie gegen jemanden zu formen, den es
+     *  nicht gibt. */
+    zugStil?: string;
   } = {},
 ): Result {
   const s = new GameState(mapId);
@@ -1824,6 +1897,17 @@ function play(
       // stellt die naechsten Tuerme ins Leere.
       if (umgelegt) { spots = buildSpots(s); spotIdx = variant % 2; }
     }
+    // **Die Karte wird gezogen, bevor die Welle losgeht** (v308, N1K) -
+    // genau da, wo `zugFaellig()` es erlaubt und wo ein Spieler zieht.
+    // Der Zustand entscheidet, nicht dieser Aufruf: `karteNehmen` prueft
+    // selbst, ob ein Zug faellig ist und ob die Karte angeboten wurde.
+    if (opts.zugStil && s.zugFaellig()) {
+      const angebot = s.angeboteneKarten();
+      if (angebot.length) {
+        s.karteNehmen(karteWaehlen(opts.zugStil, angebot).id);
+        entscheidungenJeWelle[welleNr(s)]++;
+      }
+    }
     if (s.canStartWave && !s.waveActive) s.startWave();
     s.update(DT);
     t += DT;
@@ -1843,6 +1927,7 @@ function play(
     knappheitsAnteil: entscheidungsBilder > 0 ? knappeBilder / entscheidungsBilder : 0,
     raeuber: s.raubTotal, gerettet: s.rettungTotal, geretteteFunken: s.rettungPunkte,
     artenJeKill: s.stats.artenJeKill.slice(),
+    gezogeneKarten: s.genommeneKarten.length,
     maxLives: s.maxLives,
     earned: s.stats.goldEarned, spent: s.stats.goldSpent,
   };

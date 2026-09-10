@@ -869,6 +869,26 @@ export const PROBEN = [
     meldet: 'wird gelesen statt verworfen',
   },
   {
+    // **Der Bot zieht im Lauf keine Karten mehr** (v308, N1K).
+    //
+    // Das ist die Probe auf den Fund dieser Runde. Bis v307 fuhr `laufMessen`
+    // einen Bot OHNE Deck durch sechzig Wellen und mass daran eine Rampe von
+    // 14,89 - gegen einen Spieler, der in Welle 46 fuenfundvierzig Karten
+    // genommen haette. Mit Deck gewinnt derselbe Lauf alle vier Abschnitte,
+    // und die Nullprobe sagt, dass es das Deck war: derselbe letzte Abschnitt
+    // faellt ohne Karten in Welle 9 und geht mit Karten mit 36 von 42
+    // Kristall aus.
+    //
+    // Faellt der Zug wieder weg, misst der Lauf wieder den Falschen - und die
+    // Nullprobe daneben vergleicht zweimal dasselbe.
+    name: 'Der Bot zieht im Lauf keine Karten',
+    datei: 'tools/sim.ts',
+    suche: '    if (opts.zugStil && s.zugFaellig()) {',
+    ersatz: '    if (false && opts.zugStil && s.zugFaellig()) {',
+    tor: 'sim',
+    meldet: 'Karten bei',
+  },
+  {
     // **Alle drei Auflagen werden gleich** (v305, S-N1-03).
     //
     // Die Gegenprobe, die die Story woertlich verlangt: "Beide Angebote

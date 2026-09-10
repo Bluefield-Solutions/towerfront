@@ -883,9 +883,19 @@ Knie bei 55–92 %, Ende bei `hpEnd`. Über **60** Wellen gestreckt liegen die
 ersten drei Abschnitte im flachen Teil und der vierte mitten im Knie. Ein Lauf
 ist damit heute **drei Spaziergänge und eine Wand**.
 
-**Das ist kein Fehler dieser Story, sondern ihre erste Auskunft:** der
-Wellenzähler über die Abschnitte hinweg ist richtig, die **Kurvenform** dafür
-nicht. Sie steht als `OFFEN (N1-Kurve)` in jedem Lauf und macht die Kette
+**Und in v308 hat sich diese Auskunft als Messfehler erwiesen** — der Bot in
+`laufMessen` fuhr **ohne Deck** durch sechzig Wellen, während ein Spieler in
+Welle 46 fünfundvierzig Karten genommen hätte. Mit Deck gewinnt derselbe Lauf
+**alle vier** Abschnitte (60 von 60 Wellen, 1191 s), und die Nullprobe sagt,
+dass es das Deck war: derselbe letzte Abschnitt fällt ohne Karten in Welle 9
+und geht mit Karten mit 36 von 42 Kristall aus. Die Rampe von 14,89 ist nicht
+zu steil, sondern die Antwort auf ein Deck, das über sechzig Wellen wächst.
+Was von N1K bleibt, ist die andere Hälfte und die ist echt: **0 / 0 / 0 / 6**
+Kristall Verlust — die ersten drei Abschnitte kosten nichts.
+
+**Das war kein Fehler dieser Story, sondern ihre erste Auskunft:** der
+Wellenzähler über die Abschnitte hinweg ist richtig, die **Messstelle** dafür
+war es nicht (Regel 12). Sie steht als `OFFEN (N1-Kurve)` in jedem Lauf und macht die Kette
 nicht rot — der Lauf ist heute nur aus dem Werkzeug erreichbar, und ein Tor,
 das eine unfertige Mechanik rot macht, blockiert jede Runde danach, statt
 etwas zu halten.

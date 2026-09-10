@@ -684,6 +684,19 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der Lauf zieht Karten - und N1K war ein Messfehler (v308).** Bis v307 fuhr
+`laufMessen` einen Bot OHNE Deck durch sechzig Wellen und mass daran eine
+Rampe von 14,89: "drei Spaziergaenge und eine Wand". Ein Spieler haette in
+Welle 46 fuenfundvierzig Karten genommen. Mit Deck gewinnt derselbe Lauf
+**alle vier Abschnitte** (60 von 60 Wellen, 1191 s), und die Nullprobe sagt,
+dass es das Deck war: derselbe letzte Abschnitt faellt ohne Karten in Welle 9
+und geht mit Karten mit 36 von 42 Kristall aus. **Die Rampe ist nicht zu
+steil, sondern die Antwort auf ein Deck, das ueber sechzig Wellen waechst**
+(Regel 12: die Messstelle war das Problem, nicht die Kurve). Was von N1K
+bleibt, ist die andere Haelfte: Kristallverlust je Abschnitt **0 / 0 / 0 / 6**
+- die ersten drei kosten nichts, und 45 Wellen ohne einen Kratzer sind kein
+Lauf, sondern eine Einfuehrung mit Anhang.
+
 **Der volle Probenlauf faehrt in Scheiben (v307) - und die alte Zahl war um
 mehr als das Doppelte daneben.** Am 10.09.2026 ist er in zwei Stunden nicht
 fertig geworden und um 13:15:35 an seiner eigenen `timeout-minutes: 120`
@@ -858,7 +871,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v307. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v308. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

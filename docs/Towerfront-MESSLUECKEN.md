@@ -1,6 +1,6 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v301 · 10.09.2026
+Stand: v308 · 10.09.2026
 
 **Nachgesehen in v286 — achtzehn Luecken, und M1 hat seine erste Zahl aus dem
 laufenden Betrieb bekommen.** Die achtzehnte (**M18**) ist in derselben Runde
@@ -501,6 +501,43 @@ nicht.
 ---
 
 ## Was das für die Reihenfolge bedeutet
+
+## M20 · Ein Bot ohne Deck misst ein Spiel, das eines hat — und die Lücke ist zugefallen, weil eine Zahl zu schlecht aussah
+
+**Gefunden in v308, und zwar an einer roten Zahl statt an einer grünen.** Der
+Lauf über alle Abschnitte (`laufMessen`) meldete seit v302 eine Rampe von
+**1,00 → 1,12 → 1,82 → 14,89** und einen letzten Abschnitt, der in Welle 7
+verloren geht. Daraus wurde der Rückstandspunkt N1K: „die Kurvenform überlebt
+das Strecken auf einen Lauf nicht."
+
+**Der Bot fuhr aber ohne Deck.** `play` zog keine Karte — der Kartenzug aus
+v303 lebt in `karteNehmen`, und den ruft nur die Oberfläche. Ein Spieler hätte
+in Welle 46 **fünfundvierzig** Karten genommen. Gemessen mit Deck:
+
+| | ohne Deck | mit Deck |
+|---|---|---|
+| Abschnitte gewonnen | 3 von 4 | **4 von 4** |
+| letzter Abschnitt | verloren in Welle 9 | **gewonnen, 36/42 Kristall** |
+| Wellen gefahren | 54 von 60 | **60 von 60** |
+
+Die Nullprobe steht daneben und läuft bei jedem Lauf mit: derselbe letzte
+Abschnitt, derselbe Versatz, einmal ohne Karten.
+
+**Die Klasse ist Regel 12, und diesmal andersherum als sonst.** Die Regel ist
+in diesem Verzeichnis fünfmal an einer Zahl bezahlt worden, die zu GUT aussah;
+hier sah eine zu SCHLECHT aus, und das Ergebnis war dasselbe — eine Runde
+Arbeit an der falschen Ursache wäre die Folge gewesen (eine Kurvenform, die
+gar nicht kaputt ist). **Eine Messung, die eine Mechanik des Spiels nicht
+mitfährt, misst ein anderes Spiel**, und ob das auffällt, hängt allein davon
+ab, in welche Richtung die Zahl abweicht.
+
+**Was daraus folgt und noch nicht getan ist:** derselbe Verdacht gilt für
+jede weitere Mechanik, die nur über die Oberfläche erreichbar ist. Die
+Abschnittswahl (`abschnittWaehlen`) fährt der Bot inzwischen mit, die
+Erfahrung zwischen den Läufen (S-N1-04) absichtlich nicht (Regel 4). Wer die
+nächste solche Mechanik baut, muss den Bot in derselben Runde mitziehen —
+sonst entsteht die Lücke ein zweites Mal, und dann an einer Zahl, die niemand
+nachprüft.
 
 ## M19 · C18 faehrt eine Aussaat und hat eine steile Kante
 

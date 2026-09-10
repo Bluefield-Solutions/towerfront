@@ -1,6 +1,27 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v290 · 09.09.2026
+Stand: v297 · 10.09.2026
+
+**Nachgesehen in v297:** die Torkette ist unveraendert dreiunddreissig
+Schritte und laeuft auf dem Runner (gemessen 6 Minuten je Lauf); hier laeuft
+je Runde nur `npm run vorlauf` mit 4,4 s. Dazugekommen sind seit v290 keine
+Werkzeuge, aber **zwei Regeln, die je eine Runde gekostet haben**:
+
+* **Die Buendelregel** (v292 fuer `autarkietor`, v294 fuer alle vier):
+  `npm run beruehrt` nahm die Buendeltore aus einer Liste von zwei
+  Dateinamen — Regel 15 in Reinform. v293 aenderte `src/data/towers.ts`, das
+  Werkzeug nannte `autarkietor` und schwieg zu `uxaudittor`, und der Runner
+  wurde an der Bildschirmbelegung rot. Jetzt gilt: was unter `src/` liegt
+  oder `index.html` heisst, geht ins Buendel und beruehrt alle vier.
+* **Die Bandregel** (v296): eine Ratsche misst ihr Rauschband an derselben
+  Groesse wie ihren Wert. Der Abstand der Spielstile hatte das Band EINES
+  Stils, geratscht wurde die DIFFERENZ zweier — 4,4 gegen gemessene 19,0.
+  Die Ratsche bestand dadurch um 0,14 Punkte und hat drei Runden lang
+  Entscheidungen gewuerfelt.
+
+**Beide sind derselbe Satz in zwei Anwendungen**, und er steht als Regel 12
+oben: eine Zahl traegt ihre Messstelle mit — und ein Band gehoert an dieselbe
+Stelle wie der Wert, den es beurteilt.
 
 **Nachgesehen in v290:** die Kette hat seit v283 drei Werkzeuge dazubekommen,
 und alle drei sind aus einem Fehler entstanden statt aus einem Plan:

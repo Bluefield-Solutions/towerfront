@@ -1,6 +1,32 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v290 · 09.09.2026
+Stand: v297 · 10.09.2026
+
+**Nachgesehen in v297 — der wichtigste Satz steht unveraendert, und die
+Antwort darauf hat sich in v291 bis v297 gedreht.**
+
+Bis v290 lautete die Erklaerung: „bei 28 % uebrigem Gold ist ein Preis
+folgenlos". **Diese Zahl war gar keine Aussage ueber das Spiel** (v291): die
+Bots tragen `maxTowers: 12`, eine Selbstbeschraenkung gegen rund zweihundert
+Bauplaetze. Ohne Deckel bleiben **−3 bis 16 %** liegen. Nur: wer 29 bis 41
+Tuerme baut, verliert (Spiralhain 27 → 0), weil die weiteren Plaetze zu wenig
+sehen und das Gold beim Ausbauen fehlt.
+
+**Und die Turmwahl ist der fehlende Grund nicht** (v293): ein eigenes
+Sortiment fuer `Breite` liess den Abstand der Spielstile Punkt fuer Punkt auf
+8,20 stehen. Vier Geschuetze, und welches man baut, macht sechs Punkte aus.
+
+**Was traegt, ist die LAGE** (v295, Bannturm): derselbe Turm, dasselbe Gold,
+dieselbe Welle — auf dem Spiralhain **11 Kristall unbedacht gebaut gegen 29
+ins Nest gebaut**, gegen 27 ganz ohne ihn. **18 Punkte Spanne durch die
+Lage**, wo die ganze Turmwahl sechs entscheidet. Das ist der erste
+Gegenbeleg zu M18 und zeigt, wo Spannung in diesem Spiel wirklich sitzt.
+
+**Der Wiederholungsaufschlag ist seit v297 scharf** (0,10, Kette gruen) und
+kostet etwas, das dieses Audit angeht: die **duenne Zeit** steigt monoton von
+14,7 auf 17,1 %, weil ein Aufschlag den Bot frueher zur naechsten Turmart
+treibt, ein gemischtes Feld schneller toetet und ein Feld, das schneller
+toetet, oefter leer ist. **Vielfalt und volles Feld ziehen gegeneinander.**
 
 **Nachgesehen in v290 — der wichtigste Satz dieses Audits hat in v285 bis
 v290 zwei harte Zahlen bekommen.** Er lautet: der Genre-Abgleich steht auf 30

@@ -1,6 +1,34 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v290 · 09.09.2026
+Stand: v297 · 10.09.2026
+
+**Nachgesehen in v297 — gemessen, und der Bildvorrat hat sich in sieben
+Fassungen um kein Byte bewegt.**
+
+| Gruppe | gemessen | Budget |
+|---|---|---|
+| gegner | 71 KB | 80 |
+| objekte | 192 KB | 250 |
+| tuerme | 302 KB | 445 |
+| untergrund | 256 KB | 300 |
+| **zusammen** | **821 KB** | **1075** |
+
+Gelesen aus `npm run art`, das die Groesse des ausgelieferten Buendels
+nennt — ohne Rohbilder, also auch auf dem Runner (Regel 12: die Zahl traegt
+ihre Messstelle mit). Die ausgelieferte Datei wiegt **1447 KB** von 1800
+erlaubten und ist damit in sieben Fassungen um **2 KB** gewachsen; das ist
+Quelltext, kein Bild.
+
+**Inzwischen sind es drei Bauwerke, die nichts wiegen** (Foerderer v285,
+Werft v290, Bannturm v295): fuer alle drei fehlt das Bild, sie laufen gegen
+`getPlatzhalter` (K5), und `npm run bildtor` nennt sie bei jedem Lauf als
+offene Bestellung. Die Auftraege stehen als 8d.2, 8d.3 und 8d.4.
+
+**Was das fuer den Haushalt heisst, steht als Differenz da und nicht als
+Messung:** die Gruppe `tuerme` haelt heute 302 KB ueber 18 Eintraege, also
+rund 17 KB je Eintrag. Drei Bauwerke mit je einem Bild sind damit etwa
+**50 KB** — die Gruppe kaeme auf rund 352 von 445, die Datei auf rund 1497
+von 1800. Beides passt, und beides ist gerechnet, nicht gewogen.
 
 **Nachgesehen in v290 — gemessen mit `npm run pack-art -- --force`, nicht
 gerechnet.** Die Gruppen stehen bei: gegner 71 KB von 80, objekte 192 von 250,

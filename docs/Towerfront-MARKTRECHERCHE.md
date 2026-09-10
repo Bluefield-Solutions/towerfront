@@ -1,6 +1,30 @@
 # Marktrecherche — was moderne Tower-Defense-Spiele ausmacht
 
-Stand: v290 · 09.09.2026
+Stand: v297 · 10.09.2026
+
+**Nachgesehen in v297:** unveraendert gueltig, und die Kette hat seitdem
+zwei weitere Vorbilder in ihrer FORM statt in ihrer Zahl uebernommen.
+
+**Bloons TD 6, Monkey Village** — der Stuetzturm dreht die Reihenfolge des
+Bauens um: man setzt erst das Dorf, dann die Tuerme hinein. Genau das ist am
+Bannturm (v295) gemessen worden und es ist die Zahl der Runde: **11 Kristall
+unbedacht gebaut gegen 29 ins Nest gebaut.** Ein Stuetzturm, den man wie ein
+Geschuetz stellt, ist ein verlorener Bauplatz; einer, um den herum gebaut
+wird, ist eine Entscheidung. Dazu die Deckelung aus dem Vorbild: der zweite
+Mast zaehlt halb, jeder weitere gar nicht — ohne sie waere ein Nest aus vier
+Masten eine Bauvorschrift statt einer Wahl.
+
+**Defense Grid, Reparatur statt Rueckkauf** — die Werft (v290) setzt den
+Kristall nach jeder Welle stueckweise zusammen und wirkt **global**, wie das
+Command Tower. Die Abnahme dafuer ist bewusst die unbequeme Richtung: am Ende
+der besten Partie muessen Kristallpunkte FEHLEN (gemessen vier), sonst ist ein
+Durchbruch zurueckgekauft statt abgemildert.
+
+**Rogue Tower, teurere Wiederholung** — seit v297 scharf gestellt auf 0,10.
+Die Form des Vorbilds hat auch hier die Zahl bestimmt: Rogue Tower hat ueber
+ein Dutzend Turmarten, Towerfront vier, also braucht der Aufschlag eine
+Freimenge (drei je Sorte), sonst traefe er den perfekten Verteiler genauso
+hart wie den Haeufer.
 
 **Nachgesehen in v290:** unverändert gültig — und zweimal hat sie in dieser
 Kette die Form eines Vorbilds richtiggestellt, nicht seine Zahl. Defense Grids

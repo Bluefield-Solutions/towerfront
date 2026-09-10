@@ -487,7 +487,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
  *
  *  Die Hoehe ist durchprobiert, nicht gesetzt - der Wert steht unten am
  *  Messergebnis. */
-export const WIEDERHOLUNG_ZUSCHLAG = 0;
+export const WIEDERHOLUNG_ZUSCHLAG: number = 0.10;
 
 /** **Auf Null, und das ist eine Messung, keine Abschaltung** (v286).
  *

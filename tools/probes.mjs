@@ -731,6 +731,38 @@ export const PROBEN = [
     meldet: 'Spannungsratsche',
   },
   {
+    // **Die Zusage am AUSGELIEFERTEN Wert (v297, S-N3-02).**
+    //
+    // Alles andere an `wiederholungMessen` laeuft gegen feste 0,35 - es soll
+    // sagen, was der Aufschlag TAETE. Solange nichts den gesetzten Wert
+    // ansieht, ist er ungeprueft: er koennte auf 0 stehen, auf 0,10 oder auf
+    // einem Tippfehler, und die fuenf Zeilen darueber meldeten unveraendert
+    // dieselben 693 gegen 349 Gold.
+    //
+    // Der Eingriff kappt genau diese Leitung: die Messung glaubt, der Wert
+    // stehe auf 0, das Spiel laeuft aber mit 0,10. Dann trennt sie um +192
+    // Gold, wo null zu erwarten waere - und die zweiseitige Zusage meldet es.
+    name: 'Die Zusage sieht den gesetzten Zuschlag nicht an',
+    datei: 'tools/sim.ts',
+    suche: 'const gesetzt = WIEDERHOLUNG_ZUSCHLAG;',
+    ersatz: 'const gesetzt = 0;',
+    tor: 'sim',
+    meldet: 'steht auf 0, trennt aber',
+  },
+  {
+    // Und die andere Seite derselben Zusage: der Aufschlag ist scharf
+    // gestellt und wirkt nicht. Der Eingriff misst den Haeufer ohne
+    // Aufschlag, waehrend der Verteiler seinen bekommt - dann faellt die
+    // Trennung von +192 auf -8, und "eine Zahl in den Daten, keine Regel im
+    // Spiel" muss anschlagen.
+    name: 'Der scharf gestellte Zuschlag wirkt nicht',
+    datei: 'tools/sim.ts',
+    suche: 'const hAus = mittelAusgabe(haeufen, gesetzt) - mittelAusgabe(haeufen, 0);',
+    ersatz: 'const hAus = mittelAusgabe(haeufen, 0) - mittelAusgabe(haeufen, 0);',
+    tor: 'sim',
+    meldet: 'keine Regel im Spiel',
+  },
+  {
     // **Das Rauschband des Stilabstands (v296, M18).**
     //
     // Was diese Probe haelt: dass die Ratsche ihr Band ueberhaupt LIEST.

@@ -1,6 +1,6 @@
 # Towerfront — Stories
 
-Stand: v291 · 09.09.2026
+Stand: v297 · 10.09.2026
 
 **Nachgesehen in v291 — Paket N3 ist zu drei Vierteln gebaut, und die
 Diagnose hat sich dabei umgedreht.** Förderer (v285), Wiederholungsaufschlag
@@ -639,14 +639,43 @@ Die Abnahme lautet deshalb jetzt:
 * `wiederholungMessen`: der Aufschlag trennt Häufen von Verteilen — er nimmt
   dem Häufer messbar mehr Gold ab als dem Verteiler. **Erfüllt** (v286).
 * C18 hält über drei Aussaaten. **Erfüllt** (v286: 15/19/21 von 42).
-* **Offen:** der Aufschlag ist scharf gestellt (`WIEDERHOLUNG_ZUSCHLAG > 0`)
-  und die Torkette bleibt grün. Das setzt S-N3-03 voraus und eine Ratsche,
-  die keinen Würfel wirft.
+* **Scharf gestellt (v297): `WIEDERHOLUNG_ZUSCHLAG = 0,10`, Torkette grün.**
+  Die Ratsche, die keinen Würfel wirft, kam in v296 (M18: das Band stand an
+  der falschen Messstelle, 19,0 je Lauf gegen 4,4 je Stil). Damit wurde der
+  Parameter zum ersten Mal lesbar — und monoton:
+
+  | Zuschlag | Knappheit | dünne Zeit | Abstand | Lauf |
+  |---|---|---|---|---|
+  | 0 | 44,4 | 14,7 | 8 | grün |
+  | 0,05 | — | — | — | **grün** |
+  | **0,10** | **44,9** | **15,5** | 10 | **grün** |
+  | 0,12 | — | 17,4 | — | rot |
+  | 0,15 | — | 16,8 | — | rot |
+  | 0,20 | 54,9 | 15,9 | 11 | rot |
+  | 0,30 | 55,7 | 17,1 | 13 | rot |
+
+  **Eine Fläche, keine Nadel** — drei Werte hintereinander halten, und die
+  Kante bei 0,12 hat einen Namen statt eines Zufalls.
+
+**Die 0,3 in der alten Schliessbedingung ist gemessen widerlegt.** Sie war
+geraten; ab 0,12 fällt der Lauf, und zwar immer an **derselben** Zahl: der
+**dünnen Zeit**. Sie steigt monoton von 14,7 auf 17,1 %. Die Erklärung ist
+der Ausweichpreis (`AUSWEICHEN_AB` 1,34): ein Aufschlag treibt den Bot früher
+zur nächsten Turmart, ein gemischtes Feld tötet schneller, und ein Feld, das
+schneller tötet, ist öfter leer. **Vielfalt und volles Feld ziehen
+gegeneinander** — das ist der Preis dieser Mechanik, und er steht jetzt als
+Zahl da statt als Vermutung.
+
+**Die Zusage sieht seit v297 den ausgelieferten Wert an**, nicht nur die
+gestellten 0,35: am gesetzten 0,10 zahlt der Häufer **+200 Gold**, der
+Verteiler **+8** — trennt um **192**, über drei Aussaaten mal drei
+Abwandlungen gemittelt. Zweiseitig gebaut: steht der Wert auf 0, MUSS die
+Trennung null sein, sonst greift ein Aufschlag, den niemand gesetzt hat.
 
 **Gegenprobe.** Den Aufschlag auf null setzen: `wiederholungMessen` muss auf
 null Gold Unterschied fallen.
 
-**Schliesst, wenn:** `text src/data/towers.ts "WIEDERHOLUNG_ZUSCHLAG = 0.3" >= 1`
+**Schliesst, wenn:** `text src/data/towers.ts "WIEDERHOLUNG_ZUSCHLAG: number = 0.10" >= 1`
 
 ---
 

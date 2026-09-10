@@ -9,7 +9,7 @@ import { ZIELWAHL_ORDNUNG, type Zielwahl, type Tower } from '../src/game/types';
 import { DIFFICULTIES, DIFFICULTY_ORDER, type DifficultyId } from '../src/data/difficulty';
 
 const START_LIVES = DIFFICULTIES.normal.startLives;
-import { TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, rangeFor, type TowerId } from '../src/data/towers';
+import { TOWERS, TOWER_ORDER, MAX_LEVEL, WIEDERHOLUNG_ZUSCHLAG, nextFor, rangeFor, type TowerId } from '../src/data/towers';
 
 import { MAPS } from '../src/data/maps';
 import { WEGNETZ } from '../src/data/wegnetz';
@@ -842,6 +842,55 @@ function wiederholungMessen(): void {
     errors.push(`Der Wiederholungsaufschlag trennt Haeufen von Verteilen nur um ${kleinste} `
       + `Gold (gefordert ueber ${TRENNUNG_MIN}). Er trifft dann den, der gleichmaessig baut, `
       + 'fast so hart wie den, der haeuft - und ist damit eine Verteuerung statt einer Regel.');
+  }
+
+  // **Und dasselbe noch einmal am AUSGELIEFERTEN Wert** (v297, S-N3-02).
+  //
+  // Alles darueber laeuft gegen feste 0,35 - mit gutem Grund, denn es soll
+  // sagen, was der Aufschlag TAETE. Nur: solange nichts den gesetzten Wert
+  // ansieht, ist er ungeprueft. Er koennte auf 0 stehen, auf 0,10 oder auf
+  // einem Tippfehler, und diese fuenf Zeilen meldeten unveraendert dieselben
+  // 693 gegen 349 Gold. Eine Zusage, die etwas anderes misst als das, was
+  // ausgeliefert wird, bezeugt die Sache, ohne sie je geprueft zu haben
+  // (Regel 13).
+  //
+  // **Zweiseitig, und das ist der Kern:** steht der Wert auf 0, MUSS die
+  // Trennung null sein - sonst greift irgendwo ein Aufschlag, den niemand
+  // gesetzt hat. Steht er darueber, muss sie es auch zeigen. So haelt die
+  // Zusage in beide Richtungen, statt bei Null stillschweigend zu bestehen.
+  //
+  // Gemittelt ueber drei Aussaaten mal drei Abwandlungen auf der ersten
+  // Karte - die Monokultur-Zeile weiter unten faehrt EINEN Lauf, und aus
+  // einem Lauf laesst sich hier nichts lesen (M1).
+  const mittelAusgabe = (plan: TowerId[], zuschlag: number): number => {
+    let summe = 0, n = 0;
+    for (const aussaat of AUSSAATEN) {
+      for (const variant of VARIANTS) {
+        summe += play(plan, () => 0, MEISTER, 'normal', MAPS[0].id,
+          { zuschlag, seed: aussaat, variant }).spent;
+        n++;
+      }
+    }
+    return summe / n;
+  };
+  const gesetzt = WIEDERHOLUNG_ZUSCHLAG;
+  const hAus = mittelAusgabe(haeufen, gesetzt) - mittelAusgabe(haeufen, 0);
+  const vAus = mittelAusgabe(verteilen, gesetzt) - mittelAusgabe(verteilen, 0);
+  const trenntGesetzt = hAus - vAus;
+  console.log(`  Am gesetzten Wert (${gesetzt}): Haeufer zahlt ${hAus >= 0 ? '+' : ''}`
+    + `${hAus.toFixed(0)} Gold, Verteiler ${vAus >= 0 ? '+' : ''}${vAus.toFixed(0)} - `
+    + `trennt um ${trenntGesetzt >= 0 ? '+' : ''}${trenntGesetzt.toFixed(0)}.`);
+  console.log(`  (${MAPS[0].id}, Meister, normal, ${AUSSAATEN.length} Aussaaten x `
+    + `${VARIANTS.length} Abwandlungen gemittelt)`);
+  if (gesetzt === 0 && Math.abs(trenntGesetzt) > 1) {
+    errors.push(`Der Wiederholungsaufschlag steht auf 0, trennt aber um `
+      + `${trenntGesetzt.toFixed(0)} Gold. Dann greift ein Aufschlag, den niemand gesetzt `
+      + 'hat - oder die Messung nimmt ihren Wert woanders her.');
+  }
+  if (gesetzt > 0 && trenntGesetzt <= 0) {
+    errors.push(`Der Wiederholungsaufschlag steht auf ${gesetzt}, trennt am gesetzten Wert `
+      + `aber nur um ${trenntGesetzt.toFixed(0)} Gold. Er ist scharf gestellt und wirkt `
+      + 'nicht - dann ist er eine Zahl in den Daten und keine Regel im Spiel.');
   }
 }
 

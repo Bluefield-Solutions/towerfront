@@ -1,6 +1,35 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v290 · 09.09.2026
+Stand: v297 · 10.09.2026
+
+**Nachgesehen in v297 — und der offene Punkt dieses Audits hat aufgehoert,
+eine Meinung zu sein: die Bauleiste traegt sechs Bauwerke und kein siebtes.**
+
+Gemessen in v294 und v295, mit derselben Zahl zweimal:
+
+| | ruhe | bauwahl | pruefsteg | welle |
+|---|---|---|---|---|
+| Grenze | 16 | 26 | 35 | 16 |
+| sechs Bauwerke (v294) | 15,1 | 24,5 | 34,2 | 15,1 |
+| **sieben (v295, Bannturm)** | **16,3** | **27,0** | **35,0** | **16,3** |
+
+Alle vier Zustaende reissen zugleich. Der Bannturm ist deshalb gebaut,
+gemessen und von fuenf Zusagen gehalten — und **nicht kaufbar**; er steht
+nicht in `BAU_ORDER`. Das ist keine Entscheidung ueber den Turm, sondern eine
+ueber diese Oberflaeche, und sie gehoert damit in dieses Audit.
+
+**Was v294 vorher geholt hat, ist geholt:** `.pick-btn` von 62 auf 54 Punkte
+Mindestbreite, `.tower-btn` von 50 auf 46 — beides waren Masse fuer ein ZIEL,
+waehrend die Beruehrungsgrenze bei 44 liegt. Das brachte 25,5 → 24,5 und
+34,6 → 34,2, und `npm run beruehrung` haelt weiter. Der naechste Schritt ist
+kein Feilen mehr an Punkten, sondern eine andere Form: ein Ausklapper fuer die
+Bauwerke, oder weniger Faehigkeitsknoepfe.
+
+**Und die Aufschluesselung je WURZEL ist der Grund, warum das ueberhaupt zu
+sehen war** (v286). Die nackte Prozentzahl nannte den Verursacher nicht: der
+Befund zu v285 („welle 16,5 gegen 16") sah nach dem fuenften Bauknopf aus, und
+das Dock stand in Ruhe und Welle bei denselben 10,4 %. Es war `#b-wave` mit
+3,0 gegen 4,4.
 
 **Nachgesehen in v290 — und ein Befund dieses Audits ist seit v286
 geschlossen, ohne dass er hier stand.** Der laufende Strom im Wellenknopf trug

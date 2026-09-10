@@ -425,8 +425,12 @@ export const PROBEN = [
   {
     name: 'Kein Rückweg aus dem Ergebnis',
     datei: 'src/game/menu.ts',
-    suche: "if (id === 'tomap') { this.result = null; this.view = 'map'; return true; }",
-    ersatz: "if (id === 'tomap') { return true; }",
+    // Neu angesetzt in v305: der Zweig ist mit der Abschnittswahl mehrzeilig
+    // geworden (er beendet jetzt auch den Lauf), und der alte Suchtext traf
+    // nichts mehr. Gemeldet hat es `npm run muster` in derselben Runde -
+    // genau wofuer es da ist.
+    suche: "      if (this.lauf) this.onLaufEnde();\n      this.view = 'map';",
+    ersatz: "      if (this.lauf) this.onLaufEnde();",
     tor: 'smoke',
   },
   {
@@ -859,10 +863,70 @@ export const PROBEN = [
     // vier gestellte Faelle dagegen.
     name: 'Der Lauf prueft seine Fassung nicht',
     datei: 'src/game/lauf.ts',
-    suche: 'if (l.v !== 1) return null;',
+    suche: 'if (l.v !== 2) return null;',
     ersatz: 'if (false) return null;',
     tor: 'smoke',
     meldet: 'wird gelesen statt verworfen',
+  },
+  {
+    // **Alle drei Auflagen werden gleich** (v305, S-N1-03).
+    //
+    // Die Gegenprobe, die die Story woertlich verlangt: "Beide Angebote
+    // gleich machen - `sim` muss melden, dass die Wahl folgenlos ist."
+    //
+    // Als Regel und nicht als drei feste Zeilen: die Staerken sind noch
+    // nicht geeicht (N1K), und eine Probe, die an `1.3` haengt, veraltet an
+    // der ersten Eichrunde lautlos. Gemessen faellt die Spreizung damit von
+    // 142,4 auf exakt 0 - dieselbe Karte, dieselbe Aussaat, dieselbe
+    // Rechnung, dreimal.
+    name: 'Alle Auflagen der Abschnittswahl sind gleich',
+    datei: 'src/game/lauf.ts',
+    regel: /(\{ id: '(?:ruhig|gerade|reich)', name: '[^']+', druck: )[\d.]+(, beute: )[\d.]+/g,
+    ersatz: '$11$21',
+    tor: 'sim',
+    meldet: 'folgenlos',
+  },
+  {
+    // **Die angenommene Auflage kommt im Spiel nicht an** (v305, S-N1-03).
+    //
+    // Die zweite Haelfte derselben Zusage: das Bild zeigt einen Handel, und
+    // im Abschnitt gilt er. Nimmt man den Faktor aus der Lebenspunktrechnung,
+    // steht der Handel weiter auf der Kachel und die Haelfte davon geschieht
+    // nicht mehr - genau die Sorte Fehler, die kein Bild und keine
+    // Uebersetzung fangen kann.
+    name: 'Die Auflage wirkt nicht auf die Gegner',
+    datei: 'src/game/state.ts',
+    suche: 'return Math.round(ENEMIES[id].hp * hpMul * ramp * this.laufDruck);',
+    ersatz: 'return Math.round(ENEMIES[id].hp * hpMul * ramp);',
+    tor: 'sim',
+    meldet: 'folgenlos',
+  },
+  {
+    // **Nach einem Abschnitt geht keine Wahl mehr auf** (v305, S-N1-03).
+    //
+    // Dann faellt der Lauf still auf seinen Plan zurueck: er laeuft weiter,
+    // gewinnt dieselben Abschnitte, und niemand hat je gewaehlt. Ein Bild,
+    // das man nie zu sehen bekommt, ist keine Mechanik.
+    name: 'Die Abschnittswahl geht nie auf',
+    datei: 'src/game/lauf.ts',
+    suche: 'wahlOffen: weiter < l.abschnitte.length,',
+    ersatz: 'wahlOffen: false,',
+    tor: 'sim',
+    meldet: 'Wahlen',
+  },
+  {
+    // **Ein erfundenes Angebot wird angenommen** (v305, S-N1-03).
+    //
+    // `abschnittWaehlen` prueft die Kennung gegen den Zug, statt sie zu
+    // glauben. Faellt die Pruefung auf das erste Angebot zurueck, laesst sich
+    // der Lauf ueber die Ablage stellen: eine Kennung hineinschreiben, und
+    // der naechste Abschnitt ist ein anderer als der gewaehlte.
+    name: 'Die Abschnittswahl glaubt jede Kennung',
+    datei: 'src/game/lauf.ts',
+    suche: "  const angebot = abschnittsWahl(l).find((a) => a.id === angebotId);\n  if (!angebot) return l;",
+    ersatz: "  const angebot = abschnittsWahl(l).find((a) => a.id === angebotId)\n    ?? abschnittsWahl(l)[0];\n  if (!angebot) return l;",
+    tor: 'smoke',
+    meldet: 'wird angenommen',
   },
   {
     // **Die Vielfaltsmarke steht nicht mehr im Bild** (v301, S-N3-03).

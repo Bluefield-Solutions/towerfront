@@ -14,6 +14,11 @@ import { Renderer } from './gfx/renderer';
 import { UI } from './ui/ui';
 import { messungAus, messungGewuenscht, messungLaeuft, messungStarten } from './core/messung';
 import { bildspeicherByte } from './gfx/speicher';
+import {
+  type LaufZustand, laufStarten, laufLaden, laufSpeichern, laufLoeschen,
+  abschnittGeschafft, abschnittWaehlen, laufendeKarte, istLaufZuEnde,
+} from './game/lauf';
+import { MAPS } from './data/maps';
 
 // **Die Kostentabelle der Verbesserungen an die Ablage geben - beinahe
 // verlorengegangen.**
@@ -43,6 +48,59 @@ function layout(): void {
 // Das Menue liegt auf der Leinwand, nicht mehr im HTML.
 const menu = new Menu();
 renderer.menu = menu;
+/** **Der laufende Lauf** (v305, S-N1-03).
+ *
+ *  Er lebt hier, nicht im Spielzustand: eine Partie ist ein Abschnitt des
+ *  Laufs, und zwischen zwei Abschnitten gibt es gar keine Partie. Gesichert
+ *  wird er in einer eigenen Ablage (`laufSpeichern`), damit er einen
+ *  Neustart genau an der Grenze uebersteht - das ist die dritte Abnahme der
+ *  Story.
+ *
+ *  **Was der Lauf im Spiel heute TUT und was noch nicht.** Er waehlt den
+ *  naechsten Abschnitt, und die angenommene Auflage wirkt: `laufDruck` auf
+ *  die Lebenspunkte, `laufBeute` auf alles Gold. Er fuettert die
+ *  Lebenskurve NICHT - `laufVersatz` und `laufWellen` bleiben im Spiel auf
+ *  0, und zwar so lange, bis die Kurvenform steht (N1K). Ueber 60 Wellen
+ *  gestreckt ist sie heute gemessen drei Spaziergaenge und eine Wand; sie
+ *  jetzt einzuschalten hiesse, das Spiel gegen eine Zahl zu verschlechtern,
+ *  die noch nicht stimmt. `npm run sim` faehrt sie trotzdem - dort steht
+ *  der Befund, hier steht das Spiel. */
+let lauf: LaufZustand | null = laufLaden();
+menu.lauf = lauf;
+
+function laufSetzen(l: LaufZustand | null): void {
+  lauf = l;
+  menu.lauf = l;
+  if (l) laufSpeichern(l); else laufLoeschen();
+}
+
+/** Einen Abschnitt betreten - dieselbe Stelle fuer den ersten und jeden
+ *  weiteren. Zwei Stellen waeren die naechste, die veraltet (Regel 15). */
+function abschnittBetreten(mapId: string, difficulty: typeof state.difficulty,
+  aussaat: number | undefined): void {
+  state.reset(aussaat, difficulty, mapId, { endless: false });
+  // NACH `reset`: die Auflage gehoert zum Abschnitt, nicht zur Karte.
+  state.laufDruck = lauf?.druck ?? 1;
+  state.laufBeute = lauf?.beute ?? 1;
+  renderer.menu = null;
+  ui.setSpielansicht(true);
+}
+
+menu.onWahl = (angebotId) => {
+  if (!lauf) return;
+  const nachher = abschnittWaehlen(lauf, angebotId);
+  // Ein Angebot, das es nicht gibt, aendert nichts - dann bleibt das Bild
+  // stehen, statt in eine Partie zu springen, die niemand gewaehlt hat.
+  if (nachher === lauf) return;
+  laufSetzen(nachher);
+  const karte = laufendeKarte(nachher);
+  if (!karte) return;
+  menu.result = null;
+  abschnittBetreten(karte, nachher.grad, undefined);
+};
+
+menu.onLaufEnde = () => { laufSetzen(null); };
+
 menu.onStart = (mapId, difficulty, endless) => {
   saveSettings({ map: mapId, difficulty });
   // Eine von Hand gesetzte Aussaat gilt fuer GENAU DIESE Partie und wird
@@ -52,6 +110,21 @@ menu.onStart = (mapId, difficulty, endless) => {
   const aussaat = ui.wunschAussaat ?? undefined;
   ui.wunschAussaat = null;
   state.reset(aussaat, difficulty, mapId, { endless });
+  // **Jede Partie von der Landkarte beginnt einen Lauf** - ausser dem
+  // Endlosmodus, der gar keine Abschnitte hat: er endet nicht, also gibt es
+  // keine Grenze, an der zu waehlen waere.
+  //
+  // Der Plan beginnt bei der gewaehlten Karte; was danach kommt, entscheidet
+  // die Wahl an jeder Grenze. Er steht trotzdem vollstaendig da, weil er der
+  // Nenner der Lebenskurve ist.
+  if (endless) {
+    laufSetzen(null);
+  } else {
+    laufSetzen(laufStarten(difficulty, state.seed,
+      [mapId, ...MAPS.map((m) => m.id).filter((id) => id !== mapId)]));
+  }
+  state.laufDruck = 1;
+  state.laufBeute = 1;
   renderer.menu = null;
   ui.setSpielansicht(true);
 };
@@ -81,6 +154,19 @@ function showResult(): void {
   // Ende ging. Hier wird nur noch abgelesen - siehe auswertung.ts.
   menu.result = auswertung(state);
   menu.resultAge = 0;
+  // **Der Lauf geht an dieser Stelle einen Abschnitt weiter** (S-N1-03).
+  //
+  // Nur nach einem Sieg: eine Niederlage beendet den Lauf. Das ist der
+  // Beschluss aus `Towerfront-NEUBAU.md` - ein Roguelite, in dem man nach
+  // einem verlorenen Abschnitt weiterzieht, hat keinen Einsatz.
+  if (lauf) {
+    if (state.phase === 'won' && !state.endless) {
+      const weiter = abschnittGeschafft(lauf, state.gold, state.lives, state.totalWaves);
+      laufSetzen(istLaufZuEnde(weiter) ? null : weiter);
+    } else {
+      laufSetzen(null);
+    }
+  }
   menu.view = 'result';
   renderer.menu = menu;
   ui.setSpielansicht(false);

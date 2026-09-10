@@ -6,6 +6,9 @@ import {
 } from '../core/storage';
 import { WORLD_H, WORLD_W } from '../data/config';
 import type { Auswertung } from './auswertung';
+import {
+  type LaufZustand, type AbschnittsAngebot, abschnittsWahl, laufendeKarte,
+} from './lauf';
 
 /** Das Menü als Landkarte.
  *
@@ -22,7 +25,7 @@ import type { Auswertung } from './auswertung';
  *  das Menü in der Bildabnahme sehen. Als HTML war es die einzige Fläche des
  *  Spiels, die ich nie selbst beurteilen konnte - und genau dort ist die
  *  Gestaltung abgesackt. */
-export type MenuView = 'map' | 'brief' | 'progress' | 'result';
+export type MenuView = 'map' | 'brief' | 'progress' | 'result' | 'wahl';
 
 /** Ein anklickbarer Bereich. Die Zeichenroutine legt sie an, die Bedienung
  *  liest sie - so kann es keine Schaltfläche geben, die man sieht, aber nicht
@@ -91,6 +94,39 @@ export class Menu {
   result: Auswertung | null = null;
   /** Wie lange die Sterne schon auffliegen - für die Einblendung. */
   resultAge = 0;
+
+  /** **Der laufende Lauf, oder `null`** (S-N1-03).
+   *
+   *  Das Menue haelt ihn nicht, es zeigt ihn: gesetzt wird er von aussen,
+   *  gespeichert wird er dort. Hier steht er, weil die Abschnittswahl ein
+   *  Menuebild ist - dieselbe Formensprache wie die Landkarte, und damit
+   *  auch in der Bildabnahme sichtbar (`menu-wahl`). */
+  lauf: LaufZustand | null = null;
+
+  /** Die Angebote der offenen Wahl - GERECHNET, nicht gemerkt.
+   *
+   *  Ein zweites Feld daneben waere die Stelle, an der Bild und Zustand
+   *  auseinanderlaufen (Regel 15): der Zug ist eine reine Funktion aus
+   *  Aussaat und Abschnitt, also darf ihn jedes Bild neu stellen. */
+  angebote(): AbschnittsAngebot[] {
+    return this.lauf ? abschnittsWahl(this.lauf) : [];
+  }
+
+  /** Steht eine Abschnittswahl an? */
+  wahlOffen(): boolean {
+    return this.angebote().length > 0;
+  }
+
+  /** Die Karte, auf der der Lauf gerade steht - fuer die Zeile ueber der
+   *  Wahl. */
+  laufKarte(): string | null {
+    return this.lauf ? laufendeKarte(this.lauf) : null;
+  }
+
+  /** Ein Angebot ist angenommen worden. */
+  onWahl: (angebotId: string) => void = () => {};
+  /** Der Lauf wird aufgegeben. */
+  onLaufEnde: () => void = () => {};
 
   /** Startet das Spiel - wird von außen gesetzt. */
   onStart: (mapId: string, difficulty: DifficultyId, endless: boolean) => void = () => {};
@@ -210,7 +246,16 @@ export class Menu {
 
     if (id === 'resume') { this.onResume(); return true; }
     if (id === 'retry') { this.onRetry(); return true; }
-    if (id === 'tomap') { this.result = null; this.view = 'map'; return true; }
+    if (id === 'tomap') {
+      this.result = null;
+      // Wer von hier auf die Landkarte geht, gibt den Lauf auf - und das
+      // steht auf dem Knopf, statt still zu passieren.
+      if (this.lauf) this.onLaufEnde();
+      this.view = 'map';
+      return true;
+    }
+    if (id === 'weiter') { this.result = null; this.view = 'wahl'; return true; }
+    if (id.startsWith('wahl:')) { this.onWahl(id.slice(5)); return true; }
     if (id === 'back') { this.view = 'map'; return true; }
     if (id === 'progress') { this.view = 'progress'; return true; }
     // Die Einstellungen sind kein Menue-Bild, sondern ein Dialog darueber.

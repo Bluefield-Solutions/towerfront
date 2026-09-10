@@ -1000,8 +1000,55 @@ Druck. Die vier vorhandenen Karten werden damit Inhalt statt Kampagnenstufen.
 * Keine Karte ist in der Simulation immer die beste Wahl.
 * Der Lauf lässt sich an einer Abschnittsgrenze sichern und später fortsetzen.
 
-**Gegenprobe.** Beide Angebote gleich machen: `sim` muss melden, dass die Wahl
-folgenlos ist.
+**Gebaut in v305 — und die Wahl macht gemessen 142 Punkte aus.**
+
+`abschnittsWahl` steht in `src/game/lauf.ts`: zwei bis drei Angebote, jedes
+eine **Karte mit einer Auflage**. Der Ort ist die Karte, die Entscheidung ist
+die Auflage — `Stille Schicht` (−15 % Leben, −15 % Beute), `Klarer Weg`
+(unverändert), `Reiche Ader` (+30 % Leben, +35 % Beute).
+
+**Der Unterschied steht vor der Wahl im Bild** (`bilder/menu-wahl.png`, in der
+Torabnahme). Jede Kachel trägt beide Seiten des Handels farbig, und die Farbe
+kommt aus der **Zahl**, nicht aus dem Text: mehr Druck rot, weniger Druck
+Kristall, mehr Beute Gold, weniger Beute rot. So steht auf der stillen Schicht
+der Gewinn neben dem Preis, genau wie auf der reichen Ader — eine Kachel, auf
+der nur eine Seite hervorsticht, liest sich als Empfehlung. Der Satz ist aus
+`druck` und `beute` **abgeleitet** (Regel 15).
+
+**Zwei Funde vom Blick, beide an der ersten Aufnahme** (Regel 8): der
+neutrale Satz „Gegner und Beute wie gehabt." lief rechts aus der Kachel
+heraus — er ist jetzt zweiteilig wie die anderen —, und der Knopf lag über der
+zweiten Zeile.
+
+**Gemessen mit `npm run sim --lauf`** (neu, damit eine Frage von zwei Minuten
+nicht den ganzen Durchlauf kostet):
+
+| Grenze | Karte | reich | gerade | ruhig |
+|---|---|---|---|---|
+| 1 | Frostspalte | **1121** (42 Kristall) | 1024 (42) | 985 (42) |
+| 2 | Farnkessel | 984 (27 Kristall) | 839 (22) | **988** (40) |
+
+**Spreizung 142,4** über zwei Grenzen, und **keine Auflage liegt zweimal
+vorn** — das ist die zweite Abnahme, wörtlich. Gemessen wird die Auflage bei
+**gleicher Karte**: sonst mäße die Zahl den Abstand zweier Karten, und die
+Nullprobe fiele nicht auf null.
+
+**Was der Lauf im Spiel heute tut und was noch nicht.** Er wählt den nächsten
+Abschnitt, und die Auflage wirkt (`laufDruck` auf die Lebenspunkte,
+`laufBeute` auf alles Gold). Er füttert die Lebenskurve **nicht** —
+`laufVersatz` und `laufWellen` bleiben im Spiel auf 0, bis die Kurvenform
+steht (N1K). Über 60 Wellen gestreckt ist sie gemessen drei Spaziergänge und
+eine Wand; sie jetzt einzuschalten hieße, das Spiel gegen eine Zahl zu
+verschlechtern, die noch nicht stimmt. `npm run sim` fährt sie trotzdem —
+dort steht der Befund, im Spiel steht das Spiel.
+
+**Gegenprobe.** Vier: alle drei Auflagen gleich machen (`sim` meldet
+„folgenlos", Spreizung fällt von 142,4 auf exakt 0), den Druckfaktor aus der
+Lebenspunktrechnung nehmen (dasselbe), die Wahl nie aufgehen lassen (`sim`
+meldet, dass der Lauf keine Wahlen hat), und eine erfundene Kennung annehmen
+lassen (der Rauchtest meldet es — sonst wäre der Lauf über die Ablage zu
+stellen). Dazu eine **bestehende** Probe, die `npm run muster` im selben Lauf
+gemeldet hat, weil ihre Zeile sich geändert hat.
 
 **Schliesst, wenn:** `text src/game/lauf.ts "abschnittsWahl" >= 2`
 

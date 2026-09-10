@@ -3883,6 +3883,96 @@ step('Der Lauf ueberlebt einen Neustart', async () => {
   laufLoeschen();
 });
 
+// --- Die Abschnittswahl (v305, S-N1-03).
+//
+// Drei Zusagen, die kein Bild und keine Simulation fangen kann:
+//
+// 1. **Das Angebot ist eine reine Funktion aus Aussaat und Abschnitt.** Ein
+//    Lauf, der an der Grenze gesichert und spaeter geladen wird, findet
+//    dasselbe Angebot vor - sonst waere "spaeter fortsetzen" eine andere
+//    Wahl als die, vor der man stand. Das ist die dritte Abnahme der Story.
+// 2. **Ein Angebot, das es nicht gibt, aendert nichts.** Sonst waere der
+//    Lauf ueber die Ablage zu stellen: eine Kennung mit `druck` 0,1
+//    hineingeschrieben, und der Abschnitt ist geschenkt.
+// 3. **Die Wahl setzt Karte UND Auflage.** Beides zusammen ist das Angebot;
+//    wer nur die Karte uebernaehme, liesse den sichtbaren Handel fallen.
+step('Die Abschnittswahl ist reproduzierbar und geprueft', async () => {
+  const { laufStarten, abschnittGeschafft, abschnittsWahl, abschnittWaehlen,
+    laufSpeichern, laufLaden, laufLoeschen, laufendeKarte, WAHLARTEN,
+    ANGEBOTE_JE_WAHL } = await import('../src/game/lauf');
+
+  laufLoeschen();
+  const frisch = laufStarten('normal', 4242);
+  if (abschnittsWahl(frisch).length) {
+    throw new Error('Ein frischer Lauf haelt schon eine Wahl offen. Gewaehlt wird '
+      + 'NACH einem Abschnitt, sonst waere der erste Ort keine Entscheidung des '
+      + 'Spielers auf der Landkarte mehr.');
+  }
+
+  const grenze = abschnittGeschafft(frisch, 500, 40, ALLE_KARTEN[0].waves.length);
+  const angebot = abschnittsWahl(grenze);
+  if (angebot.length < 2 || angebot.length > ANGEBOTE_JE_WAHL) {
+    throw new Error(`An der Grenze stehen ${angebot.length} Angebote. Eines ist keine `
+      + `Wahl, mehr als ${ANGEBOTE_JE_WAHL} passen nicht ins Bild.`);
+  }
+  if (new Set(angebot.map((a) => a.karte)).size !== angebot.length) {
+    throw new Error('Zwei Angebote zeigen dieselbe Karte - dann schrumpft die Wahl '
+      + 'still auf die Auflage zusammen.');
+  }
+  if (new Set(angebot.map((a) => a.art)).size !== angebot.length) {
+    throw new Error('Zwei Angebote tragen dieselbe Auflage.');
+  }
+  // Der Satz ist ABGELEITET, nicht danebengeschrieben (Regel 15).
+  for (const a of angebot) {
+    const art = WAHLARTEN.find((w) => w.id === a.art)!;
+    if (a.druck !== art.druck || a.beute !== art.beute) {
+      throw new Error(`Das Angebot "${a.id}" traegt andere Zahlen als seine Auflage.`);
+    }
+    if (art.druck !== 1 && !a.satz.includes(`${Math.round(Math.abs(art.druck - 1) * 100)} %`)) {
+      throw new Error(`Der Satz von "${a.id}" nennt den Druck nicht: "${a.satz}". `
+        + 'Dann steht der Unterschied nicht vor der Wahl im Bild.');
+    }
+  }
+
+  // 1. Ueber die Ablage hinweg dasselbe Angebot.
+  laufSpeichern(grenze);
+  const zurueck = laufLaden();
+  if (!zurueck) throw new Error('Ein Lauf an der Grenze kommt nicht zurueck.');
+  const wieder = abschnittsWahl(zurueck);
+  if (wieder.map((a) => a.id).join('|') !== angebot.map((a) => a.id).join('|')) {
+    throw new Error(`Nach dem Laden steht ein anderes Angebot da `
+      + `(${wieder.map((a) => a.id).join(', ')} statt `
+      + `${angebot.map((a) => a.id).join(', ')}).`);
+  }
+
+  // 2. Eine erfundene Kennung aendert nichts.
+  if (abschnittWaehlen(grenze, 'spiralhain:geschenkt') !== grenze) {
+    throw new Error('Ein Angebot, das gar nicht im Zug steht, wird angenommen. '
+      + 'Dann laesst sich der Lauf ueber die Ablage stellen.');
+  }
+
+  // 3. Karte und Auflage kommen beide an.
+  const nimm = angebot[angebot.length - 1];
+  const nachher = abschnittWaehlen(grenze, nimm.id);
+  if (laufendeKarte(nachher) !== nimm.karte) {
+    throw new Error(`Gewaehlt wurde ${nimm.karte}, gelaufen wird auf `
+      + `${laufendeKarte(nachher)}.`);
+  }
+  if (nachher.druck !== nimm.druck || nachher.beute !== nimm.beute) {
+    throw new Error('Die Auflage des Angebots kommt im Lauf nicht an - dann ist der '
+      + 'sichtbare Handel ein Bild ohne Wirkung.');
+  }
+  if (nachher.wahlOffen) throw new Error('Die Wahl bleibt nach dem Waehlen offen.');
+  if (abschnittsWahl(nachher).length) {
+    throw new Error('Nach der Wahl steht immer noch ein Angebot da.');
+  }
+  if (new Set(nachher.abschnitte).size !== nachher.abschnitte.length) {
+    throw new Error(`Der Plan des Laufs traegt eine Karte doppelt `
+      + `(${nachher.abschnitte.join(', ')}).`);
+  }
+  laufLoeschen();
+});
+
 // --- Die Vielfaltsbeute steht IM BILD (v301, S-N3-03).
 //
 // Die Abnahme der Story verlangt es woertlich: "Die Zahl steht im Bild, nicht

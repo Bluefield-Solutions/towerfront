@@ -489,6 +489,11 @@ npm run inspektor   stellt die Beweismittel fuer den INSPEKTOR: Aufnahmen des
                     weit kostet einen ueberfluessigen Durchgang, zu eng einen
                     ungesehenen Stand.
 npm run kritik      Wertung nach Testerkategorien, Ziel über 90
+npm run sim -- --lauf  nur der Lauf und seine Abschnittswahl - gemessen 104 s
+                    statt eines vollen Durchlaufs. Es urteilt trotzdem: die
+                    Spreizung zwischen den Auflagen (v305 gemessen 142,4) und
+                    die Zahl der Wahlen sind dieselben Fehler wie im vollen
+                    Lauf. Derselbe Grund wie bei `--faehigkeiten`.
 npm run c18         die C18-Frage allein: ist die erste Karte ohne
                     Verbesserungen zu gewinnen? Zwei Sekunden statt zwei
                     Minuten - der Rauchtest misst dasselbe, braucht dafür
@@ -672,6 +677,17 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Die Abschnittswahl (v305).** Nach jedem gewonnenen Abschnitt stehen zwei bis
+drei Angebote zur Wahl - jedes eine KARTE mit einer AUFLAGE: Stille Schicht
+(−15 % Leben, −15 % Beute), Klarer Weg, Reiche Ader (+30 % / +35 %). Der Ort
+ist die Karte, die Entscheidung ist die Auflage. Gemessen mit
+`npm run sim -- --lauf`: Spreizung **142,4** ueber zwei Grenzen, und keine
+Auflage liegt zweimal vorn. Gemessen wird bei GLEICHER Karte - sonst maesse
+die Zahl den Abstand zweier Karten, und die Nullprobe fiele nicht auf null.
+**Der Lauf fuettert die Lebenskurve im Spiel weiterhin nicht** (`laufVersatz`
+und `laufWellen` bleiben 0), bis die Kurvenform steht (N1K): ueber 60 Wellen
+gestreckt ist sie drei Spaziergaenge und eine Wand.
+
 **Der Kernraub (v262).** Wer den Kristall erreicht, stirbt nicht - er nimmt
 einen Splitter und laeuft seine Bahn mit 2,4-fachem Tempo zurueck zum Tor. Der
 Kristall faellt sofort; erwischt man den Raeuber, schwebt der Splitter zurueck
@@ -803,7 +819,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v304. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v305. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

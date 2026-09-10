@@ -52,6 +52,7 @@ const { TOWERS, TOWER_ORDER } = await import('../src/data/towers.ts');
 const { wirkungAnlegen } = await import('../src/data/wirkungen.ts');
 const { candidateSpots } = await import('./spots.ts');
 const { Menu } = await import('../src/game/menu.ts');
+const { laufStarten, abschnittGeschafft } = await import('../src/game/lauf.ts');
 const { recordEndlos } = await import('../src/core/storage.ts');
 // Wichtig: nicht die has*-Funktionen. Die sagen nur, ob ein Bild im Verzeichnis
 // steht - nicht, ob es dekodiert wurde. Genau daran ist die erste Gegenprobe
@@ -85,7 +86,7 @@ const ersterTurm = (g) => g.gebaute[0];
 // das es bewacht, laesst genau die Luecke.
 const TOR = ['menu-karte', 'menu-einweisung', 'menu-fortschritt', 'menu-sieg',
   'menu-niederlage', 'welle8', 'kristall-riss', 'kernraub', 'zier-beruehrung',
-  'menu-tastatur', 'weiche'];
+  'menu-tastatur', 'weiche', 'menu-wahl'];
 const nurTor = process.argv.includes('--tor');
 
 /** Eine Aufnahme: Zustand herstellen, ein paar Bilder laufen lassen, ausgeben.
@@ -287,6 +288,19 @@ takes.push(['menu-tastatur', () => shot('menu-tastatur', 844, 390, (s, r) => {
   r.menu = new Menu();
   r.menu.view = 'map';
   r.menu.tastenId = 'node:1';
+  return 20;
+})]);
+
+takes.push(['menu-wahl', () => shot('menu-wahl', 844, 390, (s, r) => {
+  // **Die Abschnittswahl** (S-N1-03). Der Lauf steht an der Grenze nach dem
+  // ersten Abschnitt - hergestellt ueber dieselben Funktionen, die das Spiel
+  // benutzt, nicht ueber ein von Hand gebautes Angebot: eine Aufnahme, die
+  // ihren Zustand selbst erfindet, zeigt nicht, was ein Spieler sieht.
+  s.reset(1, 'normal', 'spiralhain');
+  const lauf = abschnittGeschafft(laufStarten('normal', 4242), 640, 38, 15);
+  r.menu = new Menu();
+  r.menu.lauf = lauf;
+  r.menu.view = 'wahl';
   return 20;
 })]);
 

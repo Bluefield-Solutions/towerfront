@@ -51,6 +51,7 @@ export function drawMenu(ctx: CanvasRenderingContext2D, m: Menu): void {
   if (m.view === 'result') drawResult(ctx, m, add);
   else if (m.view === 'map') drawMap(ctx, m, add);
   else if (m.view === 'brief') drawBrief(ctx, m, add);
+  else if (m.view === 'wahl') drawWahl(ctx, m, add);
   else drawProgress(ctx, m, add);
   ctx.restore();
 
@@ -222,6 +223,18 @@ function drawMap(
 
   // Fortsetzen, falls ein Spielstand da ist - das ist die häufigste Absicht,
   // also steht es vorn und nicht in einer Unterebene.
+  // **Ein Lauf, der an einer Abschnittsgrenze steht, ist von hier aus
+  //   fortzusetzen** (S-N1-03, dritte Abnahme).
+  //
+  // Er steht ueber dem Spielstand und nicht an seiner Stelle: beides kann
+  // zugleich vorliegen - ein Lauf an der Grenze und eine halb gespielte
+  // Partie derselben Karte -, und wer eines von beiden verschwiege, liesse
+  // den Spieler das andere verlieren.
+  if (m.wahlOffen() && m.lauf) {
+    button(ctx, add, 'weiter', WORLD_W / 2 - 300, WORLD_H - (m.hasSave ? 228 : 132), 600, 76,
+      `Lauf fortsetzen · Abschnitt ${m.lauf.abschnitt + 1} von ${m.lauf.abschnitte.length}`,
+      C.gold, m.pressed === 'weiter', true);
+  }
   if (m.hasSave) {
     button(ctx, add, 'resume', WORLD_W / 2 - 300, WORLD_H - 132, 600, 76,
       m.saveLabel, C.crystal, m.pressed === 'resume', true);
@@ -340,6 +353,100 @@ function drawBrief(
 
   button(ctx, add, 'start', x0 + w - 60 - 420, y0 + 662, 420, 92,
     'Spielen', C.crystal, m.pressed === 'start', true);
+}
+
+// ---------------------------------------------------------- Die Abschnittswahl
+
+/** **Die Wahl zwischen zwei Abschnitten** (v305, S-N1-03).
+ *
+ *  Die erste Abnahme der Story lautet: der Unterschied steht VOR der Wahl im
+ *  Bild, nicht danach in der Bilanz. Deshalb traegt jede Kachel drei Zeilen -
+ *  den Ort, die Auflage und den Handel als Zahl. Der Satz ist abgeleitet
+ *  (`angebotSatz`), also kann er nicht von den Zahlen abweichen, gegen die
+ *  gespielt wird.
+ *
+ *  Gezeichnet und nicht als HTML, aus demselben Grund wie die Landkarte: im
+ *  Menue ist jedes Bedienelement gemalt (Regel 6), und nur so sehe ich es in
+ *  der Bildabnahme. */
+function drawWahl(
+  ctx: CanvasRenderingContext2D, m: Menu, add: (h: Hotspot) => Hotspot,
+): void {
+  const angebote = m.angebote();
+  // Kein Angebot heisst: es gibt nichts zu waehlen. Dann ist die Landkarte
+  // die richtige Antwort und nicht ein leeres Bild mit einer Ueberschrift.
+  if (!angebote.length || !m.lauf) { drawMap(ctx, m, add); return; }
+  const lauf = m.lauf;
+
+  const x0 = WORLD_W * 0.5 - 620, y0 = 150, w = 1240, h = 740;
+  ctx.save();
+  ctx.fillStyle = 'rgba(8,13,28,0.9)';
+  roundRect(ctx, x0, y0, w, h, 28); ctx.fill();
+  ctx.strokeStyle = hexA(C.crystal, 0.3); ctx.lineWidth = 2; ctx.stroke();
+  ctx.restore();
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = C.stone;
+  ctx.font = '700 54px system-ui, sans-serif';
+  ctx.fillText('Wohin als Nächstes?', WORLD_W / 2, y0 + 104);
+
+  // Wo der Lauf steht - die Klammer, die diese Wahl ueberhaupt erst zu einer
+  // macht. Ohne sie waere es dieselbe Frage in jedem Abschnitt.
+  ctx.font = '400 24px system-ui, sans-serif';
+  ctx.fillStyle = C.stoneDark;
+  ctx.fillText(`Abschnitt ${lauf.abschnitt + 1} von ${lauf.abschnitte.length}`
+    + ` · ${lauf.welleGesamt} Wellen gefahren`
+    + ` · ${lauf.kristall} Kristall`, WORLD_W / 2, y0 + 148);
+
+  const n = angebote.length;
+  const luecke = 30;
+  const kw = (w - 140 - luecke * (n - 1)) / n;
+  angebote.forEach((a, i) => {
+    const kx = x0 + 70 + i * (kw + luecke);
+    const ky = y0 + 190;
+    const kh = 380;
+    const id = `wahl:${a.id}`;
+    const hell = m.pressed === id;
+    ctx.save();
+    ctx.fillStyle = hexA(C.crystal, hell ? 0.2 : 0.09);
+    roundRect(ctx, kx, ky, kw, kh, 18); ctx.fill();
+    ctx.strokeStyle = hexA(C.crystal, hell ? 0.85 : 0.45);
+    ctx.lineWidth = 2; ctx.stroke();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = C.stone;
+    ctx.font = '700 38px system-ui, sans-serif';
+    ctx.fillText(a.name, kx + kw / 2, ky + 78);
+
+    ctx.fillStyle = hexA(C.crystal, 0.9);
+    ctx.font = '700 22px system-ui, sans-serif';
+    ctx.fillText(a.auflage.toUpperCase(), kx + kw / 2, ky + 126);
+
+    // Der Handel als Zahl - zwei Zeilen, damit Druck und Beute nicht in
+    // einem Satz verschwimmen.
+    const teile = a.satz.split(' · ');
+    ctx.font = '400 26px system-ui, sans-serif';
+    // **Jede Kachel zeigt beide Seiten des Handels farbig** - und die Farbe
+    // kommt aus der ZAHL, nicht aus dem Text: mehr Druck ist rot, weniger
+    // Druck ist Kristall, mehr Beute ist Gold, weniger Beute ist rot. So
+    // steht auf der stillen Schicht der Gewinn neben dem Preis, genauso wie
+    // auf der reichen Ader - eine Kachel, auf der nur die eine Seite
+    // hervorsticht, liest sich als Empfehlung.
+    const farben = [
+      a.druck === 1 ? C.stoneDark : (a.druck > 1 ? C.danger : C.crystal),
+      a.beute === 1 ? C.stoneDark : (a.beute > 1 ? C.gold : C.danger),
+    ];
+    teile.forEach((t, j) => {
+      ctx.fillStyle = farben[j] ?? C.stoneDark;
+      ctx.fillText(t, kx + kw / 2, ky + 196 + j * 42);
+    });
+    ctx.restore();
+
+    button(ctx, add, id, kx + 26, ky + kh - 100, kw - 52, 82,
+      'Hierhin', C.crystal, m.pressed === id, true);
+  });
+
+  button(ctx, add, 'tomap', x0 + 70, y0 + h - 130, 320, 76,
+    'Lauf beenden', C.stoneDark, m.pressed === 'tomap', false);
 }
 
 // ------------------------------------------------------------- Der Fortschritt
@@ -495,6 +602,18 @@ function drawResult(
   // Anlauf war "Noch einmal" immer hervorgehoben - das schickt den Spieler
   // nach einem gewonnenen Level in dasselbe Level zurück.
   const bw = (w - 200) / 2;
+  // **Steht eine Abschnittswahl an, ist SIE der naechste Schritt** (S-N1-03).
+  //
+  // Dann fuehrt der gefuellte Knopf weiter im Lauf, und "Zur Karte" heisst
+  // was es tut: den Lauf beenden. "Noch einmal" faellt weg - denselben
+  // Abschnitt noch einmal zu fahren gibt es in einem Lauf nicht.
+  if (m.wahlOffen()) {
+    button(ctx, add, 'weiter', x0 + 70, y0 + h - 128, bw, 88,
+      'Weiter im Lauf', C.crystal, m.pressed === 'weiter', true);
+    button(ctx, add, 'tomap', x0 + 70 + bw + 60, y0 + h - 128, bw, 88,
+      'Lauf beenden', C.stoneDark, m.pressed === 'tomap', false);
+    return;
+  }
   button(ctx, add, 'tomap', x0 + 70, y0 + h - 128, bw, 88,
     'Zur Karte', r.won ? C.crystal : C.stoneDark, m.pressed === 'tomap', r.won);
   button(ctx, add, 'retry', x0 + 70 + bw + 60, y0 + h - 128, bw, 88,

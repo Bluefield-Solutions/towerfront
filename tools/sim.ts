@@ -9,7 +9,8 @@ import { ZIELWAHL_ORDNUNG, type Zielwahl, type Tower } from '../src/game/types';
 import { DIFFICULTIES, DIFFICULTY_ORDER, hpScale, type DifficultyId } from '../src/data/difficulty';
 import {
   laufStarten, abschnittGeschafft, laufendeKarte, istLaufZuEnde, wellenDesLaufs,
-  wellenDesAbschnitts,
+  wellenDesAbschnitts, abschnittsWahl, abschnittWaehlen, WAHLARTEN,
+  type AbschnittsAngebot,
 } from '../src/game/lauf';
 
 const START_LIVES = DIFFICULTIES.normal.startLives;
@@ -428,6 +429,10 @@ const BESTLEISTUNG: Bot = {
 
 const MEISTER = BOTS[0];
 const NUR_MESSEN = process.argv.slice(2).includes('--faehigkeiten');
+/** Nur der Lauf und seine Wahl - fuer die Eichrunde. Derselbe Grund wie bei
+ *  `--faehigkeiten`: eine Frage von zwei Minuten soll nicht den ganzen
+ *  Durchlauf kosten. Es urteilt trotzdem, es meldet dieselben Fehler. */
+const NUR_LAUF = process.argv.slice(2).includes('--lauf');
 
 /** Bauplaetze nach abgedeckter Wegstrecke bewertet.
  *
@@ -935,6 +940,96 @@ function kartenzugMessen(): void {
     + `werden von mindestens einem Stil genommen, ${immer.length} von jedem immer.`);
 }
 
+/** **Wieviel eine Abschnittswahl ausmacht** (S-N1-03).
+ *
+ *  Gemessen wird die AUFLAGE bei gleicher Karte: dieselbe Grenze, dasselbe
+ *  Ziel, dreimal - einmal je Art. Damit misst die Zahl die Wahl und nicht
+ *  den Unterschied zwischen zwei Karten, und die Nullprobe der Story
+ *  ("beide Angebote gleich machen") laesst die Spreizung wirklich auf null
+ *  fallen statt auf den Kartenabstand.
+ *
+ *  Gemessen an den Grenzen 1 und 2 - nicht an 3: dort liegt heute die Wand
+ *  aus N1K, und ein Abschnitt, den keine Auflage gewinnt, misst die Kurve
+ *  statt der Wahl (Regel 13). */
+// Gemessen 142,4 in v305 (Grenze 1: reich 1121 gegen ruhig 985; Grenze 2:
+// ruhig 988 gegen gerade 839). Die Schwelle steht bei einem knappen Viertel
+// davon: sie soll melden, dass die Wahl ueberhaupt etwas AUSMACHT, nicht wie
+// stark - dafuer ist die Auflage noch nicht geeicht (N1K). Die Nullprobe der
+// Story gibt exakt 0, denn ohne Unterschied zwischen den Auflagen laufen drei
+// gleiche Aussaaten durch dieselbe Rechnung.
+const WAHL_SPREIZUNG_MIN = 40;
+
+function wahlNutzen(r: Result): number {
+  // Gewinnen zaehlt am schwersten, dann der Kristall, und das uebrige Gold
+  // nur noch als Feinheit - es ist am Ende eines Abschnitts fast nichts wert.
+  return (r.won ? 500 : 0) + r.lives * 10 + (r.earned - r.spent) / 20;
+}
+
+function abschnittswahlMessen(): void {
+  console.log('\nDie Abschnittswahl (S-N1-03):');
+  const gesamt = wellenDesLaufs(laufStarten('normal', AUSSAATEN[0]));
+  const bester = new Map<string, number>();
+  for (const a of WAHLARTEN) bester.set(a.id, 0);
+  const spreizungen: number[] = [];
+  let faelle = 0;
+
+  for (const grenze of [1, 2]) {
+    // Bis an die Grenze fahren - ohne zu spielen. Gebraucht werden nur der
+    // Wellenversatz und das Angebot, und beides ist gerechnet.
+    let l = laufStarten('normal', AUSSAATEN[0]);
+    while (l.abschnitt < grenze) {
+      const karte = laufendeKarte(l)!;
+      l = abschnittGeschafft(l, 0, 0, wellenDesAbschnitts(karte));
+      const angebot = abschnittsWahl(l);
+      if (angebot.length) l = abschnittWaehlen(l, angebot[0].id);
+    }
+    // Und jetzt die Wahl selbst: dieselbe Karte, jede Auflage einmal.
+    const offen = abschnittGeschafft(l, 0, 0, 0);
+    const angebote: AbschnittsAngebot[] = abschnittsWahl(offen);
+    const karte = angebote.length ? angebote[0].karte : laufendeKarte(l)!;
+    const werte: { art: string; nutzen: number; r: Result }[] = [];
+    for (const art of WAHLARTEN) {
+      const r = play(mixedPlanBase, () => 0, MEISTER, 'normal', karte, {
+        seed: l.saat, laufVersatz: l.welleGesamt, laufWellen: gesamt,
+        druck: art.druck, beute: art.beute,
+      });
+      werte.push({ art: art.id, nutzen: wahlNutzen(r), r });
+    }
+    werte.sort((a, b) => b.nutzen - a.nutzen);
+    bester.set(werte[0].art, (bester.get(werte[0].art) ?? 0) + 1);
+    spreizungen.push(werte[0].nutzen - werte[werte.length - 1].nutzen);
+    faelle += 1;
+    console.log(`  Grenze ${grenze} (${karte}): `
+      + werte.map((w) => `${w.art} ${w.nutzen.toFixed(0)}`
+        + ` (${w.r.won ? `${w.r.lives} Kristall` : `Welle ${w.r.wave}`})`).join(' · '));
+  }
+
+  const spreizung = spreizungen.reduce((a, b) => a + b, 0) / Math.max(1, spreizungen.length);
+  const immer = [...bester.entries()].filter(([, n]) => n === faelle);
+  console.log(`  Spreizung ${spreizung.toFixed(1)} ueber ${faelle} Grenzen `
+    + `(Soll >= ${WAHL_SPREIZUNG_MIN}), beste Auflage je Grenze: `
+    + [...bester.entries()].map(([id, n]) => `${id} ${n}`).join(', '));
+
+  // **Die Abnahme der Story, woertlich - und die Gegenprobe faellt genau
+  //   hier durch**: sind alle Auflagen gleich, geht jede Grenze gleich aus.
+  if (spreizung < WAHL_SPREIZUNG_MIN) {
+    errors.push(`Die Abschnittswahl ist folgenlos: die Spreizung zwischen der besten `
+      + `und der schlechtesten Auflage betraegt ${spreizung.toFixed(1)} von verlangten `
+      + `${WAHL_SPREIZUNG_MIN}. Drei Angebote, die gleich ausgehen, sind ein Angebot `
+      + 'mit drei Namen.');
+  }
+  // Und die andere Richtung: eine Auflage, die IMMER vorn liegt, ist keine
+  // Wahl, sondern eine Ansage. Sie steht heute als Hinweis da und nicht als
+  // Fehler - zwei Grenzen sind zu wenig, um "immer" zu behaupten, und die
+  // Wand aus N1K haelt die dritte besetzt.
+  if (immer.length) {
+    console.log(`  OFFEN (N1-Wahl): ${immer.map(([id]) => id).join(', ')} liegt an allen `
+      + `${faelle} gemessenen Grenzen vorn. Zwei Grenzen beweisen kein "immer" - `
+      + 'die dritte ist heute die Wand aus N1K, und geeicht wird die Auflage, sobald '
+      + 'die Kurve des Laufs steht.');
+  }
+}
+
 function laufMessen(): void {
   console.log('\nDer Lauf ueber alle Abschnitte (S-N1-01):');
   let lauf = laufStarten('normal', AUSSAATEN[0]);
@@ -943,6 +1038,7 @@ function laufMessen(): void {
   let dauer = 0;
   let gefahren = 0;
   let abschnitte = 0;
+  const gewaehlt: string[] = [];
 
   while (!istLaufZuEnde(lauf)) {
     const karte = laufendeKarte(lauf)!;
@@ -962,15 +1058,30 @@ function laufMessen(): void {
       + `${r.won ? 'gewonnen' : `verloren in Welle ${r.wave}`}, `
       + `Kristall ${r.lives}/${r.maxLives}, ${r.dauer.toFixed(0)} s`);
     // Weiter geht es auch nach einer Niederlage: gemessen wird hier der
-    // LAUF, nicht das Koennen des Bots. Ob eine Niederlage den Lauf beendet,
-    // entscheidet S-N1-03, nicht dieses Werkzeug.
+    // LAUF, nicht das Koennen des Bots.
     lauf = abschnittGeschafft(lauf, r.earned - r.spent, r.lives, wellen);
+    // **Und an der Grenze wird gewaehlt** (S-N1-03). Der Bot nimmt den
+    // Klaren Weg, wo es ihn gibt - dieser Lauf misst die KURVE, und eine
+    // Auflage darueber machte aus zwei Befunden einen. Was die Wahl
+    // ausmacht, misst `abschnittswahlMessen` eigens.
+    const angebot = abschnittsWahl(lauf);
+    if (angebot.length) {
+      const nimm = angebot.find((a) => a.art === 'gerade') ?? angebot[0];
+      lauf = abschnittWaehlen(lauf, nimm.id);
+      gewaehlt.push(`${nimm.name} (${nimm.auflage})`);
+    }
   }
 
   console.log(`  ${abschnitte} von ${lauf.abschnitte.length} Abschnitten gewonnen, `
     + `${gefahren} von ${gesamt} Wellen gefahren, ${dauer.toFixed(0)} s `
     + `(Horizont ${LAUF_HORIZONT_S} s).`);
   console.log(`  Rampe je Abschnitt: ${rampen.map((r) => r.toFixed(2)).join(' -> ')}`);
+  if (gewaehlt.length) console.log(`  Gewaehlt an den Grenzen: ${gewaehlt.join(' -> ')}`);
+  if (lauf.gewaehlt.length !== lauf.abschnitte.length - 1) {
+    errors.push(`Der Lauf hat ${lauf.abschnitte.length} Abschnitte, aber nur `
+      + `${lauf.gewaehlt.length} Wahlen. An jeder Grenze steht eine - sonst faellt der `
+      + 'Lauf still auf seinen Plan zurueck, und die Wahl waere ein Bild ohne Wirkung.');
+  }
 
   if (dauer > LAUF_HORIZONT_S) {
     errors.push(`Ein voller Lauf dauert ${dauer.toFixed(0)} s und sprengt damit den `
@@ -1311,6 +1422,12 @@ function play(
     laufVersatz?: number;
     /** Wieviele Wellen der ganze Lauf traegt. */
     laufWellen?: number;
+    /** Die Auflage der Abschnittswahl (S-N1-03): Faktor auf die
+     *  Lebenspunkte und Faktor auf alles Gold. Ohne Angabe je 1 - eine
+     *  Wirkung, die sich nicht abschalten laesst, ist nicht gemessen,
+     *  sondern behauptet (Regel 13). */
+    druck?: number;
+    beute?: number;
   } = {},
 ): Result {
   const s = new GameState(mapId);
@@ -1318,6 +1435,8 @@ function play(
   if (opts.vielfalt !== undefined) s.vielfaltZuschlag = opts.vielfalt;
   if (opts.laufVersatz !== undefined) s.laufVersatz = opts.laufVersatz;
   if (opts.laufWellen !== undefined) s.laufWellen = opts.laufWellen;
+  if (opts.druck !== undefined) s.laufDruck = opts.druck;
+  if (opts.beute !== undefined) s.laufBeute = opts.beute;
   s.reset(opts.seed ?? AUSSAATEN[0], difficulty, mapId,
     { endless: opts.endless, perks: opts.perks ?? NO_PERKS,
       karten: opts.karten ?? MAPS.length });
@@ -2414,11 +2533,19 @@ const mixedPlan = mixedPlanBase;
       + `   Mittel ${mittel.toFixed(2)}`);
   }
 
+  if (NUR_LAUF) {
+    laufMessen();
+    abschnittswahlMessen();
+    for (const e of errors) console.log(`FEHLER: ${e}`);
+    process.exit(errors.length ? 1 : 0);
+  }
+
   weichenstileMessen();
   foerdererMessen();
   wiederholungMessen();
   vielfaltMessen();
   laufMessen();
+  abschnittswahlMessen();
   kartenzugMessen();
   werftMessen();
   knappheitMessen();

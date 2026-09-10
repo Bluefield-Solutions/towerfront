@@ -1449,7 +1449,12 @@ export class GameState {
     // an, wo der erste aufgehoert hat, statt am flachen Anfang der Kurve.
     const ramp = hpScale(this.diff, this.laufVersatz + welle,
       this.laufWellen || this.waves.length, this.map.balance.hpMul);
-    return Math.round(ENEMIES[id].hp * hpMul * ramp);
+    // **Und die Auflage des Abschnitts liegt darueber** (v305, S-N1-03).
+    //
+    // Sie ist ein Faktor und kein zweiter Kurvenparameter: die Wahl aendert,
+    // wie schwer DIESER Abschnitt ist, nicht wie die Kurve laeuft. Ohne Wahl
+    // steht sie auf 1, und dann rechnet die Zeile dasselbe wie in v304.
+    return Math.round(ENEMIES[id].hp * hpMul * ramp * this.laufDruck);
   }
 
   /** Wieviele Wellen dieses Laufs VOR diesem Abschnitt schon gefahren sind.
@@ -1458,6 +1463,12 @@ export class GameState {
   /** Wieviele Wellen der ganze Lauf traegt - der Nenner der Lebenskurve.
    *  0 heisst: einzelne Karte, dann gilt die Wellenzahl dieser Karte. */
   laufWellen = 0;
+  /** Faktor auf die Lebenspunkte, aus der Abschnittswahl (S-N1-03). 1 heisst:
+   *  keine Auflage - einzelne Karte oder Abschnitt ohne Wahl. */
+  laufDruck = 1;
+  /** Faktor auf alles Gold, aus derselben Wahl. Beide zusammen sind der
+   *  Handel, den das Angebot sichtbar macht: mehr Druck gegen mehr Beute. */
+  laufBeute = 1;
 
   /** Gold fuer einen frueh gestarteten Angriff. Faellt linear auf null. */
   get earlyBonus(): number {
@@ -1516,7 +1527,8 @@ export class GameState {
     if (i < 0) return;
     this.laufende.splice(i, 1);
     const wave = this.waveAt(welle);
-    const payout = Math.round(wave.bonus * this.diff.bonusMul * this.map.balance.goldMul);
+    const payout = Math.round(wave.bonus * this.diff.bonusMul * this.map.balance.goldMul
+      * this.laufBeute);
     this.gold += payout;
     this.stats.goldEarned += payout;
     this.float(this.goal.x, this.goal.y - 56, `Welle ${welle + 1} geschafft  +${payout}`,
@@ -2693,7 +2705,7 @@ export class GameState {
       const bounty = Math.max(1, Math.round(vielfaltsBeute(def.bounty, arten,
         this.vielfaltZuschlag) * this.diff.bountyMul
         * this.map.balance.goldMul * this.foerderFaktor(e.x, e.y)
-        * this.zugWirkung.beuteMul));
+        * this.zugWirkung.beuteMul * this.laufBeute));
       this.gold += bounty;
       this.stats.goldEarned += bounty;
       this.stats.kills++;
@@ -2714,7 +2726,7 @@ export class GameState {
       // an eine Zahl, die von ihr gar nicht kommt.
       const ohne = Math.max(1, Math.round(def.bounty * this.diff.bountyMul
         * this.map.balance.goldMul * this.foerderFaktor(e.x, e.y)
-        * this.zugWirkung.beuteMul));
+        * this.zugWirkung.beuteMul * this.laufBeute));
       const vielfalt = bounty > ohne ? ` ×${arten}` : '';
       this.float(e.x, e.y - 12, `+${bounty}${vielfalt}`, C.gold, def.boss ? 30 : 20);
       // Der Funke traegt den AKZENT, nicht die Grundfarbe.

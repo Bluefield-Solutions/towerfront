@@ -587,10 +587,15 @@ const MESS_ZUSCHLAG = 0.35;
  *  Verteiler. Gemessen sind 344 bis 693 je Karte; 200 laesst Luft nach unten
  *  und faengt trotzdem den Fall, dass die Freimenge wegfaellt. */
 const TRENNUNG_MIN = 200;
+/** Wieviel Kristall der Aufschlag den perfekten Verteiler kosten darf: nichts.
+ *  Null ist hier keine strenge Zahl, sondern die Aussage selbst - wer nicht
+ *  haeuft, wird von einer Regel gegen das Haeufen nicht getroffen. */
+const VERTEILER_VERLUST_MAX = 0;
 
 function wiederholungMessen(): void {
   console.log('\nWiederholung (Haeufen gegen Verteilen, mit Aufschlag und ohne):');
   const trennung: number[] = [];
+  const verteilerLeben: number[] = [];
   const haeufen: TowerId[] = ['arrow'];
   const verteilen: TowerId[] = ['arrow', 'frost', 'mortar', 'prism'];
   // Der Aufschlag laesst sich nicht zur Laufzeit abschalten - er steht als
@@ -617,6 +622,7 @@ function wiederholungMessen(): void {
     };
     const h = zeile('Haeufen', haeufen);
     const v = zeile('Verteilen', verteilen);
+    verteilerLeben.push(v.leben);
     console.log(`  ${mm.id}`);
     console.log(`    ${h.text}`);
     console.log(`    ${v.text}`);
@@ -654,16 +660,24 @@ function wiederholungMessen(): void {
   // - er haeuft nichts, also soll ihn nichts treffen. Gemessen kippt ohne
   // Freimenge genau das: `npm run c18`, dessen Bot die Sorten reihum baut,
   // verliert dort in Welle 14, und zwar bei jedem Zuschlag von 0,10 bis 0,35.
-  const rein = play(verteilen, () => 0, MEISTER, 'normal', MAPS[0].id,
-    { zuschlag: MESS_ZUSCHLAG, karten: 0 });
-  console.log(`  Der Verteiler mit gestelltem Aufschlag ${MESS_ZUSCHLAG} und ohne `
-    + `Verbesserungen: ${rein.won ? `gewonnen, Kristall ${rein.lives}/${rein.maxLives}`
-      : `VERLOREN in Welle ${rein.wave}`}.`);
-  if (!rein.won) {
-    errors.push(`Der Wiederholungsaufschlag laesst den perfekten Verteiler in Welle `
-      + `${rein.wave} verlieren. Er haeuft nichts - vier Geschuetze, zwoelf Tuerme, drei `
-      + 'je Sorte -, also darf ihn eine Regel gegen das Haeufen nicht treffen. Die '
-      + 'Freimenge ist zu klein.');
+  //
+  // **"Gewinnt er noch?" taugt dafuer nicht**, und die Gegenprobe hat es
+  // gemessen: mit Freimenge 0 gewinnt derselbe Bot weiter, nur mit 25 statt
+  // 31 Kristall. `npm run c18` faehrt einen schwaecheren Bot, deshalb kippt
+  // es dort und hier nicht - eine Zusage, die auf dem einen Messplatz
+  // anschlaegt und auf dem anderen nicht, ist keine (v225).
+  //
+  // Gemessen wird deshalb der KRISTALL des Verteilers, mit Aufschlag gegen
+  // ohne. Er haeuft nichts, also darf ihn eine Regel gegen das Haeufen auch
+  // nichts kosten: gemessen 0, +6, 0, 0 ueber die vier Karten.
+  const verlust = Math.min(...verteilerLeben);
+  console.log(`  Der Verteiler zahlt durch den Aufschlag ${verlust >= 0 ? '+' : ''}`
+    + `${verlust} Kristall im schlechtesten Fall (gefordert >= ${VERTEILER_VERLUST_MAX}).`);
+  if (verlust < VERTEILER_VERLUST_MAX) {
+    errors.push(`Der Wiederholungsaufschlag kostet den perfekten Verteiler ${-verlust} `
+      + 'Kristall. Er haeuft nichts - vier Geschuetze, zwoelf Tuerme, drei je Sorte -, '
+      + 'also darf ihn eine Regel gegen das Haeufen nicht treffen. Die Freimenge ist zu '
+      + 'klein.');
   }
   if (kleinste <= TRENNUNG_MIN) {
     errors.push(`Der Wiederholungsaufschlag trennt Haeufen von Verteilen nur um ${kleinste} `

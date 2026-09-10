@@ -1041,14 +1041,21 @@ const PROBEN = [
     // aber auch ohne Freimenge gross, denn wer zwoelf gleiche Tuerme baut,
     // zahlt in jedem Fall mehr als wer vier Arten mischt. Regel 3.
     //
-    // Was die Freimenge haelt, ist etwas anderes: der perfekte Verteiler darf
-    // durch den Aufschlag nicht VERLIEREN. Genau daran greift sie jetzt.
+    // Der zweite Entwurf bewies auch nichts: "gewinnt er noch?" haengt am
+    // Bot, und der Meister gewinnt auch ohne Freimenge (25 statt 31
+    // Kristall). `npm run c18` faehrt einen schwaecheren, deshalb kippt es
+    // dort - eine Zusage, die auf einem Messplatz anschlaegt und auf dem
+    // anderen nicht, ist keine (v225).
+    //
+    // Gemessen wird jetzt der KRISTALL des Verteilers, mit Aufschlag gegen
+    // ohne. Er haeuft nichts, also darf ihn eine Regel gegen das Haeufen auch
+    // nichts kosten.
     name: 'Wiederholungsaufschlag ohne Freimenge',
     datei: 'src/data/towers.ts',
     suche: 'export const WIEDERHOLUNG_FREI = 3;',
     ersatz: 'export const WIEDERHOLUNG_FREI = 0;',
     tor: 'sim',
-    meldet: 'laesst den perfekten Verteiler in Welle',
+    meldet: 'kostet den perfekten Verteiler',
   },
   {
     // **Die zwei Proben zur Trennung der FLAECHE (v286).**

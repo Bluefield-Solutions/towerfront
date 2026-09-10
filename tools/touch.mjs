@@ -195,6 +195,10 @@ const KNOEPFE = [
   // jahrelang Knoepfe vermessen, die niemand druecken konnte, und die
   // lebenden uebersprungen. Er ist in v196 entfernt, und mit ihm die
   // Eintraege.
+  // Der Kartenzug zwischen zwei Wellen (v303, S-N1-02). Das Tor hat ihn beim
+  // ersten Lauf selbst verlangt - "Knopfklasse zug-btn steht in keiner
+  // geprueften Auswahl" -, und genau dafuer gibt es diese Meldung.
+  ['.zug-btn', 'Karte nehmen'],
   ['.pause-btn', 'Pausenmenue'],
   ['.opt-btn', 'Einstellung waehlen'],
   ['.dock-toggle', 'Leiste einklappen'],

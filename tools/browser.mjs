@@ -308,6 +308,34 @@ if (!start) {
 } else {
   await seite.waitForTimeout(900);
 
+  // --- 4b. Erst ziehen, dann messen (v303, S-N1-02).
+  //
+  // Zwischen zwei Wellen ist die Karte die erste Entscheidung, und solange
+  // sie offen steht, weicht ihr die Bauleiste - beim Betreten der Karte
+  // also sofort. Wer hier nicht zieht, misst alle folgenden Zustaende OHNE
+  // Leiste und ohne Wellenknopf; genau das hat dieses Tor beim ersten Lauf
+  // mit sieben Befunden gemeldet, und jeder einzelne davon war richtig.
+  //
+  // Der Zug bekommt seine eigene Pruefung: er MUSS beim Betreten dastehen,
+  // und nach einem Tipp muss er weg sein. Ohne die erste Haelfte zoege
+  // diese Stelle stillschweigend ins Leere, sobald jemand `zugFaellig`
+  // aendert - und die sieben Befunde kaemen wieder.
+  const zugOffen = await seite.evaluate(() => !document.getElementById('zug')?.hidden);
+  if (!zugOffen) {
+    fail('Beim Betreten der Karte steht kein Kartenzug offen. Dann faellt die '
+      + 'Entscheidung der ersten Welle aus - und alles, was dieses Tor danach misst, '
+      + 'sieht einen Bildschirm, den es im Spiel nicht gibt.');
+  } else {
+    await seite.evaluate(() => document.querySelector('#zug-row .zug-btn')?.click());
+    await seite.waitForTimeout(350);
+    const nochOffen = await seite.evaluate(() => !document.getElementById('zug')?.hidden);
+    if (nochOffen) {
+      fail('Nach dem Tippen auf eine Karte steht der Kartenzug weiter offen. Dann '
+        + 'zieht man in derselben Welle beliebig oft, und die Bauleiste kommt nie '
+        + 'zurueck.');
+    }
+  }
+
   // --- 5. Ist im Spiel jeder Knopf zu treffen?
   //
   // Zwei Fragen, nicht eine. Gross genug ist die eine; obenauf zu liegen die
@@ -1837,6 +1865,12 @@ if (streuung < 6) {
       fail(`Schreibtischprobe ${name} (${w}x${h}, Maus): derselbe Weg, der auf dem `
         + 'Telefon ins Spiel fuehrt, fuehrt hier nicht hinein.');
     }
+    // Zuerst ziehen - sonst misst alles Folgende einen Bildschirm ohne
+    // Bauleiste und ohne Wellenknopf (v303, S-N1-02). Dieselbe Zeile wie in
+    // Pruefung 4b; sie steht hier ein zweites Mal, weil dieser Block eine
+    // EIGENE Seite betritt und die Ableitung dort von vorn beginnt.
+    await s3.evaluate(() => document.querySelector('#zug-row .zug-btn')?.click());
+    await s3.waitForTimeout(200);
     console.log(`Schreibtisch ${name.padEnd(6)} ${w}x${h}: `
       + `${drin ? 'spielbar' : 'NICHT spielbar'}`
       + `${deckel.length ? `, verdeckt von ${deckel.join(', ')}` : ''}`);

@@ -674,6 +674,27 @@ ab Hub 3 verdient der durchgehend ueberlappende Bot mehr Gold als der
 vorsichtige, und damit waere der Fruehstart eine Einnahmequelle statt eines
 Risikos. Gesetzt ist 2,0.
 
+**Wiederholung wird teurer - gebaut, gemessen, nicht scharf gestellt
+(v287).** Der Baupreis entsteht seit v287 an EINER Stelle
+(`GameState.baupreis`); vorher stand `def.base.cost` an acht. Die Freimenge
+(`WIEDERHOLUNG_FREI = 3`) kommt aus dem Spiel und nicht aus einem Durchlauf:
+vier Geschuetze, zwoelf Tuerme, drei je Sorte - ein Zuschlag ab dem zweiten
+Turm traefe den perfekten Verteiler genauso hart wie den Haeufer. Gemessen
+kippte ohne Freimenge schon 0,10 die erste Karte.
+
+**Der Zuschlag selbst steht auf 0, und das ist das Ergebnis der Runde.** Er
+WIRKT (nimmt dem Haeufer 693 Gold ab, dem Verteiler 0 bis 349) und
+ENTSCHEIDET NICHTS (0/-6/0/+1 Kristall): bei 28 % uebrigem Gold ist ein Preis
+folgenlos - die Knappheit aus S-N3-03 ist die Voraussetzung dieser Story, nicht
+ihre Folge. Die Ratsche, an der er scheitert, wirft dabei einen Wuerfel
+(**M18**): "Abstand der Spielstile" steht bei Zuschlag 0,15 auf 1,46, bei 0,25
+auf 11,64 und bei 0,35 auf 4,50, ueber einen Parameter, der die drei Stile gar
+nicht unterscheidet - sie fahren alle dieselbe Turmliste. Sie in derselben
+Runde zu lockern, in der die eigene Aenderung an ihr scheitert, waere kein
+Beweis mehr (v219). Ungeprueft bleibt die Mechanik trotzdem nicht:
+`wiederholungMessen` haelt eine Zusage - der Aufschlag muss den Haeufer um
+ueber 200 Gold haerter treffen als den Verteiler.
+
 **Der Zustand faengt den Finger nicht mehr (v286).** v268 hat Zustand und
 Handlung im Wellenknopf getrennt - aber nur den SATZ, nicht die FLAECHE. Der
 laufende Strom stand als Kind IM Knopf: er machte ihn von 208 auf 317 Punkte
@@ -704,7 +725,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v286. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v287. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

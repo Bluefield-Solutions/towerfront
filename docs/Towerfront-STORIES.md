@@ -591,15 +591,34 @@ Infinitode jeden weiteren Miner, Defense Grid nimmt 25 % beim Verkauf.
 bereits gebauter Türme derselben Art. Die Kurve wird **durchprobiert**
 (Regel 9), nicht gesetzt.
 
-**Abnahme.**
-* `npm run sim`: die Zweigwirkung steigt über ihren Stand, und der Zuwachs
-  liegt über der Spanne der Aussaaten.
-* C18 hält: die erste Karte bleibt ohne Verbesserungen zu gewinnen.
+**Abnahme — in v286 gemessen korrigiert.** Die ursprüngliche lautete: „die
+Zweigwirkung steigt über ihren Stand, und der Zuwachs liegt über der Spanne
+der Aussaaten." Sie ist mit dem heutigen Messgerät **nicht entscheidbar**,
+und das ist gemessen, nicht vermutet:
 
-**Gegenprobe.** Den Aufschlag auf null setzen: die Zweigwirkung muss messbar
-fallen.
+* Der Aufschlag **wirkt** — `wiederholungMessen` in `npm run sim` nimmt dem
+  Häufer 693 Gold ab und dem Verteiler 0 bis 349, über alle vier Karten.
+* Er **entscheidet nichts** — derselbe Bot mit und ohne endet bei
+  0 / −6 / 0 / +1 Kristall. Bei 28 % übrigem Gold ist ein Preis folgenlos;
+  die Knappheit aus **S-N3-03** ist die Voraussetzung dieser Story, nicht
+  ihre Folge.
+* Die Ratsche, an der er scheitert, misst hier **Rauschen**: „Abstand der
+  Spielstile" steht bei Zuschlag 0,15 auf 1,46, bei 0,25 auf 11,64 und bei
+  0,35 auf 4,50 — zehn Punkte über einen Parameter, der die drei Stile gar
+  nicht unterscheidet. Sie fahren alle dieselbe Turmliste (**M18**).
 
-**Schliesst, wenn:** `text src/game/state.ts "wiederholungsAufschlag" >= 2`
+Die Abnahme lautet deshalb jetzt:
+* `wiederholungMessen`: der Aufschlag trennt Häufen von Verteilen — er nimmt
+  dem Häufer messbar mehr Gold ab als dem Verteiler. **Erfüllt** (v286).
+* C18 hält über drei Aussaaten. **Erfüllt** (v286: 15/19/21 von 42).
+* **Offen:** der Aufschlag ist scharf gestellt (`WIEDERHOLUNG_ZUSCHLAG > 0`)
+  und die Torkette bleibt grün. Das setzt S-N3-03 voraus und eine Ratsche,
+  die keinen Würfel wirft.
+
+**Gegenprobe.** Den Aufschlag auf null setzen: `wiederholungMessen` muss auf
+null Gold Unterschied fallen.
+
+**Schliesst, wenn:** `text src/data/towers.ts "WIEDERHOLUNG_ZUSCHLAG = 0.3" >= 1`
 
 ---
 

@@ -2,8 +2,9 @@
 
 Stand: v286 · 09.09.2026
 
-**Nachgesehen in v286 — und M1 hat seine erste Zahl aus dem laufenden Betrieb
-bekommen.** Die Luecke gilt als geschlossen (drei Aussaaten, `UNBELEGT` statt
+**Nachgesehen in v286 — achtzehn Luecken, und M1 hat seine erste Zahl aus dem
+laufenden Betrieb bekommen.** Die achtzehnte (**M18**) ist in derselben Runde
+entstanden: der Abstand der Spielstile misst drei Bots, die dasselbe bauen. Die Luecke gilt als geschlossen (drei Aussaaten, `UNBELEGT` statt
 einer Zahl), und v285 hat gezeigt, wozu das gut ist: bei der vierten Eichung
 des Foerderers lag das **Rauschen der Kennzahl (11,0) UEBER dem Messwert (9)**,
 und die Eichung ist daraufhin abgebrochen worden statt weiterzudrehen. Die
@@ -500,6 +501,47 @@ nicht.
 ---
 
 ## Was das für die Reihenfolge bedeutet
+
+## M18 · Der Abstand der Spielstile misst drei Bots, die dasselbe bauen
+
+**Die Frage.** `npm run sim` haelt „Abstand der Spielstile" als Ratsche:
+bester minus schlechtester Stil, Spiralhain, normal, drei Aussaaten mal drei
+Abwandlungen. Sie soll sagen, ob das Spiel verschiedene Spielweisen belohnt.
+
+**Warum sie das nicht sagt.** Die drei Stile (`Meister`, `Breite`,
+`Sparsam`) fahren **dieselbe Turmliste** — `['arrow', 'arrow', 'mortar',
+'frost', 'prism']`. Sie unterscheiden sich in Ruecklage, Ausbautiefe und
+Entscheidungstakt, nicht darin, WAS sie bauen. Ihr „Abstand" ist damit der
+Unterschied zwischen drei fast gleichen Bots.
+
+**Gemessen in v286**, beim Einbau des Wiederholungsaufschlags:
+
+| Zuschlag | Abstand der Spielstile |
+|---|---|
+| 0 | 8,20 |
+| 0,15 | **1,46** |
+| 0,25 | **11,64** |
+| 0,35 | 4,50 |
+
+Zehn Punkte Spanne ueber einen Parameter, der die drei Stile **gar nicht
+unterscheidet** — er trifft alle gleich, weil alle dieselbe Liste fahren.
+Angegeben ist ein Rauschen von 3 bis 5; das misst nur die Aussaat, nicht die
+Lage. Nicht monoton, also kein Zusammenhang.
+
+**Warum das schlimmer ist als eine fehlende Funktion.** Die Ratsche steht in
+der Torkette und macht Runden rot. Sie hat in v286 eine Mechanik abgelehnt,
+die nachweislich tut, was sie soll — und sie haette dieselbe Mechanik bei
+Zuschlag 0,25 durchgelassen. Eine Pruefung, deren Urteil vom Wuerfel abhaengt,
+ist schlimmer als keine: sie sieht aus wie ein Beweis.
+
+**Was fehlt.** Stile, die sich im Sortiment unterscheiden — ein Bot, der auf
+Wucht spielt, einer auf Schnellfeuer, einer auf Kontrolle. Dann ist der
+Abstand zwischen ihnen eine Aussage ueber das Spiel statt ueber drei
+Einstellungen desselben Bots. **Nicht in derselben Runde angefasst**, in der
+die eigene Aenderung an dieser Ratsche scheitert: eine Pruefung, die man
+lockert, waehrend sie einen selbst aufhaelt, ist kein Beweis mehr (v219).
+
+---
 
 ## M17 · Gedeckte Länge sagt den Verlust nicht vorher
 

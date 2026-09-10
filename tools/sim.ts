@@ -582,8 +582,15 @@ function foerdererMessen(): void {
  *  Messplatz.
  *
  *  Kein Tor: es misst, es urteilt nicht. */
+const MESS_ZUSCHLAG = 0.35;
+/** Wieviel Gold der Aufschlag dem Haeufer MEHR abnehmen muss als dem
+ *  Verteiler. Gemessen sind 344 bis 693 je Karte; 200 laesst Luft nach unten
+ *  und faengt trotzdem den Fall, dass die Freimenge wegfaellt. */
+const TRENNUNG_MIN = 200;
+
 function wiederholungMessen(): void {
   console.log('\nWiederholung (Haeufen gegen Verteilen, mit Aufschlag und ohne):');
+  const trennung: number[] = [];
   const haeufen: TowerId[] = ['arrow'];
   const verteilen: TowerId[] = ['arrow', 'frost', 'mortar', 'prism'];
   // Der Aufschlag laesst sich nicht zur Laufzeit abschalten - er steht als
@@ -593,7 +600,12 @@ function wiederholungMessen(): void {
   for (const mm of MAPS) {
     const zeile = (was: string, plan: TowerId[]) => {
       const ohne = play(plan, () => 0, MEISTER, 'normal', mm.id, { zuschlag: 0 });
-      const mit = play(plan, () => 0, MEISTER, 'normal', mm.id);
+      // **Fest 0,35, nicht der gesetzte Wert.** Der steht seit v286 auf Null
+      // (siehe `WIEDERHOLUNG_ZUSCHLAG`), und eine Messung, die den
+      // ausgelieferten Wert nimmt, verglaeche dann Null mit Null und meldete
+      // fuenf Zeilen Einsen. Sie soll sagen, WAS der Aufschlag taete - genau
+      // die Auskunft, an der die Entscheidung haengt, ihn scharf zu stellen.
+      const mit = play(plan, () => 0, MEISTER, 'normal', mm.id, { zuschlag: MESS_ZUSCHLAG });
       return {
         was,
         gold: mit.spent - ohne.spent,
@@ -610,10 +622,30 @@ function wiederholungMessen(): void {
     console.log(`    ${v.text}`);
     // Die Zahl, um die es geht: was der Aufschlag dem Haeufer MEHR abnimmt
     // als dem Verteiler. Ist sie null, trennt er die beiden nicht.
-    console.log(`    trennt um ${h.gold - v.gold >= 0 ? '+' : ''}${h.gold - v.gold} Gold`
+    const trennt = h.gold - v.gold;
+    console.log(`    trennt um ${trennt >= 0 ? '+' : ''}${trennt} Gold`
       + ` und ${h.leben - v.leben >= 0 ? '+' : ''}${h.leben - v.leben} Kristall`);
+    trennung.push(trennt);
   }
-  console.log('  (misst, urteilt nicht)');
+  // **Eine Zusage, kein blosser Bericht** (v287).
+  //
+  // Der erste Entwurf schrieb "misst, urteilt nicht" darunter - wie beim
+  // Foerderer in v285. Dort war das richtig, weil die Zahl geeicht werden
+  // sollte. Hier ist es falsch: der Aufschlag steht auf Null, und eine
+  // Mechanik, die abgeschaltet UND ungeprueft ist, verfaellt still. Genau
+  // das haelt Regel 5 fest.
+  //
+  // Die Zusage ist die, die die Story uebrig behaelt: der Aufschlag muss den
+  // Haeufer haerter treffen als den Verteiler. Sie haengt an der FREIMENGE -
+  // ohne sie zahlt auch der Verteiler, und die Trennung schrumpft. Gemessen
+  // sind 344 bis 693 Gold je Karte.
+  const kleinste = Math.min(...trennung);
+  console.log(`  Kleinste Trennung: ${kleinste} Gold (gefordert > ${TRENNUNG_MIN}).`);
+  if (kleinste <= TRENNUNG_MIN) {
+    errors.push(`Der Wiederholungsaufschlag trennt Haeufen von Verteilen nur um ${kleinste} `
+      + `Gold (gefordert ueber ${TRENNUNG_MIN}). Er trifft dann den, der gleichmaessig baut, `
+      + 'fast so hart wie den, der haeuft - und ist damit eine Verteuerung statt einer Regel.');
+  }
 }
 
 /** Welche Weichen dieser Stil gestellt haben will.

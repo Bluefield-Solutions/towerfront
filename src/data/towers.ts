@@ -387,7 +387,33 @@ export const TOWERS: Record<TowerId, TowerDef> = {
  *
  *  Die Hoehe ist durchprobiert, nicht gesetzt - der Wert steht unten am
  *  Messergebnis. */
-export const WIEDERHOLUNG_ZUSCHLAG = 0.35;
+export const WIEDERHOLUNG_ZUSCHLAG = 0;
+
+/** **Auf Null, und das ist eine Messung, keine Abschaltung** (v286).
+ *
+ *  Die Mechanik steht vollstaendig: `baupreis` rechnet, der Knopf zeigt den
+ *  Aufschlag, der Turm merkt sich, was er gekostet hat, der Bot weicht aus.
+ *  Sie ist auch nachweislich wirksam - `wiederholungMessen` in `npm run sim`
+ *  nimmt dem Haeufer 693 Gold ab und dem Verteiler 0 bis 349.
+ *
+ *  Scharf gestellt wird sie trotzdem nicht, und der Grund ist gemessen:
+ *
+ *  1. **Am Ergebnis aendert sie nichts.** Derselbe Bot mit und ohne
+ *     Aufschlag endet bei 0 / -6 / 0 / +1 Kristall ueber die vier Karten.
+ *     Bei 28 % uebrigem Gold entscheidet ein Preis nichts - die Knappheit,
+ *     die S-N3-03 herstellen soll, ist die Voraussetzung dieser Story und
+ *     nicht ihre Folge.
+ *  2. **Die Ratsche, an der sie scheitert, misst hier Rauschen.** "Abstand
+ *     der Spielstile" steht bei Zuschlag 0,15 auf 1,46, bei 0,25 auf 11,64
+ *     und bei 0,35 auf 4,50 - zehn Punkte Spanne ueber einen Parameter, der
+ *     die drei Stile gar nicht unterscheidet, denn sie fahren alle DIESELBE
+ *     Turmliste. Angegeben ist ein Rauschen von 3 bis 5.
+ *
+ *  Die Ratsche in derselben Runde zu lockern, in der die eigene Aenderung an
+ *  ihr scheitert, waere kein Beweis mehr (v219). Sie bekommt eine eigene
+ *  Runde; der Befund steht als M18. Bis dahin ist die Zahl hier Null - und
+ *  eine Null, die ihren Grund mittraegt, ist ehrlicher als eine Zahl, die
+ *  aus einer nicht-monotonen Messung gefischt ist (M1). */
 
 /** Wieviele Tuerme derselben Art zum Grundpreis stehen duerfen.
  *

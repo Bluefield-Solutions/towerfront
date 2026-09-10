@@ -1028,6 +1028,24 @@ const PROBEN = [
     meldet: 'laufende Strom steht auf dem Zielgerät nicht im Bild',
   },
   {
+    // **Der Wiederholungsaufschlag** (v287, S-N3-02).
+    //
+    // Der Preis entsteht seit v287 an EINER Stelle. Nimmt man die Freimenge
+    // heraus, greift der Aufschlag ab dem zweiten Turm - und dann ist er
+    // keine Strafe fuers Haeufen mehr, sondern eine globale Verteuerung:
+    // das Spiel hat vier Geschuetze, zwoelf Tuerme sind drei je Sorte, auch
+    // beim perfekten Verteiler. Gemessen kippt das die erste Karte.
+    //
+    // Geprueft wird an `wiederholungMessen`, nicht an C18: die Freimenge
+    // steht dort als Zahl im Bericht, und der Eingriff muss sie bewegen.
+    name: 'Wiederholungsaufschlag ohne Freimenge',
+    datei: 'src/data/towers.ts',
+    suche: 'export const WIEDERHOLUNG_FREI = 3;',
+    ersatz: 'export const WIEDERHOLUNG_FREI = 0;',
+    tor: 'sim',
+    meldet: 'trennt Haeufen von Verteilen nur um',
+  },
+  {
     // **Die zwei Proben zur Trennung der FLAECHE (v286).**
     //
     // v268 hat den Satz getrennt - Zustand links, Handlung rechts - und die

@@ -512,34 +512,58 @@ export const WIEDERHOLUNG_ZUSCHLAG: number = 0.10;
  *  Regel waere fuer den haeufigsten Gegner unsichtbar. Was ankommt, faengt
  *  bei zwei Arten erst ab 0,25 an; darunter belohnt sie die dicken Gegner
  *  frueher als die duennen. */
-/** **Und er steht auf Null, obwohl die Mechanik traegt - das ist das
- *  Ergebnis von v299.**
+/** **Scharf gestellt in v301 - und was ihn zwei Runden aufgehalten hat, war
+ *  eine Zusage ohne Rauschband.**
  *
- *  Gemessen WIRKT sie, und zwar sauber getrennt: bei 0,15 bekommt der
- *  Haeufer auf jeder der vier Karten **+0 Gold** und der Mischer +100 bis
- *  +251. Eine Regel, die den, der eine Turmart baut, von Bauart nicht
- *  erreicht, ist genau das, was die Story wollte.
+ *  Gemessen WIRKT die Regel, sauber getrennt: am gesetzten 0,10 bekommt der
+ *  Haeufer auf jeder der vier Karten **+0 Gold** und der Mischer **+58 bis
+ *  +170**. Die Null ist keine Schaetzung, sondern die Bauart - wer mit einer
+ *  Turmart toetet, hat an jedem Gegner `arten = 1`, und dann steht der
+ *  Faktor auf genau 1.
  *
- *  **Was blockiert, ist eine Zusage aus einer ANDEREN Story:** der
- *  Wiederholungsaufschlag (S-N3-02) darf den perfekten Verteiler kein
- *  Kristall kosten, und ab Vielfalt 0,10 kostet er ihn **2 von 42**. Das ist
- *  kein Wurf - durchprobiert von 0 bis 0,25 erscheint der Verlust bei 0,10
- *  und bleibt. Es ist auch kein Widerspruch: der Verteiler hat mit der
- *  Vielfaltsbeute mehr Gold, baut deshalb anders, und der Aufschlag trifft
- *  einen anderen Bauverlauf.
+ *  **Der Wert ist durchprobiert, nicht gesetzt** (Regel 9) - und das Fenster
+ *  ist enger, als die Balance allein sagt. Nach oben schliesst es **C18**:
  *
- *  **Die Zusage steht dabei auf EINEM Lauf je Karte und einer harten Null,
- *  ohne Rauschband** - zwei Kristall von 42 sind in diesem Werkzeug
- *  gemessen die uebliche Wegabhaengigkeit. Sie in derselben Runde zu
+ *  | Zuschlag | erste Karte mit einer Faehigkeit |
+ *  |---|---|
+ *  | 0 | gewonnen, 17/42 |
+ *  | 0,05 | gewonnen, 17/42 |
+ *  | 0,08 | gewonnen, **19/42** |
+ *  | **0,10** | gewonnen, **19/42** |
+ *  | 0,12 | gewonnen, 15/42 |
+ *  | 0,15 | **verloren in Welle 14** |
+ *
+ *  Dass MEHR Gold die Eroeffnung verliert, ist Wegabhaengigkeit: der Bot
+ *  kauft frueher etwas anderes, und der Verlauf kippt. Gesetzt ist **0,10** -
+ *  dort steht C18 mit 19 gegen 17 Kristall besser da als ohne die Regel, und
+ *  zwei Werte darunter halten ebenfalls. Es ist eine Flaeche, keine Nadel.
+ *
+ *  **C18 faehrt dabei EINE Aussaat**, und die Kante bei 0,15 ist steil - das
+ *  steht als Messluecke daneben und ist in dieser Runde ausdruecklich NICHT
+ *  repariert worden (v219: nicht in der Runde, in der die eigene Aenderung
+ *  daran scheitert).
+ *
+ *  Die Balance zieht die Grenze weiter oben: bei 0,25 faellt die Trennung
+ *  des Wiederholungsaufschlags von 599 auf 113 Gold und reisst ihre eigene
+ *  Grenze von 200. Nach unten traegt 0,05 nichts (9 Gold Trennung).
+ *
+ *  **Warum es zwei Runden gedauert hat, und das ist die eigentliche Lehre.**
+ *  In v299 meldete die Zusage aus S-N3-02, der Aufschlag koste den perfekten
+ *  Verteiler 2 von 42 Kristall. Sie stand auf EINEM Lauf je Karte gegen eine
+ *  harte Null - und ueber die Aussaaten gemessen schwankt dieselbe Zahl auf
+ *  der Ascheschlucht um **12**. v300 hat ihr das Band gegeben, das an ihre
+ *  Messstelle gehoert (Regel 12); dieselben -2 lesen sich jetzt als
+ *  **-2 / +0 / +0, Mittel -0,7 bei Rauschen 2** - innerhalb des Bandes, also
+ *  keine Aussage.
+ *
+ *  Die Reihenfolge war Absicht: eine Zusage in derselben Runde zu
  *  reparieren, in der die eigene Aenderung an ihr scheitert, waere kein
- *  Beweis mehr (v219, und dieselbe Ueberlegung hat v296 und v297
- *  auseinandergehalten). Deshalb: Mechanik gebaut, gemessen, von einer
- *  Zusage gehalten - Schalter auf Null.
+ *  Beweis (v219). Erst das Band auf eigener Grundlage, dann der Schalter.
  *
- *  Nach oben ist das Fenster ohnehin eng: bei 0,25 faellt die Trennung des
- *  Wiederholungsaufschlags von 599 auf 113 Gold und reisst ihre eigene
- *  Grenze von 200. Brauchbar sind 0,10 bis 0,20. */
-export const VIELFALT_BEUTE: number = 0;
+ *  **Was die Beute je Gegner traegt, steht darueber** - 2,23 Turmarten im
+ *  Mittel, und die Karten trennen sich von 12 % Einzelart (Spiralhain) bis
+ *  46 % (Farnkessel). */
+export const VIELFALT_BEUTE: number = 0.10;
 
 /** Die Beute eines Gegners samt Vielfaltsanteil.
  *

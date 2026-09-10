@@ -771,12 +771,32 @@ const VERTEILER_VERLUST_MAX = 0;
  *  **Am gesetzten Wert gemessen, nicht an einem gestellten** - die Lehre aus
  *  v297: eine Zusage, die etwas anderes misst als das, was ausgeliefert
  *  wird, bezeugt die Sache, ohne sie je geprueft zu haben (Regel 13). */
-const VIELFALT_TRENNUNG_MIN = 50;
-/** Der GESTELLTE Wert, an dem gemessen wird, was die Regel taete - auch
- *  wenn sie ausgeliefert auf Null steht. Dieselbe Bauart wie
- *  `MESS_ZUSCHLAG`, und aus demselben Grund: eine abgeschaltete Mechanik,
- *  die niemand mehr misst, verfaellt still (Regel 5). */
-const VIELFALT_MESS = 0.15;
+/** Wieviel Gold die Vielfaltsbeute dem Mischer mindestens bringen muss.
+ *
+ *  **30 statt 50, und der Grund ist eine Messstelle** (v301): die 50 waren
+ *  am gestellten Zuschlag 0,15 abgelesen (Trennung 100 bis 251). Gesetzt ist
+ *  0,10, und dort misst dieselbe Zahl **58 bis 170** - die alte Grenze
+ *  bestand um 8 Gold. Eine Grenze, die auf dem Gemessenen sitzt, schlaegt
+ *  beim naechsten Bauverlauf an und wird dann hochgesetzt statt ernst
+ *  genommen (dieselbe Ueberlegung wie bei den UX-Ratschen in v294).
+ *
+ *  Sie ist bewusst eine Geruchsprobe und kein Sollwert aus einer Referenz:
+ *  die eigentliche Zusage steht eine Zeile tiefer. */
+const VIELFALT_TRENNUNG_MIN = 30;
+/** Der Wert, an dem gemessen wird - **der ausgelieferte, solange es einen
+ *  gibt** (v301).
+ *
+ *  In v299 stand hier fest 0,15, weil der Schalter auf Null stand und eine
+ *  abgeschaltete Mechanik, die niemand mehr misst, still verfaellt
+ *  (Regel 5). Seit v301 ist er scharf, und dann waere eine zweite feste
+ *  0,15 daneben genau die Doppelung, die Regel 15 meint: gepflegt wuerde
+ *  eine davon. Die Zusage misst deshalb den gesetzten Wert, und die 0,15
+ *  bleibt nur als Rueckfall fuer den Fall stehen, dass jemand den Schalter
+ *  wieder auf Null dreht - dann sagt sie weiter, was die Regel TAETE.
+ *
+ *  Damit haengt die Zusage in beiden Zustaenden an etwas: am Spiel, wenn es
+ *  eins gibt, und am gestellten Fall, wenn nicht (die Lehre aus v297). */
+const VIELFALT_MESS = VIELFALT_BEUTE > 0 ? VIELFALT_BEUTE : 0.15;
 
 function vielfaltMessen(): void {
   console.log('\nVielfaltsbeute (Haeufen gegen Mischen, mit Zuschlag und ohne):');
@@ -785,17 +805,38 @@ function vielfaltMessen(): void {
   const trennung: number[] = [];
   const gold = (plan: TowerId[], mapId: string, v: number) =>
     play(plan, () => 0, MEISTER, 'normal', mapId, { vielfalt: v }).earned;
+  const haeuferGewinn: number[] = [];
   for (const mm of MAPS) {
     const h = gold(haeufen, mm.id, VIELFALT_MESS) - gold(haeufen, mm.id, 0);
     const m = gold(mischen, mm.id, VIELFALT_MESS) - gold(mischen, mm.id, 0);
     console.log(`  ${mm.id.padEnd(14)} Haeufen ${h >= 0 ? '+' : ''}${h} Gold, `
       + `Mischen ${m >= 0 ? '+' : ''}${m} - trennt um ${m - h >= 0 ? '+' : ''}${m - h}`);
     trennung.push(m - h);
+    haeuferGewinn.push(h);
+  }
+  // **Die scharfe Zusage: der Haeufer bekommt NICHTS.**
+  //
+  // Sie ist keine Schaetzung, sondern eine Aussage ueber die Bauart: wer mit
+  // einer einzigen Turmart toetet, hat an jedem Gegner `arten = 1`, und
+  // `vielfaltsBeute` multipliziert dann mit genau 1. Gemessen sind es auf
+  // allen vier Karten 0 Gold, auf die Muenze genau.
+  //
+  // Eine Zusage, die von Bauart immer haelt, waere kein Beweis (Regel 5) -
+  // deshalb steht die Gegenprobe daneben: `arten - 1` zu `arten` gemacht,
+  // und der Haeufer kassiert mit.
+  const haeuferMax = Math.max(...haeuferGewinn.map((n) => Math.abs(n)));
+  console.log(`  Der Haeufer gewinnt dabei ${haeuferMax} Gold (gefordert: 0 - `
+    + 'wer eine Turmart baut, wird von einer Regel fuer Vielfalt nicht erreicht).');
+  if (haeuferMax !== 0) {
+    errors.push(`Die Vielfaltsbeute bringt dem Haeufer ${haeuferMax} Gold. Er toetet mit `
+      + 'EINER Turmart, also darf eine Regel, die Vielfalt belohnt, ihn ueberhaupt nicht '
+      + 'erreichen - sonst ist sie eine Geldspritze mit einem Namen.');
   }
   const kleinste = Math.min(...trennung);
-  console.log(`  Kleinste Trennung: ${kleinste} Gold bei gestelltem Zuschlag `
-    + `${VIELFALT_MESS} (gefordert > ${VIELFALT_TRENNUNG_MIN}). `
-    + `Ausgeliefert steht er auf ${VIELFALT_BEUTE}.`);
+  console.log(`  Kleinste Trennung: ${kleinste} Gold bei Zuschlag ${VIELFALT_MESS} `
+    + `(gefordert > ${VIELFALT_TRENNUNG_MIN}) - `
+    + `${VIELFALT_BEUTE > 0 ? 'das ist der ausgelieferte Wert'
+      : `ausgeliefert steht er auf ${VIELFALT_BEUTE}, gemessen wird der gestellte Fall`}.`);
   // **Die Zusage haengt am GESTELLTEN Wert, nicht am ausgelieferten.**
   //
   // Der steht in v299 auf Null, und eine Zusage, die dann nichts mehr

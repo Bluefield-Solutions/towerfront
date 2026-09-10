@@ -1,6 +1,6 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v296 · 10.09.2026
+Stand: v301 · 10.09.2026
 
 **Nachgesehen in v286 — achtzehn Luecken, und M1 hat seine erste Zahl aus dem
 laufenden Betrieb bekommen.** Die achtzehnte (**M18**) ist in derselben Runde
@@ -501,6 +501,48 @@ nicht.
 ---
 
 ## Was das für die Reihenfolge bedeutet
+
+## M19 · C18 faehrt eine Aussaat und hat eine steile Kante
+
+**Die Frage.** Ist die erste Karte mit **einer** Faehigkeit zu gewinnen? Das
+ist die Abnahme der ganzen Eroeffnung (S4 des Faehigkeiten-Abgleichs), sie
+steht im Rauchtest und macht die Torkette rot.
+
+**Warum sie heute wackelt.** `npm run c18` faehrt **eine** Aussaat (4242).
+Gemessen beim Scharfstellen der Vielfaltsbeute (v301):
+
+| Zuschlag | erste Karte |
+|---|---|
+| 0 | gewonnen, 17/42 |
+| 0,05 | gewonnen, 17/42 |
+| 0,08 | gewonnen, **19/42** |
+| 0,10 | gewonnen, **19/42** |
+| 0,12 | gewonnen, 15/42 |
+| 0,15 | **verloren in Welle 14** |
+
+**Der Sprung von 15 auf verloren ist kein Verlauf, sondern eine Kante** — und
+sie liegt zwischen zwei Werten desselben Parameters, der dem Spieler nur MEHR
+Gold gibt. Dass mehr Gold die Eroeffnung verliert, ist Wegabhaengigkeit: der
+Bot kauft frueher etwas anderes, und der Verlauf kippt.
+
+**Warum das schlimmer ist als eine fehlende Funktion.** Eine Zahl aus einem
+Lauf kann eine Kante nicht von einem Wurf unterscheiden. Steht die Kante
+wirklich dort, ist 0,15 unspielbar; ist sie ein Wurf dieser einen Aussaat,
+haben wir eine brauchbare Einstellung verworfen. Beides ist heute nicht zu
+entscheiden — und dieselbe Klasse hat in dieser Sitzung schon zweimal Runden
+gekostet (M18 und die Verteiler-Zusage, v296 und v300).
+
+**Was fehlt.** Dasselbe wie dort: mehrere Aussaaten und ein Band an derselben
+Messstelle. Der Preis ist Laufzeit — `npm run c18` ist heute zwei Sekunden und
+sitzt im Rauchtest.
+
+**Nicht in v301 repariert, und das ist Absicht:** eine Pruefung in derselben
+Runde zu lockern, in der die eigene Aenderung an ihr scheitert, waere kein
+Beweis (v219). Gesetzt ist deshalb 0,10 — ein Wert, an dem C18 mit 19 gegen 17
+Kristall BESSER dasteht als ohne die Regel, und zwei Werte darunter halten
+ebenfalls.
+
+---
 
 ## M18 · Der Abstand der Spielstile misst drei Bots, die dasselbe bauen
 

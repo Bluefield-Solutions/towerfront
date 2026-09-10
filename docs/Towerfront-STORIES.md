@@ -1,6 +1,6 @@
 # Towerfront — Stories
 
-Stand: v299 · 10.09.2026
+Stand: v301 · 10.09.2026
 
 **Nachgesehen in v291 — Paket N3 ist zu drei Vierteln gebaut, und die
 Diagnose hat sich dabei umgedreht.** Förderer (v285), Wiederholungsaufschlag
@@ -730,18 +730,40 @@ Größe: anteilig, nicht absolut.
 Karte **+0 Gold**, der Mischer **+100 bis +251**. Eine Regel, die den, der eine
 Turmart baut, von Bauart nicht erreicht.
 
-**Was blockiert, ist eine Zusage aus S-N3-02.** Ab Vielfalt 0,10 kostet der
-Wiederholungsaufschlag den perfekten Verteiler **2 von 42 Kristall**, und seine
-Zusage verlangt null. Das ist kein Wurf — durchprobiert von 0 bis 0,25
-erscheint der Verlust bei 0,10 und bleibt. Es ist auch kein Widerspruch: der
-Verteiler hat mit der Vielfaltsbeute mehr Gold, baut deshalb anders, und der
-Aufschlag trifft einen anderen Bauverlauf.
+**Scharf gestellt in v301 auf 0,10, Kette grün.** Was zwei Runden gekostet
+hat, war eine Zusage ohne Rauschband — und das ist die Lehre dieser Story.
 
-**Diese Zusage steht auf EINEM Lauf je Karte und einer harten Null, ohne
-Rauschband** — zwei Kristall von 42 sind in diesem Werkzeug die übliche
-Wegabhängigkeit. Sie in derselben Runde zu reparieren, in der die eigene
-Änderung an ihr scheitert, wäre kein Beweis mehr (v219). Das ist die nächste
-Runde, nicht diese.
+In v299 meldete die Zusage aus S-N3-02, der Wiederholungsaufschlag koste den
+perfekten Verteiler **2 von 42 Kristall**. Sie stand auf **einem** Lauf je
+Karte gegen eine harte Null; über die drei Aussaaten gemessen schwankt dieselbe
+Zahl auf der Ascheschlucht um **12**. v300 hat ihr das Band gegeben, das an
+ihre Messstelle gehört (Regel 12) — und dieselben −2 lesen sich jetzt als
+**−2 / +0 / +0, Mittel −0,7 bei Rauschen 2**: innerhalb des Bandes, also keine
+Aussage.
+
+Die Reihenfolge war Absicht: eine Zusage in derselben Runde zu reparieren, in
+der die eigene Änderung an ihr scheitert, wäre kein Beweis (v219). Erst das
+Band auf eigener Grundlage, dann der Schalter.
+
+**Und dann hat C18 den Wert entschieden, nicht die Balance.** Durchprobiert:
+
+| Zuschlag | erste Karte mit einer Fähigkeit |
+|---|---|
+| 0 | gewonnen, 17/42 |
+| 0,05 | gewonnen, 17/42 |
+| 0,08 | gewonnen, **19/42** |
+| **0,10** | gewonnen, **19/42** |
+| 0,12 | gewonnen, 15/42 |
+| 0,15 | **verloren in Welle 14** |
+
+Dass MEHR Gold die Eröffnung verliert, ist Wegabhängigkeit. Bei 0,10 steht C18
+mit 19 gegen 17 Kristall **besser** da als ohne die Regel, und zwei Werte
+darunter halten ebenfalls — eine Fläche, keine Nadel. Gemessen bringt die Regel
+dort dem Häufer **+0 Gold** und dem Mischer **+58 bis +170**.
+
+Dass C18 dabei **eine** Aussaat fährt und die Kante bei 0,15 steil ist, steht
+seit v301 als **M19** in den Messlücken — und ist in dieser Runde ausdrücklich
+nicht repariert worden.
 
 Nach oben ist das Fenster ohnehin eng: bei 0,25 fällt die Trennung des
 Wiederholungsaufschlags von 599 auf 113 Gold und reisst ihre eigene Grenze von

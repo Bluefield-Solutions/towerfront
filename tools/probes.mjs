@@ -1035,11 +1035,13 @@ export const PROBEN = [
     // Bauleiste. Gefunden hat es der Blick (Regel 8), das Tor kam danach.
     //
     // Der Eingriff nimmt den Buchstaben heraus - dann bleibt nur die
-    // Schraffur, und die ist fuer beide dieselbe.
+    // Schraffur, und die ist fuer beide dieselbe. Er trifft den ganzen
+    // Zeichenblock: der erste Entwurf liess `strokeText` stehen, und dessen
+    // dunkler Saum trennt die beiden weiterhin (Regel 3).
     name: 'Platzhalter unterscheidet zwei Bauwerke nicht',
     datei: 'src/gfx/sprites.ts',
-    suche: "      g.fillStyle = '#FFFFFF';\n      g.fillText(zeichen, 0, 0);",
-    ersatz: "      g.fillStyle = '#FFFFFF';\n      void zeichen;",
+    suche: "      const zeichen = wort[0].toUpperCase();",
+    ersatz: "      const zeichen = 'X';",
     tor: 'bildtor',
     meldet: 'Zwei Platzhalter sehen gleich aus',
   },

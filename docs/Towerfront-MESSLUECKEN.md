@@ -1,6 +1,36 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v308 · 10.09.2026
+Stand: v315 · 10.09.2026
+
+**Einundzwanzig Luecken, sechs davon abgeraeumt** — fuenf geschlossen (M1,
+M3, M6, M7, M10) und eine gegenstandslos (M8). Die Zahl steht hier, weil sie
+falsch dastand: der Kopf sprach von „fuenfzehn", waehrend zwanzig Abschnitte
+darunter lagen — und `M8` fuehrte einen Schwierigkeitsgrad, den es seit v314
+nicht mehr gibt.
+
+**Nachgesehen in v315 — und drei Zeilen waren falsch geworden, ohne dass
+jemand etwas angefasst haette, was in ihnen steht.**
+
+* **M8 ist gegenstandslos**, nicht behoben: der Grad „Ruhig" ist in v314
+  ausgebaut worden (S-N1-05). Eine Luecke, deren Gegenstand verschwindet,
+  faellt nicht zu — sie hoert auf, eine zu sein, und der Unterschied gehoert
+  aufgeschrieben, sonst liest sich das naechste Verzeichnis wie eine
+  Erfolgsmeldung.
+* **M11, Loch 3 ist zu** (v313) — und es hat vorher zugeschlagen, wie
+  angekuendigt: `N1K` und `N1G` enden auf einen Buchstaben, die Kennungsregel
+  verlangte hinter der Ziffer nichts oder einen Bindestrich, und **beide
+  standen vier Fassungen lang mit einer Schliessbedingung da, die nie
+  ausgewertet wurde.**
+* **M4 beschreibt die Bots seit v293 falsch.** Der Satz „alle drei bauen
+  dieselbe Turmmischung" gilt nicht mehr; der SCHLUSS daraus gilt trotzdem,
+  und das ist die eigentliche Auskunft — siehe die Berichtigung dort.
+
+**Die Story-Kennungen der ersten fuenfzehn Abschnitte (`S-P…`) gibt es seit
+v269 nicht mehr.** Der Katalog ist damals ersetzt worden; was inhaltlich
+ueberlebt hat, steht in `Towerfront-STORIES.md` als Paket N6. Die alten
+Kennungen bleiben hier stehen, weil sie sagen, WOFUER die Luecke damals der
+Grund war — sie sind Belege, keine Wegweiser. Einmal gesagt statt fuenfzehnmal
+(Regel 15).
 
 **Nachgesehen in v286 — achtzehn Luecken, und M1 hat seine erste Zahl aus dem
 laufenden Betrieb bekommen.** Die achtzehnte (**M18**) ist in derselben Runde
@@ -33,7 +63,10 @@ Anlaeufe fuer einen dritten Bot-Stil sind an einer Kennzahl gescheitert, die
 klingt, als muesste sie stimmen.
 
 
-Zu `KATALOG.md` und `STORIES.md`. Stand des Spiels **v248** (`5623c3b`).
+Zu `KATALOG.md` und `STORIES.md`. **Die ersten fuenfzehn Abschnitte sind
+gegen den Spielstand v248 (`5623c3b`) gemessen**; jeder spaetere nennt seine
+eigene Fassung. Das ist Regel 12 und keine Formalie — dieses Verzeichnis
+lebt davon, dass man einer Zahl ansieht, woran sie entstanden ist.
 
 Dieses Verzeichnis hat mehrfach bezahlt, dass **eine Messung, die weniger sagt
 als der Satz daneben, schlimmer ist als keine**: die Zahlwort-Tabelle (v230,
@@ -43,7 +76,7 @@ nicht auf drei Sterne spielbar" hieß in Wahrheit „nicht mit drei bescheidenen
 Bots"), und `min-height: 33%` (v248, eine Zusage aus v137, die still wegfiel,
 weil ihr Bezugskasten verschwand).
 
-Die folgenden fünfzehn Lücken sind in derselben Familie. Jede nennt: **welche
+Die folgenden Lücken sind in derselben Familie. Jede nennt: **welche
 Frage** unbeantwortet ist, **warum** die vorhandenen Werkzeuge sie nicht
 beantworten, und **wie** man sie messen würde.
 
@@ -178,6 +211,25 @@ abbildet — der Stil „Hetze" aus S-P4-04 (startet früh und nimmt das Risiko)
 und danach ein Stil, der die Zweige falsch wählt. Der Abstand zwischen „wählt
 richtig" und „wählt falsch" ist die Zahl, die G4 eigentlich meint.
 
+> **Berichtigt in v315: der Befund oben stimmt nicht mehr, der Schluss schon.**
+> Seit v293 baut `Breite` eine **eigene** Turmliste (`arrow, arrow, frost,
+> arrow, mortar` — wer in die Breite geht, kauft Stueckzahl), und seit v284
+> tragen die Stile verschiedene Weichenstellungen (`offen` gegen `lang`). Der
+> Satz „alle drei bauen dieselbe Turmmischung" ist damit falsch.
+>
+> **Und genau das macht die Auskunft haerter statt weicher.** Der vorgeschlagene
+> Eingriff ist gefahren worden, und der Abstand blieb bei **8,20** — Punkt fuer
+> Punkt derselbe Wert wie mit gemeinsamer Liste. Ein zweiter Anlauf (`Sparsam`
+> mit den teuren Tuermen) **verlor** in Welle 14. Die Vermutung dieses
+> Abschnitts war also messbar, sie ist gemessen worden, und sie war falsch: die
+> drei Stile lassen sich nicht trennen, weil zwischen ihnen wenig zu trennen
+> ist. Die Fortsetzung steht in **M18**; ein Stil, der die Zweige absichtlich
+> falsch waehlt, ist bis heute nicht gebaut.
+>
+> Der Preis fuers Stehenlassen waere hoch gewesen: eine Luecke, die ihren
+> eigenen Loesungsvorschlag noch fuehrt, nachdem er gefahren und verworfen
+> wurde, schickt den naechsten denselben Weg.
+
 ---
 
 ## M5 · Der Zielmodus wird gemessen, indem alle Türme umgestellt werden
@@ -249,6 +301,22 @@ Planhälfte. Story S-P1-03.
 ---
 
 ## M8 · Der Grad „Ruhig" verliert nie einen Punkt, und kein Tor sagt es
+
+> **Gegenstandslos seit v314 — und das ist ausdruecklich keine Behebung.** Die
+> drei Grade sind mit S-N1-05 ausgebaut worden: sie beantworteten dieselbe
+> Frage wie die Laufstruktur, und solange beides nebeneinander stand, mass die
+> Balance zwei Dinge auf einmal (Regel 4). Es gibt nur noch `normal`; ein Grad,
+> auf dem nichts passieren kann, kann damit nicht mehr existieren.
+>
+> **Was von der Luecke bleibt, ist der Satz eine Ebene hoeher, und der ist
+> heute offen:** die Frage „kann ueberhaupt etwas passieren" wandert von den
+> Graden auf die ABSCHNITTE des Laufs — und dort steht sie als **N1K** im
+> Verzeichnis. Gemessen: **0 / 0 / 0 / 6** Kristallverlust in v308, und nach
+> der Lauf-Steigung von v309 **0 / 0 / 7 / 11** — aus drei folgenlosen
+> Abschnitten sind zwei geworden, erlaubt ist einer. Ein Abschnitt, der nichts
+> kostet, ist derselbe Defekt wie ein Grad, der nichts kostet; nur die Ebene
+> hat gewechselt. Die alte Story `S-P2-05` ist mit dem Katalog von v269
+> entfallen.
 
 **Die Frage.** Kann auf jedem Schwierigkeitsgrad überhaupt etwas passieren?
 
@@ -352,17 +420,24 @@ etwas gebaut wurde. Gegenmittel, das nichts kostet: `>= 2` verlangen
 (Definition **und** Benutzung) und Bezeichner wählen, die nur im Code Sinn
 ergeben. In `STORIES.md` steht deshalb fast überall `>= 2`.
 
-**Loch 3 (nicht aufgeschrieben).** Eine Zeile mit einer **Kennung außerhalb des
-Musters** wird stillschweigend übersprungen. Die Zeilenregel lautet
-`^\| ([A-Z]+\d+(?:-[A-Z])?) \| … \|` und der Abbruch kommt erst, wenn
-**keine einzige** Zeile passt (`if (gepruefte === 0)`). Eine Kennung wie
-`S-P1-03`, `E6b` oder `F10a` wäre also im Verzeichnis sichtbar und vom Wächter
-unsichtbar — genau der Zustand, den C24, D28-A und D28-F drei Runden gekostet
-haben.
+**Loch 3 — geschlossen in v313, und es hatte vorher zugeschlagen.** Eine Zeile
+mit einer **Kennung außerhalb des Musters** wurde stillschweigend übersprungen;
+der Abbruch kam erst, wenn **keine einzige** Zeile passte (`if (gepruefte ===
+0)`). Der Verdacht stand hier mit erfundenen Beispielen (`E6b`, `F10a`) — die
+Wirklichkeit lieferte zwei echte: **`N1K` und `N1G`**, beide seit v309 offen,
+beide mit Schliessbedingung, und **keine ist je ausgewertet worden**, weil die
+Regel `[A-Z]+\d+(?:-[A-Z])?` hinter der Ziffer nichts oder einen Bindestrich
+verlangte und nicht einen Buchstaben.
 
-**Wie man es misst.** Loch 2 und 3 sind billig zu halten: der Wächter zählt,
-wieviele Zeilen einer „Offen"-Tabelle er **nicht** erkannt hat, und meldet jede
-einzeln. Loch 1 bleibt offen und wird berichtet, nicht behauptet (S129).
+Die Kennung nimmt jetzt einen Buchstaben, und — das ist der wichtigere Teil —
+eine Zeile im Abschnitt „Offen", die der Waechter nicht lesen kann, wird
+**gemeldet statt uebergangen**. Sonst kommt derselbe blinde Fleck mit der
+naechsten Namensform zurueck, und wieder merkt es niemand.
+
+**Was offen bleibt.** Loch 1 (die zu hohe Schwelle) wird berichtet, nicht
+behauptet (S129). Loch 2 (die zu niedrige) ist billig gehalten, aber nicht
+erzwungen: `STORIES.md` verlangt fast ueberall `>= 2`, ein Tor prueft das
+nicht.
 
 ---
 
@@ -498,9 +573,28 @@ Aufwand, der mit der Gegnerzahl waechst, und ausdruecklich NICHT einen, der
 beide Lasten gleich trifft. Das steht im Kopf des Werkzeugs, gemessen wird es
 nicht.
 
----
+**Drei Faelle in drei Fassungen (v311 bis v313), und keiner ist am Spiel
+aufgefallen.** Sie stehen hier zusammen, weil erst die Reihe die Klasse zeigt:
 
-## Was das für die Reihenfolge bedeutet
+| Fassung | was gruen meldete, ohne pruefen zu koennen |
+|---|---|
+| **v311** | `laufMessen` rechnete die Rampentabelle DANEBEN noch einmal selbst, statt sie am Spiel abzulesen. Ein Fehler in `GameState` kam an und bewirkte nichts — das Tor prueft seine eigene Kopie (Regel 5 und Regel 15 in einem). Die Rampe steht jetzt an EINER Stelle (`GameState.laufRampe`) |
+| **v312** | Der Nachtlauf konnte seit v221 **gar nicht rot werden**: der Schritt endete auf `\| tee`, und der Ausgang einer Rohrleitung ist der des LETZTEN Gliedes. Anderthalb Jahre lang. Jetzt `set -o pipefail` UND der Protokollgriff — zwei unabhaengige Signale |
+| **v313** | Vier Rauchtest-Schritte aus v303–v306 sind `async`; `step` nahm `fn: () => void` und fing im try/catch nie eine abgelehnte Zusage. **Vier Abnahmen aus vier Runden waren nur scheinbar gehalten**, und dass es auffiel, war Glueck |
+
+**Was die drei gemeinsam haben, ist nicht der Fehler, sondern die
+Unsichtbarkeit:** jedes dieser Tore lief, meldete gruen und sah dabei von
+aussen aus wie eine Messung. Die Zaehlung „welcher Kettenschritt hat wieviele
+Gegenproben" haette keinen der drei gefunden — alle drei HATTEN Gegenproben.
+
+**Daraus die eine Frage, die dieses Verzeichnis noch nicht beantwortet:** kann
+dieses Tor ueberhaupt einen Ausgang ungleich null erzeugen? In v312 ist sie
+zum ersten Mal fuer alle vierunddreissig Kettenschritte von Hand gestellt
+worden (drei Ausnahmen, alle drei zu Recht: `tsc` und `build` melden selbst,
+`bericht` ist ausdruecklich kein Tor). **Von Hand** heisst: beim naechsten Mal
+wieder von Hand, oder gar nicht.
+
+---
 
 ## M20 · Ein Bot ohne Deck misst ein Spiel, das eines hat — und die Lücke ist zugefallen, weil eine Zahl zu schlecht aussah
 
@@ -712,6 +806,53 @@ abschätzen kann, ist ein Ratespiel — genau der Vorwurf, den das
 Spielspaß-Audit dem alten Turmausbau macht.
 
 ---
+
+## M21 · Eine Gegenprobe kann am FORTSCHRITT sterben, und `npm run muster` sieht es nicht
+
+**Gefunden in v313, an zwei Faellen im selben Lauf.** Von 382 Gegenproben
+bewiesen zwei nichts mehr — und beide waren nicht an einem Fehler gestorben,
+sondern daran, dass das Projekt weitergekommen ist:
+
+* Die eine machte aus dem Bogenturm einen Bannturm und erwartete, dass der
+  Doku-Waechter den Rueckstandspunkt **C3** meldet. **C3 ist in v295
+  zugefallen** — der Punkt, an dem sie haengt, existiert nicht mehr. Der
+  Kommentar darueber sagte den Verfall sogar voraus, rechnete aber damit, dass
+  der Punkt *offen bleibt* und nicht, dass er *verschwindet*.
+* Die andere haengte `S-N3-04` an `S-N3-02`, damit `npm run naechste` die
+  Abhaengigkeit meldet. **S-N3-04 ist seit v290 zu**, und eine zugefallene
+  Story wird gar nicht erst auf ihre Abhaengigkeit angesehen: **der Eingriff
+  kam an und bewirkte nichts.**
+
+**Die Frage.** Woran erkennt ein Werkzeug, dass eine Gegenprobe zwar noch
+trifft, ihr Treffer aber folgenlos geworden ist?
+
+**Warum die Werkzeuge sie nicht beantworten.** `npm run muster` prueft in 0,4 s,
+ob das Suchmuster jeder Probe in ihrer Zieldatei noch **vorkommt**. Genau das
+ist hier gegeben: der Bogenturm steht da, `S-N3-04` steht da, beide Eingriffe
+lassen sich einwandfrei einbauen. Was fehlt, ist die andere Haelfte — ob das
+Tor danach noch etwas zu melden HAT. Und die kostet einen vollen Lauf.
+
+**Das ist die stillste Verfallsart, die es gibt**, stiller als die vier aus
+v219 (dort wartete ein Messplatz auf einen Zufall, der nicht mehr eintrat).
+Hier ist die Probe technisch in Ordnung; nur die Welt hinter ihr hat sich
+verbessert. Und **ein Fortschritt macht nichts rot** — er wird gefeiert und
+nimmt im Vorbeigehen einen Beweis mit.
+
+**Wie man es misst.** Billig ist es nicht. Was ohne vollen Lauf ginge: die
+Proben nennen, die auf eine **Kennung** oder eine **Story** zeigen, und
+gegenpruefen, ob die noch offen ist — das haette beide gefangen. Was es nicht
+faengt, ist der allgemeine Fall (ein Eingriff, der ankommt und das Tor kalt
+laesst); dafuer gibt es nur den vollen Lauf, und der ist der Grund, warum er
+jede Nacht faehrt.
+
+**Behelf bis dahin, gemessen wirksam:** beide Proben greifen jetzt an etwas,
+das der Fortschritt nicht wegnimmt — die eine an der **Bedingung** statt an
+ihrem Gegenstand, die andere an der **letzten** Story des Katalogs. Das ist
+eine Gewohnheit, kein Tor.
+
+---
+
+## Was das für die Reihenfolge bedeutet
 
 **M1, M3 und M4 sind keine Nebenbefunde, sondern die Begründung dafür, dass
 Paket P1 vor allem anderen steht.** Drei der vier Zahlen, an denen dieser

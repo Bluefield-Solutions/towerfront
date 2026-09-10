@@ -733,6 +733,19 @@ Ausserhalb bleibt alles wie seit v227. Und dieselben drei Gegenproben griffen
 die Zeile `sauber ...` — steht dort ein Befund, gibt es das Muster nicht; sie
 verloren ihren Gegenstand immer dann, wenn man sie am dringendsten braucht.
 
+**Der Ruhezustand faellt von 15,5 auf 13,1 % (v315, S-N4-01).** Drei
+GESPERRTE Faehigkeitsfelder belegten 260 x 46 Punkte, ohne dass man eines
+davon druecken kann. **Ausblenden waere falsch gewesen, und das stand schon
+da:** S2 des Abgleichs verlangt, dass ein gesperrtes Feld ein PLAN ist und
+kein leerer Fleck. Beide Sollwerte vertragen sich, wenn der Plan bleibt und
+die FLAECHE geht - sichtbar ist die naechste Freischaltung, die weiteren
+stehen als Zahl daran.
+
+**Der eigentliche Gewinn steht im Bild, nicht in der Zahl:** die Leiste passt
+dadurch wieder in EINE Reihe statt in drei, und das Mittelband ueber der Bahn
+ist frei. Genau das setzt das HUD-Audit vor den Anteil - *die Lage ist das
+Hauptproblem, nicht der Prozentwert*.
+
 **Grade und Sterne sind ausgebaut - und die zweite Haelfte ist gemessen
 aufgeschoben (v314, S-N1-05).** Drei Grade und die Sternwertung beantworteten
 dieselbe Frage wie die Laufstruktur; solange beides nebeneinander stand, mass
@@ -1079,7 +1092,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v314. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v315. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

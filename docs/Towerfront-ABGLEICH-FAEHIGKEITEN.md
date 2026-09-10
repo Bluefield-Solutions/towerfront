@@ -1,6 +1,6 @@
 # Referenzabgleich — Fähigkeiten freischalten (C18)
 
-Stand: v307 · 10.09.2026
+Stand: v314 · 10.09.2026
 
 **Nachgesehen in v307 — nachgefahren, und die Zahl hat sich bewegt.**
 `npm run c18` meldet die erste Karte mit **einer** Faehigkeit als gewonnen,
@@ -113,7 +113,7 @@ Aus dem, was die drei **tun**:
 | S3 | Die Freischaltung ändert die **nächste** Karte — ein neues Verb, keine grössere Zahl. Wer sie bekommt, spielt anders, nicht stärker | PvZ; Kingdom Rush macht ausdrücklich das andere und trennt beides sauber |
 | S4 | Die **erste Karte ist ohne sie vollständig**. Was am Anfang dasteht, muss zum Sieg reichen — sonst ist die Eröffnung eine Demo | BTD6, als Warnung |
 | S5 | Die Freischaltung wird **gezeigt, wenn sie passiert** — ein Augenblick am Ende des Laufs, keine Zeile in einem Menü | PvZ |
-| S6 | Einmal verdient bleibt verdient: auf **jedem Grad**, in jedem Modus, auch im Endlosmodus | alle drei |
+| S6 | Einmal verdient bleibt verdient: in jedem Modus — mit einer Ausnahme, die v314 eigens prüft: der Endlosmodus schaltet nichts frei, weil er kein Ende hat, an dem man gewonnen hätte | alle drei |
 
 ## Schritt 3 — Abstand messen
 
@@ -123,8 +123,8 @@ Aus dem, was die drei **tun**:
 | S2 | sichtbar, samt Bedingung | **fehlt** — es ist nichts zu, also zeigt auch nichts einen Plan | ganz |
 | S3 | neues Verb je Karte | **fehlt** — die drei Karten unterscheiden sich in Weg und Gelände, nicht im Handwerkszeug | ganz |
 | S4 | erste Karte ohne sie vollständig | **unbekannt** — die ganze Balance ist mit allen vier geeicht. Das ist die Zahl, die diese Runde zuerst braucht | zu messen |
-| S5 | Augenblick am Ende | **halb da** — „Ein neuer Stern" steht seit v135 genau dort und hat genau diese Form | klein |
-| S6 | bleibt verdient | die Sterne liegen schon je Karte **und Grad** in der Ablage (`progress.stars`) | keiner |
+| S5 | Augenblick am Ende | **halb da** — die Zeile steht seit v135 genau dort und hat genau diese Form. Bis v313 hieß sie „Ein neuer Stern"; seit v314 ist es die Erfahrung, die der Lauf ausschüttet | klein |
+| S6 | bleibt verdient | die gewonnenen Karten liegen in der Ablage (`progress.gewonnen`, bis v313 aus `progress.stars` gerechnet) | keiner |
 
 **Der Abstand ist bei drei von sechs Punkten der volle, bei zweien
 klein oder null** — und S4 ist keine Meinung, sondern eine Messung, die vor
@@ -137,9 +137,12 @@ macht, ist kein Fortschritt, sondern ein Fehler.
 steht von Anfang an, die drei anderen hängen an der Zahl der **je
 gewonnenen Karten**. Keine Zuordnung „Ascheschlucht schaltet den Frost frei"
 — die wäre bei der vierten Karte still falsch, und Karte 4 steht als C24 im
-Verzeichnis. Gerechnet wird aus `progress.stars`: eine Karte gilt als
-geschafft, sobald dort auf irgendeinem Grad ein Stern steht, und Sterne gibt
-es nur für einen Sieg (`starsFor`). Damit erfüllt S6 sich von selbst.
+Verzeichnis. **Bis v313** wurde aus `progress.stars` gerechnet: eine Karte galt
+als geschafft, sobald dort auf irgendeinem Grad ein Stern stand, und Sterne gab
+es nur für einen Sieg. **Seit v314** steht es als eigene Liste
+(`progress.gewonnen`) — die Sternwertung ist entfallen, und was aus ihr
+abzuleiten war, ist beim ersten Lesen eines alten Standes einmalig abgeleitet
+worden. Damit erfüllt S6 sich weiterhin von selbst.
 
 **Der Zustand wird beim Start des Laufs eingefroren.** Wer während einer
 Partie nichts freischalten kann, braucht auch keinen Fall dafür — und der

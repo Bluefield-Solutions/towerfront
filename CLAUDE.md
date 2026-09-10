@@ -733,6 +733,26 @@ Ausserhalb bleibt alles wie seit v227. Und dieselben drei Gegenproben griffen
 die Zeile `sauber ...` — steht dort ein Befund, gibt es das Muster nicht; sie
 verloren ihren Gegenstand immer dann, wenn man sie am dringendsten braucht.
 
+**Grade und Sterne sind ausgebaut - und die zweite Haelfte ist gemessen
+aufgeschoben (v314, S-N1-05).** Drei Grade und die Sternwertung beantworteten
+dieselbe Frage wie die Laufstruktur; solange beides nebeneinander stand, mass
+die Balance zwei Dinge auf einmal (Regel 4). Wie hart es wird, entscheidet
+jetzt der Lauf; was ein Lauf wert war, sagen Kristall und Erfahrung. Die
+Sterne trugen dabei noch etwas Zweites - welche Karten gewonnen sind -, und
+das ist eine eigene Liste geworden, aus den alten Sternen **abgeleitet**,
+damit niemandes Fortschritt verfaellt.
+
+**Die Stufen bleiben vorerst, und der Grund ist eine Zahl:** ein voll
+ausgebauter Turm leistet das **5,4- bis 39,1-fache** seiner ersten Stufe und
+kostet dafuer 1205 bis 3010 Gold statt 55 bis 140. Wer die Stufen ersatzlos
+herausnimmt, macht das Spiel um diesen Faktor unspielbar - der Kartenstapel
+und die Zahl der Tuerme muessen die Kurve tragen. Das ist ein Umbau der
+Machtkurve mit `npm run sim` als Messgeraet, kein Rueckbau, und deshalb eine
+eigene Runde. Der mechanische Teil ist gemacht und wieder zurueckgenommen: er
+dauert zwanzig Minuten, die **rund 25 Pruefbloecke**, die dabei ihren
+Gegenstand verlieren, dauern laenger - allein `npm run guards` hatte 58
+Uebersetzungsfehler.
+
 **Vier Rauchtest-Schritte konnten still scheitern (v313).** Der zweite volle
 Probenlauf meldete `Der Kartenzug unterbricht die Welle: "smoke" meldet nicht`
 — und hier bewies dieselbe Probe einwandfrei. Die Klasse aus v225, und die
@@ -1045,7 +1065,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v313. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v314. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

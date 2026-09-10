@@ -1,6 +1,6 @@
 # Towerfront — Genre-Abgleich
 
-Stand: v307 · 10.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+Stand: v314 · 10.09.2026 · Gemessen von `npm run bericht`: **30 von 30
 
 **Nachgesehen in v307:** nachgefahren, nicht geglaubt — unveraendert **30 von
 30**, gewichtet 100 %, davon **68 von 68 Gewichtspunkten ueber 28 Kriterien
@@ -136,7 +136,7 @@ reichen für einen Prototyp. *Diesen Fehler haben wir bisher vermieden.*
 | Fokus & Klarheit | 4/4 | Karte ohne Scrollen, Pause mit Baumöglichkeit, Tempo 1×/2×/3×, Werte vor dem Kauf |
 | Rollen & Entscheidungen | 5/6 | Vier Türme, vier Wirkungsweisen, **verzweigter Ausbau**, Fähigkeiten, Luftlücke — es fehlt der Blocker |
 | Gegner | 5/6 | Masse, Tempo, Panzerung, Luft, Zerfall, Boss — es fehlen unterstützende Gegner |
-| Karten & Wiederspielwert | **6/6** | Drei Karten mit Gabelungen, drei Grade, Endlosmodus, Sterne je Karte und Grad, dauerhafte Verbesserungen |
+| Karten & Wiederspielwert | **6/6** | Vier Karten mit Gabelungen, Steigerung je Abschnitt und eine Auflage je Abschnittswahl (bis v313: drei Grade), Endlosmodus, Erfahrung je Lauf (bis v313: Sterne je Karte und Grad), dauerhafte Verbesserungen |
 | Politur | 7/8 | Ton, Auswertung, Einführung, Spielstand, Inspektor, animierte Gegner, lebende Welt — es fehlen antippbare Kleinigkeiten in der Karte |
 
 Das Bild ist eindeutig: **Die Kernschleife ist auf Genre-Niveau, der
@@ -164,7 +164,7 @@ Spielinneren: ein Turm, der aufhält statt tötet (R4), ein Gegner, der die
 Zielreihenfolge erzwingt (G5), und antippbare Kleinigkeiten in der Karte (P8).
 
 **K1 und K2 sind seit v18 erfüllt.** Drei Karten mit eigenen Biomen, zwei davon
-mit zwei Zuwegen, die sich unterwegs vereinen. Damit ergeben Sterne (K5) und
+mit zwei Zuwegen, die sich unterwegs vereinen. Damit ergeben die Erfahrung (K5, bis v313 die Sterne) und
 Fortschritt (K6) überhaupt erst Sinn — sie sind jetzt der größte verbliebene
 Block.
 

@@ -1,6 +1,6 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v307 · 10.09.2026
+Stand: v314 · 10.09.2026
 
 **Nachgesehen in v307 — nachgefahren, nicht geglaubt: die Grenze aus v300
 haelt, und der Kartenzug hat sie NICHT gesprengt.** Seit v303 liegt zwischen

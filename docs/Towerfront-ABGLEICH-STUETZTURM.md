@@ -1,6 +1,6 @@
 # Referenzabgleich — Stützturm (C3, „Bannturm")
 
-Stand: v307 · 10.09.2026
+Stand: v314 · 10.09.2026
 
 **Nachgesehen in v307 — nachgefahren, unveraendert, und S5 haelt weiter.**
 Der Bannturm ist seit v295 nicht angefasst. Gemessen mit `npm run sim`,

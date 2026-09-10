@@ -1196,6 +1196,47 @@ Der Endlosmodus wird der Schwanz des Laufs (S-N6-06).
   einzeln ersetzt oder als entfallen begründet.
 * `npm run muster` meldet keine Probe ohne Gegenstand.
 
+**Grade und Sterne sind in v314 ausgebaut** — die eine Hälfte der Story steht.
+Was dabei an Prüfungen den Gegenstand verlor, ist umgebaut statt
+stummgeschaltet: die Monotonie der Grade wurde die Ordnung der **Abschnitte**,
+die Sternobergrenze wurde „in wievielen Läufen", die Sternbuchhaltung wurde
+die gewonnene Karte, und die Prüfung „der Grad lässt sich wählen" ist
+**umgedreht** — sie verlangt jetzt, dass die Wahl weg ist.
+
+**Die zweite Hälfte ist kein Rückbau, sondern ein Umbau der Machtkurve — und
+das ist gemessen, nicht vermutet.** Ein voll ausgebauter Turm leistet das
+**5,4- bis 39,1-fache** seiner ersten Stufe:
+
+| Turm · Zweig | DPS Stufe 1 → 6 | Gold 1 → 6 |
+|---|---|---|
+| Bogenturm · Scharfschütze | ×26,7 | 55 → 1205 |
+| Bogenturm · Salve | ×24,6 | 55 → 1205 |
+| Frostturm · Ewiges Eis | ×33,6 | 80 → 1555 |
+| Frostturm · Splitterfrost | **×39,1** | 80 → 1890 |
+| Mörser · Streubombe | **×9,5** | 125 → 2415 |
+| Mörser · Brecher | ×23,4 | 125 → 2745 |
+| Prisma · Verzweigung | **×5,4** | 140 → 2840 |
+| Prisma · Bündelung | ×24,0 | 140 → 3010 |
+
+Wer die Stufen ersatzlos herausnimmt, macht das Spiel um diesen Faktor
+unspielbar. Der Kartenstapel muss die Kurve tragen, zusammen mit der MENGE an
+Türmen, die das nicht mehr in Ausbauten gebundene Gold kauft — ein Turm kostet
+dann 55 bis 140 statt 1205 bis 3010. Zur Größenordnung: fünfzehn Karten zu
++10 % ergeben ×4,2, zu +15 % ×8,1. Die Karten liegen heute bei +5 bis +15 %,
+die Grössenordnung stimmt also — geeicht ist sie nicht.
+
+**Deshalb bekommt die zweite Hälfte ihre eigene Runde**, mit `npm run sim` als
+Messgerät und der Tabelle oben als Sollwert. Der Rückbau selbst ist
+mechanisch und in einem Durchgang gemacht (Zweigtabellen aus `towers.ts`,
+`statsFor`/`rangeFor` auf ein Argument, `nextFor`/`hatZweigwahl`/`accentFor`
+weg); was Zeit kostet, sind die **rund 25 Prüfblöcke**, die dabei ihren
+Gegenstand verlieren — allein `npm run guards` hatte 58 Übersetzungsfehler,
+und jeder davon ist ein Urteil, kein Wegstreichen.
+
+**Ein Baum, der nicht übersetzt, gehört nicht auf den Zweig** — und einer, bei
+dem `sim` rot wird, erst recht nicht: der Probenlauf auf dem Zweig würde daran
+scheitern und Fehlermeldungen erzeugen, ohne dass sie etwas beweisen.
+
 **Der Umfang ist in v307 gezählt, bevor die Runde beginnt** — die zweite
 Abnahme verlangt es wörtlich („werden gezählt und einzeln ersetzt oder als
 entfallen begründet"), und eine Zählung, die erst mitten im Umbau entsteht,

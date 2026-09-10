@@ -1,6 +1,6 @@
 # Towerfront — Anforderungskatalog
 
-Stand: v307 · 10.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+Stand: v314 · 10.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
 
 **Nachgesehen in v307 — und die Antwort auf den wichtigsten Satz dieses
 Katalogs steht inzwischen woanders.**
@@ -219,7 +219,7 @@ misst, schaltet sie zuerst ab") schon fünfmal bezahlt hat.
 
 Dazu drei Zahlen, die im Auftrag nicht stehen und die ich für wichtig halte:
 
-* **Der Grad „Ruhig" verliert nie einen einzigen Punkt.** Gemessen 80/80 für
+* **Der Grad „Ruhig" verlor nie einen einzigen Punkt.** Gemessen 80/80 — der Befund ist richtig geblieben, sein Gegenstand nicht: die drei Grade sind in v314 entfallen (S-N1-05). Was er beschrieb, hält heute die Prüfung, dass nicht alle Spielstile verlustfrei durchkommen.
   alle drei Spielstile. Das ist derselbe Defekt wie G1, eine Ebene tiefer —
   und kein Tor sagt ein Wort dazu.
 * **Der Endlosmodus endet bei Welle 19**, vier Wellen über dem

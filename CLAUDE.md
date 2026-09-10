@@ -172,7 +172,14 @@ npm run gate        dreiunddreissig Prüfungen. Läuft seit v269 auf dem Runner;
                     137 s gewachsen, ohne dass jemand etwas gemerkt hätte.
                     **Sechs Schritte tragen 85 % davon**, und das ist der
                     Ansatzpunkt für jede Beschleunigung:
-                      sim 156 s (v306 nachgemessen; v268 waren es 127) ·
+                      sim 158 s (v311 nachgemessen; v268 waren es 127) -
+                      davon 107 s der LAUF (`--lauf`), also zwei Drittel.
+                      Das ist der groesste Hebel, den es noch gibt: an `sim`
+                      haengen 31 Gegenproben, und nur neun davon fragen nach
+                      dem Lauf. Ein eigenes Tor dafuer spart rund 39 Minuten
+                      Rechenzeit im Nachtlauf - bei sechs Scheiben aber nur
+                      sechs Minuten Wanduhr, und die 38 Minuten blockieren
+                      nichts mehr. Deshalb gemessen und NICHT gemacht ·
                       browser 76 s · wegdeckungtor 64 s ·
                       bildtor 41 s · smoke 29 s · uxaudittor 26 s
                     Die übrigen 27 Schritte zusammen: 63 s.

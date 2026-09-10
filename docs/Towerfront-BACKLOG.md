@@ -47,6 +47,7 @@ Aus `docs/Towerfront-AUDIT-SPIELSPASS.md`, zwölf Soll-Punkte G1–G12, keiner e
 
 | # | Punkt | Nutzen | Aufw. |
 |---|---|---|---|
+| N4W | **Die UNTERE Schranke des Weichenfensters hat keine Gegenprobe mehr.** `SPREIZUNG_MIN = 1,10` faengt die Weiche, die den Weg nicht messbar aendert - Dekoration. Ihre Gegenprobe liess `saeule1` den Umweg statt des kurzen Astes sperren; gemessen faellt der Eingriff heute vorher als **Dublette** auf ("entscheidet nichts"), und die Spreizung bleibt offen. **Fuenf Eingriffe gebaut und gemessen, keiner traegt:** Umleitung auf die kurze Geometrie 1,17 (saeule3 haelt das Fenster), saeule3-Umleitung begradigt 1,34 (die Route rechnet um), gemeinsame Kante verlaengert 1,23 (es ist ein VERHAELTNIS), saeule1 auf die Umleitung faellt als Dublette, beide Umleitungen zugleich geht nicht - ein Ersatz trifft nur EINE Stelle. Der Grund ist strukturell: vier unabhaengige Weichen halten das Fenster auf, und die Rechnung sucht nach jedem Eingriff die kuerzeste Route neu. **Die Rechnung selbst ist gehalten** - `laengste / kuerzeste` wird seit v313 von OBEN gepruefft (Fenster ueber 2,5, "sondern ein Knopf"), und bricht sie, fallen beide Schranken. Ungehalten ist die untere Schranke als Zahl. Zu schliessen mit einem Netz, das die Stellungen trennt, oder mit einem Eingriff, der mehrere Stellen zugleich trifft. · **Schliesst, wenn:** `text tools/probes.mjs "meldet: 'Dekoration'" >= 1` | ●● | M |
 
 ## Offen — Phase D (Politur)
 

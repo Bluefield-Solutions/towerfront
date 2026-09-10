@@ -696,6 +696,20 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Das Weichenfenster wird jetzt von OBEN gehalten (v313, N4W).** Die
+Gegenprobe zur unteren Schranke liess `saeule1` den Umweg statt des kurzen
+Astes sperren — gemessen faellt dieser Eingriff heute vorher als **Dublette**
+auf, und die Spreizung bleibt offen. **Fuenf Eingriffe gebaut und gemessen,
+keiner traegt:** 1,17 · 1,34 · 1,23 · zweimal gar nicht stellbar. Der Grund ist
+strukturell — vier unabhaengige Weichen halten das Fenster auf, und die
+Rechnung sucht nach jedem Eingriff die kuerzeste Route neu.
+
+Gehalten wird deshalb dieselbe Rechnung von der anderen Seite: eine
+aufgeblaehte Umleitung treibt `laengste / kuerzeste` ueber 2,5, und das Tor
+meldet den Knopf. Bricht die Rechnung, fallen beide Schranken. **Was
+ungehalten bleibt, steht als N4W im Verzeichnis** statt still zu bleiben — mit
+Schliessbedingung, also gefahren und nicht geglaubt.
+
 **Der Befund hat sich selbst am Leben gehalten (v313).** Ueber der
 Befund-Pruefung stand seit v227, sie sei - anders als die Standregel - nicht
 unter `PROBENLAUF` ausgenommen, denn *„dort gibt es einen Ringschluss, hier

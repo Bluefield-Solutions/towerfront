@@ -582,6 +582,47 @@ function foerdererMessen(): void {
  *  Messplatz.
  *
  *  Kein Tor: es misst, es urteilt nicht. */
+/** **Was die Werft kostet und was sie zurueckgibt** (v290, S-N3-04).
+ *
+ *  Derselbe Bot einmal mit und einmal ohne - die Bauweise aus v285, und sie
+ *  hat sich seitdem zweimal bewaehrt: sie sagt in vier Zeilen mehr als vier
+ *  Eichungen.
+ *
+ *  Die entscheidende Zahl ist NICHT "wieviel Kristall kommt zurueck" - das
+ *  rechnet die Formel aus, dafuer braucht es keinen Lauf. Gefragt ist, ob ein
+ *  Durchbruch danach noch wehtut: die Story verlangt ausdruecklich, dass die
+ *  Reparatur Verluste nicht folgenlos macht. */
+function werftMessen(): void {
+  console.log('\nWerft (derselbe Bot, einmal mit und einmal ohne):');
+  let schlechtester = 99;
+  for (const mm of MAPS) {
+    const ohne = play(mixedPlanBase, () => 0, MEISTER, 'normal', mm.id);
+    const mit = play(werftPlan, () => 0, MEISTER, 'normal', mm.id);
+    const dLeben = mit.lives - ohne.lives;
+    console.log(`  ${mm.id.padEnd(15)} Kristall ${ohne.lives} -> ${mit.lives} von `
+      + `${mit.maxLives} (${dLeben >= 0 ? '+' : ''}${dLeben})`
+      + `   Tuerme ${ohne.towers} -> ${mit.towers}`
+      + `   Gold ${ohne.earned} -> ${mit.earned}`);
+    // Was ein Durchbruch noch kostet: der Kristall darf mit Werft nicht
+    // voll bleiben, sonst ist der Verlust zurueckgekauft statt abgemildert.
+    schlechtester = Math.min(schlechtester, mit.maxLives - mit.lives);
+  }
+  console.log(`  Fehlender Kristall am Ende, bestenfalls: ${schlechtester} `
+    + `(gefordert > ${WERFT_REST_MIN} - sonst ist ein Durchbruch folgenlos).`);
+  if (schlechtester <= WERFT_REST_MIN) {
+    errors.push(`Mit Werft endet die beste Partie mit ${schlechtester} fehlendem Kristall. `
+      + 'Dann ist ein Durchbruch zurueckgekauft statt abgemildert, und die Verluste '
+      + 'haben keine Folge mehr.');
+  }
+}
+
+/** Der Bauplan mit Werft: dieselbe Mischung, eine Werft dazwischen. Sie
+ *  ersetzt keinen Turm, sie kommt zu ihnen - genau das ist der Handel, den
+ *  die Story messen will (derselbe Bauplatz fuer drei Zwecke). */
+const werftPlan: TowerId[] = ['arrow', 'arrow', 'werft', 'mortar', 'frost', 'prism'];
+/** Wieviel Kristall am Ende der besten Partie noch fehlen MUSS. */
+const WERFT_REST_MIN = 0;
+
 const MESS_ZUSCHLAG = 0.35;
 /** Wieviel Gold der Aufschlag dem Haeufer MEHR abnehmen muss als dem
  *  Verteiler. Gemessen sind 344 bis 693 je Karte; 200 laesst Luft nach unten
@@ -1680,6 +1721,7 @@ const mixedPlan = mixedPlanBase;
   weichenstileMessen();
   foerdererMessen();
   wiederholungMessen();
+  werftMessen();
   console.log(`  Alleinsiege: ${ZIELWAHL_ORDNUNG.map((z) => `${z} ${siege[z]}`).join('  ')}`
     + `   (${entschieden} Wellen trennen ueberhaupt)`);
   console.log(`  geteilt:     ${ZIELWAHL_ORDNUNG.map((z) => `${z} ${geteilt[z]}`).join('  ')}`);

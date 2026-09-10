@@ -1,6 +1,17 @@
 # Marktrecherche — was moderne Tower-Defense-Spiele ausmacht
 
-Stand: v283 · 09.09.2026
+Stand: v290 · 09.09.2026
+
+**Nachgesehen in v290:** unverändert gültig — und zweimal hat sie in dieser
+Kette die Form eines Vorbilds richtiggestellt, nicht seine Zahl. Defense Grids
+Command Tower gibt seine 25 % **global**; der Förderer wirkt im Umkreis und
+bringt deshalb gemessen −1,8 bis +2,4 % (v285). Rogue Tower verteuert jeden
+weiteren Turm derselben Art, hat dafür aber über ein Dutzend Turmarten;
+Towerfront hat vier, und ein Zuschlag ab dem zweiten Turm träfe den perfekten
+Verteiler genauso hart wie den Häufer (v287). **Regel 10 gilt für die Form
+eines Vorbilds, nicht nur für seine Zahl** — das steht seitdem zweimal
+gemessen da.
+
 
 **Nachgesehen in v283:** unveraendert richtig, und **einer der Befunde ist
 seitdem am eigenen Baum nachgemessen**. Hier steht, Defense Grid mache das

@@ -691,6 +691,21 @@ ab Hub 3 verdient der durchgehend ueberlappende Bot mehr Gold als der
 vorsichtige, und damit waere der Fruehstart eine Einnahmequelle statt eines
 Risikos. Gesetzt ist 2,0.
 
+**Die Werft repariert den Kristall (v290).** Der Kristall konnte bisher nur
+fallen; jetzt setzt ein Bauwerk nach jeder Welle ein Stueck zusammen, und
+derselbe Bauplatz konkurriert zwischen Feuerkraft, Einkommen und Kristall.
+Sie wirkt GLOBAL - die Lehre aus v285, wo der Foerderer an seinem Umkreis
+folgenlos blieb: der Kristall steht an einer Stelle, ein Umkreis um ihn waere
+keine Entscheidung, sondern eine Bauvorschrift. Zwei Zweige: `Takt` mehr je
+Welle, `Schmelze` weniger, dafuer hebt sie das HOECHSTMASS um 15 % des
+Startkristalls. Gemessen 27->21 / 35->38 / 23->28 / 14->15; das Minus ist der
+Handel, dort ersetzt sie ein Geschuetz. Die eigentliche Abnahme ist die andere
+Richtung: am Ende der besten Partie muessen Kristallpunkte FEHLEN, sonst ist
+ein Durchbruch zurueckgekauft statt abgemildert (gemessen vier). Der Kernraub
+bleibt unangetastet - er ist eine Rueckholung, keine Reparatur, und beide
+duerfen sich nicht aufrechnen. Der Riss im Kristall geht damit zum ersten Mal
+wieder zu; die Ableitung dafuer steht seit v263 und ist nie gefahren worden.
+
 **Wiederholung wird teurer - gebaut, gemessen, nicht scharf gestellt
 (v287).** Der Baupreis entsteht seit v287 an EINER Stelle
 (`GameState.baupreis`); vorher stand `def.base.cost` an acht. Die Freimenge
@@ -742,7 +757,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v289. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v290. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

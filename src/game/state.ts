@@ -6,6 +6,7 @@ import {
   TOWERS, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor, hatZweigwahl,
   guenstigsterTurm, type BranchIndex, type TowerId,
   FOERDER_DECKEL, foerderZuschlag, wiederholungsFaktor, WIEDERHOLUNG_ZUSCHLAG,
+  werftErtrag, werftHoechstmass,
 } from '../data/towers';
 import { EARLY_BONUS_MAX, EARLY_BONUS_WINDOW, EARLY_RISIKO_HUB } from '../data/waves';
 import { VERBUND_MAX, VERBUND_STUFE, VERBUND_UMKREIS } from './verbund';
@@ -157,6 +158,10 @@ export class GameState {
   gold = DIFFICULTIES.normal.startGold;
   lives = DIFFICULTIES.normal.startLives;
   maxLives = DIFFICULTIES.normal.startLives;
+  /** Der Kristall beim Start dieser Partie - die Bezugsgroesse der Werft.
+   *  `maxLives` waechst mit der Schmelze; wer gegen das heutige Mass rechnet,
+   *  bekommt Zinseszins statt einer Erhoehung je Stufe. */
+  startLives = DIFFICULTIES.normal.startLives;
   /** Wieviele Wellen GESTARTET sind - nicht mehr, wieviele fertig sind.
    *
    *  Bis v265 stieg der Zaehler in `finishWave`, weil immer nur eine Welle
@@ -1334,12 +1339,57 @@ export class GameState {
     this.stats.goldEarned += payout;
     this.float(this.goal.x, this.goal.y - 56, `Welle ${welle + 1} geschafft  +${payout}`,
       C.gold, 26);
+    this.kristallReparatur();
     this.idleTime = 0;
     // Gewonnen ist die Partie, wenn ALLE Wellen gestartet UND durch sind.
     if (!this.endless && this.waveIndex >= this.waves.length && !this.laufende.length) {
       this.finishRun(true);
       Sfx.play('win');
     }
+  }
+
+  /** **Die Werften setzen den Kristall zusammen** (v290, S-N3-04).
+   *
+   *  Je abgeschlossener Welle, an derselben Stelle wie der Wellenbonus: der
+   *  Spieler soll sehen, wofuer er bezahlt wurde, und zwei Belohnungen an
+   *  zwei Zeitpunkten verschwaemmen zu einem Gefuehl.
+   *
+   *  **Der Kernraub bleibt unangetastet, und das ist keine Feinheit.** Ein
+   *  Raeuber traegt einen Splitter; erwischt man ihn, schwebt der zurueck und
+   *  schreibt die Punkte wieder gut (`splitterZurueck`). Das ist eine
+   *  RUECKHOLUNG - dasselbe Stueck kommt an dieselbe Stelle. Die Reparatur
+   *  ist etwas anderes: sie macht neuen Kristall aus Gold. Beide addieren auf
+   *  `lives`, also muessen sie sich am Deckel dieselbe Grenze teilen, aber
+   *  sie duerfen sich nicht gegenseitig aufrechnen - wer beides mischt, hat
+   *  eine Rueckholung, die manchmal nichts bringt, weil eine Werft den Platz
+   *  schon gefuellt hat, und das waere aus dem Spiel heraus nicht zu
+   *  verstehen.
+   *
+   *  Deshalb steht die Reparatur HINTER dem Wellenende, wo kein Raeuber mehr
+   *  laeuft: `finishWave` faellt erst, wenn nichts mehr von dieser Welle auf
+   *  dem Feld ist.
+   *
+   *  **Das Hoechstmass steigt zuerst, dann wird gefuellt.** Anders herum
+   *  liefe die Schmelze eine Welle hinterher: sie hoebe die Grenze, die im
+   *  selben Zug schon erreicht war. */
+  private kristallReparatur(): void {
+    let ertrag = 0;
+    let hoehung = 0;
+    for (const t of this.towers) {
+      if (t.def !== 'werft') continue;
+      ertrag += werftErtrag(t.branch, t.level);
+      hoehung += werftHoechstmass(t.branch, t.level);
+    }
+    if (!ertrag && !hoehung) return;
+    if (hoehung > 0) {
+      // Anteilig am Startkristall des Grades, nicht am heutigen Hoechstmass -
+      // sonst waechst die Erhoehung mit sich selbst.
+      this.maxLives += Math.round(this.startLives * hoehung);
+    }
+    const gut = Math.min(Math.round(ertrag), Math.max(0, this.maxLives - this.lives));
+    if (gut <= 0) return;
+    this.lives += gut;
+    this.float(this.goal.x, this.goal.y - 86, `Kristall +${gut}`, C.crystal, 24);
   }
 
   // ----------------------------------------------------------- Faehigkeiten
@@ -2611,6 +2661,9 @@ export class GameState {
     this.gold = d.startGold + this.perks.goldBonus;
     this.lives = Math.round(d.startLives * (1 + this.perks.livesShare));
     this.maxLives = this.lives;
+    // Das Mass, gegen das die Schmelze rechnet - festgehalten beim Start,
+    // damit ihre Erhoehung nicht mit sich selbst waechst (v290).
+    this.startLives = this.lives;
     this.stars = 0;
     this.sterneVorher = 0;
     this.waveIndex = 0;

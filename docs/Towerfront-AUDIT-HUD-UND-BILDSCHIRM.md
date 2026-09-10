@@ -1,6 +1,20 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v283 · 09.09.2026
+Stand: v290 · 09.09.2026
+
+**Nachgesehen in v290 — und ein Befund dieses Audits ist seit v286
+geschlossen, ohne dass er hier stand.** Der laufende Strom im Wellenknopf trug
+dessen Trefferfläche mit (208 → 317 Punkte breit) und startete eine Welle, wenn
+man auf die **Anzeige** tippte. Ein Zustand, der wie eine Handlung reagiert,
+ist genau die Klasse, die dieses Audit meint. Gemessen sperrte die Bedienung im
+Zustand „welle" 16,5 % des Bildschirms gegen erlaubte 16; jetzt 15,1 % und
+damit gleichauf mit dem Ruhezustand.
+
+`uxaudit` schlüsselt die gesperrte Fläche seitdem **je Wurzel** auf — die
+nackte Prozentzahl nannte den Verursacher nicht, und die erste Vermutung
+(ein fünfter Bauknopf) war falsch. Das Dock steht in beiden Zuständen bei
+denselben 10,4 %.
+
 
 **Nachgesehen in v283:** die Messbefunde stehen unveraendert, und die drei
 Inspektorlaeufe zu v278 bis v280 haben sie ohne eine einzige neue Kennung

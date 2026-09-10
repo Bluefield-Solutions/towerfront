@@ -1,6 +1,16 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v283 · 09.09.2026
+Stand: v290 · 09.09.2026
+
+**Nachgesehen in v290:** die Kette hat seit v283 drei Werkzeuge dazubekommen,
+und alle drei sind aus einem Fehler entstanden statt aus einem Plan:
+`npm run weichenbau` (v284, eine Weiche messen bevor sie in die Karte kommt),
+`npm run beruehrt` (v288, welche Tore an den geänderten Dateien hängen — v286
+fasste `index.html` an und liess `autarkie` aus, genau das wurde rot) und
+`autarkietor` (v288, baut selbst, weil eine Gegenprobe sonst den Stand von
+vorhin prüft). Die Torkette selbst ist unverändert dreiunddreissig Schritte
+und läuft seit v269 auf dem Runner.
+
 
 **Nachgesehen in v283:** die Tortabelle ist um das **Wegenetz-Tor** gewachsen
 (`npm run netztor`, Stelle 3 der Kette, seit v278) und steht damit auf

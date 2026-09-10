@@ -12,7 +12,7 @@ import { WORLD_W } from './config';
  *  gewesen, und Nachbauten veralten. Jede Torpruefung laeuft ueber
  *  `TOWER_ORDER`, also sieht keine von ihnen die Zielunit - und keine
  *  musste dafuer angefasst werden. */
-export type TowerId = 'arrow' | 'frost' | 'mortar' | 'prism' | 'foerderer' | 'core';
+export type TowerId = 'arrow' | 'frost' | 'mortar' | 'prism' | 'foerderer' | 'werft' | 'core';
 
 /** Wie ein Turm angreift. Der Angriffstyp bestimmt die Rolle im Feld,
  *  nicht die Zahlenhoehe - sonst waeren es nur Varianten voneinander. */
@@ -326,6 +326,54 @@ export const TOWERS: Record<TowerId, TowerDef> = {
       },
     ],
   },
+  /** **Die Werft** (v290, S-N3-04) - der Kristall laesst sich reparieren.
+   *
+   *  Der Kristall konnte bisher nur fallen. Rogue Tower macht die
+   *  Lebenspunkte zu einer Ressource, in die man investiert; damit
+   *  konkurriert derselbe Bauplatz zwischen **Feuerkraft, Einkommen und
+   *  Kristall**, und "der Bauplatz ist die haerteste Knappheit" ist der
+   *  Befund aus zwei der drei Vorbilder.
+   *
+   *  **Sie wirkt global, nicht im Umkreis** - und das ist die Lehre aus v285.
+   *  Der Foerderer hat einen Umkreis von 230 Weltpunkten und bringt gemessen
+   *  -1,8 bis +2,4 % Gold; die Ursache war die FORM, nicht die Zahl. Der
+   *  Kristall steht an einer Stelle der Karte, ein Umkreis um ihn herum
+   *  waere keine Entscheidung, sondern eine Bauvorschrift. Die Werft steht,
+   *  wo Platz ist, und ihre Wirkung haengt an der Zeit statt am Ort.
+   *
+   *  Teurer als jedes Geschuetz: sie kauft keine Verteidigung, sondern
+   *  Fehlertoleranz, und das darf nicht der billigere Weg sein. */
+  werft: {
+    id: 'werft', footprint: FOOTPRINT, name: 'Werft', role: 'Kristall',
+    blurb: 'Schiesst nicht. Setzt nach jeder Welle ein Stueck des Kristalls zusammen.',
+    color: '#8FB8D8', accent: '#7FE7E0',
+    attack: 'keiner', hitsAir: false, projectileSpeed: 0,
+    base: { cost: 150, damage: 0, cooldown: 0 },
+    branches: [
+      {
+        id: 'takt', name: 'Takt', color: '#7FE7E0',
+        blurb: 'Mehr Kristall je Welle. Lohnt, wenn oft etwas durchkommt.',
+        levels: [
+          { cost: 130, damage: 0, cooldown: 0 },
+          { cost: 200, damage: 0, cooldown: 0 },
+          { cost: 290, damage: 0, cooldown: 0 },
+          { cost: 410, damage: 0, cooldown: 0 },
+          { cost: 560, damage: 0, cooldown: 0 },
+        ],
+      },
+      {
+        id: 'schmelze', name: 'Schmelze', color: '#F2C14E',
+        blurb: 'Weniger je Welle, dafuer waechst der Kristall ueber sein Mass hinaus.',
+        levels: [
+          { cost: 130, damage: 0, cooldown: 0 },
+          { cost: 200, damage: 0, cooldown: 0 },
+          { cost: 290, damage: 0, cooldown: 0 },
+          { cost: 410, damage: 0, cooldown: 0 },
+          { cost: 560, damage: 0, cooldown: 0 },
+        ],
+      },
+    ],
+  },
   core: {
     id: 'core', footprint: 200, name: 'Zielunit', role: 'Letzte Linie',
     blurb: 'Steht von Anfang an und schiesst mit. Ausbau kostet ein Vielfaches.',
@@ -480,6 +528,39 @@ export function foerderZuschlag(branch: 0 | 1 | null, level: number): number {
   return FOERDER_BONUS + Math.max(0, level - 1) * schritt;
 }
 
+/** **Wieviel Kristall EINE Werft je abgeschlossener Welle zurueckgibt.**
+ *
+ *  Zwei Zweige, zwei Fragen: `Takt` setzt mehr je Welle zusammen, `Schmelze`
+ *  weniger - dafuer waechst mit ihr der Kristall ueber sein urspruengliches
+ *  Mass hinaus. Wer viel durchlaesst, nimmt den Takt; wer selten trifft,
+ *  aber dann hart, nimmt die Schmelze und baut sich einen Puffer.
+ *
+ *  Die Zahlen sind durchprobiert, nicht gesetzt - der Stand steht am
+ *  Messergebnis in `docs/Towerfront-BACKLOG.md`. */
+export const WERFT_TAKT_ZWEIG = 0;
+export const WERFT_GRUND = 1;
+
+export function werftErtrag(branch: 0 | 1 | null, level: number): number {
+  const schritt = branch === WERFT_TAKT_ZWEIG ? 0.5 : 0.2;
+  return WERFT_GRUND + Math.max(0, level - 1) * schritt;
+}
+
+/** Um wieviel die Schmelze das HOECHSTMASS des Kristalls je Stufe hebt.
+ *
+ *  Das ist ihr eigentlicher Handel: Rogue Towers Mine gibt +1 Hoechstleben je
+ *  Stufe, und dieselbe Bewegung macht aus einer Reparatur eine Investition -
+ *  wer frueh baut, spielt am Ende mit einem groesseren Kristall.
+ *
+ *  Anteilig am Startkristall, nicht absolut (Regel 2): der Kristall ist von
+ *  20 auf 42 gewachsen, und fuenf Pruefungen wurden damals still
+ *  bedeutungslos, weil sie in Punkten rechneten. */
+export const WERFT_HOECHSTMASS_ANTEIL = 0.03;
+
+export function werftHoechstmass(branch: 0 | 1 | null, level: number): number {
+  if (branch === WERFT_TAKT_ZWEIG) return 0;
+  return Math.max(0, level - 1) * WERFT_HOECHSTMASS_ANTEIL;
+}
+
 /** Die kaufbaren Tuerme, in der Reihenfolge der Bauleiste.
  *
  *  Die Zielunit steht hier NICHT: sie wird nicht gebaut. Jede Torpruefung
@@ -502,7 +583,7 @@ export const TOWER_ORDER: TowerId[] = ['arrow', 'frost', 'mortar', 'prism'];
  *
  *  Gefragt wird diese Liste ueberall dort, wo es um die BAULEISTE geht:
  *  Bedienung, Bildvorrat, Bildbestellung. */
-export const BAU_ORDER: TowerId[] = [...TOWER_ORDER, 'foerderer'];
+export const BAU_ORDER: TowerId[] = [...TOWER_ORDER, 'foerderer', 'werft'];
 
 /** Der guenstigste Turm - er entscheidet, ob ein Platz ueberhaupt taugt.
  *  Was dort nicht steht, steht nirgends.
@@ -559,6 +640,8 @@ const REICHWEITE_GRUND: Record<TowerId, number> = {
   // sein Zuschlag gilt nur dort, wo wirklich gestorben wird, und ein Platz,
   // der viel Beute UND viel Feuer sieht, ist damit doppelt umkaempft.
   foerderer: 0.120,   // 230 px
+  // Die Werft wirkt global; ihre Reichweite zeichnet nur den Platzbedarf.
+  werft: 0.060,       // 115 px
   // Die Zielunit deckt ihren eigenen Vorplatz, nicht die Karte. Sie steht
   // dort, wo alle Bahnen enden - mit der Weite eines Moersers waere sie der
   // beste Turm im Spiel und noch dazu geschenkt.
@@ -598,6 +681,9 @@ const WUCHT_AUSGLEICH: Record<TowerId, number> = {
   // Ertrag - Schaden gibt es keinen. Der Eintrag steht hier, weil der Typ
   // ihn verlangt; gewirkt haette er nur auf eine Schadenszahl.
   foerderer: 1,
+  // Ebenso die Werft: ihre Zweige heissen Takt und Schmelze, und beide
+  // rechnen an Kristall statt an Schaden.
+  werft: 1,
   // Die Zielunit hat nur einen Zweig, also greift der Ausgleich nie. Der
   // Eintrag steht hier, weil der Typ ihn verlangt, und nicht, weil er wirkt.
   core: 1.00,

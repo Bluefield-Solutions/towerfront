@@ -33,7 +33,7 @@ import { projektilform } from '../src/gfx/renderer';
 import type { Tower } from '../src/game/types';
 import {
   TOWERS, TOWER_ORDER, MAX_LEVEL, nextFor, DRAW_SCALE, TURM_BREITE, TURM_HOEHE, rangeFor, statsFor,
-  FOERDER_DECKEL, foerderZuschlag,
+  FOERDER_DECKEL, foerderZuschlag, werftErtrag, werftHoechstmass, WERFT_TAKT_ZWEIG,
 } from '../src/data/towers';
 import {
   VERBUND_MAX, VERBUND_STUFE, VERBUND_UMKREIS,
@@ -145,6 +145,50 @@ const isHex = (s: string) => /^#[0-9A-Fa-f]{6}$/.test(s);
     + `${(foerderZuschlag(1, MAX_LEVEL) * 100).toFixed(0)} % im Ertragszweig auf Stufe ${MAX_LEVEL}, `
     + `gedeckelt bei ${(FOERDER_DECKEL * 100).toFixed(0)} %; Umkreis `
     + `${rangeFor('foerderer', null, 1)} bis ${rangeFor('foerderer', 0, MAX_LEVEL)} Weltpunkte.`);
+}
+
+// ----------------------------------------------------------------- Die Werft
+//
+// **Dieselbe Regel wie beim Foerderer, und aus demselben Grund**: ein
+// Gebaeude, das Kristall zurueckgibt UND schiesst, ist kein Tausch mehr.
+{
+  const w = TOWERS.werft;
+  if (w.attack !== 'keiner') {
+    fail(`Die Werft greift mit "${w.attack}" an - sie kauft Fehlertoleranz, keine `
+      + 'Verteidigung, und beides zugleich waere kein Tausch, sondern ein Turm mit Bonus.');
+  }
+  if (w.base.damage !== 0 || w.branches.some((b) => b.levels.some((l) => l.damage !== 0))) {
+    fail('Die Werft traegt Schadenswerte - sie schiesst nicht, also gehoert dort ueberall null hin.');
+  }
+  // **Sie muss teurer sein als jedes Geschuetz.** Wer Fehlertoleranz
+  // billiger bekommt als Feuerkraft, baut sie immer zuerst - und dann ist die
+  // Entscheidung, die diese Story herstellen soll, wieder keine.
+  const teuerstesGeschuetz = Math.max(...TOWER_ORDER.map((id) => TOWERS[id].base.cost));
+  if (w.base.cost <= teuerstesGeschuetz) {
+    fail(`Die Werft kostet ${w.base.cost}, das teuerste Geschuetz ${teuerstesGeschuetz}. `
+      + 'Fehlertoleranz darf nicht der billigere Weg sein als Feuerkraft.');
+  }
+  // **Der Takt-Zweig muss mehr je Welle geben als die Schmelze** - sonst
+  // heisst ein Zweig "Takt" und ist der langsamere, und die Wahl liest sich
+  // andersherum, als sie wirkt (dieselbe Falle wie beim Foerderer-Zweig
+  // "Weite" in v285).
+  const takt = werftErtrag(WERFT_TAKT_ZWEIG, MAX_LEVEL);
+  const schmelze = werftErtrag(1 - WERFT_TAKT_ZWEIG as 0 | 1, MAX_LEVEL);
+  if (takt <= schmelze) {
+    fail(`Der Takt-Zweig gibt auf Stufe ${MAX_LEVEL} ${takt} Kristall je Welle, die `
+      + `Schmelze ${schmelze}. Ein Zweig namens "Takt" muss der schnellere sein.`);
+  }
+  // Und die Schmelze muss ihren Gegenwert wirklich tragen: sie gibt weniger
+  // je Welle, also muss sie das Hoechstmass heben, sonst ist sie nur der
+  // schlechtere Takt.
+  if (werftHoechstmass(1 - WERFT_TAKT_ZWEIG as 0 | 1, MAX_LEVEL) <= 0) {
+    fail('Die Schmelze gibt weniger Kristall je Welle als der Takt und hebt das '
+      + 'Hoechstmass nicht - dann ist sie kein Handel, sondern der schlechtere Zweig.');
+  }
+  warn(`Werft: ${werftErtrag(null, 1)} Kristall je Welle auf Stufe 1, ${takt} im Takt auf `
+    + `Stufe ${MAX_LEVEL}, ${schmelze} in der Schmelze - deren Hoechstmass steigt um `
+    + `${(werftHoechstmass(1 - WERFT_TAKT_ZWEIG as 0 | 1, MAX_LEVEL) * 100).toFixed(0)} % `
+    + 'des Startkristalls.');
 }
 
 // ---------------------------------------------------- Das Weichenfenster

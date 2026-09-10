@@ -1028,6 +1028,34 @@ export const PROBEN = [
     meldet: 'laufende Strom steht auf dem Zielgerät nicht im Bild',
   },
   {
+    // **Die Werft macht einen Durchbruch folgenlos** (v290, S-N3-04).
+    //
+    // Genau die Gegenprobe, die die Story verlangt: die Reparatur unbegrenzt
+    // schnell machen. Dann steht der Kristall am Ende voll da, der Verlust
+    // ist zurueckgekauft statt abgemildert, und `sim` muss es sagen.
+    name: 'Werft macht einen Durchbruch folgenlos',
+    datei: 'src/data/towers.ts',
+    suche: 'export const WERFT_GRUND = 1;',
+    ersatz: 'export const WERFT_GRUND = 99;',
+    tor: 'sim',
+    meldet: 'Durchbruch zurueckgekauft statt abgemildert',
+  },
+  {
+    // **Die Werft schiesst** (v290).
+    //
+    // Dieselbe Regel wie beim Foerderer, und aus demselben Grund: wer ihr
+    // Schaden gibt, macht sie zum Turm mit Bonus, und dann baut man sie
+    // immer.
+    name: 'Werft traegt Schadenswerte',
+    datei: 'src/data/towers.ts',
+    suche: "    attack: 'keiner', hitsAir: false, projectileSpeed: 0,\n"
+      + '    base: { cost: 150, damage: 0, cooldown: 0 },',
+    ersatz: "    attack: 'single', hitsAir: false, projectileSpeed: 700,\n"
+      + '    base: { cost: 150, damage: 12, cooldown: 1 },',
+    tor: 'guards',
+    meldet: 'Werft greift mit',
+  },
+  {
     // **Die Kette geht ueber eine wartende Story hinweg** (v289).
     //
     // `npm run naechste` nahm bis v288 die erste offene in Dokumentreihen-

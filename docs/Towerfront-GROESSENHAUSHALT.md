@@ -1,6 +1,19 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v283 · 09.09.2026
+Stand: v290 · 09.09.2026
+
+**Nachgesehen in v290 — gemessen mit `npm run pack-art -- --force`, nicht
+gerechnet.** Die Gruppen stehen bei: gegner 71 KB von 80, objekte 192 von 250,
+tuerme 302 von 445, untergrund 256 von 300 — **zusammen 821 KB von 1075**. Die
+ausgelieferte Datei wiegt **1445 KB** von 1800 erlaubten.
+
+Zwei Bauwerke sind seit v283 dazugekommen (Förderer v285, Werft v290) und
+wiegen bis heute **nichts**: für beide fehlt das Bild, sie laufen gegen den
+Platzhalter (K5), und `npm run bildtor` nennt sie bei jedem Lauf als offene
+Bestellung. Wenn die zwei Bilder kommen, wächst die Gruppe `tuerme` — 302 von
+445 lassen dafür Raum, aber es ist der einzige Posten, der in diesem Haushalt
+noch wachsen wird.
+
 
 **Nachgemessen in v283:** die gebaute Datei wiegt **1440 KB** gegen die Grenze
 von 1800 (`ls -la dist/index.html` nach `npm run build`). Sie ist seit v276 um

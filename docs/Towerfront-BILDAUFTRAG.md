@@ -2751,3 +2751,77 @@ Lieferung gemessen wird, hält seine Grenze nicht von selbst.
 `npm run bildtor` nennt `foerderer_1_1` bei jedem Lauf als offene Bestellung.
 Der Platzhalter ist erkennbar: Silhouette in der richtigen Grösse, Schraffur,
 Marke #FF00E5.
+
+### 8d.3 `32_werft.png` — die Werft, das zweite Gebäude ohne Waffe
+
+**Warum sie weder wie ein Turm noch wie der Förderer aussehen darf.** Sie ist
+das zweite Bauwerk, das nicht schiesst — und damit ist der Silhouetten-Abstand
+diesmal doppelt gefordert: gegen die vier Türme *und* gegen den Förderer. Wer
+sie für den Förderer hält, baut sie für Gold und bekommt Kristall; das ist
+ärgerlicher als eine Verwechslung mit einem Turm, weil beide unbewaffnet sind
+und beide „arbeiten".
+
+**Der Unterschied ist die Richtung der Arbeit.** Der Förderer holt heraus —
+Trichter, Rutsche, Sumpf, alles nach unten offen. Die Werft **setzt
+zusammen**: ein Gerüst über einem Werkstück, Greifarme, ein Schweisspunkt.
+Das ist im Bild zu sehen, ohne dass ein Wort dabeisteht.
+
+**Maße im Prompt selbst**: 512 × 512, quadratisch, freigestellt auf
+Transparenz.
+
+```
+[STILBLOCK NEUBAU EINFÜGEN]
+
+SUBJECT: a single industrial repair gantry seen from above at a slight angle,
+512 x 512 pixels, square, isolated on full transparency with no background and
+no ground shadow - the game bakes its own shadow.
+
+An open framework cradle standing over a workpiece: two articulated arms
+reaching inward and DOWN toward a fragment held in the middle of the cradle,
+a welding point where one arm meets it, spools of filament, a rack of spare
+plating along one side. It is clearly WORKING - a small cold-blue arc at the
+weld, one lit gauge - and just as clearly UNARMED.
+
+NO WEAPON OF ANY KIND. No barrel, no muzzle, no turret ring, no dish, no
+dome, nothing that points outward or aims across the field. Both arms point
+INWARD, at the piece being mended. Every gun in this game aims away from
+itself; this machine aims at its own centre, and that difference must be
+readable in the silhouette alone.
+
+It must also read as a DIFFERENT KIND OF MACHINE than the extraction plant
+already in this set: that one is a closed squat drum with chutes pointing
+down and out, this one is an OPEN CAGE with arms pointing in. Closed and
+squat versus open and reaching - not two versions of the same shed.
+
+The saturated accent is cold blue and it belongs to the weld and the mended
+seam - not to a sight or a sensor. Amber is reserved for the extraction
+plant; do not use it here.
+
+[AUSGABE-BLOCK EINFÜGEN]
+```
+
+### Abnahme 8d.3
+
+Gemessen wird mit `npm run probebild -- <ordner>`; Format, Alpha, Rand, reines
+Schwarz, Feindetail und Lichtwinkel stehen **einmal** in Abschnitt 5 und
+gelten unverändert (Regel 15).
+
+| Prüfung | Gefordert | Womit |
+|---|---|---|
+| Silhouetten-Abstand zu den vier Türmen | Überdeckung **höchstens 0,60** | `npm run probebild` |
+| Silhouetten-Abstand zum Förderer | Überdeckung **höchstens 0,55** | `npm run probebild` |
+| Offene Form | Anteil durchsichtiger Punkte **innerhalb** des Umrisses mindestens 18 % | `npm run probebild` |
+| Anteil gesättigter Akzente | höchstens 5 % der Fläche | Stilblock 8d |
+
+**Die 0,55 gegen den Förderer sind strenger als alles andere in diesem
+Dokument, und das ist begründet.** Gegen einen Turm trennt schon „schiesst
+nicht"; gegen den Förderer trennt nur noch die Form der Arbeit, und die ist
+das Einzige, woran ein Spieler die beiden im Feld unterscheidet.
+
+**Die offene Form ist die Abnahme, die man nicht diskutieren muss.** Ein
+Gerüst hat Löcher, ein Trichter nicht — und ein Anteil durchsichtiger Punkte
+innerhalb des Umrisses misst genau das, ohne dass jemand „wirkt offen genug"
+sagen muss (Regel 8 arbeitet hier für uns, nicht gegen uns).
+
+**Bis das Bild da ist, baut das Spiel gegen den Platzhalter** (K5), und
+`npm run bildtor` nennt `werft_1_1` bei jedem Lauf als offene Bestellung.

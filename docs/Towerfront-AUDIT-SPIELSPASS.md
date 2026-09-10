@@ -1,6 +1,26 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v283 · 09.09.2026
+Stand: v290 · 09.09.2026
+
+**Nachgesehen in v290 — der wichtigste Satz dieses Audits hat in v285 bis
+v290 zwei harte Zahlen bekommen.** Er lautet: der Genre-Abgleich steht auf 30
+von 30, und das Spiel macht trotzdem wenig Spass. Gemessen ist jetzt, woran
+das in Paket N3 liegt:
+
+* Der **Förderer** (v285) bringt −1,8 bis +2,4 % Gold.
+* Der **Wiederholungsaufschlag** (v287) nimmt dem Häufer 693 Gold ab und
+  ändert am Ergebnis 0 / −6 / 0 / +1 Kristall.
+
+Beide wirken, beide entscheiden nichts — **bei 28 % übrigem Gold ist ein Preis
+folgenlos**. Die **Werft** (v290) ist der erste Baustein des Pakets, der die
+Zahl bewegt: sie gibt je Welle Kristall zurück, kostet dafür einen Bauplatz
+(auf dem Spiralhain −6 Kristall, weil sie Feuerkraft ersetzt) und macht einen
+Durchbruch nicht folgenlos — am Ende der besten Partie fehlen weiter vier
+Punkte.
+
+Was das für dieses Audit heisst: **Spannung entsteht nicht durch Preisregeln,
+sondern durch eine Verwendung für Gold, die mit dem Bauen konkurriert.**
+
 
 **Nachgesehen in v283:** unveraendert gueltig, und der Kernsatz erst recht -
 der Genre-Abgleich steht auf 30 von 30, und das Spiel macht trotzdem wenig

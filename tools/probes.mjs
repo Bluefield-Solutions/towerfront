@@ -846,6 +846,25 @@ export const PROBEN = [
     // beantwortet wird; nimmt man ihr die Wellenbedingung, laesst sich mitten
     // im Gefecht ziehen - und die Entscheidung der Welle faellt unter
     // Zeitdruck statt davor.
+    name: 'Ein async Schritt scheitert unbemerkt',
+    datei: 'tools/smoke.ts',
+    // **Die Probe zu der Falle, an der v313 zwei Laeufe verloren hat.**
+    //
+    // `step` nahm bis v313 nur `() => void`. Vier Schritte sind `async`, und
+    // eine async-Funktion wirft nicht - sie lehnt ein Versprechen ab. Ihr
+    // Befund kam damit nie in `problems`, und ob er ueberhaupt irgendwo
+    // auftauchte, entschied ein Wettlauf mit dem Ende des Prozesses: hier
+    // wurde er toedlich, auf dem Runner nicht.
+    //
+    // Der Eingriff nimmt dem Sammeln sein Ziel. Dann fehlt die Marke des
+    // Selbsttests, und der Rauchtest sagt es - statt ueber vier ungepruefte
+    // Schritte "bestanden" zu melden.
+    regel: /offeneSchritte\.push\(\(ergebnis as Promise<void>\)/,
+    ersatz: '[].push((ergebnis as Promise<void>)',
+    tor: 'smoke',
+    meldet: 'Selbsttest zu den asynchronen Schritten ist NICHT',
+  },
+  {
     name: 'Der Kartenzug unterbricht die Welle',
     datei: 'src/game/state.ts',
     suche: '      && !this.waveActive',

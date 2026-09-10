@@ -17,25 +17,37 @@ export interface PerkDef {
   cost: number;
 }
 
+/** **Die Preise stehen seit v314 in Erfahrung, nicht in Sternen** (S-N1-05).
+ *
+ *  Die Sternwertung ist entfallen, und mit ihr die Waehrung. Erfahrung gibt es
+ *  ohnehin (S-N1-04) und sie kauft schon Karten; ein zweites Konto daneben
+ *  waere genau der zweite Weg, den diese Story schliesst.
+ *
+ *  **Umgerechnet, nicht neu erfunden:** die Rangfolge 2/3/4/3/2 bleibt, der
+ *  Massstab kommt von den Karten (500 bis 900). Ein Stern entspricht 200, also
+ *  400/600/800/600/400 - zusammen 2800. Ein guter Lauf bringt gemessen rund
+ *  1300 (10 je Welle, 100 je Abschnitt, 300 fuers Durchbringen), also kosten
+ *  alle fuenf gut zwei Laeufe. Vorher waren es 14 Sterne bei hoechstens 12
+ *  erreichbaren - sie waren zusammen gar nicht zu haben. */
 export const PERKS: Record<PerkId, PerkDef> = {
   gold: {
-    id: 'gold', name: 'Volle Truhe', cost: 2,
+    id: 'gold', name: 'Volle Truhe', cost: 400,
     blurb: '+35 Startgold. Ein halber Turm mehr in der Eröffnung.',
   },
   crystal: {
-    id: 'crystal', name: 'Harter Kern', cost: 3,
-    blurb: '+15 % Kristall. Mehr Luft für Fehler, auf jedem Grad gleich viel wert.',
+    id: 'crystal', name: 'Harter Kern', cost: 600,
+    blurb: '+15 % Kristall. Mehr Luft für Fehler.',
   },
   damage: {
-    id: 'damage', name: 'Geschliffen', cost: 4,
+    id: 'damage', name: 'Geschliffen', cost: 800,
     blurb: '+4 % Schaden auf alle Türme.',
   },
   cooldown: {
-    id: 'cooldown', name: 'Kurzer Atem', cost: 3,
+    id: 'cooldown', name: 'Kurzer Atem', cost: 600,
     blurb: 'Fähigkeiten sind 10 % früher wieder bereit.',
   },
   refund: {
-    id: 'refund', name: 'Sauberer Abbau', cost: 2,
+    id: 'refund', name: 'Sauberer Abbau', cost: 400,
     blurb: 'Verkauf bringt 80 % statt 70 % zurück.',
   },
 };
@@ -74,23 +86,15 @@ export function perkEffect(owned: readonly string[]): PerkEffect {
 
 export const ALL_PERKS: PerkEffect = perkEffect(PERK_ORDER);
 
-/** Sterne fuer einen abgeschlossenen Lauf.
+/** **Die Sternvergabe ist in v314 entfallen** (S-N1-05).
  *
- *  Die Schwellen lagen bei 90 und 55 % - das stammte aus der Zeit mit 20
- *  Kristall, als ein guter Lauf fast verlustfrei war. Mit 60 Kristall kostet
- *  ein gutes Spiel regelmaessig die Haelfte, und drei Sterne waren auf zwei
- *  von drei Karten schlicht unerreichbar. Erreichbar heisst nicht leicht:
- *  die Simulation prueft, dass ein guter Lauf drei Sterne holen *kann* und
- *  ein knapper Sieg nur einen. */
-export function starsFor(won: boolean, lives: number, maxLives: number): number {
-  if (!won) return 0;
-  const share = lives / Math.max(1, maxLives);
-  // Die Schwellen sind zweimal gewandert, beide Male weil sie an einem
-  // leichteren Spielstand geeicht waren. Jetzt aus der Messung: der beste
-  // Bot-Lauf holt auf der Einsteigerkarte 42 von 60 (70 %), auf der
-  // schwersten 22 (37 %). Drei Sterne liegen knapp darunter, damit sie
-  // erreichbar sind - aber nur dort, wo man es gut macht.
-  if (share >= 0.66) return 3;
-  if (share >= 0.33) return 2;
-  return 1;
-}
+ *  `starsFor` rechnete aus Sieg und uebrigem Kristall eine Wertung von null
+ *  bis drei. Die Sternwertung ist mit den Graden gegangen; was ein Lauf wert
+ *  war, sagt jetzt der Kristall am Ende und die Erfahrung, die er
+ *  ausschuettet.
+ *
+ *  Die Schwellen standen zuletzt bei 75 und 40 Prozent des Kristalls und sind
+ *  hier vermerkt, weil sie gemessen waren: 90 und 55 stammten aus der Zeit mit
+ *  20 Kristall, und mit 60 waren drei Sterne auf zwei von drei Karten
+ *  unerreichbar. */
+

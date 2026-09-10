@@ -93,7 +93,7 @@ const { TOWERS, TOWER_ORDER, BAU_ORDER, MAX_LEVEL, nextFor, statsFor } = await i
 
 const { TUTORIAL } = await import('../src/game/tutorial');
 const { auswertung } = await import('../src/game/auswertung');
-const { getBest, getProgress, getSettings, getStars, gegnerVergessen, saveSettings } = await import('../src/core/storage');
+const { getBest, getProgress, getSettings, gegnerVergessen, recordRun, saveSettings } = await import('../src/core/storage');
 const { Sfx } = await import('../src/core/audio');
 const { konterSatz } = await import('../src/data/konter');
 const { wirkungAnlegen, wirkungenTicken, tempoFaktor } = await import('../src/data/wirkungen');
@@ -373,15 +373,15 @@ state.karten = ALLE_KARTEN.length;
 }
 
 const spots = candidateSpots(state);
-// Der Sternestand VOR dieser Partie - fuer die Auswertung weiter unten.
-const sterneVorDerPartie = getStars(state.map.id, state.difficulty);
-// Und der GANZE Stand, nicht nur der dieser Karte.
+// **Seit v314 die gewonnenen Karten statt der Sterne** (S-N1-05). Die
+// Sternwertung ist entfallen; was eingetragen wird, ist die Karte, die man
+// durchgespielt hat.
 //
-// Der Durchlauf weiter unten spielt drei Karten. Traegt er dabei Sterne fuer
-// Karten ein, die DIESE Partie nie gesehen hat, ist der Stand verunreinigt -
-// und das sieht eine Zahl fuer die eigene Karte nicht. Zwei Netze also: hier
-// die fremden Karten, unten im Durchlauf der Abdruck ueber alles.
-const alleSterneVorDerPartie = { ...getProgress().stars };
+// Der GANZE Stand, nicht nur der dieser Karte: der Durchlauf weiter unten
+// spielt drei Karten. Traegt er dabei welche ein, die DIESE Partie nie
+// gesehen hat, ist der Stand verunreinigt - und das sieht eine Zahl fuer die
+// eigene Karte nicht.
+const gewonnenVorDerPartie = [...(getProgress().gewonnen ?? [])];
 let spotIdx = 0, si = 0, frames = 0;
 let outcome = 'playing';
 const plan = TOWER_ORDER;
@@ -676,6 +676,11 @@ step('Jede Karte und der Endlosmodus durchspielen', () => {
   const GRENZE = 60 * 60 * 20;
 
   const durchspielen = (mapId: string, endlos: boolean) => {
+    // **Der Bezugspunkt gehoert an die Handlung, nicht an den Dateianfang**
+    // (v314). Die erste Fassung dieser Pruefung nahm den Stand von ganz oben
+    // - da hatten die frueheren Durchlaeufe dieselbe Karte laengst gewonnen,
+    // und der Endlosmodus bekam die Schuld dafuer.
+    const vorher = [...(getProgress().gewonnen ?? [])];
     const g = new GameState();
     g.reset(4242, 'normal', mapId, { endless: endlos });
     const plaetze = candidateSpots(g);
@@ -703,7 +708,7 @@ step('Jede Karte und der Endlosmodus durchspielen', () => {
       // abgebrochen - bewiesen ist dann, was zu beweisen war.
       if (endlos && gestartet > g.totalWaves + 5) break;
     }
-    return { g, f, hoechsteWelle, gestartet };
+    return { g, f, hoechsteWelle, gestartet, vorher };
   };
 
   for (const m of ALLE_KARTEN) {
@@ -745,10 +750,16 @@ step('Jede Karte und der Endlosmodus durchspielen', () => {
     );
   }
   if (!e.g.endless) throw new Error('Endlosmodus: das Feld `endless` steht nach dem Aufsetzen auf false.');
-  // Im Endlosmodus gibt es keine Sterne - er ist kein Fortschritt, sondern
-  // eine Bestenliste (C27 waere ihre Anzeige).
-  if (e.g.phase !== 'playing' && e.g.stars !== 0) {
-    throw new Error(`Endlosmodus: ${e.g.stars} Stern(e) vergeben - dort gibt es keine.`);
+  // **Der Endlosmodus traegt nichts in den Fortschritt** - er ist kein
+  // Fortschritt, sondern eine Bestenliste (C27 waere ihre Anzeige). Bis v314
+  // stand hier "es gibt keine Sterne"; die Sternwertung ist entfallen, die
+  // Zusage nicht: eine Karte gilt durch Endlos nicht als gewonnen, sonst
+  // haengen Faehigkeiten an einem Modus, der kein Ende hat.
+  if (e.g.phase !== 'playing'
+      && (getProgress().gewonnen ?? []).includes(e.g.map.id)
+      && !e.vorher.includes(e.g.map.id)) {
+    throw new Error(`Endlosmodus: ${e.g.map.id} steht jetzt als gewonnen da - `
+      + 'ein Modus ohne Ende darf keine Karte freischalten.');
   }
   zeilen.push(`  Endlosmodus    ${e.gestartet} Wellen gestartet (Plan hat ${e.g.totalWaves}), `
     + `${e.g.stats.kills} erledigt`);
@@ -811,32 +822,28 @@ step('Auswertung', () => {
   if (a.mapId !== state.map.id || a.waves !== state.totalWaves) {
     throw new Error('Auswertung beschreibt eine andere Karte als die gespielte.');
   }
-  // Der Kern: "vorher" ist der Stand VOR dieser Partie. Bis v134 wurde er
-  // gelesen, nachdem das Ergebnis schon eingetragen war - dann steht dort
-  // immer der neue Wert, und "Ein neuer Stern" erscheint nie.
-  if (a.before !== sterneVorDerPartie) {
-    throw new Error(
-      `Auswertung meldet ${a.before} Sterne vorher, vor der Partie standen `
-      + `${sterneVorDerPartie}.`,
-    );
+  // **Eingetragen wird an EINER Stelle, im Spielzustand** - und nur bei einem
+  // Sieg. Bis v314 stand hier die Sternbuchhaltung; ihr Gegenstand ist mit
+  // der Sternwertung entfallen, die Zusage dahinter nicht: was der Lauf
+  // hinterlaesst, muss zu dem passen, was er gespielt hat.
+  const jetztGewonnen = getProgress().gewonnen ?? [];
+  const sollte = state.phase === 'won' && !state.endless;
+  if (sollte && !jetztGewonnen.includes(state.map.id)) {
+    throw new Error(`Die Partie wurde gewonnen, ${state.map.id} steht aber nicht `
+      + 'unter den gewonnenen Karten - dann haengt keine Faehigkeit daran.');
   }
-  // Eingetragen wird an EINER Stelle, im Spielzustand. Danach steht der
-  // bessere der beiden Werte im Fortschritt.
-  const jetzt = getStars(state.map.id, state.difficulty);
-  if (jetzt !== Math.max(sterneVorDerPartie, a.stars)) {
-    throw new Error(`Nach der Partie stehen ${jetzt} Sterne, erwartet war `
-      + `${Math.max(sterneVorDerPartie, a.stars)}.`);
+  if (!sollte && !gewonnenVorDerPartie.includes(state.map.id)
+      && jetztGewonnen.includes(state.map.id)) {
+    throw new Error(`Die Partie endete als "${state.phase}", ${state.map.id} steht `
+      + 'trotzdem als gewonnen da.');
   }
-  // Und NUR diese Karte darf sich geaendert haben. Ein Durchlauf, der seinen
-  // Fortschritt stehen laesst, traegt Sterne fuer Karten ein, die diese
-  // Partie nie gesehen hat - und das ist der Teil, den die Zahl oben nicht
-  // mehr zeigen kann, seit sie am Anschlag steht.
-  const eigen = `${state.map.id}|${state.difficulty}`;
-  const jetztAlle = getProgress().stars;
-  const fremd = Object.keys(jetztAlle)
-    .filter((k) => k !== eigen && (jetztAlle[k] ?? 0) !== (alleSterneVorDerPartie[k] ?? 0));
+  // Und NUR diese Karte darf dazugekommen sein. Ein Durchlauf, der seinen
+  // Fortschritt stehen laesst, traegt Karten ein, die diese Partie nie
+  // gesehen hat.
+  const fremd = jetztGewonnen
+    .filter((id) => id !== state.map.id && !gewonnenVorDerPartie.includes(id));
   if (fremd.length) {
-    throw new Error(`Nach der Partie stehen Sterne fuer Karten, die sie nicht `
+    throw new Error(`Nach der Partie stehen Karten als gewonnen, die sie nicht `
       + `gespielt hat: ${fremd.join(', ')}. Eine Pruefung, die nebenbei den `
       + 'Zustand aendert, den andere lesen, ist keine Pruefung.');
   }
@@ -1108,7 +1115,7 @@ step('Wegvorschau beim Betreten', () => {
 
 step('Bestwert nach Niederlage', () => {
   const probe = new GameState();
-  probe.reset(777, 'erbarmungslos', state.map.id);
+  probe.reset(777, 'normal', state.map.id);
   probe.lives = 1;
   for (let i = 0; i < 60 * 600 && probe.phase === 'playing'; i++) {
     if (probe.canStartWave) probe.startWave();
@@ -1119,10 +1126,37 @@ step('Bestwert nach Niederlage', () => {
       + 'die Probe misst nicht, was sie messen soll.');
   }
   const erreicht = Math.max(0, probe.waveNumber - 1);
-  const best = getBest(probe.map.id, 'erbarmungslos');
-  if (best.wave !== erreicht) {
+  const best = getBest(probe.map.id, probe.difficulty);
+  // **Eine Niederlage darf den Bestwert nicht SENKEN.**
+  //
+  // Bis v314 fragte diese Zeile `best.wave === erreicht` und lief auf
+  // `erbarmungslos` - nicht aus Haerte, sondern weil dieser Grad ein eigener
+  // Namensraum war, den sonst niemand beschrieb. Mit einem Grad ist er weg,
+  // und der Durchlauf weiter oben hat jede Karte schon durchgespielt: der
+  // Schluessel steht auf 15, bevor diese Probe beginnt.
+  if (best.wave < erreicht) {
     throw new Error(`Bestwert steht auf Welle ${best.wave}, ueberstanden wurde Welle `
       + `${erreicht} (Welle ${probe.waveNumber} lief noch).`);
+  }
+
+  // **Und damit das nicht zur leeren Zusage wird** (Regel 5): die Regel
+  // selbst, an einem Schluessel, den sonst niemand anfasst. Ohne diesen
+  // gestellten Fall bewiese die Zeile darueber nur, dass 15 groesser als 1
+  // ist - sie waere auch dann gruen, wenn `recordRun` gar nichts mehr
+  // schriebe.
+  const eigen = 'probe-bestwert';
+  recordRun(eigen, 'normal', 7, 30);
+  if (getBest(eigen, 'normal').wave !== 7) {
+    throw new Error('Ein erster Lauf wird gar nicht als Bestwert eingetragen.');
+  }
+  recordRun(eigen, 'normal', 3, 60);
+  if (getBest(eigen, 'normal').wave !== 7) {
+    throw new Error('Ein schlechterer Lauf ueberschreibt den Bestwert - weiter gekommen '
+      + 'muss weiter gekommen bleiben.');
+  }
+  recordRun(eigen, 'normal', 11, 5);
+  if (getBest(eigen, 'normal').wave !== 11) {
+    throw new Error('Ein besserer Lauf wird nicht eingetragen.');
   }
 });
 
@@ -1853,14 +1887,20 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   m.tap(nodeSpot.x + nodeSpot.w / 2, nodeSpot.y + nodeSpot.h / 2);
   if (m.view !== 'brief') problems.push('Landkarte: ein Ort oeffnet keine Einweisung.');
   const onBrief = ids();
-  for (const need of ['back', 'start', 'endless', 'diff:normal', 'diff:ruhig', 'diff:erbarmungslos']) {
+  for (const need of ['back', 'start', 'endless']) {
     if (!onBrief.includes(need)) problems.push(`Einweisung: "${need}" fehlt.`);
   }
 
-  // Schwierigkeit laesst sich wirklich waehlen.
-  const dh = m.hotspots.find((h) => h.id === 'diff:erbarmungslos')!;
-  m.tap(dh.x + 4, dh.y + 4);
-  if (m.difficulty !== 'erbarmungslos') problems.push('Einweisung: Schwierigkeit laesst sich nicht waehlen.');
+  // **Umgedreht in v314** (S-N1-05, K1): hier stand "Schwierigkeit laesst sich
+  // wirklich waehlen" und tippte auf `diff:erbarmungslos`. Die Wahl ist
+  // entfallen - der Lauf entscheidet, wie hart es wird. Geprueft wird jetzt,
+  // dass sie WEG ist: ein zurueckgebliebener Knopf waere der zweite Weg, den
+  // diese Story gerade schliesst, und er faende sich sonst nie wieder.
+  const grade = onBrief.filter((id) => id.startsWith('diff:'));
+  if (grade.length) {
+    problems.push(`Einweisung: die Schwierigkeitswahl steht noch da (${grade.join(', ')}). `
+      + 'Sie ist in v314 entfallen - wie hart es wird, entscheidet der Lauf.');
+  }
 
   const back = m.hotspots.find((h) => h.id === 'back')!;
   m.tap(back.x + 4, back.y + 4);
@@ -1885,7 +1925,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
     m.resultAge = 3;
     m.result = {
       won, mapId: 'spiralhain', mapName: 'Spiralhain', wave: won ? 15 : 11, waves: 15,
-      lives: won ? 47 : 0, maxLives: 60, stars: won ? 2 : 0, before: 0,
+      lives: won ? 47 : 0, maxLives: 60,
       kills: 200, built: 9, damage: 90000, duration: 480,
       freischaltung: won ? 'freeze' : null,
     };
@@ -2574,7 +2614,9 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   //    misst alles Spaetere diesen Block mit.
   {
     const stand = getProgress();
-    const sterne = { ...stand.stars };
+    // Seit v314 sind es die gewonnenen Karten, die dieser Block anfasst -
+    // ein Sieg trug bis dahin Sterne ein.
+    const gewonnenVorher = [...(stand.gewonnen ?? [])];
     const abdruck = JSON.stringify(stand);
 
     const h = new GameState();
@@ -2629,7 +2671,7 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
       problems.push('Fortschritt: eine verlorene Partie schaltet etwas frei.');
     }
 
-    stand.stars = sterne;
+    stand.gewonnen = gewonnenVorher;
     if (JSON.stringify(stand) !== abdruck) {
       problems.push('Fortschritt: der C18-Block hat den Fortschritt veraendert und nicht '
         + 'zurueckgestellt.');
@@ -4049,7 +4091,7 @@ step('Erfahrung und Stapel ueberleben einen Neustart', async () => {
   }
   // Und die Nullprobe: ein leerer Stand faellt trotzdem in Form.
   const leer = fortschrittAus(undefined);
-  if (typeof leer.stars !== 'object' || !Array.isArray(leer.perks)) {
+  if (!Array.isArray(leer.gewonnen) || !Array.isArray(leer.perks)) {
     throw new Error('Ein leerer Stand kommt nicht in Form zurueck.');
   }
 

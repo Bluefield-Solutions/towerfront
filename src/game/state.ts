@@ -32,10 +32,10 @@ import { Sfx } from '../core/audio';
 import { mischen } from '../gfx/glow';
 import {
   freigeschalteteKarten,
-  getProgress, getStars, gewonneneKarten, recordEndlos, recordRun, recordStars,
+  getProgress, gewonneneKarten, karteGewonnen, recordEndlos, recordRun,
 } from '../core/storage';
 import {
-  NO_PERKS, perkEffect, starsFor, type PerkEffect,
+  NO_PERKS, perkEffect, type PerkEffect,
 } from '../data/perks';
 import { Rng, newSeed } from '../core/rng';
 import { clearGame, type SaveGame } from './save';
@@ -165,17 +165,9 @@ export class GameState {
   endless = false;
   /** Wirkung der dauerhaften Verbesserungen. */
   perks: PerkEffect = NO_PERKS;
-  /** Sterne des letzten abgeschlossenen Laufs. */
-  stars = 0;
-  /** Sterne, die auf dieser Karte VOR diesem Lauf standen.
-   *
-   *  Wird in `finishRun` festgehalten, bevor das Ergebnis eingetragen wird -
-   *  und genau darum geht es. Bis v134 holte sich der Ergebnisbildschirm die
-   *  Zahl selbst, aber erst NACHDEM `finishRun` sie ueberschrieben hatte:
-   *  "vorher" war dann immer schon "nachher", und die Zeile "Ein neuer Stern"
-   *  konnte gar nie erscheinen. Zwei Stellen, dieselbe Zahl, eine davon zu
-   *  spaet - Regel 15. */
-  sterneVorher = 0;
+  /** **Die Sterne sind in v314 entfallen** (S-N1-05). Hier standen `stars`
+   *  und `sterneVorher`; was sie trugen, sagt jetzt der Kristall am Ende
+   *  (`lives`/`maxLives`) und die Erfahrung, die der Lauf ausschuettet. */
   gold = DIFFICULTIES.normal.startGold;
   lives = DIFFICULTIES.normal.startLives;
   maxLives = DIFFICULTIES.normal.startLives;
@@ -1788,12 +1780,11 @@ export class GameState {
     // Und im Endlosmodus zusaetzlich in die Liste - dort ist nicht der eine
     // Bestwert die Auskunft, sondern wie weit man ueblicherweise kommt (C27).
     if (this.endless) recordEndlos(this.map.id, reached);
-    // Der Stand VOR diesem Lauf, festgehalten bevor er ueberschrieben wird.
-    this.sterneVorher = getStars(this.map.id, this.difficulty);
-    // Im Endlosmodus gibt es keine Sterne - er hat kein Ende, an dem man
-    // messen koennte, wie sauber man durchgekommen ist.
-    this.stars = this.endless ? 0 : starsFor(won, this.lives, this.maxLives);
-    if (this.stars > 0) recordStars(this.map.id, this.difficulty, this.stars);
+    // **Die Sternwertung ist in v314 entfallen** (S-N1-05). Was sie trug -
+    // welche Karten gewonnen sind - steht jetzt als eigene Liste; daran
+    // haengen die Faehigkeiten, und der Schluss ist derselbe wie vorher: nur
+    // ein Sieg zaehlt, und der Endlosmodus hat kein Ende zum Messen.
+    if (won && !this.endless) karteGewonnen(this.map.id);
     // Und erst JETZT, nach dem Eintragen: ist eine Karte dazugekommen, gibt
     // es dafuer genau eine Faehigkeit - die, die diese Zahl verlangt.
     // Abgeleitet aus `braucht` statt einer Zuordnung Karte -> Faehigkeit,
@@ -2941,8 +2932,6 @@ export class GameState {
     // Das Mass, gegen das die Schmelze rechnet - festgehalten beim Start,
     // damit ihre Erhoehung nicht mit sich selbst waechst (v290).
     this.startLives = this.lives;
-    this.stars = 0;
-    this.sterneVorher = 0;
     this.waveIndex = 0;
     this.laufende.length = 0;
     this.enemies.length = 0; this.towers.length = 0; this.projectiles.length = 0;

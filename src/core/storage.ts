@@ -26,7 +26,9 @@ export interface Settings {
   /** Einfuehrung beim naechsten neuen Spiel zeigen. */
   tutorial: boolean;
   /** Zuletzt gewaehlter Schwierigkeitsgrad. */
-  difficulty: 'ruhig' | 'normal' | 'erbarmungslos';
+  /** Seit v314 gibt es nur noch einen Grad (S-N1-05). Das Feld bleibt, damit
+   *  alte Spielstaende lesbar sind - gewaehlt wird nichts mehr. */
+  difficulty: 'normal';
   /** Zuletzt gewaehlte Karte. */
   map: string;
   /** Endlosmodus vorgewaehlt. */
@@ -56,8 +58,20 @@ export interface Progress {
   /** Die weitesten Endlosläufe je Karte, absteigend, hoechstens fuenf.
    *  Fehlt in Staenden vor v181 - deshalb optional, nicht als Bruch. */
   endlos?: Record<string, number[]>;
-  /** Sterne je Karte und Grad - der beste Lauf zaehlt. */
-  stars: Partial<Record<string, number>>;
+  /** **Sterne: Altlast seit v314** (S-N1-05).
+   *
+   *  Die Sternwertung ist entfallen; geschrieben wird das Feld nicht mehr.
+   *  Gelesen schon: aus ihm wird beim ersten Start abgeleitet, welche Karten
+   *  jemand schon gewonnen hat (siehe `fortschrittAus`). Wer das Feld
+   *  entfernt, nimmt jedem bisherigen Spieler seinen Fortschritt. */
+  stars?: Partial<Record<string, number>>;
+  /** **Welche Karten je gewonnen wurden** (v314).
+   *
+   *  Vorher war das aus den Sternen gerechnet - die gab es nur fuer einen
+   *  Sieg, und eine zweite Liste waere die zweite Wahrheit ueber dasselbe
+   *  gewesen (Regel 15). Ohne Sterne gibt es nichts mehr zu rechnen, also
+   *  steht es jetzt da. Abgeleitet wird beim Lesen alter Staende. */
+  gewonnen?: string[];
   /** Gekaufte dauerhafte Verbesserungen. */
   perks: string[];
   /** Karten, deren kurze Einfuehrung schon gelaufen ist.
@@ -105,7 +119,7 @@ const DEFAULTS: Store = {
     messung: false,
   },
   best: {},
-  progress: { stars: {}, perks: [], seenMaps: [] },
+  progress: { perks: [], gewonnen: [], seenMaps: [] },
 };
 
 /** **Was gespeichert wurde, kommt auch zurueck** (v306).
@@ -129,10 +143,19 @@ const DEFAULTS: Store = {
  *  laufenden Prozess nicht stellen, und eine Zusage, die niemand nachfahren
  *  kann, ist keine. */
 export function fortschrittAus(p: Partial<Progress> | undefined): Progress {
+  // **Die gewonnenen Karten aus den alten Sternen** (v314). Einen Stern gab
+  // es nur fuer einen Sieg, also ist der Schluss dicht. Steht die Liste
+  // schon da, gilt sie - abgeleitet wird nur einmal, beim ersten Lesen eines
+  // alten Standes.
+  const ausSternen = Object.entries(p?.stars ?? {})
+    .filter(([, sterne]) => (sterne ?? 0) > 0)
+    .map(([schluessel]) => schluessel.split('|')[0]);
   return {
     ...(p ?? {}),
-    stars: { ...(p?.stars ?? {}) },
     perks: Array.isArray(p?.perks) ? [...p.perks] : [],
+    gewonnen: Array.isArray(p?.gewonnen)
+      ? [...p.gewonnen]
+      : [...new Set(ausSternen)],
   };
 }
 
@@ -160,7 +183,8 @@ function structuredCloneSafe(s: Store): Store {
   return {
     settings: { ...s.settings },
     best: { ...s.best },
-    progress: { ...s.progress, stars: { ...s.progress.stars }, perks: [...s.progress.perks] },
+    progress: { ...s.progress, perks: [...s.progress.perks],
+      gewonnen: [...(s.progress.gewonnen ?? [])] },
   };
 }
 
@@ -206,30 +230,20 @@ export function saveSettings(patch: Partial<Settings>): void {
 
 export const getProgress = (): Progress => store.progress;
 
-/** Alle je verdienten Sterne. */
-export function totalStars(): number {
-  let n = 0;
-  for (const v of Object.values(store.progress.stars)) n += v ?? 0;
-  return n;
-}
-
-/** Noch nicht ausgegebene Splitter. */
-export function freeStars(): number {
-  return totalStars() - spentStars();
-}
-
-let perkCost: (id: string) => number = () => 0;
-/** Die Kostentabelle liegt in data/perks.ts - sie wird beim Start gesetzt,
- *  damit die Ablage nichts ueber Spielinhalte wissen muss. */
-export function setPerkCost(fn: (id: string) => number): void { perkCost = fn; }
-
-export function spentStars(): number {
-  return store.progress.perks.reduce((a, id) => a + perkCost(id), 0);
-}
-
-export function buyPerk(id: string, cost: number): boolean {
+/** **Verbesserungen kosten seit v314 Erfahrung, nicht Sterne** (S-N1-05).
+ *
+ *  Die Sternwertung ist entfallen, und damit ihre Waehrung. Erfahrung gibt es
+ *  ohnehin schon (S-N1-04) und sie kauft schon Karten - ein zweites Konto
+ *  daneben waere genau der zweite Weg, den diese Story schliesst.
+ *
+ *  Die Pruefung steht HIER und nicht am Knopf, dieselbe Haltung wie bei
+ *  `karteFreischalten`: ein Knopf, der sich auf seine eigene Sichtbarkeit
+ *  verlaesst, ist eine zweite Wahrheit ueber denselben Zustand. */
+export function buyPerk(id: string, kosten: number): boolean {
   if (store.progress.perks.includes(id)) return false;
-  if (freeStars() < cost) return false;
+  if (kosten <= 0) return false;
+  if (laufErfahrung() < kosten) return false;
+  store.progress.erfahrung = laufErfahrung() - kosten;
   store.progress.perks.push(id);
   write(store);
   return true;
@@ -282,35 +296,22 @@ export function karteFreischalten(id: string, kosten: number): boolean {
   return true;
 }
 
-/** Sterne eines Laufs eintragen - nur ein besseres Ergebnis zaehlt. */
-export function recordStars(mapId: string, difficulty: string, stars: number): void {
-  const key = `${mapId}|${difficulty}`;
-  if ((store.progress.stars[key] ?? 0) >= stars) return;
-  store.progress.stars[key] = stars;
+/** Eine gewonnene Karte eintragen (C18). Doppelte zaehlen einmal. */
+export function karteGewonnen(mapId: string): void {
+  const liste = store.progress.gewonnen ?? (store.progress.gewonnen = []);
+  if (liste.includes(mapId)) return;
+  liste.push(mapId);
   write(store);
 }
 
 /** Wieviele verschiedene Karten je gewonnen wurden (C18).
  *
- *  Gerechnet aus den Sternen statt aus einer eigenen Liste: Sterne gibt es
- *  nur fuer einen Sieg (`starsFor`), sie liegen je Karte UND Grad, und sie
- *  liegen schon in jedem alten Spielstand. Eine zweite Liste waere die
- *  zweite Wahrheit ueber dasselbe (Regel 15) - und sie faenge bei jedem,
- *  der schon gespielt hat, bei null an.
- *
- *  Der Grad zaehlt nicht mit: wer die Ascheschlucht auf "Ruhig" schafft, hat
- *  sie geschafft. Sonst haenge der Fortschritt am Grad, und der schwerste
- *  Grad gaebe die meisten Freischaltungen - genau verkehrt herum. */
+ *  Bis v314 aus den Sternen gerechnet. Die gibt es nicht mehr; was aus ihnen
+ *  abzuleiten war, steht seit dem ersten Lesen eines alten Standes in
+ *  `progress.gewonnen` (siehe `fortschrittAus`). */
 export function gewonneneKarten(): number {
-  const karten = new Set<string>();
-  for (const [schluessel, sterne] of Object.entries(store.progress.stars)) {
-    if ((sterne ?? 0) > 0) karten.add(schluessel.split('|')[0]);
-  }
-  return karten.size;
+  return (store.progress.gewonnen ?? []).length;
 }
-
-export const getStars = (mapId: string, difficulty: string): number =>
-  store.progress.stars[`${mapId}|${difficulty}`] ?? 0;
 
 /** Merkt sich den besten Lauf je Grad: weiter gekommen schlaegt mehr Kristall. */
 export function recordRun(

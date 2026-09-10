@@ -31,9 +31,6 @@ export interface Auswertung {
   waves: number;
   lives: number;
   maxLives: number;
-  stars: number;
-  /** Sterne vor diesem Lauf - fuer "Ein neuer Stern". */
-  before: number;
   /** Was dieser Lauf freigeschaltet hat, wenn etwas (C18). */
   freischaltung: AbilityId | null;
   kills: number;
@@ -51,8 +48,6 @@ export function auswertung(s: GameState): Auswertung {
     waves: s.totalWaves,
     lives: s.lives,
     maxLives: s.maxLives,
-    stars: s.stars,
-    before: s.sterneVorher,
     freischaltung: s.freischaltung,
     kills: s.stats.kills,
     built: s.stats.towersBuilt,

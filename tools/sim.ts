@@ -26,7 +26,7 @@ import {
   KARTENSTAPEL, GRUNDSTAPEL, zieheKarten, type Karte, type KartenArt,
 } from '../src/data/karten';
 import { WEGNETZ } from '../src/data/wegnetz';
-import { ALL_PERKS, NO_PERKS, starsFor } from '../src/data/perks';
+import { ALL_PERKS, NO_PERKS } from '../src/data/perks';
 import { ABILITIES } from '../src/data/abilities';
 import { candidateSpots } from './spots';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -536,12 +536,20 @@ const WEICHENSTILE = ['offen', 'lang'] as const;
  *  Messstelle, keine Erleichterung (Regel 12): die Balance selbst bleibt
  *  gegen `normal` geeicht, hier wird nur die Frage gestellt, ob die
  *  Entscheidung ueberhaupt eine ist. */
-const WEICHEN_GRAD: DifficultyId = 'erbarmungslos';
+/** **Der harte Grad ist in v314 entfallen - der Ersatz ist der LAUF**
+ *  (S-N1-05).
+ *
+ *  Der Gedanke darueber bleibt woertlich gueltig: gemessen wird dort, wo die
+ *  Karte weh tut, sonst ist die Weiche eine Entscheidung ohne Folgen. Nur
+ *  heisst "hart" nicht mehr `erbarmungslos`, sondern ein spaeter ABSCHNITT -
+ *  `laufFaktor` legt genau diese Steigerung ueber die Karte. Abschnitt 3 ist
+ *  der letzte und traegt 1,3 ** 3 = 2,20. */
+const WEICHEN_ABSCHNITT = 3;
 
 function weichenstileMessen(): void {
   const mitWeiche = MAPS.filter((m) => (WEGNETZ[m.id]?.weichen?.length ?? 0) > 0);
   console.log(`\nWeichenstile (derselbe Bot, ${WEICHENSTILE.length} Stellungsstrategien, `
-    + `Grad ${WEICHEN_GRAD}) - `
+    + `Abschnitt ${WEICHEN_ABSCHNITT} des Laufs) - `
     + `${mitWeiche.length} von ${MAPS.length} Karten haben ueberhaupt eine Weiche:`);
   if (!mitWeiche.length) {
     errors.push('Weichenstile: keine Karte hat eine Weiche - die Stile messen nichts.');
@@ -556,7 +564,7 @@ function weichenstileMessen(): void {
     const proStil: Record<string, number[]> = {};
     for (const w of WEICHENSTILE) {
       proStil[w] = play(mixedPlanBase, () => 0, { ...MEISTER, weichenStil: w },
-        WEICHEN_GRAD, mm.id).leakByWave;
+        'normal', mm.id, { laufAbschnitt: WEICHEN_ABSCHNITT }).leakByWave;
     }
     for (const w of WEICHENSTILE) verlauf[w] += `|${proStil[w].join(',')}`;
     const wellen = Math.max(...WEICHENSTILE.map((w) => proStil[w].length));
@@ -2469,14 +2477,18 @@ for (const bot of BOTS) {
       { perks: ALL_PERKS, variant, seed: aussaat })).mean;
   const plain = play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id);
   const buffed = play(mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { perks: ALL_PERKS });
+  // Die dritte Spalte stand auf "erbarmungslos mit allen" und ist in v314
+  // entfallen; an ihre Stelle tritt der spaeteste Abschnitt des Laufs, der
+  // die Steigerung heute traegt.
   const hardBuffed = play(
-    mixedPlanBase, () => 0, MEISTER, 'erbarmungslos', MAPS[0].id, { perks: ALL_PERKS },
+    mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id,
+    { perks: ALL_PERKS, laufAbschnitt: 3 },
   );
   console.log('\nFortschritt (Meister, Spiralhain):');
   console.log(
     `  ohne Verbesserungen ${plain.won ? `${plain.lives}/${plain.maxLives}` : `W${plain.wave}`}` +
     `   mit allen ${buffed.won ? `${buffed.lives}/${buffed.maxLives}` : `W${buffed.wave}`}` +
-    `   erbarmungslos mit allen ` +
+    `   Abschnitt 3 mit allen ` +
     `${hardBuffed.won ? `${hardBuffed.lives}/${hardBuffed.maxLives}` : `W${hardBuffed.wave}`}`,
   );
   // Verglichen wird die normierte Punktzahl, nicht der absolute Kristall.
@@ -2491,17 +2503,13 @@ for (const bot of BOTS) {
     );
   }
   if (hardBuffed.won && hardBuffed.lives >= hardBuffed.maxLives) {
-    errors.push('Mit allen Verbesserungen ist Erbarmungslos verlustfrei - der Fortschritt ersetzt den Grad.');
+    errors.push('Mit allen Verbesserungen ist der letzte Abschnitt verlustfrei - '
+      + 'der Fortschritt ersetzt den Lauf.');
   }
-  // Sterne muessen ueberhaupt vergeben werden koennen und drei muessen schwer sein.
-  if (starsFor(true, plain.maxLives, plain.maxLives) !== 3) errors.push('Ein makelloser Lauf gibt keine drei Sterne.');
-  if (starsFor(false, 0, 20) !== 0) errors.push('Eine Niederlage gibt Sterne.');
-  // Die frueher hier stehende Pruefung "der uebliche Sieg darf keine drei
-  // Sterne geben" ist entfallen: sie sah nur einen einzigen Lauf auf einer
-  // einzigen Karte und widersprach der spaeteren Pruefung, die verlangt, dass
-  // drei Sterne irgendwo erreichbar sind. Zwei Regeln fuer dieselbe Sache,
-  // aus verschiedenen Blickwinkeln - das geht nicht gut. Geblieben ist die
-  // Karten-Pruefung: erreichbar, aber nicht ueberall.
+  // **Die Sternpruefungen sind in v314 entfallen** (S-N1-05): es gibt keine
+  // Sterne mehr zu vergeben. Was sie hielten - dass ein makelloser Lauf sich
+  // von einem knappen und einer Niederlage unterscheidet -, steht jetzt im
+  // Kristall am Ende und in der Erfahrung, die der Lauf ausschuettet.
 }
 
 // Der Endlosmodus muss enden - aber nicht zu frueh.
@@ -2992,82 +3000,40 @@ for (const id of TOWER_ORDER) {
   }
 }
 
-// 4d. Die Grade muessen sich unterscheiden und jeder muss Sinn ergeben.
-{
-  const wonCount = (id: DifficultyId) => BOTS.filter((b) => diffRuns.get(`${id}:${b.name}`)!.won).length;
-  if (wonCount('ruhig') < BOTS.length) {
-    errors.push('Ruhig: nicht jeder Spielstil kommt durch - der leichteste Grad muss verzeihen.');
-  }
-  if (wonCount('erbarmungslos') < 1) {
-    errors.push('Erbarmungslos: kein Spielstil kommt durch - das ist kein Grad, sondern eine Wand.');
-  }
-  const hard = diffRuns.get('erbarmungslos:Meister')!;
-  if (hard.won && hard.lives > hard.maxLives * 0.6) {
-    errors.push(
-      `Erbarmungslos: der Meister gewinnt mit ${hard.lives}/${hard.maxLives} - zu bequem fuer den haertesten Grad.`,
-    );
-  }
-  // Verglichen wird die Punktzahl, nicht die Zahl der Sieger.
-  //
-  // Vorher stand hier ein Vergleich der Sieger-Anzahl. Seit alle drei Stile
-  // auf allen Graden durchkommen, ist die auf beiden Seiten drei - die
-  // Pruefung schlug an, obwohl die Grade sich klar unterscheiden. Dieselbe
-  // Falle wie bei den absoluten Kristallgrenzen: eine Kennzahl, die im neuen
-  // Zustand nicht mehr trennt.
-  const meanOf = (id: DifficultyId) =>
-    BOTS.reduce((a, b) => a + score(diffRuns.get(`${id}:${b.name}`)!), 0) / BOTS.length;
-  const easy = meanOf('ruhig'), hardMean = meanOf('erbarmungslos');
-  console.log(`  Ruhig ${easy.toFixed(0)} Punkte gegen Erbarmungslos ${hardMean.toFixed(0)}`);
-  if (easy - hardMean < 12) {
-    errors.push(
-      `Ruhig liegt nur ${(easy - hardMean).toFixed(0)} Punkte vor Erbarmungslos - ` +
-      'die Grade unterscheiden sich zu wenig.',
-    );
-  }
-}
+// **4d ist in v314 entfallen** (S-N1-05, K1).
+//
+// Hier standen die Vergleiche zwischen den Graden: Ruhig muss jeden Stil
+// durchlassen, Erbarmungslos mindestens einen, und zwischen beiden mussten
+// zwoelf Punkte liegen. Mit EINEM Grad haben alle drei keinen Gegenstand mehr
+// - sie verglichen etwas mit sich selbst.
+//
+// **Ersatzlos, aber nicht ersatzfrei:** was sie hielten - dass die Spanne
+// zwischen leicht und hart eine echte ist -, misst seit v305 der Lauf, und
+// zwar an derselben Karte statt an drei Zahlenwerken. `npm run sim -- --lauf`
+// verlangt eine Spreizung von 40 zwischen den Auflagen (gemessen 142,4) und
+// dass keine Auflage zweimal vorn liegt. Der Vergleich ist damit dorthin
+// gewandert, wo die Entscheidung heute faellt.
 
 // Sterne muessen erreichbar sein - und nicht ueberall gleich.
 //
 // Nach dem Umbau des Kristalls waren drei Sterne auf zwei von drei Karten
 // unmoeglich: der beste Stil kam auf 18 von 60 Punkten, gefordert waren 54.
 // Ein Ziel, das niemand erreicht, ist kein Ziel.
-{
-  // **Erreichbarkeit fragt den Bestleistungs-Bot**, nicht die drei
-  // bescheidenen Stile - sonst misst sie die Bescheidenheit mit.
-  const best = new Map<string, number>();
-  for (const m of MAPS) {
-    const r = mapRuns.get(`${m.id}:${BESTLEISTUNG.name}`)!;
-    const top = starsFor(r.won, r.lives, r.maxLives);
-    best.set(m.id, top);
-    const stile = Math.max(...BOTS.map((b) => {
-      const o = mapRuns.get(`${m.id}:${b.name}`)!;
-      return starsFor(o.won, o.lives, o.maxLives);
-    }));
-    console.log(`  ${m.name.padEnd(15)} bester Lauf: ${top} Stern(e) `
-      + `(${r.won ? `${r.lives}/${r.maxLives}` : `verloren in W${r.wave}`}) `
-      + `· die drei Stile: ${stile}`);
-  }
-  for (const m of MAPS) {
-    if ((best.get(m.id) ?? 0) < 2) {
-      errors.push(`Karte "${m.name}": auch der beste Spielstil holt nur ${best.get(m.id)} Stern(e) - unerreichbar.`);
-    }
-  }
-  if (![...best.values()].some((v) => v >= 3)) {
-    errors.push('Auf keiner Karte sind drei Sterne erreichbar - die Schwelle ist zu hoch.');
-  }
-  // **Diese Frage bleibt bei den drei Stilen.** Dass die Bestleistung ueberall
-  // drei Sterne holt, ist erlaubt - sie ist der Spieler, der alles richtig
-  // macht. Wertlos waere der dritte Stern erst, wenn ihn schon ein
-  // bescheidener Aufbau ueberall bekaeme.
-  const stileBest = MAPS.map((m) => Math.max(...BOTS.map((b) => {
-    const r = mapRuns.get(`${m.id}:${b.name}`)!;
-    return starsFor(r.won, r.lives, r.maxLives);
-  })));
-  if (stileBest.every((v) => v >= 3)) {
-    errors.push('Auf jeder Karte holt schon ein bescheidener Aufbau drei Sterne - '
-      + 'dann ist der dritte wertlos.');
-  }
-}
+// **Der Sternblock ist in v314 entfallen** (S-N1-05, K1).
+//
+// Er fragte zweierlei: ist die hoechste Wertung ueberhaupt zu holen, und holt
+// sie nicht schon ein bescheidener Aufbau ueberall. Ohne Sternwertung gibt es
+// keine Wertung mehr zu erreichen - aber beide Fragen stehen weiter im Lauf,
+// und zwar nicht neu erfunden, sondern nachgesehen:
+//
+//   * "erreichbar" -> 4e gleich darunter: jede Karte muss von mindestens zwei
+//     der drei Stile zu schaffen sein.
+//   * "nicht muehelos" -> die Pruefung eine Ebene hoeher, dass kein Spielstil
+//     ohne einen einzigen Verlust gewinnt, und die daneben, dass nicht ALLE
+//     Stile verlustfrei durchkommen.
+//
+// Beide waren schon da, bevor die Sterne gingen. Ein dritter Weg auf dieselbe
+// Frage waere Regel 15.
 
 // 4e. Jede Karte muss von mindestens zwei Stilen zu schaffen sein und keine
 //     darf muehelos sein.

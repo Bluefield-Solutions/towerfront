@@ -1126,8 +1126,12 @@ export const PROBEN = [
     // die Erfahrung ist eine Zahl auf einem Bild.
     name: 'Karten kosten keine Erfahrung',
     datei: 'src/core/storage.ts',
-    suche: '  if (laufErfahrung() < kosten) return false;',
-    ersatz: '  if (false) return false;',
+    // **Seit v314 steht dieser Satz zweimal**: `buyPerk` prueft die Erfahrung
+    // woertlich genauso, seit die Verbesserungen keine Sterne mehr kosten
+    // (S-N1-05). Ein Suchtext wirkt nur bei GENAU einem Treffer, also greift
+    // die Probe jetzt an der Funktion, zu der sie gehoert.
+    regel: /(karteFreischalten[\s\S]*?)  if \(laufErfahrung\(\) < kosten\) return false;/,
+    ersatz: '$1  if (false) return false;',
     tor: 'smoke',
     meldet: 'kostet nichts',
   },
@@ -1439,10 +1443,15 @@ export const PROBEN = [
     // Eingriff:** mit dem alten Wert 10,7 schlug die Pruefung an, von Hand
     // nachgefahren, bevor der Wert auf 12,0 stieg. Sie meldet also den
     // Zustand, den diese Runde behoben hat - und nicht nur irgendeinen.
-    name: 'Der Grad Ruhig wird wieder folgenlos',
+    name: 'Das Spiel kostet niemanden mehr etwas',
     datei: 'src/data/difficulty.ts',
-    suche: 'hpEnd: 17.0, hpCurve: 2.4',
-    ersatz: 'hpEnd: 4.0, hpCurve: 2.4',
+    // **Neu angesetzt in v314** (S-N1-05): der Grad "Ruhig" ist entfallen, die
+    // PRUEFUNG nicht - sie verlangt weiter, dass nicht alle Spielstile
+    // verlustfrei durchkommen. Gegriffen wird deshalb die eine verbliebene
+    // Lebenskurve statt der von Ruhig; flach genug, und das Spiel kostet
+    // niemanden mehr etwas.
+    regel: /hpEnd: 24\.0, hpCurve: 2\.6/,
+    ersatz: 'hpEnd: 4.0, hpCurve: 2.6',
     tor: 'sim',
     meldet: 'verlustfrei',
   },
@@ -2950,32 +2959,17 @@ export const PROBEN = [
     tor: 'sim',
     meldet: 'unerreichbar',
   },
-  {
-    // **Und die Gegenrichtung: ein bescheidener Aufbau holt ueberall drei
-    // Sterne.**
-    //
-    // Ohne diese Probe bewiese die darueber nichts - eine Pruefung, die nur
-    // nach unten sichert, laesst den dritten Stern still wertlos werden.
-    // Der Eingriff macht die drei Stile so stark wie die Bestleistung.
-    // **Der Eingriff greift seit v265 an der STERNSCHWELLE, nicht am Bot.**
-    //
-    // Vorher machte er den Meister so stark wie die Bestleistung. Der volle
-    // Lauf zu v264 hat gemeldet, dass das nichts mehr beweist: sim wird
-    // dabei zwar rot, aber aus drei ANDEREN Gruenden (Rettungen ueber dem
-    // Band, Endlos zu flach, gemischt ohne Verlust) - die gemeinte Regel
-    // schweigt, weil der Farnkessel auch fuer einen starken Bot bei zwei
-    // Sternen bleibt. Ein Eingriff, der ein Tor aus einem anderen Grund rot
-    // macht, sieht aus wie ein Beweis und ist keiner (Regel 3).
-    //
-    // Die Schwelle ist der richtige Griff: "der dritte Stern ist wertlos"
-    // ist eine Aussage ueber die Schwelle, nicht ueber den Bot.
-    name: 'Bescheidener Aufbau holt ueberall drei Sterne',
-    datei: 'src/data/perks.ts',
-    regel: /  if \(share >= 0\.66\) return 3;/,
-    ersatz: '  if (share >= 0.05) return 3;',
-    tor: 'sim',
-    meldet: 'dann ist der dritte wertlos',
-  },
+  // **"Bescheidener Aufbau holt ueberall drei Sterne" ist in v314 entfallen**
+  // (S-N1-05, K1). Sie drehte an der Sternschwelle in `perks.ts` und
+  // verlangte, dass `sim` "dann ist der dritte wertlos" meldet. Beides gibt
+  // es nicht mehr: keine Schwelle, keine Wertung, und der Block in `sim`, den
+  // sie hielt, ist mit ihr gegangen.
+  //
+  // **Ersatzlos, aber nicht ungeprueft:** was der Block fragte - holt schon
+  // ein bescheidener Aufbau ueberall das Beste -, steht weiter in `sim`, und
+  // zwar zweimal: "Spielstil X gewinnt ohne einen einzigen Verlust" und die
+  // Pruefung, dass nicht ALLE Stile verlustfrei durchkommen. Beide haben ihre
+  // eigenen Gegenproben.
   {
     // **Die Turmwahl verschweigt, was der Turm HIER bekaeme.**
     //
@@ -3406,11 +3400,17 @@ export const PROBEN = [
   {
     // P2: "Sterne vorher" wird nicht mehr vor dem Eintragen festgehalten.
     // Dann steht dort immer der neue Wert und "Ein neuer Stern" erscheint nie.
-    name: 'Sterne vorher stimmen nicht mehr',
+    name: 'Der Sieg wird nicht eingetragen',
     datei: 'src/game/state.ts',
-    regel: /this\.sterneVorher = getStars\(this\.map\.id, this\.difficulty\);/,
-    ersatz: 'this.sterneVorher = 3;',
+    // **Neu angesetzt in v314** (S-N1-05). Vorher log sie den Stand VOR dem
+    // Lauf an, damit "Ein neuer Stern" nie erschiene. Sterne gibt es nicht
+    // mehr; was `finishRun` heute hinterlaesst, ist die gewonnene Karte - und
+    // daran haengen die Faehigkeiten. Traegt er sie nicht ein, schaltet ein
+    // Sieg nichts frei, und der Rauchtest sagt es.
+    regel: /if \(won && !this\.endless\) karteGewonnen\(this\.map\.id\);/,
+    ersatz: 'if (false) karteGewonnen(this.map.id);',
     tor: 'smoke',
+    meldet: 'schaltet nichts frei',
   },
   {
     // P2: der Bestwert wird wieder mit der laufenden statt der ueberstandenen
@@ -5036,11 +5036,19 @@ export const PROBEN = [
     tor: 'smoke',
   },
   {
-    name: 'Ein Schwierigkeitsgrad wie der andere',
+    name: 'Ein Abschnitt wie der andere',
     datei: 'src/data/difficulty.ts',
-    regel: /hpEnd: [0-9.]+, hpCurve: 2\.4/,
-    ersatz: 'hpEnd: 40, hpCurve: 2.4',
+    // **Neu angesetzt in v314** (S-N1-05). Vorher machte sie "Ruhig" haerter
+    // als "Normal" und verlangte, dass der Waechter die verdrehte Reihenfolge
+    // meldet. Die Grade sind entfallen; die Reihenfolge, die das Spiel heute
+    // hat, ist die der ABSCHNITTE. Steht die Steigung auf 1, liegt jeder
+    // Abschnitt gleichauf mit dem vorigen - dieselbe Verdrehung, ein
+    // Gegenstand weiter.
+    regel: /export const LAUF_STEIGUNG = [0-9.]+;/,
+    ersatz: 'export const LAUF_STEIGUNG = 1.0;',
     tor: 'guards',
+    // Nicht bloss "wird rot": genau diese Pruefung soll anschlagen.
+    meldet: 'nicht haerter als',
   },
   {
     // **Die erste Gegenprobe fuer `bench` ueberhaupt** (S-N0-04). Von den 33

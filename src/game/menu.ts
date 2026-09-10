@@ -1,9 +1,9 @@
 import { MAPS } from '../data/maps';
-import { DIFFICULTY_ORDER, DIFFICULTIES, type DifficultyId } from '../data/difficulty';
+import { DIFFICULTIES, type DifficultyId } from '../data/difficulty';
 import { PERK_ORDER, PERKS, type PerkId } from '../data/perks';
 import {
-  buyPerk, freeStars, getBest, getProgress, getSettings, getStars, karteFreischalten,
-  laufErfahrung, freigeschalteteKarten, saveSettings, totalStars,
+  buyPerk, getBest, getProgress, getSettings, karteFreischalten,
+  laufErfahrung, freigeschalteteKarten, saveSettings,
 } from '../core/storage';
 import { KARTENSTAPEL, type Karte } from '../data/karten';
 import { WORLD_H, WORLD_W } from '../data/config';
@@ -193,11 +193,11 @@ export class Menu {
   get difficulty(): DifficultyId { return getSettings().difficulty; }
   set difficulty(d: DifficultyId) { saveSettings({ difficulty: d }); }
 
-  /** Sterne eines Ortes über alle Grade - auf der Karte zählt der beste Lauf. */
-  starsOf(mapId: string): number {
-    let best = 0;
-    for (const g of DIFFICULTY_ORDER) best = Math.max(best, getStars(mapId, g));
-    return best;
+  /** **Ob ein Ort gewonnen ist** - die Sternwertung ist in v314 entfallen
+   *  (S-N1-05). Die Landkarte zeigt seitdem, was sie wirklich weiss: hier war
+   *  jemand schon durch, oder eben nicht. */
+  gewonnen(mapId: string): boolean {
+    return (getProgress().gewonnen ?? []).includes(mapId);
   }
 
   bestOf(mapId: string): string {
@@ -311,15 +311,19 @@ export class Menu {
     return true;
   }
 
-  free(): number { return freeStars(); }
-  earned(): number { return totalStars(); }
+  /** **Seit v314 ist das Konto die Erfahrung** (S-N1-05). Verdient und frei
+   *  fallen damit zusammen: Erfahrung wird beim Kauf abgezogen, Sterne wurden
+   *  nur als "ausgegeben" verbucht. Beide Namen bleiben, weil die Zeichnung
+   *  sie nennt. */
+  free(): number { return laufErfahrung(); }
+  earned(): number { return laufErfahrung(); }
   gradeName(): string { return DIFFICULTIES[this.difficulty].name; }
   perkList(): { id: PerkId; owned: boolean; affordable: boolean }[] {
     const owned = getProgress().perks;
     return PERK_ORDER.map((id) => ({
       id,
       owned: owned.includes(id),
-      affordable: freeStars() >= PERKS[id].cost,
+      affordable: laufErfahrung() >= PERKS[id].cost,
     }));
   }
 }

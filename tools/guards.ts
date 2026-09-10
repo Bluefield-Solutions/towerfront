@@ -5,8 +5,8 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WORLD_W, WORLD_H } from '../src/data/config';
-import { DIFFICULTIES, DIFFICULTY_ORDER, hpScale } from '../src/data/difficulty';
-import { PERKS, PERK_ORDER, starsFor } from '../src/data/perks';
+import { DIFFICULTIES, DIFFICULTY_ORDER, hpScale, laufFaktor } from '../src/data/difficulty';
+import { PERKS, PERK_ORDER } from '../src/data/perks';
 
 /** Wieviel eine Verteidigung, die fuer EINE Bahn gestellt ist, von den
  *  anderen sehen muss. Gemessen: Frostspalte 56 %, Farnkessel 59 %,
@@ -1287,18 +1287,31 @@ for (const [id, e] of Object.entries(ENEMIES)) {
 
 // ------------------------------------------------------ Schwierigkeitsgrade
 //
-// Die Grade muessen eine Reihenfolge bilden. Ein "Ruhig", das an einer Stelle
-// haerter ist als "Normal", verwirrt mehr, als es hilft.
+// **Die Reihenfolge liegt seit v314 in den ABSCHNITTEN** (S-N1-05).
+//
+// Hier stand ein Vergleich der drei Grade untereinander: ein "Ruhig", das an
+// einer Stelle haerter ist als "Normal", verwirrt mehr als es hilft. Mit
+// einem Grad vergleicht diese Schleife nichts mehr - sie laeuft null Mal und
+// saehe auch dann nichts, wenn alles verkehrt stuende (K1).
+//
+// Die Ordnung, die das Spiel heute hat, ist die der Abschnitte: jeder liegt
+// ueber dem vorigen, und der erste rechnet genau wie eine einzelne Karte.
+// Dieselbe Zusage, dieselbe Pruefung, anderer Gegenstand.
 {
-  for (let i = 1; i < DIFFICULTY_ORDER.length; i++) {
-    const a = DIFFICULTIES[DIFFICULTY_ORDER[i - 1]];
-    const b = DIFFICULTIES[DIFFICULTY_ORDER[i]];
-    if (b.startLives > a.startLives) fail(`${b.name} gibt mehr Kristall als ${a.name}.`);
-    if (b.startGold > a.startGold) fail(`${b.name} gibt mehr Startgold als ${a.name}.`);
-    if (b.hpEnd <= a.hpEnd) fail(`${b.name} hat keine haertere Lebenspunktkurve als ${a.name}.`);
-    if (b.bountyMul > a.bountyMul) fail(`${b.name} zahlt mehr je Abschuss als ${a.name}.`);
-    if (b.densityRamp < a.densityRamp) fail(`${b.name} schickt duennere Wellen als ${a.name}.`);
+  const ABSCHNITTE = 4;
+  if (laufFaktor(0) !== 1) {
+    fail(`Der erste Abschnitt rechnet mit Faktor ${laufFaktor(0)} statt 1 - `
+      + 'dann ist eine einzelne Karte nicht mehr das, wogegen die Balance geeicht ist.');
   }
+  for (let i = 1; i < ABSCHNITTE; i++) {
+    if (laufFaktor(i) <= laufFaktor(i - 1)) {
+      fail(`Abschnitt ${i} ist mit Faktor ${laufFaktor(i).toFixed(2)} nicht haerter als `
+        + `Abschnitt ${i - 1} (${laufFaktor(i - 1).toFixed(2)}) - dann ist der Lauf keine `
+        + 'Steigerung, sondern eine Aneinanderreihung.');
+    }
+  }
+  warn(`Abschnitte: ${Array.from({ length: ABSCHNITTE }, (_, i) => laufFaktor(i).toFixed(2))
+    .join(' -> ')}`);
   for (const id of DIFFICULTY_ORDER) {
     const d = DIFFICULTIES[id];
     if (!d.name || !d.blurb) fail(`Schwierigkeitsgrad ${id}: Name oder Beschreibung fehlt.`);
@@ -1408,25 +1421,39 @@ for (const [id, e] of Object.entries(ENEMIES)) {
 
 // ------------------------------------------------------------- Fortschritt
 {
-  const maxStars = MAPS.length * DIFFICULTY_ORDER.length * 3;
+  // **Erreichbarkeit heisst seit v314: in wievielen Laeufen** (S-N1-05).
+  //
+  // Vorher stand hier ein Vorrat - vier Karten mal drei Grade mal drei Sterne
+  // -, und die Verbesserungen mussten darunter bleiben. Sterne gibt es nicht
+  // mehr; Erfahrung waechst mit jedem Lauf und hat keine Obergrenze, also
+  // gaebe es an einem Vorrat nichts mehr zu messen (K1).
+  //
+  // Was bleibt, ist die Frage dahinter, und sie ist dieselbe: kann man alles
+  // kaufen, ohne dass es ewig dauert - und nicht so frueh, dass der Laden
+  // nach dem ersten Lauf leer ist. Der Ertrag ist gerechnet, nicht geraten:
+  // 10 je Welle mal 15, 100 je gewonnenem Abschnitt und 300 fuers
+  // Durchbringen (S-N1-04) - ein durchgespielter Lauf ueber vier Abschnitte
+  // bringt so rund 1300.
+  const LAUF_ERTRAG = 1300;
   const totalCost = PERK_ORDER.reduce((a, id) => a + PERKS[id].cost, 0);
-  if (totalCost > maxStars) {
-    fail(`Die Verbesserungen kosten ${totalCost} Sterne, es gibt aber hoechstens ${maxStars}.`);
+  const laeufe = totalCost / LAUF_ERTRAG;
+  if (laeufe > 6) {
+    fail(`Alle Verbesserungen kosten ${totalCost} Erfahrung, also ${laeufe.toFixed(1)} `
+      + 'volle Laeufe. Mehr als sechs, und der Laden ist keine Aussicht mehr, sondern '
+      + 'eine Wand.');
   }
-  if (totalCost < maxStars * 0.3) {
-    warn(`Alle Verbesserungen kosten nur ${totalCost} von ${maxStars} Sternen - zu frueh alles gekauft.`);
+  if (laeufe < 1) {
+    warn(`Alle Verbesserungen kosten ${totalCost} Erfahrung - weniger als EIN Lauf. `
+      + 'Dann ist der Laden nach dem ersten Durchgang leer.');
   }
   for (const id of PERK_ORDER) {
     const p = PERKS[id];
     if (p.id !== id) fail(`Verbesserung ${id}: id passt nicht zum Schluessel.`);
     if (!p.name || !p.blurb) fail(`Verbesserung ${id}: Name oder Beschreibung fehlt.`);
-    if (p.cost < 1) fail(`Verbesserung ${id}: Kosten unter einem Stern.`);
+    if (p.cost < 1) fail(`Verbesserung ${id}: Kosten unter einem Punkt Erfahrung.`);
   }
-  // Die Sternschwelle muss eine Schwelle sein.
-  if (starsFor(true, 20, 20) !== 3 || starsFor(true, 1, 20) !== 1 || starsFor(false, 5, 20) !== 0) {
-    fail('Die Sternvergabe ist nicht monoton: makellos, knapp und verloren muessen sich unterscheiden.');
-  }
-  console.log(`  Fortschritt: ${totalCost} Sterne fuer alle Verbesserungen, ${maxStars} erreichbar`);
+  console.log(`  Fortschritt: ${totalCost} Erfahrung fuer alle Verbesserungen, `
+    + `${laeufe.toFixed(1)} volle Laeufe`);
 }
 
 // --- Zwei Zweige duerfen nicht gleich aussehen (D17).

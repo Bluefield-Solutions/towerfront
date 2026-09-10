@@ -2,7 +2,6 @@ import { ABILITIES } from '../data/abilities';
 import { C, WORLD_H, WORLD_W } from '../data/config';
 import { MAPS } from '../data/maps';
 import { ACHSE_NAME, type Karte } from '../data/karten';
-import { DIFFICULTIES, DIFFICULTY_ORDER } from '../data/difficulty';
 import { PERKS } from '../data/perks';
 import type { Menu, Hotspot } from '../game/menu';
 import { hexA } from './glow';
@@ -168,7 +167,7 @@ function drawMap(
     const map = MAPS[i];
     const n = m.nodes[i];
     const r = 84;
-    const stars = m.starsOf(map.id);
+    const gewonnen = m.gewonnen(map.id);
     const pressed = m.pressed === `node:${i}`;
     const k = pressed ? 0.95 : 1;
 
@@ -206,11 +205,14 @@ function drawMap(
     ctx.lineWidth = drauf ? 5 : 3;
     ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
 
-    // Sterne über dem Ort - gezeichnet, nicht als Schriftzeichen. Ein
-    // Sternsymbol fehlt in manchen Schriften und wird dann zum Kästchen.
-    for (let k2 = 0; k2 < 3; k2++) {
-      star(ctx, (k2 - 1) * 44, -r - 34, 17, k2 < stars);
-    }
+    // **Ein Zeichen statt dreier Sterne** (v314, S-N1-05). Die Sternwertung
+    // ist entfallen; was die Landkarte noch weiss, ist eine Ja-Nein-Frage -
+    // hier war jemand durch, oder nicht. Drei Sterne, von denen immer alle
+    // drei leer oder alle drei voll waeren, sagten dasselbe dreimal.
+    //
+    // Gezeichnet, nicht als Schriftzeichen: ein Haken fehlt in manchen
+    // Schriften und wird dann zum Kaestchen.
+    if (gewonnen) star(ctx, 0, -r - 34, 19, true);
 
     ctx.font = '700 30px system-ui, sans-serif';
     ctx.fillStyle = C.stone;
@@ -326,23 +328,19 @@ function drawBrief(
   ];
   facts.forEach((f, i) => ctx.fillText(f, x0 + 60, y0 + 302 + i * 36));
 
-  // Schwierigkeit - an der Stufe, nicht global. Genau wie im Vorbild.
-  ctx.font = '700 20px system-ui, sans-serif';
-  ctx.fillStyle = hexA(C.crystal, 0.9);
-  ctx.fillText('SCHWIERIGKEIT', x0 + 60, y0 + 420);
-  DIFFICULTY_ORDER.forEach((id, i) => {
-    const d = DIFFICULTIES[id];
-    const bw = (w - 160) / 3, bx = x0 + 60 + i * (bw + 20);
-    const on = m.difficulty === id;
-    // Nur die halbe Beschreibung: der Knopf ist kein Absatz. Beim ersten
-    // Versuch lief der Text unten heraus.
-    const short = d.blurb.split('.')[0];
-    button(ctx, add, `diff:${id}`, bx, y0 + 446, bw, 118,
-      d.name, on ? C.crystal : C.stoneDark, m.pressed === `diff:${id}`, on, short);
-  });
+  // **Die Schwierigkeitswahl ist in v314 entfallen** (S-N1-05).
+  //
+  // Hier standen drei Knoepfe - Ruhig, Normal, Erbarmungslos. Sie und die
+  // Laufstruktur beantworteten dieselbe Frage, und solange beide dastanden,
+  // mass die Balance zwei Dinge auf einmal (Regel 4). Wie hart es wird,
+  // entscheidet jetzt der Lauf: der Abschnitt, in dem man steht, und die
+  // Auflage, die man bei der Abschnittswahl genommen hat.
+  //
+  // Der Platz bleibt frei statt gefuellt: eine Zeile, die sagt was gilt, ist
+  // keine Wahl und braucht keinen Knopf.
 
   // Modus als Umschalter, nicht als zwei Kacheln.
-  button(ctx, add, 'endless', x0 + 60, y0 + 590, 330, 66,
+  button(ctx, add, 'endless', x0 + 60, y0 + 446, 330, 66,
     m.endless ? 'Endlos: an' : 'Endlos: aus',
     m.endless ? C.gold : C.stoneDark, m.pressed === 'endless', m.endless);
 
@@ -647,35 +645,19 @@ function drawResult(
     WORLD_W / 2, y0 + 152,
   );
 
-  // Sterne, nacheinander eingeblendet.
-  for (let i = 0; i < 3; i++) {
-    const due = 0.25 + i * 0.3;
-    const t = Math.max(0, Math.min(1, (m.resultAge - due) / 0.35));
-    const earned = i < r.stars;
-    const pop = earned ? 1 + Math.sin(t * Math.PI) * 0.35 : 1;
-    ctx.save();
-    // MAL der Deckkraft, die schon anliegt, nicht statt ihr: waehrend des
-    // Ansichtswechsels steht hier der Uebergang drin, und eine absolute
-    // Zuweisung haette die Sterne allein voll sichtbar stehen lassen,
-    // waehrend alles andere um sie herum noch einblendet.
-    ctx.globalAlpha *= earned ? t : 0.9;
-    star(ctx, WORLD_W / 2 + (i - 1) * 130, y0 + 268, 52 * pop, earned);
-    ctx.restore();
-    if (!earned) { star(ctx, WORLD_W / 2 + (i - 1) * 130, y0 + 268, 52, false); }
-  }
+  // **Die Sternreihe ist in v314 entfallen** (S-N1-05). Hier blendeten drei
+  // Sterne nacheinander auf. Die Wertung gibt es nicht mehr, und was sie
+  // sagte, steht ohnehin schon zweimal auf demselben Bildschirm: "Kristall X
+  // von Y" unter den vier Zahlen, und die Erfahrung, die der Lauf
+  // ausgeschuettet hat.
 
   // Was dieser Lauf EINGEBRACHT hat - die eigentliche Nachricht.
   //
-  // Zwei Zeilen koennen zusammenfallen: ein Sieg kann gleichzeitig einen
-  // Stern und eine Faehigkeit bringen. Deshalb werden sie gesammelt und um
+  // Zwei Zeilen koennen zusammenfallen: ein Sieg kann gleichzeitig eine
+  // Faehigkeit und Erfahrung bringen. Deshalb werden sie gesammelt und um
   // dieselbe Mitte gelegt, statt beide an eine feste Zeile geschrieben - die
   // erste Fassung haette sie uebereinandergedruckt.
   const nachricht: string[] = [];
-  if (r.stars > r.before) {
-    nachricht.push(
-      r.stars - r.before === 1 ? 'Ein neuer Stern' : `${r.stars - r.before} neue Sterne`,
-    );
-  }
   // S5 des Abgleichs: die Freischaltung wird gezeigt, WENN sie passiert.
   if (r.freischaltung) {
     nachricht.push(`Neue Fähigkeit: ${ABILITIES[r.freischaltung].name}`);

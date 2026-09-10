@@ -5,7 +5,17 @@
  *  ein voll ausgebautes Feld eine feste Leistung hat. Was wirkt, ist die Form
  *  der Kurve, die Dichte der Wellen und wieviel Geld ueberhaupt fliesst.
  *  Deshalb verstellt jeder Grad alle diese Groessen zusammen. */
-export type DifficultyId = 'ruhig' | 'normal' | 'erbarmungslos';
+/** **Es gibt seit v314 nur noch einen Grad** (S-N1-05, `keineGrade`).
+ *
+ *  Drei Grade und die Laufstruktur sind zwei Wege, dieselbe Frage zu stellen -
+ *  wie hart wird es -, und solange beide dastehen, misst die Balance zwei
+ *  Dinge auf einmal (Regel 4). Die Antwort gibt jetzt der LAUF: `laufFaktor`
+ *  ueber die Abschnitte und die Auflage der Abschnittswahl (Stille Schicht,
+ *  Klarer Weg, Reiche Ader).
+ *
+ *  Der Name bleibt als Typ stehen, weil Spielstand und Lauf ihn tragen; die
+ *  WAHL gibt es nicht mehr. */
+export type DifficultyId = 'normal';
 
 export interface DifficultyDef {
   id: DifficultyId;
@@ -47,13 +57,6 @@ export interface DifficultyDef {
 }
 
 export const DIFFICULTIES: Record<DifficultyId, DifficultyDef> = {
-  ruhig: {
-    id: 'ruhig', name: 'Ruhig',
-    blurb: 'Mehr Kristall, mehr Gold, sanftere Kurve. Zum Kennenlernen.',
-    startGold: 300, startLives: 48,
-    hpEnd: 17.0, hpCurve: 2.4, densityRamp: 0.11,
-    bountyMul: 1.3, bonusMul: 1.3,
-  },
   normal: {
     id: 'normal', name: 'Normal',
     blurb: 'Der gedachte Weg. Die letzten Wellen kosten Kristall.',
@@ -61,16 +64,19 @@ export const DIFFICULTIES: Record<DifficultyId, DifficultyDef> = {
     hpEnd: 24.0, hpCurve: 2.6, densityRamp: 0.16,
     bountyMul: 1, bonusMul: 1,
   },
-  erbarmungslos: {
-    id: 'erbarmungslos', name: 'Erbarmungslos',
-    blurb: 'Weniger Kristall, weniger Gold, steile Kurve. Jede Stellung zählt.',
-    startGold: 212, startLives: 36,
-    hpEnd: 28.3, hpCurve: 2.7, densityRamp: 0.20,
-    bountyMul: 1.0, bonusMul: 1.0,
-  },
 };
 
-export const DIFFICULTY_ORDER: DifficultyId[] = ['ruhig', 'normal', 'erbarmungslos'];
+/** **Ruhig und Erbarmungslos sind in v314 entfallen** - und ihre Zahlen stehen
+ *  hier, weil sie geeicht waren und nicht geraten:
+ *
+ *  | | startGold | startLives | hpEnd | hpCurve | densityRamp | bounty/bonus |
+ *  |---|---|---|---|---|---|---|
+ *  | Ruhig | 300 | 48 | 17,0 | 2,4 | 0,11 | 1,3 |
+ *  | Erbarmungslos | 212 | 36 | 28,3 | 2,7 | 0,20 | 1,0 |
+ *
+ *  Wer die Spanne zurueckwill, holt sie ueber den Lauf, nicht ueber eine
+ *  zweite Wahl daneben. */
+export const DIFFICULTY_ORDER: DifficultyId[] = ['normal'];
 
 /** Form der Kurve.
  *

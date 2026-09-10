@@ -18,8 +18,10 @@ import type { Wave } from '../src/data/waves';
 import { ABILITIES, ABILITY_ORDER } from '../src/data/abilities';
 import { MAPS } from '../src/data/maps';
 import { SPEEDS } from '../src/data/config';
-import { DIFFICULTY_ORDER } from '../src/data/difficulty';
-import { PERK_ORDER, starsFor } from '../src/data/perks';
+import { DIFFICULTY_ORDER, LAUF_STEIGUNG } from '../src/data/difficulty';
+import { PERK_ORDER } from '../src/data/perks';
+import { WAHLARTEN, ERFAHRUNG_JE_WELLE, ERFAHRUNG_JE_ABSCHNITT,
+  ERFAHRUNG_LAUF_GESCHAFFT } from '../src/game/lauf';
 import { fehltVorKauf } from '../src/game/turmwerte';
 import { auswertung } from '../src/game/auswertung';
 import { TUTORIAL } from '../src/game/tutorial';
@@ -419,10 +421,15 @@ const CRITERIA: Criterion[] = [
   },
   {
     id: 'K3', area: 'Karten', from: 'Bloons TD 6 (CHIMPS), Kingdom Rush (Eisen/Unmoeglich)',
-    text: 'Schwierigkeitsgrade.',
+    text: 'Die Haerte laesst sich waehlen.',
     measured: true, weight: 2,
-    check: () => DIFFICULTY_ORDER.length >= 3,
-    gap: 'Ruhig / Normal / Erbarmungslos ueber Startwerte und Lebenspunktkurve.',
+    // **Umgeschrieben in v314** (S-N1-05): drei Grade sind entfallen, die
+    // FRAGE nicht. Sie beantwortet jetzt der Lauf - jeder Abschnitt liegt
+    // ueber dem vorigen (`laufFaktor`), und bei der Abschnittswahl nimmt man
+    // eine Auflage dazu. Gewaehlt wird also weiter, nur waehrend des Spiels
+    // statt davor.
+    check: () => LAUF_STEIGUNG > 1 && WAHLARTEN.length >= 3,
+    gap: 'Steigerung je Abschnitt und eine Auflage je Abschnittswahl.',
   },
   {
     id: 'K4', area: 'Karten', from: 'Kingdom Rush (Endlosmodus)',
@@ -436,10 +443,16 @@ const CRITERIA: Criterion[] = [
   },
   {
     id: 'K5', area: 'Karten', from: 'Kingdom Rush (Sterne), Plants vs. Zombies',
-    text: 'Bewertung je Karte, die zum erneuten Spielen einlaedt.',
+    text: 'Ein Lauf traegt etwas in den naechsten.',
     measured: true, weight: 2,
-    check: () => starsFor(true, 20, 20) === 3 && starsFor(true, 1, 20) === 1,
-    gap: 'Sterne nach verbleibendem Kristall, je Karte gespeichert.',
+    // **Umgeschrieben in v314** (S-N1-05): die Sternwertung ist entfallen.
+    // Was sie tat - einen Grund geben, es noch einmal zu spielen -, tut jetzt
+    // die Erfahrung: sie waechst mit jeder gefahrenen Welle, jedem gewonnenen
+    // Abschnitt und dem Durchbringen, und sie kauft Karten und
+    // Verbesserungen. Ein verlorener Lauf bringt gemessen immer noch 340.
+    check: () => ERFAHRUNG_JE_WELLE > 0 && ERFAHRUNG_JE_ABSCHNITT > 0
+      && ERFAHRUNG_LAUF_GESCHAFFT > 0,
+    gap: 'Erfahrung je Welle, Abschnitt und Durchlauf - sie kauft Karten.',
   },
   {
     id: 'K6', area: 'Karten', from: 'Kingdom Rush (Sternpunkte)',

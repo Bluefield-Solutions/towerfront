@@ -1,8 +1,7 @@
 import './style.css';
 import { Loop } from './core/loop';
 import { Menu } from './game/menu';
-import { saveSettings, setPerkCost } from './core/storage';
-import { PERKS, type PerkId } from './data/perks';
+import { saveSettings } from './core/storage';
 import { loadGame } from './game/save';
 import { bindInput } from './core/input';
 import { Sfx } from './core/audio';
@@ -20,19 +19,11 @@ import {
 } from './game/lauf';
 import { laufErfahrungGutschreiben } from './core/storage';
 import { MAPS } from './data/maps';
-
-// **Die Kostentabelle der Verbesserungen an die Ablage geben - beinahe
-// verlorengegangen.**
-//
-// Sie stand bis v195 im Konstruktor der Oberflaeche, mitten zwischen den
-// Behandlern des HTML-Titelschirms. Als der Schirm wegfiel, wollte sie
-// mitfallen - und `spentStars()` haette dann 0 zurueckgegeben, `freeStars()`
-// den vollen Sternestand: JEDE Verbesserung waere umsonst gewesen, ohne dass
-// irgendetwas rot wird. Der Uebersetzer hat sie als "nie gelesen" gemeldet,
-// und genau das war sie nicht.
-//
-// Sie steht jetzt dort, wo der Laden wirklich ist: neben dem Leinwandmenue.
-setPerkCost((id) => PERKS[id as PerkId]?.cost ?? 0);
+// **Die Kostentabelle wird seit v314 nicht mehr hierher gereicht**
+// (S-N1-05). Sie musste es, solange die Ablage die ausgegebenen STERNE aus
+// den gekauften Verbesserungen zurueckrechnen musste - dafuer brauchte sie
+// deren Preise. Erfahrung wird beim Kauf abgezogen und nicht zurueckgerechnet,
+// also weiss die Ablage wieder nichts ueber Spielinhalte.
 
 const canvas = document.getElementById('view') as HTMLCanvasElement;
 const state = new GameState();

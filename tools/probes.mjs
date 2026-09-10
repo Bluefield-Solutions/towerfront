@@ -1247,6 +1247,22 @@ export const PROBEN = [
     // Punkten kommen 3,3 aus der Faltung. Ohne eigene Probe waere sie durch
     // die Zeile darueber mitgedeckt - und eine Zahl, die zwei Ursachen hat
     // und eine Probe, ist halb geprueft.
+    // **Der Schalter tut nichts mehr** (v316, S-N4-02).
+    //
+    // Die zwei Proben daneben halten, dass die Werte zugeklappt SIND. Diese
+    // haelt die andere Haelfte, und ohne sie waere das Zuklappen eine Falle:
+    // der Eingriff laesst den Klick ins Leere laufen, die Werte bleiben
+    // versteckt, und `browsertor` meldet, dass die Werteliste fehlt. Eine
+    // Flaeche zu sparen, indem man etwas unerreichbar macht, ist keine
+    // Ersparnis (H10: ausgeduennt wird nach Wichtigkeit, nicht nach Platz).
+    name: 'Der Schalter der Turmwerte klappt nichts auf',
+    datei: 'src/ui/ui.ts',
+    suche: 'this.werteOffen = !this.werteOffen;',
+    ersatz: 'this.werteOffen = false;',
+    tor: 'browsertor',
+    meldet: 'Werteliste des Turms',
+  },
+  {
     name: 'Die Werte am Turm stehen wieder offen',
     datei: 'src/ui/ui.ts',
     suche: 'this.iStats.hidden = amTurm && !this.werteOffen;',

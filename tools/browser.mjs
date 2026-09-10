@@ -1103,6 +1103,35 @@ if (start) {
     // Geprueft wird nicht die Stilvorlage, sondern das Ergebnis: wieviele
     // Zeilen liegen VOLLSTAENDIG im sichtbaren Bereich ihres Behaelters?
     // Eine Liste, die rollt, ist in Ordnung - eine, die nichts zeigt, nicht.
+    //
+    // **Seit v316 muss die Pruefung erst aufklappen** (S-N4-02, K1). Am Turm
+    // sind die Werte zugeklappt; der Turmname ist ihr Schalter. Die Frage
+    // dieser Stelle ist damit nicht mehr "stehen sie da", sondern "sind sie
+    // ERREICHBAR und dann vollstaendig zu sehen" - und das ist mehr als
+    // vorher, nicht weniger: der Schalter selbst wird jetzt mitgeprueft.
+    // Ein Tor, das seinen Gegenstand verliert, wird umgebaut oder gestrichen,
+    // nie stummgeschaltet.
+    const aufgeklappt = await seite.evaluate(() => {
+      const steg = document.getElementById('inspector');
+      const schalter = document.getElementById('i-name');
+      if (!steg || steg.hidden || !schalter) return 'kein Steg';
+      if (!steg.classList.contains('am-turm')) return 'am Rand';
+      if (document.getElementById('i-stats')?.hidden === false) return 'stand offen';
+      schalter.click();
+      return 'geklickt';
+    });
+    if (aufgeklappt === 'stand offen') {
+      fail(
+        'Die Werte am Turm stehen offen, bevor jemand den Schalter gedrueckt hat. '
+        + 'Dann prueft der Klick darunter nichts (Regel 3) - und die Flaeche, '
+        + 'die das Zuklappen sparen soll, ist gar nicht gespart.',
+      );
+    }
+    if (aufgeklappt === 'am Rand') {
+      fail(
+        'Der Pruefsteg steht bei gewaehltem Turm am Rand statt am Turm (S-N4-02, H4).',
+      );
+    }
     const werte = await seite.evaluate(() => {
       const liste = document.getElementById('i-stats');
       if (!liste || liste.hidden) return { fehlt: true };
@@ -1346,6 +1375,12 @@ if (start) {
       // grenze - beides setzen, sonst passiert nichts und die Pruefung
       // meldet wieder, dass sie nichts gefunden hat.
       if (l) {
+        // **Zugeklappt rollt nichts** (v316, S-N4-02). Seit die Werte am Turm
+        // gefaltet sind, hat eine versteckte Liste keine Rollhoehe - die
+        // Pruefung meldete "fand nichts, was rollt" und haette damit ihren
+        // eigenen Gegenstand verloren. Der Zustand wird hier ohnehin
+        // GESTELLT, also wird auch das Aufklappen gestellt.
+        l.hidden = false;
         l.style.minHeight = '24px';
         l.style.maxHeight = '24px';
         l.style.flex = '0 0 24px';

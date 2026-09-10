@@ -1767,10 +1767,14 @@ html, body {
      an ihm nicht - in der Aufnahme endete "Bogenturm" hart als "Bogentu",
      ohne die drei Punkte, die sagen, dass da noch etwas steht. Das Zeichen
      haengt deshalb frei darueber statt als zweites Kind daneben. */
-  position: relative; display: block; padding-right: 14px;
+  position: relative; display: block;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.am-turm .werte-auf { cursor: pointer; min-height: 44px; line-height: 44px; }
+/* Das Polster gehoert zum Zeichen und steht deshalb dort, wo das Zeichen
+   steht. Am Rand gibt es keins - und dort hat das Browsertor die 14 Punkte
+   sofort gemeldet: "der Turmname ist abgeschnitten, 1 Punkte fehlen", auf
+   allen drei Schreibtischformaten. */
+.am-turm .werte-auf { cursor: pointer; min-height: 44px; line-height: 44px; padding-right: 14px; }
 .am-turm .werte-auf::after {
   content: '\25BE'; font-size: var(--s-marke); color: var(--muted);
   position: absolute; right: 0; top: 0;

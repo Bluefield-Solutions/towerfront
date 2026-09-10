@@ -366,7 +366,7 @@ const DT = 1 / 60;
  *  (Regel 15). */
 function botSchritt(g: Spielzustand, plaetze: { x: number; y: number }[], z: { spot: number; si: number }): void {
   const id = TOWER_ORDER[z.si % TOWER_ORDER.length];
-  if (z.spot < plaetze.length && g.gold >= TOWERS[id].base.cost) {
+  if (z.spot < plaetze.length && g.gold >= g.baupreis(id)) {
     const sp = plaetze[z.spot++];
     if (g.build(sp.x, sp.y, id)) z.si++;
   }

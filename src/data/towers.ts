@@ -373,6 +373,67 @@ export const TOWERS: Record<TowerId, TowerDef> = {
  *  Mehrere Foerderer im selben Umkreis addieren sich NICHT unbegrenzt: der
  *  Zuschlag ist gedeckelt, sonst waere die Antwort auf jede Karte "erst sechs
  *  Foerderer, dann Tuerme". */
+/** **Wiederholung wird teurer** (v286, S-N3-02).
+ *
+ *  Nichts sprach bisher dagegen, viermal denselben Turm zu bauen - und genau
+ *  daran haengt die Zweigwirkung, seit v253 die schwaechste aller
+ *  Spannungskennzahlen. Alle drei Vorbilder verteuern das Haeufen: Rogue
+ *  Tower jeden weiteren Turm derselben Art, Infinitode jeden weiteren Miner,
+ *  Defense Grid nimmt 25 % beim Verkauf.
+ *
+ *  Der Zuschlag ist ANTEILIG am Grundpreis, nicht absolut (Regel 2): sonst
+ *  traefe er den Bogenturm fuer 55 viermal so hart wie das Prisma fuer 140,
+ *  und die teuren Tuerme waeren die, die man haeuft.
+ *
+ *  Die Hoehe ist durchprobiert, nicht gesetzt - der Wert steht unten am
+ *  Messergebnis. */
+export const WIEDERHOLUNG_ZUSCHLAG = 0.35;
+
+/** Wieviele Tuerme derselben Art zum Grundpreis stehen duerfen.
+ *
+ *  **Diese Zahl ist gemessen, und ohne sie ist die ganze Mechanik falsch.**
+ *  Das Spiel hat VIER Geschuetze. Wer zwoelf Tuerme stellt, hat damit
+ *  zwangslaeufig drei je Sorte - auch dann, wenn er nichts haeuft, sondern
+ *  perfekt verteilt. Ein Zuschlag ab dem zweiten Turm ist deshalb keine
+ *  Strafe fuer Wiederholung, sondern eine globale Verteuerung: gemessen an
+ *  `npm run c18`, dessen Bot die vier Sorten REIHUM baut, kippte ohne
+ *  Freimenge schon ein Zuschlag von 0,10 die erste Karte - und 0,15, 0,20,
+ *  0,25 und 0,35 genauso.
+ *
+ *  **Drei, weil zwoelf Tuerme durch vier Sorten drei ergeben.** Wer
+ *  gleichmaessig verteilt, zahlt damit gar nichts; erst der dreizehnte Turm
+ *  kostet drauf, und der ist die erste Wiederholung, die eine ist. Die Zahl
+ *  kommt also aus dem Spiel und nicht aus einem Durchlauf - und das ist hier
+ *  wichtiger, als es klingt: ueber neun gemessene Punkte (Freimenge 1 bis 3
+ *  gegen Zuschlag 0,20 / 0,35 / 0,50) laeuft C18 NICHT MONOTON. Bei
+ *  Freimenge 1 gewinnt 0,35, waehrend 0,20 und 0,50 verlieren. Das ist kein
+ *  Zusammenhang, das ist der Bot an einer Kante - dieselbe Auskunft wie beim
+ *  Foerderer in v285, und wer daraus eine Zahl ableitet, justiert gegen
+ *  Zufall (M1). Freimenge 3 gewinnt an allen drei Zuschlaegen und ueber alle
+ *  drei Aussaaten.
+ *
+ *  Die Vorbilder haben dieses Problem nicht, weil sie mehr Turmarten haben -
+ *  Rogue Tower ueber ein Dutzend. Dort IST "der zweite Bogenturm" eine Wahl;
+ *  hier waere er eine Pflicht mit Aufpreis. Regel 10 gilt fuer die Form
+ *  eines Vorbilds, nicht nur fuer seine Zahl (dieselbe Lehre wie beim
+ *  Foerderer in v285). */
+export const WIEDERHOLUNG_FREI = 3;
+
+/** Wieviel der n-te Turm derselben Art kostet, als Faktor auf den Grundpreis.
+ *
+ *  `gebaut` ist die Zahl der bereits stehenden Tuerme dieser Art. Der erste
+ *  kostet also immer den Grundpreis; erst der zweite zahlt drauf.
+ *
+ *  **Linear, nicht exponentiell.** Exponentiell ist beim vierten Turm bei
+ *  Faktor 2,5 und beim sechsten bei 4,6 - das ist kein "teurer", das ist ein
+ *  Verbot mit Umweg. Eine Entscheidung braucht beide Seiten: der vierte
+ *  Bogenturm muss kaufbar bleiben und sich dabei falsch anfuehlen. */
+export function wiederholungsFaktor(
+  gebaut: number, zuschlag = WIEDERHOLUNG_ZUSCHLAG,
+): number {
+  return 1 + Math.max(0, gebaut - WIEDERHOLUNG_FREI) * zuschlag;
+}
+
 export const FOERDER_BONUS = 0.25;
 export const FOERDER_DECKEL = 0.75;
 
@@ -575,8 +636,9 @@ export function accentFor(def: TowerDef, branch: BranchIndex): string {
  *  Verbesserungen und liegt zwischen 70 und 85 %. */
 export function sellValue(
   def: TowerDef, branch: BranchIndex, level: number, refund = 0.7,
+  bezahlt?: number,
 ): number {
-  let spent = def.base.cost;
+  let spent = bezahlt ?? def.base.cost;
   if (branch !== null) {
     for (let i = 0; i < level - 1; i++) spent += def.branches[branch].levels[i].cost;
   }

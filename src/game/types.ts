@@ -165,6 +165,14 @@ export interface Tower {
   retargetIn: number;     // Sekunden bis zur naechsten Zielsuche
   kills: number;
   damageDone: number;
+  /** Was dieser Turm beim Bau WIRKLICH gekostet hat (v286, S-N3-02).
+   *
+   *  Seit die Wiederholung teurer wird, ist der Grundpreis nicht mehr der
+   *  bezahlte. Ohne dieses Feld gaebe der Verkauf 70 % des GRUNDpreises
+   *  zurueck - der vierte Bogenturm kostete dann 110 und braechte 38, und
+   *  ein Fehlkauf waere teurer als die Wiederholung selbst. Bestraft werden
+   *  soll das Haeufen, nicht das Berichtigen. */
+  bezahlt: number;
 }
 
 export type ProjectileKind = 'homing' | 'ballistic';

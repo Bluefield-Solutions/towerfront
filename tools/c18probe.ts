@@ -24,7 +24,7 @@ import { candidateSpots } from './spots';
 type Z = { spot: number; si: number };
 function botSchritt(g: GameState, plaetze: { x: number; y: number }[], z: Z): void {
   const id = TOWER_ORDER[z.si % TOWER_ORDER.length];
-  if (z.spot < plaetze.length && g.gold >= TOWERS[id].base.cost) {
+  if (z.spot < plaetze.length && g.gold >= g.baupreis(id)) {
     const sp = plaetze[z.spot++];
     if (g.build(sp.x, sp.y, id)) z.si++;
   }

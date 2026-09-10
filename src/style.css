@@ -320,6 +320,20 @@ html, body {
   font-size: var(--s-klein); font-weight: 700; color: var(--gold);
   font-variant-numeric: tabular-nums; line-height: 1;
 }
+/* **Der Aufschlag der Wiederholung** (v286, S-N3-02).
+   Dasselbe Zeichen wie der Sprung im Wellendruck: ein kleines Dreieck in der
+   Warnfarbe. Es gibt fuer "das ist mehr als sonst" schon eine Marke in
+   diesem Spiel, und eine zweite dafuer waere eine Sprache zu viel
+   (Regel 15). Keine eigene Schriftstufe - die Skala hat fuenf, und eine
+   sechste fuer eine Marke ist eine zu viel (H7). */
+.tower-btn[data-teurer="1"] .c::after,
+.pick-cost[data-teurer="1"]::after {
+  content: '▲';
+  color: var(--danger);
+  font-size: 0.72em;
+  vertical-align: 0.15em;
+  margin-left: 1px;
+}
 .tower-btn[data-on="1"] { border-color: var(--crystal); background: rgba(127, 231, 224, 0.16); }
 .tower-btn[data-poor="1"] { opacity: 0.45; }
 .tower-btn:active { transform: scale(0.96); }

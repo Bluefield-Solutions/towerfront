@@ -5,7 +5,7 @@ import { ENEMIES, type EnemyId } from '../data/enemies';
 import {
   TOWERS, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor, hatZweigwahl,
   guenstigsterTurm, type BranchIndex, type TowerId,
-  FOERDER_DECKEL, foerderZuschlag,
+  FOERDER_DECKEL, foerderZuschlag, wiederholungsFaktor, WIEDERHOLUNG_ZUSCHLAG,
 } from '../data/towers';
 import { EARLY_BONUS_MAX, EARLY_BONUS_WINDOW, EARLY_RISIKO_HUB } from '../data/waves';
 import { VERBUND_MAX, VERBUND_STUFE, VERBUND_UMKREIS } from './verbund';
@@ -930,6 +930,32 @@ export class GameState {
 
 
 
+  /** **Was ein Turm dieser Art JETZT kostet** (v286, S-N3-02).
+   *
+   *  Die eine Stelle, an der ein Baupreis entsteht. Vorher stand
+   *  `def.base.cost` an acht Stellen im Baum - drei hier, fuenf in der
+   *  Bedienung -, und ein Preis, der an acht Stellen steht, veraltet an
+   *  sieben (Regel 15). Der Knopf, die Vorkauf-Karte, die Ausgrauung und
+   *  der Kauf selbst fragen seitdem alle hier.
+   *
+   *  Der Foerderer zaehlt fuer sich: er ist kein Geschuetz, und wer sein
+   *  Einkommen ausbaut, haeuft nicht dieselbe Sache. */
+  /** Der Zuschlag als FELD, nicht als Konstante - damit er sich abschalten
+   *  laesst (Regel 13). Das Spiel setzt ihn nie um; `npm run sim` misst
+   *  damit denselben Bot einmal mit und einmal ohne, und die Gegenprobe der
+   *  Story greift genau hier. Eine Wirkung, die sich nicht abschalten laesst,
+   *  ist nicht gemessen, sondern behauptet. */
+  wiederholungZuschlag = WIEDERHOLUNG_ZUSCHLAG;
+
+  wiederholungsAufschlag(id: TowerId): number {
+    const gebaut = this.towers.reduce((n, t) => n + (t.def === id ? 1 : 0), 0);
+    return wiederholungsFaktor(gebaut, this.wiederholungZuschlag);
+  }
+
+  baupreis(id: TowerId): number {
+    return Math.round(TOWERS[id].base.cost * this.wiederholungsAufschlag(id));
+  }
+
   build(wx: number, wy: number, id: TowerId): boolean {
     // Die Zielunit steht schon. Sie ist nicht in TOWER_ORDER, also bietet
     // die Bauleiste sie nie an - hier steht der Riegel trotzdem, weil
@@ -937,9 +963,10 @@ export class GameState {
     if (id === 'core') return false;
     const def = TOWERS[id];
     const x = snap(wx), y = snap(wy);
-    if (!this.canPlace(id, x, y) || this.gold < def.base.cost) return false;
-    this.gold -= def.base.cost;
-    this.stats.goldSpent += def.base.cost;
+    const preis = this.baupreis(id);
+    if (!this.canPlace(id, x, y) || this.gold < preis) return false;
+    this.gold -= preis;
+    this.stats.goldSpent += preis;
     this.stats.towersBuilt++;
     const c = { x, y };
     const t: Tower = {
@@ -948,6 +975,7 @@ export class GameState {
       pulse: 0, spring: 1,
       zielwahl: 'vorn',
       target: null, retargetIn: 0, kills: 0, damageDone: 0,
+      bezahlt: preis,
     };
     this.towers.push(t);
     this.towersVersion++;
@@ -983,7 +1011,10 @@ export class GameState {
     // verkaufen - und der Spieler haette dafuer auch noch Gold bekommen.
     if (t.def === 'core') return;
     const def = TOWERS[t.def];
-    const value = sellValue(def, t.branch, t.level, this.perks.refund);
+    // Zurueck kommt ein Anteil des WIRKLICH Bezahlten, nicht des Grundpreises
+    // (v286): sonst braechte der vierte Bogenturm 38 zurueck, wo er 110
+    // gekostet hat, und ein Fehlkauf waere teurer als das Haeufen selbst.
+    const value = sellValue(def, t.branch, t.level, this.perks.refund, t.bezahlt);
     this.gold += value;
     t.target = null;
     compact(this.towers, (o) => o === t);
@@ -2646,7 +2677,7 @@ export class GameState {
   private zielunitSetzen(): void {
     const { x, y } = this.map.ziel ?? this.goal;
     this.towers.push({
-      id: this.nextId++, def: 'core', x, y,
+      id: this.nextId++, def: 'core', x, y, bezahlt: 0,
       // Zweig 0 von Anfang an: die Zielunit hat nur einen, also gibt es
       // nichts zu waehlen, und `null` haette das Ausbaumenue eine Wahl
       // anbieten lassen, die es nicht gibt.
@@ -2830,6 +2861,16 @@ export class GameState {
         pulse: 0, spring: 0,
         zielwahl: ZIELWAHL_ORDNUNG[zIdx ?? 0] ?? 'vorn',
         target: null, retargetIn: retargetIn ?? 0, kills, damageDone,
+        // **Der Kaufpreis wird beim Laden nachgerechnet, nicht gespeichert**
+        // (v286). Die Tuerme kommen in Baureihenfolge zurueck, also ist der
+        // Aufschlag dieselbe Rechnung wie beim Kauf - fuer jeden Spielstand,
+        // in dem nichts verkauft wurde, auf den Goldstueck genau. Wer
+        // zwischendurch verkauft hat, bekommt den Preis, den derselbe Turm
+        // heute kostete; der Fehler liegt nach oben beim Zuschlag und trifft
+        // nur den Verkaufswert. Ein Feld im Spielstand waere genauer und
+        // haette dafuer ein Format gebrochen, das vier Fassungen alt ist.
+        bezahlt: Math.round(TOWERS[def].base.cost
+          * wiederholungsFaktor(this.towers.reduce((n, w) => n + (w.def === def ? 1 : 0), 0))),
       };
       this.towers.push(t);
       }

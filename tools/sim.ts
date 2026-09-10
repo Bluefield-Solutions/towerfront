@@ -316,6 +316,15 @@ interface Bot {
  *
  *  Alle drei koennen alle zwoelf Plaetze belegen - keiner ist durch die
  *  Obergrenze benachteiligt. */
+/** Ab welchem Vielfachen des Grundpreises der Bot auf eine andere Turmart
+ *  ausweicht, wenn eine zum Grundpreis zu haben ist.
+ *
+ *  1,35 ist der ERSTE Aufschlag - der Bot weicht also aus, sobald das Haeufen
+ *  ueberhaupt etwas kostet. Das ist die vorsichtigste Lesart der neuen
+ *  Entscheidung und damit die, die am wenigsten ueber den Bot und am meisten
+ *  ueber die Mechanik sagt. */
+const AUSWEICHEN_AB = 1.34;
+
 const BOTS: Bot[] = [
   {
     name: 'Meister', foerderer: 0, maxTowers: 12, maxLevel: 3, reserve: 40, decideEvery: 30, deepenAt: 0.65,
@@ -556,6 +565,57 @@ function foerdererMessen(): void {
   console.log('  (misst, urteilt nicht - die Eichung braucht ein ruhigeres Messgeraet, siehe M1)');
 }
 
+/** **Trennt der Wiederholungsaufschlag Haeufen von Verteilen?** (v286, S-N3-02)
+ *
+ *  Die Story verlangt, dass die Zweigwirkung steigt - und gemessen tut sie
+ *  das nicht. Bevor man das der Mechanik zuschreibt, ist zu pruefen, ob der
+ *  Messplatz sie ueberhaupt sehen kann: die drei Spielstile fahren ALLE
+ *  dieselbe Turmliste und unterscheiden sich nur in der Ausbautiefe. Eine
+ *  Regel gegen das Haeufen kann zwischen drei Bots, von denen keiner haeuft,
+ *  nichts trennen - sie nimmt allen dasselbe weg.
+ *
+ *  Hier wird der Fall GESTELLT statt abgewartet (dieselbe Bewegung wie in
+ *  v219 und v231): ein Bot, der nur eine Turmart baut, gegen einen, der vier
+ *  gleichmaessig verteilt - jeder einmal mit Aufschlag und einmal ohne. Wenn
+ *  der Aufschlag etwas taugt, muss der Abstand zwischen beiden MIT groesser
+ *  sein als OHNE. Ist er es nicht, liegt es an der Mechanik und nicht am
+ *  Messplatz.
+ *
+ *  Kein Tor: es misst, es urteilt nicht. */
+function wiederholungMessen(): void {
+  console.log('\nWiederholung (Haeufen gegen Verteilen, mit Aufschlag und ohne):');
+  const haeufen: TowerId[] = ['arrow'];
+  const verteilen: TowerId[] = ['arrow', 'frost', 'mortar', 'prism'];
+  // Der Aufschlag laesst sich nicht zur Laufzeit abschalten - er steht als
+  // Konstante in den Daten. Die Nullprobe faehrt deshalb einen Bot, dem der
+  // Aufschlag NICHT begegnet: die Freimenge reicht fuer vier Tuerme je Art,
+  // also baut `maxTowers: 12` mit vier Arten keinen einzigen teuren.
+  for (const mm of MAPS) {
+    const zeile = (was: string, plan: TowerId[]) => {
+      const ohne = play(plan, () => 0, MEISTER, 'normal', mm.id, { zuschlag: 0 });
+      const mit = play(plan, () => 0, MEISTER, 'normal', mm.id);
+      return {
+        was,
+        gold: mit.spent - ohne.spent,
+        leben: mit.lives - ohne.lives,
+        text: `${was.padEnd(10)} Kristall ${ohne.lives} -> ${mit.lives} von ${mit.maxLives}`
+          + `   Gold ${ohne.spent} -> ${mit.spent}`
+          + ` (${mit.spent - ohne.spent >= 0 ? '+' : ''}${mit.spent - ohne.spent})`,
+      };
+    };
+    const h = zeile('Haeufen', haeufen);
+    const v = zeile('Verteilen', verteilen);
+    console.log(`  ${mm.id}`);
+    console.log(`    ${h.text}`);
+    console.log(`    ${v.text}`);
+    // Die Zahl, um die es geht: was der Aufschlag dem Haeufer MEHR abnimmt
+    // als dem Verteiler. Ist sie null, trennt er die beiden nicht.
+    console.log(`    trennt um ${h.gold - v.gold >= 0 ? '+' : ''}${h.gold - v.gold} Gold`
+      + ` und ${h.leben - v.leben >= 0 ? '+' : ''}${h.leben - v.leben} Kristall`);
+  }
+  console.log('  (misst, urteilt nicht)');
+}
+
 /** Welche Weichen dieser Stil gestellt haben will.
  *
  *  Zwei Stile, zwei Zeilen: `offen` ruehrt keine an, `lang` macht alles zu,
@@ -590,9 +650,14 @@ function play(
      *  allen vier geeicht, und ein Bot, der sie ploetzlich nicht mehr hat,
      *  wuerde hier eine Verschiebung melden, die kein Spieler erlebt. */
     karten?: number;
+    /** Den Wiederholungsaufschlag abschalten oder anders setzen (v286).
+     *  Eine Wirkung, die sich nicht abschalten laesst, ist nicht gemessen,
+     *  sondern behauptet (Regel 13). */
+    zuschlag?: number;
   } = {},
 ): Result {
   const s = new GameState(mapId);
+  if (opts.zuschlag !== undefined) s.wiederholungZuschlag = opts.zuschlag;
   s.reset(opts.seed ?? AUSSAATEN[0], difficulty, mapId,
     { endless: opts.endless, perks: opts.perks ?? NO_PERKS,
       karten: opts.karten ?? MAPS.length });
@@ -691,8 +756,26 @@ function play(
       const stehen = s.gebaute.filter((tw) => tw.def === 'foerderer').length;
       const willFoerdern = stehen < bot.foerderer;
       let id = willFoerdern ? 'foerderer' as TowerId : strategy[si % strategy.length];
-      if (s.gold < TOWERS[id].base.cost) {
-        const affordable = strategy.filter((c) => s.gold >= TOWERS[c].base.cost + reserve);
+      // **Der Bot weicht dem Aufschlag aus** (v286, S-N3-02).
+      //
+      // Seit die Wiederholung teurer wird, gibt es eine Entscheidung, die es
+      // vorher nicht gab: den vierten Bogenturm zahlen oder etwas anderes
+      // stellen. Ohne diese Zeilen trifft der Bot sie nicht - er faehrt seine
+      // Liste stur durch -, und dann misst `sim` nicht die Mechanik, sondern
+      // seine Sturheit. Das ist derselbe Modellfehler wie beim Foerderer in
+      // v285, wo der Bot sein Einkommen auf die besten Bauplaetze stellte.
+      //
+      // Gefragt wird allein der PREIS, nicht der Nutzen: haengt die Wahl an
+      // Schaden je Gold, misst der Lauf zwei Dinge auf einmal (Regel 4).
+      if (!willFoerdern) {
+        const grund = TOWERS[id].base.cost;
+        if (s.baupreis(id) > grund * AUSWEICHEN_AB) {
+          const guenstiger = strategy.find((c) => c !== id && s.baupreis(c) <= TOWERS[c].base.cost);
+          if (guenstiger) id = guenstiger;
+        }
+      }
+      if (s.gold < s.baupreis(id)) {
+        const affordable = strategy.filter((c) => s.gold >= s.baupreis(c) + reserve);
         if (affordable.length) id = affordable[0];
       }
 
@@ -722,7 +805,7 @@ function play(
       // nur der Deckel des Bots ist keine Flaeche.
       const gebaut = s.gebaute.filter((tw) => tw.def !== 'foerderer');
       const wantBuild = gebaut.length < bot.maxTowers * bot.deepenAt &&
-        spotIdx < spots.length && s.gold >= TOWERS[id].base.cost + reserve;
+        spotIdx < spots.length && s.gold >= s.baupreis(id) + reserve;
 
       // Was WOLLTE der Bot, und hat das Gold dafuer gereicht?
       //
@@ -733,7 +816,7 @@ function play(
       entscheidungsBilder++;
       const bauVorzug = gebaut.length < bot.maxTowers * bot.deepenAt && spotIdx < spots.length;
       if (bauVorzug) {
-        if (s.gold < TOWERS[id].base.cost + reserve) knappeBilder++;
+        if (s.gold < s.baupreis(id) + reserve) knappeBilder++;
       } else {
         // Der teuerste Schritt, den er sich gerade NICHT leisten kann,
         // zaehlt nicht - gefragt ist der, den er nehmen wuerde: der Turm mit
@@ -783,7 +866,7 @@ function play(
           upgrades++; entscheidungenJeWelle[welle]++;
         }
         else if (gebaut.length < bot.maxTowers && spotIdx < spots.length &&
-          s.gold >= TOWERS[id].base.cost + reserve) {
+          s.gold >= s.baupreis(id) + reserve) {
           const sp = spots[spotIdx];
           if (s.build(sp.x, sp.y, id)) { stelleZiel(s, opts.ziel); si++; entscheidungenJeWelle[welle]++; }
           spotIdx++;
@@ -895,7 +978,7 @@ function useAbilities(s: GameState): number {
   // benutzt. Die Schwelle ist der teuerste Turm: darunter ist man
   // handlungsunfaehig.
   if (s.ready('ernte')) {
-    const teuerster = Math.max(...TOWER_ORDER.map((id) => TOWERS[id].base.cost));
+    const teuerster = Math.max(...TOWER_ORDER.map((id) => s.baupreis(id)));
     if (s.gold < teuerster && s.cast('ernte', 0, 0)) gezogen++;
   }
   return gezogen;
@@ -1526,6 +1609,7 @@ const mixedPlan = mixedPlanBase;
   }
   weichenstileMessen();
   foerdererMessen();
+  wiederholungMessen();
   console.log(`  Alleinsiege: ${ZIELWAHL_ORDNUNG.map((z) => `${z} ${siege[z]}`).join('  ')}`
     + `   (${entschieden} Wellen trennen ueberhaupt)`);
   console.log(`  geteilt:     ${ZIELWAHL_ORDNUNG.map((z) => `${z} ${geteilt[z]}`).join('  ')}`);

@@ -860,9 +860,27 @@ export class UI {
 
     this.renderNext();
 
+    // **Der Preis auf dem Knopf steigt mit** (v286, S-N3-02).
+    //
+    // Bis v285 stand er einmal im Konstruktor da und war der Grundpreis.
+    // Seit die Wiederholung teurer wird, ist das die falsche Zahl - und
+    // schlimmer als keine: der Knopf sagte 55 und der Kauf nahm 110. Eine
+    // Verteuerung, die man erst am Kontostand merkt, ist eine Falle und
+    // keine Entscheidung.
     for (const [id, b] of this.btns) {
       b.dataset.on = s.buildChoice === id ? '1' : '0';
-      b.dataset.poor = s.gold < TOWERS[id].base.cost ? '1' : '0';
+      const preis = s.baupreis(id);
+      b.dataset.poor = s.gold < preis ? '1' : '0';
+      // Nur schreiben, wenn sich etwas geaendert hat: `textContent` je Bild
+      // auf fuenf Knoepfen laesst das Flex-Band jedes Bild neu rechnen.
+      const c = b.querySelector('.c');
+      if (c && c.textContent !== String(preis)) {
+        c.textContent = String(preis);
+        b.setAttribute('aria-label', `${TOWERS[id].name}, ${preis} Gold`);
+        // Der Aufschlag ist eine eigene Auskunft, keine groessere Zahl: wer
+        // 55 im Kopf hat und 110 liest, sucht den Fehler bei sich.
+        b.dataset.teurer = preis > TOWERS[id].base.cost ? '1' : '0';
+      }
     }
 
     // **Die Gegnerauskunft (D10) - im selben Kasten wie alles andere.**
@@ -1110,7 +1128,8 @@ export class UI {
       this.pickKey = schluessel;
       this.pickRow.innerHTML = BAU_ORDER.map((id) => {
         const def = TOWERS[id];
-        const reicht = s.gold >= def.base.cost;
+        const preis = s.baupreis(id);
+        const reicht = s.gold >= preis;
         // Zwei verschiedene Gruende, nicht einer. Bis v124 wurde nur
         // ausgegraut, was man nicht BEZAHLEN konnte - nie das, was nicht
         // PASST. Wer den Moerser waehlte, wo nur der Bogenturm hinpasst,
@@ -1138,7 +1157,8 @@ export class UI {
           : '';
         const marke = grund !== null
           ? `<span class="pick-nein">${grund}</span>`
-          : `<span class="pick-cost">${def.base.cost}</span>${verbund}`;
+          : `<span class="pick-cost"${preis > def.base.cost ? ' data-teurer="1"' : ''}>`
+            + `${preis}</span>${verbund}`;
         // **Die in der Leiste gewaehlte Sorte steht hervorgehoben da.**
         // Seit v202 baut ein Tipp aufs Feld nicht mehr, er oeffnet diese
         // Wahl - und dann muss sofort zu sehen sein, was man vorhin gewaehlt

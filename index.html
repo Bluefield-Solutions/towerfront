@@ -208,6 +208,13 @@
     <div class="pick-row" id="pick-row"></div>
   </div>
 
+  <!-- Der Kartenzug zwischen zwei Wellen (S-N1-02). Sichtbarkeit ist eine
+       Ableitung aus zugFaellig(), kein Schalter - siehe ui.sync(). -->
+  <div class="zug" id="zug" hidden>
+    <div class="zug-kopf" id="zug-kopf">Ein Zug vor der Welle</div>
+    <div class="zug-row" id="zug-row"></div>
+  </div>
+
   <div class="dock" id="dock">
     <button class="dock-toggle" id="dock-toggle" aria-label="Leiste einklappen">
       <span id="dock-toggle-i">▾</span>

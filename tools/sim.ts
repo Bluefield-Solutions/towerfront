@@ -16,6 +16,7 @@ const START_LIVES = DIFFICULTIES.normal.startLives;
 import { TOWERS, TOWER_ORDER, MAX_LEVEL, WIEDERHOLUNG_ZUSCHLAG, VIELFALT_BEUTE, nextFor, rangeFor, type TowerId } from '../src/data/towers';
 
 import { MAPS } from '../src/data/maps';
+import { KARTENSTAPEL, zieheKarten, type Karte, type KartenArt } from '../src/data/karten';
 import { WEGNETZ } from '../src/data/wegnetz';
 import { ALL_PERKS, NO_PERKS, starsFor } from '../src/data/perks';
 import { ABILITIES } from '../src/data/abilities';
@@ -820,6 +821,119 @@ const VIELFALT_MESS = VIELFALT_BEUTE > 0 ? VIELFALT_BEUTE : 0.15;
  *  gegen das Haengenbleiben: ein Lauf, der nicht endet, ist ein Fehler, und
  *  ohne Grenze wuerde er den Runner blockieren statt zu melden. */
 const LAUF_HORIZONT_S = 3600;
+
+/** **Wie ein Bot zwischen drei Karten waehlt** (v303, S-N1-02).
+ *
+ *  **Die Bewertung darf nicht von dem abhaengen, was gemessen wird**
+ *  (Regel 4). Gemessen wird, ob es eine Karte gibt, die IMMER oder NIE
+ *  genommen wird; eine Bewertung, die die Karten nach ihrer gemessenen
+ *  Wirkung sortierte, machte daraus einen Zirkel - sie naehme immer die
+ *  staerkste, und die Messung faende genau das.
+ *
+ *  Gewaehlt wird deshalb nach dem STIL, nicht nach der Staerke: jeder Bot hat
+ *  eine Vorliebe fuer eine Achse, und innerhalb der angebotenen drei nimmt er
+ *  die, die am besten dazu passt. Das ist die Entscheidung, die ein Spieler
+ *  trifft ("ich spiele auf Reichweite"), und sie ist unabhaengig davon, was
+ *  am Ende dabei herauskommt.
+ *
+ *  Passt keine, entscheidet die Reihenfolge des Angebots - also der Zug, und
+ *  damit die Aussaat. Ein Bot, der bei Gleichstand immer die erste nimmt,
+ *  waere sonst ein Bot mit einer heimlichen dreizehnten Vorliebe. */
+const KARTENSTIL: Record<string, KartenArt[]> = {
+  // Der Meister nimmt, was die Tuerme staerker macht - er baut zwoelf und
+  // will, dass jeder zaehlt.
+  Meister: ['schaden', 'takt'],
+  // Breite kauft Stueckzahl, also Gold und Beute.
+  Breite: ['gold', 'beute'],
+  // Sparsam haelt Ruecklage und wenige Stellungen: Reichweite und Kristall.
+  Sparsam: ['reichweite', 'kristall'],
+};
+
+function karteWaehlen(stil: string, angebot: Karte[]): Karte {
+  const vorliebe = KARTENSTIL[stil] ?? [];
+  for (const art of vorliebe) {
+    const treffer = angebot.filter((k) => k.art === art);
+    if (treffer.length) {
+      // Innerhalb der Vorliebe die staerkere - das ist keine Bewertung ueber
+      // die Achsen hinweg, sondern die triviale Wahl zwischen zwei Karten
+      // derselben Art.
+      return treffer.reduce((a, b) => (b.wert > a.wert === (art !== 'takt') ? b : a));
+    }
+  }
+  return angebot[0];
+}
+
+/** **Wird jede Karte irgendwann genommen, und keine immer?** (S-N1-02)
+ *
+ *  Die Abnahme der Story in einer Zahl. Gefahren wird der Zug ueber alle
+ *  Wellen eines Laufs, fuer jeden der drei Stile - ohne zu spielen: der Zug
+ *  haengt nur an Aussaat und Welle, und die Wahl nur am Stil. Eine Partie
+ *  dazwischen brauchte diese Frage nicht und traege ihre Wegabhaengigkeit
+ *  mit hinein. */
+function kartenzugMessen(): void {
+  console.log('\nKartenzug je Welle (S-N1-02):');
+  const wellen = MAPS.reduce((a, m) => a + m.waves.length, 0);
+  const stile = Object.keys(KARTENSTIL);
+  const genommen = new Map<string, Set<string>>();   // Karte -> Stile
+  const angeboten = new Map<string, number>();
+  for (const stil of stile) {
+    const zaehl = new Map<string, number>();
+    for (let w = 0; w < wellen; w += 1) {
+      const angebot = zieheKarten(AUSSAATEN[0], w);
+      for (const k of angebot) angeboten.set(k.id, (angeboten.get(k.id) ?? 0) + 1);
+      const gewaehlt = karteWaehlen(stil, angebot);
+      zaehl.set(gewaehlt.id, (zaehl.get(gewaehlt.id) ?? 0) + 1);
+      if (!genommen.has(gewaehlt.id)) genommen.set(gewaehlt.id, new Set());
+      genommen.get(gewaehlt.id)!.add(stil);
+    }
+    const oben = [...zaehl.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
+    console.log(`  ${stil.padEnd(9)} ${oben.map(([id, n]) => `${id} ${n}`).join('  ')}`
+      + `   (${zaehl.size} verschiedene von ${KARTENSTAPEL.length})`);
+  }
+
+  // **Erstens: der Zug ist deterministisch.** Zweimal dieselbe Aussaat, und
+  // zwar an einer SPAETEN Welle - die erste zoege auch aus einem kaputten
+  // Zufall dasselbe.
+  const a1 = zieheKarten(AUSSAATEN[0], 37).map((k) => k.id).join(',');
+  const a2 = zieheKarten(AUSSAATEN[0], 37).map((k) => k.id).join(',');
+  const b1 = zieheKarten(AUSSAATEN[1], 37).map((k) => k.id).join(',');
+  console.log(`  Welle 38: Aussaat A "${a1}", noch einmal "${a2}", Aussaat B "${b1}".`);
+  if (a1 !== a2) {
+    errors.push(`Der Kartenzug ist nicht deterministisch: dieselbe Aussaat zieht in `
+      + `derselben Welle "${a1}" und "${a2}". Dann laesst sich kein Lauf nachstellen.`);
+  }
+  if (a1 === b1) {
+    errors.push(`Zwei verschiedene Aussaaten ziehen in Welle 38 dasselbe ("${a1}"). `
+      + 'Dann haengt der Zug gar nicht an der Aussaat.');
+  }
+
+  // **Zweitens: keine Karte liegt tot im Stapel, und keine wird von allen
+  //   genommen.** Das ist die Abnahme der Story, woertlich.
+  const nie = KARTENSTAPEL.filter((k) => !genommen.has(k.id));
+  if (nie.length) {
+    errors.push(`Diese Karten nimmt kein Stil je: ${nie.map((k) => k.id).join(', ')}. `
+      + 'Eine Karte, die nie die richtige Wahl ist, ist keine Wahl, sondern Fuellmaterial '
+      + '- sie macht das Angebot kleiner, ohne dass es jemand sieht.');
+  }
+  const immer = KARTENSTAPEL.filter((k) => (genommen.get(k.id)?.size ?? 0) === stile.length
+    && (angeboten.get(k.id) ?? 0) > 0
+    && stile.every((stil) => {
+      for (let w = 0; w < wellen; w += 1) {
+        const angebot = zieheKarten(AUSSAATEN[0], w);
+        if (angebot.some((x) => x.id === k.id) && karteWaehlen(stil, angebot).id !== k.id) {
+          return false;
+        }
+      }
+      return true;
+    }));
+  if (immer.length) {
+    errors.push(`Diese Karten nimmt JEDER Stil, sooft sie angeboten werden: `
+      + `${immer.map((k) => k.id).join(', ')}. Dann ist die Wahl keine - wer sie sieht, `
+      + 'nimmt sie, und die anderen zwei Karten sind Dekoration.');
+  }
+  console.log(`  ${KARTENSTAPEL.length - nie.length} von ${KARTENSTAPEL.length} Karten `
+    + `werden von mindestens einem Stil genommen, ${immer.length} von jedem immer.`);
+}
 
 function laufMessen(): void {
   console.log('\nDer Lauf ueber alle Abschnitte (S-N1-01):');
@@ -2305,6 +2419,7 @@ const mixedPlan = mixedPlanBase;
   wiederholungMessen();
   vielfaltMessen();
   laufMessen();
+  kartenzugMessen();
   werftMessen();
   knappheitMessen();
   bannMessen();

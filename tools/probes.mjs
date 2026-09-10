@@ -615,9 +615,14 @@ export const PROBEN = [
     tor: 'smoke',
   },
   {
+    // **Der Aufruf hat in v303 ein zweites Argument bekommen** - der
+    // Kartenzug, dem die Bauleiste weicht. Die Probe zog damit ins Leere, und
+    // `npm run muster` hat es im selben Lauf gemeldet, in dem die Zeile sich
+    // geaendert hat. Sie trifft weiter den ganzen Aufruf, also beide
+    // Ableitungen auf einmal.
     name: 'Turmleiste nicht mehr abgeleitet',
     datei: 'src/ui/ui.ts',
-    suche: '    this.setSpielansicht(!this.istMenuOffen());',
+    suche: '    this.setSpielansicht(!this.istMenuOffen(), s.zugFaellig());',
     ersatz: '    void this.istMenuOffen;',
     tor: 'smoke',
   },
@@ -765,6 +770,46 @@ export const PROBEN = [
     ersatz: 'if (artIndex >= 999) e.arten |= 1 << artIndex;',
     tor: 'sim',
     meldet: 'schuettet Gold aus',
+  },
+  {
+    // **Der Kartenzug haengt nicht mehr an der Aussaat** (v303, S-N1-02).
+    //
+    // Die erste Abnahme der Story: zwei Laeufe mit derselben Aussaat ziehen
+    // dieselben Karten - und zwei mit verschiedener eben nicht. Nimmt man die
+    // Verwebung heraus, zieht jede Welle jeder Aussaat dasselbe.
+    name: 'Der Kartenzug haengt nicht an der Aussaat',
+    datei: 'src/data/karten.ts',
+    suche: 'const rng = new Rng(((saat >>> 0) ^ Math.imul(welle + 1, 0x9e3779b1)) >>> 0);',
+    ersatz: 'const rng = new Rng(1);',
+    tor: 'sim',
+    meldet: 'ziehen in Welle 38 dasselbe',
+  },
+  {
+    // **Der Kartenzug unterbricht die Welle** (v303, S-N1-02).
+    //
+    // Die dritte Abnahme. `zugFaellig` ist die eine Stelle, an der die Frage
+    // beantwortet wird; nimmt man ihr die Wellenbedingung, laesst sich mitten
+    // im Gefecht ziehen - und die Entscheidung der Welle faellt unter
+    // Zeitdruck statt davor.
+    name: 'Der Kartenzug unterbricht die Welle',
+    datei: 'src/game/state.ts',
+    suche: '      && !this.waveActive',
+    ersatz: '      && true',
+    tor: 'smoke',
+    meldet: 'unterbricht er die Welle',
+  },
+  {
+    // **Die Bauleiste weicht dem Kartenzug nicht mehr** (v303).
+    //
+    // Beide zugleich sperren im Ruhezustand 21,7 % des Bildschirms gegen
+    // erlaubte 16 - jede fuer sich passt, beide nicht. Die Ableitung haelt
+    // das; ohne sie meldet das UX-Tor die Belegung.
+    name: 'Bauleiste und Kartenzug stehen zugleich',
+    datei: 'src/ui/ui.ts',
+    suche: 'this.dock.hidden = !anzeigen || zugOffen;',
+    ersatz: 'this.dock.hidden = !anzeigen;',
+    tor: 'uxaudittor',
+    meldet: 'Belegung',
   },
   {
     // **Der Wellenzaehler faengt beim Abschnittswechsel von vorn an**
@@ -1658,9 +1703,12 @@ export const PROBEN = [
     //
     // Die Probe auf `hud.hidden` daneben ist damit keine Doppelung: die
     // Kopfzeile ist ein anderes Element und haengt am Rauchtest.
+    // **Die Zeile traegt seit v303 zwei Gruende** - das Menue und den
+    // Kartenzug. Die Probe nimmt beide weg; welchen der zwei das Browsertor
+    // meldet, ist ihm gleich, und der zweite hat seine eigene Probe.
     name: 'Bedienband steht im Menue',
     datei: 'src/ui/ui.ts',
-    regel: /this\.dock\.hidden = !anzeigen;/,
+    regel: /this\.dock\.hidden = !anzeigen \|\| zugOffen;/,
     ersatz: 'this.dock.hidden = false;',
     tor: 'browsertor',
   },

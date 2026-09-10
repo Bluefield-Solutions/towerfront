@@ -96,6 +96,8 @@ export class UI {
    *  laufenden. */
   wunschAussaat: number | null = null;
   private pick = $<HTMLElement>('pick');
+  private zug = $<HTMLElement>('zug');
+  private zugRow = $<HTMLElement>('zug-row');
   private pickRow = $<HTMLElement>('pick-row');
   private pickKey = '';
   private bWave = $<HTMLButtonElement>('b-wave');
@@ -424,14 +426,32 @@ export class UI {
    *  Meine Bildabnahme hat das nicht gesehen, weil sie nur die Leinwand
    *  zeichnet - die Bedienung ist HTML. Deshalb wird es hier geprueft und
    *  nicht im Bild. */
-  setSpielansicht(anzeigen: boolean): void {
+  setSpielansicht(anzeigen: boolean, zugOffen = false): void {
     // Die Werkzeugklappe faellt zu, sobald das Menue offen ist. Sie liegt
     // zwar in der Kopfzeile und verschwindet mit ihr - aber sie wieder offen
     // vorzufinden, wenn man in eine Partie zurueckkehrt, waere ein Zustand,
     // den niemand hergestellt hat.
     if (!anzeigen) this.werkzeugeOffen = false;
     this.hud.hidden = !anzeigen;
-    this.dock.hidden = !anzeigen;
+    // **Die Bauleiste weicht dem Kartenzug** (v303, S-N1-02).
+    //
+    // Nicht aus Platzgruenden allein, sondern weil es die Reihenfolge sagt:
+    // zwischen zwei Wellen ist die Karte die erste Entscheidung, und die
+    // Leiste kommt zurueck, sobald sie genommen ist. Ein Zug ist EIN Tipp;
+    // wer ihn hinter der Bauleiste versteckte, machte aus der Entscheidung
+    // der Welle eine Einstellung.
+    //
+    // **Und die Zahl sagt, dass es keinen dritten Weg gibt:** mit beiden
+    // zugleich sperrt die Bedienung im Ruhezustand 21,7 % des Bildschirms
+    // gegen erlaubte 16. Die Leiste allein sind 10,8, der Zug 6,2 - jede
+    // fuer sich passt, beide nicht. Vorher ist geholt worden, was zu holen
+    // war: der Zug traegt Name und Zahl statt Name, Zahl und Satz, und das
+    // hat ihn von 11,7 auf 6,2 % gebracht (der Satz steht weiter im
+    // `title`).
+    //
+    // Eine Ableitung, kein Schalter: `dock.hidden` wird an genau EINER
+    // Stelle geschrieben, und beide Gruende stehen in derselben Zeile.
+    this.dock.hidden = !anzeigen || zugOffen;
     // **Der Startknopf braucht hier seit v239 nichts mehr** - und das ist
     // dieselbe Stelle, an der der Wegknopf schon einmal stand.
     //
@@ -647,7 +667,7 @@ export class UI {
   sync(): void {
     const s = this.s;
     // Jedes Bild neu abgeleitet, nicht auf Zuruf gesetzt.
-    this.setSpielansicht(!this.istMenuOffen());
+    this.setSpielansicht(!this.istMenuOffen(), s.zugFaellig());
     // VOR dem Ausstieg unten. `sync` kehrt frueh zurueck, wenn sich die
     // Signatur nicht geaendert hat - und die Signatur beschreibt den
     // SPIELZUSTAND. Der Einstellungsdialog haengt aber an Einstellungen:
@@ -686,6 +706,15 @@ export class UI {
       // erscheint - und der Knopf selbst bleibt aus, bis sich zufaellig
       // etwas anderes aendert. Beim Schreiben sofort aufgelaufen.
       getSettings().messung,
+      // **Der Kartenzug gehoert dazu, und zwar die ZAHL der genommenen**
+      // (v303, S-N1-02) - siebter Fall derselben Art.
+      //
+      // Eine Karte zu nehmen aendert weder Gold noch Welle noch Phase (die
+      // Gold- und Kristallkarten schon, die vier anderen nicht). Ohne diesen
+      // Eintrag bliebe die Wahl nach dem Antippen stehen, bis sich zufaellig
+      // etwas anderes aendert - genau der Fehler, den die sechs Zeilen
+      // darueber schon sechsmal beschreiben.
+      s.genommeneKarten.length,
       // buildAt gehoert dazu: aendert sich nur der gewaehlte Bauplatz, muss
       // die Oberflaeche trotzdem neu zeichnen - sonst bleibt die Turmwahl
       // unsichtbar, obwohl der Zustand sie verlangt.
@@ -843,6 +872,7 @@ export class UI {
     this.pauseMenu.hidden = !s.paused || s.phase !== 'playing';
     this.syncBilanz(s);
     this.syncPick(s);
+    this.syncZug(s);
     this.bWave.disabled = !s.canStartWave;
     // **Der Hauptknopf ist nie tot** (v239, E6/G12).
     //
@@ -1107,6 +1137,64 @@ export class UI {
    *  Rauchtest ist kein Renderer angeschlossen, und die Pruefung meldete eine
    *  Wahl, die es sehr wohl geben sollte.
    */
+  /** **Der Kartenzug zwischen zwei Wellen** (v303, S-N1-02).
+   *
+   *  Sichtbarkeit als ABLEITUNG aus `zugFaellig()`, kein Schalter - dieselbe
+   *  Bauart wie die Bedienleiste hinter Regel 6. Es gibt keine Stelle, an der
+   *  man das Ausblenden vergessen kann, und wer die Ableitung entfernt, wird
+   *  von der Gegenprobe erwischt.
+   *
+   *  Neu gezeichnet wird nur, wenn sich das Angebot wirklich aendert. Die
+   *  Wahl steht zwischen zwei Wellen sekundenlang da; sie in jedem Bild neu
+   *  aufzubauen hiesse, das Flex-Band sechzigmal je Sekunde rechnen zu
+   *  lassen - genau die Stelle, an der v287 fuer die Bauleiste denselben
+   *  Schluessel eingezogen hat. */
+  private zugSchluessel = '';
+
+  private syncZug(s: GameState): void {
+    const faellig = s.zugFaellig();
+    this.zug.hidden = !faellig;
+    if (!faellig) { this.zugSchluessel = ''; return; }
+    const angebot = s.angeboteneKarten();
+    const schluessel = `${s.waveIndex}:${angebot.map((k) => k.id).join(',')}`;
+    if (schluessel === this.zugSchluessel) return;
+    this.zugSchluessel = schluessel;
+    this.zugRow.innerHTML = angebot.map((k) => {
+      // **Die Zahl kommt aus den Daten, nicht aus dem Satz** (Regel 15).
+      // Ein Satz, der seine Staerke selbst nennt, veraltet an dem Tag, an
+      // dem jemand den Wert aendert - und niemand merkt es.
+      // **Das Vorzeichen sagt BESSER, nicht groesser** (v303).
+      //
+      // Der Takt ist eine Nachladezeit: 0,95 heisst fuenf Prozent schneller,
+      // und ein Faktor unter eins ist hier das Gute. Die erste Fassung
+      // rechnete stur `wert > 1 ? '+' : '−'` und schrieb "Geoelter Lauf
+      // −5 %" - ein Minus an einer Karte, die man nehmen soll. Gefunden hat
+      // es der Blick auf die erste Aufnahme, kein Tor (Regel 8): fuer eine
+      // Messung sind beide Zeichen gleich lang.
+      const besserGross = k.art !== 'takt';
+      const zahl = k.art === 'gold' || k.art === 'kristall'
+        ? `+${k.wert}`
+        : `${(k.wert > 1) === besserGross ? '+' : '−'}`
+          + `${Math.round(Math.abs(1 - k.wert) * 100)} %`;
+      return `<button class="zug-btn" data-karte="${k.id}" title="${k.text}">`
+        + `<span class="zug-name">${k.name}</span>`
+        + `<span class="zug-wert">${zahl}</span></button>`;
+    }).join('');
+    // Die Griffe erst NACH dem Zeichnen, und je Neuzeichnung neu: die Knoepfe
+    // von vorhin gibt es nicht mehr, ihre Griffe zeigten ins Leere.
+    for (const b of this.zugRow.querySelectorAll<HTMLButtonElement>('.zug-btn')) {
+      const id = b.dataset.karte ?? '';
+      b.addEventListener('click', () => {
+        // Der Zustand entscheidet, nicht der Knopf: `karteNehmen` prueft
+        // selbst, ob ein Zug faellig ist und ob diese Karte angeboten wurde.
+        // Ein Knopf, der sich auf seine eigene Sichtbarkeit verlaesst, ist
+        // eine zweite Wahrheit ueber denselben Zustand.
+        s.karteNehmen(id);
+        Sfx.play('tap');
+      });
+    }
+  }
+
   private syncPick(s: GameState): void {
     const at = s.buildAt;
     if (!at || s.phase !== 'playing' || s.paused) {

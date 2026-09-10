@@ -3728,6 +3728,86 @@ step('Einrasten', () => {
   }
 });
 
+// --- Der Kartenzug liegt ZWISCHEN den Wellen (v303, S-N1-02).
+//
+// Die dritte Abnahme der Story, woertlich: "Der Zug unterbricht die Welle
+// nicht - er liegt zwischen den Wellen." Ein Zug mitten im Gefecht waere eine
+// Entscheidung unter Zeitdruck, und Zeitdruck ist hier schon die Welle selbst.
+//
+// Geprueft wird die ABLEITUNG `zugFaellig()`, nicht der Zeichenweg: sie ist
+// die eine Stelle, an der die Frage beantwortet wird, und die Oberflaeche
+// fragt dieselbe (Regel 6). Jede Bedingung einzeln, jede mit ihrer Nullprobe -
+// sonst pruefte die Reihe nur, dass die Ableitung immer falsch zurueckgibt.
+step('Der Kartenzug liegt zwischen den Wellen', async () => {
+  const { KARTENSTAPEL } = await import('../src/data/karten');
+  const probe = new GameState();
+  probe.reset();
+  probe.phase = 'playing';
+
+  if (!probe.zugFaellig()) {
+    throw new Error('Zwischen zwei Wellen steht kein Zug an - dann faellt die '
+      + 'Entscheidung der Welle aus.');
+  }
+  if (probe.angeboteneKarten().length !== 3) {
+    throw new Error(`Der Zug bietet ${probe.angeboteneKarten().length} Karten statt drei.`);
+  }
+
+  // **Erstens: waehrend einer Welle nicht.**
+  probe.wellenZumPruefen([0]);
+  if (probe.zugFaellig()) {
+    throw new Error('Waehrend einer laufenden Welle steht ein Zug an. Dann unterbricht '
+      + 'er die Welle, statt zwischen den Wellen zu liegen.');
+  }
+  const vorher = probe.genommeneKarten.length;
+  probe.karteNehmen(probe.angeboteneKarten()[0].id);
+  if (probe.genommeneKarten.length !== vorher) {
+    throw new Error('Waehrend einer laufenden Welle laesst sich trotzdem eine Karte '
+      + 'nehmen - die Ableitung sagt nein, und der Griff hoert nicht auf sie.');
+  }
+  probe.wellenZumPruefen([]);
+  if (!probe.zugFaellig()) {
+    throw new Error('Nach dem Ende der Welle steht kein Zug an - dann prueft die Zeile '
+      + 'darueber nichts, sie schaltet den Zug nur ab.');
+  }
+
+  // **Zweitens: nur eine Karte je Welle.**
+  const k = probe.angeboteneKarten()[0];
+  probe.karteNehmen(k.id);
+  if (probe.genommeneKarten.length !== 1) {
+    throw new Error('Zwischen zwei Wellen laesst sich keine Karte nehmen.');
+  }
+  if (probe.zugFaellig()) {
+    throw new Error('Nach dem Ziehen steht der Zug weiter an - dann zieht man in '
+      + 'derselben Welle beliebig oft.');
+  }
+
+  // **Drittens: nur aus dem, was angeboten wird.** Ohne diese Regel waere die
+  // Wahl aus dreien eine Wahl aus zwoelf.
+  probe.waveIndex = 1;
+  const nichtImAngebot = KARTENSTAPEL
+    .find((x) => !probe.angeboteneKarten().some((a) => a.id === x.id));
+  if (!nichtImAngebot) throw new Error('Alle Karten stehen im Angebot - die Probe misst nichts.');
+  const stand = probe.genommeneKarten.length;
+  probe.karteNehmen(nichtImAngebot.id);
+  if (probe.genommeneKarten.length !== stand) {
+    throw new Error(`Die Karte "${nichtImAngebot.id}" laesst sich nehmen, obwohl sie `
+      + 'gar nicht angeboten wird. Dann ist die Wahl aus dreien eine aus zwoelf.');
+  }
+  // Nullprobe: eine ANGEBOTENE geht weiterhin.
+  probe.karteNehmen(probe.angeboteneKarten()[0].id);
+  if (probe.genommeneKarten.length !== stand + 1) {
+    throw new Error('Auch eine angebotene Karte laesst sich nicht nehmen - dann prueft '
+      + 'die Zeile darueber nichts.');
+  }
+
+  // **Viertens: im Menue nie** (Regel 6).
+  probe.phase = 'won';
+  if (probe.zugFaellig()) {
+    throw new Error('Auf dem Ergebnisbildschirm steht ein Kartenzug an. Im Menue ist '
+      + 'keine Spielbedienung sichtbar, niemals (Regel 6).');
+  }
+});
+
 // --- Der Lauf ueberlebt einen Neustart (v302, S-N1-01).
 //
 // Die erste Abnahme der Story: "Ein unterbrochener Lauf laesst sich

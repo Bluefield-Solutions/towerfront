@@ -128,6 +128,11 @@ const GRENZEN = {
   // Bauwahl, nur in dem Zustand, in dem sie mehr zu sagen hat. Zwei
   // Grenzen fuer dieselbe Flaeche waeren eine zuviel (Regel 15).
   teurer: 26,      // gemessen 24,2 %
+  // **Der Kartenzug** (v303, S-N1-02): drei Karten zwischen zwei Wellen,
+  // waehrend die Bauleiste ihnen weicht. Gemessen 7,9 % - weniger als der
+  // Ruhezustand mit Leiste, und das ist kein Zufall: der Zug ersetzt sie,
+  // er kommt nicht dazu. 16 wie `ruhe`, weil es derselbe Augenblick ist.
+  zug: 16,         // gemessen 7,9 %
 };
 /** Wieviele Beschriftungen zugleich doppelt im Bild stehen duerfen.
  *
@@ -181,7 +186,7 @@ const belegung = (seite) => seite.evaluate(() => {
   // Trennung von v286 still zurueck. Wer dem Strom wieder `pointer-events`
   // gibt, faellt damit sofort auf - eine Regel, die nur im Kommentar steht,
   // wird gebrochen.
-  const WURZELN = '#hud, #dock, #b-wave, #b-wave-l, #inspector, #pick, #coach, #perf, #v-version, #werkzeuge';
+  const WURZELN = '#hud, #dock, #b-wave, #b-wave-l, #inspector, #pick, #zug, #coach, #perf, #v-version, #werkzeuge';
   const w = innerWidth, h = innerHeight, S = 4;
   let gesperrt = 0, bemalt = 0, gesamt = 0;
   const malt = new Set();
@@ -351,11 +356,49 @@ await schuss(a, 'landkarte');
 messwerte.landkarte = await layout(a);
 if (!(await insSpiel(a, BREIT, HOCH))) { console.error('Kein Weg ins Spiel.'); process.exit(1); }
 await a.waitForTimeout(600);
+
+// ---------------------------------------------- Der Kartenzug (v303, S-N1-02)
+//
+// **Er kommt VOR dem Ruhezustand, und zwar zwingend.** Zwischen zwei Wellen
+// ist die Karte die erste Entscheidung, und solange sie offen ist, weicht ihr
+// die Bauleiste. Wer hier nicht zoege, maesse alle folgenden Zustaende OHNE
+// die Leiste - und die vier Ratschen waeren still lockerer geworden, ohne
+// dass der Bildschirm besser geworden ist. Genau die Verfallsart, gegen die
+// dieses Verzeichnis seit v219 anschreibt.
+{
+  const offen = await a.evaluate(() => !document.getElementById('zug').hidden);
+  if (!offen) {
+    befunde.push('Nach dem Betreten der Karte steht kein Kartenzug offen. Dann faellt '
+      + 'die Entscheidung der ersten Welle aus - und alle folgenden Messungen dieses '
+      + 'Audits sehen eine Bauleiste, die im Spiel gar nicht dasteht.');
+  } else {
+    await schuss(a, 'zug');
+    messwerte.belegung = { zug: await belegung(a) };
+    messwerte.doppelt = { zug: await doppelteBeschriftung(a) };
+    messwerte.groessen = { zug: await schriftgroessen(a) };
+    const karten = await a.evaluate(() => [...document
+      .querySelectorAll('#zug-row .zug-btn')].map((b) => b.dataset.karte));
+    console.log(`  (Kartenzug offen: ${karten.join(', ')})`);
+    if (karten.length !== 3) {
+      befunde.push(`Der Kartenzug bietet ${karten.length} Karten statt drei. Eine Wahl `
+        + 'aus weniger als dreien ist eine andere Entscheidung als die gemessene.');
+    }
+    // Und jetzt gezogen - danach ist der Zustand der, den alles Weitere misst.
+    await a.evaluate(() => document.querySelector('#zug-row .zug-btn')?.click());
+    await a.waitForTimeout(350);
+    const nochOffen = await a.evaluate(() => !document.getElementById('zug').hidden);
+    if (nochOffen) {
+      befunde.push('Nach dem Ziehen steht der Kartenzug weiter offen. Dann laesst sich '
+        + 'in derselben Welle beliebig oft ziehen.');
+    }
+  }
+}
+
 await schuss(a, 'spiel-ruhe');
 messwerte.ruhe = await layout(a);
-messwerte.belegung = { ruhe: await belegung(a) };
-messwerte.doppelt = { ruhe: await doppelteBeschriftung(a) };
-messwerte.groessen = { ruhe: await schriftgroessen(a) };
+messwerte.belegung = { ...(messwerte.belegung ?? {}), ruhe: await belegung(a) };
+messwerte.doppelt = { ...(messwerte.doppelt ?? {}), ruhe: await doppelteBeschriftung(a) };
+messwerte.groessen = { ...(messwerte.groessen ?? {}), ruhe: await schriftgroessen(a) };
 
 /** Einen Bauplatz suchen, ohne etwas zu bauen: tippen, pruefen, wieder zu. */
 const bauplatzSuchen = async (s, w, h, schritt = 22) => {

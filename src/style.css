@@ -326,6 +326,52 @@ html, body {
    diesem Spiel, und eine zweite dafuer waere eine Sprache zu viel
    (Regel 15). Keine eigene Schriftstufe - die Skala hat fuenf, und eine
    sechste fuer eine Marke ist eine zu viel (H7). */
+/* **Der Kartenzug zwischen zwei Wellen** (v303, S-N1-02).
+ *
+ *  Er sitzt ueber dem Feld wie die Bauwahl und in derselben Formensprache -
+ *  eine zweite waere eine Sprache zu viel. Drei Karten nebeneinander, jede
+ *  mit Namen, Satz und Zahl; die Zahl kommt aus den Daten, nicht aus dem
+ *  Satz (Regel 15).
+ *
+ *  Die Trefferflaeche ist bewusst gross: das ist die eine Entscheidung der
+ *  Welle, und sie wird mit dem Daumen getroffen. 44 Punkte ist die Grenze,
+ *  hier stehen 64. */
+.zug {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  top: 52px; z-index: 6;
+  display: flex; flex-direction: column; gap: 4px; align-items: center;
+  padding: 6px 8px; border-radius: 12px;
+  background: var(--panel);
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
+}
+.zug-kopf {
+  /* Aus der Typoskala, nicht in Pixeln gesetzt: das UX-Tor zaehlt die
+     Schriftgroessen der Spielansicht und laesst fuenf zu. Ein eigener Wert
+     hier waere die sechste, und sie meinte dasselbe wie eine der fuenf. */
+  font-size: var(--s-marke); letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted);
+}
+.zug-row { display: flex; gap: 6px; }
+/* **Name und Zahl, kein Satz** - und das ist gemessen, nicht gespart.
+ *
+ * Mit Beschreibungszeile mass die Leiste 11,7 % des Bildschirms und riss alle
+ * vier Ratschen des UX-Tors zugleich (ruhe 27,2 gegen 16, bauwahl 32,7 gegen
+ * 26, pruefsteg 44,7 gegen 35). Der Satz steht weiter im `title`, also am
+ * Schreibtisch unter dem Zeiger; auf dem Telefon sagt der NAME die Achse und
+ * die Zahl die Staerke, und mehr braucht eine Wahl aus dreien nicht.
+ *
+ * 44 Punkte ist die Beruehrungsgrenze; hier stehen 46. */
+.zug-btn {
+  display: flex; flex-direction: column; gap: 1px; align-items: center;
+  justify-content: center;
+  min-width: 84px; min-height: 46px; padding: 4px 8px;
+  border: 1px solid var(--edge); border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05); cursor: pointer;
+}
+.zug-btn:hover { background: rgba(255, 255, 255, 0.10); }
+.zug-name { font-size: var(--s-text); font-weight: 700; color: var(--text); }
+.zug-wert { font-size: var(--s-klein); font-weight: 700; color: var(--crystal); }
+
 .tower-btn[data-teurer="1"] .c::after,
 .pick-cost[data-teurer="1"]::after {
   content: '▲';

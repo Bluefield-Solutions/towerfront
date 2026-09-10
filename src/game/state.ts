@@ -18,6 +18,10 @@ import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
 import {
   MAPS, mapById, goalOf, lanePaths, snap, PATH_CLEARANCE, type GameMap,
 } from '../data/maps';
+import {
+  KARTENSTAPEL, KEINE_KARTEN, kartenWirkung, zieheKarten,
+  type Karte, type KartenWirkung,
+} from '../data/karten';
 import { WEGNETZ } from '../data/wegnetz';
 import type { LanePath } from '../core/path';
 import type { Vec } from '../core/math';
@@ -986,6 +990,82 @@ export class GameState {
    *  abschalten kann, ohne die Daten zu aendern (Regel 13). */
   vielfaltZuschlag = VIELFALT_BEUTE;
 
+  /** **Die genommenen Karten dieses Laufs** (v303, S-N1-02).
+   *
+   *  Ihre Wirkung steht daneben als fertige Rechnung (`karten`) - nicht,
+   *  weil das schneller waere, sondern damit es EINE Stelle gibt, an der aus
+   *  Karten Zahlen werden. Wer sie an drei Stellen ausrechnet, hat drei
+   *  Rechnungen, von denen zwei veralten (Regel 15).
+   *
+   *  Leer heisst: keine Karte genommen, und dann steht in `karten` ueberall
+   *  die 1 - die Faktoren aendern nichts, und der ganze an EINZELNEN Karten
+   *  geeichte Pfad rechnet Zeichen fuer Zeichen wie vorher. Dieselbe Haltung
+   *  wie beim Lauf in v302. */
+  genommeneKarten: string[] = [];
+  /** **Heisst `zugWirkung` und nicht `karten`, und das ist kein Geschmack.**
+   *  `this.karten` gibt es seit v193 und meint etwas ganz anderes: wieviele
+   *  KARTEN (Level) gewonnen sind, woran die Faehigkeiten haengen (C18). Zwei
+   *  Dinge unter einem Namen sind genau die Doppelung, die Regel 15 meint -
+   *  hier waere sie sogar stumm gewesen, weil beide Zahlen sind. */
+  zugWirkung: KartenWirkung = KEINE_KARTEN;
+
+  /** Eine Karte nehmen: sie merken, die Rechnung neu bilden und die
+   *  Sofortwirkungen gutschreiben.
+   *
+   *  Gold und Kristall wirken beim NEHMEN, nicht laufend - sonst waere eine
+   *  Goldkarte in Welle 2 etwas anderes als dieselbe in Welle 40, und die
+   *  Karte haette zwei Werte mit einem Namen. */
+  /** **Steht gerade ein Zug an?** (v303, S-N1-02)
+   *
+   *  Eine ABLEITUNG, kein Schalter - dieselbe Bauart wie `istMenuOffen()`
+   *  hinter Regel 6, und aus demselben Grund: es gibt keine Stelle, an der
+   *  man das Wegnehmen vergessen kann.
+   *
+   *  Drei Bedingungen, und jede sagt etwas anderes:
+   *  - **keine Welle laeuft.** Die Abnahme der Story woertlich: der Zug
+   *    unterbricht die Welle nicht, er liegt dazwischen. Ein Zug mitten im
+   *    Gefecht waere eine Entscheidung unter Zeitdruck, und Zeitdruck ist
+   *    hier schon die Welle selbst.
+   *  - **es laeuft eine Partie.** Im Menue ist keine Spielbedienung sichtbar
+   *    (Regel 6), und der Kartenzug ist Spielbedienung.
+   *  - **fuer diese Welle wurde noch nicht gezogen.** Sonst zoege man
+   *    zwischen zwei Wellen beliebig oft. */
+  zugFaellig(): boolean {
+    return this.phase === 'playing'
+      && !this.paused
+      && !this.waveActive
+      && this.genommeneKarten.length <= this.waveIndex
+      && this.waveIndex < this.waves.length;
+  }
+
+  /** Die drei Karten, die gerade zur Wahl stehen - gezogen, nicht gemerkt.
+   *
+   *  Aus Aussaat und Welle, also deterministisch und ohne eigenen Zustand:
+   *  wer denselben Lauf noch einmal faehrt, sieht in Welle 7 dieselben drei
+   *  Karten. Ein gemerkter Zug muesste in den Spielstand, koennte davon
+   *  abweichen und waere die zweite Wahrheit, die Regel 15 meint. */
+  angeboteneKarten(): Karte[] {
+    return zieheKarten(this.seed, this.waveIndex);
+  }
+
+  karteNehmen(id: string): void {
+    // **Nicht waehrend einer Welle** - die Regel steht an der Ableitung, und
+    // hier wird sie gefragt statt noch einmal geschrieben.
+    if (!this.zugFaellig()) return;
+    // Und nur aus dem, was wirklich angeboten wird: ohne diese Zeile koennte
+    // ein Aufruf jede Karte des Stapels nehmen, und die Wahl aus dreien waere
+    // eine Wahl aus zwoelf.
+    if (!this.angeboteneKarten().some((x) => x.id === id)) return;
+    const k = KARTENSTAPEL.find((x) => x.id === id);
+    if (!k) return;
+    this.genommeneKarten.push(id);
+    this.zugWirkung = kartenWirkung(this.genommeneKarten);
+    if (k.art === 'gold') this.gold += k.wert;
+    // Kristall wie jede Reparatur am Hoechstmass gedeckelt - eine Karte darf
+    // den Kristall nicht ueber das heben, was die Karte selbst zulaesst.
+    if (k.art === 'kristall') this.lives = Math.min(this.maxLives, this.lives + k.wert);
+  }
+
   wiederholungsAufschlag(id: TowerId): number {
     const gebaut = this.towers.reduce((n, t) => n + (t.def === id ? 1 : 0), 0);
     return wiederholungsFaktor(gebaut, this.wiederholungZuschlag);
@@ -1132,10 +1212,21 @@ export class GameState {
     const st = statsFor(TOWERS[t.def], t.branch, t.level);
     const v = this.verbundVon(t);
     const bann = this.bannVon(t);
-    if (v <= 0 && bann <= 0) return st;
+    const k = this.zugWirkung;
+    const kartenLos = k.schadenMul !== 1 || k.taktMul !== 1 || k.reichweiteMul !== 1;
+    if (v <= 0 && bann <= 0 && !kartenLos) return st;
     return {
       ...st,
-      damage: v > 0 ? st.damage * (1 + VERBUND_STUFE * v) : st.damage,
+      // **Die Kartenwirkung liegt AUSSEN** (v303, S-N1-02).
+      //
+      // Sie ist ein Faktor auf das fertige Ergebnis, nicht ein Summand im
+      // Turmwert: eine Karte, die zehn Prozent gibt, gibt sie auf jeder Stufe
+      // und in jedem Zweig zehn Prozent. Innen verrechnet waere sie auf
+      // Stufe 1 spuerbar und auf Stufe 6 verschwunden - und ein Zug, dessen
+      // Wert davon abhaengt, wann man ihn macht, ist keine Entscheidung,
+      // sondern eine Reihenfolge.
+      range: st.range * k.reichweiteMul,
+      damage: (v > 0 ? st.damage * (1 + VERBUND_STUFE * v) : st.damage) * k.schadenMul,
       // **Der Bann greift an der Abklingzeit, nicht am Schaden** (v295, C3).
       //
       // Zwei Gruende. Erstens ist der Verbund (v244) schon eine
@@ -1148,7 +1239,7 @@ export class GameState {
       //
       // Und es ist im Bild zu sehen, ohne eine Zahl zu lesen: ein Turm im
       // Bann feuert sichtbar schneller.
-      cooldown: bann > 0 ? st.cooldown / (1 + bann) : st.cooldown,
+      cooldown: (bann > 0 ? st.cooldown / (1 + bann) : st.cooldown) * k.taktMul,
     };
   }
 
@@ -2601,7 +2692,8 @@ export class GameState {
       const arten = zaehleBits(e.arten);
       const bounty = Math.max(1, Math.round(vielfaltsBeute(def.bounty, arten,
         this.vielfaltZuschlag) * this.diff.bountyMul
-        * this.map.balance.goldMul * this.foerderFaktor(e.x, e.y)));
+        * this.map.balance.goldMul * this.foerderFaktor(e.x, e.y)
+        * this.zugWirkung.beuteMul));
       this.gold += bounty;
       this.stats.goldEarned += bounty;
       this.stats.kills++;
@@ -2617,8 +2709,12 @@ export class GameState {
       // und nur dann, wenn wirklich etwas dazugekommen ist: bei einer Art
       // steht dort nichts, und wo die Rundung den Anteil verschluckt, luegt
       // die Marke nicht.
+      // Die Vergleichszahl traegt dieselben Faktoren wie die echte, nur ohne
+      // die Vielfalt - sonst schriebe eine BEUTEkarte die Marke der Vielfalt
+      // an eine Zahl, die von ihr gar nicht kommt.
       const ohne = Math.max(1, Math.round(def.bounty * this.diff.bountyMul
-        * this.map.balance.goldMul * this.foerderFaktor(e.x, e.y)));
+        * this.map.balance.goldMul * this.foerderFaktor(e.x, e.y)
+        * this.zugWirkung.beuteMul));
       const vielfalt = bounty > ohne ? ` ×${arten}` : '';
       this.float(e.x, e.y - 12, `+${bounty}${vielfalt}`, C.gold, def.boss ? 30 : 20);
       // Der Funke traegt den AKZENT, nicht die Grundfarbe.

@@ -1219,11 +1219,37 @@ das ist gemessen, nicht vermutet.** Ein voll ausgebauter Turm leistet das
 | Prisma · Bündelung | ×24,0 | 140 → 3010 |
 
 Wer die Stufen ersatzlos herausnimmt, macht das Spiel um diesen Faktor
-unspielbar. Der Kartenstapel muss die Kurve tragen, zusammen mit der MENGE an
-Türmen, die das nicht mehr in Ausbauten gebundene Gold kauft — ein Turm kostet
-dann 55 bis 140 statt 1205 bis 3010. Zur Größenordnung: fünfzehn Karten zu
-+10 % ergeben ×4,2, zu +15 % ×8,1. Die Karten liegen heute bei +5 bis +15 %,
-die Grössenordnung stimmt also — geeicht ist sie nicht.
+unspielbar. Der Kartenstapel müsste die Kurve tragen, zusammen mit der MENGE an
+Türmen, die das nicht mehr in Ausbauten gebundene Gold kauft.
+
+**Und genau das kann er heute nicht — gemessen, nicht geschätzt.** Ein Lauf
+über fünfzehn Wellen zieht aus dem Grundstapel:
+
+| | über einen ganzen Lauf |
+|---|---|
+| Feuerkraft | **×1,48** |
+| Reichweite | ×1,19 |
+
+*(200 Aussaaten, `zieheKarten` mit dem Grundstapel aus zwölf Karten, je Welle
+drei Angebote und eines genommen.)*
+
+**Die Stufen trugen ×24 im Mittel, der Stapel trägt ×1,48 — Faktor 16
+dazwischen.** Der Grund steht in der Zusammensetzung: von zwölf Grundkarten
+wirken nur **vier** auf Feuerkraft (zwei Schaden, zwei Takt), die übrigen acht
+geben Gold, Beute und Kristall. Und die stärkste Schadenskarte ist ×1,16.
+
+**Eine erste Schätzung war hier falsch und ist bewusst stehen geblieben, damit
+sie nicht wiederkommt:** „fünfzehn Karten zu +10 % ergeben ×4,2, die
+Größenordnung stimmt also." Sie rechnete, als wäre jede gezogene Karte eine
+Schadenskarte. Der Unterschied zwischen ×4,2 und ×1,48 ist genau dieser
+Denkfehler.
+
+**Damit ist die zweite Hälfte keine Ausführungsfrage mehr, sondern eine
+Entscheidung über den Stapel:** entweder er wird um eine Größenordnung
+umgebaut (viel mehr Züge je Lauf, oder deutlich stärkere Karten, oder ein
+Stapel, der fast nur aus Feuerkraft besteht), oder die Türme behalten einen
+Teil ihrer Steigerung. Das ist eine Frage an den Nutzer, keine, die sich aus
+der Story ableiten lässt.
 
 **Deshalb bekommt die zweite Hälfte ihre eigene Runde**, mit `npm run sim` als
 Messgerät und der Tabelle oben als Sollwert. Der Rückbau selbst ist

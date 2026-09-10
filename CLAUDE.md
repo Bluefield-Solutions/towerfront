@@ -742,16 +742,30 @@ Sterne trugen dabei noch etwas Zweites - welche Karten gewonnen sind -, und
 das ist eine eigene Liste geworden, aus den alten Sternen **abgeleitet**,
 damit niemandes Fortschritt verfaellt.
 
-**Die Stufen bleiben vorerst, und der Grund ist eine Zahl:** ein voll
-ausgebauter Turm leistet das **5,4- bis 39,1-fache** seiner ersten Stufe und
-kostet dafuer 1205 bis 3010 Gold statt 55 bis 140. Wer die Stufen ersatzlos
-herausnimmt, macht das Spiel um diesen Faktor unspielbar - der Kartenstapel
-und die Zahl der Tuerme muessen die Kurve tragen. Das ist ein Umbau der
-Machtkurve mit `npm run sim` als Messgeraet, kein Rueckbau, und deshalb eine
-eigene Runde. Der mechanische Teil ist gemacht und wieder zurueckgenommen: er
-dauert zwanzig Minuten, die **rund 25 Pruefbloecke**, die dabei ihren
-Gegenstand verlieren, dauern laenger - allein `npm run guards` hatte 58
-Uebersetzungsfehler.
+**Die Stufen bleiben vorerst, und der Grund sind zwei Zahlen.** Ein voll
+ausgebauter Turm leistet das **5,4- bis 39,1-fache** seiner ersten Stufe (1205
+bis 3010 Gold statt 55 bis 140). Und der Kartenstapel, der das auffangen
+soll, traegt ueber einen ganzen Lauf gemessen **x1,48** Feuerkraft und x1,19
+Reichweite - 200 Aussaaten, Grundstapel, drei Angebote je Welle. **Faktor 16
+dazwischen.**
+
+Der Grund steht in der Zusammensetzung: von zwoelf Grundkarten wirken nur
+**vier** auf Feuerkraft, die uebrigen acht geben Gold, Beute und Kristall.
+
+**Eine Schaetzung dazu war falsch, und sie steht in der Story als Warnung
+drin:** "fuenfzehn Karten zu +10 % ergeben x4,2, die Groessenordnung stimmt
+also" - gerechnet, als waere jede gezogene Karte eine Schadenskarte. Der
+Unterschied zwischen x4,2 und x1,48 ist genau dieser Denkfehler, und er waere
+in eine Runde Arbeit gelaufen, haette ihn niemand nachgemessen (Regel 9: erst
+den Raum ansehen).
+
+Damit ist die zweite Haelfte keine Ausfuehrungsfrage mehr, sondern eine
+**Entscheidung ueber den Stapel** - er muesste um eine Groessenordnung
+umgebaut werden, oder die Tuerme behalten einen Teil ihrer Steigerung. Das
+gehoert dem Nutzer, nicht der Story. Der mechanische Rueckbau selbst ist
+gemacht und wieder zurueckgenommen: er dauert zwanzig Minuten, die **rund 25
+Pruefbloecke**, die dabei ihren Gegenstand verlieren, dauern laenger - allein
+`npm run guards` hatte 58 Uebersetzungsfehler.
 
 **Vier Rauchtest-Schritte konnten still scheitern (v313).** Der zweite volle
 Probenlauf meldete `Der Kartenzug unterbricht die Welle: "smoke" meldet nicht`

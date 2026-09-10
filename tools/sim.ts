@@ -565,6 +565,51 @@ function foerdererMessen(): void {
   console.log('  (misst, urteilt nicht - die Eichung braucht ein ruhigeres Messgeraet, siehe M1)');
 }
 
+/** **Ist Gold in diesem Spiel ueberhaupt knapp?** (v291)
+ *
+ *  Drei Runden haben dieselbe Antwort gegeben, ohne dass jemand die Frage
+ *  gestellt hat: der Foerderer bringt -1,8 bis +2,4 % (v285), der
+ *  Wiederholungsaufschlag aendert 0/-6/0/+1 Kristall (v287), die Werft senkt
+ *  das uebrige Gold von 43 auf 35 bis 44 % (v290). Jedes Mal stand daneben
+ *  "bei 28 % uebrigem Gold entscheidet ein Preis nichts".
+ *
+ *  **Nur ist diese Zahl gar keine Aussage ueber das Spiel.** Die drei Bots
+ *  tragen `maxTowers: 12` - eine Selbstbeschraenkung, keine Regel; die Karten
+ *  halten rund zweihundert Bauplaetze. Wer nicht mehr baut, weil er nicht
+ *  will, laesst Gold liegen, das er ausgeben KOENNTE, und ein Preis kann bei
+ *  ihm nichts entscheiden, ganz gleich wie hoch er ist. Genau derselbe
+ *  Modellfehler wie in v285, wo der Foerderer gegen `maxTowers` gezaehlt
+ *  wurde.
+ *
+ *  Gefragt wird deshalb hier, an einem Bot OHNE Deckel: wieviel Gold bleibt
+ *  liegen, wenn einer wirklich alles ausgibt, was er kann? Bleibt auch dann
+ *  viel uebrig, ist Gold nicht knapp und keine Preisregel wird je etwas
+ *  entscheiden - dann fehlt dem Spiel eine Verwendung, nicht eine Zahl.
+ *
+ *  Kein Tor: es misst, es urteilt nicht. Die drei geeichten Bots bleiben
+ *  unangetastet - wer sie umstellt, verschiebt jede andere Messung mit. */
+function knappheitMessen(): void {
+  console.log('\nIst Gold knapp? (derselbe Bot mit Deckel und ohne):');
+  const ohneDeckel = { ...MEISTER, maxTowers: 200, maxLevel: MAX_LEVEL };
+  for (const mm of MAPS) {
+    const eng = play(mixedPlanBase, () => 0, MEISTER, 'normal', mm.id);
+    const frei = play(mixedPlanBase, () => 0, ohneDeckel, 'normal', mm.id);
+    const anteil = (r: Result) => 100 * (r.earned - r.spent) / Math.max(1, r.earned);
+    console.log(`  ${mm.id.padEnd(15)} Tuerme ${eng.towers} -> ${frei.towers}`
+      + `   Ausbauten ${eng.upgrades} -> ${frei.upgrades}`
+      + `   Gold uebrig ${anteil(eng).toFixed(0)} % -> ${anteil(frei).toFixed(0)} %`
+      + `   Kristall ${eng.lives} -> ${frei.lives} von ${frei.maxLives}`);
+  }
+  console.log('  (misst, urteilt nicht - die Zahl sagt, ob eine Preisregel ueberhaupt');
+  console.log('   etwas entscheiden KANN, siehe S-N3-02 und M1)');
+  console.log('  Gemessen in v291: ohne Deckel bleiben -3 bis 16 % liegen statt 40 bis 47.');
+  console.log('  Gold IST also knapp, sobald es ausgegeben wird - der Bot gibt es nur');
+  console.log('  nicht aus, weil zwoelf Tuerme reichen. Wer 29 bis 41 baut, verliert');
+  console.log('  (Kristall 27 -> 0 auf dem Spiralhain): die weiteren Plaetze sehen zu');
+  console.log('  wenig, und das Gold fehlt beim Ausbauen (24 -> 4 bis 21). Die');
+  console.log('  Knappheit fehlt nicht beim GOLD, sondern beim BEDARF.');
+}
+
 /** **Trennt der Wiederholungsaufschlag Haeufen von Verteilen?** (v286, S-N3-02)
  *
  *  Die Story verlangt, dass die Zweigwirkung steigt - und gemessen tut sie
@@ -602,7 +647,8 @@ function werftMessen(): void {
     console.log(`  ${mm.id.padEnd(15)} Kristall ${ohne.lives} -> ${mit.lives} von `
       + `${mit.maxLives} (${dLeben >= 0 ? '+' : ''}${dLeben})`
       + `   Tuerme ${ohne.towers} -> ${mit.towers}`
-      + `   Gold ${ohne.earned} -> ${mit.earned}`);
+      + `   Gold uebrig ${(100 * (ohne.earned - ohne.spent) / Math.max(1, ohne.earned)).toFixed(0)} `
+      + `% -> ${(100 * (mit.earned - mit.spent) / Math.max(1, mit.earned)).toFixed(0)} %`);
     // Was ein Durchbruch noch kostet: der Kristall darf mit Werft nicht
     // voll bleiben, sonst ist der Verlust zurueckgekauft statt abgemildert.
     schlechtester = Math.min(schlechtester, mit.maxLives - mit.lives);
@@ -1722,6 +1768,7 @@ const mixedPlan = mixedPlanBase;
   foerdererMessen();
   wiederholungMessen();
   werftMessen();
+  knappheitMessen();
   console.log(`  Alleinsiege: ${ZIELWAHL_ORDNUNG.map((z) => `${z} ${siege[z]}`).join('  ')}`
     + `   (${entschieden} Wellen trennen ueberhaupt)`);
   console.log(`  geteilt:     ${ZIELWAHL_ORDNUNG.map((z) => `${z} ${geteilt[z]}`).join('  ')}`);

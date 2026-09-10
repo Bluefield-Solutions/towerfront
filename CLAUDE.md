@@ -691,6 +691,19 @@ ab Hub 3 verdient der durchgehend ueberlappende Bot mehr Gold als der
 vorsichtige, und damit waere der Fruehstart eine Einnahmequelle statt eines
 Risikos. Gesetzt ist 2,0.
 
+**Gold ist knapp, sobald man es ausgibt - die Knappheit fehlt beim BEDARF
+(v291).** Drei Runden lang stand "bei 28 % uebrigem Gold entscheidet ein Preis
+nichts" als Erklaerung da, und diese Zahl war gar keine Aussage ueber das
+Spiel: die Bots tragen `maxTowers: 12`, eine Selbstbeschraenkung, waehrend die
+Karten rund zweihundert Bauplaetze halten. `knappheitMessen` fragt es jetzt an
+einem Bot OHNE Deckel - dann bleiben **-3 bis 16 %** liegen statt 40 bis 47.
+Nur: wer 29 bis 41 Tuerme baut, verliert (Kristall 27 -> 0 auf dem
+Spiralhain), weil die weiteren Plaetze zu wenig sehen und das Gold beim
+Ausbauen fehlt (24 -> 4 Ausbauten). **Foerderer, Wiederholungsaufschlag und
+Werft sind alle drei Regeln ueber den PREIS - und ein Preis entscheidet nur,
+wo man das Gekaufte braucht.** Was N3 fehlt, ist kein weiterer Kostenpunkt,
+sondern ein Grund, den dreizehnten Turm zu wollen.
+
 **Die Werft repariert den Kristall (v290).** Der Kristall konnte bisher nur
 fallen; jetzt setzt ein Bauwerk nach jeder Welle ein Stueck zusammen, und
 derselbe Bauplatz konkurriert zwischen Feuerkraft, Einkommen und Kristall.
@@ -757,7 +770,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v290. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v291. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

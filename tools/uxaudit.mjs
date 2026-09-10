@@ -89,7 +89,16 @@ const fail = (m) => befunde.push(m);
  *  Wort - genau die Klasse, an der `kartenprobe` in v229 gebrochen ist: ein
  *  Werkzeug, dessen Eingang niemand prueft, ist im Ernstfall kaputt. */
 const GRENZEN = {
-  ruhe: 16,        // gemessen 13,0 % (v239), 15,5 % (v294)
+  // **v315 (S-N4-01): 15,5 -> 13,1 %.** Die drei GESPERRTEN
+  // Faehigkeitsfelder belegten 260 x 46 Punkte, ohne dass man eines davon
+  // druecken kann; sichtbar ist jetzt die naechste Freischaltung, die
+  // weiteren stehen als Zahl daran. Nebenwirkung und eigentlicher Gewinn:
+  // die Leiste passt dadurch wieder in EINE Reihe statt in drei, und das
+  // Mittelband ueber der Bahn ist frei (H2 des HUD-Audits).
+  //
+  // 14 statt 13: die Grenze sitzt ueber dem Gemessenen, nicht darauf - und
+  // 14 ist zugleich das Soll aus H1 (Kingdom Rush, BTD6).
+  ruhe: 14,        // gemessen 13,0 % (v239), 15,5 % (v294), 13,1 % (v315)
   // **26 seit v294, und der Verlauf steht dabei** - genau wie beim
   // Pruefsteg eine Zeile tiefer, aus demselben Grund: eine Ratsche ohne ihn
   // ist nur eine Zahl. v239 19,7 -> v285 23,3 (der Foerderer wurde der
@@ -106,7 +115,7 @@ const GRENZEN = {
   // 26 statt 25: eine Grenze, die auf dem Gemessenen sitzt, schlaegt beim
   // naechsten Textwechsel an und wird dann hochgesetzt statt ernst
   // genommen.
-  bauwahl: 26,     // gemessen 24,5 %
+  bauwahl: 23,     // gemessen 24,5 % (v294), 22,0 % (v315)
   // gemessen 32,9 % (v248). Der Verlauf steht dabei, weil eine Ratsche ohne
   // ihn nur eine Zahl ist: v239 31,9 -> v246 35,4 (der Verbund und die
   // Verbundzeile kamen dazu) -> v247 31,3 (der Steg endet an seinem Inhalt)
@@ -117,8 +126,8 @@ const GRENZEN = {
   // v248 32,9 -> v294 **34,2**: der Foerderer und die Werft haben das Dock
   // von 10,4 auf 11,2 % getrieben, und der Pruefsteg liegt darueber. Nach
   // dem Schrumpfen der Knoepfe (siehe `bauwahl`) sind es 10,8 %.
-  pruefsteg: 35,
-  welle: 16,       // gemessen 13,2 % (v239), 15,5 % (v294)
+  pruefsteg: 33,   // gemessen 34,2 % (v294), 31,7 % (v315)
+  welle: 14,       // gemessen 13,2 % (v239), 15,5 % (v294), 13,1 % (v315)
   // **Der fuenfte Zustand** (v298, E12): vier Bogentuerme stehen, der
   // fuenfte kostet 61 statt 55, und die Bauwahl ist offen. Gemessen 24,2 %
   // gegen die 24,5 % der gewoehnlichen Bauwahl - die Marke selbst kostet
@@ -127,7 +136,7 @@ const GRENZEN = {
   // Er traegt dieselbe Grenze wie `bauwahl` und keine eigene: es IST die
   // Bauwahl, nur in dem Zustand, in dem sie mehr zu sagen hat. Zwei
   // Grenzen fuer dieselbe Flaeche waeren eine zuviel (Regel 15).
-  teurer: 26,      // gemessen 24,2 %
+  teurer: 23,      // gemessen 24,2 % (v294), 21,7 % (v315)
   // **Der Kartenzug** (v303, S-N1-02): drei Karten zwischen zwei Wellen,
   // waehrend die Bauleiste ihnen weicht. Gemessen 7,9 % - weniger als der
   // Ruhezustand mit Leiste, und das ist kein Zufall: der Zug ersetzt sie,

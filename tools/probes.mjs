@@ -903,6 +903,26 @@ export const PROBEN = [
     meldet: 'unterbricht er die Welle',
   },
   {
+    // **Die Ruheebene holt die gesperrten Faehigkeiten zurueck** (v315,
+    // S-N4-01).
+    //
+    // Drei gesperrte Felder belegten 260 x 46 Punkte, ohne dass man eines
+    // davon druecken kann - und sie trieben die Leiste von einer Reihe auf
+    // drei. Sichtbar ist jetzt die naechste Freischaltung, die weiteren
+    // stehen als Zahl daran.
+    //
+    // Der Eingriff blendet sie wieder ein, genau wie es die Story verlangt
+    // ("ein Element aus der Ruheebene in die Randleiste zurueckholen"): dann
+    // steigt die Belegung im Ruhezustand von 13,1 auf 15,5 % gegen erlaubte
+    // 14, und das Tor sagt es.
+    name: 'Die Ruheebene wird wieder zur Leiste',
+    datei: 'src/ui/ui.ts',
+    suche: '      else { b.hidden = true; weitere++; }',
+    ersatz: '      else { b.hidden = false; weitere++; }',
+    tor: 'uxaudittor',
+    meldet: 'sperrt',
+  },
+  {
     // **Die Bauleiste weicht dem Kartenzug nicht mehr** (v303).
     //
     // Beide zugleich sperren im Ruhezustand 21,7 % des Bildschirms gegen

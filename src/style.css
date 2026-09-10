@@ -881,6 +881,17 @@ html, body {
   font-size: var(--s-klein); font-weight: 700; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--muted);
 }
+/* **Wieviele Freischaltungen noch dahinterstehen** (v315, S-N4-01).
+   Die gesperrten Felder ab dem zweiten sind ausgeblendet - drei Kaesten
+   nebeneinander lasen sich als ein grauer Block und belegten 3,6 % des
+   Bildschirms, ohne dass man einen davon druecken kann. Der PLAN bleibt
+   trotzdem sichtbar (S2 des Abgleichs): das naechste Feld steht da, und
+   diese Zahl sagt, wieviele noch folgen. */
+.s-mehr {
+  position: absolute; top: 4px; right: 6px;
+  font-size: var(--s-klein); font-weight: 700; color: var(--muted);
+  letter-spacing: 0.04em;
+}
 .skill-btn[data-ready="1"] { border-color: var(--tone); }
 .skill-btn[data-ready="1"] .s-cd { color: var(--tone); }
 .skill-btn[data-ready="0"] { opacity: 0.65; }

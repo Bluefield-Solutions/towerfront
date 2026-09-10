@@ -829,6 +829,7 @@ export class UI {
         (b.querySelector('.s-fill') as HTMLElement).style.transform =
           `scaleY(${ready || fehlt > 0 ? 0 : cd / def.cooldown})`;
       }
+      this.ruheEbene();
     }
 
     this.syncFruehstart(s);
@@ -1440,6 +1441,46 @@ export class UI {
   }
 
   private letzterStrom = '';
+
+  /** **Der Ruhezustand zeigt nur, was ohne Nachdenken gebraucht wird**
+   *  (v315, S-N4-01).
+   *
+   *  Gemessen belegte die Bedienung in Ruhe 15,5 % des Bildschirms gegen die
+   *  14 %, die H1 aus Kingdom Rush und BTD6 ableitet - und **3,6 Punkte davon
+   *  waren drei GESPERRTE Faehigkeitsfelder**, die man gar nicht druecken
+   *  kann (260 x 46 Punkte, gemessen an `messwerte.json`). Der Inspektorlauf
+   *  v273 hat dieselbe Stelle von der anderen Seite gesehen: die drei Kaesten
+   *  beruehren einander und lesen sich als EIN grauer Block.
+   *
+   *  **Ausblenden waere falsch, und das steht schon da:** S2 des Abgleichs
+   *  verlangt, dass ein gesperrtes Feld ein PLAN ist und kein leerer Fleck -
+   *  sonst ist der Fortschritt unsichtbar. Beide Sollwerte vertragen sich,
+   *  wenn der Plan bleibt und die FLAECHE geht: sichtbar ist die naechste
+   *  Freischaltung, die weiteren stehen als Zahl daran. Aus drei Kaesten
+   *  wird einer, und der graue Block ist keiner mehr.
+   *
+   *  Die Reihenfolge ist die des Abgleichs (`ABILITY_ORDER`), also steht dort
+   *  immer die, die als naechste faellt. */
+  private ruheEbene(): void {
+    let ersteGesperrte: HTMLButtonElement | null = null;
+    let weitere = 0;
+    for (const [id, b] of this.skillBtns) {
+      if (b.dataset.zu !== '1') { b.hidden = false; continue; }
+      if (ersteGesperrte === null) { ersteGesperrte = b; b.hidden = false; }
+      else { b.hidden = true; weitere++; }
+      void id;
+    }
+    if (ersteGesperrte) {
+      const rest = ersteGesperrte.querySelector('.s-mehr') as HTMLElement | null
+        ?? ersteGesperrte.appendChild(Object.assign(
+          document.createElement('span'), { className: 's-mehr' },
+        ));
+      // Kein Text, wenn es nichts weiter gibt - eine "+0" waere eine Zahl
+      // ohne Gegenstand.
+      rest.textContent = weitere > 0 ? `+${weitere}` : '';
+      rest.hidden = weitere === 0;
+    }
+  }
 
   private syncFruehstart(s: GameState): void {
     const f = s.fruehstart;

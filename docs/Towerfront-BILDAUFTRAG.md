@@ -1,6 +1,20 @@
 # Towerfront — Bildauftrag
 
-Stand: v284 · 09.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v291 · 09.09.2026 · **Auftragsdokument für den Bild-Agenten**
+
+**Nachgesehen in v291 — zwei offene Bestellungen, und sie hängen aneinander.**
+`8d.2` (`31_foerderer.png`, seit v285) und `8d.3` (`32_werft.png`, seit v290)
+sind die einzigen offenen Aufträge; `npm run bildtor` nennt beide bei jedem
+Lauf. Sie hängen aneinander, weil sie die zwei einzigen Bauwerke des Spiels
+sind, die **nicht schiessen** — gegen einen Turm trennt schon das, gegeneinander
+trennt nur die Form der Arbeit. Deshalb trägt 8d.3 mit **0,55** die strengste
+Silhouetten-Grenze dieses Dokuments.
+
+**Bis dahin sagt der Platzhalter, welches Bild fehlt.** Er trug bis v290 nur
+Schraffur und Marke — und mit zwei fehlenden Bildern standen zwei identische
+Kacheln nebeneinander in der Bauleiste. Seit v290 trägt er den
+Anfangsbuchstaben (F und W), und `npm run bildtor` prüft bei jedem Lauf, dass
+sich zwei Platzhalter um mindestens 12 % ihrer Punkte unterscheiden.
 
 **Nachgesehen in v284 — nachgefahren, nicht gestempelt.** `npm run guards`
 liest die Abnahmegrenzen bei jedem Lauf aus diesem Dokument und meldet sie:

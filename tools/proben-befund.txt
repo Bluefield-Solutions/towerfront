@@ -1,3 +1,10 @@
-BEFUND vom 2026-09-10T18:18Z auf 786d5107:
-PROBEN: 1 von 63 Toren beweisen nichts
-  - Der Kartenzug unterbricht die Welle: "smoke" meldet "unterbricht er die Welle" nicht, obwohl der Fehler eingebaut ist.
+BEFUND vom 2026-09-10T19:17Z auf 4b907f74:
+PROBEN: 1 Tor(e) sind schon OHNE eingebauten Fehler rot: muster.
+  Eine Gegenprobe an einem roten Tor beweist nichts - sie schlaegt an,
+  gleich was man einbaut. Erst die Kette gruen bekommen.
+PROBEN: 1 Tor(e) sind schon OHNE eingebauten Fehler rot: muster.
+  Eine Gegenprobe an einem roten Tor beweist nichts - sie schlaegt an,
+  gleich was man einbaut. Erst die Kette gruen bekommen.
+PROBEN: 1 Tor(e) sind schon OHNE eingebauten Fehler rot: muster.
+  Eine Gegenprobe an einem roten Tor beweist nichts - sie schlaegt an,
+  gleich was man einbaut. Erst die Kette gruen bekommen.

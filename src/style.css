@@ -1708,3 +1708,75 @@ html, body {
   .tower-btn:disabled, .skill-btn:disabled, .pick-btn:disabled,
   .insp-ups .up:disabled, .go:disabled { cursor: not-allowed; }
 }
+
+
+/* **Der Turmring: derselbe Steg, nur am Turm** (v316, S-N4-02, H4).
+
+   Das Soll kommt aus der Referenz und nicht aus mir (Regel 10): Defense Grid
+   legt einen kleinen Kreis an den Turm, Kingdom Rush einen Ring, der am Ort
+   der Handlung aufgeht. In der Aufnahme zu v315 steht der gemeinte Turm
+   HINTER dem Steg am rechten Rand; nur sein Reichweitenring lugt daneben
+   hervor, und die Zuordnung zwischen Kasten und Ding musste der Spieler
+   leisten.
+
+   **Ein Raster mit einem LOCH war der erste Entwurf, und er ist gemessen
+   gescheitert.** Zwei Spalten um den Turm herum sind 394 Punkte breit; auf
+   844 Punkten kann sich das um keinen Turm legen, der in den aeusseren 47 %
+   steht - die Einhaltung schiebt den Kasten weg, und dann steht das Loch
+   ueber leerem Gras waehrend der Turm daneben liegt. Das ist SCHLECHTER als
+   der Rand, weil der wenigstens einen festen Ort hatte. Drei Aufnahmen, drei
+   Mal derselbe Befund (Regel 8).
+
+   **Was traegt, ist der Kasten NEBEN dem Turm.** Er behaelt seine 250 Punkte
+   Breite - dort stehen die zwei Zweige nebeneinander statt untereinander,
+   und das spart 66 Punkte Hoehe - und er tritt zur Seite: links vom Turm,
+   wenn dort Platz ist, sonst rechts. Verdeckt wird der Turm nie, und die
+   Seite wechselt nur am Bildrand. Dieselbe Bewegung wie bei der Bauwahl
+   (`.pick.unten`), nur waagerecht. */
+.inspector.am-turm {
+  right: auto; bottom: auto; max-height: none;
+  /* Der Kasten haengt an seiner rechten Kante am Turm - `turmRing()` setzt
+     `left` auf den Turm und zieht den Abstand selbst ab. */
+  transform: translate(-100%, -50%);
+}
+.inspector.am-turm.tr-rechts { transform: translate(0, -50%); }
+/* **Die Stufe steht am Turm nicht in der Kopfzeile.** Bild, Name, Schalter,
+   Stufe und Kreuz teilen sich 226 Punkte; in der Aufnahme blieb davon
+   "Bogentur…" und "STU…" - zwei abgeschnittene Angaben statt einer ganzen.
+   Von den fuenfen ist die Stufe die, die am Turm SELBST abzulesen ist
+   (Stufenringe am Sockel), und der Turm steht daneben. */
+.am-turm .insp-stufe { display: none; }
+
+/* **Der Name ist der Schalter fuer die Werte** (v316).
+
+   Am Turm ist die Hoehe knapp: zwischen Kopfzeile und Bedienband sind auf
+   844 x 390 nur 218 Punkte frei, und der Steg verlangte 228 - das ist E9,
+   seit v247 zehn Punkte daneben. Die Werte sind ein NACHLESEN, waehrend die
+   Zweigkarten die Entscheidung tragen; zugeklappt passt der Kasten, und
+   gemessen kosten sie 3,3 Prozentpunkte des Bildschirms.
+
+   Er sieht aus wie vorher - ein Knopf, der sich als Kasten aufdraengt, wo
+   ein Titel steht, ist eine Zumutung -, und er traegt das Fingermass, weil
+   ihn jemand treffen soll (H12). Das kleine Zeichen dahinter sagt, dass sich
+   etwas oeffnet; ohne das ist ein unauffaelliger Knopf kein Knopf. */
+.werte-auf {
+  background: none; border: none; padding: 0; margin: 0;
+  font-family: var(--ui); text-align: left; color: inherit;
+  /* **Block statt Flex, und das ist gemessen.** Mit `display: flex` wird der
+     Text des Knopfes ein namenloses Flex-Kind, und `text-overflow` greift
+     an ihm nicht - in der Aufnahme endete "Bogenturm" hart als "Bogentu",
+     ohne die drei Punkte, die sagen, dass da noch etwas steht. Das Zeichen
+     haengt deshalb frei darueber statt als zweites Kind daneben. */
+  position: relative; display: block; padding-right: 14px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.am-turm .werte-auf { cursor: pointer; min-height: 44px; line-height: 44px; }
+.am-turm .werte-auf::after {
+  content: '\25BE'; font-size: var(--s-marke); color: var(--muted);
+  position: absolute; right: 0; top: 0;
+  transition: transform 0.12s ease;
+}
+.am-turm .werte-auf[aria-expanded="true"]::after { transform: rotate(180deg); }
+/* Am Rand ist er kein Schalter, also traegt er auch kein Zeichen und keinen
+   Zeigefinger - sonst verspricht er etwas, was er dort nicht tut. */
+.inspector:not(.am-turm) .werte-auf::after { content: none; }

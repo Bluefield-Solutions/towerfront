@@ -207,6 +207,12 @@ const KNOEPFE = [
   ['#messtafel .mb', 'Messtafel: Aufklappen und Kopieren'],
   ['.ziel-auf', 'Ziellogik aufklappen'],
   ['.insp-fuss .sell', 'Verkaufen'],
+  // Der Turmname ist am Turm zugleich der Schalter fuer die Werte (v316,
+  // S-N4-02). Das Tor hat ihn beim ersten Lauf selbst verlangt -
+  // "Knopfklasse insp-name steht in keiner geprueften Auswahl" -, und genau
+  // dafuer gibt es diese Meldung: was der Finger trifft, wird gemessen, auch
+  // wenn es aussieht wie eine Ueberschrift (H12).
+  ['.am-turm .werte-auf', 'Werte auf- und zuklappen'],
 ];
 
 console.log('\nIm HTML — zugesagte Höhe laut Stilvorlage:\n');

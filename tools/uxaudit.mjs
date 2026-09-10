@@ -126,7 +126,16 @@ const GRENZEN = {
   // v248 32,9 -> v294 **34,2**: der Foerderer und die Werft haben das Dock
   // von 10,4 auf 11,2 % getrieben, und der Pruefsteg liegt darueber. Nach
   // dem Schrumpfen der Knoepfe (siehe `bauwahl`) sind es 10,8 %.
-  pruefsteg: 33,   // gemessen 34,2 % (v294), 31,7 % (v315)
+  // v315 31,7 -> v316 **27,0**: das Turmmenue sitzt am Turm (S-N4-02, H4),
+  // und die Werte klappen dort zu. Von den 4,7 Punkten kommen 1,3 aus dem
+  // Ortswechsel und 3,3 aus der Faltung - gemessen in vier Zwischenstaenden,
+  // und das ist die eigentliche Auskunft der Runde: **der Ort kostet fast
+  // nichts, der Inhalt ist die Flaeche.** Ein Raster mit Loch um den Turm
+  // herum stand dabei bei 17,3 % gegen 19,0 am Rand.
+  //
+  // 28 statt 27: eine Grenze, die auf dem Gemessenen sitzt, schlaegt beim
+  // naechsten Textwechsel an und wird dann hochgesetzt statt ernst genommen.
+  pruefsteg: 28,   // gemessen 34,2 % (v294), 31,7 % (v315), 27,0 % (v316)
   welle: 14,       // gemessen 13,2 % (v239), 15,5 % (v294), 13,1 % (v315)
   // **Der fuenfte Zustand** (v298, E12): vier Bogentuerme stehen, der
   // fuenfte kostet 61 statt 55, und die Bauwahl ist offen. Gemessen 24,2 %

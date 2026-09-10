@@ -1222,6 +1222,39 @@ export const PROBEN = [
     // kein Beweis (Regel 5). Der Eingriff macht die Knoepfe so breit, dass
     // sechs davon nicht mehr nebeneinander passen - dann laufen sie
     // ineinander, und beide Zahlen muessen es sagen.
+    // **Das Turmmenue kehrt an den Rand zurueck** (v316, S-N4-02, H4).
+    //
+    // Der Eingriff laesst `turmRing` die Klasse nie setzen - der Steg steht
+    // dann wieder rechts am Bildschirmrand, in voller Hoehe, mit
+    // aufgeklappten Werten. Gemessen sind das 31,7 % statt 27,0, also ueber
+    // der Ratsche von 28.
+    //
+    // **Gegriffen wird das Setzen, nicht die Lage.** Die zwei Zeilen mit
+    // `style.left` sind die naheliegende Stelle, und sie waere falsch: ohne
+    // sie stuende der Kasten bei 0/0, was ebenfalls anschlaegt - aber aus
+    // einem anderen Grund als dem, den diese Probe behauptet.
+    name: 'Das Turmmenue steht wieder am Rand',
+    datei: 'src/ui/ui.ts',
+    suche: "this.insp.classList.toggle('am-turm', p !== null);",
+    ersatz: "this.insp.classList.toggle('am-turm', false);",
+    tor: 'uxaudittor',
+    meldet: 'pruefsteg',
+  },
+  {
+    // **Die Werte am Turm klappen wieder auf** (v316, S-N4-02).
+    //
+    // Die andere Haelfte derselben Runde, und die groessere: von den 4,7
+    // Punkten kommen 3,3 aus der Faltung. Ohne eigene Probe waere sie durch
+    // die Zeile darueber mitgedeckt - und eine Zahl, die zwei Ursachen hat
+    // und eine Probe, ist halb geprueft.
+    name: 'Die Werte am Turm stehen wieder offen',
+    datei: 'src/ui/ui.ts',
+    suche: 'this.iStats.hidden = amTurm && !this.werteOffen;',
+    ersatz: 'this.iStats.hidden = false;',
+    tor: 'uxaudittor',
+    meldet: 'pruefsteg',
+  },
+  {
     name: 'Die Bauwahl laeuft ineinander',
     datei: 'src/style.css',
     suche: 'gap: 1px; min-width: 54px; padding: 4px 6px 3px; cursor: pointer;',

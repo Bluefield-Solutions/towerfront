@@ -1,6 +1,27 @@
 # Towerfront — Art Bible
 
-Stand: v309 · 10.09.2026
+Stand: v316 · 10.09.2026
+
+**Nachgesehen in v316 — am Stil unverändert, am Vorrat auch, und diesmal
+nachgesehen statt angenommen.** `git log -- src/gfx/assets/` nennt als
+letzten Eingriff **v233**; seitdem ist kein Bildpunkt dazugekommen. Die zwei
+offenen Bestellungen sind unverändert `31_foerderer.png` (8d.2) und
+`32_werft.png` (8d.3), und `npm run bildtor` nennt sie in jedem Lauf.
+
+**Zwei Funde aus dem Torlauf, beide am Platzhalter und nicht an der Kunst:**
+
+* Die deckenden Punkte tragen zu **83 %** die Marke `#FF00E5` — der
+  Platzhalter ist als solcher erkennbar, wie er soll.
+* **Zwei Platzhalter unterscheiden sich zu 20 %.** Förderer und Werft
+  bekommen dieselbe Silhouette in derselben Größe, also sehen sie einander
+  ähnlich — das ist bei einem Platzhalter richtig und wäre bei einem BILD ein
+  Befund: `npm run probebild` lehnt eine Silhouetten-Ähnlichkeit dieser Höhe
+  ab. Wer die zwei Bilder liefert, misst genau das mit.
+
+**Neu an der Oberfläche, ohne einen einzigen Bildpunkt** (v315 und v316):
+gesperrte Fähigkeitsfelder falten sich zu einer Zeile mit `+N`, und das
+Turmmenü steht am Turm statt am Rand. Beides ist Satz und Fläche, kein Bild —
+und beides ist der Grund, aus dem in diesem Dokument nichts nachzuziehen war.
 
 **Nachgesehen in v309:** am Stil unverändert, am Vorrat auch — seit v288 ist
 kein Bild dazugekommen und kein Backwert geändert worden. Von den drei offenen

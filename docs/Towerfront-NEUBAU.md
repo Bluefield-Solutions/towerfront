@@ -1,6 +1,49 @@
 # Towerfront — der Neubau
 
-Stand: v309 · beschlossen am 09.09.2026
+Stand: v316 · beschlossen am 09.09.2026
+
+**Nachgesehen in v316 — und eine der vier Grundentscheidungen dieses
+Dokuments ist gemessen zu teuer.**
+
+Die Tabelle unten sagt: *„Zweige und Stufen werden durch den Kartenzug
+ersetzt."* v314 hat beide Seiten dieser Gleichung nachgemessen, und sie geht
+nicht auf:
+
+| | gemessen |
+|---|---|
+| ein voll ausgebauter Turm gegen seine erste Stufe | **x5,4 bis x39,1** (1205–3010 Gold statt 55–140) |
+| der Kartenstapel über einen ganzen Lauf | **x1,48** Feuerkraft, x1,19 Reichweite (200 Aussaaten, Grundstapel, drei Angebote je Welle) |
+
+**Faktor 16 dazwischen**, und der Grund steht in der Zusammensetzung: von
+zwölf Grundkarten wirken nur **vier** auf Feuerkraft, die übrigen acht geben
+Gold, Beute und Kristall. Eine Schätzung im Gegenteil („fünfzehn Karten zu
++10 % ergeben x4,2, die Größenordnung stimmt also") hat gerechnet, als wäre
+jede gezogene Karte eine Schadenskarte; sie steht in der Story als Warnung.
+
+Damit ist der Rückbau der Stufen **keine Ausführungsfrage mehr, sondern eine
+Entscheidung über den Stapel** — er müsste um eine Größenordnung umgebaut
+werden, oder die Türme behalten einen Teil ihrer Steigerung. Das gehört dem
+Nutzer, nicht der Story, und liegt als **S-N1-07** im Katalog.
+
+**Was von N1 seitdem steht:**
+
+| Story | gebaut | was gemessen dabei herauskam |
+|---|---|---|
+| S-N1-05 · Rückbau, erste Hälfte | **v314** | Grade und Sterne sind ausgebaut; sieben Prüfungen haben ihren Gegenstand verloren, keine wurde stummgeschaltet |
+| S-N1-05 · zweite Hälfte | **wartet auf S-N1-07** | der mechanische Rückbau dauert zwanzig Minuten, die rund 25 Prüfblöcke danach länger (`npm run guards` allein: 58 Übersetzungsfehler) |
+
+**Und Paket N4 (die Oberfläche) hat angefangen:**
+
+| Story | gebaut | was gemessen dabei herauskam |
+|---|---|---|
+| S-N4-01 · Ruhezustand | v315 | 15,5 → **13,1 %**, damit unter den 14 % aus H1 |
+| S-N4-02 · Turmmenü am Turm | v316 | 31,7 → **27,0 %**; H1 verlangt 25, siehe **N4M** |
+
+**Die Auskunft aus v316 gilt über die Story hinaus und gehört deshalb hierher:
+der ORT einer Bedienung kostet fast nichts, der INHALT ist die Fläche.** Das
+Turmmenü an den Turm zu holen brachte 1,3 Prozentpunkte, das Zuklappen der
+Werte 3,3. Wer die Oberfläche kleiner haben will, muss weniger zeigen — nicht
+umräumen.
 
 **Nachgesehen in v309 — Paket N1 steht bis auf den Rückbau, und zwei seiner
 Zahlen sind unterwegs zweimal korrigiert worden.**

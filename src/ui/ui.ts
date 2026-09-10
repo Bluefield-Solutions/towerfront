@@ -129,6 +129,13 @@ export class UI {
   /** Steht die Ziellogik gerade offen? Sie ist eine Einstellung, die man
    *  einmal setzt - dauerhaft sichtbar hat sie den Pruefsteg gesprengt. */
   private zielOffen = false;
+  /** **Die Werte am Turm sind zugeklappt** (v316, S-N4-02).
+   *
+   *  Nur AM TURM. Am Rand zeigt der Steg Gegner und Kaufvorschau, und dort
+   *  sind die Werte der ganze Inhalt - eine Faltung waere ein leerer Kasten
+   *  mit einem Schalter darauf. Am Turm stehen sie neben der Entscheidung
+   *  und kosten gemessen 4,3 Prozentpunkte des Bildschirms. */
+  private werteOffen = false;
   private hud = $('hud');
   private dock = $('dock');
   private dockToggle = $('dock-toggle');
@@ -397,6 +404,13 @@ export class UI {
     this.iZielAuf.addEventListener('click', () => {
       Sfx.unlock(); Sfx.play('tap');
       this.zielOffen = !this.zielOffen;
+      this.lastSig = '';
+    });
+    this.iName.addEventListener('click', () => {
+      // Am Rand ist nichts zu falten - dort SIND die Werte der Inhalt.
+      if (!this.insp.classList.contains('am-turm')) return;
+      Sfx.unlock(); Sfx.play('tap');
+      this.werteOffen = !this.werteOffen;
       this.lastSig = '';
     });
     // Die Ausbauknoepfe entstehen je nach Stufe neu - auf Stufe 1 sind es
@@ -736,6 +750,9 @@ export class UI {
       // Anzeige folgte trotzdem nicht. Wer hier etwas anzeigt, das nicht
       // aus dem Spielzustand kommt, traegt es in diese Zeile ein.
       this.zielOffen ? 'z' : '-',
+      // Sechster Fall derselben Art: die Werte am Turm klappen auf und zu,
+      // und das aendert weder Gold noch Welle.
+      this.werteOffen ? 'w' : '-',
       this.bilanzOffen ? 'b' : '-',
       this.optionenOffen ? 'o' : '-',
       // Fuenfter Fall derselben Art nach Startknopf, Zielwahl, Bilanzblatt
@@ -943,6 +960,8 @@ export class UI {
       this.iHint.textContent = rat ?? '';
       this.iSell.hidden = true;
       this.turmteileLeeren();
+      this.turmRing(null);
+      this.iStats.hidden = false;
       return;
     }
 
@@ -962,6 +981,8 @@ export class UI {
       this.iHint.textContent = def.blurb;
       this.iSell.hidden = true;
       this.turmteileLeeren();
+      this.turmRing(null);
+      this.iStats.hidden = false;
       return;
     }
     this.iHint.hidden = true;
@@ -1015,9 +1036,66 @@ export class UI {
       // nachgeben, solange die Ziellogik Platz braucht.
       this.insp.dataset.ziel = this.zielOffen ? '1' : '0';
       this.iSell.textContent = `Verkaufen · ${sellValue(def, sel.branch, sel.level)}`;
+      this.turmRing(sel);
+      const amTurm = this.insp.classList.contains('am-turm');
+      this.iStats.hidden = amTurm && !this.werteOffen;
+      this.iName.setAttribute('aria-expanded', String(!this.iStats.hidden));
     } else {
       this.insp.hidden = true;
+      this.turmRing(null);
     }
+  }
+
+  /** **Das Turmmenue sitzt am Turm** (v316, S-N4-02, H4 des HUD-Audits).
+   *
+   *  Alle drei Vorbilder tun dasselbe: Defense Grid legt einen kleinen Kreis
+   *  direkt an den Turm, Kingdom Rush einen Ring, der am Ort der Handlung
+   *  aufgeht. Towerfront legte ihn an den rechten Rand - und in der Aufnahme
+   *  zu v314 steht der gemeinte Turm HINTER dem Steg, nur sein
+   *  Reichweitenring lugt links daneben hervor. Die Zuordnung zwischen
+   *  Kasten und Ding musste der Spieler leisten.
+   *
+   *  **Es ist derselbe Steg, nicht ein zweiter.** Ein eigener Ring waere die
+   *  zweite Stelle, an der Werte, Rollhinweise, Berührungsflächen und
+   *  Streifenmass gepflegt werden - Regel 15, und der Steg hat schon drei
+   *  Fuellungen (Turm, Turm vor dem Kauf, Gegner). Nur die ZWEI, die keinen
+   *  Ort auf dem Feld haben, bleiben am Rand; der gewaehlte Turm hat einen.
+   *
+   *  Gemalt wird der Ring vom Stilblatt (`.inspector.am-turm`): ein Raster
+   *  mit einem LOCH in der Mitte, und der Hintergrund liegt an den Zellen
+   *  statt am Kasten - sonst deckt der Kasten den Turm zu, um den es geht.
+   *
+   *  Hier steht nur die Lage, und die wird EINGEHALTEN wie bei der Bauwahl:
+   *  ein Menue, das halb aus dem Fenster ragt, ist genau am Rand
+   *  unbrauchbar - und am Rand steht mancher Turm. */
+  private turmRing(sel: Tower | null): void {
+    const p = sel ? this.worldToScreen?.(sel.x, sel.y) ?? null : null;
+    this.insp.classList.toggle('am-turm', p !== null);
+    if (!p) {
+      // Zuruecksetzen, sonst schlagen die Inline-Werte die Randlage des
+      // Stilblatts - der Steg fuer Gegner und Kaufvorschau stuende dann
+      // dort, wo zuletzt ein Turm stand.
+      this.insp.style.left = '';
+      this.insp.style.top = '';
+      return;
+    }
+    const b = this.insp.getBoundingClientRect();
+    const breite = b.width || 276;
+    const halbH = (b.height || 180) / 2;
+    // **Die Seite waehlt der Platz, nicht die Vorliebe.** Links vom Turm,
+    // solange der Kasten dort ganz hinpasst; sonst rechts. Der Abstand haelt
+    // den Turm samt Sockel frei - 120 Weltpunkte Platzbedarf sind auf dem
+    // Zielgeraet 53 Bildschirmpunkte, die Haelfte davon plus Luft.
+    const luft = 34;
+    const rechts = p.x - luft - breite < 8;
+    this.insp.classList.toggle('tr-rechts', rechts);
+    this.insp.style.left = `${rechts ? p.x + luft : p.x - luft}px`;
+    // Oben die Kopfzeile, unten das Bedienband - dieselben zwei Zahlen, mit
+    // denen `.inspector` am Rand rechnet. Passt der Kasten zwischen sie gar
+    // nicht (E9: 218 Punkte frei), steht er mittig statt halb ausserhalb.
+    const oben = halbH + 60;
+    const unten = window.innerHeight - halbH - 62;
+    this.insp.style.top = `${oben > unten ? (oben + unten) / 2 : Math.min(Math.max(p.y, oben), unten)}px`;
   }
 
   /** Die Pausenkarte: Knoepfe oder Bilanzblatt.

@@ -29,6 +29,7 @@ import {
   type BranchIndex, type TowerDef, type TowerStats,
 } from '../data/towers';
 import { VERBUND_STUFE } from './verbund';
+import type { Tower } from './types';
 
 /** Welchen Wert eine Zeile zeigt. `null` heisst abgeleitet - Schaden je
  *  Sekunde steht in keinem Feld, sondern folgt aus zweien. */
@@ -226,6 +227,52 @@ export function werteAmTurm(
       : 'allein',
   });
   z.push({ feld: null, name: 'Erledigt', wert: String(kills) });
+  return z;
+}
+
+/** **Was dieser Turm wirklich ausgerichtet hat** (v317, S-N4-03).
+ *
+ *  Die Frage, die das Spiel bis v316 nicht beantwortet hat, lautet nicht
+ *  "wieviel Schaden macht ein Moerser" - das steht in den Werten -, sondern
+ *  "taugt DIESER Moerser HIER etwas". Die Zahlen dafuer gab es schon; sie
+ *  standen als Summe ueber alle Tuerme in der Messtafel fuer Entwickler und
+ *  nirgends sonst.
+ *
+ *  **Und die zweite Haelfte ist die wichtigere: WARUM ein Schuss nichts
+ *  bewirkt hat.** Panzerung schluckt einen Anteil, ein Schild ganze Treffer,
+ *  und ein Turm ohne Luftziel steht still, waehrend ihm ein Gleiter ueber den
+ *  Kopf laeuft. Im Bild sieht das alles gleich aus - wie ein Turm, der eben
+ *  nichts tut. Ohne diese drei Zeilen ist der Konter eine Sache, die man
+ *  auswendig lernt statt sie zu sehen.
+ *
+ *  **Jede Zeile steht nur da, wo sie etwas sagt.** Eine Bilanz, in der immer
+ *  sechs Zeilen stehen und vier davon auf null, ist eine Tabelle und keine
+ *  Auskunft - man liest sie einmal und danach nie wieder. Ausnahme ist
+ *  "Angerichtet": die Null ist dort die Nachricht.
+ *
+ *  Gerechnet wird hier und sonst nirgends (Regel 15). Der Rauchtest haelt
+ *  nach, dass die Summe dieser Zaehler ueber alle Tuerme genau die ist, die
+ *  `npm run geschosse` misst - sonst zeigte die Oberflaeche eine zweite
+ *  Wahrheit. */
+export function wirkungsBilanz(t: Tower): Wertzeile[] {
+  const z: Wertzeile[] = [
+    { feld: null, name: 'Angerichtet', wert: String(Math.round(t.damageDone)) },
+  ];
+  if (t.schuesse > 0) {
+    z.push({
+      feld: null, name: 'Verpufft',
+      wert: `${Math.round(100 * t.schuesseOhneWirkung / t.schuesse)} %`,
+    });
+  }
+  if (t.vomSchild > 0) {
+    z.push({ feld: null, name: 'Schild schluckt', wert: `${t.vomSchild}×` });
+  }
+  if (t.vonPanzerung > 0) {
+    z.push({ feld: null, name: 'Panzerung frisst', wert: String(Math.round(t.vonPanzerung)) });
+  }
+  if (t.luftBlind >= 0.5) {
+    z.push({ feld: null, name: 'Ohne Luftziel', wert: dauer(t.luftBlind) });
+  }
   return z;
 }
 

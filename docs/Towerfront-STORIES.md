@@ -1,6 +1,30 @@
 # Towerfront — Stories
 
-Stand: v310 · 10.09.2026
+Stand: v317 · 10.09.2026
+
+**Nachgesehen in v317 — Paket N4 hat angefangen, und die erste seiner Zahlen
+hat eine Regel geliefert, die über die Stories hinausgeht.**
+
+| Story | gebaut | gemessen |
+|---|---|---|
+| S-N4-01 · Ruhezustand minimal | v315 | 15,5 → **13,1 %**, damit unter den 14 % aus H1 |
+| S-N4-02 · Turmmenü am Turm | v316 | 31,7 → **27,0 %**; H1 verlangt 25, Rest als **N4M** |
+| S-N4-03 · Wirkung sichtbar | v317 | `wirkungsBilanz` am Turm; Belegung unverändert |
+
+**Der Ort einer Bedienung kostet fast nichts, der Inhalt IST die Fläche.**
+Das Turmmenü an den Turm zu holen brachte 1,3 Prozentpunkte, das Zuklappen
+der Werte 3,3 — und ein Raster mit Loch um den Turm herum war 394 Punkte
+breit und ließ sich um keinen Turm in den äußeren 47 % der Breite legen. Wer
+die Oberfläche kleiner haben will, muss weniger zeigen, nicht umräumen. Für
+S-N4-04 und alles danach ist das die brauchbarere Vorgabe als jede
+Prozentzahl.
+
+**Und S-N1-05 ist halb gebaut, nicht offen** (v314): Grade und Sterne sind
+ausgebaut. Die zweite Hälfte wartet gemessen auf **S-N1-07** — ein voll
+ausgebauter Turm leistet das x5,4- bis x39,1-fache seiner ersten Stufe, der
+Kartenstapel trägt über einen ganzen Lauf x1,48. Faktor 16, und damit ist der
+Rückbau der Stufen eine Entscheidung über den Stapel und keine
+Ausführungsfrage.
 
 **Nachgesehen in v310 — Paket N1 ist bis auf den Rückbau gebaut, und die
 Reihenfolge im Katalog hat gehalten.**
@@ -11,7 +35,7 @@ Reihenfolge im Katalog hat gehalten.**
 | S-N1-02 · Kartenzug je Welle | v303 | 12 von 12 Karten werden genommen, 0 von jedem immer |
 | S-N1-03 · Abschnittswahl | v305 | Spreizung **142,4**, keine Auflage zweimal vorn |
 | S-N1-04 · Erfahrung | v306 | 1300 gewonnen gegen 340 verloren, Stapel 12 → 18 |
-| **S-N1-05 · Rückbau** | offen | Umfang gezählt, siehe dort |
+| **S-N1-05 · Rückbau** | **halb, v314** | Grade und Sterne raus; die Stufen warten auf S-N1-07 (Faktor 16) |
 
 **Zwei Zahlen dieses Pakets sind unterwegs korrigiert worden, beide nach
 Regel 12** (die Messstelle): die Rampe von 14,89 war gegen einen Bot **ohne

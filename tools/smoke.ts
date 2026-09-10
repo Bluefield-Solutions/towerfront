@@ -3811,6 +3811,65 @@ step('Einrasten', () => {
 // die eine Stelle, an der die Frage beantwortet wird, und die Oberflaeche
 // fragt dieselbe (Regel 6). Jede Bedingung einzeln, jede mit ihrer Nullprobe -
 // sonst pruefte die Reihe nur, dass die Ableitung immer falsch zurueckgibt.
+step('Die Wirkungsbilanz am Turm ist dieselbe Zahl wie die Messung', async () => {
+  // **Die Abnahme aus S-N4-03, und sie ist der ganze Punkt der Story.**
+  //
+  // Die Anzeige am Turm zeigt seit v317 den Anteil verpuffter Schuesse. Die
+  // GLEICHE Groesse misst `npm run geschosse` als Summe ueber alle Tuerme.
+  // Zwei Zaehlwerke fuer dieselbe Sache sind Regel 15 in Reinform: sie
+  // laufen auseinander, und dann zeigt die Oberflaeche eine zweite Wahrheit,
+  // die kein Tor haelt.
+  //
+  // Gebucht wird deshalb in denselben ZEILEN, und diese Probe haelt es nach.
+  // Sie stellt den Fall statt ihn abzuwarten (die Lehre aus v219): sechs
+  // Bogentuerme auf Salve, eine dichte Welle, gerechnet bis Schuesse
+  // dagewesen sind.
+  const { TOWERS: T } = await import('../src/data/towers');
+  const probe = new GameState();
+  probe.reset(4242, 'normal', 'spiralhain');
+  probe.gold = 999999;
+  let gebaut = 0;
+  for (const sp of candidateSpots(probe)) {
+    if (gebaut >= 6) break;
+    if (!probe.build(sp.x, sp.y, 'arrow')) continue;
+    const t = probe.towers[probe.towers.length - 1];
+    for (let l = 0; l < 3; l++) probe.upgrade(t, 1);
+    gebaut++;
+  }
+  if (gebaut < 6) throw new Error(`nur ${gebaut} Tuerme gebaut - der Fall steht nicht.`);
+  void T;
+  // Dieselben zwei Zeilen wie in `tools/geschosse.ts` - die Welle wird
+  // gestellt UND gestartet. Ohne `startWave` kommt kein Gegner, und dann
+  // faellt kein Schuss: die erste Fassung dieser Probe meldete "nur 0
+  // Schuesse gefallen" und hat sich damit selbst gefangen (Regel 3).
+  probe.waveIndex = 11;
+  probe.startWave();
+  for (let f = 0; f < 60 * 90 && probe.stats.schuesse < 200; f++) probe.update(1 / 60);
+
+  if (probe.stats.schuesse < 50) {
+    throw new Error(`nur ${probe.stats.schuesse} Schuesse gefallen - dann prueft `
+      + 'die Gleichheit darunter nichts (Regel 3).');
+  }
+  const ab = probe.towers.reduce((n, t) => n + t.schuesse, 0);
+  const weg = probe.towers.reduce((n, t) => n + t.schuesseOhneWirkung, 0);
+  if (ab !== probe.stats.schuesse) {
+    throw new Error(`Die Tuerme zaehlen ${ab} Schuesse, die Messung ${probe.stats.schuesse}. `
+      + 'Anzeige und Messung laufen auseinander - dann zeigt der Turm eine zweite Wahrheit.');
+  }
+  if (weg !== probe.stats.schuesseOhneWirkung) {
+    throw new Error(`Die Tuerme zaehlen ${weg} verpuffte Schuesse, die Messung `
+      + `${probe.stats.schuesseOhneWirkung}. Dieselbe Groesse, zwei Zahlen.`);
+  }
+  // Und die Bilanz selbst muss dabei etwas zu sagen haben - eine Liste, die
+  // immer leer ist, beweist nichts (Regel 5).
+  const { wirkungsBilanz } = await import('../src/game/turmwerte');
+  const mit = probe.towers.filter((t) => wirkungsBilanz(t).length > 1);
+  if (!mit.length) {
+    throw new Error('Kein Turm hat nach 200 Schuessen mehr als eine Bilanzzeile - '
+      + 'die Anzeige entsteht nie, und die Pruefung darueber ist folgenlos.');
+  }
+});
+
 step('Der Kartenzug liegt zwischen den Wellen', async () => {
   const { KARTENSTAPEL } = await import('../src/data/karten');
   const probe = new GameState();

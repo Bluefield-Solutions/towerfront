@@ -15,7 +15,7 @@ import { turmSymbol } from '../gfx/towerart';
 import { TUTORIAL, kartenEinfuehrung, type TutorialStep } from '../game/tutorial';
 import { konterSatz } from '../data/konter';
 import type { GameState } from '../game/state';
-import { werteAmTurm, werteVorKauf, zweigWirkung, type Wertzeile } from '../game/turmwerte';
+import { werteAmTurm, wirkungsBilanz, werteVorKauf, zweigWirkung, type Wertzeile } from '../game/turmwerte';
 import { VERBUND_STUFE } from '../game/verbund';
 import { bilanzblatt } from './statsblatt';
 import { aussaatLesen, laufAlsText } from '../game/mitschrift';
@@ -1021,8 +1021,15 @@ export class UI {
         this.iBild.style.backgroundImage = `url(${symbol.toDataURL()})`;
         this.iBild.dataset.bild = bildKey;
       }
-      this.iStats.innerHTML = werteAmTurm(def, sel.branch, sel.level, sel.kills, s.verbundVon(sel))
-        .map(zeile).join('');
+      // **Werte und Wirkungsbilanz stehen untereinander** (v317, S-N4-03).
+      //
+      // Was der Turm KANN und was er GETAN hat sind zwei Fragen, und die
+      // zweite gab es bis v316 nur in der Messtafel fuer Entwickler. Beide
+      // Listen kommen aus derselben Datei und rechnen nichts nach.
+      this.iStats.innerHTML = [
+        ...werteAmTurm(def, sel.branch, sel.level, sel.kills, s.verbundVon(sel)),
+        ...wirkungsBilanz(sel),
+      ].map(zeile).join('');
       this.rollhinweis();
       this.renderUpgrades();
       this.renderZielwahl(sel);

@@ -177,6 +177,27 @@ export interface Tower {
   retargetIn: number;     // Sekunden bis zur naechsten Zielsuche
   kills: number;
   damageDone: number;
+  /** **Die Wirkungsbilanz dieses Turms** (v317, S-N4-03).
+   *
+   *  Die Zahlen gab es schon - als SUMME ueber alle Tuerme, in `stats`, und
+   *  damit nur in der Messtafel fuer Entwickler. Die Frage des Spielers ist
+   *  aber eine andere: taugt DIESER Moerser hier etwas? Sie stehen deshalb
+   *  am Turm.
+   *
+   *  **Gebucht wird in denselben Zeilen wie die Summe** - nicht an einer
+   *  zweiten Stelle, die auseinanderlaufen kann (Regel 15). Der Rauchtest
+   *  haelt es nach: die Summe ueber alle Tuerme muss `stats.schuesse` und
+   *  `stats.schuesseOhneWirkung` treffen. */
+  schuesse: number;
+  schuesseOhneWirkung: number;
+  /** Treffer, die ein Schild geschluckt hat - ganze Treffer, kein Anteil. */
+  vomSchild: number;
+  /** Schaden, den Panzerung geschluckt hat - ein Anteil, kein Abzug. */
+  vonPanzerung: number;
+  /** Sekunden, in denen dieser Turm kein Ziel hatte, obwohl ein FLIEGER in
+   *  Reichweite stand. Nur Tuerme ohne Luftziel zaehlen sie; bei den anderen
+   *  bleibt sie null, und dann steht die Zeile gar nicht erst da. */
+  luftBlind: number;
   /** Was dieser Turm beim Bau WIRKLICH gekostet hat (v286, S-N3-02).
    *
    *  Seit die Wiederholung teurer wird, ist der Grundpreis nicht mehr der

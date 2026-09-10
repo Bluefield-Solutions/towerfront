@@ -696,6 +696,80 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Man sieht, was ein Schuss bewirkt hat (v317, S-N4-03).** Die Zahlen gab es
+schon - als SUMME ueber alle Tuerme, in der Messtafel fuer Entwickler und
+nirgends sonst. Die Frage des Spielers ist eine andere: taugt DIESER Moerser
+HIER etwas. `wirkungsBilanz` steht am Turm, unter den Werten: Angerichtet,
+Verpufft, Schild schluckt, Panzerung frisst, Ohne Luftziel.
+
+**Die zweite Haelfte ist die wichtigere: WARUM ein Schuss nichts bewirkt
+hat.** Panzerung schluckt einen Anteil, ein Schild ganze Treffer, und ein Turm
+ohne Luftziel steht still, waehrend ihm ein Gleiter ueber den Kopf laeuft - im
+Bild sieht das alles gleich aus. Ohne diese drei Zeilen ist der Konter etwas,
+das man auswendig lernt, statt es zu sehen. **Jede Zeile steht nur da, wo sie
+etwas sagt**; eine Bilanz aus sechs Zeilen, von denen vier auf null stehen,
+ist eine Tabelle und keine Auskunft.
+
+**Gebucht wird in denselben ZEILEN wie die Summe** (Regel 15):
+`this.stats.schuesse++` und `t.schuesse++` stehen nebeneinander, Schild und
+Panzerung genau dort, wo sie schlucken. Anzeige und Messung koennen damit
+nicht auseinanderlaufen, und der Rauchtest haelt es an einem GESTELLTEN Fall
+nach - sechs Salventuerme, Welle 12, gerechnet bis 200 Schuesse gefallen sind
+(die Lehre aus v219: ein Messplatz, der auf einen Zufall wartet, hoert leise
+auf zu pruefen). **Die erste Fassung der Probe hat sich selbst gefangen**
+(Regel 3): sie stellte die Welle, startete sie aber nicht. Der Luftzaehler
+sitzt in der Zielsuche und nicht im Bildtakt - alle 0,12 s, und nur bei
+Tuermen ohne Luftziel, die gerade leer ausgehen; `npm run bench` unveraendert
+bei Dichtefaktor 3,79 von erlaubten 7,74.
+
+**Das Turmmenue sitzt am Turm - und der Ort kostet fast nichts (v316,
+S-N4-02).** Bis v315 stand der Pruefsteg am rechten Rand, in voller Hoehe; in
+der Aufnahme zu v315 steht der gemeinte Turm DAHINTER, nur sein
+Reichweitenring lugt daneben hervor. Alle drei Vorbilder machen es anders
+(Defense Grid: ein kleiner Kreis am Turm; Kingdom Rush: ein Ring, der am Ort
+der Handlung aufgeht).
+
+**Der erste Entwurf war ein Raster mit einem LOCH um den Turm herum und ist an
+einer Zahl gescheitert:** zwei Spalten sind 394 Punkte breit, auf 844 kann
+sich das um keinen Turm legen, der in den aeusseren 47 % steht - die
+Einhaltung schiebt den Kasten weg, und dann steht das Loch ueber leerem Gras,
+waehrend der Turm daneben liegt. Das ist SCHLECHTER als der Rand, der
+wenigstens einen festen Ort hatte. Was traegt, ist der Kasten NEBEN dem Turm:
+250 Punkte breit (dort stehen die Zweige nebeneinander statt untereinander,
+das spart 66 Punkte Hoehe), links wenn dort Platz ist, sonst rechts. Dazu die
+Faltung: der Turmname ist am Turm zugleich der Schalter fuer die Werte.
+
+**Gemessen 31,7 -> 27,0 % in vier Zwischenstaenden, und das Verhaeltnis ist
+die Lehre:** der Ortswechsel bringt **1,3** Punkte, das Zuklappen **3,3**.
+**Der Ort kostet fast nichts, der Inhalt IST die Flaeche** - wer die
+Oberflaeche kleiner haben will, muss weniger zeigen, nicht umraeumen. H1
+verlangt hoechstens 25 % bei offenem Turmmenue; die restlichen zwei Punkte
+liegen als **N4M** im Verzeichnis, mit beiden gemessenen Wegen daneben (die
+Bauleiste haelt 8,3 % und steht auch dann da, wenn man gerade keinen Turm
+baut; und E9/H6 verlangen seit v239 dieselbe Antwort - Symbole statt Saetze,
+also Bildmaterial).
+
+**Drei Befunde kamen aus den Aufnahmen, keiner aus einer Zahl** (Regel 8): die
+zwei Zweige ueberlappten sich zu "Scharfschü|Salve" (`flex: 1 1 0` teilt in
+einer SPALTE die Hoehe statt der Breite), "0,55 s" brach um (vier Wertespalten
+auf 134 Punkten), und "Bogenturm" endete hart als "Bogentu" ohne die drei
+Punkte - `display: flex` macht den Knopftext zu einem namenlosen Flex-Kind,
+und `text-overflow` greift daran nicht.
+
+**Zwei Tore haben dabei ihren Gegenstand verloren, keines wurde
+stummgeschaltet (K1).** `browsertor` prueft "sind die Werte zu sehen" - am
+Turm sind sie zugeklappt; es klappt jetzt selbst auf und prueft damit MEHR als
+vorher, weil der Schalter mit an ihm haengt. Und die Rollpruefung stellt das
+Aufklappen mit, weil eine versteckte Liste keine Rollhoehe hat. **Der Umlaut
+hat ausserdem zum zweiten Mal zugeschlagen**: ein HTML-Kommentar mit
+"Flaeche" und "fuer" machte `autarkie` rot - HTML-Kommentare landen im
+Buendel, und das Tor liest den ausgelieferten Text (v292, und in v316 gleich
+noch einmal).
+
+**Das Beruehrungstor hat den neuen Knopf selbst verlangt** ("Knopfklasse
+insp-name steht in keiner geprueften Auswahl"): was der Finger trifft, wird
+gemessen, auch wenn es aussieht wie eine Ueberschrift (H12).
+
 **Das Weichenfenster wird jetzt von OBEN gehalten (v313, N4W).** Die
 Gegenprobe zur unteren Schranke liess `saeule1` den Umweg statt des kurzen
 Astes sperren — gemessen faellt dieser Eingriff heute vorher als **Dublette**
@@ -1092,7 +1166,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v316. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v317. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

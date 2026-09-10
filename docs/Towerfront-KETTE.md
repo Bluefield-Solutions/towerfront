@@ -1,6 +1,36 @@
 # Towerfront — die Kette
 
-Stand: v310 · 10.09.2026
+Stand: v317 · 10.09.2026
+
+**Nachgesehen in v317 — und die zwei Sätze, die seit v310 hier standen, waren
+beide zu freundlich.**
+
+* **„38 Minuten, alle 378 Proben schlagen an."** Das war der Lauf, der
+  gemessen wurde. Der nächste hat gezeigt, dass er das gar nicht hätte melden
+  können: der Schritt endete auf `| tee`, und **der Ausgang einer Rohrleitung
+  ist der des letzten Gliedes** — `tee` gelingt immer. Der Nachtlauf konnte
+  seit **v221 nicht rot werden**, anderthalb Jahre lang. Seit v312 stehen
+  `set -o pipefail` UND der Protokollgriff nebeneinander, an einer Stelle zu
+  einem Urteil zusammengeführt (zwei unabhängige Signale, weil eines davon
+  schon einmal still ausgefallen ist).
+* **Der Befund hielt sich selbst am Leben** (v313). Ein roter Lauf schreibt
+  einen Befund → `muster` ist rot → jede Scheibe mit einer `muster`-Probe
+  arbeitet gar nicht erst → der Lauf ist rot → er schreibt einen Befund.
+  **Der Befund geht nur weg, wenn ein Lauf grün ist, und kein Lauf konnte grün
+  sein, solange er dastand.** Daher stand der Stand vom 09.09. bis v313 fest.
+  Unter `PROBENLAUF` wird ein Befund jetzt übergangen, den dieser Lauf nicht
+  selbst angerichtet hat.
+
+**Heute sind es 386 Proben** (378 in v310), und die Zahl steht hier nur als
+Größenordnung: `npm run muster` zählt sie in 0,4 s, und dieses Dokument ist
+nicht die Stelle, an der sie gepflegt wird (Regel 15).
+
+**Was seit v313 sonst am Ablauf gilt:** vier Rauchtest-Schritte aus v303 bis
+v306 sind `async`, und `step` nahm nur `() => void` — eine abgelehnte Zusage
+kam nie in den Befund. Vier Abnahmen aus vier Runden waren nur scheinbar
+gehalten. `step` nimmt jetzt auch ein Versprechen, und das Urteil wartet die
+offenen Schritte ab. **Wer einen `async`-Schritt schreibt, braucht dafür
+nichts mehr zu tun** — das ist der Punkt.
 
 **Nachgesehen in v310 — der Nachtlauf hat die Kette einen halben Tag lang
 angehalten, und die Reparatur ist der wichtigste Teil dieses Abschnitts.**

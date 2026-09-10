@@ -1247,6 +1247,24 @@ export const PROBEN = [
     // Punkten kommen 3,3 aus der Faltung. Ohne eigene Probe waere sie durch
     // die Zeile darueber mitgedeckt - und eine Zahl, die zwei Ursachen hat
     // und eine Probe, ist halb geprueft.
+    // **Die Bilanz laeuft von der Messung weg** (v317, S-N4-03).
+    //
+    // Genau die Gegenprobe, die die Story verlangt: die Anzeige am Turm und
+    // `npm run geschosse` messen dieselbe Groesse, also duerfen sie nicht
+    // zwei Zahlen sein. Der Eingriff nimmt dem Turm seinen Zaehler, waehrend
+    // die Summe weiterlaeuft - dann zeigt der Turm 0 % verpuffte Schuesse,
+    // waehrend die Messung 2,1 % misst, und der Rauchtest sagt es.
+    //
+    // Gegriffen wird die gemeinsame Zeile, nicht der Turmzaehler allein:
+    // dass beide IN EINER Zeile stehen, ist die Zusage (Regel 15).
+    name: 'Anzeige und Messung zaehlen getrennt',
+    datei: 'src/game/state.ts',
+    suche: "if (kind === 'homing') { this.stats.schuesse++; t.schuesse++; }",
+    ersatz: "if (kind === 'homing') { this.stats.schuesse++; }",
+    tor: 'smoke',
+    meldet: 'laufen auseinander',
+  },
+  {
     // **Der Schalter tut nichts mehr** (v316, S-N4-02).
     //
     // Die zwei Proben daneben halten, dass die Werte zugeklappt SIND. Diese

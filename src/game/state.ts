@@ -1097,6 +1097,7 @@ export class GameState {
       pulse: 0, spring: 1,
       zielwahl: 'vorn',
       target: null, retargetIn: 0, kills: 0, damageDone: 0,
+      schuesse: 0, schuesseOhneWirkung: 0, vomSchild: 0, vonPanzerung: 0, luftBlind: 0,
       bezahlt: preis,
     };
     this.towers.push(t);
@@ -2334,6 +2335,21 @@ export class GameState {
       t.retargetIn -= dt;
       if (!target || t.retargetIn <= 0) {
         target = this.findTarget(t.x, t.y, st.range, def.hitsAir, t.zielwahl);
+        // **Warum dieser Turm gerade nichts tut** (v317, S-N4-03).
+        //
+        // Ein Turm ohne Luftziel steht still, waehrend ihm ein Gleiter ueber
+        // den Kopf laeuft - und im Bild sieht das genauso aus wie ein Turm,
+        // der einfach nichts in Reichweite hat. Gezaehlt wird nur, wo beides
+        // zugleich gilt: kein Bodenziel UND ein Flieger da.
+        //
+        // Die Zeile sitzt in der Zielsuche und nicht im Bildtakt: gesucht
+        // wird alle 0,12 s, also kostet die zweite Abfrage hoechstens acht
+        // Mal je Sekunde und Turm - und nur bei Tuermen, die gar nicht in
+        // die Luft schiessen koennen und gerade leer ausgehen.
+        if (!target && !def.hitsAir
+          && this.enemiesInRange(t.x, t.y, st.range, this.qArea, true).length > 0) {
+          t.luftBlind += 0.12;
+        }
         t.retargetIn = 0.12;
       }
       t.target = target;
@@ -2408,7 +2424,9 @@ export class GameState {
     p.dirX = d > 0 ? (aim.x - t.x) / d : 1;
     p.dirY = d > 0 ? (aim.y - t.y) / d : 0;
     p.luft = TOWERS[t.def].hitsAir;
-    if (kind === 'homing') this.stats.schuesse++;
+    // Zwei Buecher, EINE Zeile - so koennen sie nicht auseinanderlaufen
+    // (Regel 15, und der Rauchtest haelt die Gleichheit nach).
+    if (kind === 'homing') { this.stats.schuesse++; t.schuesse++; }
     return p;
   }
 
@@ -2566,7 +2584,10 @@ export class GameState {
       if (p.oT > 0) p.oT = Math.max(0, p.oT - dt / VERSATZ_ZEIT);
       p.life -= dt;
       if (p.life <= 0) {
-        if (p.kind === 'homing') this.stats.schuesseOhneWirkung++;
+        if (p.kind === 'homing') {
+          this.stats.schuesseOhneWirkung++;
+          if (p.owner) p.owner.schuesseOhneWirkung++;
+        }
         p.dead = true; any = true; continue;
       }
 
@@ -2603,6 +2624,7 @@ export class GameState {
         p.y += p.dirY * step;
         if (p.x < -40 || p.x > WORLD_W + 40 || p.y < -40 || p.y > WORLD_H + 40) {
           this.stats.schuesseOhneWirkung++;
+          if (p.owner) p.owner.schuesseOhneWirkung++;
           p.dead = true; any = true;
         }
         continue;
@@ -2666,6 +2688,7 @@ export class GameState {
     // Schild waere keine Frage mehr.
     if (e.shield > 0) {
       e.shield--;
+      if (owner) owner.vomSchild++;
       e.hitFlash = 1;
       this.ring(e.x, e.y, ENEMIES[e.def].radius * 1.6, '#9FD4FF', 0.28, 3);
       return;
@@ -2684,7 +2707,11 @@ export class GameState {
     // durch - auf jeder Stufe gleich. Durchschlag (`pierce`) zieht vorher ab.
     const rest = Math.max(0, def.armor - pierce);
     const schluck = Math.min(0.66, rest * 0.11);
-    const dmg = Math.max(1, Math.round(raw * this.perks.damageMul * (1 - schluck)));
+    const roh = raw * this.perks.damageMul;
+    const dmg = Math.max(1, Math.round(roh * (1 - schluck)));
+    // Was die Panzerung geschluckt hat - an DERSELBEN Stelle gerechnet,
+    // an der sie schluckt. Eine zweite Rechnung waere eine zweite Wahrheit.
+    if (owner) owner.vonPanzerung += Math.max(0, Math.round(roh) - dmg);
     e.hp -= dmg;
     // **Welche Turmart hat hier gearbeitet?** (v299, S-N3-03)
     //
@@ -3005,6 +3032,7 @@ export class GameState {
       pulse: 0, spring: 0,
       zielwahl: 'vorn',
       target: null, retargetIn: 0, kills: 0, damageDone: 0,
+      schuesse: 0, schuesseOhneWirkung: 0, vomSchild: 0, vonPanzerung: 0, luftBlind: 0,
     });
     this.towersVersion++;
   }
@@ -3181,6 +3209,12 @@ export class GameState {
         pulse: 0, spring: 0,
         zielwahl: ZIELWAHL_ORDNUNG[zIdx ?? 0] ?? 'vorn',
         target: null, retargetIn: retargetIn ?? 0, kills, damageDone,
+        // **Die Wirkungsbilanz steht nicht im Spielstand** (v317).
+        // Sie beantwortet "taugt dieser Turm hier etwas", und das ist eine
+        // Frage an die LAUFENDE Partie. Ein Format zu brechen, das vier
+        // Fassungen alt ist, waere der teurere Weg fuer eine Zahl, die nach
+        // dem Laden ohnehin binnen einer Welle wieder dasteht.
+        schuesse: 0, schuesseOhneWirkung: 0, vomSchild: 0, vonPanzerung: 0, luftBlind: 0,
         // **Der Kaufpreis wird beim Laden nachgerechnet, nicht gespeichert**
         // (v286). Die Tuerme kommen in Baureihenfolge zurueck, also ist der
         // Aufschlag dieselbe Rechnung wie beim Kauf - fuer jeden Spielstand,

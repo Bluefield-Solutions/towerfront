@@ -738,14 +738,19 @@ export const PROBEN = [
     // genau die Falle, in die der erste Entwurf dieser Runde gelaufen ist).
     //
     // Der Eingriff nimmt der Regel ihren Kern: `arten - 1` wird zu `arten`,
-    // dann bekommt auch der Haeufer mit EINER Turmart seinen Zuschlag, und
-    // die Trennung faellt von 100 bis 251 Gold auf fast nichts.
+    // dann bekommt auch der Haeufer mit EINER Turmart seinen Zuschlag.
+    //
+    // **Erwartet wird seit v301 die scharfe Zusage**, nicht die Trennung:
+    // "der Haeufer bekommt 0 Gold". Der erste Anlauf hier zielte auf die
+    // Trennung ("schuettet Gold aus") und meldete NICHTS - beide Seiten
+    // gewinnen dann naemlich, und die Differenz bleibt gross genug. Regel 3
+    // in Reinform: der Eingriff kam an, die Pruefung sah an ihm vorbei.
     name: 'Die Vielfaltsbeute belohnt auch Haeufen',
     datei: 'src/data/towers.ts',
     suche: 'return grund * (1 + Math.max(0, arten - 1) * zuschlag);',
     ersatz: 'return grund * (1 + Math.max(0, arten) * zuschlag);',
     tor: 'sim',
-    meldet: 'schuettet Gold aus',
+    meldet: 'bringt dem Haeufer',
   },
   {
     // **Und die Zaehlung selbst.**

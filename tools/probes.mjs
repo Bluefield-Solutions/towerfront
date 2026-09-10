@@ -731,6 +731,46 @@ export const PROBEN = [
     meldet: 'Spannungsratsche',
   },
   {
+    // **Der fuenfte Zustand des UX-Audits: der vierte Turm derselben Art**
+    // (v298, E12).
+    //
+    // Er misst, was bis v297 niemand gesehen hat: die Preismarke des
+    // Wiederholungsaufschlags. Sie steht seit v287 im Stil und war bis dahin
+    // tot, weil der Zuschlag auf Null stand; seit v297 ist er scharf, und
+    // alle vierzehn Aufnahmen blieben trotzdem bei EINEM Turm stehen.
+    //
+    // Der Eingriff dreht den Zuschlag auf Null zurueck. Dann kostet der
+    // fuenfte Bogenturm wieder 55, keine Marke erscheint, und der Zustand
+    // meldet es - statt eine Aufnahme der Bauwahl unter falschem Namen
+    // abzulegen. Damit haengt die Aufnahme an ihrem GEGENSTAND und nicht an
+    // einer Klickzahl.
+    name: 'Der Zustand "teurer" zeigt keinen Aufschlag',
+    datei: 'src/data/towers.ts',
+    suche: 'export const WIEDERHOLUNG_ZUSCHLAG: number = 0.10;',
+    ersatz: 'export const WIEDERHOLUNG_ZUSCHLAG: number = 0;',
+    tor: 'uxaudittor',
+    meldet: 'traegt weder die Bauwahl noch die Bauleiste die Preismarke',
+  },
+  {
+    // **Und die zwei Formpruefungen an derselben Bauwahl** (v298).
+    //
+    // Beide haben bei ihrem ersten Lauf null gemeldet, und das war das
+    // Ergebnis: das Bild sah nach uebereinanderstehendem Text aus, gemessen
+    // sind es 5 px Luecke ueberall und kein Ueberlauf. Regel 8 irrt in beide
+    // Richtungen (v230).
+    //
+    // Eine Pruefung, die noch nie etwas gemeldet hat, ist damit aber noch
+    // kein Beweis (Regel 5). Der Eingriff macht die Knoepfe so breit, dass
+    // sechs davon nicht mehr nebeneinander passen - dann laufen sie
+    // ineinander, und beide Zahlen muessen es sagen.
+    name: 'Die Bauwahl laeuft ineinander',
+    datei: 'src/style.css',
+    suche: 'gap: 1px; min-width: 54px; padding: 4px 6px 3px; cursor: pointer;',
+    ersatz: 'gap: 1px; min-width: 240px; padding: 4px 6px 3px; cursor: pointer;',
+    tor: 'uxaudittor',
+    meldet: 'Bauwahl',
+  },
+  {
     // **Die Zusage am AUSGELIEFERTEN Wert (v297, S-N3-02).**
     //
     // Alles uebrige an `wiederholungMessen` laeuft gegen feste 0,35 - es

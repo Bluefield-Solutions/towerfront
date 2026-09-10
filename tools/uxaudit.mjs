@@ -119,6 +119,15 @@ const GRENZEN = {
   // dem Schrumpfen der Knoepfe (siehe `bauwahl`) sind es 10,8 %.
   pruefsteg: 35,
   welle: 16,       // gemessen 13,2 % (v239), 15,5 % (v294)
+  // **Der fuenfte Zustand** (v298, E12): vier Bogentuerme stehen, der
+  // fuenfte kostet 61 statt 55, und die Bauwahl ist offen. Gemessen 24,2 %
+  // gegen die 24,5 % der gewoehnlichen Bauwahl - die Marke selbst kostet
+  // keine Flaeche, sie sitzt in der Zeile, die ohnehin da ist.
+  //
+  // Er traegt dieselbe Grenze wie `bauwahl` und keine eigene: es IST die
+  // Bauwahl, nur in dem Zustand, in dem sie mehr zu sagen hat. Zwei
+  // Grenzen fuer dieselbe Flaeche waeren eine zuviel (Regel 15).
+  teurer: 26,      // gemessen 24,2 %
 };
 /** Wieviele Beschriftungen zugleich doppelt im Bild stehen duerfen.
  *
@@ -253,7 +262,19 @@ const doppelteBeschriftung = (seite) => seite.evaluate(() => {
     // Turmwahl, weil dort bezahlt wird (B2 des Bedienungs-Abgleichs verlangt
     // eine "benannte Flaeche, die ihren Preis traegt"). Gemeint ist die
     // doppelte BESCHRIFTUNG, nicht die doppelte Zahl.
-    if (/^[\d.,\s×x/-]+$/.test(t)) continue;
+    //
+    // **Seit v298 gehoert der Prozentsatz mit dazu**, und zwar aus genau dem
+    // Grund, der eine Zeile hoeher steht. Der neue Zustand "teurer" (E12)
+    // hat vier Tuerme stehen, also traegt jedes Bauwerk der Wahl seine
+    // Verbundmarke - fuenfmal "+20 %", weil der Platz fuenfmal denselben
+    // einen Nachbarn hat. Das sind fuenf GERECHNETE Werte, die zufaellig
+    // gleich sind, keine fuenf Fassungen desselben Textes; gepflegt wird
+    // hier gar nichts, gerechnet wird fuenfmal.
+    //
+    // Der Zuschnitt bleibt eng: Ziffern, Trenner, Vorzeichen und
+    // Prozentzeichen. Ein einziges Wort darin, und die Zeile zaehlt wieder
+    // als Beschriftung.
+    if (/^[+\d.,\s×x%/-]+$/.test(t)) continue;
     const r = e.getBoundingClientRect();
     const cs = getComputedStyle(e);
     if (r.width < 2 || r.height < 2) continue;
@@ -347,6 +368,59 @@ const bauplatzSuchen = async (s, w, h, schritt = 22) => {
   }
   return null;
 };
+/** **Passt der Inhalt eines Bauwahl-Knopfes noch in seinen Knopf?** (v298)
+ *
+ *  Gefunden hat es kein Tor, sondern das erste Bild des neuen Zustands
+ *  (Regel 8): auf 844 x 390 stossen bei sechs Bauwerken der Name des einen
+ *  und die Verbundmarke des anderen aneinander - "Foerderer" schiebt sich
+ *  ueber die "+20 %" des Prismas. Die Belegung sieht das nicht (die Flaeche
+ *  bleibt dieselbe), `doppelteBeschriftung` auch nicht (die Texte sind
+ *  verschieden), und der Ueberdeckungstest des Browsertors prueft die
+ *  Bedienung gegen das FELD, nicht gegen sich selbst.
+ *
+ *  Gemessen wird deshalb je Knopf, ob sein Inhalt breiter ist als er selbst.
+ *  `scrollWidth` gegen `clientWidth` ist die Frage in einer Zeile und
+ *  braucht keine Annahme darueber, welche zwei Texte sich treffen. */
+const ueberlaufInDerWahl = (seite) => seite.evaluate(() => [...document
+  .querySelectorAll('#pick-row .pick-btn')]
+  .map((el) => {
+    const r = el.getBoundingClientRect();
+    // Zwei Fragen, weil es zwei Arten Ueberlauf gibt: der Inhalt passt nicht
+    // in den Kasten (`scrollWidth`), oder er passt hinein und ragt trotzdem
+    // heraus, weil der Kasten ihn nicht abschneidet. Das erste Mass allein
+    // hat den gesehenen Fall NICHT gefangen - gemessen null bei sichtbar
+    // uebereinanderstehendem Text.
+    const teile = [...el.children].map((k) => k.getBoundingClientRect());
+    const links = Math.min(...teile.map((t) => t.left), r.left);
+    const rechts = Math.max(...teile.map((t) => t.right), r.right);
+    return {
+      turm: el.dataset.turm ?? '?',
+      ueber: Math.max(el.scrollWidth - el.clientWidth,
+        Math.round((r.left - links) + (rechts - r.right))),
+    };
+  })
+  .filter((o) => o.ueber > 0));
+
+/** **Stossen zwei Bauwahl-Knoepfe aneinander oder ineinander?** (v298)
+ *
+ *  Die dritte Frage zu demselben Bild, weil die ersten zwei null gemeldet
+ *  haben: nicht der Inhalt laeuft ueber seinen Knopf, sondern die Knoepfe
+ *  ueber einander. Gemessen wird der Abstand zwischen benachbarten Kaesten -
+ *  negativ heisst Ueberlappung. */
+const abstaendeInDerWahl = (seite) => seite.evaluate(() => {
+  const btns = [...document.querySelectorAll('#pick-row .pick-btn')];
+  const r = btns.map((el) => el.getBoundingClientRect());
+  const paare = [];
+  for (let i = 1; i < r.length; i += 1) {
+    paare.push({
+      von: btns[i - 1].dataset.turm ?? '?',
+      nach: btns[i].dataset.turm ?? '?',
+      luecke: Math.round(r[i].left - r[i - 1].right),
+    });
+  }
+  return paare;
+});
+
 const fleck = await bauplatzSuchen(a, BREIT, HOCH);
 if (!fleck) { console.error('Kein Bauplatz gefunden.'); }
 else {
@@ -356,6 +430,7 @@ else {
   messwerte.bauwahl = await layout(a);
 messwerte.belegung.bauwahl = await belegung(a);
   messwerte.doppelt.bauwahl = await doppelteBeschriftung(a);
+  messwerte.ueberlauf = { bauwahl: await ueberlaufInDerWahl(a) };
   messwerte.groessen.bauwahl = await schriftgroessen(a);
   await a.evaluate(() => document.querySelector('#pick-row .pick-btn:not([disabled])')?.click());
   await a.waitForTimeout(500);
@@ -371,6 +446,113 @@ messwerte.belegung.pruefsteg = await belegung(a);
   await schuss(a, 'pruefsteg-ziel');
   await a.evaluate(() => document.getElementById('i-close')?.click());
   await a.waitForTimeout(250);
+
+  // **Der fuenfte Zustand: der vierte Turm derselben Art** (v298, E12).
+  //
+  // Die Preismarke des Wiederholungsaufschlags - das Dreieck der Warnfarbe
+  // auf dem Bauknopf - steht seit v287 im Stil und war bis v297 tot, weil
+  // der Zuschlag auf Null stand. Seit v297 ist er scharf (0,10), und damit
+  // ging die sichtbare Seite einer Preisregel ungesehen raus: keine der
+  // vierzehn Aufnahmen zeigte sie, weil alle bei EINEM Turm stehenbleiben
+  // und die Freimenge drei betraegt (Regel 8).
+  //
+  // Drei Bogentuerme, dann die Bauwahl geoeffnet: der vierte kostet 61 statt
+  // 55 und traegt die Marke. Dass er in diesem Zustand nicht mehr bezahlbar
+  // ist (220 Gold, 165 ausgegeben), ist kein Mangel - es ist genau der
+  // Augenblick, in dem die Auskunft gebraucht wird.
+  //
+  // Der erste Turm oben ist bereits ein Bogenturm: die Bauwahl fuehrt ihn
+  // als ersten und billigsten, `\u0060.pick-btn:not([disabled])\u0060` trifft ihn.
+  // Hier wird trotzdem ausdruecklich `data-turm="arrow"` gewaehlt - eine
+  // Aufnahme, die auf einer Reihenfolge beruht, veraltet an der naechsten
+  // Turmsorte.
+  // **Gebaut wird, bis die MARKE dasteht - nicht viermal geklickt.**
+  //
+  // Der erste Entwurf zaehlte Klicks und pruefte das Gold gleich danach.
+  // Beides war falsch: ein Klick auf den Knopf heisst nicht, dass die Stelle
+  // den Turm annimmt, und das Gold wird erst im naechsten Bild nachgezogen -
+  // die Pruefung las den Wert von vorhin und meldete dreimal "nichts
+  // passiert", waehrend drei Tuerme entstanden. Beide Fehler waren Regel 3
+  // in einer Zeile: der Eingriff kam an, die Kontrolle sah ihn nicht.
+  //
+  // Der Zustand ist deshalb ueber sein ZIEL definiert. Aufgehoert wird,
+  // wenn die Bauwahl die Marke traegt; findet sich in acht Anlaeufen keine,
+  // ist das ein Befund und keine Aufnahme.
+  const markeLesen = () => a.evaluate(() => ({
+    pick: document.querySelectorAll('#pick-row [data-teurer="1"]').length,
+    dock: document.querySelectorAll('#dock [data-teurer="1"]').length,
+    preis: document.querySelector('#pick-row .pick-btn[data-turm="arrow"] .pick-cost')
+      ?.textContent ?? '',
+    gold: document.getElementById('v-gold')?.textContent ?? '?',
+  }));
+  let marke = await markeLesen();
+  let anlaeufe = 0;
+  while (!marke.pick && !marke.dock && anlaeufe < 8) {
+    anlaeufe += 1;
+    const stelle = await bauplatzSuchen(a, BREIT, HOCH, 26);
+    if (!stelle) break;
+    await a.evaluate(() => {
+      document.querySelector('#pick-row .pick-btn[data-turm="arrow"]:not([disabled])')?.click();
+    });
+    await a.waitForTimeout(400);
+    marke = await markeLesen();
+  }
+  // Der letzte Anlauf hat gebaut und damit die Wahl geschlossen - der
+  // Aufschlag steht dann nur in der Leiste. Die Aufnahme soll BEIDE Orte
+  // zeigen: die Leiste sagt "teurer", die Wahl sagt "61 statt 55". Also
+  // einmal mehr oeffnen, ohne zu bauen.
+  if (await bauplatzSuchen(a, BREIT, HOCH, 26)) {
+    await a.waitForTimeout(300);
+    marke = await markeLesen();
+  }
+  console.log(`  (Bogentuerme: ${anlaeufe} Anlauf/Anlaeufe, Gold ${marke.gold}, `
+    + `Preis ${marke.preis}, Marke in der Wahl ${marke.pick}x, in der Leiste ${marke.dock}x)`);
+  if (!marke.pick && !marke.dock) {
+    befunde.push(`Der Wiederholungsaufschlag steht scharf, aber nach ${anlaeufe} `
+      + 'Bogentuermen traegt weder die Bauwahl noch die Bauleiste die Preismarke. '
+      + 'Dann steht der hoehere Preis ohne Auskunft da - wer 55 im Kopf hat und 61 '
+      + 'liest, sucht den Fehler bei sich.');
+  }
+  {
+    await schuss(a, 'teurer');
+    messwerte.belegung.teurer = await belegung(a);
+    messwerte.doppelt.teurer = await doppelteBeschriftung(a);
+    messwerte.groessen.teurer = await schriftgroessen(a);
+    messwerte.ueberlauf.teurer = await ueberlaufInDerWahl(a);
+    messwerte.abstaende = await abstaendeInDerWahl(a);
+    console.log('  Luecken in der Bauwahl: '
+      + messwerte.abstaende.map((o) => `${o.von}|${o.nach} ${o.luecke}`).join(', '));
+    const stossen = messwerte.abstaende.filter((o) => o.luecke < 0);
+    if (stossen.length) {
+      befunde.push('In der Bauwahl ueberlappen sich Knoepfe: '
+        + stossen.map((o) => `${o.von} und ${o.nach} um ${-o.luecke} px`).join(', ')
+        + '. Dann steht die Marke des einen Bauwerks unter dem Namen des naechsten.');
+    }
+    for (const [zustand, liste] of Object.entries(messwerte.ueberlauf)) {
+      if (!liste.length) continue;
+      console.log(`  Ueberlauf in der Bauwahl (${zustand}): `
+        + liste.map((o) => `${o.turm} +${o.ueber} px`).join(', '));
+      befunde.push(`In der Bauwahl (${zustand}) ist der Inhalt von `
+        + `${liste.map((o) => `"${o.turm}" um ${o.ueber} px`).join(', ')} breiter als sein `
+        + 'Knopf. Dann schiebt sich der Text des einen Bauwerks ueber die Marke des '
+        + 'naechsten, und zwei Zahlen nebeneinander gehoeren nicht mehr sichtbar zu dem, '
+        + 'was sie meinen.');
+    }
+    // **Die Bauwahl muss WIEDER ZU sein, sonst misst der naechste Zustand
+    //   diesen hier.** `i-close` schliesst den Pruefsteg, nicht die Wahl -
+    // die haengt an `buildAt`, und das raeumt die Escape-Taste weg
+    // (`src/core/input.ts`). Der erste Entwurf hat das uebersehen, und der
+    // Lauf meldete es sofort: `welle` sprang von 15,5 auf 24,2 % und trug
+    // `#pick 8,7` mit sich - der Zustand danach hatte die Wahl noch offen.
+    await a.keyboard.press('Escape');
+    await a.waitForTimeout(250);
+    const offen = await a.evaluate(() => !document.getElementById('pick').hidden);
+    if (offen) {
+      befunde.push('Die Bauwahl laesst sich mit Escape nicht schliessen. Damit misst '
+        + 'jeder folgende Zustand des Audits sie mit - genau das hat den Zustand '
+        + '"welle" in v298 von 15,5 auf 24,2 % gehoben.');
+    }
+  }
 }
 
 await a.evaluate(() => document.getElementById('b-wave')?.click());

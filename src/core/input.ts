@@ -390,7 +390,20 @@ export function bindInput(canvas: HTMLCanvasElement, s: GameState, r: Renderer):
 
     if (ev.key === ' ') { ev.preventDefault(); s.startWave(); }
     if (ev.key === 'p' || ev.key === 'P') s.paused = !s.paused;
-    if (ev.key === 'Escape') { s.auswahlSchliessen(); s.aiming = null; }
+    // **Escape schliesst, was offen ist - und `buildAt` gehoert seit v298
+    //   dazu.**
+    //
+    // `auswahlSchliessen` raeumt Turmauswahl, Bauwahl-Sorte, Erklaerung und
+    // Gegnerauskunft weg, aber nicht die STELLE, an der gebaut werden soll -
+    // und an der haengt die Bauwahl (`syncPick`). Am Schreibtisch blieb sie
+    // damit offen, gleich wie oft man Escape drueckt; auf dem Telefon
+    // schliesst sie ein Tipp auf Unbebaubares, dort faellt es nicht auf.
+    //
+    // Gefunden hat es kein Blick, sondern das UX-Audit: der neue Zustand
+    // "vierter Turm derselben Art" (E12) liess die Wahl offen, und der
+    // Zustand DANACH sprang von 15,5 auf 24,2 % Belegung, weil er sie
+    // mitmass. Hier steht die Ursache, dort steht die Zusage.
+    if (ev.key === 'Escape') { s.auswahlSchliessen(); s.buildAt = null; s.aiming = null; }
     if (ev.key === 'o' || ev.key === 'O') r.toggleOverview();
     for (const id of ABILITY_ORDER) {
       if (ev.key.toLowerCase() === ABILITIES[id].key) s.chooseAbility(id);

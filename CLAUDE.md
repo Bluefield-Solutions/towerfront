@@ -501,6 +501,11 @@ npm run sim -- --lauf  nur der Lauf und seine Abschnittswahl - gemessen 104 s
                     Spreizung zwischen den Auflagen (v305 gemessen 142,4) und
                     die Zahl der Wahlen sind dieselben Fehler wie im vollen
                     Lauf. Derselbe Grund wie bei `--faehigkeiten`.
+                    `--steigung=a,b,c` faehrt den Lauf je Wert einmal durch
+                    und legt die Kristallverluste nebeneinander (Regel 9),
+                    `--stile` dazu ueber alle drei Bots: ein Wert, der nur
+                    fuer EINEN Bot traegt, ist keine Einstellung, sondern ein
+                    Zufall.
 npm run c18         die C18-Frage allein: ist die erste Karte ohne
                     Verbesserungen zu gewinnen? Zwei Sekunden statt zwei
                     Minuten - der Rauchtest misst dasselbe, braucht dafür
@@ -683,6 +688,21 @@ tools/         Torkette, Bildabnahme, Schleifenwerkzeug
 art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
+
+**Ein Lauf hat zwei Kurven (v309, N1K).** Die eine laeuft INNERHALB eines
+Abschnitts (ruhiger Anfang, steiles Ende - `hpScale`, geeicht an EINER Karte
+mit fuenfzehn Wellen), die andere UEBER die Abschnitte. Bis v308 sollte eine
+beide erledigen: `hpScale` ueber sechzig Wellen gestreckt, gemessen **0/0/0/6**
+Kristall - drei Spaziergaenge und ein Abschnitt, der alles trug. Jetzt behaelt
+jeder Abschnitt seine eigene Kurve und der Lauf legt einen Faktor darueber
+(`laufFaktor`); bei Abschnitt 0 ist er 1, also rechnet eine einzelne Karte wie
+vorher. **Der Wert ist gemessen und ein Kompromiss:** 1,6 sieht am besten aus
+und traegt genau EINEN Stil (Breite und Sparsam verlieren dort je zwei
+Abschnitte) - eine Nadel, keine Flaeche. Gesetzt ist **1,3**, der niedrigste
+Wert, bei dem der Lauf jeden Stil etwas kostet. Nullprobe: bei 1,0 gewinnen
+alle drei Stile alles. **Daraus der neue Punkt N1G:** Gold und Beute kaufen
+Tuerme, die Turmzahl ist begrenzt, also kauft diese Achse nach dem Ausbau
+nichts mehr - ueber 15 Wellen faellt das nicht auf, ueber 60 entscheidet es.
 
 **Der Lauf zieht Karten - und N1K war ein Messfehler (v308).** Bis v307 fuhr
 `laufMessen` einen Bot OHNE Deck durch sechzig Wellen und mass daran eine
@@ -871,7 +891,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v308. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v309. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

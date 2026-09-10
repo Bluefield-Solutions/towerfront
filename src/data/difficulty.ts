@@ -90,6 +90,61 @@ function smoothstep(a: number, b: number, x: number): number {
   return t * t * (3 - 2 * t);
 }
 
+/** **Wie hart ein Abschnitt gegenueber dem ersten ist** (v309, N1K).
+ *
+ *  Ein Lauf hat zwei Kurven, und bis v308 wurde versucht, beide mit einer zu
+ *  erledigen: die eine laeuft INNERHALB eines Abschnitts (ruhiger Anfang,
+ *  steiles Ende - das ist `hpScale`, und sie ist an EINER Karte mit fuenfzehn
+ *  Wellen geeicht), die andere UEBER die Abschnitte hinweg.
+ *
+ *  **Der erste Versuch streckte `hpScale` ueber alle sechzig Wellen** (v302).
+ *  Das Ergebnis war gemessen 0 / 0 / 0 / 6 Kristall Verlust: die ersten drei
+ *  Abschnitte lagen im flachen Teil und kosteten nichts, der vierte trug
+ *  alles. Ein Lauf, dessen erste Abschnitte nichts kosten, faengt erst in
+ *  seiner zweiten Haelfte an.
+ *
+ *  Jetzt behaelt jeder Abschnitt seine EIGENE, geeichte Kurve und bekommt
+ *  einen Faktor darueber. Damit hat jeder Abschnitt seinen ruhigen Anfang und
+ *  sein steiles Ende - und der spaetere ist ueberall haerter als der fruehere.
+ *
+ *  `abschnitt` ist 0-basiert; 0 gibt genau 1, also rechnet eine einzelne
+ *  Karte Zeichen fuer Zeichen wie vorher. */
+/** **Gemessen, nicht gewaehlt - und die Zahl ist ein Kompromiss, kein
+ *  Treffer** (v309, Regel 9: erst den Raum ansehen).
+ *
+ *  Ein voller Lauf je Wert und je Stil, mit Deck, Kristallverlust je
+ *  Abschnitt:
+ *
+ *  | Steigung | Meister | Breite | Sparsam |
+ *  |---|---|---|---|
+ *  | 1,0 | 4/4 · 0/0/0/0 | 4/4 · 0/15/5/15 | 4/4 · 0/0/0/0 |
+ *  | **1,3** | **4/4 · 0/0/7/11** | **3/4 · 0/23/23/42** | **4/4 · 0/4/12/19** |
+ *  | 1,4 | 4/4 · 0/0/11/20 | 3/4 · 0/19/36/42 | 4/4 · 0/13/27/27 |
+ *  | 1,6 | 4/4 · 0/5/26/34 | 2/4 | 2/4 |
+ *  | 1,7 | 3/4 | - | - |
+ *  | 2,0 | 2/4 | - | - |
+ *
+ *  **1,6 sieht am besten aus und ist eine Nadel:** es traegt genau EINEN
+ *  Stil. Bei 1,7 verliert schon der Meister einen Abschnitt, bei 1,6
+ *  verlieren die anderen beiden je zwei. Ein Wert, der nur fuer einen Bot
+ *  gilt, ist keine Einstellung, sondern ein Zufall (dieselbe Lehre wie v210:
+ *  eine Nadel, keine Flaeche).
+ *
+ *  **1,3 ist der niedrigste Wert, bei dem der Lauf jeden Stil etwas kostet**
+ *  und jeder Stil alle sechzig Wellen faehrt. Breite faellt dort im LETZTEN
+ *  Abschnitt - das ist eine Niederlage am Ende, kein Zusammenbruch.
+ *
+ *  **Die Nullprobe sagt, dass die Kurve die Ursache ist** (Regel 13): bei 1,0
+ *  gewinnen alle drei Stile alle vier Abschnitte. Breite bricht also an
+ *  DIESER Kurve, nicht an sich selbst - und warum, steht als eigener Punkt im
+ *  Verzeichnis: Gold und Beute kaufen Tuerme, die Turmzahl ist gedeckelt, und
+ *  ueber sechzig Wellen kauft diese Achse damit irgendwann nichts mehr. */
+export const LAUF_STEIGUNG = 1.3;
+
+export function laufFaktor(abschnitt: number, steigung = LAUF_STEIGUNG): number {
+  return steigung ** Math.max(0, abschnitt);
+}
+
 /** Lebenspunktfaktor der Welle mit dem Index i (0-basiert).
  *  `mapMul` ist der Ausgleich der Karte - siehe GameMap.balance. */
 export function hpScale(d: DifficultyDef, i: number, waveCount: number, mapMul = 1): number {

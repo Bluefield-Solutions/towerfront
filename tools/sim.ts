@@ -6,7 +6,10 @@
 import { GameState } from '../src/game/state';
 import { ZIELWAHL_ORDNUNG, type Zielwahl, type Tower } from '../src/game/types';
 
-import { DIFFICULTIES, DIFFICULTY_ORDER, hpScale, type DifficultyId } from '../src/data/difficulty';
+import {
+  DIFFICULTIES, DIFFICULTY_ORDER, hpScale, laufFaktor, LAUF_STEIGUNG,
+  type DifficultyId,
+} from '../src/data/difficulty';
 import {
   laufStarten, abschnittGeschafft, laufendeKarte, istLaufZuEnde, wellenDesLaufs,
   wellenDesAbschnitts, abschnittsWahl, abschnittWaehlen, WAHLARTEN, erfahrungFuer,
@@ -975,7 +978,6 @@ function wahlNutzen(r: Result): number {
 
 function abschnittswahlMessen(): void {
   console.log('\nDie Abschnittswahl (S-N1-03):');
-  const gesamt = wellenDesLaufs(laufStarten('normal', AUSSAATEN[0]));
   const bester = new Map<string, number>();
   for (const a of WAHLARTEN) bester.set(a.id, 0);
   const spreizungen: number[] = [];
@@ -998,7 +1000,7 @@ function abschnittswahlMessen(): void {
     const werte: { art: string; nutzen: number; r: Result }[] = [];
     for (const art of WAHLARTEN) {
       const r = play(mixedPlanBase, () => 0, MEISTER, 'normal', karte, {
-        seed: l.saat, laufVersatz: l.welleGesamt, laufWellen: gesamt,
+        seed: l.saat, laufAbschnitt: l.abschnitt,
         druck: art.druck, beute: art.beute,
       });
       werte.push({ art: art.id, nutzen: wahlNutzen(r), r });
@@ -1064,6 +1066,19 @@ function erfahrungMessen(): void {
   }
   const gewonnen = erfahrungFuer(ganz, true);
 
+  // **Der Wellenzaehler zaehlt wirklich durch** (S-N1-01, neu geprueft in
+  // v309). Bis v308 hing die Lebenskurve daran und der Fehler waere in der
+  // Rampe aufgefallen; seit die Kurve am ABSCHNITT haengt, traegt der Zaehler
+  // nur noch die Erfahrung und die Laenge - und haette still falsch sein
+  // koennen. Ein Wert, den kein Tor mehr haelt, ist ein Wert ohne Zusage
+  // (K1).
+  if (ganz.welleGesamt !== wellenDesLaufs(ganz)) {
+    errors.push(`Der Lauf hat ${ganz.abschnitte.length} Abschnitte mit zusammen `
+      + `${wellenDesLaufs(ganz)} Wellen, sein Zaehler steht aber auf `
+      + `${ganz.welleGesamt}. Dann zaehlt er nicht durch, und die Erfahrung eines `
+      + 'Laufs haengt an einer Zahl, die es nicht gibt.');
+  }
+
   // Und ein Lauf, der im zweiten Abschnitt in Welle 9 endet.
   let kurz = laufStarten('normal', AUSSAATEN[0]);
   kurz = abschnittGeschafft(kurz, 0, 0, wellenDesAbschnitts(laufendeKarte(kurz) ?? ''));
@@ -1119,8 +1134,9 @@ function erfahrungMessen(): void {
   void vorher;
 }
 
-function laufMessen(): void {
-  console.log('\nDer Lauf ueber alle Abschnitte (S-N1-01):');
+function laufMessen(steigung = LAUF_STEIGUNG, bot: Bot = MEISTER): void {
+  console.log(`\nDer Lauf ueber alle Abschnitte (S-N1-01), Steigung `
+    + `${steigung.toFixed(2)}, Stil ${bot.name}:`);
   let lauf = laufStarten('normal', AUSSAATEN[0]);
   const gesamt = wellenDesLaufs(lauf);
   const rampen: number[] = [];
@@ -1136,13 +1152,16 @@ function laufMessen(): void {
     const mm = MAPS.find((m) => m.id === karte)!;
     // Die Rampe der ERSTEN Welle dieses Abschnitts - gerechnet, nicht
     // erspielt.
-    rampen.push(hpScale(DIFFICULTIES.normal, lauf.welleGesamt, gesamt, mm.balance.hpMul));
-    const r = play(mixedPlanBase, () => 0, MEISTER, 'normal', karte, {
-      seed: lauf.saat, laufVersatz: lauf.welleGesamt, laufWellen: gesamt,
+    // Die Rampe der ERSTEN Welle dieses Abschnitts, nach dem Modell von v309:
+    // die geeichte Kurve der Karte, mal dem Faktor des Abschnitts.
+    rampen.push(hpScale(DIFFICULTIES.normal, 0, mm.waves.length, mm.balance.hpMul)
+      * laufFaktor(lauf.abschnitt, steigung));
+    const r = play(bot.plan ?? mixedPlanBase, () => 0, bot, 'normal', karte, {
+      seed: lauf.saat, laufAbschnitt: lauf.abschnitt, laufSteigung: steigung,
       // **Mit Deck** (v308, N1K). Bis v307 fuhr dieser Lauf ohne - und die
       // Rampe von 14,89 war damit gegen einen Spieler gemessen, der in
       // Welle 46 fuenfundvierzig Karten genommen haette.
-      zugStil: MEISTER.name,
+      zugStil: bot.name,
     });
     karten += r.gezogeneKarten;
     dauer += r.dauer;
@@ -1217,13 +1236,13 @@ function laufMessen(): void {
   // demselben Versatz, einmal OHNE Karten. Ohne sie bezeugt der Lauf oben,
   // dass ein Deck getragen hat, ohne es je geprueft zu haben.
   const letzte = lauf.abschnitte[lauf.abschnitte.length - 1];
-  const versatzLetzte = gesamt - wellenDesAbschnitts(letzte);
   const ohneDeck = play(mixedPlanBase, () => 0, MEISTER, 'normal', letzte, {
-    seed: lauf.saat, laufVersatz: versatzLetzte, laufWellen: gesamt,
+    seed: lauf.saat, laufAbschnitt: lauf.abschnitte.length - 1,
+    laufSteigung: steigung,
   });
   const mitDeck = play(mixedPlanBase, () => 0, MEISTER, 'normal', letzte, {
-    seed: lauf.saat, laufVersatz: versatzLetzte, laufWellen: gesamt,
-    zugStil: MEISTER.name,
+    seed: lauf.saat, laufAbschnitt: lauf.abschnitte.length - 1,
+    laufSteigung: steigung, zugStil: MEISTER.name,
   });
   console.log(`  Letzter Abschnitt (${letzte}) ohne Deck: `
     + `${ohneDeck.won ? 'gewonnen' : `verloren in Welle ${ohneDeck.wave}`}, `
@@ -1256,6 +1275,18 @@ function laufMessen(): void {
   const makellos = verluste.filter((v) => v === 0).length;
   console.log(`  Kristallverlust je Abschnitt: ${verluste.join(' / ')} `
     + `(${makellos} von ${verluste.length} ohne einen Kratzer, Rampe ${spanne.toFixed(0)}-fach).`);
+  // **Was diese Runde nebenbei gemessen hat und was noch offen ist** (N1G).
+  //
+  // Der Stil `Breite` bevorzugt Gold und Beute - und ist der einzige, der an
+  // der Laufkurve bricht: bei Steigung 1,0 gewinnt er alle vier Abschnitte,
+  // bei 1,3 drei, bei 1,6 zwei. Die Ursache steht im Modell: Gold kauft
+  // Tuerme, die Turmzahl ist gedeckelt, also kauft diese Achse nach dem
+  // Ausbau des Feldes nichts mehr. Ueber fuenfzehn Wellen faellt das nicht
+  // auf, ueber sechzig entscheidet es - und vier der zwoelf Grundkarten
+  // liegen darauf.
+  console.log('  OFFEN (N1-Gold): Gold und Beute kaufen Tuerme, und die Turmzahl ist '
+    + 'begrenzt - nach dem Ausbau kauft diese Achse nichts mehr. Gemessen: der Stil '
+    + 'Breite gewinnt bei Steigung 1,0 alle vier Abschnitte, bei 1,3 drei, bei 1,6 zwei.');
   if (makellos > 1 || abschnitte < lauf.abschnitte.length) {
     console.log(`  OFFEN (N1-Kurve): ${makellos} von ${lauf.abschnitte.length} `
       + 'Abschnitten enden mit vollem Kristall, und '
@@ -1563,10 +1594,13 @@ function play(
      *  Dieselbe Begruendung wie eine Zeile hoeher: eine Wirkung, die sich
      *  nicht abschalten laesst, ist nicht gemessen, sondern behauptet. */
     vielfalt?: number;
-    /** Wieviele Wellen des Laufs vor diesem Abschnitt liegen (S-N1-01). */
-    laufVersatz?: number;
-    /** Wieviele Wellen der ganze Lauf traegt. */
-    laufWellen?: number;
+    /** Der wievielte Abschnitt eines Laufs, 0-basiert (v309, N1K). Ohne
+     *  Angabe der erste - dann steht der Lauffaktor auf 1. */
+    laufAbschnitt?: number;
+    /** Wie stark ein Abschnitt gegenueber dem vorigen zulegt. Ohne Angabe der
+     *  Wert des Spiels; eine Wirkung, die sich nicht abschalten laesst, ist
+     *  nicht gemessen, sondern behauptet (Regel 13). */
+    laufSteigung?: number;
     /** Die Auflage der Abschnittswahl (S-N1-03): Faktor auf die
      *  Lebenspunkte und Faktor auf alles Gold. Ohne Angabe je 1 - eine
      *  Wirkung, die sich nicht abschalten laesst, ist nicht gemessen,
@@ -1596,8 +1630,8 @@ function play(
   const s = new GameState(mapId);
   if (opts.zuschlag !== undefined) s.wiederholungZuschlag = opts.zuschlag;
   if (opts.vielfalt !== undefined) s.vielfaltZuschlag = opts.vielfalt;
-  if (opts.laufVersatz !== undefined) s.laufVersatz = opts.laufVersatz;
-  if (opts.laufWellen !== undefined) s.laufWellen = opts.laufWellen;
+  if (opts.laufAbschnitt !== undefined) s.laufAbschnitt = opts.laufAbschnitt;
+  if (opts.laufSteigung !== undefined) s.laufSteigung = opts.laufSteigung;
   if (opts.druck !== undefined) s.laufDruck = opts.druck;
   if (opts.beute !== undefined) s.laufBeute = opts.beute;
   s.reset(opts.seed ?? AUSSAATEN[0], difficulty, mapId,
@@ -2709,6 +2743,23 @@ const mixedPlan = mixedPlanBase;
   }
 
   if (NUR_LAUF) {
+    // **Vor dem Justieren den Raum ansehen** (Regel 9). `--steigung a,b,c`
+    // faehrt den Lauf je Wert einmal durch und legt die Kristallverluste
+    // nebeneinander; blind nachzujustieren hiesse, durch ein Schluesselloch
+    // zu schauen.
+    const sweep = process.argv.find((a) => a.startsWith('--steigung='));
+    // **Und dieselbe Steigung ueber alle drei Stile** (`--stile`). Ein Wert,
+    // der nur fuer EINEN Bot traegt, ist keine Einstellung, sondern ein
+    // Zufall - dieselbe Ueberlegung wie bei jeder anderen Eichung dieses
+    // Verzeichnisses.
+    const ueberStile = process.argv.includes('--stile');
+    if (sweep) {
+      for (const w of sweep.slice('--steigung='.length).split(',').map(Number)) {
+        if (ueberStile) for (const b of BOTS) laufMessen(w, b);
+        else laufMessen(w);
+      }
+      process.exit(errors.length ? 1 : 0);
+    }
     laufMessen();
     abschnittswahlMessen();
     kartenzugMessen(GRUNDSTAPEL, 'Grundstapel');

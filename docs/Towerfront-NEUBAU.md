@@ -1,6 +1,38 @@
 # Towerfront — der Neubau
 
-Stand: v302 · beschlossen am 09.09.2026
+Stand: v309 · beschlossen am 09.09.2026
+
+**Nachgesehen in v309 — Paket N1 steht bis auf den Rückbau, und zwei seiner
+Zahlen sind unterwegs zweimal korrigiert worden.**
+
+| Story | gebaut | was gemessen dabei herauskam |
+|---|---|---|
+| S-N1-01 · der Lauf | v302 | Lauf über vier Abschnitte, in `sim` fahrbar, 1316 s |
+| S-N1-02 · Kartenzug je Welle | v303 | zwölf Karten, 12 von 12 werden genommen, 0 von jedem immer |
+| S-N1-03 · Abschnittswahl | v305 | Ort + Auflage, Spreizung **142,4**, keine Auflage zweimal vorn |
+| S-N1-04 · Erfahrung | v306 | 1300 gewonnen gegen 340 verloren; Stapel 12 → 18 |
+| **S-N1-05 · Rückbau** | offen | Umfang gezählt: 22 Proben an Stufen, 16 an Zweigen, 13 an Graden, 6 an Sternen |
+
+**Die zwei Korrekturen sind die eigentliche Auskunft dieses Pakets**, und
+beide gehen auf dieselbe Regel zurück (Regel 12, die Messstelle):
+
+1. **v308:** die Rampe von 14,89 („drei Spaziergänge und eine Wand") war
+   gegen einen Bot **ohne Deck** gemessen. Mit Deck gewinnt derselbe Lauf alle
+   vier Abschnitte. Die Kurve war nie kaputt — die Messung war es.
+2. **v309:** die Form ist trotzdem falsch gewesen, nur anders. Eine Kurve über
+   sechzig Wellen macht die ersten Abschnitte folgenlos. Jetzt behält jeder
+   Abschnitt seine geeichte Kurve und der Lauf legt einen **Faktor** darüber.
+
+**Und der Faktor lässt sich nicht auf einen Wert eichen**, das ist der Befund,
+der offen bleibt: 1,6 trägt genau einen Spielstil, bei 1,6 verlieren die
+anderen zwei je zwei Abschnitte. Gesetzt ist 1,3. Die Ursache steht als **N1G**
+im Verzeichnis: Gold und Beute kaufen Türme, die Turmzahl ist begrenzt, also
+kauft diese Achse nach dem Ausbau nichts mehr — über fünfzehn Wellen fällt das
+nicht auf, über sechzig entscheidet es.
+
+**Was daraus für die Reihenfolge folgt:** der Lauf geht erst dann in die
+Oberfläche, wenn er für jeden Spielstil ein Lauf ist und nicht für zwei ein
+Spaziergang und für einen eine Wand.
 
 **Nachgesehen in v302 — N3 ist zu, und N1 hat angefangen zu antworten.**
 

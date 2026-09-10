@@ -842,14 +842,32 @@ export const PROBEN = [
     // aus einem Lauf vier Partien hintereinander - jeder Abschnitt faengt
     // wieder am flachen Anfang der Lebenskurve an.
     //
-    // Gemessen wird es an der RAMPE je Abschnitt, nicht an einem Ergebnis:
-    // `hpScale` ist eine Funktion, und diese Frage braucht die
-    // Wegabhaengigkeit einer Partie nicht. Ohne den Zaehler steht die Rampe
-    // in jedem Abschnitt bei rund 1,0 statt bei 1,00 / 1,12 / 1,82 / 15,17.
+    // **Neu angesetzt in v309, und der Grund ist die Lehre selbst.** Bis v308
+    // hing die Lebenskurve am Wellenzaehler, und ein kaputter Zaehler fiel in
+    // der Rampe auf. Seit die Kurve am ABSCHNITT haengt (N1K), traegt der
+    // Zaehler nur noch die Erfahrung und die Laenge - und haette still falsch
+    // sein koennen, ohne dass ein Tor ein Wort sagt. Ein Wert, den kein Tor
+    // mehr haelt, ist ein Wert ohne Zusage (K1); `erfahrungMessen` haelt ihn
+    // seitdem gegen die Summe der Abschnitte.
     name: 'Der Lauf zaehlt die Wellen nicht durch',
     datei: 'src/game/lauf.ts',
     suche: 'welleGesamt: l.welleGesamt + gefahreneWellen,',
     ersatz: 'welleGesamt: 0,',
+    tor: 'sim',
+    meldet: 'zaehlt er nicht durch',
+  },
+  {
+    // **Der Lauf legt keinen Faktor mehr ueber die Abschnitte** (v309, N1K).
+    //
+    // Das ist die Zusage, die seit v309 an die Stelle des gestreckten
+    // Wellenzaehlers getreten ist: jeder Abschnitt behaelt seine geeichte
+    // Kurve, und der Lauf macht den spaeteren haerter als den frueheren.
+    // Faellt der Faktor weg, ist ein Lauf wieder vier gleich schwere Partien
+    // hintereinander - gemessen 0 / 0 / 0 / 0 Kristall Verlust.
+    name: 'Der Lauf macht spaetere Abschnitte nicht haerter',
+    datei: 'src/game/state.ts',
+    suche: '      * laufFaktor(this.laufAbschnitt, this.laufSteigung);',
+    ersatz: '      * 1;',
     tor: 'sim',
     meldet: 'steigt im Lauf nicht durch',
   },

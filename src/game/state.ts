@@ -12,7 +12,8 @@ import {
 import { EARLY_BONUS_MAX, EARLY_BONUS_WINDOW, EARLY_RISIKO_HUB } from '../data/waves';
 import { VERBUND_MAX, VERBUND_STUFE, VERBUND_UMKREIS } from './verbund';
 import {
-  DIFFICULTIES, hpScale, type DifficultyDef, type DifficultyId,
+  DIFFICULTIES, hpScale, laufFaktor, LAUF_STEIGUNG,
+  type DifficultyDef, type DifficultyId,
 } from '../data/difficulty';
 import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
 import {
@@ -1457,8 +1458,19 @@ export class GameState {
     // dasselbe wie vorher, und die ganze an EINZELNEN Karten geeichte
     // Balance bleibt unberuehrt. Mit Lauf faengt der zweite Abschnitt dort
     // an, wo der erste aufgehoert hat, statt am flachen Anfang der Kurve.
-    const ramp = hpScale(this.diff, this.laufVersatz + welle,
-      this.laufWellen || this.waves.length, this.map.balance.hpMul);
+    // **Zwei Kurven, nicht eine gestreckte** (v309, N1K).
+    //
+    // `hpScale` laeuft INNERHALB dieses Abschnitts und bleibt damit genau die
+    // Kurve, gegen die C18, die Spannungsratsche und jede Kartenzahl geeicht
+    // sind. Der Lauf legt einen FAKTOR darueber, einen je Abschnitt.
+    //
+    // Bis v308 wurde stattdessen `hpScale` ueber alle sechzig Wellen
+    // gestreckt. Gemessen kostete das 0 / 0 / 0 / 6 Kristall - drei
+    // Spaziergaenge und ein Abschnitt, der alles trug. Der Wellenzaehler war
+    // nicht falsch, aber er ist der Zaehler eines LAUFS und nicht der einer
+    // Kurve; er traegt seitdem die Erfahrung (S-N1-04) und die Laenge.
+    const ramp = hpScale(this.diff, welle, this.waves.length, this.map.balance.hpMul)
+      * laufFaktor(this.laufAbschnitt, this.laufSteigung);
     // **Und die Auflage des Abschnitts liegt darueber** (v305, S-N1-03).
     //
     // Sie ist ein Faktor und kein zweiter Kurvenparameter: die Wahl aendert,
@@ -1467,12 +1479,14 @@ export class GameState {
     return Math.round(ENEMIES[id].hp * hpMul * ramp * this.laufDruck);
   }
 
-  /** Wieviele Wellen dieses Laufs VOR diesem Abschnitt schon gefahren sind.
-   *  0 heisst: einzelne Karte, kein Lauf (S-N1-01). */
-  laufVersatz = 0;
-  /** Wieviele Wellen der ganze Lauf traegt - der Nenner der Lebenskurve.
-   *  0 heisst: einzelne Karte, dann gilt die Wellenzahl dieser Karte. */
-  laufWellen = 0;
+  /** **Der wievielte Abschnitt eines Laufs das hier ist**, 0-basiert
+   *  (v309, N1K). 0 heisst: einzelne Karte oder erster Abschnitt - dann steht
+   *  der Faktor auf 1 und alles rechnet wie ohne Lauf. */
+  laufAbschnitt = 0;
+  /** Wie stark ein Abschnitt gegenueber dem vorigen zulegt. Steht auf dem
+   *  Wert aus `difficulty.ts`; die Werkzeuge stellen ihn um, damit sich die
+   *  Wirkung abschalten laesst (Regel 13). */
+  laufSteigung = LAUF_STEIGUNG;
   /** Faktor auf die Lebenspunkte, aus der Abschnittswahl (S-N1-03). 1 heisst:
    *  keine Auflage - einzelne Karte oder Abschnitt ohne Wahl. */
   laufDruck = 1;

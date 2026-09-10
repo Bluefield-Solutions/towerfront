@@ -1,6 +1,21 @@
 # Towerfront — Art Bible
 
-Stand: v302 · 10.09.2026
+Stand: v309 · 10.09.2026
+
+**Nachgesehen in v309:** am Stil unverändert, am Vorrat auch — seit v288 ist
+kein Bild dazugekommen und kein Backwert geändert worden. Von den drei offenen
+Bestellungen ist eine erledigt (`33_bannturm.png` ist mit v295 in den Vorrat
+gegangen); **offen sind zwei**, und `npm run bildtor` nennt sie in jedem Lauf:
+`31_foerderer.png` (8d.2) und `32_werft.png` (8d.3). Beide Prompts sind in
+v304 richtiggestellt worden — sie trugen den Kartenblock („16:9, FULL BLEED,
+2400 × 1350") an einer Bestellung für ein 512 × 512-Sprite; dafür gibt es
+seitdem Abschnitt **1c**.
+
+**Zwei neue Menübilder sind ohne einen einzigen neuen Bildpunkt entstanden**
+(v305 `menu-wahl`, v306 `menu-stapel`): beide sind gezeichnet, in derselben
+Formensprache wie die Landkarte, und beide stehen in der Torabnahme. Das ist
+der Grund, aus dem das Menü seit v42 auf der Leinwand liegt — was gezeichnet
+ist, sehe ich in der Bildabnahme.
 
 **Nachgesehen in v302:** am Stil unveraendert, am Vorrat auch - seit v288 ist
 kein Bild dazugekommen und kein Backwert geaendert worden. Die drei offenen

@@ -667,12 +667,25 @@ export const PROBEN = [
     // jetzt jede offene Zeile gegen ihre Schliessbedingung - und diese Probe
     // stellt genau den Fall her: der Bannturm ist da, C3 steht weiter offen.
     name: 'Zugefallener Punkt steht weiter offen',
-    datei: 'src/data/towers.ts',
-    // Der Eingriff greift in towers.ts, der Fall steht im Verzeichnis: die
-    // Probe faellt, sobald C3 eine andere Schliessbedingung bekommt.
-    haengtAn: ['docs/Towerfront-BACKLOG.md'],
-    suche: "name: 'Bogenturm'",
-    ersatz: "name: 'Bannturm'",
+    datei: 'docs/Towerfront-BACKLOG.md',
+    // **Und genau das ist ihr in v313 passiert** (gefunden vom ersten
+    // Probenlauf, der ueberhaupt rot werden konnte). Sie machte aus dem
+    // Bogenturm einen Bannturm - damit war C3 erfuellt, waehrend es offen
+    // dastand. C3 ist in v295 zugefallen, und seitdem bewies sie nichts:
+    // kein offener Punkt fragte mehr nach dem Bannturm. Der Kommentar
+    // darueber sagte den Verfall sogar voraus ("faellt, sobald C3 eine
+    // andere Schliessbedingung bekommt") - er hat nur nicht damit gerechnet,
+    // dass C3 selbst verschwindet.
+    //
+    // Jetzt greift sie an der BEDINGUNG statt an ihrem Gegenstand: die erste
+    // `text`-Bedingung der Offen-Tabelle wird durch eine ersetzt, die der
+    // heutige Baum erfuellt. Welcher Punkt das gerade ist, spielt keine
+    // Rolle - die Probe ueberlebt jeden, der zufaellt. Dieselbe Bewegung wie
+    // bei "Story ohne Schliessbedingung" in v269, eine Tabelle tiefer.
+    regel: /(\*\*Schliesst, wenn:\*\* `)text [^`]+(`)/,
+    // Der Bogenturm steht seit der ersten Fassung in `towers.ts` und ist der
+    // Turm, den das Spiel am wenigsten verlieren kann.
+    ersatz: '$1text src/data/towers.ts "Bogenturm" >= 1$2',
     tor: 'doku',
     meldet: 'ist ERFUELLT',
   },
@@ -1610,10 +1623,28 @@ export const PROBEN = [
     // "Haengt an" waere S-N3-04 weiter gewaehlt worden und stuende nirgends.
     name: 'Kette liest die Abhaengigkeit nicht',
     datei: 'docs/Towerfront-STORIES.md',
-    suche: '**Paket:** N3 · **Aufwand:** M · **Hängt an:** S-N3-01',
-    ersatz: '**Paket:** N3 · **Aufwand:** M · **Hängt an:** S-N3-02',
+    // **Auch diese Probe hat in v313 ihren Gegenstand verloren.** Sie haengte
+    // S-N3-04 an S-N3-02 - und S-N3-04 ist seit v290 zu. Eine zugefallene
+    // Story wird gar nicht erst auf ihre Abhaengigkeit angesehen
+    // (`zustandVon.get(a.id) !== 'OFFEN'` in `naechste.mjs`), also blieb der
+    // Eingriff folgenlos. Er kam an und bewirkte nichts: die stillste Art,
+    // wie eine Probe aufhoert zu beweisen.
+    //
+    // Gegriffen wird jetzt an **S-N7-01**, der letzten Story des Katalogs,
+    // und gewartet wird auf **S-N4-08** - die steht als HANDARBEIT da und
+    // wird deshalb nie "zu" (`blick:`, Regel 8). Damit haengt die Probe an
+    // keinem Fortschritt mehr: sie gilt, solange es die letzte Story gibt.
+    //
+    // Als Regel statt als Suchtext, damit ein geaendertes `Aufwand:` sie
+    // nicht mitnimmt.
+    regel: /(### S-N7-01[^\n]*\n\n\*\*Paket:\*\*[^\n]*\*\*Hängt an:\*\* )S-N\d-\d\d/,
+    ersatz: '$1S-N4-08',
     tor: 'naechste',
-    meldet: 'S-N3-04 wartet auf S-N3-02',
+    // Die Meldung nennt beide Namen. Ein blosses "wartet auf" waere KEINE
+    // Probe: `naechste` nennt heute fuenf solcher Zeilen ohne jeden Eingriff
+    // (S-N4-02, S-N4-03, S-N4-06, S-N6-02, S-N6-03), und eine Meldung, die
+    // ohnehin kommt, beweist nichts (Regel 13).
+    meldet: 'S-N7-01 wartet auf S-N4-08',
   },
   {
     // **Der Umlaut im ausgelieferten HTML-Kommentar** (v288).

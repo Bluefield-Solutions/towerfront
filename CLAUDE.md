@@ -292,6 +292,13 @@ npm run uxaudit     nimmt das GEBAUTE Spiel in den Zustaenden auf, die man
                     Welle bei denselben 10,4 %. Es war `#b-wave` mit 3,0
                     gegen 4,4.
 npm run beruehrt    welche Tore an dem haengen, was gerade geaendert ist -
+                    **seit v292 gilt fuer `autarkietor` eine Regel statt
+                    einer Liste**: was unter `src/` liegt oder `index.html`
+                    heisst, geht ins Buendel und beruehrt es. Vorher standen
+                    dort zwei Dateien, und zweimal in drei Runden ist genau
+                    deshalb der Runner rot geworden - einmal an einem
+                    HTML-Kommentar, einmal an einer `blurb`-Zeile in
+                    `towers.ts`.
                     gelesen aus den 346 Gegenproben, die ohnehin `datei` und
                     `tor` tragen, nicht aus einer zweiten Liste (Regel 15).
                     Dazu die Tore, die am gebauten BUENDEL messen und
@@ -770,7 +777,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v291. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v292. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

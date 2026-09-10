@@ -36,6 +36,20 @@ const AM_BUENDEL = {
   'src/style.css': ['autarkietor', 'browsertor', 'uxaudittor', 'streifentor'],
 };
 
+/** **Was ins Buendel geht, beruehrt `autarkietor`** (v292).
+ *
+ *  Die Liste oben nannte zwei Dateien, und das war zu kurz: der Waechter
+ *  prueft den ausgelieferten TEXT, und ausgeliefert wird alles unter `src/`.
+ *  Zweimal in drei Runden ist genau das rot geworden - einmal an einem
+ *  HTML-Kommentar (v286), einmal an einer `blurb`-Zeile in `towers.ts`
+ *  (v291). Beide Male stand `autarkietor` nicht in der Liste dieses
+ *  Werkzeugs, und beide Male habe ich es deshalb nicht gefahren.
+ *
+ *  Eine Regel statt einer Aufzaehlung: was unter `src/` liegt oder
+ *  `index.html` heisst, geht ins Buendel. Dann veraltet sie nicht, sobald
+ *  jemand eine Datei anlegt. */
+const insBuendel = (d) => d === 'index.html' || d.startsWith('src/');
+
 const geaendert = execSync(`git diff --name-only ${seit}`, { encoding: 'utf-8' })
   .split('\n').map((z) => z.trim()).filter(Boolean);
 const ungesichert = execSync('git status --porcelain', { encoding: 'utf-8' })
@@ -64,6 +78,7 @@ for (const d of alle) {
   for (const [muster, liste] of Object.entries(AM_BUENDEL)) {
     if (d === muster) for (const t of liste) merken(t, d);
   }
+  if (insBuendel(d)) merken('autarkietor', d);
 }
 
 if (!tore.size) {

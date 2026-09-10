@@ -57,11 +57,40 @@ if (!/\[hidden\][^{]*\{[^}]*display\s*:\s*none\s*!important/.test(html)) {
     'Moerser', 'Flaeche', 'Fuehler', 'Schwaermer', 'Tuerme', 'Faehigkeit',
     'zaehlt', 'naechste', 'Ueberspringen', 'Bauplaetze', 'Erloes', 'Waechter',
     'Spruenge', 'Buendelung', 'Scharfschuetze', 'ueber ', 'fuer ', 'koennen',
+    // **v292 nachgetragen, und die Lehre steht daneben.** Die Werft trug
+    // "ein Stueck des Kristalls" im `blurb` - also im TEXT, den der Spieler
+    // liest -, und das ging durch: das Wort stand nicht auf dieser Liste.
+    // Gefunden wurde die Zeile nur, weil im selben Satz "ueber" und "fuer"
+    // vorkamen.
+    //
+    // **Das ist eine Aufzaehlung und keine Regel, und sie bleibt eine.** Ein
+    // Muster ueber `ae|oe|ue` faengt "neue", "Feuer", "Steuer", "Bauer" und
+    // ein Dutzend weitere richtige Woerter - ein Waechter, der bei richtigem
+    // Deutsch anschlaegt, wird ueberlesen (dieselbe Lehre wie beim
+    // Doku-Waechter in v226). Also wird nachgetragen, was wirklich vorkommt,
+    // und die Meldung nennt seit v292 die Fundstelle, damit die naechste
+    // Luecke schneller zu schliessen ist.
+    'Stueck', 'waechst', 'Mass hinaus', 'zusaetzlich', 'moeglich', 'haelt ',
+    'gaebe', 'Groesse', 'Waehle', 'auswaehlen', 'Zufuhr', 'Werftgebaeude',
   ];
+  // **Mit Fundstelle, nicht nur mit Wort** (v292).
+  //
+  // Bis v291 stand hier "Ersatzschreibung statt Umlaut: ueber , fuer " - und
+  // dann sucht man. Zweimal in drei Runden hat genau diese Meldung eine
+  // Viertelstunde gekostet: einmal war es ein HTML-Kommentar, einmal eine
+  // `blurb`-Zeile. Der Waechter hat die Stelle in der Hand, also nennt er
+  // sie. Sechzig Zeichen drumherum reichen, um sie im Baum wiederzufinden.
   const found = suspicious.filter((w) => html.includes(w));
   if (found.length) {
+    const stellen = found.map((w) => {
+      const i = html.indexOf(w);
+      const um = html.slice(Math.max(0, i - 40), i + w.length + 20)
+        .replace(/\s+/g, ' ').trim();
+      return `"${w.trim()}" in ...${um}...`;
+    });
     problems.push(
-      `Ersatzschreibung statt Umlaut im ausgelieferten Text: ${found.join(', ')}`,
+      `Ersatzschreibung statt Umlaut im ausgelieferten Text:\n      `
+      + stellen.join('\n      '),
     );
   }
 }

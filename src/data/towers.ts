@@ -345,7 +345,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
    *  Fehlertoleranz, und das darf nicht der billigere Weg sein. */
   werft: {
     id: 'werft', footprint: FOOTPRINT, name: 'Werft', role: 'Kristall',
-    blurb: 'Schiesst nicht. Setzt nach jeder Welle ein Stueck des Kristalls zusammen.',
+    blurb: 'Schiesst nicht. Setzt nach jeder Welle ein Stück des Kristalls zusammen.',
     color: '#8FB8D8', accent: '#7FE7E0',
     attack: 'keiner', hitsAir: false, projectileSpeed: 0,
     base: { cost: 150, damage: 0, cooldown: 0 },
@@ -363,7 +363,7 @@ export const TOWERS: Record<TowerId, TowerDef> = {
       },
       {
         id: 'schmelze', name: 'Schmelze', color: '#F2C14E',
-        blurb: 'Weniger je Welle, dafuer waechst der Kristall ueber sein Mass hinaus.',
+        blurb: 'Weniger je Welle, dafür wächst der Kristall über sein Maß hinaus.',
         levels: [
           { cost: 130, damage: 0, cooldown: 0 },
           { cost: 200, damage: 0, cooldown: 0 },

@@ -1028,6 +1028,23 @@ export const PROBEN = [
     meldet: 'laufende Strom steht auf dem Zielgerät nicht im Bild',
   },
   {
+    // **Ersatzschreibung im ANGEZEIGTEN Text** (v292).
+    //
+    // Die Werft trug "ein Stueck des Kristalls" in ihrem `blurb` - also im
+    // Text, den der Spieler liest -, und die Verdaechtigenliste kannte das
+    // Wort nicht. Gefunden wurde die Zeile nur, weil im selben Satz "ueber"
+    // und "fuer" standen. Die Probe greift jetzt an genau diesem Wort.
+    //
+    // Die Probe zu v288 traf einen HTML-KOMMENTAR, diese den angezeigten
+    // Text: derselbe Waechter, zwei verschiedene Wege ins Buendel.
+    name: 'Ersatzschreibung im angezeigten Text',
+    datei: 'src/data/towers.ts',
+    suche: 'ein Stück des Kristalls zusammen.',
+    ersatz: 'ein Stueck des Kristalls zusammen.',
+    tor: 'autarkietor',
+    meldet: 'Ersatzschreibung statt Umlaut',
+  },
+  {
     // **Zwei Platzhalter sehen gleich aus** (v290).
     //
     // Solange ein einziges Bild fehlte, war das keine Frage. Seit v290 fehlen

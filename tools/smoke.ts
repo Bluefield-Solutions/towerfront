@@ -3728,6 +3728,85 @@ step('Einrasten', () => {
   }
 });
 
+// --- Die Vielfaltsbeute steht IM BILD (v301, S-N3-03).
+//
+// Die Abnahme der Story verlangt es woertlich: "Die Zahl steht im Bild, nicht
+// nur in der Bilanz." Der Zuschlag ist ein Faktor auf dieselbe Zahl - in einem
+// blossen `+3` waere er nicht zu erkennen, der Spieler saehe eine groessere
+// Zahl und wuesste nicht, warum. Angehaengt wird deshalb `×N`, die Zahl der
+// beteiligten Turmarten.
+//
+// **Geprueft wird es hier, weil kein Bild es fangen kann.** Die Marke lebt
+// 1,1 Sekunden im Augenblick eines Kills; keine der fuenfzehn Aufnahmen des
+// UX-Audits hat sie erwischt, und darauf zu warten waere ein Messplatz, der
+// auf einen Zufall wartet - genau die Verfallsart, die v219 viermal gekostet
+// hat. Der Fall wird deshalb GESTELLT.
+step('Vielfaltsbeute steht im Bild', () => {
+  const probe = new GameState();
+  probe.reset();
+
+  /** Einen Gegner setzen, ihn mit `arten` Turmarten toeten, den Text der
+   *  Goldzahl zurueckgeben. */
+  const toeten = (art: 'runner' | 'brute', arten: number): string => {
+    probe.floats.length = 0;
+    probe.enemies.length = 0;
+    const e = probe.spawnZumPruefen(art, 0);
+    if (!e) throw new Error('Kein Gegner gesetzt - die Probe misst nicht, was sie soll.');
+    e.arten = (1 << arten) - 1;   // die untersten `arten` Bits
+    e.hp = 1;
+    probe.trefferZumPruefen(e, 9999);
+    const f = probe.floats.find((t) => t.text.startsWith('+'));
+    return f ? f.text : '';
+  };
+  const nurZahl = (t: string) => Number(t.replace(/[^0-9]/g, ''));
+
+  // **Erstens: mit EINER Turmart steht keine Marke da.** Von Bauart - `arten`
+  // ist dann 1 und der Faktor genau 1 -, und deshalb ist es die Zusage, die
+  // am schaerfsten ist: eine Marke hier waere eine behauptete Belohnung.
+  for (const art of ['runner', 'brute'] as const) {
+    const t = toeten(art, 1);
+    if (!t.startsWith('+')) throw new Error(`Ein toter ${art} erzeugt keine Goldzahl.`);
+    if (t.includes('×')) {
+      throw new Error(`Mit EINER Turmart traegt ${art} trotzdem eine Vielfaltsmarke `
+        + `("${t}"). Dann behauptet das Bild eine Belohnung, die es nicht gibt.`);
+    }
+  }
+
+  // **Zweitens: wo die Beute wirklich steigt, steht die Marke.** Der Koloss
+  // traegt 7 Gold, dort landet der Zuschlag ab der zweiten Turmart.
+  const eine = toeten('brute', 1);
+  const zwei = toeten('brute', 2);
+  if (!zwei.includes('×2')) {
+    throw new Error(`Zwei Turmarten am Koloss bringen mehr Gold, aber keine Marke `
+      + `("${eine}" -> "${zwei}"). Die Beute steigt dann, ohne dass der Spieler `
+      + 'erfaehrt warum - und die Abnahme von S-N3-03 verlangt es ausdruecklich.');
+  }
+  if (nurZahl(zwei) <= nurZahl(eine)) {
+    throw new Error(`Die Marke steht am Koloss an einer Zahl, die sich gar nicht `
+      + `geaendert hat (${eine} gegen ${zwei}).`);
+  }
+
+  // **Drittens: wo die Rundung den Zuschlag frisst, luegt die Marke nicht.**
+  //
+  // Und das ist kein Randfall, sondern der haeufigste Gegner: der Laeufer
+  // traegt 2 Gold, 2 x 1,2 sind 2,4, und gerundet bleiben 2. Bei Zuschlag
+  // 0,10 ist die Vielfaltsbeute auf den drei billigsten Gegnerarten
+  // (Krabbler 2, Laeufer 2, Span 1) UNSICHTBAR - gemessen ueber alle vier
+  // Artenzahlen. Sie zeigt sich auf fuenf von acht Arten, ab zwei Arten bei
+  // Koloss, Spalter und Titan, ab vier bei Infanterie und Gleiter.
+  //
+  // Das ist der Preis einer ganzzahligen Beute und steht so im Verzeichnis;
+  // was die Prueferin hier haelt, ist die Ehrlichkeit der Marke: keine
+  // Vielfaltsmarke an einer Zahl, die gleich geblieben ist.
+  const laeuferEins = toeten('runner', 1);
+  const laeuferDrei = toeten('runner', 3);
+  if (nurZahl(laeuferDrei) === nurZahl(laeuferEins) && laeuferDrei.includes('×')) {
+    throw new Error(`Der Laeufer traegt eine Vielfaltsmarke ("${laeuferDrei}"), obwohl `
+      + `sich seine Beute nicht geaendert hat ("${laeuferEins}"). Eine Marke an einer `
+      + 'unveraenderten Zahl ist eine Luege im Bild.');
+  }
+});
+
 // --- Der Bauhinweis und die Bauwahl sagen dasselbe (v298).
 //
 // Der Hinweis ist ein Wort auf der Leinwand, dort wo der Finger war. Die

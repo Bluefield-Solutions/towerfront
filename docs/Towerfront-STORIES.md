@@ -765,6 +765,28 @@ Dass C18 dabei **eine** Aussaat fährt und die Kante bei 0,15 steil ist, steht
 seit v301 als **M19** in den Messlücken — und ist in dieser Runde ausdrücklich
 nicht repariert worden.
 
+**Die Zahl im Bild ist gemessen und der Befund gehört an die Story: sie steht
+auf fünf von acht Gegnerarten.** Die Beute ist ganzzahlig, und bei 0,10 frisst
+die Rundung den Zuschlag auf den billigsten Gegnern vollständig:
+
+| Gegner | Beute | 1 Art | 2 Arten | 3 Arten | 4 Arten |
+|---|---|---|---|---|---|
+| Krabbler | 2 | +2 | +2 | +2 | +2 |
+| Läufer | 2 | +2 | +2 | +2 | +2 |
+| Span | 1 | +1 | +1 | +1 | +1 |
+| Infanterie | 3 | +3 | +3 | +3 | **+4 ×4** |
+| Gleiter | 4 | +4 | +4 | +4 | **+5 ×4** |
+| Spalter | 6 | +5 | **+6 ×2** | **+6 ×3** | **+7 ×4** |
+| Koloss | 7 | +6 | **+7 ×2** | **+8 ×3** | **+8 ×4** |
+| Titan | 48 | +43 | **+48 ×2** | **+52 ×3** | **+56 ×4** |
+
+**Und das ist kein Fehler, sondern der Preis einer ganzzahligen Beute** — die
+Marke erscheint genau dann, wenn wirklich ein Gold mehr fliesst, und schweigt
+sonst. Eine Marke an einer unveränderten Zahl wäre eine Lüge im Bild; der
+Rauchtest hält beide Richtungen. Wer sie überall sehen will, müsste den Anteil
+aufrunden — dann bekäme jeder Kill mit zwei Arten +1, auf einer Beute von 2
+also +50 %, und genau das verbietet die Abnahme.
+
 Nach oben ist das Fenster ohnehin eng: bei 0,25 fällt die Trennung des
 Wiederholungsaufschlags von 599 auf 113 Gold und reisst ihre eigene Grenze von
 200. **Brauchbar sind 0,10 bis 0,20.**

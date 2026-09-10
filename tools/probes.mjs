@@ -767,6 +767,25 @@ export const PROBEN = [
     meldet: 'schuettet Gold aus',
   },
   {
+    // **Die Vielfaltsmarke steht nicht mehr im Bild** (v301, S-N3-03).
+    //
+    // Die Abnahme der Story verlangt sie woertlich: "Die Zahl steht im Bild,
+    // nicht nur in der Bilanz." Kein Bildschirmfoto kann das halten - die
+    // Marke lebt 1,1 Sekunden im Augenblick eines Kills, und keine der
+    // fuenfzehn Aufnahmen des UX-Audits hat sie erwischt. Darauf zu warten
+    // waere ein Messplatz, der auf einen Zufall wartet (v219, viermal
+    // gemessen).
+    //
+    // Der Eingriff nimmt den Anhang weg: die Beute steigt weiter, aber der
+    // Spieler erfaehrt nicht mehr, warum.
+    name: 'Die Vielfaltsmarke fehlt im Bild',
+    datei: 'src/game/state.ts',
+    suche: "const vielfalt = bounty > ohne ? ` ×${arten}` : '';",
+    ersatz: "const vielfalt = '';",
+    tor: 'smoke',
+    meldet: 'keine Marke',
+  },
+  {
     // **Der Bauhinweis steht wieder unter der Bauwahl** (v298).
     //
     // Die Ableitung `hinweisSichtbar` haelt beide auseinander. Nimmt man

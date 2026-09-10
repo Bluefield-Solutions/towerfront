@@ -641,6 +641,30 @@ function wiederholungMessen(): void {
   // sind 344 bis 693 Gold je Karte.
   const kleinste = Math.min(...trennung);
   console.log(`  Kleinste Trennung: ${kleinste} Gold (gefordert > ${TRENNUNG_MIN}).`);
+
+  // **Was die FREIMENGE haelt, und nur sie** (v287).
+  //
+  // Die Trennung oben haelt den Aufschlag: sie bliebe auch ohne Freimenge
+  // gross, denn wer zwoelf gleiche Tuerme baut, zahlt in jedem Fall mehr als
+  // wer vier Arten mischt. Die Gegenprobe hat genau das gemeldet, indem sie
+  // schwieg (Regel 3).
+  //
+  // Die Freimenge haelt etwas anderes: der perfekte Verteiler darf durch den
+  // Aufschlag NICHT verlieren. Vier Geschuetze, zwoelf Tuerme, drei je Sorte
+  // - er haeuft nichts, also soll ihn nichts treffen. Gemessen kippt ohne
+  // Freimenge genau das: `npm run c18`, dessen Bot die Sorten reihum baut,
+  // verliert dort in Welle 14, und zwar bei jedem Zuschlag von 0,10 bis 0,35.
+  const rein = play(verteilen, () => 0, MEISTER, 'normal', MAPS[0].id,
+    { zuschlag: MESS_ZUSCHLAG, karten: 0 });
+  console.log(`  Der Verteiler mit gestelltem Aufschlag ${MESS_ZUSCHLAG} und ohne `
+    + `Verbesserungen: ${rein.won ? `gewonnen, Kristall ${rein.lives}/${rein.maxLives}`
+      : `VERLOREN in Welle ${rein.wave}`}.`);
+  if (!rein.won) {
+    errors.push(`Der Wiederholungsaufschlag laesst den perfekten Verteiler in Welle `
+      + `${rein.wave} verlieren. Er haeuft nichts - vier Geschuetze, zwoelf Tuerme, drei `
+      + 'je Sorte -, also darf ihn eine Regel gegen das Haeufen nicht treffen. Die '
+      + 'Freimenge ist zu klein.');
+  }
   if (kleinste <= TRENNUNG_MIN) {
     errors.push(`Der Wiederholungsaufschlag trennt Haeufen von Verteilen nur um ${kleinste} `
       + `Gold (gefordert ueber ${TRENNUNG_MIN}). Er trifft dann den, der gleichmaessig baut, `

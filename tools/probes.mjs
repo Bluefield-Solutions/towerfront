@@ -3997,7 +3997,11 @@ export const PROBEN = [
     // waehrend die Datei laengst zu gross war.
     name: 'Ein Gruppenbudget sprengt die Datei',
     datei: 'art/tuerme.json',
-    regel: /"budgetKb": 445/,
+    // Als Regel statt als feste Zahl (v313): das Budget stand auf 445 und
+    // steht jetzt auf 400. Eine Probe, die auf den heutigen Wert zeigt,
+    // veraltet mit der naechsten Anpassung - und das ist genau die Klasse,
+    // an der in dieser Runde schon zwei andere Proben gestorben sind.
+    regel: /"budgetKb": \d+/,
     ersatz: '"budgetKb": 900',
     tor: 'autarkie',
   },

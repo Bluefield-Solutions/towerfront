@@ -696,6 +696,25 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Zwei Haushalte sind mit 0,2 KB Abstand zusammengestossen (v313).** Fuenf der
+sechs Probenscheiben haben gar nicht erst gearbeitet: `PROBEN: 1 Tor(e) sind
+schon OHNE eingebauten Fehler rot: autarkie` — eine Gegenprobe an einem roten
+Tor beweist nichts, sie schlaegt an, gleich was man einbaut. Die Schutzregel
+hat also getan, was sie soll; rot war das Tor trotzdem zu Recht.
+
+Die Gruppenbudgets reservierten zusammen **1075 KB roh**, erlaubt waren
+**1074,75**. Die Regel steht seit v186 und ist richtig — *waechst der Code,
+schrumpft der erlaubte Bildvorrat von selbst*. Der Code ist ueber v303 bis
+v313 auf 366,9 KB gewachsen, die Grenze liegt bei 366,7. **Gerichtet wurde die
+RESERVIERUNG, nicht die Obergrenze**: `tuerme` von 445 auf 400, gemessen 302
+ueber 18 Eintraege plus rund 50 fuer die drei offenen Bestellungen. Die 1800 KB
+sind unberuehrt — eine Ratsche in der Runde zu lockern, in der die eigene
+Aenderung an ihr scheitert, waere kein Beweis mehr (v219).
+
+**Das Tor nennt jetzt den Abstand, nicht nur die Ueberschreitung** (heute 44,8
+KB, und jedes KB Code kostet 0,75 KB Bildvorrat). Es schwieg bis zur Kollision
+und meldete dann etwas, das seit vielen Fassungen naeher gekrochen war.
+
 **Der erste Lauf, der rot werden konnte, war rot - und beide Befunde waren
 Proben, keine Tore (v313).** v312 hat `set -o pipefail` und den Protokollgriff
 eingebaut; der Lauf danach meldete sofort zwei Gegenproben ohne Gegenstand. Die

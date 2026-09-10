@@ -1,6 +1,35 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v311 · 10.09.2026
+Stand: v313 · 10.09.2026
+
+**Die zwei Haushalte sind in v313 zusammengestossen — mit 0,2 KB Abstand.**
+`npm run autarkie` wurde rot: die Gruppen reservierten zusammen **1075 KB
+roh**, erlaubt waren **1074,75**. Die Regel dahinter steht seit v186 und ist
+richtig — *waechst der Code, schrumpft der erlaubte Bildvorrat von selbst*
+(`erlaubtRohKb = (1800 − Rest) / (4/3)`). Der Rest ist ueber v303 bis v313 auf
+**366,9 KB** gewachsen (Lauf, Kartenstapel, Abschnittswahl, die zwei neuen
+Menuebildschirme); die Grenze liegt bei 366,7.
+
+**Gerichtet wurde die RESERVIERUNG, nicht die Obergrenze.** Die 1800 KB in
+`tools/check-autarkie.mjs` sind unberuehrt — eine Ratsche in der Runde zu
+lockern, in der die eigene Aenderung an ihr scheitert, waere kein Beweis mehr
+(v219). Stattdessen ist `tuerme` von **445 auf 400** gesetzt: gemessen haelt
+die Gruppe 302 KB ueber 18 Eintraege, die drei offenen Bestellungen (Foerderer,
+Werft, Bannturm) wiegen nach derselben Rechnung rund 50 KB, also **352** — 400
+laesst danach noch 48 KB. Dieselbe Bewegung wie beim Untergrund in v222 (330
+auf 250, als vier Bilder zusammen 162 wogen): eine Reservierung, die die Datei
+gar nicht einloesen kann, ist keine Reservierung.
+
+**Und das Tor sagt jetzt den ABSTAND, nicht nur die Ueberschreitung.** Es
+schwieg bis zur Kollision und meldete dann etwas, das seit vielen Fassungen
+naeher gekrochen war. Jeder Lauf nennt seitdem die Zeile
+
+    Gruppenbudgets: 1030 KB roh reserviert, 1075 erlaubt - Abstand 44.8 KB.
+    Jedes KB Code kostet 0,75 KB Bildvorrat.
+
+Damit ist die naechste Annaeherung sichtbar, bevor sie die Kette anhaelt — und
+die Umrechnung steht daneben: **60 KB Code sind der ganze heutige Abstand.**
+
 
 **Nachgesehen in v311:** der Bildvorrat ist unverändert — seit v288 ist kein
 Bild dazugekommen und kein Backwert geändert worden. Gemessen an den
@@ -25,7 +54,7 @@ Bildpunkt.
 Lauf — ein fehlendes Bild ist eine laufende Bestellung, kein Fehler im Code.
 
 **Nachgesehen in v304:** der Bildvorrat ist unveraendert (gegner 71, objekte
-192, tuerme 302, untergrund 256 - zusammen 821 KB von 1075). Die ausgelieferte
+192, tuerme 302, untergrund 256 - zusammen 821 KB von 1030). Die ausgelieferte
 Datei ist von 1447 auf **1453 KB** gewachsen, also um 6 KB in sieben
 Fassungen; das ist Quelltext, kein Bild - Lauf, Kartenzug und die zwei neuen
 Messabschnitte in `sim` schlagen zusammen mit diesen 6 KB zu Buche. Grenze
@@ -42,9 +71,9 @@ Fassungen um kein Byte bewegt.**
 |---|---|---|
 | gegner | 71 KB | 80 |
 | objekte | 192 KB | 250 |
-| tuerme | 302 KB | 445 |
+| tuerme | 302 KB | 400 |
 | untergrund | 256 KB | 300 |
-| **zusammen** | **821 KB** | **1075** |
+| **zusammen** | **821 KB** | **1030** |
 
 Gelesen aus `npm run art`, das die Groesse des ausgelieferten Buendels
 nennt — ohne Rohbilder, also auch auf dem Runner (Regel 12: die Zahl traegt
@@ -60,19 +89,19 @@ offene Bestellung. Die Auftraege stehen als 8d.2, 8d.3 und 8d.4.
 **Was das fuer den Haushalt heisst, steht als Differenz da und nicht als
 Messung:** die Gruppe `tuerme` haelt heute 302 KB ueber 18 Eintraege, also
 rund 17 KB je Eintrag. Drei Bauwerke mit je einem Bild sind damit etwa
-**50 KB** — die Gruppe kaeme auf rund 352 von 445, die Datei auf rund 1497
+**50 KB** — die Gruppe kaeme auf rund 352 von 400, die Datei auf rund 1497
 von 1800. Beides passt, und beides ist gerechnet, nicht gewogen.
 
 **Nachgesehen in v290 — gemessen mit `npm run pack-art -- --force`, nicht
 gerechnet.** Die Gruppen stehen bei: gegner 71 KB von 80, objekte 192 von 250,
-tuerme 302 von 445, untergrund 256 von 300 — **zusammen 821 KB von 1075**. Die
+tuerme 302 von 400, untergrund 256 von 300 — **zusammen 821 KB von 1030**. Die
 ausgelieferte Datei wiegt **1445 KB** von 1800 erlaubten.
 
 Zwei Bauwerke sind seit v283 dazugekommen (Förderer v285, Werft v290) und
 wiegen bis heute **nichts**: für beide fehlt das Bild, sie laufen gegen den
 Platzhalter (K5), und `npm run bildtor` nennt sie bei jedem Lauf als offene
 Bestellung. Wenn die zwei Bilder kommen, wächst die Gruppe `tuerme` — 302 von
-445 lassen dafür Raum, aber es ist der einzige Posten, der in diesem Haushalt
+400 lassen dafür Raum, aber es ist der einzige Posten, der in diesem Haushalt
 noch wachsen wird.
 
 
@@ -152,7 +181,7 @@ Zahl. Die 1423 sagt `ls`.
 
 **Nachgemessen in v248** (`npm run art`, ohne Rohbilder — die Größe steht in
 `src/gfx/assets/*.ts` und ist ohne Packlauf zu lesen, Regel 12): Gegner 71,
-Objekte 192, Türme 302, Untergründe 256, zusammen **821 KB von 1075** — seit
+Objekte 192, Türme 302, Untergründe 256, zusammen **821 KB von 1030** — seit
 v240 unverändert, es ist in sieben Fassungen kein einziges Bild dazugekommen.
 
 **Gewachsen ist der Code: 217 → 225 KB.** Acht Kilobyte für den Verbund
@@ -171,11 +200,11 @@ Der Bildvorrat als Rohbytes, also vor der Datenadresse — die Zahlen sagt
 
 | Gruppe | roh | Budget |
 |---|---|---|
-| Türme (18 Bilder) | 302 KB | 445 |
+| Türme (18 Bilder) | 302 KB | 400 |
 | **Untergründe (4)** | **256 KB** | **300** |
 | Objekte (14) | 192 KB | 250 |
 | Gegner (8) | 71 KB | 80 |
-| **Summe** | **821 KB** | **1075** |
+| **Summe** | **821 KB** | **1030** |
 
 **Diese Tabelle stand bis v230 auf dem Stand von v185**, und bis v233 waren
 zwei ihrer vier Zeilen trotzdem falsch: Untergründe „162" statt 260, Objekte

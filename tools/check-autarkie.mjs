@@ -178,6 +178,20 @@ if (sizeKb > SIZE_BUDGET_KB) {
       } catch { /* eine unlesbare Vorschrift meldet der Packer selbst */ }
     }
   }
+  // **Der Abstand wird genannt, nicht nur die Ueberschreitung** (v313).
+  //
+  // Am 10.09.2026 ist dieses Tor rot geworden, und der Abstand betrug **0,2
+  // KB**: die Gruppen reservierten 1075 KB roh, erlaubt waren 1074,75. Bis
+  // dahin sagte das Tor gar nichts - es schwieg bis zur Ueberschreitung und
+  // meldete dann eine Kollision, die seit vielen Fassungen naeher gekrochen
+  // war. Jedes KB Code kostet 0,75 KB Bildvorrat; wer das nicht laufend
+  // sieht, sieht es erst, wenn die Kette steht.
+  if (gruppen.length) {
+    const abstand = erlaubtRohKb - summeKb;
+    console.log(`  Gruppenbudgets: ${summeKb.toFixed(0)} KB roh reserviert, `
+      + `${erlaubtRohKb.toFixed(0)} erlaubt - Abstand ${abstand.toFixed(1)} KB. `
+      + 'Jedes KB Code kostet 0,75 KB Bildvorrat.');
+  }
   if (gruppen.length && summeKb > erlaubtRohKb) {
     problems.push(
       `Die Gruppenbudgets summieren sich auf ${summeKb.toFixed(0)} KB roh `

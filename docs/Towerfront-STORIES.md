@@ -1169,6 +1169,34 @@ Der Endlosmodus wird der Schwanz des Laufs (S-N6-06).
   einzeln ersetzt oder als entfallen begründet.
 * `npm run muster` meldet keine Probe ohne Gegenstand.
 
+**Der Umfang ist in v307 gezählt, bevor die Runde beginnt** — die zweite
+Abnahme verlangt es wörtlich („werden gezählt und einzeln ersetzt oder als
+entfallen begründet"), und eine Zählung, die erst mitten im Umbau entsteht,
+zählt schon nicht mehr dasselbe.
+
+Gemessen über alle **378** Gegenproben, nach Stichwort im Probenblock
+(Überschneidungen inbegriffen — mehrere Proben hängen an zweien):
+
+| hängt an | Proben |
+|---|---|
+| Stufen / Ausbau | **22** |
+| Zweige | **16** |
+| Grade | **13** |
+| Sterne | **6** |
+
+Dazu betroffene Quelldateien: `towers.ts`, `turmwerte.ts`, `types.ts`,
+`state.ts`, `save.ts`, `ui.ts`, `input.ts`, `towerart.ts`, `sprites.ts`,
+`menurender.ts`, `menu.ts`, `perks.ts`, `difficulty.ts`, `storage.ts`,
+`auswertung.ts`, `main.ts` — und auf der Werkzeugseite `sim.ts`, `guards.ts`,
+`smoke.ts`, `benchmark.ts`, `determinism.ts`, `review.mjs`, `shots.mjs`.
+
+**Diese Story wird nicht auf einem ungelieferten Stand gefahren.** In v307
+lagen fünf Fassungen (v303–v307) auf dem Zweig, weil der nächtliche
+Probenlauf an seiner eigenen Zeitgrenze gestorben war; ein Rückbau dieser
+Größe auf einem Stand, den die volle Torkette nie gesehen hat, wäre ein
+Rückbau ohne Netz. Die Reihenfolge ist deshalb: erst ausliefern, dann
+abtragen.
+
 **Gegenprobe.** Ist der Musterlauf selbst: bleibt eine Probe stehen, die auf
 Zweige zeigt, meldet er sie.
 

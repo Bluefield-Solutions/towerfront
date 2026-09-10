@@ -1,6 +1,22 @@
 # Marktrecherche — was moderne Tower-Defense-Spiele ausmacht
 
-Stand: v297 · 10.09.2026
+Stand: v304 · 10.09.2026
+
+**Nachgesehen in v304:** unveraendert gueltig, und die Kette hat seitdem das
+groesste Stueck aus Rogue Tower uebernommen - den **Kartenzug je Welle**
+(v303). Dort sind es anfangs alle drei Wellen eine aus drei, spaeter jede Welle
+eine aus sechs; hier ist es jede Welle eine aus drei bei 60 Wellen je Lauf.
+
+**Die Form des Vorbilds hat dabei die Staerke bestimmt, nicht umgekehrt.**
+Rogue Tower gibt je Karte einen Schritt, den man nicht sofort spuert, und
+vierzig davon in einem Lauf; die Wirkung entsteht aus der Menge. Die zwoelf
+Karten hier tragen deshalb 5 bis 15 %, nicht 50 - eine Karte, die fuer sich
+schon entscheidet, waere bei 60 Zuegen ein Fehler im Entwurf und kein starker
+Zug.
+
+Und derselbe Satz wie bei der Vielfaltsbeute in v299: **die Form ueberträgt,
+die Zahl nicht.** Rogue Towers "+1 Gold je Turmart" waere auf einer Beute von
+2 eine Verdopplung gewesen.
 
 **Nachgesehen in v297:** unveraendert gueltig, und die Kette hat seitdem
 zwei weitere Vorbilder in ihrer FORM statt in ihrer Zahl uebernommen.

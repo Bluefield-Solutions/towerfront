@@ -1,6 +1,41 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v297 · 10.09.2026
+Stand: v304 · 10.09.2026
+
+**Nachgesehen in v304 — der Bildschirm hat eine neue Dauerbewohnerin bekommen
+und dafuer eine abgegeben.**
+
+Der **Kartenzug** (v303) steht zwischen zwei Wellen ueber dem Feld, und die
+Bauleiste weicht ihm. Das ist gemessen und nicht gewaehlt: mit beiden zugleich
+sperrt die Bedienung im Ruhezustand **21,7 %** des Bildschirms gegen erlaubte
+16 - die Leiste allein sind 10,8, der Zug 6,2. Jede fuer sich passt, beide
+nicht.
+
+**Vorher ist geholt worden, was zu holen war** (dieselbe Reihenfolge wie in
+v294): der Zug trug erst Name, Zahl UND Satz und mass 11,7 %; mit Name und
+Zahl sind es 6,2, und der Satz steht weiter im `title`. Erst danach die
+Entwurfsentscheidung, und die sagt mehr als Platz: zwischen zwei Wellen ist
+die Karte die **erste** Entscheidung.
+
+| Zustand | Grenze | gemessen |
+|---|---|---|
+| zug (neu) | 16 | **7,9** |
+| ruhe | 16 | 15,5 |
+| bauwahl | 26 | 24,5 |
+| teurer | 26 | 24,2 |
+| pruefsteg | 35 | 34,2 |
+| welle | 16 | 15,5 |
+
+**Und das Audit hat sich dabei fast selbst entwertet.** Ohne den Zug zu
+ziehen, mass es alle folgenden Zustaende **ohne Bauleiste** - vier Ratschen
+waeren still lockerer geworden, ohne dass der Bildschirm besser geworden ist.
+Der Zug kommt jetzt vor dem Ruhezustand und wird gezogen; danach stehen alle
+vier Zahlen wieder da, wo sie standen. Dieselbe Verfallsart wie die vier Funde
+aus v219.
+
+**Der Kartenknopf misst 46 x 84 Punkte**, und das Beruehrungstor hat ihn beim
+ersten Lauf selbst verlangt: "Knopfklasse zug-btn steht in keiner geprueften
+Auswahl."
 
 **Nachgesehen in v297 — und der offene Punkt dieses Audits hat aufgehoert,
 eine Meinung zu sein: die Bauleiste traegt sechs Bauwerke und kein siebtes.**

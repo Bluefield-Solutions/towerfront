@@ -1,6 +1,27 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v297 · 10.09.2026
+Stand: v304 · 10.09.2026
+
+**Nachgesehen in v304 — das Spiel hat zum ersten Mal eine Entscheidung je
+WELLE, und der Lauf hat gesagt, was ihm fehlt.**
+
+Der **Kartenzug** (v303) liegt zwischen zwei Wellen: drei Karten aus zwoelf,
+eine wird genommen. Gemessen ueber einen ganzen Lauf und drei Stile werden
+**12 von 12 Karten von mindestens einem Stil genommen und 0 von jedem immer** -
+die Wahl ist also keine Reihenfolge. Die Stile trennen sich sauber: Meister
+nimmt Wucht und Schliff, Breite Hort und Pacht, Sparsam Warte und Linse.
+
+Das ist die Antwort auf den zentralen Befund dieses Audits ("gut zwei
+Entscheidungen je Welle, meistens frueh"): jetzt ist es mindestens eine je
+Welle, und sie liegt genau dort, wo vorher nichts war.
+
+**Der Lauf selbst ist seit v302 ein Zustand** - und der erste kopflos
+gefahrene hat sofort gesagt, was ihm fehlt: Rampe **1,00 / 1,12 / 1,82 /
+15,17** ueber die vier Abschnitte, die ersten drei mit 42 von 42 Kristall
+gewonnen, der vierte in Welle 7 verloren. **Drei Spaziergaenge und eine Wand.**
+Die Lebenskurve ist an EINER Karte mit 15 Wellen geeicht; ueber 60 gestreckt
+liegen drei Abschnitte im flachen Teil und einer im Knie. Steht als N1K im
+Verzeichnis.
 
 **Nachgesehen in v297 — der wichtigste Satz steht unveraendert, und die
 Antwort darauf hat sich in v291 bis v297 gedreht.**

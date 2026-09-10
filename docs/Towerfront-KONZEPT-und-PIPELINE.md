@@ -1,6 +1,19 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v297 · 10.09.2026
+Stand: v304 · 10.09.2026
+
+**Nachgesehen in v304:** die Torkette ist unveraendert dreiunddreissig
+Schritte. Dazugekommen ist eine **neunte Pruefung im Doku-Waechter**, und sie
+haelt etwas, das sieben Fassungen lang aufgeschrieben und ungehalten war: ein
+Bildauftrag darf sich nicht selbst widersprechen. Wer im Prompt "512 x 512"
+schreibt, bestellt eine Figur und darf nicht den Kartenblock tragen, der 16:9
+und randlos verlangt.
+
+**Die Regel ist eine Ableitung, keine Liste** (Regel 15) - eine gepflegte
+Liste der Figurenabschnitte veraltete an dem Tag, an dem einer dazukommt. Und
+sie ist der dritte Fall derselben Familie nach der Buendelregel (v292/v294)
+und der Bandregel (v296): was hier gehalten wird, wird aus dem gelesen, was
+ohnehin dasteht, nicht aus einer zweiten Aufzaehlung.
 
 **Nachgesehen in v297:** die Torkette ist unveraendert dreiunddreissig
 Schritte und laeuft auf dem Runner (gemessen 6 Minuten je Lauf); hier laeuft

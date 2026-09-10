@@ -772,6 +772,24 @@ export const PROBEN = [
     meldet: 'schuettet Gold aus',
   },
   {
+    // **Ein Gebaeudeauftrag traegt wieder den Kartenblock** (v304).
+    //
+    // Abschnitt 1b sagt selbst, dass er nur fuer Kartenbilder gilt - und
+    // 8d.2 bis 8d.4 trugen ihn trotzdem: "512 x 512, freigestellt auf
+    // Transparenz" drei Absaetze ueber "exactly 16:9, full bleed,
+    // 2400 x 1350". Der Prompt widersprach sich selbst, und gefunden hat es
+    // kein Tor, sondern der Versuch, die Auftraege wirklich herauszugeben.
+    //
+    // Der Waechter liest jetzt beide Bloecke und prueft, dass kein
+    // Figurenauftrag den Kartenblock traegt. Der Eingriff dreht 8d.4 zurueck.
+    name: 'Gebaeudeauftrag traegt den Kartenblock',
+    datei: 'docs/Towerfront-BILDAUFTRAG.md',
+    regel: /### 8d\.4([\s\S]*?)\[AUSGABE-BLOCK FIGUR EINFÜGEN\]/,
+    ersatz: '### 8d.4$1[AUSGABE-BLOCK EINFÜGEN]',
+    tor: 'doku',
+    meldet: 'Kartenblock',
+  },
+  {
     // **Der Kartenzug haengt nicht mehr an der Aussaat** (v303, S-N1-02).
     //
     // Die erste Abnahme der Story: zwei Laeufe mit derselben Aussaat ziehen

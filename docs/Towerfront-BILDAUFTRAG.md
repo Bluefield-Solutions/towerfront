@@ -1,6 +1,25 @@
 # Towerfront — Bildauftrag
 
-Stand: v298 · 10.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v304 · 10.09.2026 · **Auftragsdokument für den Bild-Agenten**
+
+**Nachgesehen in v304 — und die drei offenen Aufträge widersprachen sich
+selbst.** 8d.2, 8d.3 und 8d.4 bestellen ein Sprite (512 × 512, quadratisch,
+freigestellt auf Transparenz) und trugen am Ende den **Kartenblock**: 16:9,
+randlos, 2400 × 1350. Ein Empfänger, der ihm folgt, liefert ein Gelände statt
+einer Figur — und die Regel dagegen steht seit v211 in Abschnitt 1b selbst
+(„Er gilt nur für die Kartenbilder").
+
+**Gefunden hat es kein Tor, sondern der Versuch, sie wirklich herauszugeben.**
+Dieselbe Klasse wie v229, wo `kartenprobe` an einer verschobenen Tabellenspalte
+brach und es erst auffiel, als ein Bild ankam: ein Auftrag, den niemand
+ausgibt, ist im Ernstfall kaputt.
+
+Es gibt jetzt einen zweiten Ausgabeblock (**Abschnitt 1c**) für Figuren und
+Bauwerke, mit den Zahlen, gegen die `npm run probebild` misst — 512 × 512,
+echter Alphakanal, 6 Punkte Luft zum Rand, höchstens 2 % reines Schwarz, Licht
+von oben links. Und `npm run doku` hält es: wer im Prompt „512 x 512" schreibt,
+bestellt eine Figur und bekommt den Figurenblock. Eine Ableitung, keine Liste
+(Regel 15).
 
 **Nachgesehen in v298 — es sind jetzt DREI offene Bestellungen, und die dritte
 verschärft die Regel, die schon für die ersten beiden galt.** Dazugekommen ist
@@ -179,6 +198,61 @@ canvas.
 | „5 percent margin" | Alle acht Kandidaten der Probelieferung berührten den Kachelrand | `npm run probebild` |
 
 ---
+
+## 1c. Der Ausgabe-Block — für **Figuren und Bauwerke**, wörtlich ans Ende
+
+**Warum es diesen zweiten gibt, und was er gekostet hat.** Abschnitt 1b sagt
+selbst, dass er nur für Kartenbilder gilt — und die drei Gebäudeaufträge 8d.2
+bis 8d.4 trugen ihn trotzdem. Ein Empfänger, der ihnen folgt, liefert ein
+randloses 16:9-Gelände von 2400 × 1350 Punkten, während im selben Prompt drei
+Absätze höher „512 × 512, quadratisch, freigestellt auf Transparenz" steht.
+**Der Prompt widersprach sich selbst**, und die Regel dagegen stand seit v211
+in 1b: „Er gilt nur für die Kartenbilder."
+
+Gefunden hat es kein Tor, sondern der Versuch, die drei Aufträge wirklich
+herauszugeben — dieselbe Klasse wie v229, wo `kartenprobe` an einer
+verschobenen Tabellenspalte brach und es erst auffiel, als ein Bild ankam. Ein
+Auftrag, den niemand ausgibt, ist im Ernstfall kaputt.
+
+Die Zahlen darin sind die, gegen die `npm run probebild` misst — sie stehen
+nicht ein zweites Mal irgendwo (Regel 15).
+
+```
+OUTPUT AND DELIVERY — read this as carefully as the rest.
+
+FORMAT: PNG with a real alpha channel. Not JPEG, not WebP - the file is
+re-encoded later, and a missing alpha channel cannot be recovered.
+
+SIZE: exactly 512 x 512 pixels, square. Not 1024, not 500, not a rectangle
+that happens to be close.
+
+CUT OUT ON FULL TRANSPARENCY: no background, no backdrop, no ground plane, no
+baked drop shadow, no glow bleeding into the empty area. The game bakes its
+own shadow and its own light; a baked one sits on top of it twice.
+
+AIR AROUND THE FIGURE: leave at least 6 pixels of fully transparent margin on
+every side. A figure that touches the tile edge gets clipped when the atlas is
+packed, and the clip is invisible until it is in the game.
+
+NO PURE BLACK: at most 2 % of the visible pixels may be pure black. In
+practice that means no black contour line and no black-modelled chains or
+grilles - shapes are separated by value and by light, the way a painting does
+it.
+
+ONE LIGHT DIRECTION, FROM THE UPPER LEFT, matching the rest of the set. A
+figure lit from somewhere else contradicts its own shadow the moment it stands
+on the field.
+
+NOTHING ADDED: no caption, no title, no watermark, no signature, no frame, no
+scale bar, no colour-check patch, no second view of the same object.
+
+ONE IMAGE PER REQUEST: deliver a single image, not a grid of variants and not
+a sheet with several options. If you want to offer alternatives, produce them
+one after another, each as its own full-size file.
+
+DELIVER IT AS A DOWNLOADABLE FILE at full resolution - not as an inline
+preview, not cropped, not resized to fit a chat window.
+```
 
 ## 1b. Der Ausgabe-Block — für **Kartenbilder**, wörtlich ans Ende jedes Prompts
 
@@ -2757,7 +2831,7 @@ from across the field, at roughly 96 pixels on screen.
 The saturated accent is amber and it belongs to the material being processed
 - inside the hopper, along the chute lip - not to a sight or a sensor.
 
-[AUSGABE-BLOCK EINFÜGEN]
+[AUSGABE-BLOCK FIGUR EINFÜGEN]
 ```
 
 ### Abnahme 8d.2
@@ -2829,7 +2903,7 @@ The saturated accent is cold blue and it belongs to the weld and the mended
 seam - not to a sight or a sensor. Amber is reserved for the extraction
 plant; do not use it here.
 
-[AUSGABE-BLOCK EINFÜGEN]
+[AUSGABE-BLOCK FIGUR EINFÜGEN]
 ```
 
 ### Abnahme 8d.3
@@ -2903,7 +2977,7 @@ The saturated accent is violet and it belongs to the ring and the ground
 band - not to a sight or a sensor. Amber is reserved for the extraction
 plant, cold blue for the repair gantry; do not use either here.
 
-[AUSGABE-BLOCK EINFÜGEN]
+[AUSGABE-BLOCK FIGUR EINFÜGEN]
 ```
 
 ### Abnahme 8d.4

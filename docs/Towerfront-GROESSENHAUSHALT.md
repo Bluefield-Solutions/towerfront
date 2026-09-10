@@ -1,6 +1,17 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v297 · 10.09.2026
+Stand: v304 · 10.09.2026
+
+**Nachgesehen in v304:** der Bildvorrat ist unveraendert (gegner 71, objekte
+192, tuerme 302, untergrund 256 - zusammen 821 KB von 1075). Die ausgelieferte
+Datei ist von 1447 auf **1453 KB** gewachsen, also um 6 KB in sieben
+Fassungen; das ist Quelltext, kein Bild - Lauf, Kartenzug und die zwei neuen
+Messabschnitte in `sim` schlagen zusammen mit diesen 6 KB zu Buche. Grenze
+1800.
+
+Die drei Bauwerke ohne Bild sind unveraendert drei (Foerderer, Werft,
+Bannturm); ihre Auftraege haben in v304 den richtigen Ausgabeblock bekommen
+und sind damit zum ersten Mal wirklich herausgebbar.
 
 **Nachgesehen in v297 — gemessen, und der Bildvorrat hat sich in sieben
 Fassungen um kein Byte bewegt.**

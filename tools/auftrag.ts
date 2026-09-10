@@ -18,6 +18,17 @@ export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const DOK = join(ROOT, 'docs/Towerfront-BILDAUFTRAG.md');
 export const PLATZHALTER = '[STYLE-BLOCK EINFÜGEN]';
 export const AUSGABE_PLATZHALTER = '[AUSGABE-BLOCK EINFÜGEN]';
+/** **Der zweite Ausgabe-Block: fuer Figuren und Bauwerke** (v304).
+ *
+ *  Abschnitt 1b sagt selbst, dass er nur fuer Kartenbilder gilt - und die
+ *  drei Gebaeudeauftraege 8d.2 bis 8d.4 trugen ihn trotzdem. Ein Empfaenger,
+ *  der ihnen folgt, liefert ein randloses 16:9-Gelaende, waehrend drei
+ *  Absaetze hoeher "512 x 512, freigestellt auf Transparenz" steht. Der
+ *  Prompt widersprach sich selbst.
+ *
+ *  Gefunden hat es kein Tor, sondern der Versuch, die Auftraege wirklich
+ *  herauszugeben. */
+export const FIGUR_PLATZHALTER = '[AUSGABE-BLOCK FIGUR EINFÜGEN]';
 /** Der Stilblock des Neubaus (v277).
  *
  *  **Zwei Stilbloecke sind hier kein Regel-15-Verstoss, sondern zwei
@@ -86,6 +97,20 @@ export function neubauBlock(): string {
   return b.inhalt;
 }
 
+export function figurBlock(): string {
+  const zeile = zeilen.findIndex((z) => z.startsWith('## 1c. Der Ausgabe-Block'));
+  if (zeile < 0) {
+    console.error('AUFTRAG: der Abschnitt "1c. Der Ausgabe-Block" fehlt im Auftragsdokument.');
+    process.exit(1);
+  }
+  const b = blockNach(zeile + 1);
+  if (!b) {
+    console.error('AUFTRAG: unter "1c. Der Ausgabe-Block" steht kein Block.');
+    process.exit(1);
+  }
+  return b.inhalt;
+}
+
 export function ausgabeBlock(): string {
   const zeile = zeilen.findIndex((z) => z.startsWith('## 1b. Der Ausgabe-Block'));
   if (zeile < 0) {
@@ -129,7 +154,11 @@ export function einsetzen(prompt: string, stil: string, ausgabe?: string): strin
   if (fertig.includes(AUSGABE_PLATZHALTER)) {
     fertig = fertig.split(AUSGABE_PLATZHALTER).join(ausgabe ?? ausgabeBlock());
   }
+  if (fertig.includes(FIGUR_PLATZHALTER)) {
+    fertig = fertig.split(FIGUR_PLATZHALTER).join(figurBlock());
+  }
   if (fertig.includes(PLATZHALTER) || fertig.includes(AUSGABE_PLATZHALTER)
+    || fertig.includes(FIGUR_PLATZHALTER)
     || fertig.includes(NEUBAU_PLATZHALTER)) {
     console.error('AUFTRAG: ein Platzhalter steht noch im Ergebnis - '
       + 'ein Block wurde nicht eingesetzt.');

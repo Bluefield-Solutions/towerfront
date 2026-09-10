@@ -657,6 +657,54 @@ const offeneIds = new Set();
   }
 }
 
+// --- 9. Ein Bildauftrag darf sich nicht selbst widersprechen (v304).
+//
+// **Der Fall, aus dem diese Pruefung entstanden ist.** Abschnitt 1b des
+// Bildauftrags sagt seit v211 selbst: "Er gilt nur fuer die Kartenbilder." Die
+// drei Gebaeudeauftraege 8d.2 bis 8d.4 trugen ihn trotzdem - "512 x 512,
+// quadratisch, freigestellt auf Transparenz" stand drei Absaetze ueber
+// "ASPECT RATIO: exactly 16:9 ... FULL BLEED ... 2400 x 1350". Ein Empfaenger,
+// der dem Ausgabeblock folgt, liefert ein randloses Gelaende statt eines
+// freigestellten Sprites.
+//
+// Gefunden hat es kein Tor, sondern der Versuch, die Auftraege wirklich
+// herauszugeben - dieselbe Klasse wie v229, wo `kartenprobe` an einer
+// verschobenen Tabellenspalte brach und es erst auffiel, als ein Bild ankam.
+// Ein Auftrag, den niemand ausgibt, ist im Ernstfall kaputt.
+//
+// **Die Regel ist eine Ableitung, keine Liste** (Regel 15): wer im Prompt
+// "512 x 512" schreibt, bestellt eine Figur, und eine Figur bekommt den
+// Figurenblock. Eine gepflegte Liste der Figurenabschnitte veraltete an dem
+// Tag, an dem einer dazukommt.
+{
+  const auftrag = alle.find(([n]) => n === 'Towerfront-BILDAUFTRAG.md');
+  if (auftrag) {
+    const zeilen = auftrag[1].split('\n');
+    let kopf = '';
+    let inBlock = false;
+    let block = [];
+    const pruefen = () => {
+      const text = block.join('\n');
+      if (!kopf) return;
+      const figur = /512\s*x\s*512/i.test(text);
+      const karte = text.includes('[AUSGABE-BLOCK EINFÜGEN]');
+      if (figur && karte) {
+        fail(`Bildauftrag ${kopf}: der Prompt bestellt eine Figur (512 x 512), traegt `
+          + 'aber den Kartenblock `[AUSGABE-BLOCK EINFÜGEN]`. Der sagt 16:9, randlos '
+          + 'und 2400 x 1350 - der Auftrag widerspricht sich selbst, und der Empfaenger '
+          + 'liefert ein Gelaende statt eines freigestellten Sprites. '
+          + 'Gemeint ist `[AUSGABE-BLOCK FIGUR EINFÜGEN]` (Abschnitt 1c).');
+      }
+    };
+    for (const z of zeilen) {
+      if (/^### /.test(z)) { pruefen(); kopf = z.replace(/^###\s*/, '').slice(0, 40); block = []; }
+      if (z.startsWith('```')) { inBlock = !inBlock; continue; }
+      if (inBlock) block.push(z);
+    }
+    pruefen();
+  }
+}
+
 for (const h of hinweise) console.log(`  Hinweis: ${h}`);
 if (probleme.length) {
   console.error(`DOKU-WAECHTER: ${probleme.length} Fehler`);

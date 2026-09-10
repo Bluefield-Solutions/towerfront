@@ -400,10 +400,24 @@ html, body {
    etwas getan (Regel 5). */
 .go-lauf {
   font-size: var(--s-marke); letter-spacing: 0.08em; font-weight: 700;
-  font-variant-numeric: tabular-nums; opacity: 0.72;
+  font-variant-numeric: tabular-nums;
   color: var(--crystal);
   pointer-events: none;
   padding-right: 8px; border-right: 1px solid currentColor;
+  /* **Eine Zeile - und das ist ausserhalb des Knopfes eine neue Frage.**
+     Im Knopf hielt ihn dessen Innenabstand breit; daneben schrumpft er auf
+     das Band und brach bei "Welle 15 · noch 71" auf zwei Zeilen um.
+     Gesehen, nicht gemessen (Regel 8): das Tor prueft seit v268 die Hoehe
+     des KNOPFES, und die aendert sich davon nicht mehr - es haette
+     geschwiegen, waehrend er umbricht. */
+  white-space: nowrap;
+  /* **Er liegt jetzt auf dem Feld, nicht auf Kristallgrund.** Dort laufen
+     Gegner durch, und tuerkise Schrift auf einer tuerkisen Figur ist keine.
+     Ein dunkler Saum statt einer Flaeche: eine Unterlegung waere zusaetzlich
+     verdecktes Bild, und genau davon handelt diese Runde. Gedaempft wird er
+     nicht mehr - 0,72 Deckkraft trug auf hellem Grund, ueber dem Feld nimmt
+     sie ihm den Rest. */
+  text-shadow: 0 1px 3px rgba(4, 8, 18, 0.95), 0 0 6px rgba(4, 8, 18, 0.8);
 }
 .go-lauf[data-an="0"] { display: none; }
 .go:disabled { background: rgba(137, 148, 176, 0.3); color: var(--muted); box-shadow: none; }

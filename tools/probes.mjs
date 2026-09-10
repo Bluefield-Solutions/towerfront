@@ -1041,8 +1041,8 @@ const PROBEN = [
     // Ursache - hier steht die Sache selbst.
     name: 'Laufender Strom faengt den Finger wieder',
     datei: 'src/style.css',
-    suche: '  color: var(--crystal);\n  pointer-events: none;\n  margin-left: auto;',
-    ersatz: '  color: var(--crystal);\n  pointer-events: auto;\n  margin-left: auto;',
+    suche: '  color: var(--crystal);\n  pointer-events: none;',
+    ersatz: '  color: var(--crystal);\n  pointer-events: auto;',
     tor: 'browsertor',
     meldet: 'laufende Strom fängt den Finger',
   },
@@ -1066,6 +1066,21 @@ const PROBEN = [
     ersatz: '.dock-body {\n  display: flex; flex-direction: column; gap: 6px; flex: 0 1 auto;',
     tor: 'browsertor',
     meldet: 'Wellenknopf rutscht um',
+  },
+  {
+    // Drittens: der Umbruch, den das Tor bis v285 gar nicht sehen konnte.
+    //
+    // Es prueft seit v268 die Hoehe des KNOPFES - solange der Strom sein
+    // Kind war, machte ein Umbruch den Knopf zweizeilig. Daneben gestellt
+    // aendert er die Knopfhoehe nicht mehr, und die Pruefung haette
+    // geschwiegen. Sie tat es auch: er brach bei "Welle 15 · noch 71" auf
+    // zwei Zeilen um, und gesehen hat es der Blick (Regel 8).
+    name: 'Laufender Strom bricht auf zwei Zeilen um',
+    datei: 'src/style.css',
+    suche: '  white-space: nowrap;\n  /* **Er liegt jetzt auf dem Feld',
+    ersatz: '  white-space: normal;\n  /* **Er liegt jetzt auf dem Feld',
+    tor: 'browsertor',
+    meldet: 'laufende Strom ist',
   },
   {
     // Zweitens die Mehrdeutigkeit selbst. `waveNumber` zeigt die NEUESTE

@@ -834,6 +834,7 @@ if (start) {
           anzeige: getComputedStyle(lauf).display,
           sichtbar: getComputedStyle(lauf).visibility,
           knopf: Math.round(r.width),
+          eigen: Math.round(l.height),
           rechts: Math.round(r.right),
           faengt: mitte ? (mitte.closest('#b-wave, #b-wave-l') ? 'ja' : 'nein') : '-',
         };
@@ -868,7 +869,7 @@ if (start) {
     } else {
       console.log(`Laufender Strom neben dem Wellenknopf: ${st.mit.breite} Punkte `
         + `(${st.mit.anzeige}, ${st.mit.sichtbar}) · fängt den Finger: ${st.mit.faengt} `
-        + `· Knopf ${st.mit.knopf} Punkte mit, ${st.ohne.knopf} ohne `
+        + `· ${st.mit.eigen} Punkte hoch · Knopf ${st.mit.knopf} Punkte mit, ${st.ohne.knopf} ohne `
         + `· rechte Kante ${st.mit.rechts}/${st.ohne.rechts}, mit Freiraum `
         + `${st.eng.mit.rechts}/${st.eng.ohne.rechts} · Knopfhöhe ${st.hoehe}`);
       if (st.mit.anzeige === 'none' || st.mit.sichtbar === 'hidden' || st.mit.breite < 30) {
@@ -876,12 +877,23 @@ if (start) {
           + `(display ${st.mit.anzeige}, visibility ${st.mit.sichtbar}, `
           + `${st.mit.breite} Punkte breit).`);
       }
-      // **Eine Zeile, nicht zwei.** Der Knopf ist seit v243 eine Zeile, und
-      // ein umbrechender Strom machte daraus wieder zwei - auf 390 Punkten
-      // Hoehe ist das die Falle, die den Fruehstart schon einmal gekostet
-      // hat. Gemessen an der Hoehe, nicht am Augenschein.
+      // **Eine Zeile, nicht zwei** - und seit v286 an SEINER Hoehe gemessen.
+      //
+      // Bis v285 stand hier nur die Hoehe des Knopfes: der Strom war sein
+      // Kind, ein Umbruch machte den Knopf zweizeilig, und auf 390 Punkten
+      // ist das die Falle, die den Fruehstart schon einmal gekostet hat.
+      // Daneben gestellt aendert er die Knopfhoehe gar nicht mehr - die
+      // Pruefung haette geschwiegen, waehrend er umbricht. Und genau das tat
+      // er: gesehen hat es der Blick, nicht das Tor (Regel 8, K1).
+      //
+      // Der Knopf wird weiter mitgemessen: eine Zeile bleibt eine Zusage an
+      // ihn, ganz gleich woran sie haengt.
       if (st.hoehe > 60) {
         fail(`Der Wellenknopf ist mit dem laufenden Strom ${st.hoehe} Punkte hoch - `
+          + 'er bricht damit auf zwei Zeilen um.');
+      }
+      if (st.mit.eigen > 26) {
+        fail(`Der laufende Strom ist ${st.mit.eigen} Punkte hoch - `
           + 'er bricht damit auf zwei Zeilen um.');
       }
       // **Und er darf den Finger nicht fangen** (v286).

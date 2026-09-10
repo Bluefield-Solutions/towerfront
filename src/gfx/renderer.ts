@@ -914,6 +914,24 @@ export class Renderer {
   private drawHinweis(s: GameState): void {
     const h = s.hinweis;
     if (!h) return;
+    // **Nicht, solange die Bauwahl offen ist** (v298).
+    //
+    // Sie nennt den Grund bereits an jedem Turm, fuer den er gilt - und zwar
+    // je Turm verschieden, waehrend hier ein einziges Wort steht. Zwei
+    // Fassungen derselben Auskunft, von denen die schlechtere obendrein
+    // durch die halbdurchsichtige Leiste scheint: in der Aufnahme zu v298
+    // lag ein rotes "Weg" hinter den Namen "Prisma" und "Foerderer", und
+    // "Prisma" las sich als "PrismaWeg".
+    //
+    // Gefunden hat es der Blick, nicht die Messung - vier Messungen an
+    // derselben Leiste haben vorher null gemeldet (Ueberlauf, Kinder,
+    // Abstaende, Behaelter), weil dieses Kaestchen gar nicht zur Leiste
+    // gehoert: es steht auf der LEINWAND darunter. Regel 8 und Regel 15 in
+    // einem Bild.
+    //
+    // Eine benannte Ableitung, kein `if` an dieser Stelle (Regel 6): so
+    // fragt der Rauchtest dieselbe Bedingung, die hier zeichnet.
+    if (!s.hinweisSichtbar()) return;
     const rest = h.bis - s.time;
     if (rest <= 0) { s.hinweis = null; return; }
     const ctx = this.ctx;

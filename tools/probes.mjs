@@ -731,6 +731,21 @@ export const PROBEN = [
     meldet: 'Spannungsratsche',
   },
   {
+    // **Der Bauhinweis steht wieder unter der Bauwahl** (v298).
+    //
+    // Die Ableitung `hinweisSichtbar` haelt beide auseinander. Nimmt man
+    // ihr die Bedingung, stehen sie wieder zugleich im Bild - und der
+    // Rauchtest muss es sagen, statt es dem naechsten Bildschirmfoto zu
+    // ueberlassen. Genau daran hat es bis v298 gefehlt: gefunden hat den
+    // Fall der Blick, nicht die Messung.
+    name: 'Bauhinweis steht wieder unter der Bauwahl',
+    datei: 'src/game/state.ts',
+    suche: 'return this.hinweis !== null && this.buildAt === null;',
+    ersatz: 'return this.hinweis !== null;',
+    tor: 'smoke',
+    meldet: 'stehen zugleich im Bild',
+  },
+  {
     // **Der fuenfte Zustand des UX-Audits: der vierte Turm derselben Art**
     // (v298, E12).
     //

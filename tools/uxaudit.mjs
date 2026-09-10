@@ -421,6 +421,28 @@ const abstaendeInDerWahl = (seite) => seite.evaluate(() => {
   return paare;
 });
 
+/** **Liegen die Knoepfe ueberhaupt in ihrem Behaelter?** (v298)
+ *
+ *  Die vierte Frage an dasselbe Bild, und die ersten drei haben sie nicht
+ *  gestellt: Inhalt gegen Knopf, Kinder gegen Knopf, Knopf gegen Knopf -
+ *  alle drei null. Ein Knopf kann aber sauber gesetzt sein UND trotzdem
+ *  ueber den Rand seiner Leiste hinausragen; dann schneidet der Behaelter
+ *  ihn an, und was danebensteht, sieht aus wie Text unter Text. */
+const ausDemBehaelter = (seite) => seite.evaluate(() => {
+  const reihe = document.getElementById('pick-row');
+  if (!reihe) return [];
+  const rr = reihe.getBoundingClientRect();
+  return [...reihe.querySelectorAll('.pick-btn')]
+    .map((el) => {
+      const r = el.getBoundingClientRect();
+      return {
+        turm: el.dataset.turm ?? '?',
+        raus: Math.round(Math.max(0, rr.left - r.left) + Math.max(0, r.right - rr.right)),
+      };
+    })
+    .filter((o) => o.raus > 0);
+});
+
 const fleck = await bauplatzSuchen(a, BREIT, HOCH);
 if (!fleck) { console.error('Kein Bauplatz gefunden.'); }
 else {
@@ -520,6 +542,15 @@ messwerte.belegung.pruefsteg = await belegung(a);
     messwerte.groessen.teurer = await schriftgroessen(a);
     messwerte.ueberlauf.teurer = await ueberlaufInDerWahl(a);
     messwerte.abstaende = await abstaendeInDerWahl(a);
+    messwerte.ausReihe = await ausDemBehaelter(a);
+    if (messwerte.ausReihe.length) {
+      console.log('  Aus der Leiste heraus: '
+        + messwerte.ausReihe.map((o) => `${o.turm} ${o.raus} px`).join(', '));
+      befunde.push('In der Bauwahl ragen Knoepfe ueber ihre Leiste hinaus: '
+        + messwerte.ausReihe.map((o) => `${o.turm} um ${o.raus} px`).join(', ')
+        + '. Der Behaelter schneidet sie an, und was danebensteht, liest sich als '
+        + 'Text unter Text.');
+    }
     console.log('  Luecken in der Bauwahl: '
       + messwerte.abstaende.map((o) => `${o.von}|${o.nach} ${o.luecke}`).join(', '));
     const stossen = messwerte.abstaende.filter((o) => o.luecke < 0);

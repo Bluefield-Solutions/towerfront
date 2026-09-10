@@ -405,6 +405,23 @@ export class GameState {
   bauHinweis(x: number, y: number, text: string | null): void {
     this.hinweis = text ? { x, y, text, bis: this.time + 1.1 } : null;
   }
+
+  /** **Darf der Bauhinweis gerade zu sehen sein?** (v298)
+   *
+   *  Nein, solange die Bauwahl offen steht: sie nennt den Grund bereits an
+   *  jedem Turm, fuer den er gilt - je Turm verschieden, waehrend der
+   *  Hinweis ein einziges Wort ist. Zwei Fassungen derselben Auskunft, und
+   *  die schlechtere scheint obendrein durch die halbdurchsichtige Leiste:
+   *  in der Aufnahme zu v298 lag ein rotes "Weg" hinter den Namen "Prisma"
+   *  und "Foerderer".
+   *
+   *  **Als benannte Ableitung und nicht als `if` im Renderer**, aus dem
+   *  Grund, den Regel 6 aufgeschrieben hat: eine Bedingung, die nur im
+   *  Zeichenweg steht, prueft niemand. So steht sie an einer Stelle, der
+   *  Rauchtest fragt sie, und eine Gegenprobe kann sie brechen. */
+  hinweisSichtbar(): boolean {
+    return this.hinweis !== null && this.buildAt === null;
+  }
   selectedTower: Tower | null = null;
 
   /** Welche Gegnerart im Inspektor erklaert wird (D10).

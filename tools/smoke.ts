@@ -3728,6 +3728,59 @@ step('Einrasten', () => {
   }
 });
 
+// --- Der Bauhinweis und die Bauwahl sagen dasselbe (v298).
+//
+// Der Hinweis ist ein Wort auf der Leinwand, dort wo der Finger war. Die
+// Bauwahl nennt denselben Grund an jedem Turm, fuer den er gilt - je Turm
+// verschieden. Stehen beide zugleich da, ist es Regel 15 als Bedienoberflaeche,
+// und die schlechtere Fassung scheint durch die halbdurchsichtige Leiste: in
+// der Aufnahme zu v298 lag ein rotes "Weg" hinter "Prisma" und "Foerderer",
+// und "Prisma" las sich als "PrismaWeg".
+//
+// **Gefunden hat es der Blick.** Vier Messungen an derselben Leiste haben
+// vorher null gemeldet - Ueberlauf im Kasten, Kinder ueber den Kasten,
+// Abstaende zwischen den Knoepfen, Knoepfe im Behaelter -, weil dieses
+// Kaestchen gar nicht zur Leiste gehoert. Regel 8 und Regel 15 in einem Bild.
+//
+// Geprueft wird die ABLEITUNG, nicht der Zeichenweg: `hinweisSichtbar()` ist
+// die eine Stelle, an der die Frage beantwortet wird, und der Renderer fragt
+// sie. Eine Bedingung, die nur im Zeichenweg steht, prueft niemand (Regel 6).
+step('Bauhinweis und Bauwahl stehen nicht zugleich', () => {
+  const probe = new GameState();
+  probe.reset();
+  const lane = probe.lanes[0];
+  const p = lane.at(lane.length * 0.5);
+
+  // Der Fall wird GESTELLT, nicht abgewartet: ein Hinweis auf der Wegmitte.
+  probe.bauHinweis(p.x, p.y, probe.warumNicht('arrow', p.x, p.y));
+  if (probe.hinweis === null) {
+    throw new Error('Auf der Wegmitte entsteht kein Bauhinweis - die Probe misst nicht, '
+      + 'was sie messen soll.');
+  }
+  if (!probe.hinweisSichtbar()) {
+    throw new Error('Der Bauhinweis ist unsichtbar, obwohl keine Bauwahl offen steht. '
+      + 'Dann sieht der Spieler nie, warum dort nichts hinkann.');
+  }
+
+  // Und jetzt die Bauwahl daneben. Derselbe Hinweis, derselbe Augenblick.
+  const ziel = probe.einrasten('arrow', p.x, p.y, 220);
+  if (!ziel) throw new Error('Neben dem Weg findet sich kein Bauplatz fuer die Probe.');
+  probe.buildAt = ziel;
+  if (probe.hinweisSichtbar()) {
+    throw new Error('Bauhinweis und Bauwahl stehen zugleich im Bild. Die Wahl nennt den '
+      + 'Grund bereits an jedem Turm, fuer den er gilt - das Wort auf der Leinwand sagt '
+      + 'dasselbe ein zweites Mal und liegt dabei hinter ihren Beschriftungen.');
+  }
+
+  // Die Nullprobe: ohne Bauwahl ist er wieder da. Ohne sie koennte
+  // `hinweisSichtbar` schlicht immer falsch zurueckgeben.
+  probe.buildAt = null;
+  if (!probe.hinweisSichtbar()) {
+    throw new Error('Der Bauhinweis bleibt auch ohne Bauwahl unsichtbar - dann prueft '
+      + 'die Bedingung nichts, sie schaltet ihn nur ab.');
+  }
+});
+
 // --- Kleinigkeiten in der Karte (D14).
 //
 // Zwei Fragen, und die zweite ist die wichtigere.

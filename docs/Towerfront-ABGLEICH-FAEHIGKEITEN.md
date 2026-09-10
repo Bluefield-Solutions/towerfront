@@ -1,6 +1,18 @@
 # Referenzabgleich — Fähigkeiten freischalten (C18)
 
-Stand: v293 · 09.09.2026
+Stand: v300 · 10.09.2026
+
+**Nachgesehen in v300:** unveraendert. Die vier Faehigkeiten sind seit v286
+nicht angefasst; `npm run c18` faehrt sie in jeder Runde und meldet die erste
+Karte mit **einer** Faehigkeit als gewonnen (17/42 Kristall), alle vier Karten
+gewonnen. Was seitdem dazugekommen ist, beruehrt sie nicht: Bannturm (v295),
+Wiederholungsaufschlag scharf (v297) und Vielfaltsbeute (v299) sind Regeln
+ueber Preis und Beute, und keine Faehigkeit kostet Gold.
+
+**Eine Zahl aus v299 gehoert hierher, weil sie die Faehigkeiten mitzaehlt:**
+von allen getoeteten Gegnern sterben **2,9 % ohne jede Turmbeteiligung** -
+Faehigkeiten, Kernraub und die Zielunit zusammen. Das ist die erste Messung
+dieses Anteils ueberhaupt.
 
 **Nachgesehen in v293:** unveraendert. Die vier Faehigkeiten sind seit v286
 nicht angefasst worden; `npm run sim` und der Rauchtest fahren sie weiter,

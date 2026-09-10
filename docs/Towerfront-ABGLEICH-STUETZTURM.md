@@ -1,6 +1,35 @@
 # Referenzabgleich — Stützturm (C3, „Bannturm")
 
-Stand: v293 · 09.09.2026
+Stand: v300 · 10.09.2026
+
+**Nachgesehen in v300 — C3 ist gebaut und gemessen, und der Befund ist
+groesser als der Turm.** Der Bannturm steht seit v295: Radius 190, +40 %
+Feuerrate, Preis 90, kein Schaden. Der Zuschlag teilt die **Nachladezeit**,
+nicht den Schaden - den nimmt der Verbund schon, und zwei Regeln auf derselben
+Zahl sind eine Zahl mit zwei Namen. `bannStapel` deckelt nach S6: der zweite
+Mast zaehlt halb, jeder weitere gar nicht.
+
+**S5 ist damit nicht mehr eine Wette, sondern eine Messung** - und sie faellt
+deutlicher aus als der Abgleich vermutet hat. Auf dem Spiralhain:
+
+| | Kristall von 42 |
+|---|---|
+| ohne Bannturm | 27 |
+| **unbedacht gebaut** | **11** (−16) |
+| **ins Nest gebaut** | **29** (+2) |
+
+**18 Punkte Spanne durch die LAGE** — und zum Vergleich: die ganze Turmwahl
+macht nach v293 sechs Punkte aus. Ascheschlucht 35 → 37/37, Frostspalte
+23 → 11/10, Farnkessel 14 → 13/13: auf zwei Karten kostet er, auf einer
+traegt er. Genau das ist eine Entscheidung.
+
+**S4 bleibt offen, und zwar unveraendert:** man sieht nicht, wer verstaerkt
+ist. Der Schildtraeger tut es seit v110 fuer die Gegner (gestrichelter Ring,
+Faeden) - die Mechanik ist im Spiel, sie wird nur gegen den Spieler gespielt.
+
+**Und der Turm ist nicht kaufbar.** Mit sieben Bauknoepfen reissen alle vier
+UX-Zustaende zugleich; er steht deshalb nicht in `BAU_ORDER`. Das Bild fehlt
+ebenfalls noch (Auftrag 8d.4, `33_bannturm.png`).
 
 **Nachgesehen in v293 — C3 ist zur Haelfte gebaut, und die andere Haelfte ist
 jetzt genau benannt.** Seit v290 steht mit der **Werft** ein zweites Gebaeude

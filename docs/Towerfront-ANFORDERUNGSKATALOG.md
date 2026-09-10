@@ -1,6 +1,31 @@
 # Towerfront — Anforderungskatalog
 
-Stand: v293 · 09.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+Stand: v300 · 10.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+
+**Nachgesehen in v300 — die Antwort auf den wichtigsten Satz dieses Katalogs
+hat sich in v291 bis v299 gedreht, und zwar dreimal.**
+
+1. **„Bei 28 % uebrigem Gold ist ein Preis folgenlos"** war gar keine Aussage
+   ueber das Spiel (v291): die Bots tragen `maxTowers: 12` gegen rund
+   zweihundert Bauplaetze. Ohne Deckel bleiben −3 bis 16 % liegen. Nur: wer 29
+   bis 41 Tuerme baut, verliert.
+2. **Die Turmwahl ist der fehlende Grund nicht** (v293): ein eigenes Sortiment
+   fuer `Breite` liess den Abstand der Spielstile Punkt fuer Punkt auf 8,20
+   stehen. Vier Geschuetze, und welches man baut, macht sechs Punkte aus.
+3. **Was traegt, ist die LAGE** (v295): derselbe Bannturm, unbedacht gebaut
+   gegen ins Nest gebaut — **18 Punkte Spanne**, dreimal so viel wie die ganze
+   Turmwahl.
+
+**Damit steht Abschnitt 2.1 anders da als beim Schreiben dieses Katalogs.** Er
+warnt, dass drei der vier Zielzahlen unter dem Rauschen ihres eigenen
+Messverfahrens liegen — das war richtig, und es ist inzwischen zweimal
+gemessen behoben worden: die Spannungsratsche mass ihr Band an der falschen
+Groesse (v296, 4,4 statt 19,0), und die Verteiler-Zusage stand auf einem
+einzigen Lauf neben einem Rauschen von 12 (v300). **Beide Male war die
+Reparatur eine Messung und keine gelockerte Grenze**, und beide Male ist sie
+in einer EIGENEN Runde gefahren worden — eine Ratsche in der Runde zu
+lockern, in der die eigene Aenderung an ihr scheitert, waere kein Beweis
+(v219).
 
 **Nachgesehen in v293 — der wichtigste Satz dieses Katalogs hat endlich seine
 Zahl.** Er lautet: der Genre-Abgleich steht auf 30 von 30, und das Spiel macht

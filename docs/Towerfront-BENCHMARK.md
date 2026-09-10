@@ -1,6 +1,22 @@
 # Towerfront — Genre-Abgleich
 
-Stand: v293 · 09.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+Stand: v300 · 10.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+
+**Nachgesehen in v300:** nachgefahren, nicht geglaubt — unveraendert **30
+von 30**. Sieben weitere Fassungen mit Bannturm (v295), scharfem
+Wiederholungsaufschlag (v297) und Vielfaltsbeute (v299) haben die Zahl nicht
+bewegt, und das ist kein Versaeumnis, sondern der Satz, um den es geht: **der
+Abgleich misst Vollstaendigkeit, nicht Spannung.**
+
+Was sich in diesen sieben Fassungen wirklich bewegt hat, steht in keiner der
+30 Zeilen:
+
+| | gemessen |
+|---|---|
+| Spanne durch die LAGE eines Turms | **18 Kristall** (v295) |
+| Spanne durch die ganze Turmwahl | 6 (v293) |
+| Trennung Haeufer/Mischer durch die Vielfaltsbeute | +0 gegen +100 bis +251 Gold (v299) |
+| Turmarten je getoetetem Gegner | 2,23 (v299) |
 
 **Nachgesehen in v293:** nachgefahren, nicht geglaubt — `npm run bericht`
 meldet unveraendert **30 von 30, gewichtet 100 %, davon 68 von 68

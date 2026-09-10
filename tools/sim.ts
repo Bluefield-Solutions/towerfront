@@ -814,7 +814,7 @@ function vielfaltMessen(): void {
 function wiederholungMessen(): void {
   console.log('\nWiederholung (Haeufen gegen Verteilen, mit Aufschlag und ohne):');
   const trennung: number[] = [];
-  const verteilerLeben: number[] = [];
+  const verteilerLeben: { mittel: number; spanne: number; id: string; je: number[] }[] = [];
   const haeufen: TowerId[] = ['arrow'];
   const verteilen: TowerId[] = ['arrow', 'frost', 'mortar', 'prism'];
   // Der Aufschlag laesst sich nicht zur Laufzeit abschalten - er steht als
@@ -841,7 +841,31 @@ function wiederholungMessen(): void {
     };
     const h = zeile('Haeufen', haeufen);
     const v = zeile('Verteilen', verteilen);
-    verteilerLeben.push(v.leben);
+    // **Der Kristall des Verteilers ueber die AUSSAATEN, nicht aus einem
+    //   Lauf** (v300).
+    //
+    // Bis v299 stand hier `v.leben` - ein einzelner Lauf je Karte, gegen
+    // eine harte Null. Zwei Kristall von 42 sind in diesem Werkzeug die
+    // uebliche Wegabhaengigkeit, und genau daran ist v299 gescheitert: die
+    // Vielfaltsbeute gibt dem Verteiler mehr Gold, er baut anders, der
+    // Aufschlag trifft einen anderen Verlauf, und die Zusage meldete einen
+    // Rueckschritt, den sie gar nicht von einem Wurf unterscheiden kann.
+    //
+    // Gemessen wird jetzt der Mittelwert ueber die drei Aussaaten UND die
+    // Spanne zwischen ihnen - dieselbe Bewegung wie bei der
+    // Spannungsratsche in v296: das Band gehoert an dieselbe Messstelle wie
+    // der Wert (Regel 12).
+    const jeAussaat = AUSSAATEN.map((aussaat) => {
+      aussaatGezaehlt('verteilerLeben', aussaat);
+      const o = play(verteilen, () => 0, MEISTER, 'normal', mm.id,
+        { zuschlag: 0, seed: aussaat });
+      const m2 = play(verteilen, () => 0, MEISTER, 'normal', mm.id,
+        { zuschlag: MESS_ZUSCHLAG, seed: aussaat });
+      return m2.lives - o.lives;
+    });
+    const vMittel = jeAussaat.reduce((a, b) => a + b, 0) / jeAussaat.length;
+    const vSpanne = Math.max(...jeAussaat) - Math.min(...jeAussaat);
+    verteilerLeben.push({ mittel: vMittel, spanne: vSpanne, id: mm.id, je: jeAussaat });
     console.log(`  ${mm.id}`);
     console.log(`    ${h.text}`);
     console.log(`    ${v.text}`);
@@ -889,14 +913,32 @@ function wiederholungMessen(): void {
   // Gemessen wird deshalb der KRISTALL des Verteilers, mit Aufschlag gegen
   // ohne. Er haeuft nichts, also darf ihn eine Regel gegen das Haeufen auch
   // nichts kosten: gemessen 0, +6, 0, 0 ueber die vier Karten.
-  const verlust = Math.min(...verteilerLeben);
-  console.log(`  Der Verteiler zahlt durch den Aufschlag ${verlust >= 0 ? '+' : ''}`
-    + `${verlust} Kristall im schlechtesten Fall (gefordert >= ${VERTEILER_VERLUST_MAX}).`);
-  if (verlust < VERTEILER_VERLUST_MAX) {
-    errors.push(`Der Wiederholungsaufschlag kostet den perfekten Verteiler ${-verlust} `
-      + 'Kristall. Er haeuft nichts - vier Geschuetze, zwoelf Tuerme, drei je Sorte -, '
-      + 'also darf ihn eine Regel gegen das Haeufen nicht treffen. Die Freimenge ist zu '
-      + 'klein.');
+  // **Der schlechteste Fall ist der, dessen Verlust sein eigenes Band
+  //   ueberschreitet** - nicht der mit der kleinsten Zahl.
+  //
+  // Eine Karte, die im Mittel 2 Kristall verliert und zwischen den Aussaaten
+  // um 6 schwankt, sagt nichts; eine, die 2 verliert und um 0 schwankt, sagt
+  // alles. Bis v299 stand hier `Math.min` ueber vier einzelne Laeufe.
+  for (const v of verteilerLeben) {
+    console.log(`  ${v.id.padEnd(14)} Verteiler ${v.mittel >= 0 ? '+' : ''}`
+      + `${v.mittel.toFixed(1)} Kristall im Mittel ueber ${AUSSAATEN.length} Aussaaten `
+      + `(${v.je.map((n) => (n >= 0 ? `+${n}` : n)).join(' / ')}, Rauschen ${v.spanne})`);
+  }
+  const schlimmste = verteilerLeben.reduce((a, b) => (a.mittel <= b.mittel ? a : b));
+  console.log(`  Der Verteiler zahlt durch den Aufschlag im schlechtesten Mittel `
+    + `${schlimmste.mittel >= 0 ? '+' : ''}${schlimmste.mittel.toFixed(1)} Kristall `
+    + `(${schlimmste.id}, Rauschen ${schlimmste.spanne}, `
+    + `gefordert >= ${VERTEILER_VERLUST_MAX} ausserhalb des Rauschens).`);
+  const ueberBand = verteilerLeben
+    .filter((v) => VERTEILER_VERLUST_MAX - v.mittel > v.spanne);
+  if (ueberBand.length) {
+    const v = ueberBand[0];
+    errors.push(`Der Wiederholungsaufschlag kostet den perfekten Verteiler auf `
+      + `${v.id} im Mittel ${(-v.mittel).toFixed(1)} Kristall, und das liegt AUSSERHALB `
+      + `des Rauschens dieser Zahl (${v.spanne} ueber ${AUSSAATEN.length} Aussaaten: `
+      + `${v.je.join(' / ')}). Er haeuft nichts - vier Geschuetze, zwoelf Tuerme, drei je `
+      + 'Sorte -, also darf ihn eine Regel gegen das Haeufen nicht treffen. Die Freimenge '
+      + 'ist zu klein.');
   }
   if (kleinste <= TRENNUNG_MIN) {
     errors.push(`Der Wiederholungsaufschlag trennt Haeufen von Verteilen nur um ${kleinste} `

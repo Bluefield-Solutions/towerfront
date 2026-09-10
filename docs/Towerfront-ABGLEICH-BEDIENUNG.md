@@ -1,6 +1,37 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v293 · 09.09.2026
+Stand: v300 · 10.09.2026
+
+**Nachgesehen in v300 — und die Bedienung hat ihre Grenze gefunden, gemessen
+statt vermutet.** Mit einem SIEBTEN Bauknopf (dem Bannturm, v295) reissen
+**alle vier** Zustaende zugleich: 16,3 / 27,0 / 35,0 / 16,3 % gegen die
+Ratschen 16 / 26 / 35 / 16. Der Turm ist deshalb gebaut, gemessen und von
+fuenf Zusagen gehalten - und steht nicht in `BAU_ORDER`. Das ist keine
+Entscheidung ueber den Turm, sondern ueber diese Bedienung, und sie gehoert
+dem Nutzer.
+
+**Zwei Funde aus v298, beide vom BLICK und nicht von der Messung** (Regel 8,
+und sie irrt in beide Richtungen):
+
+* **Escape schloss die Bauwahl nicht.** `auswahlSchliessen` raeumt Turmauswahl
+  und Sorte weg, aber nicht `buildAt` - und daran haengt die Wahl. Am
+  Schreibtisch blieb sie offen, gleich wie oft man drueckte; auf dem Telefon
+  schliesst sie ein Tipp auf Unbebaubares, dort faellt es nicht auf. Der
+  Schreibtisch ist seit v122 der zweite unterstuetzte Weg, also ist das ein
+  Fehler und kein Randfall.
+* **Der Bauhinweis lag UNTER der Bauwahl.** Ein rotes „Weg" auf der Leinwand
+  schien durch die halbdurchsichtige Leiste und ueberschnitt zwei Namen -
+  „Prisma" las sich als „PrismaWeg". Er sagt dabei dasselbe wie die Wahl, die
+  den Grund an jedem Turm nennt, fuer den er gilt: Regel 15 als
+  Bedienoberflaeche. Vier Messungen an derselben Leiste hatten vorher null
+  gemeldet, weil sie alle nach der LEISTE fragten und das Kaestchen nicht zu
+  ihr gehoert.
+
+**Die Preismarke des Wiederholungsaufschlags ist seit v298 zum ersten Mal
+angesehen worden** - das UX-Audit hat dafuer einen fuenften Zustand („vierter
+Turm derselben Art"): vier Bogentuerme stehen, der fuenfte kostet 61 statt 55
+und traegt das Dreieck in Wahl und Leiste. Gemessen 24,2 % Belegung gegen die
+24,5 % der gewoehnlichen Bauwahl - die Marke kostet keine Flaeche.
 
 **Nachgesehen in v293:** unveraendert seit v286. Die Bedienung ist in v290
 um einen sechsten Bauknopf gewachsen (die Werft), und das UX-Tor haelt: die

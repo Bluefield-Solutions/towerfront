@@ -1346,6 +1346,16 @@ export const PROBEN = [
     // Gemessen wird jetzt der KRISTALL des Verteilers, mit Aufschlag gegen
     // ohne. Er haeuft nichts, also darf ihn eine Regel gegen das Haeufen auch
     // nichts kosten.
+    //
+    // **Seit v300 gegen das eigene Rauschen, nicht gegen eine harte Null.**
+    // Bis dahin stand die Zusage auf EINEM Lauf je Karte - und gemessen
+    // schwankt der Wert auf der Ascheschlucht zwischen den drei Aussaaten um
+    // **12 Kristall** (+6 / +12 / +0). Eine Null, die neben einem Rauschen
+    // von 12 steht, beweist nichts; sie hat in v299 prompt einen
+    // Rueckschritt gemeldet, den sie von einem Wurf nicht unterscheiden
+    // kann. Diese Probe ist der Beleg, dass sie trotzdem noch anschlaegt:
+    // ohne Freimenge zahlt der Verteiler auf einer Karte MEHR als ihr Band
+    // breit ist.
     name: 'Wiederholungsaufschlag ohne Freimenge',
     datei: 'src/data/towers.ts',
     suche: 'export const WIEDERHOLUNG_FREI = 3;',

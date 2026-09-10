@@ -1,6 +1,31 @@
 # Towerfront — Anforderungskatalog
 
-Stand: v300 · 10.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+Stand: v307 · 10.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+
+**Nachgesehen in v307 — und die Antwort auf den wichtigsten Satz dieses
+Katalogs steht inzwischen woanders.**
+
+Der Satz lautet: *der Genre-Abgleich steht auf 30 von 30, und das Spiel macht
+trotzdem wenig Spass.* Er gilt unveraendert — `npm run bericht` meldet in
+v307 wieder 30 von 30 —, aber die Arbeit daran laeuft seit v269 nicht mehr
+ueber diesen Katalog, sondern ueber `docs/Towerfront-NEUBAU.md`. Was in
+v301 bis v306 dazugekommen ist, gehoert alles dorthin:
+
+| Fassung | was |
+|---|---|
+| v301 | Vielfaltsbeute scharf (0,10) — mehrere Turmarten je Gegner lohnen sich |
+| v302 | `LaufZustand`: der Lauf als Klammer ueber Abschnitte; Befund **N1K** |
+| v303 | Kartenzug je Welle, zwoelf Karten als Daten |
+| v305 | Abschnittswahl: Ort und Auflage, Spreizung gemessen **142,4** |
+| v306 | Erfahrung je Lauf (1300 gewonnen gegen 340 verloren), Stapel 12 → 18 |
+
+**Was der Katalog weiterhin richtig sagt**, und was deshalb hier stehen
+bleibt: die Reihenfolge in Abschnitt 2.1 (Messung vor Knappheit) — drei der
+vier Zielzahlen lagen unter dem Rauschen ihres eigenen Verfahrens, und genau
+das ist in v296 und v300 zweimal nachgemessen und repariert worden.
+
+**Was der Katalog nicht mehr entscheidet:** Turmzweige, Stufen, Grade und
+Sterne. Sie entfallen mit S-N1-05, und Paket P2 ist damit gegenstandslos.
 
 **Nachgesehen in v300 — die Antwort auf den wichtigsten Satz dieses Katalogs
 hat sich in v291 bis v299 gedreht, und zwar dreimal.**

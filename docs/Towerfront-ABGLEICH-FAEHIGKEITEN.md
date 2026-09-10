@@ -1,6 +1,21 @@
 # Referenzabgleich — Fähigkeiten freischalten (C18)
 
-Stand: v300 · 10.09.2026
+Stand: v307 · 10.09.2026
+
+**Nachgesehen in v307 — nachgefahren, und die Zahl hat sich bewegt.**
+`npm run c18` meldet die erste Karte mit **einer** Faehigkeit als gewonnen,
+Kristall **19 von 42** (v300: 17). Die zwei Punkte kommen nicht von den
+Faehigkeiten — die sind seit v286 nicht angefasst —, sondern von der
+Vielfaltsbeute (v301, scharf auf 0,10): wer mit mehreren Turmarten toetet,
+verdient mehr, und der Bot tut das nebenbei.
+
+**Was seit v300 dazugekommen ist und die Frage NICHT beruehrt.** Der
+Kartenzug je Welle (v303), die Abschnittswahl (v305) und die Erfahrung
+zwischen den Laeufen (v306) sind alle drei Teil des Laufs, nicht der
+einzelnen Karte: C18 fragt, ob die erste Karte **ohne Verbesserungen** zu
+gewinnen ist, und `c18probe` faehrt sie mit `karten: 0` und ohne Lauf. Der
+Kartenstapel steht dabei auf dem Grundstapel und nie auf dem Kontostand des
+Messenden (Regel 4, seit v306 als Selbsttest in `npm run sim`).
 
 **Nachgesehen in v300:** unveraendert. Die vier Faehigkeiten sind seit v286
 nicht angefasst; `npm run c18` faehrt sie in jeder Runde und meldet die erste

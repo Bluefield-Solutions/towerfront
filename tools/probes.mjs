@@ -5077,6 +5077,53 @@ const befundOffen = () => {
 const filter = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const VOLL = process.argv.includes('--voll');
 
+/** **Der volle Lauf wird in Scheiben gefahren** (v307).
+ *
+ *  Gemessen am 10.09.2026: der volle Lauf ist in **zwei Stunden nicht fertig
+ *  geworden** und an seiner eigenen `timeout-minutes: 120` gestorben - ohne
+ *  Stand, ohne Befund, ohne dass irgendjemand eine Zahl bekommen haette.
+ *  Ueber der Werkstattdatei stand dabei "er dauert rund fuenfzig Minuten",
+ *  und diese Zahl ist aus der Zeit von 249 Proben; heute sind es 377, und die
+ *  teuersten sind dazugekommen (29 an `sim`, 49 an `browsertor`).
+ *
+ *  Dieselbe Falle wie bei `npm run gate` - dort steht sie seit v268 dreimal
+ *  aufgeschrieben: **eine Laufzeit, die niemand nachmisst, wird nicht laenger,
+ *  sondern nur falscher.** Der Unterschied ist, dass sie hier nicht nur eine
+ *  Zahl im Dokument verdirbt: ohne den vollen Lauf schreibt niemand
+ *  `tools/proben-stand.txt` fort, die Zeitratsche schlaegt an, und die ganze
+ *  Torkette ist rot. Eine Vorsichtsmassnahme, die den Betrieb anhaelt, wenn
+ *  sie selbst zu langsam wird, ist keine.
+ *
+ *  **Die Arbeit ist von Natur aus teilbar**: jede Probe baut ihren Fehler
+ *  ein, faehrt ihr Tor und nimmt ihn zurueck. Keine weiss von der anderen.
+ *  `--teil N/M` faehrt jede M-te, beginnend bei N - reihum ueber die ganze
+ *  Liste und nicht in Bloecken: die Proben stehen nach Themen beieinander,
+ *  und ein Block waere eine Scheibe voller `browsertor` neben einer voller
+ *  Musterproben.
+ *
+ *  **Eine Scheibe schreibt den Stand NICHT.** Sie hat die anderen nicht
+ *  gesehen; ihn fortzuschreiben hiesse, sich den Abstand schoenzurechnen -
+ *  derselbe Grund, aus dem ein gefilterter Lauf es auch nicht darf. Der
+ *  zusammenfuehrende Schritt tut es, wenn ALLE Scheiben gruen waren
+ *  (`--stand-schreiben`). */
+const teilArg = process.argv.find((a) => a.startsWith('--teil='))
+  ?? (process.argv.includes('--teil') ? `--teil=${process.argv[process.argv.indexOf('--teil') + 1]}` : null);
+let TEIL = null;
+if (teilArg) {
+  const [n, m] = teilArg.slice('--teil='.length).split('/').map(Number);
+  if (!Number.isInteger(n) || !Number.isInteger(m) || m < 1 || n < 0 || n >= m) {
+    console.error(`--teil ${teilArg.slice(7)} ergibt keine Scheibe. Erwartet wird N/M `
+      + 'mit 0 <= N < M, zum Beispiel --teil=0/6.');
+    process.exit(2);
+  }
+  TEIL = { n, m };
+}
+
+/** Nur den Stand fortschreiben - fuer den zusammenfuehrenden Schritt, wenn
+ *  alle Scheiben gruen waren. Das FORMAT steht damit weiter an genau einer
+ *  Stelle (Regel 15); ein `echo` in der Werkstattdatei waere die zweite. */
+const STAND_SCHREIBEN = process.argv.includes('--stand-schreiben');
+
 /** **Der Standardlauf faehrt nur die Proben, die etwas zu pruefen haben.**
  *
  *  Der volle Lauf dauert rund fuenfzig Minuten. Das ist keine Zahl, die man
@@ -5204,6 +5251,42 @@ if (filter.length) {
   }
 }
 
+// **Und jetzt die Scheibe.** Sie greift NACH der Umfangswahl: eine Scheibe
+// eines Umfangslaufs waere eine halbe Auskunft ueber eine halbe Auskunft.
+// Gedacht ist sie fuer `--voll`, verboten ist der Rest nicht - der Lauf sagt
+// nur immer, welche Scheibe er war.
+if (TEIL) {
+  const ganz = liste.length;
+  // **Selbsttest: die Scheiben decken die Liste genau einmal ab.**
+  //
+  // Eine Aufteilung, die etwas auslässt, sieht aus wie ein bestandener Lauf -
+  // sechs gruene Scheiben, und niemand faehrt die vergessenen Proben. Das ist
+  // dieselbe Klasse wie eine Probe, die nichts mehr beweist (Regel 5), nur
+  // eine Ebene hoeher. Gerechnet wird sie bei JEDEM Scheibenlauf, sie kostet
+  // nichts.
+  const abdeckung = new Array(ganz).fill(0);
+  for (let n = 0; n < TEIL.m; n += 1) {
+    for (let i = 0; i < ganz; i += 1) if (i % TEIL.m === n) abdeckung[i] += 1;
+  }
+  const luecken = abdeckung.filter((x) => x !== 1).length;
+  if (luecken) {
+    console.error(`PROBEN: die Aufteilung in ${TEIL.m} Scheiben deckt ${luecken} von `
+      + `${ganz} Proben nicht genau einmal ab. Sechs gruene Scheiben waeren dann `
+      + 'ein Freispruch fuer Proben, die niemand gefahren hat.');
+    process.exit(1);
+  }
+  liste = liste.filter((_, i) => i % TEIL.m === TEIL.n);
+  umfangGrund = `${umfangGrund}, Scheibe ${TEIL.n + 1} von ${TEIL.m} `
+    + `(${liste.length} von ${ganz} Proben)`;
+  console.log(`  Selbsttest: ${TEIL.m} Scheiben decken alle ${ganz} Proben genau `
+    + 'einmal ab.');
+  if (!liste.length) {
+    console.error(`PROBEN: Scheibe ${TEIL.n + 1} von ${TEIL.m} ist leer. Eine leere `
+      + 'Scheibe meldet gruen und prueft nichts.');
+    process.exit(1);
+  }
+}
+
 /** **Was der Lauf nicht geprueft hat, sagt er selbst.**
  *
  *  Bis v224 stand am Ende "alle 11 Tore schlagen an" - und das las sich wie
@@ -5252,6 +5335,21 @@ const umfangBericht = () => {
 // Lauf - deshalb steht er weiter vor jeder Auslieferung.
 const fassung = () => (readFileSync(join(ROOT, 'src/data/config.ts'), 'utf8')
   .match(/VERSION = 'v(\d+)'/)?.[1] ?? '0');
+
+/** **Den Stand fortschreiben, ohne eine Probe zu fahren** (v307).
+ *
+ *  Fuer den Schritt, der die Scheiben zusammenfuehrt. Er weiss, dass alle
+ *  gruen waren; die Zeilenform kennt er nicht - und soll sie nicht kennen.
+ *  Ein `echo "v$N $SHA $ZEIT"` in der Werkstattdatei waere die zweite Stelle,
+ *  an der dieses Format steht, und die erste, die veraltet (Regel 15). */
+if (STAND_SCHREIBEN) {
+  const kopf = execSync('git rev-parse HEAD', { cwd: ROOT, encoding: 'utf8' }).trim();
+  const zeit = new Date().toISOString();
+  writeFileSync(STAND_DATEI, `v${fassung()} ${kopf} ${zeit}\n`);
+  console.log(`Stand festgehalten: v${fassung()} ${kopf.slice(0, 8)} ${zeit} `
+    + '(tools/proben-stand.txt).');
+  process.exit(0);
+}
 /** Wieviele Fassungen der volle Lauf zurueckliegen darf.
  *
  *  Drei - so hat der Nutzer den Ablauf entschieden, nachdem das Tor-Audit
@@ -5644,7 +5742,7 @@ console.log(`\nPROBEN: alle ${liste.length} Tore schlagen an.`);
 // Den Stand nur bei einem VOLLEN Lauf festhalten. Ein gefilterter Lauf hat
 // die uebrigen Proben nicht angefasst - ihn mitzuzaehlen hiesse, sich den
 // Abstand schoenzurechnen, und genau dafuer ist die Zahl nicht da.
-if (VOLL && !filter.length) {
+if (VOLL && !filter.length && !TEIL) {
   // Fassung UND Commit: die Fassung traegt die Drei-Fassungs-Regel, der
   // Commit sagt dem naechsten Standardlauf, wogegen er `git diff` rechnet.
   const kopf = execSync('git rev-parse HEAD', { cwd: ROOT, encoding: 'utf8' }).trim();
@@ -5655,6 +5753,10 @@ if (VOLL && !filter.length) {
   writeFileSync(STAND_DATEI, `v${fassung()} ${kopf} ${zeit}\n`);
   console.log(`  Stand festgehalten: v${fassung()} ${kopf.slice(0, 8)} ${zeit} `
     + '(tools/proben-stand.txt).');
+} else if (TEIL) {
+  console.log(`  Stand NICHT fortgeschrieben - das war Scheibe ${TEIL.n + 1} von `
+    + `${TEIL.m}. Sie hat die anderen nicht gesehen; der zusammenfuehrende `
+    + 'Schritt schreibt ihn, wenn alle gruen waren.');
 } else if (!filter.length) {
   console.log('  Stand NICHT fortgeschrieben - das war ein Umfangslauf, kein voller.');
   console.log('  Der volle Lauf faehrt nachts auf dem Runner, oder hier mit `-- --voll`.');

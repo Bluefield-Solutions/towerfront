@@ -1,6 +1,26 @@
 # Referenzabgleich — Stützturm (C3, „Bannturm")
 
-Stand: v300 · 10.09.2026
+Stand: v307 · 10.09.2026
+
+**Nachgesehen in v307 — nachgefahren, unveraendert, und S5 haelt weiter.**
+Der Bannturm ist seit v295 nicht angefasst. Gemessen mit `npm run sim`,
+derselbe Bot einmal mit und einmal ohne:
+
+| Karte | ohne | unbedacht gestellt | ins Nest gebaut |
+|---|---|---|---|
+| Spiralhain | 21 | 21 (+0) | **23 (+2)** |
+| Ascheschlucht | 33 | 33 (+0) | **35 (+2)** |
+| Frostspalte | 30 | 22 (−8) | 9 (−21) |
+| Farnkessel | 11 | 13 (+2) | 13 (+2) |
+
+Wer absichtlich um ihn herum baut, erreicht gemessen **5,3 statt 2,2 Tuerme
+im Umkreis** — Faktor 2,4. Das ist der Satz des Abgleichs: unbedacht gestellt
+SOLL er sich nicht lohnen.
+
+**Die Frostspalte ist kein neuer Befund, sondern derselbe zugespitzt.** Dort
+kostet ein Bauplatz, der nicht schiesst, am meisten — die Karte hat die
+laengsten Bahnen bei der duennsten Deckung. Ein Stuetzturm ist dort eine
+Entscheidung gegen Feuerkraft, und sie kann falsch sein.
 
 **Nachgesehen in v300 — C3 ist gebaut und gemessen, und der Befund ist
 groesser als der Turm.** Der Bannturm steht seit v295: Radius 190, +40 %

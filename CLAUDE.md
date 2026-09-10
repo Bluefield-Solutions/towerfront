@@ -172,7 +172,8 @@ npm run gate        dreiunddreissig Prüfungen. Läuft seit v269 auf dem Runner;
                     137 s gewachsen, ohne dass jemand etwas gemerkt hätte.
                     **Sechs Schritte tragen 85 % davon**, und das ist der
                     Ansatzpunkt für jede Beschleunigung:
-                      sim 127 s · browser 76 s · wegdeckungtor 64 s ·
+                      sim 156 s (v306 nachgemessen; v268 waren es 127) ·
+                      browser 76 s · wegdeckungtor 64 s ·
                       bildtor 41 s · smoke 29 s · uxaudittor 26 s
                     Die übrigen 27 Schritte zusammen: 63 s.
                     Messstelle (Regel 12): dieser Rechner, warmer Baum,
@@ -418,6 +419,12 @@ npm run proben      baut Fehler ein und prüft, ob die Tore anschlagen - im
                     geändert hat. Ein Name oder ein Torname als Argument filtert
                     gezielt. `-- --voll` fährt alle; das dauert rund 50
                     Minuten und läuft deshalb nachts auf dem Runner.
+                    **Seit v307 in Scheiben:** `-- --voll --teil=N/6` faehrt
+                    jede sechste Probe. Der volle Lauf ist gemessen laenger
+                    als zwei Stunden - er ist am 10.09.2026 an seiner eigenen
+                    Zeitgrenze gestorben, ohne Stand und ohne Befund. Eine
+                    Scheibe schreibt den Stand NICHT; das tut der
+                    zusammenfuehrende Schritt, wenn alle sechs gruen waren.
 npm run naechste    welche Story als naechste dran ist, mit ihrem vollen
                     Text - gelesen aus `docs/Towerfront-STORIES.md`, nicht
                     gemerkt. **Seit v289 liest es auch "Haengt an"** und
@@ -677,6 +684,28 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der volle Probenlauf faehrt in Scheiben (v307) - und die alte Zahl war um
+mehr als das Doppelte daneben.** Am 10.09.2026 ist er in zwei Stunden nicht
+fertig geworden und um 13:15:35 an seiner eigenen `timeout-minutes: 120`
+gestorben. Ueber der Werkstattdatei stand "rund fuenfzig Minuten" - das ist
+die Zahl von 249 Proben; heute sind es **378**, und die teuersten sind
+dazugekommen: 29 an `sim` (das allein misst gemessen **156 s**, dokumentiert
+waren 127), 49 an `browsertor`, 114 an `smoke`. **Ein abgebrochener Lauf
+schreibt nicht einmal seinen Befund** - `if: always()` laeuft bei einer
+Absage nicht mehr -, also blieb weder Stand noch Meldung, die Zeitratsche
+schlug an, und die ganze Torkette war rot. Eine Vorsichtsmassnahme, die den
+Betrieb anhaelt, wenn sie selbst zu langsam wird, ist keine.
+
+Die Arbeit ist von Natur aus teilbar - jede Probe baut ihren Fehler ein,
+faehrt ihr Tor und nimmt ihn zurueck. `npm run proben -- --voll --teil=N/6`
+faehrt jede sechste, reihum ueber die ganze Liste (nicht in Bloecken: die
+Proben stehen nach Themen beieinander). **Eine Scheibe schreibt den Stand
+nicht** - sie hat die anderen nicht gesehen; der zusammenfuehrende Schritt tut
+es, wenn alle sechs gruen waren, und eine FEHLENDE Scheibe zaehlt dabei als
+rot. Dazu ein Selbsttest bei jedem Scheibenlauf: die sechs Scheiben decken die
+Liste genau einmal ab - eine Aufteilung, die etwas auslaesst, sieht aus wie
+ein bestandener Lauf.
+
 **Erfahrung zwischen den Laeufen (v306).** Ein Lauf bringt 10 je gefahrener
 Welle, 100 je gewonnenem Abschnitt und 300 fuers Durchbringen - gemessen 1300
 gewonnen gegen 340 verloren, das 3,8-fache. Gekauft werden **Karten, keine
@@ -829,7 +858,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v306. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v307. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

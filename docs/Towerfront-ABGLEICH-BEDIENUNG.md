@@ -1,6 +1,35 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v300 · 10.09.2026
+Stand: v307 · 10.09.2026
+
+**Nachgesehen in v307 — nachgefahren, nicht geglaubt: die Grenze aus v300
+haelt, und der Kartenzug hat sie NICHT gesprengt.** Seit v303 liegt zwischen
+zwei Wellen ein eigenes Band mit drei Karten (`#zug`). Gemessen mit
+`npm run uxaudittor` auf demselben Geraet und in derselben Aufloesung:
+
+| Zustand | gesperrt | Ratsche |
+|---|---|---|
+| `zug` (neu seit v303) | **7,9 %** | 16 |
+| `ruhe` | 15,5 % | 16 |
+| `bauwahl` | 24,5 % | 26 |
+| `pruefsteg` | 34,2 % | 35 |
+| `teurer` | 24,2 % | 26 |
+| `welle` | 15,5 % | 16 |
+
+Fuenf Schriftgroessen (8/10/12/15/17 px), keine Doppelungen, alle
+Trefferflaechen ueber 44.
+
+**Warum das nicht die Grenze aus v300 widerlegt.** Der Zug steht nicht NEBEN
+der Bauleiste, sondern an ihrer Stelle: `setSpielansicht` blendet das Dock
+aus, solange eine Karte zu ziehen ist. Beide zugleich sperren gemessen 21,7 %
+gegen erlaubte 16 — jede fuer sich passt, beide nicht. Das ist dieselbe
+Auskunft wie beim siebten Bauknopf, nur an einer anderen Stelle: **die Leiste
+ist voll, und was dazukommt, muss etwas anderes ersetzen.**
+
+Die Menuebilder aus v305 und v306 (Abschnittswahl, Kartenstapel) zaehlen hier
+nicht mit und stehen absichtlich nicht in der Tabelle: sie sind Menue, und im
+Menue ist keine Spielbedienung sichtbar (Regel 6). Abgenommen werden sie als
+Aufnahmen (`menu-wahl`, `menu-stapel`).
 
 **Nachgesehen in v300 — und die Bedienung hat ihre Grenze gefunden, gemessen
 statt vermutet.** Mit einem SIEBTEN Bauknopf (dem Bannturm, v295) reissen

@@ -1,6 +1,18 @@
 # Towerfront — Genre-Abgleich
 
-Stand: v300 · 10.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+Stand: v307 · 10.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+
+**Nachgesehen in v307:** nachgefahren, nicht geglaubt — unveraendert **30 von
+30**, gewichtet 100 %, davon **68 von 68 Gewichtspunkten ueber 28 Kriterien
+gemessen**; von Hand beurteilt bleiben P6 und P7 mit 5 von 73 Gewichtspunkten
+(7 % der Zahl). Fokus 4/4, Rollen 6/6, Gegner 6/6, Karten 6/6, Politur 8/8.
+
+Sieben weitere Fassungen — Lauf (v302), Kartenzug (v303), Abschnittswahl
+(v305), Erfahrung und Kartenstapel (v306) — haben die Zahl **nicht bewegt**,
+und das ist wieder kein Versaeumnis, sondern der Satz, um den es geht: der
+Abgleich misst, ob das Spiel die Gattung beherrscht, nicht ob es Spass macht.
+Genau deshalb ist der Neubau ab v269 nicht gegen diese dreissig gefahren,
+sondern gegen `docs/Towerfront-NEUBAU.md`.
 
 **Nachgesehen in v300:** nachgefahren, nicht geglaubt — unveraendert **30
 von 30**. Sieben weitere Fassungen mit Bannturm (v295), scharfem

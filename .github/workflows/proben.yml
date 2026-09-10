@@ -1,13 +1,31 @@
 # Der volle Gegenprobenlauf - nachts, auf dem Runner, nicht in der Sitzung.
 #
-# **Warum er hierher gehoert.** Der Lauf baut nacheinander 249 Fehler ein und
-# prueft, ob das zustaendige Tor sie meldet. Er dauert rund fuenfzig Minuten,
-# und die standen bisher zwischen jeder Runde und der naechsten. Das ist die
-# falsche Stelle: die Arbeit ist wichtig, aber niemand muss dabei zusehen.
+# **Warum er hierher gehoert.** Der Lauf baut nacheinander 377 Fehler ein und
+# prueft, ob das zustaendige Tor sie meldet. Niemand muss dabei zusehen.
 #
-# Der Lauf schreibt bei Erfolg `tools/proben-stand.txt` fort - Fassung und
-# Commit. Die Fassung traegt die Drei-Fassungs-Regel in `npm run muster`, der
+# **Warum er seit v307 in Scheiben faehrt.** Am 10.09.2026 ist er in zwei
+# Stunden nicht fertig geworden und an seiner eigenen `timeout-minutes: 120`
+# gestorben - ohne Stand, ohne Befund, ohne dass irgendjemand eine Zahl
+# bekommen haette. Ueber der Werkstattdatei stand dabei "rund fuenfzig
+# Minuten", und diese Zahl ist aus der Zeit von 249 Proben; heute sind es 377,
+# und die teuersten sind dazugekommen (29 an `sim`, 49 an `browsertor`).
+#
+# Dieselbe Falle wie bei `npm run gate`, wo sie seit v268 dreimal
+# aufgeschrieben steht: eine Laufzeit, die niemand nachmisst, wird nicht
+# laenger, sondern nur falscher. Hier verdirbt sie nicht nur eine Zahl im
+# Dokument - ohne den vollen Lauf schreibt niemand `tools/proben-stand.txt`
+# fort, die Zeitratsche schlaegt an, und die ganze Torkette ist rot. Eine
+# Vorsichtsmassnahme, die den Betrieb anhaelt, wenn sie selbst zu langsam
+# wird, ist keine.
+#
+# Die Arbeit ist von Natur aus teilbar: jede Probe baut ihren Fehler ein,
+# faehrt ihr Tor und nimmt ihn zurueck. Keine weiss von der anderen.
+#
+# Der Lauf schreibt bei Erfolg `tools/proben-stand.txt` fort - Fassung,
+# Commit und Zeit. Die Zeit traegt die Zeitratsche in `npm run muster`, der
 # Commit sagt dem taeglichen Umfangslauf, wogegen er `git diff` rechnet.
+# Geschrieben wird er im zusammenfuehrenden Schritt und nur dann, wenn ALLE
+# Scheiben gruen waren - eine Scheibe hat die anderen nicht gesehen.
 #
 # Der Push mit dem GITHUB_TOKEN loest KEINEN weiteren Plan aus (GitHub
 # unterbindet das gegen Endlosschleifen). Die Auslieferung wird deshalb bei
@@ -29,10 +47,18 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  proben:
-    name: Alle Gegenproben
+  scheiben:
+    name: Gegenproben ${{ matrix.teil }}/6
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 90
+    strategy:
+      # **`fail-fast: false` ist hier keine Nachlaessigkeit, sondern der
+      # Zweck.** Eine rote Scheibe sagt, dass EINE Probe nichts beweist; die
+      # anderen fuenf sollen ihre Befunde trotzdem liefern. Abzubrechen hiesse,
+      # nach dem ersten Fund blind zu werden.
+      fail-fast: false
+      matrix:
+        teil: [0, 1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -42,45 +68,88 @@ jobs:
       - run: npm ci
       - name: Chromium
         run: npx playwright install --with-deps chromium
-      # `continue-on-error`, damit der Befund auch nach einem roten Lauf noch
-      # geschrieben und eingecheckt wird. Rot bleibt der Lauf trotzdem - der
-      # letzte Schritt reicht das Ergebnis durch.
+      # `continue-on-error`, damit das Protokoll auch nach einem roten Lauf
+      # noch als Beweisstueck hochgeladen wird. Rot bleibt die Scheibe
+      # trotzdem - der zusammenfuehrende Schritt liest das Ergebnis.
       #
       # Das Protokoll liegt unter /tmp und nicht im Baum: `npm run proben`
       # verweigert den Dienst bei schmutzigem Baum, und `git status
       # --porcelain` zaehlt auch unverfolgte Dateien mit.
-      - name: Alle Gegenproben
+      - name: Scheibe fahren
         id: lauf
         continue-on-error: true
-        run: npm run proben -- --voll 2>&1 | tee /tmp/proben-lauf.log
-      # **Der Befund muss einen Weg zurueck ins Tor finden.**
-      #
-      # Bis v226 landete er nur hier im Protokoll. Dreimal ist der Lauf
-      # gefahren, zweimal rot, und beide Befunde habe ich nur gefunden, weil
-      # ich nachgesehen habe. Jetzt steht er eingecheckt in
-      # `tools/proben-befund.txt`, und `npm run muster` liest ihn in jeder
-      # Torkette.
-      - name: Befund festhalten
+        run: npm run proben -- --voll --teil=${{ matrix.teil }}/6 2>&1 | tee /tmp/proben-lauf.log
+      - name: Ergebnis der Scheibe festhalten
         if: always()
         run: |
+          echo "${{ steps.lauf.outcome }}" > /tmp/ausgang.txt
+          mkdir -p /tmp/scheibe
+          cp /tmp/proben-lauf.log /tmp/scheibe/lauf.log
+          cp /tmp/ausgang.txt /tmp/scheibe/ausgang.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scheibe-${{ matrix.teil }}
+          path: /tmp/scheibe
+          retention-days: 7
+
+  zusammenfuehren:
+    name: Befund und Stand
+    needs: scheiben
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: scheibe-*
+          path: /tmp/scheiben
+      # **Der Befund muss einen Weg zurueck ins Tor finden.**
+      #
+      # Bis v226 landete er nur im Protokoll. Dreimal ist der Lauf gefahren,
+      # zweimal rot, und beide Befunde wurden nur gefunden, weil jemand
+      # nachgesehen hat. Jetzt steht er eingecheckt in
+      # `tools/proben-befund.txt`, und `npm run muster` liest ihn in jeder
+      # Torkette.
+      #
+      # **Eine fehlende Scheibe zaehlt als rot.** Sie kann abgebrochen,
+      # abgestuerzt oder zeitlich abgelaufen sein - genau der Fall vom
+      # 10.09.2026 -, und "keine Meldung" als "nichts gefunden" zu lesen waere
+      # die schlimmere Haelfte.
+      - name: Befund und Stand
+        run: |
           kurz="${GITHUB_SHA:0:8}"
-          if grep -q "beweisen nichts" /tmp/proben-lauf.log 2>/dev/null; then
+          rot=0
+          fehlend=""
+          for i in 0 1 2 3 4 5; do
+            aus="/tmp/scheiben/scheibe-$i/ausgang.txt"
+            if [ ! -f "$aus" ]; then rot=1; fehlend="$fehlend $i"; continue; fi
+            if [ "$(cat "$aus")" != "success" ]; then rot=1; fi
+          done
+          if [ "$rot" = "1" ]; then
             {
               echo "BEFUND vom $(date -u +%Y-%m-%dT%H:%MZ) auf $kurz:"
-              sed -n '/beweisen nichts/,$p' /tmp/proben-lauf.log | head -20
-            } > tools/proben-befund.txt
-          elif [ "${{ steps.lauf.outcome }}" = "failure" ]; then
-            # Rot, aber ohne die uebliche Zeile - abgebrochen, abgestuerzt oder
-            # zeitlich abgelaufen. Auch das ist ein Befund; ihn als "sauber" zu
-            # schreiben waere die schlimmere Haelfte.
-            {
-              echo "BEFUND vom $(date -u +%Y-%m-%dT%H:%MZ) auf $kurz:"
-              echo "Der volle Lauf ist rot geendet, ohne eine Probenmeldung zu"
-              echo "hinterlassen - abgebrochen, abgestuerzt oder zeitlich abgelaufen."
-              tail -12 /tmp/proben-lauf.log 2>/dev/null || echo "(kein Protokoll)"
+              if [ -n "$fehlend" ]; then
+                echo "Ohne Ergebnis geblieben:$fehlend (abgebrochen, abgestuerzt"
+                echo "oder zeitlich abgelaufen). Eine fehlende Scheibe zaehlt als rot."
+              fi
+              for i in 0 1 2 3 4 5; do
+                log="/tmp/scheiben/scheibe-$i/lauf.log"
+                [ -f "$log" ] || continue
+                sed -n '/beweisen nichts/,$p' "$log" | head -12
+              done
             } > tools/proben-befund.txt
           else
             echo "sauber $(date -u +%Y-%m-%d) $kurz" > tools/proben-befund.txt
+            # Das FORMAT der Standzeile steht in `tools/probes.mjs` und nur
+            # dort (Regel 15) - ein `echo` hier waere die zweite Stelle.
+            node tools/probes.mjs --stand-schreiben
           fi
           if git diff --quiet -- tools/proben-stand.txt tools/proben-befund.txt; then
             echo "Stand und Befund unveraendert."
@@ -91,10 +160,7 @@ jobs:
             git commit -m "Probenlauf: $(head -1 tools/proben-befund.txt)"
             git push
           fi
-      # Der Lauf ist rot, wenn die Proben rot waren - erst hier, damit der
-      # Befund vorher seinen Weg in den Baum gefunden hat.
-      - name: Ergebnis durchreichen
-        if: steps.lauf.outcome == 'failure'
-        run: |
-          echo "Der volle Probenlauf ist rot. Der Befund steht in tools/proben-befund.txt."
-          exit 1
+          if [ "$rot" = "1" ]; then
+            echo "Der volle Probenlauf ist rot. Der Befund steht in tools/proben-befund.txt."
+            exit 1
+          fi

@@ -1,6 +1,32 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v304 · 10.09.2026
+Stand: v311 · 10.09.2026
+
+**Nachgesehen in v311 — nachgefahren, nicht geglaubt.** `npm run uxaudittor`
+auf demselben Gerät und in derselben Auflösung:
+
+| Zustand | gesperrt | bemalt | Ratsche |
+|---|---|---|---|
+| `zug` (neu seit v303) | **7,9 %** | 10,3 % | 16 |
+| `ruhe` | 15,5 % | 18,5 % | 16 |
+| `bauwahl` | 24,5 % | 27,4 % | 26 |
+| `pruefsteg` | 34,2 % | 37,0 % | 35 |
+| `teurer` | 24,2 % | 26,9 % | 26 |
+| `welle` | 15,5 % | 17,7 % | 16 |
+
+Fünf Schriftgrößen (8/10/12/15/17 px), keine Doppelungen, alle
+Trefferflächen über 44.
+
+**Der Kartenzug hat die Leiste nicht gesprengt, weil er sie ERSETZT.**
+`setSpielansicht` blendet das Dock aus, solange eine Karte zu ziehen ist;
+beide zugleich sperren gemessen 21,7 % gegen erlaubte 16. Jede für sich passt,
+beide nicht — dieselbe Auskunft wie beim siebten Bauknopf, nur an anderer
+Stelle.
+
+**Zwei neue Bildschirme sind dazugekommen und zählen hier NICHT mit**
+(v305 Abschnittswahl, v306 Kartenstapel): sie sind Menü, und im Menü ist keine
+Spielbedienung sichtbar (Regel 6). Abgenommen werden sie als Aufnahmen
+(`menu-wahl`, `menu-stapel`) statt über die Belegung.
 
 **Nachgesehen in v304 — der Bildschirm hat eine neue Dauerbewohnerin bekommen
 und dafuer eine abgegeben.**

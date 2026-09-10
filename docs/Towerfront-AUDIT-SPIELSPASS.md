@@ -1,6 +1,34 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v304 · 10.09.2026
+Stand: v311 · 10.09.2026
+
+**Nachgesehen in v311 — der Lauf ist zum ersten Mal ein Bogen und nicht vier
+Partien hintereinander.** Gemessen über einen vollen Lauf mit Deck
+(`npm run sim -- --lauf`):
+
+| Abschnitt | Rampe | Ergebnis | Kristall verloren |
+|---|---|---|---|
+| 1 · Spiralhain | 1,00 | gewonnen | **0** |
+| 2 · Ascheschlucht | 1,30 | gewonnen | **0** |
+| 3 · Frostspalte | 1,69 | gewonnen | **7** |
+| 4 · Ascheschlucht | 2,20 | gewonnen | **11** |
+
+60 von 60 Wellen, 1316 s, 60 Karten gezogen. **Zwei Abschnitte kosten noch
+nichts**, und genau das steht als N1K offen — erlaubt ist einer.
+
+**Der Befund, der am meisten über den Spielspaß sagt, ist aber ein anderer:**
+die drei Spielstile laufen über einen Lauf weit auseinander. Bei Steigung 1,6
+gewinnt `Meister` alle vier Abschnitte und `Breite` nur zwei. Über eine
+einzelne Karte messen sie sich mit 8,20 Punkten Abstand (M18) — über sechzig
+Wellen entscheidet derselbe Unterschied über den Lauf. Die Ursache steht als
+**N1G**: Gold und Beute kaufen Türme, die Turmzahl ist begrenzt, also kauft
+diese Achse nach dem Ausbau nichts mehr.
+
+**Was das für die Frage dieses Audits heißt:** die Entscheidung je Welle ist
+gebaut und misst sich (12 von 12 Karten werden genommen, 0 von jedem immer),
+die Entscheidung je Abschnitt auch (Spreizung 142,4). Was fehlt, ist nicht
+noch eine Entscheidung, sondern dass **jede Spielweise über einen ganzen Lauf
+trägt**.
 
 **Nachgesehen in v304 — das Spiel hat zum ersten Mal eine Entscheidung je
 WELLE, und der Lauf hat gesagt, was ihm fehlt.**

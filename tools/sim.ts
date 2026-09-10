@@ -7,8 +7,7 @@ import { GameState } from '../src/game/state';
 import { ZIELWAHL_ORDNUNG, type Zielwahl, type Tower } from '../src/game/types';
 
 import {
-  DIFFICULTIES, DIFFICULTY_ORDER, hpScale, laufFaktor, LAUF_STEIGUNG,
-  type DifficultyId,
+  DIFFICULTIES, DIFFICULTY_ORDER, LAUF_STEIGUNG, type DifficultyId,
 } from '../src/data/difficulty';
 import {
   laufStarten, abschnittGeschafft, laufendeKarte, istLaufZuEnde, wellenDesLaufs,
@@ -481,6 +480,10 @@ interface Result {
   /** Wieviele Karten der Bot in diesem Abschnitt gezogen hat (v308, N1K).
    *  0 heisst: er faehrt ohne Deck. */
   gezogeneKarten: number;
+  /** **Die Rampe, mit der dieser Abschnitt wirklich gerechnet hat** (v310).
+   *  Abgelesen am Spielzustand, nicht danebengerechnet - die Gegenprobe hat
+   *  gezeigt, dass eine nachgerechnete Tabelle den Eingriff gar nicht sieht. */
+  rampe: number;
 }
 
 type BranchPick = (id: TowerId) => 0 | 1;
@@ -1152,10 +1155,7 @@ function laufMessen(steigung = LAUF_STEIGUNG, bot: Bot = MEISTER): void {
     const mm = MAPS.find((m) => m.id === karte)!;
     // Die Rampe der ERSTEN Welle dieses Abschnitts - gerechnet, nicht
     // erspielt.
-    // Die Rampe der ERSTEN Welle dieses Abschnitts, nach dem Modell von v309:
-    // die geeichte Kurve der Karte, mal dem Faktor des Abschnitts.
-    rampen.push(hpScale(DIFFICULTIES.normal, 0, mm.waves.length, mm.balance.hpMul)
-      * laufFaktor(lauf.abschnitt, steigung));
+    void mm;
     const r = play(bot.plan ?? mixedPlanBase, () => 0, bot, 'normal', karte, {
       seed: lauf.saat, laufAbschnitt: lauf.abschnitt, laufSteigung: steigung,
       // **Mit Deck** (v308, N1K). Bis v307 fuhr dieser Lauf ohne - und die
@@ -1164,6 +1164,11 @@ function laufMessen(steigung = LAUF_STEIGUNG, bot: Bot = MEISTER): void {
       zugStil: bot.name,
     });
     karten += r.gezogeneKarten;
+    // **Die Rampe wird ABGELESEN, nicht nachgerechnet** (v310). Bis dahin
+    // stand hier dieselbe Formel ein zweites Mal - und die Gegenprobe zum
+    // Lauffaktor lief deshalb ins Leere: sie baute den Fehler ins Spiel ein,
+    // und diese Tabelle blieb unveraendert.
+    rampen.push(r.rampe);
     dauer += r.dauer;
     verluste.push(r.maxLives - r.lives);
     const wellen = r.won ? wellenDesAbschnitts(karte) : r.wave;
@@ -1962,6 +1967,7 @@ function play(
     raeuber: s.raubTotal, gerettet: s.rettungTotal, geretteteFunken: s.rettungPunkte,
     artenJeKill: s.stats.artenJeKill.slice(),
     gezogeneKarten: s.genommeneKarten.length,
+    rampe: s.laufRampe(0),
     maxLives: s.maxLives,
     earned: s.stats.goldEarned, spent: s.stats.goldSpent,
   };

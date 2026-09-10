@@ -1,6 +1,30 @@
 # Towerfront — Bildauftrag
 
-Stand: v304 · 10.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v311 · 10.09.2026 · **Auftragsdokument für den Bild-Agenten**
+
+**Nachgesehen in v311:** die Reparatur aus v304 hält — Abschnitt **1c** (der
+Ausgabeblock für Figuren und Bauwerke) steht, `tools/auftrag.ts` setzt ihn
+ein, und `npm run doku` hält es als Ableitung statt als Liste: wer im Prompt
+„512 x 512" schreibt, bestellt eine Figur und darf nicht den Kartenblock
+tragen.
+
+**Offen sind zwei Bestellungen**, beide seit ihrer Story unverändert und beide
+in jedem `npm run bildtor` genannt:
+
+| Abschnitt | Datei | offen seit |
+|---|---|---|
+| 8d.2 | `31_foerderer.png` | v285 |
+| 8d.3 | `32_werft.png` | v290 |
+
+Gebaut wird solange gegen `getPlatzhalter` — Silhouette in der richtigen
+Größe, Schraffur, kein Detail, Marke `#FF00E5`. Gemessen tragen 83 % der
+deckenden Punkte die Marke, und die beiden Platzhalter unterscheiden sich zu
+20 % voneinander; ein fehlendes Bild ist damit sichtbar und nicht als
+ordentliche Ersatzform getarnt (das war es bis v272).
+
+**Seit v304 sind keine neuen Bildbestellungen dazugekommen.** Die beiden neuen
+Menübilder (v305 Abschnittswahl, v306 Kartenstapel) sind gezeichnet, in
+derselben Formensprache wie die Landkarte.
 
 **Nachgesehen in v304 — und die drei offenen Aufträge widersprachen sich
 selbst.** 8d.2, 8d.3 und 8d.4 bestellen ein Sprite (512 × 512, quadratisch,

@@ -1469,14 +1469,27 @@ export class GameState {
     // Spaziergaenge und ein Abschnitt, der alles trug. Der Wellenzaehler war
     // nicht falsch, aber er ist der Zaehler eines LAUFS und nicht der einer
     // Kurve; er traegt seitdem die Erfahrung (S-N1-04) und die Laenge.
-    const ramp = hpScale(this.diff, welle, this.waves.length, this.map.balance.hpMul)
-      * laufFaktor(this.laufAbschnitt, this.laufSteigung);
-    // **Und die Auflage des Abschnitts liegt darueber** (v305, S-N1-03).
     //
+    // **Und die Auflage des Abschnitts liegt darueber** (v305, S-N1-03).
     // Sie ist ein Faktor und kein zweiter Kurvenparameter: die Wahl aendert,
     // wie schwer DIESER Abschnitt ist, nicht wie die Kurve laeuft. Ohne Wahl
     // steht sie auf 1, und dann rechnet die Zeile dasselbe wie in v304.
-    return Math.round(ENEMIES[id].hp * hpMul * ramp * this.laufDruck);
+    return Math.round(ENEMIES[id].hp * hpMul * this.laufRampe(welle) * this.laufDruck);
+  }
+
+  /** **Die Rampe dieser Welle - an EINER Stelle** (v310).
+   *
+   *  Sie stand bis v310 nur inline in `huelle`, und `npm run sim` rechnete
+   *  seine Rampentabelle daneben noch einmal selbst. Die Gegenprobe hat es
+   *  gefunden: sie baute den Fehler in den Spielzustand ein, und die Tabelle
+   *  im Werkzeug blieb unveraendert - **das Tor mass seine eigene Arithmetik
+   *  statt des Spiels**. Eine Pruefung, die ihren Gegenstand nachrechnet
+   *  statt ihn abzulesen, beweist nichts (Regel 5 und Regel 15 in einem).
+   *
+   *  Jetzt fragt das Werkzeug hier, und beide sehen dieselbe Zahl. */
+  laufRampe(welle: number): number {
+    return hpScale(this.diff, welle, this.waves.length, this.map.balance.hpMul)
+      * laufFaktor(this.laufAbschnitt, this.laufSteigung);
   }
 
   /** **Der wievielte Abschnitt eines Laufs das hier ist**, 0-basiert

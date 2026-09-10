@@ -866,6 +866,12 @@ export const PROBEN = [
     // hintereinander - gemessen 0 / 0 / 0 / 0 Kristall Verlust.
     name: 'Der Lauf macht spaetere Abschnitte nicht haerter',
     datei: 'src/game/state.ts',
+    // **Neu angesetzt in v310, und zwar nachdem sie sich selbst als
+    // wirkungslos erwiesen hat** (Regel 3): der erste Anlauf baute den Fehler
+    // in den Spielzustand ein, und `sim` meldete nichts - weil `laufMessen`
+    // seine Rampentabelle DANEBEN noch einmal selbst rechnete. Das Tor mass
+    // seine eigene Arithmetik statt des Spiels. Die Rampe steht seitdem an
+    // einer Stelle (`GameState.laufRampe`), und das Werkzeug liest sie ab.
     suche: '      * laufFaktor(this.laufAbschnitt, this.laufSteigung);',
     ersatz: '      * 1;',
     tor: 'sim',

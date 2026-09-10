@@ -1,6 +1,26 @@
 # Marktrecherche — was moderne Tower-Defense-Spiele ausmacht
 
-Stand: v304 · 10.09.2026
+Stand: v311 · 10.09.2026
+
+**Nachgesehen in v311:** unverändert gültig, und seit v304 sind drei weitere
+Stücke aus den Vorbildern übernommen und **gemessen** worden:
+
+| übernommen | Vorbild | hier gemessen |
+|---|---|---|
+| Kartenwahl je Abschnitt (v305) | Rogue Tower wählt das nächste Gelände | Spreizung **142,4**, keine Auflage zweimal vorn |
+| Erfahrung zwischen den Läufen (v306) | Rogue Tower: 450 / 900 / 1350 | **1300** gewonnen gegen **340** verloren, das 3,8-fache |
+| gekaufte Karten statt Werte (v306) | dieselbe Quelle | Stapel 12 → 18, drei je Welle zur Wahl |
+
+**Das Verhältnis „durchspielen zu gewinnen" ist bewusst aus der Referenz
+genommen und nicht aus mir** (Regel 10): Rogue Tower gibt 450 fürs
+Durchspielen gegen 1350 für den Sieg, also ungefähr das Dreifache; hier sind
+es gemessen 3,8.
+
+**Was die Vorbilder NICHT beantworten und diese Kette selbst gemessen hat:**
+über einen Lauf von sechzig Wellen tragen nicht alle Kartenachsen gleich weit.
+Gold und Beute kaufen Türme, die Turmzahl ist begrenzt — nach dem Ausbau kauft
+diese Achse nichts mehr (Punkt **N1G**). Rogue Tower hat dieses Problem nicht,
+weil dort die Baufläche mit dem Lauf wächst.
 
 **Nachgesehen in v304:** unveraendert gueltig, und die Kette hat seitdem das
 groesste Stueck aus Rogue Tower uebernommen - den **Kartenzug je Welle**

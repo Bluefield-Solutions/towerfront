@@ -1,6 +1,25 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v304 · 10.09.2026
+Stand: v311 · 10.09.2026
+
+**Nachgesehen in v311 — an der Kette hat sich das Wichtigste seit v269
+geändert, und es war eine Reparatur.**
+
+Der nächtliche Probenlauf ist am 10.09. um 13:15:35 an seiner eigenen
+`timeout-minutes: 120` gestorben, nach zwei Stunden ohne Ergebnis. Über der
+Werkstattdatei stand „rund fünfzig Minuten" — die Zahl von 249 Proben; heute
+sind es **378**. Ein abgebrochener Lauf schreibt nicht einmal seinen Befund,
+also blieb weder Stand noch Meldung, die Zeitratsche schlug an, und die ganze
+Torkette war rot.
+
+Seit v307 fährt er in **sechs Scheiben** (`npm run proben -- --voll
+--teil=N/6`), reihum über die Liste. Gemessen: **38 Minuten**, alle 378 Proben
+schlagen an.
+
+**Die Torkette selbst hat dreiunddreissig Schritte und ist langsamer geworden,
+als hier stand:** `npm run sim` misst nachgemessen **156 s** (v268 waren es
+127). Sie läuft seit v269 auf dem Runner; hier läuft je Runde nur
+`npm run vorlauf` (4,4 s).
 
 **Nachgesehen in v304:** die Torkette ist unveraendert dreiunddreissig
 Schritte. Dazugekommen ist eine **neunte Pruefung im Doku-Waechter**, und sie

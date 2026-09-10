@@ -689,6 +689,15 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Eine Gegenprobe hat sich selbst als wirkungslos erwiesen - und dabei ein Tor
+entlarvt, das seine eigene Arithmetik mass (v311).** Die Probe zum Lauffaktor
+baute den Fehler in `GameState` ein, und `npm run sim` meldete nichts:
+`laufMessen` rechnete seine Rampentabelle DANEBEN noch einmal selbst, statt
+sie am Spiel abzulesen. Ein Tor, das seinen Gegenstand nachrechnet statt ihn
+abzulesen, prueft seine Kopie - Regel 5 und Regel 15 in einem. Gefunden hat es
+Regel 3. Die Rampe steht jetzt an EINER Stelle (`GameState.laufRampe`), und
+das Werkzeug liest sie ab.
+
 **Der erste geteilte Probenlauf: sechs von sechs Scheiben gruen in 38 Minuten
 (v310)** - gegen "in zwei Stunden nicht fertig und abgebrochen". Rot geendet
 ist er trotzdem, an einem Waechter, der an der eigenen Arbeit anschlug: der
@@ -900,7 +909,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v310. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v311. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

@@ -1,6 +1,28 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v304 · 10.09.2026
+Stand: v311 · 10.09.2026
+
+**Nachgesehen in v311:** der Bildvorrat ist unverändert — seit v288 ist kein
+Bild dazugekommen und kein Backwert geändert worden. Gemessen an den
+eingecheckten Dateien (`src/gfx/assets/*.ts`, also ohne Packlauf zu lesen —
+Regel 12, die Zahl trägt ihre Messstelle mit):
+
+| Gruppe | Datei | eingecheckt |
+|---|---|---|
+| Gegner | `enemies.ts` | 95 KB |
+| Objekte | `objects.ts` | 257 KB |
+| Türme | `towers.ts` | 403 KB |
+| Untergrund | `backgrounds.ts` | 342 KB |
+
+**Die ausgelieferte Datei wiegt 1462 KB** von erlaubten 1800 (`npm run
+autarkie`, gemessen an `dist/index.html`). Die sieben Fassungen seit v304
+haben nichts hinzugefügt, was wiegt: die Abschnittswahl (v305) und der
+Kartenstapel (v306) sind **gezeichnete** Menübilder, kein einziger neuer
+Bildpunkt.
+
+**Zwei Bestellungen sind weiterhin offen** und laufen gegen den Platzhalter:
+`31_foerderer.png` und `32_werft.png`. `npm run bildtor` nennt sie in jedem
+Lauf — ein fehlendes Bild ist eine laufende Bestellung, kein Fehler im Code.
 
 **Nachgesehen in v304:** der Bildvorrat ist unveraendert (gegner 71, objekte
 192, tuerme 302, untergrund 256 - zusammen 821 KB von 1075). Die ausgelieferte

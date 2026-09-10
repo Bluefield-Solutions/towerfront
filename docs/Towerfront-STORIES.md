@@ -1,6 +1,27 @@
 # Towerfront — Stories
 
-Stand: v284 · 09.09.2026
+Stand: v291 · 09.09.2026
+
+**Nachgesehen in v291 — Paket N3 ist zu drei Vierteln gebaut, und die
+Diagnose hat sich dabei umgedreht.** Förderer (v285), Wiederholungsaufschlag
+(v287) und Werft (v290) stehen; **S-N3-04 ist zu**, S-N3-02 hängt seit v289
+gemessen an ihr statt umgekehrt. Alle drei sind Regeln über den **Preis**, und
+alle drei wirken messbar — entschieden hat bisher nur die Werft etwas
+(Kristall 27→21 / 35→38 / 23→28 / 14→15).
+
+**Warum die anderen zwei nichts entscheiden, ist seit v291 gemessen und war
+drei Runden lang falsch begründet.** „Bei 28 % übrigem Gold entscheidet ein
+Preis nichts" war keine Aussage über das Spiel: die Bots tragen
+`maxTowers: 12`, eine Selbstbeschränkung, während die Karten rund zweihundert
+Bauplätze halten. Ohne Deckel bleiben **−3 bis 16 %** liegen statt 40 bis 47 —
+Gold **ist** knapp, sobald es ausgegeben wird. Nur verliert, wer 29 bis 41
+Türme baut (Kristall 27→0 auf dem Spiralhain): die weiteren Plätze sehen zu
+wenig, und das Gold fehlt beim Ausbauen.
+
+**Die Knappheit fehlt also nicht beim Gold, sondern beim Bedarf.** Was N3
+braucht, ist kein weiterer Kostenpunkt, sondern ein Grund, den dreizehnten
+Turm zu wollen — und das ist eine Frage an den Nutzer, keine an das
+Messgerät.
 
 **Dieses Dokument ist das Lenkrad.** `npm run naechste` liest die Reihenfolge
 hier und wählt die erste offene Story — über Stunden und über Kontextgrenzen

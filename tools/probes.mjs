@@ -1035,15 +1035,21 @@ export const PROBEN = [
     // Story, die auf eine SPAETERE wartet, die ganze Kette - in v287 genau
     // passiert, als gemessen herauskam, dass S-N3-02 an S-N3-04 haengt.
     //
-    // Der Eingriff laesst S-N3-04 auf S-N3-02 warten und macht daraus einen
-    // Ring: jede offene Story wartet dann auf eine andere, und das Werkzeug
-    // muss es sagen statt sich eine auszusuchen.
-    name: 'Kette laeuft in einen Ring der Abhaengigkeiten',
+    // Der Eingriff laesst S-N3-04 auf S-N3-02 warten - und S-N3-02 wartet
+    // auf S-N3-04. Das ist ein Ring, aber KEIN vollstaendiger: es gibt
+    // andere freie Stories, das Werkzeug findet also eine und meldet keinen
+    // Stillstand. Genau das hat der erste Entwurf dieser Probe erwartet und
+    // damit nichts bewiesen (Regel 3).
+    //
+    // Was der Eingriff wirklich bewirkt, ist das Ueberspringen von S-N3-04 -
+    // und dass es GENANNT wird. Daran greift sie jetzt; ohne die Zeile
+    // "Haengt an" waere S-N3-04 weiter gewaehlt worden und stuende nirgends.
+    name: 'Kette liest die Abhaengigkeit nicht',
     datei: 'docs/Towerfront-STORIES.md',
     suche: '**Paket:** N3 · **Aufwand:** M · **Hängt an:** S-N3-01',
     ersatz: '**Paket:** N3 · **Aufwand:** M · **Hängt an:** S-N3-02',
     tor: 'naechste',
-    meldet: 'jede offene Story wartet auf eine andere',
+    meldet: 'S-N3-04 wartet auf S-N3-02',
   },
   {
     // **Der Umlaut im ausgelieferten HTML-Kommentar** (v288).

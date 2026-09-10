@@ -1,1 +1,3 @@
-BEFUND vom 2026-09-10T17:25Z auf 310dadff:
+BEFUND vom 2026-09-10T18:18Z auf 786d5107:
+PROBEN: 1 von 63 Toren beweisen nichts
+  - Der Kartenzug unterbricht die Welle: "smoke" meldet "unterbricht er die Welle" nicht, obwohl der Fehler eingebaut ist.

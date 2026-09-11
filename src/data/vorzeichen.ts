@@ -25,6 +25,22 @@
  *  | Schwerlast | Leben +60 %, Tempo −20 % | Schaden ueber Zeit - der Umweg ist der Freund |
  *  | Stoersender | Bremswiderstand +0,5 | der Frostturm faellt als Stuetze aus |
  *
+ *  **Ein Gewinn dazu war gebaut und ist gemessen wieder heraus.** Der
+ *  Gedanke ist richtig und steht im eigenen Haus: die Auflagen der
+ *  Abschnittswahl (v305) stellen jeder Last einen Gewinn gegenueber, und ein
+ *  Zeichen, das nur haerter macht, ist eine Steuer. Gebaut war ein Faktor
+ *  auf den Wellenbonus (+30 bis +90 % je Zeichen). Gemessen macht er die
+ *  erste Karte SCHLECHTER - fuenf von fuenf Aussaaten gewonnen ohne ihn,
+ *  drei von fuenf mit -, und der Grund ist nicht das Gold, sondern wofuer es
+ *  ausgegeben wird: der C18-Bot kauft von jedem Ueberschuss einen weiteren
+ *  Turm, und der dreizehnte Turm ist weniger wert als ein Ausbau. Genau das
+ *  hat v291 schon gemessen (29 bis 41 Tuerme: Kristall 27 -> 0).
+ *
+ *  Die Messstelle in derselben Runde umzubauen, in der die eigene Aenderung
+ *  an ihr scheitert, waere kein Beweis mehr (v219). Der Gewinn steht deshalb
+ *  als offener Punkt im Verzeichnis und nicht als Zahl im Code - ein Feld,
+ *  das auf 1 steht und nie etwas tut, waere Regel 5 in Reinform.
+ *
  *  **Gegensatzpaare, nicht sechs Abstufungen.** Eisenregen und Schildwache
  *  verlangen entgegengesetzte Antworten, Sturmlauf und Schwerlast auch,
  *  Schwarm und Stoersender treffen verschiedene Tuerme.
@@ -106,12 +122,32 @@ export const VORZEICHEN_ORDNUNG: Vorzeichen[] = [
  *  Falle wie beim Konter-Satz). Die ersten `VORZEICHEN_AB` Wellen bleiben
  *  frei - man soll das Spiel kennen, bevor es sich aendert - und danach
  *  traegt jede DRITTE eines.
+ *
+ *  **Und das FINALE bleibt frei, und das ist gemessen** (v331). Die letzten
+ *  Wellen eines Abschnitts sind die Spitze, die der Wellenplan selbst baut
+ *  (`npm run wellenbau`: „Finale gleich Spitze"). Ein Vorzeichen obendrauf
+ *  ist eine zweite Steigerung auf derselben Stelle - und die erste Karte hat
+ *  dafuer keinen Platz: ohne Vorzeichen gewinnt sie ueber fuenf Aussaaten mit
+ *  11 bis 17 Kristall, mit einem auf Welle 14 verliert sie fuenfmal von
+ *  fuenf. Durchprobiert wurde erst die STAERKE (Regel 9) - 0,35 · 0,5 · 0,65
+ *  · 0,8 · 1,0, und keine Abstufung traegt: bei 0,35 gewinnt eine von fuenf,
+ *  bei 0,5 vier, bei 0,65 wieder eine. Die Zahl schwankt mit dem Zeichen,
+ *  das gerade auf Welle 14 faellt, nicht mit seiner Hoehe. Derselbe Satz
+ *  Aussaaten mit freiem Finale: vier von fuenf bei VOLLER Staerke.
+ *
+ *  Es ist also keine Abschwaechung, sondern eine Stelle: zwei Steigerungen
+ *  auf derselben Welle sind eine zu viel.
  */
 export const VORZEICHEN_AB = 4;
-export const VORZEICHEN_TAKT = 3;
+export const VORZEICHEN_TAKT = 5;
+/** Wieviele Wellen am ENDE eines Abschnitts frei bleiben. */
+export const VORZEICHEN_FINALE = 2;
 
-export function vorzeichenFuer(aussaat: number, welle: number): Vorzeichen | null {
+export function vorzeichenFuer(
+  aussaat: number, welle: number, wellen = Infinity,
+): Vorzeichen | null {
   if (welle < VORZEICHEN_AB) return null;
+  if (welle >= wellen - VORZEICHEN_FINALE) return null;
   if ((welle - VORZEICHEN_AB) % VORZEICHEN_TAKT !== 0) return null;
   // Die Mischung ist dieselbe wie in `zieheKarten`: Aussaat und Welle gehen
   // beide ein, damit zwei benachbarte Wellen nicht dasselbe ziehen.

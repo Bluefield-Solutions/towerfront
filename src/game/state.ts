@@ -1582,7 +1582,8 @@ export class GameState {
    *  einem Neustart dasselbe. Ein gemerktes Feld muesste in den Spielstand,
    *  und dort waere es die naechste Zahl, die still falsch wird. */
   get naechstesVorzeichen(): Vorzeichen | null {
-    return this.endless ? null : vorzeichenFuer(this.seed, this.waveIndex);
+    return this.endless ? null
+      : vorzeichenFuer(this.seed, this.waveIndex, this.waves.length);
   }
 
   /** **Eine Welle in den Anmarsch stellen** - der eine Ort, an dem aus
@@ -1610,7 +1611,8 @@ export class GameState {
     // Lebenskurve dieser Nummer mit, nicht das Vorzeichen (Regel 12).
     // `undefined` heisst "wie im Spiel", `null` heisst "ausdruecklich
     // keines" - das ist der Unterschied, an dem die Nullprobe haengt.
-    const vz = vorzeichen === undefined ? vorzeichenFuer(this.seed, welle) : vorzeichen;
+    const vz = vorzeichen === undefined
+      ? vorzeichenFuer(this.seed, welle, this.waves.length) : vorzeichen;
     const zahl = vz?.zahl ?? 1;
     const leben = vz?.leben ?? 1;
     const tempo = vz?.tempo ?? 1;

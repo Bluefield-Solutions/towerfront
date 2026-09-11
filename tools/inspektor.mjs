@@ -95,6 +95,23 @@ const TOLERANZ_MS = 5 * 60 * 1000;
  *  (Regel 15), und der Selbsttest bewiese dann nur die eine Haelfte. */
 const zuAlt = (alterMs) => alterMs > TOLERANZ_MS;
 
+/** Ein Alter so schreiben, dass man es lesen kann.
+ *
+ *  Bis v344 stand an beiden Meldestellen `Math.round(alter / 3600000)` und
+ *  damit "0 h aelter als der Lauf" fuer eine Luecke von fuenf Minuten. Eine
+ *  Meldung, die "0" sagt und die Datei trotzdem herauswirft, sagt dem Leser
+ *  nichts - es hat eine Messung gekostet, ueberhaupt zu sehen, warum die
+ *  Haelfte der Bilder fehlte. */
+const alterText = (ms) => (ms < 3600000
+  ? `${Math.round(ms / 60000)} min` : `${(ms / 3600000).toFixed(1)} h`);
+
+/** Der Nullpunkt eines Laufs: die JUENGSTE seiner Aufnahmen.
+ *
+ *  Steht hier oben bei der Altersregel, weil der Selbsttest sie gestellt
+ *  fahren muss - und der laeuft, bevor es die Quellen ueberhaupt gibt. Die
+ *  lange Begruendung steht bei `QUELLEN`. */
+const laufZeitAus = (zeiten) => (zeiten.length ? Math.max(...zeiten) : 0);
+
 
 const version = () => (readFileSync(join(ROOT, 'src/data/config.ts'), 'utf8')
   .match(/VERSION = '(v\d+)'/) ?? [])[1] ?? 'v?';
@@ -218,13 +235,54 @@ const selbsttest = () => {
       process.exit(1);
     }
   }
+  // 5. Misst sich eine Quelle mit EINEM Bild an sich selbst?
+  //
+  // Das ist der Fall, fuer den die Altersregel in v271 gebaut wurde - und
+  // fuer `bilder/browser.png` konnte sie ihn bis v344 nie sehen: ein
+  // Nullpunkt JE QUELLE ist bei einem einzigen Treffer dessen eigene Zeit,
+  // das Alter also von Bauart null. Gemessen ging so eine neun Stunden alte
+  // Aufnahme unbeanstandet durch (Regel 5).
+  //
+  // Gestellt statt abgewartet: eine Quelle mit zwei frischen Aufnahmen, eine
+  // zweite mit einer einzigen alten. Geprueft werden BEIDE Richtungen - die
+  // alte muss herausfallen, die frischen muessen bleiben. Ohne die zweite
+  // besteht den Test auch ein Nullpunkt, der alles herauswirft.
+  {
+    const spaet = 9 * 3600000;
+    const frisch = [spaet, spaet + 60000];
+    const einzeln = [0];
+    const null0 = laufZeitAus([...frisch, ...einzeln]);
+    if (!zuAlt(null0 - einzeln[0]) || zuAlt(null0 - frisch[0])) {
+      console.error('INSPEKTOR: der Selbsttest des gemeinsamen Nullpunkts ist gescheitert - '
+        + 'eine Quelle mit einer einzigen Aufnahme misst sich an sich selbst.');
+      process.exit(1);
+    }
+    // Und der Nullpunkt ist der JUENGSTE, nicht der aelteste: nimmt er den
+    // aeltesten, sind alle Alter negativ und nie zu alt - eine Regel, die
+    // immer schweigt (Regel 5).
+    if (null0 !== frisch[1]) {
+      console.error('INSPEKTOR: der Nullpunkt ist nicht die juengste Aufnahme.');
+      process.exit(1);
+    }
+  }
   console.log(`  Selbsttest: die Quelltext-Sperre trifft .ts und laesst .png und .md `
     + `durch; es gibt genau ${URTEILE.length} Urteile; was mehr als `
     + `${TOLERANZ_MS / 60000} min hinter dem Lauf liegt, bleibt draussen - `
     + 'Aufnahmen wie Bericht; der Abdruck sieht eine geaenderte und eine '
-    + 'umbenannte Datei, die Fassungsnummer aber nicht.');
+    + 'umbenannte Datei, die Fassungsnummer aber nicht; und eine Quelle mit '
+    + 'einer einzigen Aufnahme misst sich nicht an sich selbst.');
 };
 selbsttest();
+
+/** **`--selbsttest` faehrt nur die Regeln dieses Werkzeugs und geht.**
+ *
+ *  Damit bekommt der Inspektor eine Gegenprobe, die er als ganzes Werkzeug
+ *  nicht haben kann: `npm run inspektor` braucht Aufnahmen in `/tmp/lab/ux`,
+ *  und die gibt es auf dem Runner nicht - dort waere er OHNE eingebauten
+ *  Fehler rot, und eine Gegenprobe an einem roten Tor beweist nichts
+ *  (v313). Die Selbsttests dagegen haengen an keiner Datei und antworten auf
+ *  jedem Rechner gleich (v225). */
+if (args.includes('--selbsttest')) process.exit(0);
 
 // ------------------------------------------------------------------ pruefen
 
@@ -305,7 +363,7 @@ const berichtOhneAbsicht = (text) => {
  *  die einzigen, die die Frage "kann man das spielen?" ueberhaupt zeigen;
  *  ein Werkzeugbild aus `bilder/` zeigt eine Messung, kein Spiel. */
 const QUELLEN = [
-  { ordner: '/tmp/lab/ux', muster: /^\d\d-.*\.png$/, marke: 'messwerte.json' },
+  { ordner: '/tmp/lab/ux', muster: /^\d\d-.*\.png$/ },
   // **`wellenvorschau.png` ist hier heraus (v272), und der Inspektor hat es
   // selbst gefunden.** Er meldete "Platzhaltertext in der Einweisung: *und so
   // weiter und so weiter und so weiter*" - und hatte recht, dass es dasteht.
@@ -325,26 +383,50 @@ const QUELLEN = [
   { ordner: join(ROOT, 'bilder'), muster: /^browser\.png$/ },
 ];
 
-const laufZeit = (q) => {
-  const marke = q.marke && join(q.ordner, q.marke);
-  if (marke && existsSync(marke)) return statSync(marke).mtimeMs;
-  const treffer = readdirSync(q.ordner).filter((f) => q.muster.test(f));
-  if (!treffer.length) return 0;
-  return Math.max(...treffer.map((f) => statSync(join(q.ordner, f)).mtimeMs));
-};
+/** **Wann lief der Lauf, dessen Aufnahmen hier liegen?** Die JUENGSTE
+ *  Aufnahme ueber ALLE Quellen - ein Nullpunkt, nicht einer je Quelle.
+ *  Beides ist gemessen und nicht gewaehlt (v345).
+ *
+ *  **Die Marke war der falsche Nullpunkt.** Bis v344 las die Regel
+ *  `messwerte.json`, und das schreibt `npm run uxaudit` NACH den Aufnahmen.
+ *  Gemessen am 11.09.: die sechzehn Bilder liegen zwischen 16:48:20 und
+ *  16:50:46, die Marke bei 16:53:36. Damit waren die ersten ACHT zwischen
+ *  5:00 und 5:16 "aelter als der Lauf" und fielen an einer Toleranz von
+ *  5:00 heraus - um bis zu sechzehn Sekunden, und alle acht aus genau dem
+ *  Lauf, dessen andere acht blieben. Weg war die HAELFTE der Beweismittel,
+ *  und zwar die mit Landkarte, Ruhe und Bauwahl - also genau die Zustaende,
+ *  an denen "kommt man ins Spiel?" haengt. Ein Beweismittel, das eine Sache
+ *  systematisch weglaesst, erzeugt Befunde ueber genau diese Sache (v319).
+ *
+ *  **Und eine Quelle mit EINEM Bild mass sich an sich selbst.**
+ *  `bilder/browser.png` ist der einzige Treffer seines Musters; der alte
+ *  Rueckfallweg nahm das Groesste seiner eigenen Treffer, also seine eigene
+ *  Zeit, und das Alter stand von Bauart auf null. Gemessen am 11.09. war es
+ *  NEUN Stunden alt und ging unbeanstandet durch - fuer diese Quelle konnte
+ *  die Regel prinzipiell nie anschlagen (Regel 5), und sie ist genau der
+ *  Fall, fuer den v271 sie gebaut hat. Mit einem gemeinsamen Nullpunkt
+ *  faellt es auf.
+ *
+ *  Die Toleranz selbst ist unveraendert: sie hat nicht versagt, der
+ *  Nullpunkt hat es. Eine Ratsche in der Runde zu lockern, in der die
+ *  eigene Aenderung an ihr scheitert, waere kein Beweis mehr (v219). */
+const zeitenVon = (q) => (existsSync(q.ordner)
+  ? readdirSync(q.ordner).filter((f) => q.muster.test(f))
+    .map((f) => statSync(join(q.ordner, f)).mtimeMs)
+  : []);
 
 if (existsSync(ORDNER)) rmSync(ORDNER, { recursive: true, force: true });
 mkdirSync(ORDNER, { recursive: true });
 
 const bilder = [];
 const veraltet = [];
+const LAUF_MS = laufZeitAus(QUELLEN.flatMap(zeitenVon));
 for (const q of QUELLEN) {
   if (!existsSync(q.ordner)) continue;
-  const zeit = laufZeit(q);
   for (const f of readdirSync(q.ordner).filter((x) => q.muster.test(x)).sort()) {
-    const alter = zeit - statSync(join(q.ordner, f)).mtimeMs;
+    const alter = LAUF_MS - statSync(join(q.ordner, f)).mtimeMs;
     if (zuAlt(alter)) {
-      veraltet.push(`${f} (${Math.round(alter / 3600000)} h aelter als der Lauf)`);
+      veraltet.push(`${f} (${alterText(alter)} aelter als der Lauf)`);
       continue;
     }
     copyFileSync(join(q.ordner, f), join(ORDNER, f));
@@ -371,7 +453,7 @@ if (existsSync(berichtDatei)) {
     ? Math.max(...bilder.map((f) => statSync(join(ORDNER, f)).mtimeMs)) : 0;
   const alter = juengste - statSync(berichtDatei).mtimeMs;
   if (zuAlt(alter)) {
-    veraltet.push(`bericht.md (${Math.round(alter / 3600000)} h aelter als die Aufnahmen)`);
+    veraltet.push(`bericht.md (${alterText(alter)} aelter als die Aufnahmen)`);
   } else {
     writeFileSync(join(ORDNER, 'bericht.md'),
       berichtOhneAbsicht(readFileSync(berichtDatei, 'utf8')));

@@ -5638,6 +5638,33 @@ export const PROBEN = [
     meldet: 'weichenMarken` fehlt',
   },
   {
+    // **Die Altersregel des Inspektors mass jede Quelle an sich selbst.**
+    //
+    // Bis v344 hatte jede Bildquelle ihren eigenen Nullpunkt: bei EINEM
+    // Treffer war das dessen eigene Zeit, das Alter also von Bauart null.
+    // `bilder/browser.png` ist der einzige Treffer seines Musters - gemessen
+    // am 11.09. war es neun Stunden alt und ging unbeanstandet durch. Fuer
+    // diese Quelle konnte die Regel prinzipiell nie anschlagen (Regel 5),
+    // und sie ist genau der Fall, fuer den v271 sie gebaut hat.
+    //
+    // Der Eingriff stellt den Fehler her, statt ihn nachzubauen: der
+    // Nullpunkt wird der AELTESTE statt des juengsten, dann hat die alte
+    // Aufnahme das Alter null und bleibt drin. Der fuenfte Selbsttest muss
+    // das melden.
+    //
+    // Gefahren wird gegen `inspektortest` und nicht gegen `inspektor`: der
+    // volle Lauf braucht Aufnahmen in `/tmp/lab/ux`, und die gibt es auf dem
+    // Runner nicht - dort waere er OHNE eingebauten Fehler rot, und eine
+    // Gegenprobe an einem roten Tor beweist nichts (v313). Die Selbsttests
+    // haengen an keiner Datei und antworten auf jedem Rechner gleich (v225).
+    name: 'Der Inspektor misst jede Bildquelle an sich selbst',
+    datei: 'tools/inspektor.mjs',
+    regel: /const laufZeitAus = \(zeiten\) => \(zeiten\.length \? Math\.max/,
+    ersatz: 'const laufZeitAus = (zeiten) => (zeiten.length ? Math.min',
+    tor: 'inspektortest',
+    meldet: 'misst sich an sich selbst',
+  },
+  {
     name: 'Eine Weiche entscheidet nichts',
     datei: 'src/data/wegnetz.ts',
     regel: /\{ id: 'saeule3', kante: 'kreuz3-kreuz4', name: '([^']+)' \}/,

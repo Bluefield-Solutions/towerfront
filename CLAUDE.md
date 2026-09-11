@@ -727,6 +727,47 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der Inspektor liess die HAELFTE seiner eigenen Beweismittel liegen - und
+nahm gleichzeitig eine neun Stunden alte Aufnahme an (v345).** Beides an
+derselben Zeile, beides gemessen, beides in dieselbe Richtung falsch: die
+Altersregel hatte den falschen Nullpunkt.
+
+Sie las `messwerte.json`, und das schreibt `npm run uxaudit` NACH den
+Aufnahmen. Gemessen: die sechzehn Bilder liegen zwischen 16:48:20 und
+16:50:46, die Marke bei 16:53:36. Die ersten ACHT waren damit zwischen 5:00
+und 5:16 „aelter als der Lauf" und fielen an einer Toleranz von 5:00 heraus -
+um bis zu sechzehn Sekunden, und alle acht aus genau dem Lauf, dessen andere
+acht blieben. **Weg war die Haelfte, und zwar die mit Landkarte, Zug, Ruhe und
+Bauwahl** - genau die Zustaende, an denen „kommt man ins Spiel?" haengt.
+
+**Und andersherum: eine Quelle mit EINEM Bild mass sich an sich selbst.**
+`bilder/browser.png` ist der einzige Treffer seines Musters, der Rueckfallweg
+nahm seine eigene Zeit, das Alter stand von Bauart auf null. Gemessen war es
+NEUN Stunden alt und ging unbeanstandet durch - fuer diese Quelle konnte die
+Regel nie anschlagen (Regel 5), und sie ist genau der Fall, fuer den v271 sie
+gebaut hat.
+
+Jetzt gibt es **einen Nullpunkt ueber alle Quellen**: die juengste Aufnahme.
+Gemessen **16 statt 8**, und `browser.png` faellt zum ersten Mal heraus
+(8,0 h). **Die Toleranz ist unveraendert** - sie hat nicht versagt, der
+Nullpunkt hat es (v219). Die Meldung sagte dabei „0 h aelter als der Lauf" und
+warf die Datei trotzdem heraus; sie nennt jetzt Minuten, wo es Minuten sind.
+
+**Die Gegenprobe laeuft gegen `npm run inspektortest`**, nicht gegen den
+vollen Lauf: der braucht Aufnahmen in `/tmp/lab/ux`, und die gibt es auf dem
+Runner nicht - dort waere er OHNE eingebauten Fehler rot (v313).
+
+**Das Urteil auf dem vollstaendigen Satz ist Schleife, und beide Befunde
+stehen im Verzeichnis.** `N4X`: der Weichenknopf - die Stelle, an der „der Weg
+wird die Entscheidung" wirklich stattfindet - zeigt in `03-spiel-ruhe.png` und
+`04-bauwahl.png` nichts als einen liegenden Strich in einem Kreis, also das
+Zeichen fuer „entfernen" oder „gesperrt". Kein Tor sieht das: `feldVerdeckung`
+misst seit v344, wieviel vom Ring VERDECKT ist (ruhe 0,0 %) - dass der
+unverdeckte Ring nichts sagt, ist Regel 8. Und `N4L` hat seinen dritten Blick
+bekommen, den die Zeile seit v321 verlangt: er liest wie v272, zwei Leisten
+fuer eine Wahl. Damit steht es 2:1 - entschieden ist es nicht, drei Blicke
+sind kein Soll (Regel 10).
+
 **Der Inspektorlauf hat einen Befund am BILD gefunden, den kein Tor sah - und
 die Messung hat ihn geschaerft statt bestaetigt (v344, Regel 8).** Seit v313
 lag kein Urteil mehr vor; das Werkzeug sagte es selbst. Gefahren, angesehen,
@@ -2117,7 +2158,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v344. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v345. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

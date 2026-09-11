@@ -1,6 +1,46 @@
 # Towerfront — die Kette
 
-Stand: v338 · 11.09.2026
+Stand: v345 · 11.09.2026
+
+**Nachgesehen in v345 — und die sieben Runden v339 bis v345 haben am Ablauf
+eine Sache geändert, dafür an Schritt 8: dem BEWEISMITTEL des Inspektors.**
+Heute sind es **413 Proben** (408 in v338); die Zahl steht wieder nur als
+Größenordnung hier, gezählt wird sie in 0,4 s.
+
+**Der Inspektor ließ die Hälfte seiner eigenen Beweismittel liegen — und nahm
+gleichzeitig eine neun Stunden alte Aufnahme an.** Beides an derselben Zeile,
+beides in dieselbe Richtung falsch: die Altersregel hatte den falschen
+Nullpunkt.
+
+Sie las `messwerte.json`, und das schreibt `npm run uxaudit` **nach** den
+Aufnahmen. Gemessen am 11.09.: die sechzehn Bilder liegen zwischen 16:48:20
+und 16:50:46, die Marke bei 16:53:36. Die ersten **acht** waren damit zwischen
+5:00 und 5:16 „älter als der Lauf" und fielen an einer Toleranz von 5:00
+heraus — um bis zu sechzehn Sekunden, und alle acht aus genau dem Lauf, dessen
+andere acht blieben. Weg war die Hälfte, und zwar die mit **Landkarte, Zug,
+Ruhe und Bauwahl**: genau die Zustände, an denen „kommt man ins Spiel?" hängt.
+**Ein Beweismittel, das eine Sache systematisch wegläßt, erzeugt Befunde über
+genau diese Sache** (v319, die Wellenvorschau mit dem 1×1-GIF).
+
+Und andersherum: eine Quelle mit **einem** Bild maß sich an sich selbst.
+`bilder/browser.png` ist der einzige Treffer seines Musters, der Rückfallweg
+nahm das Größte seiner eigenen Treffer — also seine eigene Zeit —, und das
+Alter stand von Bauart auf null. Gemessen war es **neun Stunden alt** und ging
+unbeanstandet durch. Für diese Quelle konnte die Regel nie anschlagen
+(Regel 5), und sie ist genau der Fall, für den v271 sie gebaut hat.
+
+Seit v345 gibt es **einen Nullpunkt über alle Quellen**: die jüngste Aufnahme.
+Gemessen danach **16 statt 8**, und `browser.png` fällt zum ersten Mal heraus
+(8,0 h). **Die Toleranz ist unverändert** — sie hat nicht versagt, der
+Nullpunkt hat es (v219). Die Meldung sagte dabei „0 h älter als der Lauf" und
+warf die Datei trotzdem heraus; sie nennt jetzt Minuten, wo es Minuten sind.
+
+**Die Gegenprobe läuft gegen `npm run inspektortest`, nicht gegen `npm run
+inspektor`.** Der volle Lauf braucht Aufnahmen in `/tmp/lab/ux`, und die gibt
+es auf dem Runner nicht — dort wäre er OHNE eingebauten Fehler rot, und eine
+Gegenprobe an einem roten Tor beweist nichts (v313). `--selbsttest` fährt nur
+die fünf Regeln des Werkzeugs und geht; sie hängen an keiner Datei und
+antworten auf jedem Rechner gleich (v225).
 
 **Nachgesehen in v338 — und die sieben Runden v332 bis v338 haben am Ablauf
 genau eine Sache geändert, dafür an der wichtigsten Stelle: dem BEFUND des

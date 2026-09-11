@@ -1783,6 +1783,19 @@ html, body {
   transform: translate(-100%, -50%);
 }
 .inspector.am-turm.tr-rechts { transform: translate(0, -50%); }
+/* **Am Turm steht immer nur EINE Klappe offen** (v318, S-N4-04).
+
+   Gemessen: mit aufgeklappter Ziellogik verlangt der Kasten 242 Punkte, und
+   zwischen Kopfzeile und Wellenvorschau sind 234 frei - das Browsertor hat
+   es gemeldet ("unten wird abgeschnitten"). Vor v318 passte es nur, weil der
+   Kasten die Vorschau ueberdeckte; genau das sieht `textVerdeckung` jetzt.
+
+   Weg sind die Ausbauknoepfe und nicht die Werte: wer die Ziellogik
+   aufklappt, stellt gerade etwas ein und baut nicht aus, und ein Tipp auf
+   "Ziel" bringt sie zurueck. Dasselbe Muster wie beim Einweisungsband und
+   dem Kartenzug eine Datei weiter - zwei Dinge, die denselben Platz wollen,
+   teilen ihn nicht, sie loesen sich ab. */
+.am-turm[data-ziel="1"] .insp-ups { display: none; }
 /* **Die Stufe steht am Turm nicht in der Kopfzeile.** Bild, Name, Schalter,
    Stufe und Kreuz teilen sich 226 Punkte; in der Aufnahme blieb davon
    "Bogentur…" und "STU…" - zwei abgeschnittene Angaben statt einer ganzen.

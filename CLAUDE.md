@@ -741,6 +741,15 @@ Stellen, und `turmRing()` liest sie aus dem Stilblatt statt sie noch einmal
 hinzuschreiben (Regel 15). Die vierte hat prompt eine Gegenprobe gebrochen,
 und `npm run muster` hat es gemeldet.
 
+**Und die neue Messung hat sofort einen Fall gefangen, den es vorher nur
+deshalb nicht gab, weil er niemandem auffiel:** mit aufgeklappter Ziellogik
+verlangt der Turmkasten 242 Punkte, und zwischen Kopfzeile und Wellenvorschau
+sind 234 frei - vor v318 passte das nur, weil der Kasten die Vorschau
+ueberdeckte. Am Turm steht seitdem immer nur EINE Klappe offen: wer die
+Ziellogik aufklappt, stellt gerade etwas ein und baut nicht aus. Dasselbe
+Muster wie beim Einweisungsband und dem Kartenzug - **zwei Dinge, die denselben
+Platz wollen, teilen ihn nicht, sie loesen sich ab.**
+
 **Selbsttest im Tor, weil die acht Nullen sonst nichts sagen** (Regel 5): es
 legt sich einen deckenden Fleck ueber die Goldzahl und verlangt den Fund -
 und nach dem Wegnehmen wieder null. Dieselbe Bauart wie die Nullprobe von

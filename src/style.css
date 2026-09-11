@@ -1583,10 +1583,24 @@ html, body {
   border-color: rgba(226, 86, 106, 0.45);
   background: rgba(226, 86, 106, 0.10);
 }
+/* **Der Grund steht UNTER dem Preis, nicht an seiner Stelle** (v321,
+   S-N4-07). Bis v320 trat er an die Stelle der Zahl, und dann stand an
+   derselben Stelle, an der drei Nachbarn eine Zahl tragen, bei einem ein
+   Wort. B2 des Bedienungs-Abgleichs verlangt eine benannte Flaeche, die
+   ihren PREIS traegt - also traegt sie ihn, und der Grund kommt dazu.
+
+   Kleiner als der Preis und in der Warnfarbe: er sagt den ZUSTAND der
+   Kachel, und der Preis bleibt die Zahl, nach der man vergleicht. */
 .pick-btn .pick-nein {
+  display: block;
   color: var(--danger); font-weight: 700; font-size: var(--s-marke);
   letter-spacing: 0.04em; text-transform: uppercase;
+  line-height: 1.1;
 }
+/* Der Preis einer gesperrten Kachel bleibt golden, nicht rot: gesperrt ist
+   die KACHEL, nicht der Preis - und "zu teuer" faerbt ihn weiterhin rot
+   (die Regel eine Zeile hoeher). */
+.pick-btn.eng .pick-cost { color: var(--gold); opacity: 0.75; }
 /* **Was der Turm HIER an Verbund bekäme** (v245).
    In der Farbe des Kristalls, nicht in der des Goldes: der Preis darüber ist
    das, was man zahlt, der Verbund das, was man geschenkt bekommt. Zwei

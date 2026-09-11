@@ -20,6 +20,37 @@ import { VERBUND_STUFE } from '../game/verbund';
 import { bilanzblatt } from './statsblatt';
 import { aussaatLesen, laufAlsText } from '../game/mitschrift';
 
+/** **Eine gesperrte Kachel behaelt ihren Preis** (v321, S-N4-07).
+ *
+ *  Bis v320 trat der Grund AN DIE STELLE des Preises: der Moerser stand in
+ *  der Bauwahl als "RAND" in Rot da, waehrend seine drei Nachbarn eine Zahl
+ *  trugen. Der Inspektorlauf v272 hat das als *"zwei Leisten fuer dieselbe
+ *  Wahl, und in einer davon fehlt die Zahl"* gelesen.
+ *
+ *  **Die groessere Haelfte dieser Story ist NICHT gebaut, und das ist
+ *  Absicht:** derselbe Durchgang ein Bild spaeter (v273) hat dieselbe
+ *  Aufnahme unter *"was gut aussieht"* gefuehrt - *"der nicht baubare Moerser
+ *  traegt statt einer Zahl den Grund RAND in Rot, das erklaert sich von
+ *  selbst"*. Zwei unbefangene Blicke, entgegengesetzte Urteile, und die
+ *  Story sagt selbst: das ist nicht meine Entscheidung. Gemessen laesst es
+ *  sich heute auch nicht - `doppelteBeschriftung` nimmt reine Zahlen
+ *  ausdruecklich AUS, mit der Begruendung, dass der Preis nach B2 des
+ *  Bedienungs-Abgleichs an beiden Stellen stehen SOLL.
+ *
+ *  Was hier bleibt, ist die Haelfte, die kein Urteil braucht: **B2 verlangt
+ *  eine benannte Flaeche, die ihren Preis traegt** - eine Kachel, die ihren
+ *  Preis gegen ein Wort tauscht, verletzt das, gleich wie man die Leiste
+ *  liest. Der Preis steht also, und der Grund kommt DAZU, als Zustand der
+ *  Kachel. */
+export function gesperrteKachel(
+  grund: string | null, preis: number, teurer: boolean, verbund: string,
+): string {
+  const kosten = `<span class="pick-cost"${teurer ? ' data-teurer="1"' : ''}>${preis}</span>`;
+  return grund !== null
+    ? `${kosten}<span class="pick-nein">${grund}</span>`
+    : `${kosten}${verbund}`;
+}
+
 /** **Was in einer Zeile der Wellenvorschau steht** (v319, S-N4-05).
  *
  *  Bis v318 stand dort Bild und Zahl, und der Name nur im `title` - also im
@@ -1369,10 +1400,7 @@ export class UI {
         const verbund = grund === null && nachbarn > 0
           ? `<span class="pick-verbund">+${Math.round(VERBUND_STUFE * nachbarn * 100)} %</span>`
           : '';
-        const marke = grund !== null
-          ? `<span class="pick-nein">${grund}</span>`
-          : `<span class="pick-cost"${preis > def.base.cost ? ' data-teurer="1"' : ''}>`
-            + `${preis}</span>${verbund}`;
+        const marke = gesperrteKachel(grund, preis, preis > def.base.cost, verbund);
         // **Die in der Leiste gewaehlte Sorte steht hervorgehoben da.**
         // Seit v202 baut ein Tipp aufs Feld nicht mehr, er oeffnet diese
         // Wahl - und dann muss sofort zu sehen sein, was man vorhin gewaehlt

@@ -1,6 +1,29 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v314 · 10.09.2026
+Stand: v321 · 11.09.2026
+
+**Nachgesehen in v321 — jede Zahl dieser Tabelle hat sich bewegt, und zwar
+nach unten.** Gemessen mit `npm run uxaudittor`, dasselbe Gerät, dieselbe
+Auflösung:
+
+| Zustand | v314 | **v321** | Ratsche |
+|---|---|---|---|
+| `zug` | 7,9 % | 7,9 % | 16 |
+| `ruhe` | 15,5 % | **13,1 %** | **14** |
+| `bauwahl` | 24,5 % | **22,0 %** | **23** |
+| `pruefsteg` | 34,2 % | **27,0 %** | **28** |
+| `teurer` | 24,2 % | **21,7 %** | **23** |
+| `welle` | 15,5 % | **13,1 %** | **14** |
+
+**Der Prüfsteg hat 7,2 Punkte verloren, und das Verhältnis darin ist die
+Auskunft:** 1,3 kommen daher, dass das Menü an den Turm gewandert ist (v316,
+H4), 3,3 daher, dass die Werte dort zuklappen, der Rest aus der Ruheleiste
+darunter. **Der Ort kostet fast nichts, der Inhalt ist die Fläche.**
+
+**Neu gemessen wird seit v320 auch, ob die Bedienung die RICHTIGE Fläche
+nimmt** — zwei Leisten mit gleicher Prozentzahl können sehr verschieden
+stehen. `feldVerdeckung` fragt am Bahnschlauch und an den Bauplätzen: 17,8 %
+der Bahn liegen unter `#dock` und `#b-wave`. Das ist offen und steht als N4F.
 
 **Nachgesehen in v307 — nachgefahren, nicht geglaubt: die Grenze aus v300
 haelt, und der Kartenzug hat sie NICHT gesprengt.** Seit v303 liegt zwischen

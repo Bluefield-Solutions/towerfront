@@ -1,6 +1,17 @@
 # Referenzabgleich — Stützturm (C3, „Bannturm")
 
-Stand: v314 · 10.09.2026
+Stand: v321 · 11.09.2026
+
+**Nachgesehen in v321 — unverändert, und diesmal ist das eine Aussage über die
+Runden und nicht über den Turm.** Der Bannturm ist seit v295 nicht angefasst;
+v315 bis v321 haben an der Oberfläche und am Messgerät gearbeitet, nicht an
+der Mechanik. S5 hält weiter.
+
+**Eine Kleinigkeit betrifft ihn trotzdem** (v317): was ein Turm ausgerichtet
+hat, steht seitdem an ihm selbst — Angerichtet, Verpufft, und warum ein Schuss
+nichts bewirkt hat. Für einen Stützturm, der selbst keinen Schaden macht, ist
+das die ehrlichste Zeile, die er bekommen konnte: sie zeigt die Null, und die
+Wirkung steht bei seinen Nachbarn.
 
 **Nachgesehen in v307 — nachgefahren, unveraendert, und S5 haelt weiter.**
 Der Bannturm ist seit v295 nicht angefasst. Gemessen mit `npm run sim`,

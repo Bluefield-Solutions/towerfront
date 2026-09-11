@@ -1,6 +1,22 @@
 # Referenzabgleich — Fähigkeiten freischalten (C18)
 
-Stand: v314 · 10.09.2026
+Stand: v321 · 11.09.2026
+
+**Nachgesehen in v321 — nachgefahren, nicht gestempelt: unverändert.**
+`npm run c18` meldet die erste Karte mit **einer** Fähigkeit als gewonnen,
+Kristall **19 von 42** — dieselbe Zahl wie in v307. An den Fähigkeiten ist
+seit v286 nichts angefasst worden, und die sieben Runden v315 bis v321 haben
+ausschließlich an der Oberfläche und am Messgerät gearbeitet.
+
+**Was sich für S2 dieses Abgleichs geändert hat, ist die Darstellung, nicht
+die Mechanik** (v315): ein gesperrtes Fähigkeitsfeld ist weiterhin ein PLAN
+und kein leerer Fleck — sichtbar bleibt die nächste Freischaltung, die
+weiteren stehen als Zahl daran. Die Fläche fiel dabei von 15,5 auf 13,1 % des
+Bildschirms.
+
+**Und die Messlücke aus M19 steht unverändert:** `npm run c18` fährt eine
+Aussaat. Die Kante bei Zuschlag 0,15 ist damit weiterhin nicht von einem Wurf
+zu unterscheiden.
 
 **Nachgesehen in v307 — nachgefahren, und die Zahl hat sich bewegt.**
 `npm run c18` meldet die erste Karte mit **einer** Faehigkeit als gewonnen,

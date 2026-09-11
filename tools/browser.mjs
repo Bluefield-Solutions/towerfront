@@ -479,6 +479,63 @@ if (!start) {
       if (!(await seite.evaluate(() => !!document.querySelector('.pick-btn[data-vor="1"]')))) {
         fail('In der Turmwahl ist die vorgewaehlte Sorte nicht hervorgehoben.');
       }
+      // **Eine gesperrte Kachel behaelt ihren Preis** (v321, S-N4-07).
+      //
+      // B2 verlangt eine benannte Flaeche, die ihren PREIS traegt. Bis v320
+      // trat der Grund an die Stelle der Zahl - der Moerser stand als "RAND"
+      // da, waehrend seine Nachbarn Zahlen trugen, und der Inspektorlauf v272
+      // hat genau das gelesen als "in einer Leiste fehlt die Zahl".
+      //
+      // Gestellt statt abgewartet (die Lehre aus v219): eine gesperrte Kachel
+      // gibt es nur, wo `warumNicht` etwas meldet, und ob das an DIESEM Fleck
+      // vorkommt, haengt an der Karte. Findet der Lauf keine, sagt er es -
+      // eine Pruefung ohne Gegenstand ist keine (Regel 5).
+      const kacheln = await seite.evaluate(() => [...document.querySelectorAll('.pick-btn')]
+        .map((b) => ({
+          turm: b.dataset.turm ?? '?',
+          gesperrt: b.classList.contains('eng'),
+          preis: (b.querySelector('.pick-cost')?.textContent ?? '').trim(),
+          grund: (b.querySelector('.pick-nein')?.textContent ?? '').trim(),
+        })));
+      let gesperrte = kacheln.filter((k) => k.gesperrt);
+      let wo = bauFleck;
+      // Der erste Bauplatz nimmt oft jeden Turm an - dann steht die Pruefung
+      // darunter ueber einer leeren Liste und meldet gruen, ohne etwas
+      // gesehen zu haben. Gesucht wird deshalb ein Fleck, an dem MINDESTENS
+      // EINE Sorte nicht passt: eng am Weg braucht der Moerser mehr Platz
+      // als der Bogenturm, und genau diese Auskunft soll die Kachel tragen.
+      for (let y = 70; y < HOCH - 70 && !gesperrte.length; y += 18) {
+        for (let x = 24; x < BREIT * 0.62 && !gesperrte.length; x += 18) {
+          await seite.evaluate(() => document.getElementById('i-close')?.click());
+          await seite.mouse.click(x, y);
+          const k2 = await seite.evaluate(() => [...document.querySelectorAll('.pick-btn')]
+            .map((b) => ({
+              turm: b.dataset.turm ?? '?',
+              gesperrt: b.classList.contains('eng'),
+              preis: (b.querySelector('.pick-cost')?.textContent ?? '').trim(),
+              grund: (b.querySelector('.pick-nein')?.textContent ?? '').trim(),
+            })));
+          if (k2.some((k) => k.gesperrt)) { gesperrte = k2.filter((k) => k.gesperrt); wo = { x, y }; }
+        }
+      }
+      console.log(`  Bauwahl bei ${wo.x},${wo.y}: ${gesperrte.length} gesperrte Kachel(n)`
+        + `${gesperrte.map((k) => ` · ${k.turm} "${k.preis}" ${k.grund}`).join('')}`);
+      if (!gesperrte.length) {
+        fail('Auf dieser Karte ist an keiner Stelle eine Turmsorte gesperrt - dann prueft '
+          + 'die Pruefung darunter nichts (Regel 5). Entweder ist `warumNicht` kaputt, '
+          + 'oder die Karte hat ihre engen Stellen verloren.');
+      }
+      for (const k of gesperrte) {
+        if (!/^\d/.test(k.preis)) {
+          fail(`Die gesperrte Kachel "${k.turm}" zeigt keinen Preis (sie traegt "${k.preis}"). `
+            + 'B2 verlangt eine benannte Flaeche, die ihren Preis traegt - und ohne die Zahl '
+            + 'steht an derselben Stelle, an der die Nachbarn vergleichbar sind, ein Wort.');
+        }
+        if (!k.grund) {
+          fail(`Die gesperrte Kachel "${k.turm}" nennt keinen Grund. Ein Knopf, der nicht `
+            + 'geht und nicht sagt warum, sieht aus wie ein Fehler.');
+        }
+      }
       // Bezahlt wird erst auf der benannten Flaeche.
       const konnte = await seite.evaluate(() => {
         const b = document.querySelector('.pick-btn:not([disabled])');

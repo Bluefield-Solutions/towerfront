@@ -1222,6 +1222,20 @@ export const PROBEN = [
     // kein Beweis (Regel 5). Der Eingriff macht die Knoepfe so breit, dass
     // sechs davon nicht mehr nebeneinander passen - dann laufen sie
     // ineinander, und beide Zahlen muessen es sagen.
+    // **Die gesperrte Kachel verliert ihren Preis** (v321, S-N4-07).
+    //
+    // Genau die Gegenprobe, die die Story verlangt. Der Eingriff stellt den
+    // Zustand von v320 wieder her: der Grund tritt AN DIE STELLE des
+    // Preises. Das Browsertor sucht sich seit v321 selbst eine gesperrte
+    // Kachel (auf dem Spiralhain der Moerser bei 24,70) und verlangt beides.
+    name: 'Die gesperrte Kachel zeigt den Grund statt des Preises',
+    datei: 'src/ui/ui.ts',
+    suche: '    ? `${kosten}<span class="pick-nein">${grund}</span>`',
+    ersatz: '    ? `<span class="pick-nein">${grund}</span>`',
+    tor: 'browsertor',
+    meldet: 'zeigt keinen Preis',
+  },
+  {
     // **Der Messgriff wird abgeschraubt** (v320, S-N4-06).
     //
     // Die staerkere der beiden Proben zu dieser Story, und sie ist Regel 13:

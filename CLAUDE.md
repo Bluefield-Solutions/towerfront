@@ -696,6 +696,29 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Eine gesperrte Kachel behaelt ihren Preis - und die andere Haelfte der Story
+ist ABSICHTLICH nicht gebaut (v321, S-N4-07).** Bis v320 trat der Grund an die
+Stelle des Preises: der Moerser stand in der Bauwahl als "RAND" in Rot da,
+waehrend seine drei Nachbarn eine Zahl trugen. Jetzt traegt die Kachel `125`
+UND `Rand` - B2 des Bedienungs-Abgleichs verlangt eine benannte Flaeche, die
+ihren PREIS traegt, und das gilt, gleich wie man die Leiste liest.
+
+**Die groessere Haelfte - "eine Wahl, eine Leiste" - ist nicht gebaut, und die
+Story sagt selbst warum:** zwei unbefangene Blicke haben dieselbe Aufnahme
+entgegengesetzt gelesen (v272 *"zwei Leisten fuer dieselbe Wahl, und in einer
+davon fehlt die Zahl"*, v273 unter *"was gut aussieht"*). **Und das vorhandene
+Messgeraet steht ihr entgegen statt bei:** `doppelteBeschriftung` nimmt reine
+Zahlen ausdruecklich AUS, weil der Preis nach B2 an beiden Stellen stehen SOLL.
+Eine Entscheidung darueber, welcher Blick recht hatte, ist nicht meine; sie
+steht als **N4L** im Verzeichnis, mit einer Schliessbedingung, die ein Soll aus
+der Referenz verlangt.
+
+**Das Browsertor prueft die Kachel jetzt selbst, und es STELLT den Fall** (die
+Lehre aus v219): es sucht einen Fleck, an dem mindestens eine Sorte gesperrt
+ist. Beim ersten Lauf fand es keinen und haette ueber einer leeren Liste gruen
+gemeldet - gemessen auf dem Spiralhain bei 24,70 steht jetzt Moerser, "125",
+Rand.
+
 **Die Bedienung liegt ueber dem Spielfeld - jetzt als Zahl (v320, S-N4-06,
 H2).** Die Belegung sagt, WIEVIEL Flaeche die Bedienung nimmt; sie sagt nicht,
 ob es die richtige ist - eine Leiste am Rand und eine Leiste auf der Bahn
@@ -1283,7 +1306,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v320. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v321. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

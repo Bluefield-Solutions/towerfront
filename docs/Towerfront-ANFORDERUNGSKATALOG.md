@@ -1,6 +1,30 @@
 # Towerfront — Anforderungskatalog
 
-Stand: v314 · 10.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+Stand: v321 · 11.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+
+**Nachgesehen in v321 — Paket N4 (die Oberfläche) ist zur Hälfte gebaut, und
+es hat eine Regel geliefert, die über den Katalog hinausgeht.**
+
+| Story | gebaut | gemessen |
+|---|---|---|
+| S-N4-01 · Ruhezustand | v315 | 15,5 → **13,1 %**, damit unter H1 |
+| S-N4-02 · Menü am Turm | v316 | 31,7 → **27,0 %**; H4 erledigt |
+| S-N4-03 · Wirkung sichtbar | v317 | `wirkungsBilanz` am Turm |
+| S-N4-04 · nichts verdeckt Text | v318 | `textVerdeckung`, Ratsche null |
+| S-N4-05 · Vorschau mit Namen | v319 | 60 Wellen über vier Karten, 67 von 86 |
+| S-N4-06 · nichts über dem Feld | v320 | `feldVerdeckung`: **17,8 %** der Bahn liegen darunter |
+| S-N4-07 · eine Wahl, eine Leiste | v321, **halb** | die gesperrte Kachel behält ihren Preis; der Rest als N4L |
+
+**Die Regel:** *der ORT einer Bedienung kostet fast nichts, der INHALT ist die
+Fläche.* Das Turmmenü an den Turm zu holen brachte 1,3 Prozentpunkte, das
+Zuklappen der Werte 3,3. Wer eine Oberfläche kleiner haben will, muss weniger
+zeigen, nicht umräumen.
+
+**Und zweimal hat sich in diesen Runden ein Befund als Fehler des
+Messgeräts herausgestellt** — einmal ein durchsichtiger Platzhalter im
+Beweisblatt (v319), einmal `elementFromPoint` als falsche Messstelle für
+Verdeckung (v318). Beide Male sah das Spiel schlechter aus, als es war. Das
+gehört neben den umgekehrten Fall, der in diesem Katalog fünfmal steht.
 
 **Nachgesehen in v307 — und die Antwort auf den wichtigsten Satz dieses
 Katalogs steht inzwischen woanders.**

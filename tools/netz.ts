@@ -35,7 +35,8 @@ import { fileURLToPath } from 'node:url';
 import { MAPS } from '../src/data/maps';
 import { LanePath, type PathPoint } from '../src/core/path';
 import {
-  WEGNETZ, bahnenAusNetz, netzAusBahnen, tore, type Wegnetz,
+  WEGNETZ, bahnenAusNetz, netzAusBahnen, tore, weichenPfeil,
+  type Wegnetz, type WeichenPfeil,
 } from '../src/data/wegnetz';
 import { kuerzesteRoute } from '../src/core/route';
 
@@ -48,6 +49,62 @@ const ABTAST = 64;
 /** Was als deckungsgleich gilt. Erwartet werden 0,00 Weltpunkte - die
  *  Schwelle faengt nur das Rechenrauschen der Bogenlaengen-Tabelle ab. */
 const SCHWELLE = 0.5;
+
+/** Wieviel der Pfeil vom benutzten Ast abweichen darf, in Grad.
+ *
+ *  Nicht null: der Arm laeuft geradlinig aus dem Ring, der Ast ist eine
+ *  Kurve, und die Richtung wird 90 Weltpunkte draussen abgegriffen. Gemessen
+ *  liegen alle zehn Faelle (fuenf Weichen, zwei Stellungen) bei 0,0 Grad,
+ *  weil beide dieselbe Stelle abgreifen; die Spanne ist der Platz fuer eine
+ *  spaetere Glaettung im Bild, nicht ein gemessener Bedarf. */
+const PFEIL_ABWEICHUNG = 12;
+
+/** Wie weit die Gabel spreizen muss, damit man sie als Gabel sieht.
+ *
+ *  **Gemessen und nicht gesetzt** (Regel 10): ueber alle fuenf Weichen
+ *  liegen die beiden Aeste 26,6 bis 123,0 Grad auseinander. Die Schranke
+ *  steht bei 15 - deutlich unter der engsten, damit sie eine Weiche faengt,
+ *  die zur Attrappe wird, und nicht die engste von heute. */
+const GABEL_MIN = 15;
+
+/** Der Winkel zwischen zwei Einheitsvektoren, in Grad. */
+function winkel(a: { dx: number; dy: number }, b: { dx: number; dy: number }): number {
+  const p = Math.max(-1, Math.min(1, a.dx * b.dx + a.dy * b.dy));
+  return Math.acos(p) * 180 / Math.PI;
+}
+
+/** In welche Richtung ein Gegner den Abzweig verlaesst.
+ *
+ *  Gelesen an der abgeleiteten BAHN, also an der Kurve, die er wirklich
+ *  abfaehrt - die unabhaengige Gegenrechnung zu `weichenPfeil`, das seine
+ *  Richtung aus der Kantenliste nimmt.
+ *
+ *  Gesucht wird die Bahn, die dem Abzweig am naechsten kommt; liegt keine
+ *  naeher als `BAHN_NAH`, gibt es `null` zurueck statt irgendeine zu nehmen.
+ *  Die Richtung wird von dort aus dieselben 90 Weltpunkte weiter abgegriffen
+ *  wie im Bild - ein Vergleich zweier verschiedener Abgriffstellen maesse die
+ *  Kruemmung der Bahn und nicht den Pfeil (Regel 12). */
+const BAHN_NAH = 80;
+
+function richtungAufBahn(bahnen: PathPoint[][], pfeil: WeichenPfeil):
+{ dx: number; dy: number } | null {
+  let beste: { kurve: LanePath; s: number; d: number } | null = null;
+  for (const b of bahnen) {
+    const kurve = new LanePath(b);
+    for (let t = 0; t <= 1.0001; t += 0.002) {
+      const s = kurve.length * t;
+      const q = kurve.at(s);
+      const d = Math.hypot(q.x - pfeil.x, q.y - pfeil.y);
+      if (!beste || d < beste.d) beste = { kurve, s, d };
+    }
+  }
+  if (!beste || beste.d > BAHN_NAH) return null;
+  const a = beste.kurve.at(beste.s);
+  const b = beste.kurve.at(Math.min(beste.kurve.length, beste.s + 90));
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const l = Math.hypot(dx, dy);
+  return l > 0 ? { dx: dx / l, dy: dy / l } : null;
+}
 
 function abtasten(bahn: PathPoint[]): { x: number; y: number }[] {
   const kurve = new LanePath(bahn);
@@ -244,6 +301,65 @@ for (const map of MAPS) {
         + `(${dann > auf ? '+' : ''}${(100 * (dann / auf - 1)).toFixed(0)} %)`);
     } catch (e) {
       console.log(`  Weiche "${w.id}" (${w.name}): keine Route mehr - ${(e as Error).message}`);
+    }
+  }
+
+  // **Zeigt die Weiche, wohin sie stellt? (v346, N4X)**
+  //
+  // Der Ring im Bild trug bis v345 einen liegenden Strich - das Zeichen fuer
+  // "entfernen". Seit v346 ist es eine Gabel: der volle Arm entlang des
+  // Astes, den der Verkehr nimmt, der gestrichelte entlang des ruhenden.
+  // Gemessen werden hier die zwei Zusagen, von denen das abhaengt.
+  //
+  // Gefragt wird an `weichenPfeil`, also an derselben Funktion, aus der der
+  // Renderer malt (Regel 15) - ein Pfeil kann damit nicht woandershin
+  // zeigen als der Verkehr laeuft.
+  for (const w of netz.weichen ?? []) {
+    for (const zu of [false, true]) {
+      const gestellt = new Set(zu ? [w.id] : []);
+      const pfeil = weichenPfeil(netz, w.id, gestellt);
+      if (!pfeil) {
+        meldung(`${map.id}: die Weiche "${w.id}" hat in Stellung `
+          + `${zu ? 'ZU' : 'OFFEN'} keine rechenbare Richtung - `
+          + 'der Ring zeigt dann gar nichts an.');
+        continue;
+      }
+
+      // 1. Der volle Arm zeigt dorthin, wo die GEGNER laufen.
+      //
+      //    Gefragt wird an der abgeleiteten BAHN - der Kurve, die ein Gegner
+      //    wirklich abfaehrt -, und nicht an der Kantenliste, aus der
+      //    `weichenPfeil` seine Richtung nimmt. Beides an derselben Liste zu
+      //    fragen waere eine Kopie gegen sich selbst (v311, Regel 5); so
+      //    faellt auch ein falscher Knoten, eine verkehrt herum gelesene
+      //    Kante oder eine schief abgegriffene Tangente auf.
+      const soll = richtungAufBahn(bahnenAusNetz(netz, gestellt), pfeil);
+      if (!soll) {
+        meldung(`${map.id}: am Abzweig der Weiche "${w.id}" laeuft in Stellung `
+          + `${zu ? 'ZU' : 'OFFEN'} gar keine Bahn vorbei - der Ring sitzt `
+          + 'dann neben dem Weg.');
+        continue;
+      }
+      const ab = winkel(pfeil.aktiv, soll);
+      if (ab > PFEIL_ABWEICHUNG) {
+        meldung(`${map.id}: der Pfeil der Weiche "${w.id}" zeigt in Stellung `
+          + `${zu ? 'ZU' : 'OFFEN'} ${ab.toFixed(1)} Grad neben dem Ast, den der `
+          + `Verkehr nimmt (erlaubt ${PFEIL_ABWEICHUNG}).`);
+      }
+
+      // 2. Die Gabel muss als Gabel zu sehen sein. Zwei Arme, die
+      //    uebereinanderliegen, sind ein Strich - und ein Strich war genau
+      //    der Befund (Regel 13: ohne den Unterschied faellt die Zahl).
+      const spreizung = winkel(pfeil.aktiv, pfeil.ruhend);
+      if (spreizung < GABEL_MIN) {
+        meldung(`${map.id}: die Gabel der Weiche "${w.id}" spreizt in Stellung `
+          + `${zu ? 'ZU' : 'OFFEN'} nur ${spreizung.toFixed(1)} Grad `
+          + `(noetig ${GABEL_MIN}) - zwei Arme darauf sehen aus wie einer.`);
+      }
+      if (!zu) {
+        console.log(`  Weiche "${w.id}": Pfeil ${ab.toFixed(1)} Grad neben dem `
+          + `benutzten Ast, Gabel spreizt ${spreizung.toFixed(1)} Grad`);
+      }
     }
   }
 

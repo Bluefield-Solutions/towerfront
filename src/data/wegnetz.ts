@@ -79,6 +79,89 @@ export function gesperrteKanten(netz: Wegnetz, gestellt?: ReadonlySet<string>): 
   return zu;
 }
 
+/** Wohin eine Weiche zeigt - und wohin die andere Stellung zeigen wuerde.
+ *
+ *  **Der Befund N4X (v345):** der Weichenknopf zeigte einen liegenden Strich
+ *  in einem Kreis, also das Zeichen, das in jeder Oberflaeche "entfernen"
+ *  oder "gesperrt" heisst. Nichts daran sagte, dass es ein Schalter IST,
+ *  wohin er gerade zeigt oder was die andere Stellung aendern wuerde - und
+ *  beide Ringe des Spiralhains sahen gleich aus, obwohl sie an verschiedenen
+ *  Abzweigen sitzen. Das ist der Knopf, an dem seit v269 "der Weg wird die
+ *  Entscheidung" haengt.
+ *
+ *  Gerechnet wird die Richtung, nicht gezeichnet: der Renderer malt daraus,
+ *  `npm run netz` misst daran, und es gibt keine zweite Wahrheit darueber,
+ *  wohin der Verkehr laeuft (Regel 15).
+ *
+ *  **Die Struktur ist gemessen und ueber alle fuenf Weichen gleich:** an
+ *  jedem Weichenknoten haengen genau drei Kanten - eine, auf der der Verkehr
+ *  ankommt, und zwei, die hinausfuehren. Genau EINE der beiden ausgehenden
+ *  liegt je Stellung auf der Route. Trifft das einmal nicht zu, gibt es
+ *  `null` zurueck statt zu raten: ein Pfeil, der bei unklarer Lage
+ *  irgendwohin zeigt, ist schlimmer als keiner. */
+export interface WeichenPfeil {
+  /** Einheitsvektor entlang des Astes, den der Verkehr JETZT nimmt. */
+  aktiv: { dx: number; dy: number };
+  /** Derselbe fuer die andere Stellung - der Ast, der ruht. */
+  ruhend: { dx: number; dy: number };
+  /** Der Ort des Abzweigs. */
+  x: number;
+  y: number;
+}
+
+/** Die Richtung, in der eine Kante ihren Knoten verlaesst.
+ *
+ *  Abgegriffen ein Stueck weit DRAUSSEN und nicht am ersten Stuetzpunkt:
+ *  eine Kante, die am Knoten noch geradeaus laeuft und erst danach
+ *  abbiegt, zeigte sonst fuer beide Stellungen fast dieselbe Richtung. */
+function richtungAus(netz: Wegnetz, knoten: WegKnoten, kante: WegKante):
+{ dx: number; dy: number } | null {
+  const b = netz.knoten.find((k) => k.id === kante.nach);
+  if (!b) return null;
+  const punkte = [...kante.punkte, { x: b.x, y: b.y }];
+  // Der erste Stuetzpunkt, der weit genug weg liegt; sonst der letzte.
+  const ziel = punkte.find((q) => Math.hypot(q.x - knoten.x, q.y - knoten.y) >= 90)
+    ?? punkte[punkte.length - 1];
+  const dx = ziel.x - knoten.x, dy = ziel.y - knoten.y;
+  const l = Math.hypot(dx, dy);
+  return l > 0 ? { dx: dx / l, dy: dy / l } : null;
+}
+
+export function weichenPfeil(
+  netz: Wegnetz, weicheId: string, gestellt?: ReadonlySet<string>,
+): WeichenPfeil | null {
+  const w = netz.weichen?.find((x) => x.id === weicheId);
+  if (!w) return null;
+  const eigene = netz.kanten.find((k) => k.id === w.kante);
+  const knoten = netz.knoten.find((k) => k.id === eigene?.von);
+  if (!eigene || !knoten) return null;
+
+  const raus = netz.kanten.filter((k) => k.von === knoten.id);
+  if (raus.length !== 2) return null;
+
+  // **Welcher Ast aktiv ist, entscheidet die ROUTE und nicht die Sperrliste.**
+  // Der erste Entwurf fragte `gesperrteKanten`, und der ist in der offenen
+  // Stellung leer: dann galten beide Aeste als offen, es gab keinen ruhenden,
+  // und alle fuenf Weichen meldeten "keine rechenbare Richtung". Eine Weiche
+  // sperrt in der einen Stellung; in der anderen ist der zweite Ast nicht
+  // gesperrt, sondern nur laenger.
+  const gesperrt = gesperrteKanten(netz, gestellt);
+  const benutzt = new Set<string>();
+  for (const tor of netz.knoten.filter((k) => k.art === 'tor')) {
+    for (const id of kuerzesteRoute(netz, tor.id, gesperrt) ?? []) benutzt.add(id);
+  }
+  const aktivKante = raus.filter((k) => benutzt.has(k.id));
+  const ruhtKante = raus.filter((k) => !benutzt.has(k.id));
+  // Genau ein befahrener und ein ruhender Ast - sonst ist es kein Abzweig,
+  // ueber den diese Weiche entscheidet.
+  if (aktivKante.length !== 1 || ruhtKante.length !== 1) return null;
+
+  const aktiv = richtungAus(netz, knoten, aktivKante[0]);
+  const ruhend = richtungAus(netz, knoten, ruhtKante[0]);
+  if (!aktiv || !ruhend) return null;
+  return { aktiv, ruhend, x: knoten.x, y: knoten.y };
+}
+
 const schluessel = (p: PathPoint | WegKnoten): string => `${p.x}:${p.y}:${p.w ?? ''}`;
 
 /** Der Zielknoten eines Netzes. */

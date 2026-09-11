@@ -1,6 +1,19 @@
 # Towerfront — Bildauftrag
 
-Stand: v339 · 11.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v346 · 11.09.2026 · **Auftragsdokument für den Bild-Agenten**
+
+**Nachgesehen in v346 — gemessen mit `npm run bildtor`, nicht abgeschrieben:
+vier offene Bestellungen, unverändert seit v339.** Es fehlen `heiler`,
+`hetzer`, `foerderer_1_1` und `werft_1_1`; gebaut wird gegen
+`getPlatzhalter` (Silhouette in der richtigen Größe, Schraffur, Marke
+#FF00E5), und das Tor meldet sie grün, aber nie stillschweigend (K5).
+
+**Die sieben Runden v340 bis v346 haben keine neue Bestellung erzeugt** — sie
+lagen alle am Messgerät und an der Oberfläche: der Wegfall der Stufen
+(gemessen, nicht gebaut), zwei Nachtlauf-Reparaturen, der Weichenfenster-
+Wächter, die Ringverdeckung, das Beweismittel des Inspektors und der
+Weichenknopf. Der letzte ist der einzige, der das Bild verändert hat, und
+er ist **gezeichnet, nicht gemalt**: eine Gabel aus zwei Armen, keine Datei.
 
 **Nachgesehen in v339 — gemessen mit `npm run bildtor`, nicht abgeschrieben.**
 Offen sind unverändert **vier von 22** Bildern: `31_foerderer.png`,

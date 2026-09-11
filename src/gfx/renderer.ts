@@ -1,5 +1,5 @@
 import { C, LICHT, WORLD_H, WORLD_W } from '../data/config';
-import { WEGNETZ, gesperrteKanten } from '../data/wegnetz';
+import { WEGNETZ, gesperrteKanten, weichenPfeil } from '../data/wegnetz';
 import { kuerzesteRoute } from '../core/route';
 import { LanePath } from '../core/path';
 import { ENEMIES, type EnemyId } from '../data/enemies';
@@ -810,14 +810,61 @@ export class Renderer {
       ctx.lineWidth = gewaehlt ? 7 : 5;
       ctx.strokeStyle = hexA(w.zu ? C.danger : C.crystal, gewaehlt ? 1 : 0.85);
       ctx.beginPath(); ctx.arc(0, 0, r * 0.66, 0, Math.PI * 2); ctx.stroke();
-      // Der Hebel: waagerecht heisst offen, quer heisst zu. Eine FORM statt
-      // nur einer Farbe - Rot und Tuerkis allein trennen fuer einen Teil der
-      // Spieler gar nichts.
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      if (w.zu) { ctx.moveTo(-r * 0.34, -r * 0.34); ctx.lineTo(r * 0.34, r * 0.34); }
-      else { ctx.moveTo(-r * 0.4, 0); ctx.lineTo(r * 0.4, 0); }
-      ctx.stroke();
+
+      // **Die Gabel statt des Hebels (v346, N4X).** Bis v345 stand hier ein
+      // liegender Strich im Kreis - das Zeichen, das in jeder Oberflaeche
+      // "entfernen" oder "gesperrt" heisst. Der Inspektorlauf hat genau das
+      // gemeldet, und drei Auskuenfte fehlten: dass es ein SCHALTER ist,
+      // wohin er zeigt, und was die andere Stellung aendern wuerde.
+      //
+      // Eine Gabel beantwortet alle drei auf einmal, und sie ist das Zeichen
+      // der Sache selbst: der volle Arm mit Spitze laeuft entlang des Astes,
+      // den der Verkehr JETZT nimmt, der duenne gestrichelte entlang des
+      // Astes, der ruht. Gemessen liegen die beiden ueber alle fuenf Weichen
+      // 26,6 bis 123,0 Grad auseinander - eine Gabel, die man als Gabel
+      // sieht.
+      //
+      // Die Richtung wird NICHT hier gerechnet, sondern in `weichenPfeil`
+      // neben der Sperrlogik: `npm run netz` misst an derselben Funktion,
+      // und damit kann der Pfeil nicht woandershin zeigen als der Verkehr
+      // laeuft (Regel 15).
+      const pfeil = weichenPfeil(netz, w.id, s.weichen);
+      if (pfeil) {
+        const arm = (d: { dx: number; dy: number }, laenge: number): void => {
+          ctx.beginPath();
+          ctx.moveTo(d.dx * r * 0.2, d.dy * r * 0.2);
+          ctx.lineTo(d.dx * laenge, d.dy * laenge);
+          ctx.stroke();
+        };
+        // Der ruhende Ast zuerst, damit der aktive darueber liegt.
+        ctx.setLineDash([7, 7]);
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = hexA(C.stone, 0.5);
+        arm(pfeil.ruhend, r * 0.78);
+        ctx.setLineDash([]);
+
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = hexA(w.zu ? C.danger : C.crystal, 1);
+        arm(pfeil.aktiv, r * 0.92);
+        // Die Spitze - ohne sie ist es ein Strich und keine Richtung.
+        const { dx, dy } = pfeil.aktiv;
+        const sx = dx * r * 0.92, sy = dy * r * 0.92, f = r * 0.3;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(sx - dx * f + dy * f * 0.55, sy - dy * f - dx * f * 0.55);
+        ctx.lineTo(sx - dx * f - dy * f * 0.55, sy - dy * f + dx * f * 0.55);
+        ctx.closePath();
+        ctx.fillStyle = hexA(w.zu ? C.danger : C.crystal, 1);
+        ctx.fill();
+      } else {
+        // **Keine Richtung zu rechnen heisst: keine behaupten** - ein Pfeil,
+        // der bei unklarer Lage irgendwohin zeigt, ist schlimmer als keiner.
+        // Der alte Strich bleibt als ehrlicher Rest.
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.4, 0); ctx.lineTo(r * 0.4, 0);
+        ctx.stroke();
+      }
       ctx.restore();
     }
   }

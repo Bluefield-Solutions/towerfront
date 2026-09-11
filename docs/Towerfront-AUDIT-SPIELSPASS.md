@@ -1,6 +1,23 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v339 · 11.09.2026
+Stand: v346 · 11.09.2026
+
+**Nachgesehen in v346 — die Kennzahlen dieses Audits sind seit v336 an einer
+anderen Messstelle erhoben, und das ist beim Lesen mitzudenken:** `sim`
+fährt seitdem **Läufe statt Partien**, also sechzig Wellen über vier
+Abschnitte statt fünfzehn auf einer Karte. Sieben der zehn Spannungs-
+kennzahlen haben dadurch neue Zahlen bekommen — „längste folgenlose
+Strecke" springt von 13,0 auf 43,7 Wellen. Die alten Werte waren nie
+falsch; sie beantworteten eine andere Frage (Regel 12).
+
+**Was in v340 bis v346 dazukam, ist kein Spaß-Befund, sondern seine
+Vorbedingung.** Der Stapel mischt Achsen, die sich verzinsen (Schaden,
+Takt, Reichweite, Beute) mit solchen, die es nicht tun (Gold, Kristall) —
+über sechzig Züge trägt das Deck **Meister ×32,4 gegen Breite ×1,83**
+(N1G). Und der Weichenknopf, an dem die einzige echte Wegentscheidung des
+Spiels hängt, sah bis v345 aus wie ein abgeschalteter Knopf (N4X). Beides
+sind Antworten auf die Leitfrage dieses Audits: eine Entscheidung, die man
+nicht als Entscheidung erkennt, ist keine.
 
 **Nachgesehen in v339 — die Kennzahlen dieses Audits sind nicht mehr
 dieselben Zahlen, obwohl sie dasselbe heißen.** Seit v336 misst `npm run sim`

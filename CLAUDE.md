@@ -727,6 +727,45 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der Knopf, an dem der ganze Neubau haengt, sah aus wie ein abgeschalteter
+(v346, N4X).** Der Inspektorlauf nannte ihn in `03-spiel-ruhe.png` und
+`04-bauwahl.png`: zwei Ringe mit nichts als einem liegenden Strich darin -
+**das Zeichen, das in jeder Oberflaeche „entfernen" oder „gesperrt" heisst**.
+Und das an der Stelle, an der seit v280 „der Weg wird die Entscheidung"
+wirklich stattfindet.
+
+**Drei Auskuenfte fehlten, und eine Gabel gibt alle drei:** der volle Arm mit
+Spitze laeuft entlang des Astes, den der Verkehr JETZT nimmt, der duenne
+gestrichelte entlang des ruhenden. Damit sagt der Ring, dass er ein Schalter
+ist, wohin er zeigt und was die andere Stellung aendern wuerde. Gemessen
+spreizt die Gabel **30,1 bis 130,8 Grad** ueber alle fuenf Weichen; die
+Schranke steht bei 15, deutlich unter der engsten von heute (Regel 10).
+
+**Gerechnet wird die Richtung in `weichenPfeil` neben der Sperrlogik, nicht
+im Renderer** (Regel 15): der Renderer malt daraus, `npm run netz` misst
+daran, und ein Pfeil kann damit nicht woandershin zeigen als der Verkehr
+laeuft.
+
+**Der erste Entwurf fragte die SPERRLISTE und meldete auf allen fuenf Weichen
+„keine rechenbare Richtung".** In der offenen Stellung ist nichts gesperrt,
+also galten beide Aeste als offen und es gab keinen ruhenden. Eine Weiche
+sperrt nur in der EINEN Stellung; in der anderen ist der zweite Ast nicht
+gesperrt, sondern nur laenger. Gefragt wird seitdem die Route.
+
+**Und damit war die erste Fassung der Messung eine Kopie gegen sich selbst**
+(v311, Regel 5): sie las den befahrenen Ast aus derselben Kantenliste wie
+`weichenPfeil`. Gemessen wird jetzt gegen die abgeleitete **BAHN** - die
+Kurve, die ein Gegner wirklich abfaehrt. Genau daran sieht man, dass es zwei
+Rechnungen sind: die Abweichung steht bei **0,9 bis 8,7 Grad** statt bei
+lauter Nullen (erlaubt 12).
+
+**Ein Eingriff war kein Fehler und ist verworfen** (Regel 3): den Abgriff vom
+90 Weltpunkte entfernten Punkt auf den ersten Stuetzpunkt zu ziehen senkt die
+Abweichung gemessen von 8,7 auf 2,2 Grad - der Ast trennt sich sofort, der
+Pfeil blieb richtig, und die Probe haette ueber einem gesunden Tor
+geschwiegen. Was traegt, ist der Eingriff, auf den es ankommt: die beiden
+Aeste vertauschen.
+
 **Der Inspektor liess die HAELFTE seiner eigenen Beweismittel liegen - und
 nahm gleichzeitig eine neun Stunden alte Aufnahme an (v345).** Beides an
 derselben Zeile, beides gemessen, beides in dieselbe Richtung falsch: die
@@ -2158,7 +2197,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v345. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v346. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

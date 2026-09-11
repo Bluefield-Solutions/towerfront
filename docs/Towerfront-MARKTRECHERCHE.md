@@ -1,6 +1,17 @@
 # Marktrecherche — was moderne Tower-Defense-Spiele ausmacht
 
-Stand: v339 · 11.09.2026
+Stand: v346 · 11.09.2026
+
+**Nachgesehen in v346 — inhaltlich unverändert gültig.** Die Runden v340 bis
+v346 haben nichts an der Recherche berührt, aber einen ihrer Sätze zum
+ersten Mal im eigenen Haus eingelöst: *der Weg ist die Entscheidung* steht
+seit v269 als erster der vier Neubau-Sätze da, und seit v280 gibt es die
+Weiche dafür. **Bedient wurde sie über einen Ring mit einem liegenden Strich
+darin** — das Zeichen für „entfernen". Der Inspektorlauf hat es gemeldet,
+v346 hat daraus eine Gabel gemacht. Die Lehre gehört hierher, weil sie die
+Recherche betrifft und nicht den Code: eine Mechanik, die alle drei
+Vorbilder tragen, trägt hier erst, wenn ihr Knopf die Sprache ihres Genres
+spricht.
 
 **Nachgesehen in v339 — inhaltlich unverändert gültig, und die Runden v333
 bis v339 haben eine ihrer Zahlen zum ersten Mal am eigenen Haus geprüft.**

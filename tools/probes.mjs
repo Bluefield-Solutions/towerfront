@@ -5638,6 +5638,48 @@ export const PROBEN = [
     meldet: 'weichenMarken` fehlt',
   },
   {
+    // **Der Pfeil der Weiche zeigt nicht dorthin, wo die Gegner laufen.**
+    //
+    // Bis v345 trug der Weichenring einen liegenden Strich - das Zeichen fuer
+    // "entfernen" -, und der Inspektorlauf hat genau das gemeldet (N4X). Seit
+    // v346 ist es eine Gabel entlang der beiden Aeste, und die Richtung kommt
+    // aus `weichenPfeil`.
+    //
+    // Der Eingriff vertauscht die beiden Aeste: der volle Arm laeuft dann auf
+    // dem RUHENDEN, der gestrichelte auf dem befahrenen. Das ist der Fehler,
+    // auf den es ankommt - ein Pfeil, der auf den falschen Ast zeigt, sagt
+    // dem Spieler das Gegenteil dessen, was passiert. Gemessen wird gegen die
+    // abgeleitete BAHN, also gegen die Kurve, die ein Gegner wirklich
+    // abfaehrt, und nicht gegen dieselbe Kantenliste (v311).
+    //
+    // **Ein erster Eingriff war kein Fehler und ist verworfen** (Regel 3): er
+    // nahm den Abgriff am ersten Stuetzpunkt statt 90 Weltpunkte draussen,
+    // und gemessen fiel die Abweichung dabei von 8,7 auf 2,2 Grad - der Ast
+    // trennt sich sofort, der Pfeil blieb richtig. Die Probe haette ueber
+    // einem gesunden Tor geschwiegen und wie ein Beweis ausgesehen.
+    name: 'Der Pfeil der Weiche zeigt auf den falschen Ast',
+    datei: 'src/data/wegnetz.ts',
+    regel: /const aktiv = richtungAus\(netz, knoten, aktivKante\[0\]\);\n(\s*)const ruhend = richtungAus\(netz, knoten, ruhtKante\[0\]\);/,
+    ersatz: 'const aktiv = richtungAus(netz, knoten, ruhtKante[0]);\n$1const ruhend = richtungAus(netz, knoten, aktivKante[0]);',
+    tor: 'netztor',
+    meldet: 'neben dem Ast',
+  },
+  {
+    // **Die Gabel spreizt nicht - dann ist sie ein Strich.**
+    //
+    // Genau das war der Befund: ein Strich im Kreis sagt nicht, dass es ein
+    // Schalter ist. Der Eingriff laesst den ruhenden Arm auf demselben Ast
+    // liegen wie den aktiven; im Bild faellt er darunter und ist nicht mehr
+    // zu sehen. Gemessen 30,1 bis 130,8 Grad Spreizung, noetig 15 - ohne den
+    // Unterschied faellt die Zahl auf 0 (Regel 13).
+    name: 'Die Gabel der Weiche spreizt nicht',
+    datei: 'src/data/wegnetz.ts',
+    regel: /const ruhend = richtungAus\(netz, knoten, ruhtKante\[0\]\);/,
+    ersatz: 'const ruhend = richtungAus(netz, knoten, aktivKante[0]);',
+    tor: 'netztor',
+    meldet: 'sehen aus wie einer',
+  },
+  {
     // **Die Altersregel des Inspektors mass jede Quelle an sich selbst.**
     //
     // Bis v344 hatte jede Bildquelle ihren eigenen Nullpunkt: bei EINEM

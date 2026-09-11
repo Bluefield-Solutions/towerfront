@@ -1,6 +1,16 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v339 · 11.09.2026
+Stand: v346 · 11.09.2026
+
+**Nachgesehen in v346 — die Kette hat unverändert dreiunddreissig
+abbrechende Schritte, und an ihrem Ablauf haben die Runden v340 bis v346
+nichts geändert.** Was sich bewegt hat, steht daneben: **415 Gegenproben**
+(408 in v339), und ein Werkzeug ist dazugekommen, das nicht in der Kette
+steht — `npm run inspektortest` fährt die fünf Selbsttests des Inspektors
+und geht. Es gibt sie, weil der volle Inspektorlauf Aufnahmen in
+`/tmp/lab/ux` braucht, die es auf dem Runner nicht gibt: dort wäre er ohne
+eingebauten Fehler rot, und eine Gegenprobe an einem roten Tor beweist
+nichts (v313).
 
 **Nachgesehen in v339 — die Kette hat unveraendert dreiunddreissig
 abbrechende Schritte, und die sieben Runden v333 bis v339 haben an ihrem

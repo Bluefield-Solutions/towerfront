@@ -1,6 +1,25 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v339 · 11.09.2026
+Stand: v346 · 11.09.2026
+
+**Nachgesehen in v346 — die Belegungszahlen stehen unverändert, und der
+wichtigste Befund der sieben Runden ist einer, den keine von ihnen messen
+konnte.** `feldVerdeckung` hat in v344 eine dritte Fläche bekommen: die
+Weichenringe. Gemessen liegen in `ruhe` **0,0 %** von ihnen unter der
+Bedienung, in `welle` **50,0 %** und mit eingeklappter Leiste **26,9 %** —
+und der Ring ist genau dann verdeckt, wenn er gar nicht bedienbar ist
+(`weicheStellen` lehnt während einer Welle ab). Der Befund des
+Inspektorlaufs war damit beantwortet, ohne eine Zeile Spiel zu ändern.
+
+**Was danach übrig blieb, ist der Satz dieses Audits in Reinform** (v346,
+N4X): der Ring war frei, gut getroffen und **sagte trotzdem nichts**. Er
+trug einen liegenden Strich im Kreis, also das Zeichen für „entfernen" oder
+„gesperrt", an der Stelle, an der der Spieler die einzige Wegentscheidung
+des Spiels trifft. **Keine Belegungszahl kann das sehen** — Fläche, Treffer
+und Verdeckung waren alle in Ordnung. Gefunden hat es der Blick (Regel 8),
+gehalten wird es jetzt von zwei Zahlen in `npm run netz`: der Pfeil liegt
+0,9 bis 8,7 Grad neben dem Ast, den die Gegner nehmen, und die Gabel
+spreizt 30,1 bis 130,8 Grad.
 
 **Nachgesehen in v339 — nachgefahren, nicht geglaubt.** `npm run uxtor` auf
 demselben Gerät und in derselben Auflösung, nach sieben Runden (v333 bis

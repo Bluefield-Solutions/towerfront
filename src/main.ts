@@ -7,6 +7,7 @@ import { bindInput } from './core/input';
 import { Sfx } from './core/audio';
 import { getSettings } from './core/storage';
 import { GameState } from './game/state';
+import { TOWERS } from './data/towers';
 import { auswertung } from './game/auswertung';
 import { saveGame } from './game/save';
 import { Renderer } from './gfx/renderer';
@@ -287,6 +288,24 @@ ui.onPick = (id, x, y) => { if (state.build(x, y, id)) Sfx.play('build'); };
  *  Verschiebung. */
 (window as unknown as Record<string, unknown>).weichenMarken =
   () => state.weichenPunkte().map((w) => ({ ...w, r: GameState.WEICHE_RADIUS }));
+
+/** Wo der GEWAEHLTE Turm steht - der vierte Messgriff (v347).
+ *
+ *  Der Inspektorlauf auf v346 hat gemeldet, dass die Turmkarte "neben nichts"
+ *  steht: der Turm lag am linken Rand zur Haelfte unter der Statuskachel, und
+ *  die Karte oeffnete korrekt daneben - ueber leerem Gras. Die Belegungszahl
+ *  sah das nicht, denn sie misst Bahn, Bauplaetze und Weichen; der AUSGEWAEHLTE
+ *  Turm war in keiner der drei Listen.
+ *
+ *  Gelesen statt nachgebaut (Regel 15): der Ort kommt aus dem Zustand, der
+ *  Radius aus dem Platzbedarf seiner Sorte. Ohne Auswahl `null` - und eine
+ *  Messung, die daraus eine Null macht, behauptet etwas ueber einen Zustand,
+ *  den es nicht gibt. */
+(window as unknown as Record<string, unknown>).gewaehlterTurm = () => {
+  const t = state.selectedTower;
+  if (!t) return null;
+  return { x: t.x, y: t.y, r: TOWERS[t.def].footprint / 2 };
+};
 
 layout();
 bindInput(canvas, state, renderer);

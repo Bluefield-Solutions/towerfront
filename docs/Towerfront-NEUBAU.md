@@ -1,6 +1,27 @@
 # Towerfront — der Neubau
 
-Stand: v340 · beschlossen am 09.09.2026
+Stand: v347 · beschlossen am 09.09.2026
+
+**Nachgesehen in v347 — an den vier Sätzen hat sich nichts geändert, und der
+erste hat in v346 zum ersten Mal seinen KNOPF bekommen.** *Der Weg wird die
+Entscheidung* steht seit v269 ganz oben; die Weiche dafür gibt es seit v280.
+Bedient wurde sie über einen Ring mit einem liegenden Strich darin — also
+über das Zeichen, das in jeder Oberfläche „entfernen" oder „gesperrt" heißt.
+Der Inspektorlauf hat es gemeldet; seit v346 ist es eine Gabel: der volle Arm
+entlang des Astes, den der Verkehr nimmt, der gestrichelte entlang des
+ruhenden.
+
+**Die Lehre gehört hierher und nicht nur ins Verzeichnis:** ein Beschluss
+dieses Dokuments gilt erst, wenn man ihn im Bild wiederfindet. Zwischen
+„gebaut" (v280) und „zu sehen" (v346) liegen **66 Fassungen**, und in keiner
+davon hat ein Tor etwas gemeldet — die Weiche funktionierte ja.
+
+**Was die Runden v341 bis v347 sonst beigetragen haben, ist Messgerät**: der
+Weg des Nachtlauf-Befunds zurück in die Kette, das Beweismittel des
+Inspektors (die Hälfte seiner Aufnahmen fiel an einer falschen Altersregel
+heraus) und die Feldverdeckung, die eine von zwei Fragen maß. Alle drei sind
+Fälle derselben Art wie oben: eine Zusage stand da, und gemessen wurde etwas
+daneben.
 
 **Nachgesehen in v340 — und einer der vier Sätze dieses Dokuments hat zum
 ersten Mal eine Messung gegen sich.**

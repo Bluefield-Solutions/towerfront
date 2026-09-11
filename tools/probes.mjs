@@ -5638,6 +5638,26 @@ export const PROBEN = [
     meldet: 'weichenMarken` fehlt',
   },
   {
+    // **Die zweite Haelfte der Feldverdeckung: was ist wirklich zugedeckt?**
+    //
+    // Bis v346 mass `feldVerdeckung` nur, wer den FINGER faengt
+    // (`elementFromPoint`) - und die Zusage des Tores lautet seit v320, was
+    // darueber liegt, koenne man *weder sehen noch bebauen*. Gemessen fallen
+    // die zwei Zahlen weit auseinander: der Weichenring steht in `welle` auf
+    // 50,0 % gefangen gegen 15,4 % zugedeckt.
+    //
+    // Der Eingriff laesst `malt` fuer jedes Element wahr werden. Dann zaehlt
+    // auch die durchsichtige Flaeche der Kopfzeile als Deckung, und die
+    // Blind-Ratsche muss anschlagen. Ohne die neue Zahl waere das eine
+    // Messung, die niemand haelt (Regel 5).
+    name: 'Die Feldverdeckung zaehlt Durchsichtiges als Deckung',
+    datei: 'tools/uxaudit.mjs',
+    regel: /const malt = \(e\) => \{\n    const cs = getComputedStyle\(e\);/,
+    ersatz: 'const malt = (e) => {\n    if (e) return true;\n    const cs = getComputedStyle(e);',
+    tor: 'uxtor',
+    meldet: 'zugedeckt',
+  },
+  {
     // **Der Pfeil der Weiche zeigt nicht dorthin, wo die Gegner laufen.**
     //
     // Bis v345 trug der Weichenring einen liegenden Strich - das Zeichen fuer

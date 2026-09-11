@@ -727,6 +727,43 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Die Feldverdeckung mass eine von zwei Fragen (v347) - und die Antwort auf
+die andere nimmt einem Befund aus v344 die Haelfte seiner Groesse.** Die
+Zusage des Tores lautet seit v320: *was darueber liegt, kann man weder SEHEN
+noch BEBAUEN*. Gemessen wurde davon nur die zweite Haelfte -
+`elementFromPoint` sagt, wer den Finger faengt.
+
+**Die zwei Zahlen fallen weit auseinander, und in die Richtung, die ich nicht
+erwartet hatte:**
+
+| | gefangen | zugedeckt |
+|---|---|---|
+| Weichenring in `welle` | **50,0 %** | **15,4 %** |
+| Weichenring in `dock-zu` | **26,9 %** | **3,8 %** |
+| Bahn in `ruhe` | 17,8 % | 16,9 % |
+
+Der Finger wird auch ueber den LUECKEN zwischen den Knoepfen gefangen - dort
+sieht man das Feld und kann es nur nicht antippen. **Damit ist der
+Nebenbefund aus v344 kleiner, als er dastand:** die eingeklappte Leiste deckt
+3,8 % des Rings zu, nicht 26,9. Die 26,9 waren nie falsch, sie beantworteten
+die andere Frage (Regel 12).
+
+**Beide bleiben stehen, keine ersetzt die andere.** `anteil` haelt die alten
+Ratschen Punkt fuer Punkt unveraendert, `blindAnteil` bekommt eine eigene
+Tabelle - dieselbe Bewegung wie `lesbarkeit` in v275, wo der Mittelwert
+zweier Flaechen genau den Fall wegmittelte, der zaehlt.
+
+**`sichtbar` und `malt` stehen jetzt EINMAL** und werden von beiden Messungen
+benutzt; zwei Abschriften waren Regel 15, und daran ist `feldVerdeckung`
+siebenundzwanzig Fassungen vorbeigelaufen.
+
+**Der gewaehlte Turm ist die vierte gemessene Flaeche** (`gewaehlterTurm`,
+der vierte Messgriff). Seine Schranke steht auf **null ohne Band** - er ist
+EIN Ding, der Spieler hat gerade darauf getippt, und ihn zuzudecken ist kein
+Anteil, sondern ein Fehler. Gemessen 0,0: **der Befund des Inspektorlaufs zu
+v346 („die Turmkarte steht neben nichts") liegt nicht an der Verdeckung**,
+sondern daran, dass der Turm am aeussersten Rand steht.
+
 **Der Knopf, an dem der ganze Neubau haengt, sah aus wie ein abgeschalteter
 (v346, N4X).** Der Inspektorlauf nannte ihn in `03-spiel-ruhe.png` und
 `04-bauwahl.png`: zwei Ringe mit nichts als einem liegenden Strich darin -
@@ -2197,7 +2234,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v346. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v347. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

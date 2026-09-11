@@ -181,6 +181,27 @@ const FELD_GRENZEN = {
   zug: { bahn: 2, bau: 12, weiche: 2 },         // gemessen 0,0 / 10,3 / 0,0 - der Kartenzug steht mitten im Bild
   'dock-zu': { bahn: 15, bau: 6, weiche: 28 },  // gemessen 13,2 / 4,6 / 26,9
 };
+
+/** Dieselbe Tabelle fuer die ZWEITE Frage: was ist wirklich zugedeckt?
+ *
+ *  **Eigene Zahlen, weil es eine eigene Frage ist** (v347). Sie stehen
+ *  ueberall unter denen oben, und an zwei Stellen weit darunter: der
+ *  Weichenring steht in `welle` auf 50,0 % gefangen gegen **15,4 %
+ *  zugedeckt**, auf `dock-zu` auf 26,9 gegen **3,8**. Der Finger wird auch
+ *  ueber den Luecken zwischen den Knoepfen gefangen - dort SIEHT man das Feld
+ *  und kann es nur nicht antippen.
+ *
+ *  Eine Ratsche je Zustand, gesetzt auf das Gemessene mit etwas Luft, wie die
+ *  Tabelle darueber. Ohne sie waere die neue Zahl eine, die niemand haelt
+ *  (Regel 5). */
+const BLIND_GRENZEN = {
+  ruhe: { bahn: 18, bau: 5, weiche: 1 },        // gemessen 16,9 / 3,4 / 0,0
+  bauwahl: { bahn: 18, bau: 18, weiche: 1 },    // gemessen 16,9 / 16,1 / 0,0
+  pruefsteg: { bahn: 27, bau: 27, weiche: 13 }, // gemessen 25,6 / 25,3 / 11,5
+  welle: { bahn: 15, bau: 4, weiche: 17 },      // gemessen 13,2 / 2,9 / 15,4
+  zug: { bahn: 1, bau: 12, weiche: 1 },         // gemessen 0,0 / 10,3 / 0,0
+  'dock-zu': { bahn: 11, bau: 6, weiche: 5 },   // gemessen 9,1 / 4,6 / 3,8
+};
 /** Wieviele Beschriftungen zugleich doppelt im Bild stehen duerfen.
  *
  *  Null. Bei offener Turmwahl standen bis v238 Bogenturm, Frostturm, Moerser,
@@ -251,6 +272,32 @@ const schuss = async (seite, name) => {
  *  Gemessen werden Textblaetter UND Knoepfe: ein angeschnittener Text ist
  *  unlesbar, ein angeschnittener Knopf ist unter dem Daumen auch noch
  *  unerreichbar. */
+/** **Sieht man es, und malt es etwas Deckendes?**
+ *
+ *  Die zwei Fragen stehen hier EINMAL und werden von beiden Messungen
+ *  benutzt - `textVerdeckung` (v318) und `feldVerdeckung` (v320). Als Text,
+ *  weil beide im Browser laufen und eine Funktion aus diesem Prozess dort
+ *  nicht ankommt; zwei Abschriften waeren Regel 15 in Reinform, und genau
+ *  daran ist `feldVerdeckung` siebenundzwanzig Fassungen lang vorbeigelaufen. */
+const DECKT_QUELLE = `(() => {
+  const sichtbar = (e) => {
+    const r = e.getBoundingClientRect();
+    const cs = getComputedStyle(e);
+    return r.width > 2 && r.height > 2 && cs.display !== 'none' && cs.visibility !== 'hidden'
+      && Number(cs.opacity) > 0.05 && r.right > 0 && r.bottom > 0
+      && r.left < innerWidth && r.top < innerHeight;
+  };
+  const malt = (e) => {
+    const cs = getComputedStyle(e);
+    if (cs.backgroundImage !== 'none') return true;
+    const m = cs.backgroundColor.match(/rgba?\\(([^)]+)\\)/);
+    if (!m) return false;
+    const teile = m[1].split(',');
+    return Number(teile[3] ?? 1) > 0.5;
+  };
+  return { sichtbar, malt };
+})()`;
+
 const textVerdeckung = (seite) => seite.evaluate(() => {
   const WURZELN = '#hud, #dock, #b-wave, #b-wave-l, #inspector, #pick, #zug, #coach, #werkzeuge';
   const alle = [...document.querySelectorAll(
@@ -350,8 +397,9 @@ const textVerdeckung = (seite) => seite.evaluate(() => {
  *  der Renderer fuellend; auf der Landkarte trifft sie, im Spiel nicht.
  *  Deshalb haengt seit v320 ein Messgriff am `window` - und wenn er fehlt,
  *  meldet diese Messung das, statt eine Null zu liefern. */
-const feldVerdeckung = (seite, punkte) => seite.evaluate(({ bahn, bau }) => {
+const feldVerdeckung = (seite, punkte) => seite.evaluate(({ bahn, bau, deckt }) => {
   const WURZELN = '#hud, #dock, #b-wave, #b-wave-l, #inspector, #pick, #zug, #coach, #werkzeuge';
+  const DECKT = eval(deckt);
   const rechnen = window.weltZuSchirm;
   if (typeof rechnen !== 'function') return { fehlt: true };
   // **Die Weichen kommen aus dem SPIEL, nicht aus einer zweiten Rechnung**
@@ -369,22 +417,78 @@ const feldVerdeckung = (seite, punkte) => seite.evaluate(({ bahn, bau }) => {
       weichen.push([w.x + Math.cos(a) * w.r, w.y + Math.sin(a) * w.r]);
     }
   }
+  // **Zwei Fragen, zwei Zahlen (v347)** - und bis v346 stand dafuer eine.
+  //
+  // Die Zusage des Tores lautet seit v320: *was darueber liegt, kann man
+  // weder SEHEN noch BEBAUEN*. Gemessen wurde davon nur die zweite Haelfte:
+  // `elementFromPoint` sagt, wer den Finger faengt.
+  //
+  // Die beiden fallen messbar auseinander, und zwar in die Richtung, die ich
+  // nicht erwartet hatte: der Weichenring steht in `welle` auf **50,0 %
+  // gefangen gegen 15,4 % zugedeckt**, auf `dock-zu` 26,9 gegen 3,8. Der
+  // Finger wird auch ueber den LUECKEN zwischen den Knoepfen gefangen - dort
+  // sieht man das Feld, man kann es nur nicht antippen.
+  //
+  // Beide bleiben stehen, und keine ersetzt die andere: `anteil` haelt die
+  // Ratschen (unveraendert, Regel 2 und v219), `blindAnteil` steht als
+  // Messung daneben. Dieselbe Bewegung wie bei `lesbarkeit` in v275 - dort
+  // hat der Mittelwert zweier Flaechen genau den Fall weggemittelt, der
+  // zaehlt.
+  //
+  // Gefragt wird fuer die zweite Zahl nach UEBERLAPPUNG mal MALORDNUNG, wie
+  // bei `textVerdeckung` seit v318: liegt der Punkt in einem sichtbaren
+  // Element der Bedienung, das wirklich deckend malt? Eine Malordnung
+  // zwischen den Elementen braucht es nicht - sie liegen alle ueber der
+  // Leinwand.
+  const { sichtbar, malt } = DECKT;
+  const deckend = [...document.querySelectorAll(
+    `${WURZELN}, ${WURZELN.split(', ').map((x) => `${x} *`).join(', ')}`,
+  )].filter((e) => sichtbar(e) && malt(e))
+    .map((e) => ({ r: e.getBoundingClientRect(), wurzel: e.closest(WURZELN) ?? e }));
+
   const pruefen = (liste) => {
-    let drin = 0, zu = 0;
+    let drin = 0, zu = 0, blind = 0;
     const taeter = {};
     for (const [wx, wy] of liste) {
       const p = rechnen(wx, wy);
       if (!p || p.x < 0 || p.y < 0 || p.x >= innerWidth || p.y >= innerHeight) continue;
       drin += 1;
+      // **Wer faengt den Finger** - das ist die Zahl seit v320, und sie ist
+      // die richtige fuer "kann man hier noch bauen".
       const e = document.elementFromPoint(p.x, p.y);
       const wurzel = e && e.closest(WURZELN);
-      if (!wurzel) continue;
-      zu += 1;
-      const n = wurzel.id ? `#${wurzel.id}` : wurzel.tagName.toLowerCase();
-      taeter[n] = (taeter[n] ?? 0) + 1;
+      if (wurzel) {
+        zu += 1;
+        const n = wurzel.id ? `#${wurzel.id}` : wurzel.tagName.toLowerCase();
+        taeter[n] = (taeter[n] ?? 0) + 1;
+      }
+      // **Wer deckt das Bild zu** - eine andere Frage, und bis v346 stand
+      // dafuer dieselbe Zahl da.
+      if (deckend.some((o) => p.x >= o.r.left && p.x < o.r.right
+        && p.y >= o.r.top && p.y < o.r.bottom)) blind += 1;
     }
-    return { drin, zu, anteil: drin ? (100 * zu) / drin : 0, taeter };
+    return {
+      drin, zu, anteil: drin ? (100 * zu) / drin : 0, taeter,
+      blind, blindAnteil: drin ? (100 * blind) / drin : 0,
+    };
   };
+  // **Der GEWAEHLTE Turm ist die vierte Flaeche** (v347).
+  //
+  // Der Inspektorlauf auf v346 meldete, die Turmkarte stehe "neben nichts":
+  // der Turm lag am linken Rand zur Haelfte unter der Statuskachel, und die
+  // Karte oeffnete korrekt daneben - ueber leerem Gras. Bahn, Bauplaetze und
+  // Weichen sahen das nicht, denn der ausgewaehlte Turm stand in keiner der
+  // drei Listen. Gemessen wird wie beim Weichenring der KRANZ und nicht der
+  // Mittelpunkt (Regel 14).
+  const gt = typeof window.gewaehlterTurm === 'function' ? window.gewaehlterTurm() : undefined;
+  const turm = [];
+  if (gt) {
+    turm.push([gt.x, gt.y]);
+    for (let i = 0; i < 12; i += 1) {
+      const a = (i / 12) * Math.PI * 2;
+      turm.push([gt.x + Math.cos(a) * gt.r, gt.y + Math.sin(a) * gt.r]);
+    }
+  }
   return {
     fehlt: false,
     bahn: pruefen(bahn),
@@ -393,8 +497,12 @@ const feldVerdeckung = (seite, punkte) => seite.evaluate(({ bahn, bau }) => {
     // ueber eine Messung, die gar nicht stattgefunden hat (dieselbe Haltung
     // wie beim Griff `weltZuSchirm` seit v320).
     weiche: marken ? pruefen(weichen) : null,
+    // `null` heisst hier ZWEIERLEI, und beides ist keine Null: der Griff
+    // fehlt, oder es ist gar kein Turm gewaehlt. Ein Zustand ohne Auswahl
+    // hat keinen verdeckten Turm - er hat keinen Turm.
+    turm: gt === undefined ? undefined : (gt ? pruefen(turm) : null),
   };
-}, punkte);
+}, { ...punkte, deckt: DECKT_QUELLE });
 
 /** Wieviel des Bildschirms gehoert der Bedienung?
  *
@@ -1051,13 +1159,18 @@ for (const [k, v] of Object.entries(messwerte.feld ?? {})) {
   if (v.fehlt) { console.log(`  ${k.padEnd(11)} MESSGRIFF FEHLT`); continue; }
   const wer = (t) => Object.entries(t).sort((x, y) => y[1] - x[1])
     .map(([n, c]) => `${n} ${c}`).join(' · ');
-  console.log(`  ${k.padEnd(11)} Bahn ${v.bahn.anteil.toFixed(1)} % von ${v.bahn.drin}`
+  const zwei = (x) => `${x.anteil.toFixed(1)} % gefangen / ${x.blindAnteil.toFixed(1)} % zugedeckt`;
+  console.log(`  ${k.padEnd(11)} Bahn ${zwei(v.bahn)} von ${v.bahn.drin}`
     + `${v.bahn.zu ? ` (${wer(v.bahn.taeter)})` : ''}`
-    + `   Bauplaetze ${v.bau.anteil.toFixed(1)} % von ${v.bau.drin}`
+    + `   Bauplaetze ${zwei(v.bau)} von ${v.bau.drin}`
     + `${v.bau.zu ? ` (${wer(v.bau.taeter)})` : ''}`
     + `   Weichen ${v.weiche === null ? 'MESSGRIFF FEHLT'
-      : `${v.weiche.anteil.toFixed(1)} % von ${v.weiche.drin}`
-        + `${v.weiche.zu ? ` (${wer(v.weiche.taeter)})` : ''}`}`);
+      : `${zwei(v.weiche)} von ${v.weiche.drin}`
+        + `${v.weiche.zu ? ` (${wer(v.weiche.taeter)})` : ''}`}`
+    + `   Turm ${v.turm === undefined ? 'MESSGRIFF FEHLT'
+      : v.turm === null ? 'keiner gewaehlt'
+        : `${zwei(v.turm)} von ${v.turm.drin}`
+          + `${v.turm.zu ? ` (${wer(v.turm.taeter)})` : ''}`}`);
 }
 
 writeFileSync(join(AUS, 'messwerte.json'), JSON.stringify(messwerte, null, 1));
@@ -1123,21 +1236,49 @@ if (TOR) {
     // Leiste deckt MEHR vom Ring zu als die ausgeklappte in `ruhe`. Das ist
     // die Sorte Zahl, die kein Blick findet und die als Ratsche stehen
     // bleibt, bis jemand die Geometrie anfasst (N4F).
-    for (const [was, wert] of [['Bahn', w.bahn], ['Bauplaetze', w.bau], ['Weichen', w.weiche]]) {
+    // **Der gewaehlte Turm steht seit v347 daneben, und er hat kein Band.**
+    //
+    // Fuer Bahn, Bauplaetze und Weichen haelt die Ratsche den STAND: sie sind
+    // ueber die ganze Karte verteilt, und eine Null ist gemessen nicht
+    // erreichbar (N4F). Der gewaehlte Turm ist etwas anderes - es ist EIN
+    // Ding, der Spieler hat gerade darauf getippt, und die Karte daneben
+    // redet ueber ihn. Ihn dabei zuzudecken ist kein Anteil, sondern ein
+    // Fehler; die Schranke steht deshalb auf null ohne Band, wie bei
+    // `textVerdeckung` seit v318.
+    for (const [was, wert] of [['Bahn', w.bahn], ['Bauplaetze', w.bau],
+      ['Weichen', w.weiche], ['Turm', w.turm]]) {
       if (was === 'Weichen' && wert === null) {
         fail(`Feldverdeckung "${zustand}": der Messgriff \`window.weichenMarken\` fehlt. `
           + 'Ohne ihn ist nicht zu sagen, wo die Weichen liegen, und eine Null waere '
           + 'erfunden (Regel 5).');
         continue;
       }
-      const g = was === 'Bahn' ? grenze.bahn : was === 'Bauplaetze' ? grenze.bau : grenze.weiche;
+      if (was === 'Turm' && wert === undefined) {
+        fail(`Feldverdeckung "${zustand}": der Messgriff \`window.gewaehlterTurm\` fehlt. `
+          + 'Ohne ihn ist nicht zu sagen, wo der gewaehlte Turm steht, und eine Null '
+          + 'waere erfunden (Regel 5).');
+        continue;
+      }
+      // Kein Turm gewaehlt heisst: nichts zu messen. Das ist keine Null.
+      if (was === 'Turm' && wert === null) continue;
+      const blindGrenze = BLIND_GRENZEN[zustand] ?? {};
+      const g = was === 'Bahn' ? grenze.bahn : was === 'Bauplaetze' ? grenze.bau
+        : was === 'Weichen' ? grenze.weiche : 0;
+      const gb = was === 'Bahn' ? blindGrenze.bahn : was === 'Bauplaetze' ? blindGrenze.bau
+        : was === 'Weichen' ? blindGrenze.weiche : 0;
+      const wer = Object.entries(wert.taeter).sort((x, y) => y[1] - x[1])
+        .map(([n, c]) => `${n} ${c}`).join(', ');
       if (wert.anteil > g) {
-        const wer = Object.entries(wert.taeter).sort((x, y) => y[1] - x[1])
-          .map(([n, c]) => `${n} ${c}`).join(', ');
-        fail(`Feldverdeckung "${zustand}": ${wert.anteil.toFixed(1)} % der ${was} liegen `
-          + `unter der Bedienung, gehalten sind ${g} %. Verteilt auf: ${wer}. `
+        fail(`Feldverdeckung "${zustand}": ${wert.anteil.toFixed(1)} % der ${was} fangen `
+          + `den Finger, gehalten sind ${g} %. Verteilt auf: ${wer}. `
           + 'Auf dem Zielgeraet ist das Feld das Spiel - was darueber liegt, '
-          + 'kann man weder sehen noch bebauen (H2).');
+          + 'kann man nicht mehr bebauen (H2).');
+      }
+      if (gb !== undefined && wert.blindAnteil > gb) {
+        fail(`Feldverdeckung "${zustand}": ${wert.blindAnteil.toFixed(1)} % der ${was} sind `
+          + `zugedeckt, gehalten sind ${gb} %. Verteilt auf: ${wer}. `
+          + 'Das ist die andere Haelfte derselben Zusage: was darueber liegt, '
+          + 'kann man auch nicht mehr sehen (H2).');
       }
     }
   }

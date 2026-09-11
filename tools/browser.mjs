@@ -746,6 +746,17 @@ if (!start) {
               // Zeilenhoehe gegen eine Grenze von 32 - eine Nadel, keine
               // Flaeche; mit 520 sind es 84.
               if (steg) { steg.style.maxHeight = 'none'; steg.style.height = '520px'; }
+              // **Die Werte muessen AUFGEKLAPPT sein, sonst misst das hier
+              // nichts** (v334, K1). Seit v316 steht der Steg am Turm, und
+              // der Turmname ist zugleich der Schalter fuer die Werteliste -
+              // zugeklappt. Die sechs Zeilen stehen dann zwar im Baum, sind
+              // aber NULL Punkte hoch, und null ist nie groesser als die
+              // Grenze: das Tor war seitdem still, nicht gruen. Genau so hat
+              // der Nachtlauf die Gegenprobe gefunden.
+              const liste = document.querySelector('.insp-stats');
+              const zu = liste && liste.hidden;
+              if (zu) liste.hidden = false;
+              const hoch = steg ? steg.getBoundingClientRect().height : 0;
               const dts = [...document.querySelectorAll('.insp-stats dt')];
               const dds = [...document.querySelectorAll('.insp-stats dd')];
               let schlimm = { was: '', ab: -1 };
@@ -753,8 +764,9 @@ if (!start) {
                 const ab = dds[i].getBoundingClientRect().height;
                 if (ab > schlimm.ab) schlimm = { was: (dts[i] ?? dds[i]).textContent.trim(), ab };
               }
+              if (zu && liste) liste.hidden = true;
               if (steg && vorher) { [steg.style.height, steg.style.maxHeight] = vorher; }
-              return { ...schlimm, zeilen: dds.length };
+              return { ...schlimm, zeilen: dds.length, hoch: Math.round(hoch) };
             });
             // **Eine Messung ueber eine LEERE Liste ist keine** (v334,
             // Regel 5). `schlimm.ab` startet auf -1; findet die Abfrage
@@ -762,9 +774,13 @@ if (!start) {
             // Vergleich darunter ist immer falsch - das sieht aus wie ein
             // bestandenes Tor. Genau so hat der Nachtlauf die Gegenprobe
             // gefunden: der Eingriff kam an, das Tor schwieg.
-            if (weit.zeilen === 0) {
-              fail(`Prüfsteg (Ziellogik ${wie}): die Zeilenmessung findet keine einzige `
-                + 'Wertezeile. Dann misst sie nichts, und ihr Schweigen ist kein Beweis.');
+            console.log(`  Zeilenmessung (Ziellogik ${wie}): ${weit.zeilen} Zeile(n), `
+              + `hoechste "${weit.was}" ${Math.round(weit.ab)} Punkte (erlaubt ${ZEILE_MAX}), `
+              + `Steghoehe gestellt ${weit.hoch}`);
+            if (weit.zeilen === 0 || weit.ab <= 0) {
+              fail(`Prüfsteg (Ziellogik ${wie}): die Zeilenmessung findet ${weit.zeilen} `
+                + `Wertezeile(n) mit hoechstens ${Math.round(weit.ab)} Punkten Hoehe. `
+                + 'Dann misst sie nichts, und ihr Schweigen ist kein Beweis (Regel 5).');
             } else if (weit.ab > ZEILE_MAX) {
               fail(`Prüfsteg (Ziellogik ${wie}): die Wertezeile "${weit.was}" ist `
                 + `${Math.round(weit.ab)} Punkte hoch (erlaubt ${ZEILE_MAX}), sobald der Steg `

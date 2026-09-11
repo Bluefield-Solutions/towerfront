@@ -1583,9 +1583,33 @@ function wirkungenMessen(): void {
   }
 }
 
+/** **Entscheidet dieser Lauf die Frage, oder haelt er nur den Stand?**
+ *
+ *  Wahr, solange die Streuung zwischen den Aussaaten KLEINER ist als der
+ *  Abstand des Wertes zur Schranke. Liegt sie darueber, ist ein gruenes
+ *  Urteil eine Wette: derselbe Baum haette bei anderer Aussaat rot gemeldet.
+ *
+ *  Als eigene Funktion, damit sie sich stellen laesst - am echten Lauf kommt
+ *  der Fall heute nicht vor (371 Gold, Rauschen 80, Schranke 200), und eine
+ *  Bedingung, die nie anschlaegt, ist kein Beweis (Regel 5). Dieselbe Bauart
+ *  wie die Nullprobe in `zielplatte` seit v234: was die Wirklichkeit nicht
+ *  hergibt, stellt die Pruefung sich selbst her. */
+function streuungEntscheidet(wert: number, spanne: number, schranke: number): boolean {
+  return spanne <= Math.abs(wert - schranke);
+}
+
 function wiederholungMessen(): void {
   console.log('\nWiederholung (Haeufen gegen Verteilen, mit Aufschlag und ohne):');
-  const trennung: number[] = [];
+  // Selbsttest, bevor gemessen wird: ein gestellter Fall, der reden muss,
+  // und einer, der schweigen muss. Ohne den zweiten bewiese der erste nur,
+  // dass die Funktion ueberhaupt etwas zurueckgibt (Regel 13).
+  if (streuungEntscheidet(240, 80, 200) || !streuungEntscheidet(371, 80, 200)) {
+    errors.push('Die Streuungspruefung der Wiederholungsmessung ist kaputt: sie muss bei '
+      + '240 Gold mit Rauschen 80 gegen eine Schranke von 200 MELDEN (Abstand 40 < 80) und '
+      + 'bei 371 mit demselben Rauschen schweigen (Abstand 171 > 80). Eine Zahl, die ihre '
+      + 'eigene Unschaerfe nicht kennt, sieht aus wie ein Urteil.');
+  }
+  const trennung: { wert: number; spanne: number; id: string }[] = [];
   const verteilerLeben: { mittel: number; spanne: number; id: string; je: number[] }[] = [];
   const haeufen: TowerId[] = ['arrow'];
   const verteilen: TowerId[] = ['arrow', 'frost', 'mortar', 'prism'];
@@ -1613,6 +1637,36 @@ function wiederholungMessen(): void {
     };
     const h = zeile('Haeufen', haeufen);
     const v = zeile('Verteilen', verteilen);
+    // **Die Trennung ueber die drei Aussaaten, nicht aus einem Lauf**
+    // (v331) - dieselbe Bewegung, die v300 eine Zeile tiefer fuer den
+    // KRISTALL des Verteilers gemacht hat, und aus demselben Grund.
+    //
+    // Bis v330 stand hier ein einziger Lauf je Karte. Gemessen schwankt die
+    // Zahl zwischen den Aussaaten um mehr als die Schranke selbst: auf dem
+    // Spiralhain 635 / 344 / 424 bei einer Forderung von 200, auf der
+    // Frostspalte 424 / 344 / 344. **Ein Wert, dessen Streuung groesser ist
+    // als sein Abstand zur Schranke, sagt ueber einen Lauf nichts** - die
+    // Kette konnte an jeder Runde rot werden, die die Wirtschaft nur
+    // umruehrt, ohne dass etwas schlechter geworden waere.
+    //
+    // Der Grund liegt in der gemessenen Groesse: `spent` ist, was der Bot
+    // AUSGEGEBEN hat, nicht was der Aufschlag ihn gekostet hat. Wer mehr
+    // einnimmt, gibt mehr aus, und ob er den vierten Turm einer Sorte noch
+    // kauft, ist eine Stufe und kein Verlauf. Der Haeufer ist davon nicht
+    // betroffen (er zahlt auf allen vier Karten dieselben +693), der
+    // Verteiler sehr.
+    const jeTrennung = AUSSAATEN.map((aussaat) => {
+      aussaatGezaehlt('trennung', aussaat);
+      const oh = play(haeufen, () => 0, MEISTER, 'normal', mm.id,
+        { zuschlag: 0, seed: aussaat });
+      const mh = play(haeufen, () => 0, MEISTER, 'normal', mm.id,
+        { zuschlag: MESS_ZUSCHLAG, seed: aussaat });
+      const ov = play(verteilen, () => 0, MEISTER, 'normal', mm.id,
+        { zuschlag: 0, seed: aussaat });
+      const mv = play(verteilen, () => 0, MEISTER, 'normal', mm.id,
+        { zuschlag: MESS_ZUSCHLAG, seed: aussaat });
+      return (mh.spent - oh.spent) - (mv.spent - ov.spent);
+    });
     // **Der Kristall des Verteilers ueber die AUSSAATEN, nicht aus einem
     //   Lauf** (v300).
     //
@@ -1643,10 +1697,12 @@ function wiederholungMessen(): void {
     console.log(`    ${v.text}`);
     // Die Zahl, um die es geht: was der Aufschlag dem Haeufer MEHR abnimmt
     // als dem Verteiler. Ist sie null, trennt er die beiden nicht.
-    const trennt = h.gold - v.gold;
-    console.log(`    trennt um ${trennt >= 0 ? '+' : ''}${trennt} Gold`
+    const trennt = jeTrennung.reduce((a, b) => a + b, 0) / jeTrennung.length;
+    const spanne = Math.max(...jeTrennung) - Math.min(...jeTrennung);
+    console.log(`    trennt um ${trennt >= 0 ? '+' : ''}${trennt.toFixed(0)} Gold im Mittel `
+      + `ueber ${AUSSAATEN.length} Aussaaten (${jeTrennung.join(' / ')}, Rauschen ${spanne})`
       + ` und ${h.leben - v.leben >= 0 ? '+' : ''}${h.leben - v.leben} Kristall`);
-    trennung.push(trennt);
+    trennung.push({ wert: trennt, spanne, id: mm.id });
   }
   // **Eine Zusage, kein blosser Bericht** (v287).
   //
@@ -1659,9 +1715,22 @@ function wiederholungMessen(): void {
   // Die Zusage ist die, die die Story uebrig behaelt: der Aufschlag muss den
   // Haeufer haerter treffen als den Verteiler. Sie haengt an der FREIMENGE -
   // ohne sie zahlt auch der Verteiler, und die Trennung schrumpft. Gemessen
-  // sind 344 bis 693 Gold je Karte.
-  const kleinste = Math.min(...trennung);
-  console.log(`  Kleinste Trennung: ${kleinste} Gold (gefordert > ${TRENNUNG_MIN}).`);
+  // sind im Mittel ueber drei Aussaaten 371 bis 693 Gold je Karte; die
+  // einzelnen Laeufe liegen zwischen 113 und 693.
+  const kleinsteZ = trennung.reduce((a, b) => (a.wert <= b.wert ? a : b));
+  const kleinste = kleinsteZ.wert;
+  console.log(`  Kleinste Trennung: ${kleinste.toFixed(0)} Gold (${kleinsteZ.id}, `
+    + `Rauschen ${kleinsteZ.spanne}, gefordert > ${TRENNUNG_MIN}).`);
+  // **Und die Zahl sagt selbst, wenn sie nichts entscheiden kann** (Regel 12
+  // und die Lehre aus v296): liegt die Streuung ueber dem Abstand zur
+  // Schranke, ist ein gruenes Urteil eine Wette. Als Hinweis und nicht als
+  // Fehler - die Messung ist dann nicht falsch, sie ist nur zu grob, und ein
+  // Tor, das daran rot wuerde, hielte die Kette fuer die Streuung an.
+  if (!streuungEntscheidet(kleinste, kleinsteZ.spanne, TRENNUNG_MIN)) {
+    console.log(`  HINWEIS: die Streuung (${kleinsteZ.spanne}) ist groesser als der Abstand `
+      + `zur Schranke (${Math.abs(kleinste - TRENNUNG_MIN).toFixed(0)}) - dieser Lauf `
+      + 'entscheidet die Frage nicht, er haelt nur den Stand.');
+  }
 
   // **Was die FREIMENGE haelt, und nur sie** (v287).
   //
@@ -1713,7 +1782,8 @@ function wiederholungMessen(): void {
       + 'ist zu klein.');
   }
   if (kleinste <= TRENNUNG_MIN) {
-    errors.push(`Der Wiederholungsaufschlag trennt Haeufen von Verteilen nur um ${kleinste} `
+    errors.push('Der Wiederholungsaufschlag trennt Haeufen von Verteilen nur um '
+      + `${kleinste.toFixed(0)} `
       + `Gold (gefordert ueber ${TRENNUNG_MIN}). Er trifft dann den, der gleichmaessig baut, `
       + 'fast so hart wie den, der haeuft - und ist damit eine Verteuerung statt einer Regel.');
   }

@@ -1,6 +1,35 @@
 # Towerfront — die Kette
 
-Stand: v324 · 11.09.2026
+Stand: v331 · 11.09.2026
+
+**Nachgesehen in v331 — am Ablauf hat sich seit v324 nichts geändert, und
+das ist die Aussage.** Sieben Runden (v325 bis v331) sind ohne eine einzige
+Änderung an dieser Datei durchgelaufen: `npm run naechste` bietet an,
+`npm run vorlauf` übersetzt, der Runner fährt das Tor, `npm run muster`
+meldet, was seinen Gegenstand verloren hat. **Heute sind es 401 Proben**
+(386 in v317) — die Zahl steht wieder nur als Größenordnung hier, gezählt
+wird sie in 0,4 s.
+
+**Eine Regel des Ablaufs hat in v331 zum ersten Mal eine ganze Runde
+umgeworfen, und sie hat recht behalten.** Beim Bau von S-N6-05 (Vorzeichen)
+wurde `npm run sim` rot — an einer Zahl, die mit der Story nichts zu tun hat:
+der Wiederholungsaufschlag trennte Häufer von Verteiler nur noch um 113 Gold
+statt 424. Nachgemessen war die Zahl **ein einziger Lauf je Karte** und
+schwankt zwischen den Aussaaten um mehr als die Schranke selbst.
+
+**Beides in eine Runde zu packen wäre der bequeme Weg gewesen und kein
+Beweis** (v219: eine Messstelle in derselben Runde umzubauen, in der die
+eigene Änderung an ihr scheitert). Also ist die Runde geteilt: v331 repariert
+das Messgerät, die fertigen Vorzeichen liegen auf dem Zweig `vorzeichen-wip`
+und kommen in v332 auf ein Gerät, das sie beurteilen kann. **Das ist die
+Reihenfolge, die Abschnitt 2.1 des Katalogs für das ganze Projekt fordert —
+erst die Messung, dann das Gemessene —, und sie gilt auch mitten in einer
+Runde.**
+
+**Was daraus als Ablaufregel bleibt:** wird ein Tor an einer Zahl rot, die
+mit der gebauten Story **nichts zu tun hat**, ist die erste Frage nicht „wie
+bekomme ich es grün", sondern „kann diese Zahl überhaupt etwas entscheiden".
+Die Antwort steht in ihrer Streuung, und die kostet drei Läufe.
 
 **Nachgesehen in v324 — die Kette hat zum ersten Mal eine Story angeboten,
 deren Gegenstand es nicht gibt.** S-N5-02 („Figuren bekommen Fuß und

@@ -885,6 +885,33 @@ daran gearbeitet haette. Sie heisst jetzt **Nahkampf**: ein Ding, ein Wort
 (v323) - und diesmal andersherum, zwei Dinge duerfen nicht dasselbe Wort
 nehmen.
 
+**Eine Zahl der Balance mass einen Wurf (v331) - und gefunden hat es die
+naechste Story, nicht ein Tor.** `wiederholungMessen` verlangt ueber 200 Gold
+Unterschied zwischen Haeufer und Verteiler. Die Zahl war **ein einziger Lauf je
+Karte** und schwankt zwischen den drei Aussaaten um mehr als die Schranke
+selbst: Spiralhain 635 / 424 / 635, Frostspalte 424 / 344 / 344. Beim Bau der
+Vorzeichen (S-N6-05) fiel die Frostspalte auf 113 - derselbe Wurf aus derselben
+Schuessel, und die Kette waere fuer die Streuung stehengeblieben.
+
+**Der Grund liegt in der gemessenen Groesse:** `spent` ist, was der Bot
+AUSGEGEBEN hat, nicht was der Aufschlag ihn gekostet hat. Wer mehr einnimmt,
+gibt mehr aus, und ob er den vierten Turm einer Sorte noch kauft, ist eine
+Stufe und kein Verlauf. Der Haeufer ist davon nicht betroffen (+693 auf allen
+vier Karten), der Verteiler sehr (+58 / +94 / +269 / +0).
+
+Repariert wie v300 die andere Haelfte derselben Messung: gemittelt ueber drei
+Aussaaten, mit der Spanne daneben (Regel 12). Gemessen 565 ± 211 · 649 ± 75 ·
+**371 ± 80** · 693 ± 0, Schranke unveraendert bei 200. **Und die Messung sagt
+selbst, wenn sie nichts entscheiden kann** - liegt die Streuung ueber dem
+Abstand zur Schranke, steht es als Hinweis da. Der Fall kommt heute nicht vor,
+also stellt die Pruefung ihn sich selbst (Regel 5, wie `zielplatte` seit v234):
+240 Gold bei Rauschen 80 muss reden, 371 bei demselben Rauschen schweigen.
+
+**Die Vorzeichen selbst liegen fertig auf dem Zweig `vorzeichen-wip`** und sind
+bewusst NICHT in dieser Runde ausgeliefert: eine Messstelle in derselben Runde
+umzubauen, in der die eigene Aenderung an ihr scheitert, waere kein Beweis mehr
+(v219). Erst das Messgeraet, dann das Gemessene.
+
 **Der Grund wird dunkel (v326, S-N5-07) - und die Messung hat die Story auf
 halbem Weg widerlegt.** Die Story stuetzt sich auf eine Tabelle aus v274:
 `BODEN_HELL` von 0,355 auf 0,24 bringe „1 von 20 schwachen Kanten statt 20 von

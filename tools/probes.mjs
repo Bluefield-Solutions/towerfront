@@ -5456,6 +5456,25 @@ export const PROBEN = [
     meldet: 'nicht zu unterscheiden',
   },
   {
+    // **Die Trennung wird ueber drei Aussaaten gemittelt** (v331) - bis v330
+    // stand dort ein einziger Lauf je Karte, und der schwankte um mehr als
+    // die Schranke selbst (Spiralhain 635 / 424 / 635 bei einer Forderung
+    // von 200). Der Eingriff nimmt den Mittelwert wieder heraus und laesst
+    // nur die ERSTE Aussaat zaehlen; die Streuungspruefung muss dann sagen,
+    // dass dieser Lauf nichts entscheidet.
+    //
+    // Gegriffen wird die Streuungsrechnung und nicht der Mittelwert: eine
+    // einzelne Aussaat kann zufaellig ueber der Schranke liegen, und dann
+    // meldete gar nichts. Mit Rauschen 0 daneben behauptet die Zahl
+    // Sicherheit, die sie nicht hat - genau das soll der Selbsttest fangen.
+    name: 'Die Trennung kennt ihre eigene Streuung nicht',
+    datei: 'tools/sim.ts',
+    regel: /return spanne <= Math\.abs\(wert - schranke\);/,
+    ersatz: 'return true;',
+    tor: 'sim',
+    meldet: 'Streuungspruefung',
+  },
+  {
     name: 'Lesbarkeit findet die Wegflaeche nicht mehr',
     datei: 'tools/readability.mjs',
     regel: /if \(nah <= 0\) \{ wr \+= d\[j\];/,

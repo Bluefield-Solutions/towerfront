@@ -114,7 +114,7 @@ bestellt eine Figur und bekommt den Figurenblock. Eine Ableitung, keine Liste
 
 **Nachgesehen in v298 — es sind jetzt DREI offene Bestellungen, und die dritte
 verschärft die Regel, die schon für die ersten beiden galt.** Dazugekommen ist
-`8d.4` (`33_bannturm.png`, seit v295). Damit hat das Spiel drei Bauwerke, die
+`8d.4` (`35_bannturm.png`, seit v295). Damit hat das Spiel drei Bauwerke, die
 **nicht schiessen**, und sie müssen sich gegenseitig auf den ersten Blick
 trennen: jede der drei Bestellungen trägt **0,55** Silhouetten-Ähnlichkeit als
 Grenze — gegen jedes schon gelieferte Bauwerk **und gegen die anderen zwei**.
@@ -3188,7 +3188,16 @@ die Rolle also nicht allein tragen; es muss ihr nur nicht widersprechen.
 **Bis das Bild da ist, baut das Spiel gegen den Platzhalter** (K5), und
 `npm run bildtor` nennt `werft_1_1` bei jedem Lauf als offene Bestellung.
 
-### 8d.4 `33_bannturm.png` — das dritte Gebäude ohne Waffe
+### 8d.6 `35_bannturm.png` — das dritte Gebäude ohne Waffe
+
+> **Umnummeriert in v334.** Dieser Auftrag stand seit v295 als `8d.4` und
+> `35_bannturm.png` da — und v328 hat dem Sanitäter **dieselbe Nummer und
+> denselben Dateinamen** gegeben. Zwei Aufträge unter einer Kennung sind kein
+> Schönheitsfehler: `npm run doku` liest die Abschnitte nach ihrer
+> Überschrift, und eine Gegenprobe, die `### 8d.4` greift, trifft seitdem den
+> falschen. Genau so hat der Nachtlauf sie als gegenstandslos gemeldet.
+> Seit v334 prüft der Doku-Wächter beides — doppelte Abschnittsnummer und
+> doppelter Dateiname.
 
 **Er ist der einzige, der nach OBEN arbeitet.** Förderer und Werft greifen
 nach unten und nach innen — Trichter, Rutsche, Sumpf; Gerüst, Greifarme,

@@ -702,6 +702,50 @@ const offeneIds = new Set();
 // "512 x 512" schreibt, bestellt eine Figur, und eine Figur bekommt den
 // Figurenblock. Eine gepflegte Liste der Figurenabschnitte veraltete an dem
 // Tag, an dem einer dazukommt.
+// **Keine zwei Auftraege unter derselben Kennung** (v334).
+//
+// v295 bestellte den Bannturm als `8d.4` mit `33_bannturm.png`; v328 gab dem
+// Sanitaeter DIESELBE Nummer und DENSELBEN Dateinamen. Zwei Aufträge unter
+// einer Kennung sind kein Schoenheitsfehler: die Pruefungen dieses Dokuments
+// lesen die Abschnitte nach ihrer Ueberschrift, und eine Gegenprobe, die
+// `### 8d.4` greift, trifft seitdem den falschen. Der Nachtlauf hat sie als
+// gegenstandslos gemeldet, und die Ursache lag nicht in der Probe.
+//
+// Geprueft wird BEIDES, weil es zwei Fehler sind: eine doppelte Nummer
+// verwirrt den Leser und die Werkzeuge, ein doppelter Dateiname laesst die
+// zweite Lieferung die erste ueberschreiben.
+{
+  const auftrag0 = alle.find(([n]) => n === 'Towerfront-BILDAUFTRAG.md');
+  if (auftrag0) {
+    const kennungen = new Map();
+    const dateien = new Map();
+    for (const z of auftrag0[1].split('\n')) {
+      const m = /^###\s+(\d+[a-z]?(?:\.\d+)*)\s/.exec(z);
+      if (!m) continue;
+      const k = m[1];
+      if (kennungen.has(k)) {
+        fail(`Bildauftrag: die Kennung ${k} steht zweimal - "${kennungen.get(k)}" und `
+          + `"${z.trim()}". Die Pruefungen lesen die Abschnitte nach ihrer Ueberschrift; `
+          + 'zwei Abschnitte unter einer Kennung heisst, dass eine Gegenprobe den falschen '
+          + 'trifft und dabei schweigt.');
+      } else kennungen.set(k, z.trim());
+      const d = /`([0-9A-Za-z_]+\.png)`/.exec(z);
+      if (!d) continue;
+      // **Nur INNERHALB einer Abschnittsfamilie** (8b, 8c, 8d). Dass 8b und
+      // 8c dieselbe Datei bestellen, ist Absicht und steht so im Dokument:
+      // 8c ist die Fassung OHNE gemalten Weg und tritt an die Stelle von 8b,
+      // das als Rueckfalllinie stehen bleibt. Zwei Bestellungen in DERSELBEN
+      // Familie sind dagegen genau der Fehler, den v334 gefunden hat.
+      const familie = `${k.split('.')[0]}|${d[1]}`;
+      if (dateien.has(familie)) {
+        fail(`Bildauftrag: die Datei \`${d[1]}\` wird in Abschnitt `
+          + `${k.split('.')[0]} zweimal bestellt - in "${dateien.get(familie)}" und in `
+          + `"${z.trim()}". Die zweite Lieferung ueberschriebe die erste.`);
+      } else dateien.set(familie, z.trim());
+    }
+  }
+}
+
 {
   const auftrag = alle.find(([n]) => n === 'Towerfront-BILDAUFTRAG.md');
   if (auftrag) {

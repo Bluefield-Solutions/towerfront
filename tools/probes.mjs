@@ -864,9 +864,15 @@ export const PROBEN = [
     // Der Waechter liest jetzt beide Bloecke und prueft, dass kein
     // Figurenauftrag den Kartenblock traegt. Der Eingriff dreht 8d.4 zurueck.
     name: 'Gebaeudeauftrag traegt den Kartenblock',
+    // **Auf den Bannturm nachgezogen (v334, K1).** Sie griff `### 8d.4` -
+    // und diese Kennung stand seit v328 ZWEIMAL da (Sanitaeter und
+    // Bannturm), also traf sie den falschen Abschnitt und schwieg. Der
+    // Nachtlauf hat sie als gegenstandslos gemeldet. Die Kennungen sind
+    // gerichtet, und der Doku-Waechter prueft seitdem auf Dubletten.
+
     datei: 'docs/Towerfront-BILDAUFTRAG.md',
-    regel: /### 8d\.4([\s\S]*?)\[AUSGABE-BLOCK FIGUR EINFÜGEN\]/,
-    ersatz: '### 8d.4$1[AUSGABE-BLOCK EINFÜGEN]',
+    regel: /### 8d\.6([\s\S]*?)\[AUSGABE-BLOCK FIGUR EINFÜGEN\]/,
+    ersatz: '### 8d.6$1[AUSGABE-BLOCK EINFÜGEN]',
     tor: 'doku',
     meldet: 'Kartenblock',
   },
@@ -5469,6 +5475,29 @@ export const PROBEN = [
     ersatz: "{ id: 'bajonett', name: 'Bajonett', text: 'Mehr Schaden dicht am Turm.', art: 'weit', wert: 0.35, kosten: 700 }",
     tor: 'sim',
     meldet: 'nicht zu unterscheiden',
+  },
+  {
+    // **Zwei Auftraege unter derselben Kennung** (v334). Der Eingriff gibt
+    // dem Bannturm die Nummer des Sanitaeters zurueck - genau der Zustand,
+    // der seit v328 bestand und eine Gegenprobe stumm gemacht hat.
+    name: 'Zwei Bildauftraege tragen dieselbe Kennung',
+    datei: 'docs/Towerfront-BILDAUFTRAG.md',
+    regel: /### 8d\.6 `35_bannturm\.png`/,
+    ersatz: '### 8d.4 `35_bannturm.png`',
+    tor: 'doku',
+    meldet: 'steht zweimal',
+  },
+  {
+    // **Und dieselbe Datei zweimal in einer Familie.** Die zweite Lieferung
+    // ueberschriebe die erste. Zwischen 8b und 8c ist es dagegen Absicht -
+    // deshalb greift die Regel nur innerhalb einer Familie, und genau das
+    // stellt dieser Eingriff.
+    name: 'Zwei Bildauftraege bestellen dieselbe Datei',
+    datei: 'docs/Towerfront-BILDAUFTRAG.md',
+    regel: /### 8d\.6 `35_bannturm\.png`/,
+    ersatz: '### 8d.6 `33_sanitaeter.png`',
+    tor: 'doku',
+    meldet: 'zweimal bestellt',
   },
   {
     // **Ein Schwanz, der nicht endet, ist kein Ende** (S-N6-06). Der Eingriff

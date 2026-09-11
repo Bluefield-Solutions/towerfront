@@ -1,12 +1,5 @@
-BEFUND vom 2026-09-11T08:09Z auf 874f7303:
+BEFUND vom 2026-09-11T10:15Z auf d3d5b5e7:
 PROBEN: 1 von 67 Toren beweisen nichts
-  - Der Pruefsteg zieht seine Wertezeilen auseinander: "browsertor" bleibt grün, obwohl der Fehler eingebaut ist.
+  - Muendungsversatz rutscht in die Flugbahn: "muendungstor" bleibt grün, obwohl der Fehler eingebaut ist.
 PROBEN: 1 von 67 Toren beweisen nichts
-  - Pruefsteg spannt ueber die ganze Hoehe: "uxtor" bleibt grün, obwohl der Fehler eingebaut ist.
-PROBEN: 1 von 67 Toren beweisen nichts
-  - Bestwert eine Welle zu weit: "smoke" bleibt grün, obwohl der Fehler eingebaut ist.
-PROBEN: 4 von 67 Toren beweisen nichts
-  - Gebaeudeauftrag traegt den Kartenblock: "doku" meldet "Kartenblock" nicht, obwohl der Fehler eingebaut ist.
-  - Sterne sind nicht mehr erreichbar: "sim" meldet "unerreichbar" nicht, obwohl der Fehler eingebaut ist.
-  - Ueberspringen deckt die Kopfzeile zu: "browsertor" bleibt grün, obwohl der Fehler eingebaut ist.
-  - Bildrate bricht ein: "bench" meldet "Bildrate bricht ein" nicht, obwohl der Fehler eingebaut ist.
+  - Der Lauf macht spaetere Abschnitte nicht haerter: "sim" meldet "steigt im Lauf nicht durch" nicht, obwohl der Fehler eingebaut ist.

@@ -1,5 +1,1 @@
-BEFUND vom 2026-09-11T12:24Z auf d8e06c0d:
-PROBEN: 1 von 68 Toren beweisen nichts
-  - Kette liest die Abhaengigkeit nicht: "naechste" meldet "S-N7-01 wartet auf S-N4-08" nicht, obwohl der Fehler eingebaut ist. Zuletzt sagte "naechste": **Schliesst, wenn:** `text tools/guards.ts "Kartenstapel" >= 2` | --- | ## Rückbau — nur fahren, wenn eine Abnahme nach drei Schleifen nicht hält
-PROBEN: 1 von 68 Toren beweisen nichts
-  - Ein Spielstil gewinnt die erste Karte nicht: "sim" meldet "gewinnt spiralhain nicht in jedem Lauf" nicht, obwohl der Fehler eingebaut ist. Zuletzt sagte "sim":   kleinste Zweigwirkung           UNBELEGT   Stand UNBELEGT   Soll >= 9   (Rauschen 0.00) |     OFFEN: kleinste Zweigwirkung liegt noch nicht beim Soll (>= 9). | BALANCE-CHECK: bestanden.
+sauber 2026-09-11 e0b9b8ba

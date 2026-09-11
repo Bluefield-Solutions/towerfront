@@ -1,6 +1,33 @@
 # Towerfront — Anforderungskatalog
 
-Stand: v328 · 11.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+Stand: v335 · 11.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+
+**Nachgesehen in v335 — Paket N6 ist bis auf zwei Stories durch, N7 hat
+begonnen.**
+
+| Story | gebaut | gemessen |
+|---|---|---|
+| S-N6-02 · der Sanitäter | v328 | 14,0 Lebenspunkte je Sekunde in Reichweite, **0,0** außerhalb |
+| S-N6-03 · der Hetzer | v329 | lange Route gehalten, kurze kommt durch |
+| S-N6-04 · die Monokulturwelle | v330 | jede reine Sorte verliert mehr als das gemischte Feld (28/21/10/10 gegen **5**) |
+| S-N6-05 · Vorzeichen | v332 | sechs Ankündigungen, **null Paare** mit gleichem Abdruck |
+| S-N6-06 · der Schwanz des Laufs | v333 | bester Stil **5 Umläufe**, ohne Steigerung 12+ |
+| S-N7-01 · `bahntreue` misst das Netz | v335 | **100 %** Netzdeckung, Gegenprobe lässt sie auf 78,5 % fallen |
+
+**Abschnitt 2.1 ist in v331 zum ersten Mal MITTEN in einer Runde angewandt
+worden, und das ist die Auskunft dieses Nachsehens.** Die Reihenfolge „erst
+die Messung, dann das Gemessene" stand bisher als Regel über den Paketen. In
+v331 wurde `sim` an einer Zahl rot, die mit der gebauten Story nichts zu tun
+hatte — nachgemessen war sie ein einziger Lauf je Karte und schwankte um mehr
+als ihre eigene Schranke. Beides in eine Runde zu packen wäre kein Beweis
+gewesen (v219), also wurde geteilt: v331 das Messgerät, v332 das Gemessene.
+
+**Und v334 hat gezeigt, was der Katalog mit „drei der vier Zielzahlen liegen
+unter dem Rauschen ihres eigenen Messverfahrens" wirklich meint.** Der
+Nachtlauf fand sieben Gegenproben, die nichts mehr bewiesen — keine davon war
+ein Fehler im Spiel. Alle sieben sind daran gestorben, dass sich der
+Gegenstand unter ihnen bewegt hat. **Das Messgerät verfällt schneller, als es
+gebaut wird**, und genau deshalb steht P1 vor P2.
 
 **Nachgesehen in v328 — Paket N4 ist durch, N5 und N6 haben begonnen.**
 

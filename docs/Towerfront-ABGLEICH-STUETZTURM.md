@@ -1,6 +1,23 @@
 # Referenzabgleich — Stützturm (C3, „Bannturm")
 
-Stand: v328 · 11.09.2026
+Stand: v335 · 11.09.2026
+
+**Nachgesehen in v335 — und der Bannturm hat seine Bestellung verloren und
+eine neue bekommen.** Sein Bildauftrag stand seit v295 als `8d.4` mit
+`33_bannturm.png`; v328 hat dem Sanitäter dieselbe Nummer **und** denselben
+Dateinamen gegeben, ohne dass es jemandem auffiel. Eine Gegenprobe, die
+`### 8d.4` greift, traf seitdem den falschen Abschnitt und schwieg — der
+Nachtlauf hat sie in v334 als gegenstandslos gemeldet. Der Auftrag heißt
+jetzt **8d.6** und **`35_bannturm.png`**, und `npm run doku` prüft seither,
+dass keine zwei Aufträge dieselbe Kennung oder denselben Dateinamen tragen.
+
+**An der Sache selbst hat sich nichts geändert, und das ist der Punkt:** der
+Bannturm ist seit v295 gebaut, gemessen und von Wächtern gehalten — der
+Schalter steht auf null, weil die Bauleiste kein siebtes Bauwerk trägt
+(gemessen fallen mit sieben Knöpfen alle vier UX-Zustände). Das ist eine
+Entscheidung über die Oberfläche und keine über den Turm. **Was v334 dazu
+beigetragen hat, ist kein Fortschritt am Turm, sondern die Erkenntnis, dass
+sein Auftrag zwei Fassungen lang unter einer fremden Kennung lag.**
 
 **Nachgesehen in v328 — und diesmal ist etwas dazugekommen, das den Stützturm
 wirklich betrifft.** Mit **S-N6-01** (v327) gibt es sechs Karten, die das

@@ -5508,6 +5508,34 @@ export const PROBEN = [
     meldet: 'zweimal bestellt',
   },
   {
+    // **Eine Kante, die niemand befaehrt, ist Kulisse in den Daten**
+    // (v335, S-N7-01, D30).
+    //
+    // Der Eingriff laesst die Weiche `saeule1` auf eine Kante zeigen, die es
+    // nicht gibt. Die Weiche sperrt damit nichts, die Rechnung nimmt immer
+    // den kurzen Ast, und die lange Nordschleife (`kreuz1-kreuz2-2`) liegt in
+    // KEINER Stellung mehr auf einer Route. Gemessen faellt die Netzdeckung
+    // des Spiralhains von 100 auf 78,5 %, und das Tor nennt die tote Kante.
+    //
+    // **Drei Eingriffe sind durchprobiert, und zwei taugen nicht** (Regel 3):
+    // die Kante zu LOESCHEN verkleinert Zaehler und Nenner zugleich, die
+    // Deckung bleibt bei 100 % - dieselbe Falle wie bei jeder Ratsche, die
+    // ihren eigenen Bezug mitverschiebt (Regel 2). Sie auf ihren eigenen
+    // Anfangsknoten zu legen macht das Tor zwar rot, aber am falschen Ort:
+    // dann fuehrt von `tor1` gar keine Route mehr zum Ziel, `maps.ts` wirft
+    // schon beim Laden, und die Meldung kommt nie zustande.
+    //
+    // Was traegt, ist der Eingriff an der WEICHE: er laesst das Netz heil und
+    // nimmt genau das weg, was die Messung misst - dass jede Kante irgendwann
+    // an die Reihe kommt.
+    name: 'Eine Kante des Netzes wird nie befahren',
+    datei: 'src/data/wegnetz.ts',
+    regel: /\{ id: 'saeule1', kante: 'kreuz1-kreuz2', name: '[^']+' \}/,
+    ersatz: "{ id: 'saeule1', kante: 'gibtesnicht', name: 'Nordschleife' }",
+    tor: 'bahntreuetor',
+    meldet: 'in KEINER Weichenstellung',
+  },
+  {
     // **Ein Schwanz, der nicht endet, ist kein Ende** (S-N6-06). Der Eingriff
     // setzt die Steigerung des Schwanzes auf 1 - dann laeuft der beste Stil
     // durch alle zwoelf gemessenen Umlaeufe, und `sim` muss sagen, dass das

@@ -1,6 +1,22 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v328 · 11.09.2026
+Stand: v335 · 11.09.2026
+
+**Nachgesehen in v335 — eine Zahl hat sich bewegt, und sie ist bezahlt.**
+`npm run uxaudittor` misst `zug` 7,9 · `ruhe` 13,1 · `bauwahl` 22,0 ·
+`pruefsteg` 27,0 · `teurer` 21,7 · **`welle` 13,9 %** (vorher 13,1). Die acht
+Zehntel sind das Vorzeichenband der nächsten Welle aus v332 — `#dock` 8,3 →
+9,2 —, und die Ratsche von 16 bleibt unberührt. Kein anderer Zustand hat sich
+um ein Zehntel geändert.
+
+**Und die Verdeckungsmessung hat in v334 einen blinden Fleck verloren.** Die
+Zeilenmessung des Prüfstegs las sechs Wertezeilen mit **null Punkten Höhe** —
+seit v316 ist die Liste am Turm zugeklappt, und null ist nie größer als die
+Grenze. Sie war seitdem still, nicht grün. Sie klappt jetzt selbst auf (14
+statt 0) und meldet eine leere oder flache Liste, statt über ihr grün zu
+werden. **Das ist dieselbe Klasse wie B2 und H12 in diesem Dokument:** eine
+Zusage über die Bedienung, die den Zustand nicht herstellt, in dem sie gilt,
+misst den falschen.
 
 **Nachgesehen in v328 — jede Zahl steht, wo sie in v321 stand.** `npm run
 uxaudittor` misst unverändert `zug` 8,0 · `ruhe` 13,1 · `bauwahl` 22,0 ·

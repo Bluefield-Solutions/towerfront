@@ -912,6 +912,32 @@ bewusst NICHT in dieser Runde ausgeliefert: eine Messstelle in derselben Runde
 umzubauen, in der die eigene Aenderung an ihr scheitert, waere kein Beweis mehr
 (v219). Erst das Messgeraet, dann das Gemessene.
 
+**`bahntreuetor` kann nach 36 Fassungen wieder rot werden (v335, S-N7-01,
+D30).** Es fragte, ob eine Bahn auf der GEMALTEN Strasse laeuft - seit v233
+malt keine Karte eine, und es sagte das seitdem selbst: „gegenstandslos".
+
+**Die alte Frage selbst ist nicht zu retten, und das ist gemessen:** der Weg
+wird heute aus den Bahnen GEZEICHNET, also laeuft die Bahn von Bauart auf
+ihrer Strasse - genau die Art Zahl, vor der v214 gewarnt hat („von Bauart auf
+100 %").
+
+**Was NICHT von Bauart wahr ist:** dass jede eingetragene Kante des `wegnetz`
+in mindestens einer Weichenstellung auf einer Route liegt. Eine Kante, die in
+keiner vorkommt, wird nie gezeichnet und nie belaufen - Kulisse in den DATEN,
+und eine Weiche, die auf sie zeigt, waere eine Wahl ohne Folgen. Gefahren
+werden ALLE Stellungen (vier auf dem Spiralhain, sonst zwei); Stellungen, die
+ein Tor zumachen, zaehlen nicht mit - die gibt es im Spiel nicht, und sie hier
+mitzuzaehlen waere eine zweite Wahrheit ueber das Weichenfenster (Regel 15).
+
+Gemessen **100 % auf allen vier Karten**. **Drei Eingriffe sind durchprobiert,
+zwei taugen nicht** (Regel 3): die Kante zu LOESCHEN verkleinert Zaehler und
+Nenner zugleich und laesst die Deckung bei 100 % (Regel 2); sie auf ihren
+eigenen Knoten zu legen macht das Tor am falschen Ort rot, weil dann gar keine
+Route mehr fuehrt. Was traegt, ist der Eingriff an der WEICHE - sie auf eine
+Kante zeigen zu lassen, die es nicht gibt: das Netz bleibt heil, die lange
+Nordschleife liegt in keiner Stellung mehr auf einer Route, und die Deckung
+faellt auf **78,5 %**.
+
 **Sieben Gegenproben bewiesen nichts mehr - und keine zwei aus demselben
 Grund (v334).** Der Nachtlauf hat sie auf v331 gefunden; der Befund macht
 `npm run muster` rot und damit die ganze Kette, also war das die naechste

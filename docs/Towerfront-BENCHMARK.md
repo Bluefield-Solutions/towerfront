@@ -1,6 +1,24 @@
 # Towerfront — Genre-Abgleich
 
-Stand: v328 · 11.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+Stand: v335 · 11.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+
+**Nachgefahren in v335, nicht geglaubt** (`npm run bericht`): unverändert
+**30 von 30, gewichtet 100 %**. Von Hand beurteilt bleiben P6 und P7.
+
+**Die Zahl steht jetzt seit einundzwanzig Runden still, und in diesen
+einundzwanzig hat das Spiel zwei Gegnerarten, sechs Wirkungskarten, eine
+Monokulturwelle, sechs Vorzeichen und einen endlosen Laufschwanz bekommen.**
+Der Abgleich fragt nach keinem davon: seine sechs Gegner-Kriterien sind seit
+v110 erfüllt, und ob es acht Arten sind oder zehn, steht in keinem.
+
+**Dieses Dokument ist damit das deutlichste Beispiel für den wichtigsten Satz
+des Anforderungskatalogs** — der Genre-Abgleich steht auf 30 von 30, und das
+Spiel macht trotzdem wenig Spaß. Was seit v327 wirklich dazugekommen ist,
+steht nicht hier, sondern in den Messungen, die jede Runde neu gebaut hat:
+*ist diese Sache von den anderen zu UNTERSCHEIDEN.* Drei davon gibt es jetzt
+(`--wirkungen`, `--monokultur`, `--vorzeichen`), und alle drei melden null
+Paare mit gleichem Abdruck. **Das ist die Zahl, die sich bewegt** — diese
+hier bewegt sich nicht mehr und soll es auch nicht.
 
 **Nachgefahren in v328, nicht geglaubt** (`npm run bericht`): unverändert
 **30 von 30, gewichtet 100 %**. Von Hand beurteilt bleiben P6 und P7.

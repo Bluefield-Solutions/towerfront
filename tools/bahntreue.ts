@@ -1,4 +1,22 @@
-/** Laeuft die Bahn auf der gemalten Strasse? (v149)
+/** Laeuft die Bahn auf ihrer Strasse - und wird jede Kante des Netzes je
+ *  befahren? (v149, neu gefasst in v335)
+ *
+ *  **Zwei Fragen, und seit v233 traegt nur noch die zweite.** Die erste ist
+ *  die urspruengliche: laeuft die Bahn auf der GEMALTEN Strasse. Sie hat
+ *  keinen Gegenstand mehr, seit keine Karte eine malt - das Tor sagt es
+ *  selbst und steht nur noch da, weil `bildBringt.weg` ein Schalter je Karte
+ *  ist und die naechste Karte ihn wieder umlegen kann (D30).
+ *
+ *  Die zweite ist ihre moderne Form und steht seit v335 daneben: **liegt
+ *  jede Kante des `wegnetz` in mindestens einer Weichenstellung auf einer
+ *  Route?** Der Weg wird heute aus den Bahnen GEZEICHNET, also laeuft die
+ *  Bahn von Bauart auf ihrer Strasse - das ist keine Messung mehr (die
+ *  Lehre aus v214). Ob eine eingetragene Kante je an die Reihe kommt, ist
+ *  dagegen nicht von Bauart wahr: eine Kante, die in keiner Stellung
+ *  vorkommt, wird nie gezeichnet und nie belaufen. Sie ist Kulisse in den
+ *  DATEN, und eine Weiche, die auf sie zeigt, waere eine Wahl ohne Folgen.
+ *
+ *  Damit hat D30 nach 36 Fassungen wieder etwas, das anschlagen kann.
  *
  *  **Wie dieser Befund gefunden wurde.** Die Wegvorschau aus TF-014 zieht
  *  eine Lichtspur ueber jede Bahn. Auf der ersten Aufnahme schnitt sie die
@@ -46,6 +64,8 @@ let fehler = 0;
 /** Wieviele Karten dieses Tor wirklich gemessen hat. Steht die Zahl auf null,
  *  hat es keinen Gegenstand - und dann darf es nichts behaupten (Regel 5). */
 let gemessen = 0;
+/** Wieviele Karten mit einem Wegnetz gemessen wurden (v335, S-N7-01). */
+let netzGemessen = 0;
 const fail = (m: string): void => { console.error(`  FEHLER: ${m}`); fehler++; };
 const offen: string[] = [];
 
@@ -208,7 +228,87 @@ if (offen.length) {
   console.log('  zeigt die Alternative, macht die Bahn aber ein Viertel laenger).');
 }
 
-// **Seit v233 hat dieses Tor keinen Gegenstand mehr - und das sagt es.**
+// ------------------------------------------------------------ Das NETZ
+//
+// **Was dieses Tor seit v233 wirklich messen kann** (v335, S-N7-01, D30).
+//
+// Die alte Frage - laeuft die Bahn auf der GEMALTEN Strasse - hat seit v233
+// keinen Gegenstand: keine Karte malt mehr eine. Die neue Frage stellt
+// dasselbe eine Ebene tiefer und hat einen: **wird jede Kante des Netzes
+// ueberhaupt je befahren?**
+//
+// Der Weg wird gezeichnet, und zwar aus den BAHNEN der gerade gestellten
+// Weichen (`terrainAuftrag(s.map, s.lanes, ...)`). Ob die Bahn auf ihrer
+// Strasse laeuft, ist damit von Bauart wahr - genau die Art Zahl, vor der
+// v214 gewarnt hat ("von Bauart auf 100 %"). Was NICHT von Bauart wahr ist:
+// dass jede eingetragene Kante in mindestens einer Weichenstellung auf einer
+// Route liegt. Eine Kante, die in keiner Stellung vorkommt, wird nie
+// gezeichnet und nie befahren - sie ist Kulisse in den DATEN, und der
+// Begriff ist damit derselbe wie in D28, nur an der Stelle, an der es ihn
+// heute gibt.
+//
+// Gefahren werden ALLE Stellungen (hoechstens vier je Karte, gemessen).
+// Stellungen, die eine Bahn ganz zumachen, zaehlen nicht mit - dass es sie
+// gibt, faengt der Weichenfenster-Waechter (S-N2-04), und hier waeren sie
+// eine zweite Wahrheit darueber (Regel 15).
+{
+  const { WEGNETZ, gesperrteKanten, tore } = await import('../src/data/wegnetz');
+  const { kuerzesteRoute, kantenLaenge } = await import('../src/core/route');
+  console.log('\nNetzdeckung - welche Kante wird in IRGENDEINER Weichenstellung befahren:');
+  for (const m of MAPS) {
+    const netz = WEGNETZ[m.id];
+    if (!netz) continue;
+    const weichen = netz.weichen ?? [];
+    const benutzt = new Set<string>();
+    let stellungen = 0;
+    for (let maske = 0; maske < (1 << weichen.length); maske++) {
+      const gestellt = new Set(weichen.filter((_, i) => (maske >> i) & 1).map((w) => w.id));
+      const gesperrt = gesperrteKanten(netz, gestellt);
+      const routen = tore(netz).map((t) => kuerzesteRoute(netz, t.id, gesperrt));
+      // Eine Stellung, die auch nur ein Tor zumacht, gibt es im Spiel nicht:
+      // `weicheStellen` nimmt sie zurueck. Sie darf hier also auch keine
+      // Kante als "befahren" beisteuern.
+      if (routen.some((r) => !r)) continue;
+      stellungen++;
+      for (const r of routen) for (const k of r!) benutzt.add(k);
+    }
+    let ganz = 0;
+    let tot = 0;
+    const tote: string[] = [];
+    for (const k of netz.kanten) {
+      const l = kantenLaenge(netz, k);
+      ganz += l;
+      if (!benutzt.has(k.id)) { tot += l; tote.push(k.id); }
+    }
+    const anteil = ganz > 0 ? (1 - tot / ganz) * 100 : 0;
+    console.log(`  ${m.name.padEnd(15)} ${benutzt.size}/${netz.kanten.length} Kanten, `
+      + `${anteil.toFixed(1)} % der Netzlaenge befahrbar `
+      + `(${stellungen} von ${1 << weichen.length} Stellungen spielbar)`
+      + (tote.length ? `   TOT: ${tote.join(', ')}` : ''));
+    // **Eine Zahl ohne Spielraum trennt nichts** (Regel 13): ein Netz ohne
+    // Kanten meldet 0 % und saehe aus wie ein Befund, ist aber ein leeres
+    // Blatt.
+    if (netz.kanten.length === 0) {
+      console.error(`  FEHLER: das Netz von ${m.name} hat keine Kante - dann misst die `
+        + 'Zeile darueber nichts.');
+      fehler++;
+    } else if (tote.length) {
+      console.error(`  FEHLER: ${m.name} traegt ${tote.length} Kante(n), die in KEINER `
+        + `Weichenstellung befahren werden (${tote.join(', ')}). Sie werden nie `
+        + 'gezeichnet und nie belaufen - Kulisse in den Daten, und eine Weiche, die '
+        + 'auf sie zeigt, waere eine Wahl ohne Folgen.');
+      fehler++;
+    }
+    netzGemessen++;
+  }
+  if (netzGemessen === 0) {
+    console.error('  FEHLER: keine Karte hat ein Wegnetz - dann misst dieser Block nichts '
+      + '(Regel 5).');
+    fehler++;
+  }
+}
+
+// **Seit v233 hat die ERSTE Haelfte dieses Tores keinen Gegenstand mehr.**
 //
 // Es misst, ob eine Bahn auf der GEMALTEN Strasse laeuft. Mit der
 // Ascheschlucht ist die letzte Karte auf `weg: false` gegangen; es gibt im
@@ -239,5 +339,14 @@ if (gemessen === 0) {
 }
 
 if (fehler) { console.error(`\nBAHNTREUE: ${fehler} Fehler.`); if (TOR) process.exit(1); }
-else if (gemessen === 0) console.log('\nBAHNTREUE: gegenstandslos - keine Karte malt eine Strasse.');
-else console.log(`\nBAHNTREUE: keine der ${gemessen} gemessenen Bahnen ist schlechter geworden.`);
+else if (gemessen === 0) {
+  // **Nicht mehr "gegenstandslos"** (v335, S-N7-01). Die Frage nach der
+  // gemalten Strasse hat keinen Gegenstand mehr, die nach dem NETZ schon -
+  // und die ist seit diesem Lauf gemessen. D30 ist damit nach 36 Fassungen
+  // wieder etwas, das anschlagen kann.
+  console.log(`\nBAHNTREUE: keine Karte malt eine Strasse; das Netz ist auf `
+    + `${netzGemessen} Karten vollstaendig befahrbar.`);
+} else {
+  console.log(`\nBAHNTREUE: keine der ${gemessen} gemessenen Bahnen ist schlechter `
+    + `geworden; das Netz ist auf ${netzGemessen} Karten vollstaendig befahrbar.`);
+}

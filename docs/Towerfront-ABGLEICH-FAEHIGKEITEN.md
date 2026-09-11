@@ -1,6 +1,26 @@
 # Referenzabgleich — Fähigkeiten freischalten (C18)
 
-Stand: v328 · 11.09.2026
+Stand: v335 · 11.09.2026
+
+**Nachgesehen in v335 — nachgefahren, nicht gestempelt.** `npm run c18` meldet
+die erste Karte mit **einer** Fähigkeit als gewonnen, und seit v329 wird sie
+über **fünf Aussaaten** gefahren statt über eine: 15 / 15 / 11 / 15 / 17
+Kristall von 42, fünf von fünf gewonnen.
+
+**Die fünf Aussaaten sind der eigentliche Fortschritt an diesem Dokument.**
+Bis v328 stand hier eine einzige Zahl aus einer einzigen Aussaat, und v329
+hat gemessen, was das wert ist: eine Balance-Änderung wurde auf die BEUTE
+geschoben, weil mit 2 Gold die Standard-Aussaat gewann und mit 4 verlor —
+sauber reproduzierbar, und trotzdem die falsche Ursache. Es war die Gruppe.
+**Reproduzierbar heißt nicht richtig**, und dieses Dokument hat seine Zahl
+sieben Fassungen lang aus genau einem Wurf bezogen.
+
+**Und v332 hat den Spielraum der ersten Karte zum ersten Mal vermessen.** Die
+Vorzeichen mussten daran vorbei: mit einem auf Welle 14 verliert sie fünfmal
+von fünf, und zwar bei jeder Stärke von 0,35 bis 1,0. Der Abstand zwischen
+„gewonnen" und „verloren" ist auf dieser Karte **ein** zusätzlicher Gegner
+oder **ein** Vorzeichen auf dem Finale — das ist die Zahl, die C18 in
+Wahrheit trägt.
 
 **Nachgesehen in v328 — nachgefahren, nicht gestempelt: unverändert.**
 `npm run c18` meldet die erste Karte mit **einer** Fähigkeit als gewonnen,

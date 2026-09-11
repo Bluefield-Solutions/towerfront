@@ -34,7 +34,16 @@ const abschnitte = [];
   const zeilen = text.split('\n');
   let jetzt = null;
   for (const z of zeilen) {
-    const m = z.match(/^### (S-[A-Z0-9-]+) · (.+)$/);
+    // **Eine Kennung darf auf einen Kleinbuchstaben enden** (v324).
+    //
+    // Dieselbe Klasse wie der blinde Fleck des Doku-Waechters in v313: dort
+    // hiess die Regel `[A-Z]+\d+(?:-[A-Z])?` und las `N1K` und `N1G` nicht,
+    // die seit v309 offen dastanden. Hier war es `S-[A-Z0-9-]+`, und die neue
+    // Story `S-N5-01b` fiel durch - sie wurde weder als Story gefuehrt noch
+    // als Abhaengigkeit erkannt, und `naechste` bot weiter eine Story an,
+    // deren Gegenstand fehlt. Eine Zaehlung, die eine Kennung nicht lesen
+    // kann, meldet nichts; sie zaehlt einfach eine weniger.
+    const m = z.match(/^### (S-[A-Za-z0-9-]+) · (.+)$/);
     if (m) {
       if (jetzt) abschnitte.push(jetzt);
       jetzt = { id: m[1], titel: m[2], text: [z] };
@@ -65,7 +74,7 @@ if (abschnitte.length < 10) {
 const haengtAn = (a) => {
   const m = a.text.join('\n').match(/\*\*H(?:ä|ae)ngt an:\*\*\s*([^\n]*)/);
   if (!m) return [];
-  return [...m[1].matchAll(/S-[A-Z0-9-]+/g)].map((x) => x[0]);
+  return [...m[1].matchAll(/S-[A-Za-z0-9-]+/g)].map((x) => x[0]);
 };
 
 let offen = null;

@@ -1222,6 +1222,23 @@ export const PROBEN = [
     // kein Beweis (Regel 5). Der Eingriff macht die Knoepfe so breit, dass
     // sechs davon nicht mehr nebeneinander passen - dann laufen sie
     // ineinander, und beide Zahlen muessen es sagen.
+    // **Eine Kennung auf einem Kleinbuchstaben** (v324).
+    //
+    // Dieselbe Klasse wie der blinde Fleck des Doku-Waechters in v313: eine
+    // Kennung, die die Regel nicht lesen kann, wird nicht gemeldet - sie
+    // wird uebergangen. `S-N5-01b` fiel durch `S-[A-Z0-9-]+`, und damit bot
+    // `naechste` weiter eine Story an, deren Gegenstand fehlt.
+    //
+    // Der Eingriff haengt eine ANDERE Story an diese Kennung. Die Kette muss
+    // das Warten melden - kann sie die Kennung nicht lesen, schweigt sie.
+    name: 'Die Kette liest eine Kennung mit Kleinbuchstaben nicht',
+    datei: 'docs/Towerfront-STORIES.md',
+    regel: /(### S-N5-06[^\n]*\n\n\*\*Paket:\*\*[^\n]*\*\*Hängt an:\*\* )—/,
+    ersatz: '$1S-N5-01b',
+    tor: 'naechste',
+    meldet: 'wartet auf S-N5-01b',
+  },
+  {
     // **Das englische Wort kehrt zurueck** (v323, S-N4-10).
     //
     // Genau die Gegenprobe, die die Story verlangt: eines der drei Woerter

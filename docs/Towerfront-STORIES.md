@@ -1,6 +1,26 @@
 # Towerfront — Stories
 
-Stand: v317 · 10.09.2026
+Stand: v324 · 11.09.2026
+
+**Nachgesehen in v324 — Paket N4 ist durch bis auf zwei Punkte, die dem Nutzer
+gehören, und die Kette hat dabei einen eigenen blinden Fleck gefunden.**
+
+| Story | gebaut | gemessen |
+|---|---|---|
+| S-N4-01 … S-N4-06 | v315–v320 | Ruhezustand 13,1 %, Menü am Turm, Wirkungsbilanz, Verdeckung, Vorschau, Feldverdeckung |
+| S-N4-07 | v321, **halb** | die gesperrte Kachel behält ihren Preis; „eine Wahl, eine Leiste" als **N4L** |
+| S-N4-09 | v322 | Kristall in vier Formaten ganz im Bild; der Warnring braucht ein Kartenbild |
+| S-N4-10 | v323 | „Karte", überall |
+| **S-N5-02** | **wartet** | auf `S-N5-01b` — die Bilder im neuen Stil sind bestellt, nicht geliefert |
+
+**Neu als S-N5-01b, und der Grund ist ein Ablauffehler, kein Inhalt:** ein
+Auftrag und eine Lieferung sind zwei Stories. S-N5-02 hing an S-N5-01, also am
+Auftrag, und `npm run naechste` bot sie an, obwohl ihr Gegenstand fehlt.
+
+**Die Kette selbst konnte die neue Kennung nicht lesen.** `S-[A-Z0-9-]+`
+nimmt kein `b` am Ende; die Story war weder gefahren noch als Abhängigkeit
+erkannt, und die Zählung stand auf 32 von 52 statt 53. Dieselbe Klasse wie
+v313 (`N1K`, `N1G`) und v230 (die Zahlwort-Tabelle).
 
 **Nachgesehen in v317 — Paket N4 hat angefangen, und die erste seiner Zahlen
 hat eine Regel geliefert, die über die Stories hinausgeht.**
@@ -408,6 +428,46 @@ allen Abnahmezahlen aus `npm run kartenprobe`.
 muss abbrechen statt still die falsche Zahl zu lesen.
 
 **Schliesst, wenn:** `text docs/Towerfront-BILDAUFTRAG.md "Stilblock Neubau" >= 1`
+
+---
+
+### S-N5-01b · Die Bilder im neuen Stil liegen im Vorrat
+
+**Paket:** N5 · **Aufwand:** HANDARBEIT · **Hängt an:** S-N5-01
+
+**Warum es diese Zeile gibt, und zwar seit v324.** S-N5-01 ist der
+**Auftrag**, nicht die Lieferung — und S-N5-02 hing an ihr, als wäre sie
+beides. `npm run naechste` bot deshalb in v324 eine Story an, deren Gegenstand
+es gar nicht gibt: „Figuren bekommen Fuß und Schatten" setzt die Schrägsicht
+voraus, und im Vorrat liegt seit v233 kein neuer Bildpunkt.
+
+**Nachgesehen, was von S-N5-02 heute schon steht** — zwei von drei Teilen, und
+beide gemessen:
+
+| verlangt | Stand |
+|---|---|
+| nach y sortieren | **gebaut** — `stand.sort((a, b) => a.y - b.y)` in `renderer.ts`, seit Langem |
+| gebackener Bodenschatten | **gebaut** — zwei Schatten je Figur, der Schlagschatten trägt den eigenen Umriss (`getSchattenriss`, v132) |
+| am Fuß hängen statt in der Mitte | **geht heute nicht** — alle acht Gegnerbilder sind Aufsichten, und dort IST die Mitte der Auflagepunkt. `renderer.ts`: *„Aufsichten sitzen mittig im Bild"* |
+
+**Und den toten Zweig dafür gab es schon einmal.** Bis v147 trug jede
+Gegnerart ein `topdown`-Feld für genau diese Unterscheidung; es stand bei
+allen acht auf `true`, der andere Zweig lief nie, und v147 hat beides
+entfernt. Ihn jetzt wieder einzubauen, für Bilder, die niemand geliefert hat,
+wäre derselbe Weg ein zweites Mal — und eine Prüfung, die nie etwas meldet,
+ist kein Beweis (Regel 5).
+
+**Was zu tun ist:** die Bestellung aus S-N5-01 an den Bild-Agenten geben, die
+Lieferung mit `npm run probebild` messen, mit `npm run pack-art` einbacken.
+Das ist Handarbeit und Wartezeit, kein Code.
+
+**Schliesst, wenn:** `nutzer: ein Bild im neuen Stil liegt im Vorrat` — der
+Stil ist nicht maschinell zu erkennen, und `liste src/gfx/assets >= 1` wäre
+vom ersten Augenblick an erfüllt gewesen (dort liegen seit jeher Dateien).
+Genau die Falle, die in dieser Datei schon einmal steht: eine Bedingung, die
+sofort wahr ist, führt die Story als zugefallen, ohne dass jemand etwas getan
+hat. Als HANDARBEIT gezählt hält sie stattdessen S-N5-02 zurück, bis Bilder da
+sind — und `npm run naechste` sagt den Grund bei jedem Lauf.
 
 ---
 
@@ -1696,7 +1756,7 @@ sieht — also hängt die Bedingung daran.
 
 ### S-N5-02 · Figuren bekommen Fuß und Schatten
 
-**Paket:** N5 · **Aufwand:** M · **Hängt an:** S-N5-01
+**Paket:** N5 · **Aufwand:** M · **Hängt an:** S-N5-01b
 
 **Problem.** In der Draufsicht hängt eine Figur in der Mitte ihrer Kachel. In
 der Schrägsicht steht sie auf einem Punkt — und ohne diesen Punkt schwebt sie.

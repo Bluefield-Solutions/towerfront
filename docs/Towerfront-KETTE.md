@@ -1,6 +1,33 @@
 # Towerfront — die Kette
 
-Stand: v317 · 10.09.2026
+Stand: v324 · 11.09.2026
+
+**Nachgesehen in v324 — die Kette hat zum ersten Mal eine Story angeboten,
+deren Gegenstand es nicht gibt.** S-N5-02 („Figuren bekommen Fuß und
+Schatten") setzt die Schrägsicht voraus; im Vorrat liegt seit v233 kein neuer
+Bildpunkt. Sie hing an S-N5-01 — und das ist der **Auftrag**, nicht die
+Lieferung.
+
+**Daraus zwei Änderungen am Ablauf, und beide gehören hierher:**
+
+1. **Ein Auftrag und eine Lieferung sind zwei Stories.** Wo eine Story auf
+   Bildmaterial wartet, steht jetzt eine eigene HANDARBEIT-Zeile dazwischen
+   (`S-N5-01b`), und `npm run naechste` überspringt mit Begründung statt
+   anzubieten. Eine Story, die auf eine Bestellung wartet, darf nicht so
+   aussehen, als wäre sie dran.
+2. **Die Kennungsregel liest jetzt Kleinbuchstaben.** `S-[A-Z0-9-]+` hat
+   `S-N5-01b` weder als Story noch als Abhängigkeit gesehen — dieselbe Klasse
+   wie der blinde Fleck des Doku-Wächters in v313 (`N1K`, `N1G`) und wie die
+   Zahlwort-Tabelle in v230. **Eine Zählung, die eine Kennung nicht lesen
+   kann, meldet nichts; sie zählt einfach eine weniger** (32 von 52 statt 53).
+   Das ist die stillste Art, in der ein Werkzeug aufhört zu arbeiten.
+
+**Und der Umgang mit einer Story, deren Gegenstand fehlt, steht damit fest:**
+nachsehen, was von ihr schon steht (bei S-N5-02 waren es zwei von drei
+Teilen), den fehlenden Teil benennen, die Abhängigkeit richtigstellen — und
+**keinen toten Zweig für Material bauen, das niemand geliefert hat.** Genau
+den hatte das Projekt schon einmal (`topdown` bis v147, bei allen acht Arten
+`true`), und v147 hat ihn entfernt.
 
 **Nachgesehen in v317 — und die zwei Sätze, die seit v310 hier standen, waren
 beide zu freundlich.**

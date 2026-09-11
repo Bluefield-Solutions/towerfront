@@ -696,6 +696,31 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Die Kette wollte eine Story bauen, deren Gegenstand es nicht gibt (v324).**
+`npm run naechste` bot S-N5-02 an ("Figuren bekommen Fuss und Schatten") - die
+Story setzt die SCHRAEGSICHT voraus, und im Vorrat liegt seit v233 kein neuer
+Bildpunkt. Sie hing an S-N5-01, und das ist der AUFTRAG, nicht die Lieferung.
+
+**Nachgesehen, was von ihr heute schon steht: zwei von drei Teilen.** Die
+Sortierung nach y ist gebaut (`stand.sort` im Renderer), der gebackene
+Bodenschatten auch (zwei Schatten je Figur, der Schlagschatten mit eigenem
+Umriss seit v132). Was fehlt, ist das Haengen am FUSS - und das geht heute
+nicht: alle acht Gegnerbilder sind Aufsichten, und dort IST die Mitte der
+Auflagepunkt. **Den toten Zweig dafuer gab es schon einmal**: bis v147 trug
+jede Gegnerart ein `topdown`-Feld, es stand bei allen acht auf `true`, der
+andere Zweig lief nie, und v147 hat beides entfernt. Ihn fuer Bilder wieder
+einzubauen, die niemand geliefert hat, waere derselbe Weg ein zweites Mal
+(Regel 5).
+
+Neu als **S-N5-01b** (HANDARBEIT): die Bilder im neuen Stil liegen im Vorrat.
+S-N5-02 haengt jetzt daran, und `naechste` nennt den Grund bei jedem Lauf.
+
+**Und die Kennungsregel war blind, genau wie die des Doku-Waechters in v313:**
+`S-[A-Z0-9-]+` liest `S-N5-01b` nicht. Die Story wurde weder gefuehrt noch als
+Abhaengigkeit erkannt, und die Kette bot unveraendert an. **Eine Zaehlung, die
+eine Kennung nicht lesen kann, meldet nichts - sie zaehlt einfach eine
+weniger** (32 von 52 statt 53). Dieselbe Klasse zum dritten Mal.
+
 **Ein Ding, ein Wort (v323, S-N4-10).** Fuer dieselbe Sache standen drei
 Woerter im Bild - "Level neu starten", "Zurueck zur Karte", "Waehle ein Land"
 -, und eines davon war das einzige englische in einer sonst durchgehend
@@ -1353,7 +1378,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v323. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v324. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

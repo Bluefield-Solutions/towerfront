@@ -3097,6 +3097,25 @@ for (const m of MAPS) {
     line.push(`${bot.name} ${r.won ? `${r.lives}/${r.maxLives}` : `W${r.wave}`}`);
   }
   console.log(`  ${m.name.padEnd(15)} ${line.join('   ')}`);
+  // **Wer alles richtig macht, muss jede Karte gewinnen koennen** (v334).
+  //
+  // Diese Zusage gab es bis v314 in anderer Form: sie fragte, ob drei Sterne
+  // erreichbar sind. Mit den Sternen ist sie ersatzlos verschwunden, und die
+  // Gegenprobe dazu hat seitdem ins Leere gegriffen - der Nachtlauf hat sie
+  // als gegenstandslos gemeldet.
+  //
+  // Die Frage selbst ist geblieben und ist die wichtigere von beiden: eine
+  // Karte, die auch der beste Spieler nicht gewinnt, ist nicht schwer,
+  // sondern UNERREICHBAR. Gefragt wird der Bot ohne Deckel und nicht einer
+  // der drei bescheidenen Stile - die messen, ob ein gewoehnlicher Spieler
+  // durchkommt, und das ist eine andere Frage (siehe BESTLEISTUNG).
+  const beste = mapRuns.get(`${m.id}:${BESTLEISTUNG.name}`);
+  if (beste && !beste.won) {
+    errors.push(`Die Karte ${m.name} ist unerreichbar: auch die Bestleistung `
+      + `(${BESTLEISTUNG.maxTowers} Tuerme, volle Stufe) verliert sie in Welle `
+      + `${beste.wave} mit ${beste.lives}/${beste.maxLives} Kristall. Eine Karte, die `
+      + 'auch der beste Spieler nicht gewinnt, ist nicht schwer, sondern zu.');
+  }
 }
 
 // --- Dauer und Leerlauf je Karte (S-P1-04).

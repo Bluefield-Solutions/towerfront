@@ -912,6 +912,48 @@ bewusst NICHT in dieser Runde ausgeliefert: eine Messstelle in derselben Runde
 umzubauen, in der die eigene Aenderung an ihr scheitert, waere kein Beweis mehr
 (v219). Erst das Messgeraet, dann das Gemessene.
 
+**Sieben Gegenproben bewiesen nichts mehr - und keine zwei aus demselben
+Grund (v334).** Der Nachtlauf hat sie auf v331 gefunden; der Befund macht
+`npm run muster` rot und damit die ganze Kette, also war das die naechste
+Runde. Vier repariert, zwei gestrichen, eine neu angesetzt - kein
+Stummschalten (K1).
+
+* **Die Zeilenmessung des Pruefstegs mass NULL.** Sechs Wertezeilen standen im
+  Baum, jede 0 Punkte hoch: seit v316 ist die Werteliste am Turm ZUGEKLAPPT,
+  und null ist nie groesser als die Grenze. Sie klappt jetzt selbst auf (14
+  statt 0) und meldet eine leere oder flache Liste, statt ueber ihr gruen zu
+  werden.
+* **Zwei Bildauftraege trugen dieselbe Kennung UND denselben Dateinamen** -
+  v295 den Bannturm als `8d.4`/`33_bannturm.png`, v328 den Sanitaeter noch
+  einmal. Eine Gegenprobe, die `### 8d.4` greift, traf seitdem den falschen
+  Abschnitt. Der Doku-Waechter prueft jetzt beides, und die Dateiregel gilt
+  nur INNERHALB einer Abschnittsfamilie (dass 8b und 8c dieselbe Karte
+  bestellen, ist Absicht).
+* **Der Bestwert-Waechter fragte nur, ob der Wert zu NIEDRIG ist.** Der
+  Durchlauf gewinnt vorher jede Karte, also stand der Schluessel auf 15, und
+  ein zu hoher Wert kam gar nicht erst an. Mit `bestVergessen` fragt die
+  Zusage auf GLEICH statt auf „nicht kleiner".
+* **Die Bildratenratsche stand siebzig Prozent ueber der Wirklichkeit** (5.95
+  gegen gemessene 3.92 bis 4.56). Der eingebaute Fehler treibt den Faktor auf
+  8.23 - hier sechs Prozent ueber der Grenze, auf dem Runner darunter (v225).
+  Eingetragen ist der SCHLECHTESTE der fuenf Werte, nicht der letzte: 4.56
+  statt der 3.92, die `--schreiben` gesetzt haette - die Flaeche statt des
+  Randes (v210).
+* **Die Sterne-Probe zielte auf ein Tor, das v314 mit den Sternen ausgebaut
+  hat.** Die Frage ist geblieben und steht jetzt modern da: wer alles richtig
+  macht, muss jede Karte gewinnen koennen.
+* **Zwei sind ersatzlos gestrichen, beide mit Messung statt Vermutung.** Der
+  Eingriff am Pruefsteg aendert gemessen NICHTS (27,0 % / 30,2 % mit wie
+  ohne), weil `turmRing` die Lage seit v316 am Element selbst setzt; und
+  `order: -1` ordnet nur innerhalb des Einweisungsbands um, das mit und ohne
+  die Zeile 41 Punkte hoch ist. Was beide Fragen heute haelt, sind die
+  Belegungsratsche und `textVerdeckung`.
+
+**Die gemeinsame Form:** nicht eine davon war ein Fehler im Spiel. Alle sieben
+sind daran gestorben, dass sich der GEGENSTAND unter ihnen bewegt hat - eine
+Liste klappt zu, eine Kennung wird doppelt vergeben, ein Grad faellt weg, ein
+Stand veraltet. Genau dafuer faehrt der Nachtlauf.
+
 **Der Lauf hoert nicht mehr auf (v333, S-N6-06) - und die Runde hat zwei
 Fehler gefunden, die seit Fassungen dastanden.** Nach dem letzten geplanten
 Abschnitt geht es weiter: die Karten laufen um, die Wahl geht an JEDER Grenze

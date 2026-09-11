@@ -5,4 +5,19 @@
 # selben Prozess gemessen. Absichtlich keine Millisekundenzahl: dieses Tor
 # laeuft auf dem Runner, und eine Millisekunde dort ist eine andere als hier.
 # Das Band steht in tools/bench.ts.
-5.95
+#
+# **Nachgezogen in v334, und zwar NACH UNTEN.** Der Stand stand auf 5.95,
+# waehrend fuenf Messungen hintereinander 3.92 / 4.05 / 4.38 / 4.42 / 4.56
+# ergaben - die Ratsche erlaubte damit 7.74 gegen eine Wirklichkeit von rund
+# 4.3, also siebzig Prozent Polster. Genau daran ist die Gegenprobe
+# gestorben: der eingebaute Fehler (ein Gitter mit einer einzigen Zelle)
+# treibt den Faktor auf 8.23, und das sind nur sechs Prozent ueber 7.74 -
+# hier reichte es, auf dem Runner nicht. Eine Probe, die auf einem Rechner
+# beweist und auf dem anderen nicht, ist keine (v225).
+#
+# Eingetragen ist der SCHLECHTESTE der fuenf Werte und nicht der letzte:
+# 4.56 erlaubt bis 5.93, die schlechteste Messung liegt 30 % darunter, und
+# der eingebaute Fehler 39 % darueber. `--schreiben` haette 3.92 gesetzt -
+# den Rand statt der Flaeche, und beim naechsten lauteren Lauf waere die
+# Kette fuer das Rauschen stehengeblieben (v210).
+4.56

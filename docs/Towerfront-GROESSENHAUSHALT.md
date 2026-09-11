@@ -1,6 +1,29 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v327 · 11.09.2026
+Stand: v334 · 11.09.2026
+
+**Nachgesehen in v334, und der Abstand schrumpft weiter — gleichmäßig.**
+Gemessen mit `npm run build && npm run autarkie`:
+
+| | v313 | v320 | v327 | **v334** |
+|---|---|---|---|---|
+| Gruppen reservieren | 1030 KB roh | 1030 KB roh | 1030 KB roh | 1030 KB roh |
+| erlaubt | 1074,75 | 1073 | 1070 | **1067** |
+| Abstand | 44,8 KB | 42,8 KB | 39,8 KB | **36,6 KB** |
+| ausgelieferte Datei | — | — | 1466 KB | **1473 KB** von 1800 |
+
+**Der Verlauf ist die Auskunft, nicht die einzelne Zahl.** Über einundzwanzig
+Fassungen ist der erlaubte Bildvorrat um 7,75 KB geschrumpft, also um rund
+0,37 KB je Fassung — weil der Code wächst und jedes KB Code 0,75 KB
+Bildvorrat kostet. **Hochgerechnet bleiben bei diesem Tempo noch rund
+hundert Fassungen**, bevor die Reservierung wieder auf die Grenze trifft wie
+in v313.
+
+**Und die vier offenen Bestellungen sind darin schon eingepreist:** die
+Gruppe `tuerme` reserviert seit v313 400 KB über gemessenen 302, der Rest ist
+Platz für `31_foerderer.png`, `32_werft.png`, `33_sanitaeter.png` und
+`34_hetzer.png`. Wer sie liefert, verbraucht Reserve und keinen neuen
+Spielraum — das ist der Sinn der Reservierung.
 
 **Nachgesehen in v327, und der Abstand schrumpft weiter — gleichmäßig.**
 Gemessen mit `npm run build && npm run autarkie` (die Zahl hängt am GEBAUTEN

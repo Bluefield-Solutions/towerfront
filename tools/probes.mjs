@@ -3187,19 +3187,23 @@ export const PROBEN = [
     tor: 'browsertor',
     meldet: 'sagen dasselbe',
   },
-  {
-    // **Der Pruefsteg spannt wieder ueber die ganze Fensterhoehe.**
-    //
-    // Die Zeile stand von v205 bis v246 im Kompaktblock und hat die Regel
-    // weiter oben still ueberschrieben - der Steg war 276 Punkte hoch, wo
-    // sein Inhalt 176 verlangt, und deckte damit ein Drittel des Feldes zu,
-    // um nichts zu zeigen. Gemessen: Belegung 31,3 zurueck auf 35,4 %.
-    name: 'Pruefsteg spannt ueber die ganze Hoehe',
-    datei: 'src/style.css',
-    regel: /    top: calc\(48px \+ var\(--sat\)\); bottom: auto;/,
-    ersatz: '    top: calc(48px + var(--sat)); bottom: calc(54px + var(--sab));',
-    tor: 'uxtor',
-  },
+  // **Gestrichen in v334: "Pruefsteg spannt ueber die ganze Hoehe".**
+  //
+  // Sie schob `bottom: calc(54px + var(--sab))` in den Kompaktblock zurueck
+  // und erwartete, dass `uxtor` den gewachsenen Steg meldet. Gemessen aendert
+  // der Eingriff heute NICHTS: Belegung 27,0 % / bemalt 30,2 % mit ihm wie
+  // ohne ihn, Punkt fuer Punkt.
+  //
+  // Der Grund ist v316. Seit der Steg am TURM steht, setzt `turmRing` seine
+  // Lage als Stilangabe am Element selbst, und die schlaegt jede Regel im
+  // Blatt; die Hoehe kommt seitdem vom Inhalt und von `max-height`. Der
+  // Schaden, gegen den die Zeile stand - ein Glasstreifen ueber 87 % des
+  // Bildes (v205) -, ist damit strukturell weg, nicht nur ungemessen.
+  //
+  // Was die Flaeche des Stegs heute haelt, ist die Belegungsratsche des
+  // UX-Tors (`pruefsteg` hoechstens 28 %). Sie ist die bessere Zusage: sie
+  // misst, wieviel Bild die Bedienung nimmt, statt einer einzelnen Zeile im
+  // Stilblatt zu folgen, die morgen woanders steht.
   {
     // **Das Turmbild im Kopf des Menues faellt weg.**
     //
@@ -4608,16 +4612,20 @@ export const PROBEN = [
     ersatz: '    this.fortgesetzt = false;',
     tor: 'smoke',
   },
-  {
-    // Die Trefferflaeche des Ueberspringen-Knopfs darf die Kopfzeile nicht
-    // zudecken. Steht er rechts, liegt sie ueber Tempo und Pause - und das
-    // sieht keine Stilvorlage, sondern nur das gerechnete Layout.
-    name: 'Ueberspringen deckt die Kopfzeile zu',
-    datei: 'src/style.css',
-    suche: '  order: -1; margin-right: 10px;',
-    ersatz: '  margin-right: 10px;',
-    tor: 'browsertor',
-  },
+  // **Gestrichen in v334: "Ueberspringen deckt die Kopfzeile zu".**
+  //
+  // Sie nahm `order: -1` vom Ueberspringen-Knopf und erwartete, dass er die
+  // Kopfzeile zudeckt. Gemessen tut er das nicht: `order` ordnet die Kinder
+  // INNERHALB des Einweisungsbands um, und das Band ist mit und ohne die
+  // Zeile gleich hoch - 41 Punkte bei 190 Zeichen, beide Male (`npm run
+  // streifen`).
+  //
+  // Der Schaden, den sie meinte, stammt aus der Zeit, als das Band keine
+  // eigene Lage hatte. Seit v318 hat es eine, und seitdem misst
+  // `textVerdeckung` in ACHT Zustaenden direkt, ob ein Element den Text
+  // eines anderen zudeckt - mit eigenem Selbsttest (ein deckender Fleck ueber
+  // der Goldzahl muss gefunden werden). Das haelt die Frage besser, als eine
+  // Gegenprobe an einer Stilzeile es je konnte.
   {
     // Ein Knopf ohne Messung ist rot, nicht mehr nur ein Hinweis.
     name: 'Knopfklasse steht in keiner Messung',

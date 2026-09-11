@@ -1,6 +1,26 @@
 # Marktrecherche — was moderne Tower-Defense-Spiele ausmacht
 
-Stand: v325 · 11.09.2026
+Stand: v332 · 11.09.2026
+
+**Nachgesehen in v332 — inhaltlich unverändert gültig, und seit v325 sind
+drei weitere Stücke übernommen. Alle drei beantworten dieselbe Frage, und
+diesmal eine andere als 2025:** *woran entscheidet sich, was der Spieler als
+Nächstes tut?*
+
+| übernommen | Vorbild | hier gemessen |
+|---|---|---|
+| **Die Welle sagt an, was kommt** — sechs Vorzeichen, jedes mit einer anderen Antwort | Rogue Tower kündigt die nächste Gefahr an, BEVOR die Karte gezogen wird; Defense Grid zeigt die Zusammensetzung der Welle vor dem Start | v332: null Paare mit gleichem Abdruck über vier reine Felder — der Störsender trifft NUR das Frostfeld, Eisenregen Mörser und Prisma |
+| **Eine Welle, die Monokultur bestraft** | BTD6 und Kingdom Rush bauen Wellen, gegen die ein einzelner Turmtyp nicht reicht | v330: jede reine Sorte verliert mehr Kristall als das gemischte Feld (28 / 21 / 10 / 10 gegen 5) |
+| **Gegner, die etwas GEBEN statt nur zu nehmen** — der Sanitäter heilt seinen Pulk, der Hetzer bestraft die falsch gestellte Weiche | Defense Grids Racer und die Heiler aus Kingdom Rush; beide machen die Reihenfolge der Ziele zur Entscheidung | v328/v329: 14,0 Lebenspunkte je Sekunde in Reichweite, 0,0 außerhalb; lange Route gehalten, kurze kommt durch |
+
+**Und ein Stück, das die Vorbilder haben und Towerfront gemessen NICHT
+übernommen hat:** eine Ankündigung, die BEZAHLT. Rogue Tower und die
+Abschnittswahl dieses Spiels (v305) stellen jeder Last einen Gewinn gegenüber;
+der Versuch, das auch den Vorzeichen zu geben, hat die erste Karte messbar
+schlechter gemacht (5 von 5 Aussaaten gewonnen ohne, 3 von 5 mit), weil der
+Bot von jedem Überschuss einen weiteren Turm kauft statt auszubauen. Es steht
+als **N6V** im Verzeichnis — als offene Frage an die Messstelle, nicht als
+verworfenes Vorbild.
 
 **Nachgesehen in v325 — inhaltlich unverändert gültig, und seit v318 sind
 drei weitere Stücke übernommen. Alle drei beantworten dieselbe Frage, und die

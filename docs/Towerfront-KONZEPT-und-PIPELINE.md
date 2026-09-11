@@ -1,6 +1,36 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v325 · 11.09.2026
+Stand: v332 · 11.09.2026
+
+**Nachgesehen in v332 — die Kette hat unveraendert dreiunddreissig
+abbrechende Schritte, und was sich seit v325 geaendert hat, ist wieder nicht
+ihre Zahl, sondern das, was die Schritte HALTEN:**
+
+* **v327 bis v332: `sim` traegt drei neue Messungen**, und alle drei stellen
+  dieselbe Frage in verschiedenen Gegenstaenden - `--wirkungen` (sechs
+  Karten), `--monokultur` (vier reine Felder gegen ein gemischtes) und
+  `--vorzeichen` (sechs Ankuendigungen an vier reinen Feldern). Gefragt ist
+  nie „wirkt es", sondern „ist es von den anderen zu UNTERSCHEIDEN": zwei
+  Dinge, die dieselbe Antwort verlangen, sind ein Ding mit zwei Namen.
+  Gemessen null Paare mit gleichem Abdruck in allen dreien.
+
+* **v331: eine Zahl der Kette mass einen Wurf.** Die Trennung des
+  Wiederholungsaufschlags stand auf EINEM Lauf je Karte und schwankt zwischen
+  den Aussaaten um mehr als ihre eigene Schranke. Sie ist jetzt der Mittelwert
+  ueber drei Aussaaten mit der Spanne daneben - und sie SAGT, wenn die Spanne
+  ueber dem Abstand zur Schranke liegt und der Lauf die Frage damit nicht
+  entscheidet. **Der Fall kommt an echten Daten vor:** mit den Vorzeichen aus
+  v332 steht sie auf 267 ± 231 gegen eine Schranke von 200, und die Messung
+  meldet es von selbst, statt gruen oder rot zu behaupten.
+
+* **Was die Runde v331/v332 ueber den ABLAUF sagt, steht in
+  `Towerfront-KETTE.md`** und gehoert auch hierher: wird ein Tor an einer
+  Zahl rot, die mit der gebauten Story nichts zu tun hat, ist die erste Frage
+  nicht „wie bekomme ich es gruen", sondern „kann diese Zahl ueberhaupt etwas
+  entscheiden". Beides in EINE Runde zu packen waere kein Beweis gewesen
+  (v219), also sind es zwei: erst das Messgeraet, dann das Gemessene. Das ist
+  dieselbe Reihenfolge, die Abschnitt 2.1 des Anforderungskatalogs fuer das
+  ganze Projekt fordert.
 
 **Nachgesehen in v325 — die Kette hat unveraendert dreiunddreissig
 abbrechende Schritte, und was sich seit v318 geaendert hat, ist wieder nicht

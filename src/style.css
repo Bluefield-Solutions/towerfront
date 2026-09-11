@@ -845,6 +845,25 @@ html, body {
   vertical-align: middle; image-rendering: auto;
 }
 .next-note { color: var(--gold); font-weight: 600; font-size: var(--s-klein); }
+/* **Das Vorzeichen der naechsten Welle** (v331, S-N6-05).
+
+   In der Warnfarbe und nicht in Gold: Gold traegt in diesem Streifen den
+   erklaerenden Satz der Welle, und zwei goldene Dinge nebeneinander sind
+   eine Zeile statt zweier Aussagen - dieselbe Ueberlegung wie beim
+   Sprungzeichen eine Regel tiefer.
+
+   Der Rahmen macht aus zwei Woertern eine ANKUENDIGUNG. Ohne ihn stand der
+   Name zwischen den Gegnereintraegen und las sich wie eine weitere
+   Gegnerart. Er kostet 1 Punkt Hoehe je Seite; das Band hat ihn. */
+.next-vz {
+  display: inline-flex; align-items: baseline; gap: 5px;
+  padding: 1px 6px; border-radius: 5px;
+  border: 1px solid var(--danger);
+  font-style: normal; font-size: var(--s-klein);
+  vertical-align: middle;
+}
+.next-vz-n { color: var(--danger); font-weight: 700; letter-spacing: 0.02em; }
+.next-vz-z { color: var(--muted); }
 /* Der Sprung im Wellendruck (TF-023). In der Warnfarbe, nicht in Gold:
    Gold traegt hier den erklaerenden Satz, und zwei goldene Dinge
    nebeneinander sind eine Zeile, kein Zeichen. */

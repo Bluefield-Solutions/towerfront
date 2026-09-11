@@ -1,6 +1,37 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v325 · 11.09.2026
+Stand: v332 · 11.09.2026
+
+**Nachgesehen in v332 — die Kennzahlen dieses Audits sind unverändert, und
+was sich seit v325 geändert hat, ist wieder eine ganze Klasse.** Sieben Runden
+(v326 bis v332) haben dasselbe getan wie die fünf davor, nur an einer anderen
+Stelle: **sie haben Entscheidungen gebaut, wo vorher nur Ausführung war.**
+
+| Runde | was hinzukam | welche Entscheidung es stellt |
+|---|---|---|
+| v327 | sechs Wirkungskarten (Brand, Markierung, Frost) | dieselbe Feuerkraft anders ausgeben — halten oder verteilen |
+| v328 | der Sanitäter | wen zuerst, wenn der Pulk sich selbst heilt |
+| v329 | der Hetzer | die gestellte Weiche wird bestraft, wenn sie falsch steht |
+| v330 | die Monokulturwelle | eine Welle, die jede reine Turmsorte schlägt |
+| v332 | sechs Vorzeichen | **wogegen** man baut, angesagt, bevor die Welle läuft |
+
+**Gemessen ist bei allen fünf dasselbe Kriterium, und es ist nicht „wirkt":
+es ist „ist von den anderen zu UNTERSCHEIDEN".** Sechs Wirkungskarten, null
+Paare mit gleichem Abdruck über vier Karten (v327); vier reine Felder gegen
+eine gemischte Welle, jede Monokultur verliert mehr (v330); sechs Vorzeichen,
+null Paare mit gleichem Abdruck über vier reine Felder (v332). Zwei Dinge, die
+dieselbe Antwort verlangen, sind ein Ding mit zwei Namen — dieselbe Zusage wie
+bei den Zielmodi seit v223.
+
+**Was dieses Audit an dem Zuwachs NICHT sieht, steht daneben und ist
+gemessen:** die Spannungsratsche bewegt sich nicht. „Stellen mit Verlust"
+steht auf 2 bei einem Soll von 5, „längste folgenlose Strecke" auf 13 bei
+einem Soll von 3. Fünf Runden neue Mechanik haben diese zwei Zahlen um Null
+verändert. **Das ist kein Widerspruch, sondern die Lage:** die Vorbilder
+verteilen den Verlust über den Lauf, und der Lauf ist bis heute nur aus
+`npm run sim` erreichbar (N1K, N1G). Solange der Spieler eine EINZELNE Karte
+spielt, entscheidet ihre Wellenkurve die Verteilung, und keine neue Gegnerart
+ändert daran etwas.
 
 **Nachgesehen in v325 — die Zahlen dieses Audits sind unverändert; was sich
 seit v318 geändert hat, ist eine ganze Klasse von Befunden, und sie gehört

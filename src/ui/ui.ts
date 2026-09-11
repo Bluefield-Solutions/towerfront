@@ -14,6 +14,7 @@ import { spriteCount } from '../gfx/sprites';
 import { turmSymbol } from '../gfx/towerart';
 import { TUTORIAL, kartenEinfuehrung, type TutorialStep } from '../game/tutorial';
 import { konterSatz } from '../data/konter';
+import { vorzeichenZahl } from '../data/vorzeichen';
 import type { GameState } from '../game/state';
 import { werteAmTurm, wirkungsBilanz, werteVorKauf, zweigWirkung, type Wertzeile } from '../game/turmwerte';
 import { VERBUND_STUFE } from '../game/verbund';
@@ -1685,6 +1686,29 @@ export class UI {
       if (g.traeger) traeger.add(g.enemy);
     }
     const parts: string[] = [];
+    // **Das Vorzeichen steht VOR der Welle** (v331, S-N6-05).
+    //
+    // Es steht an erster Stelle im Streifen, und zwar aus zwei Gruenden.
+    // Erstens liest man von links: was die ganze Welle aendert, gehoert vor
+    // die Liste dessen, was in ihr laeuft. Zweitens ist `#next` der eine
+    // Ort, der schon VOR dem Start dasteht - der Wellenknopf traegt den
+    // Zustand, nicht die Ankuendigung, und die Kopfzeile ist eine Anzeige.
+    //
+    // `kommendesVorzeichen` fragt dieselbe Wellennummer wie `vorschauWelle`
+    // (beide `waveIndex`), also kann die Ankuendigung gar nicht ueber der
+    // falschen Welle stehen. Waeren es zwei Zahlen, waere das die naechste
+    // Stelle, an der still etwas auseinanderlaeuft (Regel 15).
+    //
+    // **Der Satz steht nur, wo die Welle keinen eigenen hat** - dieselbe
+    // Ableitung wie beim Gegnernamen seit v319: beides zugleich ist gemessen
+    // zu breit, und ein Band, das umbricht, nimmt dem Feld eine Zeile.
+    const vz = s.kommendesVorzeichen;
+    if (vz) {
+      const zahl = vorzeichenZahl(vz);
+      parts.push(`<i class="next-vz" title="${vz.name} — ${vz.text} ${zahl}">`
+        + `<span class="next-vz-n">${vz.name}</span>`
+        + `<span class="next-vz-z">${w.note ? zahl : vz.text}</span></i>`);
+    }
     // Ein Sprung im Druck haengt an der BESCHRIFTUNG, nicht als eigener
     // Eintrag in der Reihe.
     //

@@ -1,6 +1,33 @@
 # Towerfront — Bildauftrag
 
-Stand: v325 · 11.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v332 · 11.09.2026 · **Auftragsdokument für den Bild-Agenten**
+
+**Nachgesehen in v332 — nachgesehen, nicht gestempelt.** `npm run bildtor`
+nennt jetzt **vier** offene Bestellungen statt zweier, und das ist die
+Bewegung, die dieses Dokument seit v325 macht:
+
+| Bestellung | Abschnitt | seit | was im Spiel steht |
+|---|---|---|---|
+| `31_foerderer.png` | 8d.2 | v285 | Platzhalter |
+| `32_werft.png` | 8d.3 | v290 | Platzhalter |
+| `33_sanitaeter.png` | 8d.4 | v328 | Platzhalter |
+| `34_hetzer.png` | 8d.5 | v329 | Platzhalter |
+
+**Vier Platzhalter, und das Spiel ist vollständig spielbar** — genau dafür ist
+K5 gemacht: ein fehlendes Bild ist eine laufende Bestellung und kein Fehler im
+Code. Gebaut wird gegen `getPlatzhalter` (Silhouette in der richtigen Größe,
+Schraffur, Marke #FF00E5), `npm run bildtor` meldet sie grün und verschweigt
+sie nicht. `git log -- src/gfx/assets/` nennt als letzten Eingriff weiterhin
+**v233** — seit 99 Fassungen ist kein Bildpunkt dazugekommen.
+
+**Die Vorzeichen aus v332 haben KEINE Bestellung ausgelöst, und das ist eine
+Entscheidung.** Ein Vorzeichen ist ein Wort und eine Zahl in einem Rahmen;
+gemessen kostet es 0,8 Prozentpunkte Bildschirm und null Kilobyte Bildvorrat.
+Ein Symbol je Zeichen wäre sechs weitere Bestellungen für etwas, das der Text
+schon sagt — und der Bildvorrat hat sie nicht: `npm run autarkie` misst **1030
+KB roh reserviert gegen 1067 erlaubte, Abstand 36,8 KB**, in v325 waren es
+42,2. Der Code ist gewachsen, und jedes KB Code kostet 0,75 KB Bildvorrat. Die
+ausgelieferte Datei wiegt **1473 KB von 1800**.
 
 **Nachgesehen in v325 — nachgesehen, nicht gestempelt.** `npm run bildtor`
 nennt unverändert **zwei** offene Bestellungen, `31_foerderer.png` (8d.2) und

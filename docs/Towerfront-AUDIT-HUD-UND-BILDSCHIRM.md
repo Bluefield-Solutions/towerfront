@@ -1,6 +1,33 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v325 · 11.09.2026
+Stand: v332 · 11.09.2026
+
+**Nachgesehen in v332 — nachgefahren, nicht geglaubt.** `npm run uxaudittor`
+auf demselben Gerät und in derselben Auflösung, mit der Ankündigung der
+Vorzeichen im Streifen (v332):
+
+| Zustand | gesperrt | bemalt | Ratsche | v325 |
+|---|---|---|---|---|
+| `zug` | **7,9 %** | 10,3 % | 16 | 8,0 % |
+| `ruhe` | **13,1 %** | 16,3 % | 14 | 13,1 % |
+| `bauwahl` | **22,0 %** | 25,2 % | 23 | 22,0 % |
+| `pruefsteg` | **27,0 %** | 30,2 % | 28 | 27,0 % |
+| `teurer` | **21,7 %** | 24,7 % | — | — |
+| `welle` | **13,9 %** | 16,1 % | 16 | 13,1 % |
+
+**Die einzige Zahl, die sich bewegt hat, ist `welle` — 13,1 auf 13,9 %**, und
+sie ist bezahlt: das ist das Vorzeichenband der nächsten Welle, gemessen als
+`#dock` 8,3 → 9,2. Acht Zehntel Prozent für eine Ankündigung, die sagt, wogegen
+die nächste Welle gebaut wird; die Ratsche von 16 bleibt unberührt, und der
+Streifen selbst wächst nicht (`npm run streifen`: höchste Welle unverändert 67
+von 86 Punkten). **Kein anderer Zustand hat sich um ein Zehntel geändert.**
+
+**Und `#hud` steht in JEDEM Zustand bei denselben 1,7 %** — die Kopfzeile ist
+die einzige Fläche, die nie verschwindet, und sie ist die kleinste. Das ist die
+Antwort auf H2 („die Lage ist das Hauptproblem, nicht der Prozentwert"): was
+dauerhaft über dem Feld liegt, ist `#dock` mit 8,3 bis 9,2 und `#b-wave` mit
+3,0, und beide sitzen am unteren Rand — dort, wohin v219 die Bahn gezogen hat.
+Das steht unverändert als **N4F** im Verzeichnis, mit beiden Zahlen.
 
 **Nachgesehen in v325 — nachgefahren, nicht geglaubt.** `npm run uxaudittor`
 auf demselben Gerät und in derselben Auflösung:

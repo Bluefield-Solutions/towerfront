@@ -1,6 +1,27 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v334 · 11.09.2026
+Stand: v341 · 11.09.2026
+
+**Nachgesehen in v341 — und zum ersten Mal seit v313 hat sich nichts bewegt.**
+Gemessen mit `npm run build && npm run autarkie`:
+
+| | v334 | **v341** |
+|---|---|---|
+| Gruppen reservieren | 1030 KB roh | 1030 KB roh |
+| erlaubt | 1067 | **1067** |
+| Abstand | 36,6 KB | **36,6 KB** |
+| ausgelieferte Datei | 1473 KB | **1473 KB** von 1800 |
+
+**Punkt für Punkt dieselben Zahlen, und das ist die Auskunft.** Die sieben
+Runden v335 bis v341 haben `src/` fast nicht angefasst: v335, v337, v338,
+v341 sind Tore und Gegenproben, v336, v339 und v340 Messgeräte. Was dort
+wächst, wächst in `tools/` und `docs/` — und beides geht nicht ins Bündel.
+
+**Die Hochrechnung von v334 hält damit nicht als Zeitangabe, sondern als
+Verbrauchsangabe:** nicht „hundert Fassungen", sondern „hundert Fassungen, die
+Code hinzufügen". Eine Runde am Messgerät kostet null. Die Zahl trägt damit
+ihre Messstelle mit (Regel 12), und die ist nicht die Fassungszahl, sondern
+der Codezuwachs.
 
 **Nachgesehen in v334, und der Abstand schrumpft weiter — gleichmäßig.**
 Gemessen mit `npm run build && npm run autarkie`:

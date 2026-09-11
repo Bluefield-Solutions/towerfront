@@ -1861,13 +1861,35 @@ export const PROBEN = [
     // Kennzahl, die sich durch Verschlechtern verbessern laesst, ist keine.
     //
     // Der Eingriff stellt genau diesen Fall wieder her.
+    //
+    // **In v341 nachgezogen, und der Fehler lag bei mir** (K1): v336 hat den
+    // Waechter vom "gewinnt die erste KARTE" auf "gewinnt den ersten
+    // ABSCHNITT" umgestellt - mit dem Umstieg auf Laeufe war aus seiner
+    // woertlichen Zusage ungewollt "gewinnt alle vier Abschnitte" geworden.
+    // Die Meldung hat sich damit geaendert, und die Probe griff noch den
+    // alten Satz. Wer ein Tor umbaut, zieht seine Proben in DERSELBEN Runde
+    // nach; hier ist es eine Runde zu spaet passiert, und gefunden hat es
+    // der Nachtlauf.
+    //
+    // Gegriffen wird jetzt der Satzanfang statt der ganzen Zeile: die Zahlen
+    // darin (`${r.siege}`, die Punktzahl) aendern sich mit jeder Eichung.
+    //
+    // **Und der Eingriff musste schaerfer werden, nicht nur die Meldung.**
+    // Bis v335 fragte der Waechter, ob der Stil den ganzen Lauf gewinnt;
+    // seit v336 fragt er am ERSTEN Abschnitt, und der ist der leichteste.
+    // Der alte Eingriff (nur teure Tuerme) gewinnt ihn gemessen weiterhin -
+    // er kam an und bewirkte nichts, genau die Verfallsart aus v313. Jetzt
+    // faehrt `Sparsam` ein reines Moerserfeld: `npm run sim -- --monokultur`
+    // misst dafuer "verloren in Welle 11" von 15, also schon im ersten
+    // Abschnitt. Der Moerser trifft keine Gleiter, und daran ist mit keiner
+    // Baureihenfolge etwas zu retten.
     name: 'Ein Spielstil gewinnt die erste Karte nicht',
     datei: 'tools/sim.ts',
     suche: "    name: 'Sparsam', foerderer: 0, maxTowers: 12, maxLevel: 3, reserve: 140,",
-    ersatz: "    plan: ['prism', 'mortar', 'prism', 'frost'],\n"
+    ersatz: "    plan: ['mortar', 'mortar', 'mortar', 'mortar'],\n"
       + "    name: 'Sparsam', foerderer: 0, maxTowers: 12, maxLevel: 3, reserve: 140,",
     tor: 'sim',
-    meldet: 'gewinnt spiralhain nicht in jedem Lauf',
+    meldet: 'gewinnt den ERSTEN Abschnitt nicht',
   },
   {
     // **Ersatzschreibung im ANGEZEIGTEN Text** (v292).
@@ -1958,21 +1980,30 @@ export const PROBEN = [
     // Eingriff folgenlos. Er kam an und bewirkte nichts: die stillste Art,
     // wie eine Probe aufhoert zu beweisen.
     //
-    // Gegriffen wird jetzt an **S-N7-01**, der letzten Story des Katalogs,
-    // und gewartet wird auf **S-N4-08** - die steht als HANDARBEIT da und
-    // wird deshalb nie "zu" (`blick:`, Regel 8). Damit haengt die Probe an
-    // keinem Fortschritt mehr: sie gilt, solange es die letzte Story gibt.
+    // **Und in v341 ein drittes Mal, aus demselben Grund.** v313 hat sie an
+    // S-N7-01 gehaengt, "der letzten Story des Katalogs", mit der
+    // Begruendung: *sie gilt, solange es die letzte Story gibt*. S-N7-01 ist
+    // in v335 zugefallen, und damit war der Eingriff wieder folgenlos - die
+    // Kette sieht eine zugefallene Story gar nicht erst auf ihre
+    // Abhaengigkeit an (`zustandVon.get(a.id) !== 'OFFEN'`).
     //
-    // Als Regel statt als Suchtext, damit ein geaendertes `Aufwand:` sie
-    // nicht mitnimmt.
-    regel: /(### S-N7-01[^\n]*\n\n\*\*Paket:\*\*[^\n]*\*\*Hängt an:\*\* )S-N\d-\d\d/,
-    ersatz: '$1S-N4-08',
+    // **Zweimal an einer VORHANDENEN Story zu greifen hat zweimal nicht
+    // getragen, weil jede vorhandene zufallen kann.** Der Eingriff legt
+    // deshalb seine EIGENE an: eine Story, deren Schliessbedingung nie
+    // erfuellt ist (also dauerhaft OFFEN), die auf S-N4-08 wartet (HANDARBEIT,
+    // wird nie "zu") und die es ohne den Eingriff nicht gibt. Damit haengt
+    // die Probe an gar keinem Fortschritt mehr - weder an dem einer Story
+    // noch an der Laenge des Katalogs.
+    regel: /(\n## Rückbau — nur fahren, wenn eine Abnahme nach drei Schleifen nicht hält\n)/,
+    ersatz: '\n### S-N9-99 · Gegenprobe: eine Story, die auf eine Handarbeit wartet\n\n'
+      + '**Paket:** N9 · **Aufwand:** S · **Hängt an:** S-N4-08\n\n'
+      + '**Schliesst, wenn:** `text src/data/config.ts "DIESE-ZEILE-GIBT-ES-NIE" >= 1`\n$1',
     tor: 'naechste',
     // Die Meldung nennt beide Namen. Ein blosses "wartet auf" waere KEINE
     // Probe: `naechste` nennt heute fuenf solcher Zeilen ohne jeden Eingriff
     // (S-N4-02, S-N4-03, S-N4-06, S-N6-02, S-N6-03), und eine Meldung, die
     // ohnehin kommt, beweist nichts (Regel 13).
-    meldet: 'S-N7-01 wartet auf S-N4-08',
+    meldet: 'S-N9-99 wartet auf S-N4-08',
   },
   {
     // **Der Umlaut im ausgelieferten HTML-Kommentar** (v288).

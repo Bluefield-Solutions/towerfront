@@ -727,6 +727,32 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Ein Eingriff, der sich einen VORHANDENEN Gegenstand borgt, stirbt an dessen
+Fortschritt (v341).** Der Nachtlauf auf v337 meldete zwei Gegenproben, und der
+Befundtext aus v337 nannte beide Ursachen in seiner ersten Zeile - aus je
+einer Stunde Suche wurden je zwei Minuten. Die Reparatur hat sich in der Runde
+nach ihrem Einbau selbst bezahlt.
+
+**„Kette liest die Abhaengigkeit nicht" ist zum DRITTEN Mal an derselben
+Klasse gestorben.** v313 hat sie an S-N7-01 gehaengt, „der letzten Story des
+Katalogs", mit der Begruendung *sie gilt, solange es die letzte Story gibt*.
+S-N7-01 ist in v335 zugefallen, und `naechste` sieht eine zugefallene Story
+gar nicht erst auf ihre Abhaengigkeit an. Der Eingriff kam an und bewirkte
+nichts.
+
+**Zweimal an einer vorhandenen Story zu greifen hat zweimal nicht getragen,
+weil jede vorhandene zufallen kann.** Der Eingriff legt jetzt seine EIGENE an:
+`S-N9-99`, Schliessbedingung nie erfuellt (also dauerhaft OFFEN), wartet auf
+S-N4-08 (HANDARBEIT, wird nie „zu"), und ohne den Eingriff gibt es sie nicht.
+
+**Die zweite war meine eigene Nachlaessigkeit (K1).** v336 hat den Waechter
+von „gewinnt die erste KARTE" auf „gewinnt den ersten ABSCHNITT" umgestellt;
+die Meldung aenderte sich mit, und die Probe griff noch den alten Satz. Und
+die Meldung war nicht der einzige Verfall: der alte Eingriff (nur teure
+Tuerme) gewinnt den ersten Abschnitt gemessen weiterhin - der ist der
+leichteste. Jetzt faehrt `Sparsam` ein reines Moerserfeld, gemessen „verloren
+in Welle 11" von 15.
+
 **Der Wegfall der Stufen ist gemessen, BEVOR er gebaut wird - und er traegt
 nicht (v340, S-N1-05, Regel 9).** Der Rueckbau ist mechanisch und teuer: rund
 25 Pruefbloecke verlieren dabei ihren Gegenstand, allein `npm run guards`
@@ -2011,7 +2037,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v340. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v341. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

@@ -717,6 +717,31 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Zwei Gegenproben bewiesen nichts mehr - und die zweite hat ein Loch im
+BEFUND aufgedeckt (v337).** Der Nachtlauf vom 11.09. fand sie auf v334.
+
+**„Muendungsversatz rutscht in die Flugbahn":** das Tor fuhr dieselbe Partie
+zweimal, mit und ohne Muendungen, und verglich vier Summen am Ende - Schaden,
+Erledigte, Kristall, Gold. Nachgemessen schiebt der eingebaute Fehler den
+Abschuss um rund hundert Weltpunkte (Bogen 47/-95, Prisma -25/-117), und die
+vier Summen bleiben **Ziffer fuer Ziffer gleich**: jeder Schuss trifft sein
+Ziel trotzdem, nur ein paar Bilder frueher oder spaeter, und keine der vier
+Zahlen zaehlt Zeit. **Die Zusage war nie „das Ergebnis bleibt gleich", sondern
+„das SPIEL bleibt unberuehrt"** - gemessen wird jetzt ein Abdruck ueber die
+Lagen aller Gegner und Geschosse in JEDEM Bild. Nullprobe zuerst (ohne
+Eingriff derselbe Abdruck), dann der Eingriff.
+
+**„Der Lauf macht spaetere Abschnitte nicht haerter":** v333 hat den Aufruf
+von `laufFaktor` auf zwei Zeilen umgebrochen, `suche` traf nur die erste, und
+stehen blieb ein `this.laufEndlos);` ohne Aufruf davor. `sim` starb beim
+Uebersetzen, statt zu pruefen - **rot aus dem falschen Grund sieht im Befund
+genauso aus wie stumm aus dem richtigen.**
+
+**Der Befund traegt jetzt die letzten drei Zeilen des Tores mit.** Er sagte
+„meldet X nicht" und verschwieg, dass das Tor gar nicht uebersetzt hat; die
+Ursache stand die ganze Zeit in einer Ausgabe, die niemand mitgeschrieben hat.
+An einem gestellten Fall nachgefahren - dort nennt er die Ursache woertlich.
+
 **`sim` faehrt Laeufe statt Partien (v336, S-N7-02) - und der Unterschied ist
 der Messwert selbst.** Sieben der zehn Spannungskennzahlen wurden auf EINER
 Karte ueber fuenfzehn Wellen gemessen, waehrend ein Spieler seit S-N1-01
@@ -1878,7 +1903,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v336. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v337. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

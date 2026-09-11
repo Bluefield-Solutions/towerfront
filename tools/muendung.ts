@@ -200,6 +200,23 @@ for (const id of ['frost'] as TowerId[]) {
 // Also wird die Invariante gepruefert, statt sie zu meinen: dieselbe Partie
 // zweimal, einmal mit den Muendungen und einmal ohne. Jede Zahl muss
 // gleich sein. Weicht sie ab, ist der Versatz in die Flugbahn gerutscht.
+//
+// **Gemessen wird der ZUSTAND, nicht das Ergebnis** (v337). Bis v336 standen
+// hier vier Summen am Ende der Partie - Schaden, Erledigte, Kristall, Gold -,
+// und die sind gegen genau diese Frage zu grob: der Nachtlauf vom 11.09. hat
+// die Gegenprobe dazu als gegenstandslos gemeldet. Nachgemessen schiebt der
+// eingebaute Fehler den Abschuss um rund hundert Weltpunkte (Bogen 47/-95,
+// Prisma -25/-117), und die vier Summen bleiben **Ziffer fuer Ziffer
+// gleich**: jeder Schuss trifft sein Ziel trotzdem, nur ein paar Bilder
+// frueher oder spaeter, und keine der vier Zahlen zaehlt Zeit.
+//
+// Die Zusage ist aber nicht "das Ergebnis bleibt gleich", sondern "das SPIEL
+// bleibt unberuehrt". Gefragt wird deshalb ueber die Lagen aller Gegner und
+// Geschosse in JEDEM Bild. Das ist keine Verschaerfung, sondern die Frage
+// selbst: der Versatz sitzt in `p.ox/oy` und wird erst beim Zeichnen
+// aufgeschlagen, also darf er an `p.x` und an jedem Gegner spurlos
+// vorbeigehen. Eine Verschiebung um ein Tausendstel reicht damit fuer den
+// Befund - und genau so viel darf sie nicht bewegen.
 {
   const lauf = (mit: boolean): string => {
     const sicherung = { ...MUENDUNG };
@@ -216,17 +233,31 @@ for (const id of ['frost'] as TowerId[]) {
       s2.gold = 400;
       s2.waveIndex = 9;
       s2.startWave();
+      // Der Abdruck waechst mit jedem Bild: Lage jedes Gegners und jedes
+      // Geschosses, in der Reihenfolge, in der sie stehen. Als Zahl statt
+      // als Zeichenkette - sechzig Sekunden mit hundert Objekten waeren
+      // sonst ein Text von einigen Megabyte.
+      let abdruck = 2166136261;
+      const rein = (v: number): void => {
+        abdruck ^= Math.round(v * 1000) | 0;
+        abdruck = Math.imul(abdruck, 16777619);
+      };
       for (let i = 0; i < 60 * 60; i++) {
         s2.update(1 / 60);
+        for (const e of s2.enemies) { rein(e.x); rein(e.y); }
+        for (const pr of s2.projectiles) { rein(pr.x); rein(pr.y); }
         if (!s2.enemies.length && !s2.waveActive) break;
       }
-      return `${s2.stats.damage.toFixed(3)} ${s2.stats.kills} ${s2.lives} ${s2.gold}`;
+      return `${s2.stats.damage.toFixed(3)} ${s2.stats.kills} ${s2.lives} ${s2.gold} `
+        + `${(abdruck >>> 0).toString(16).padStart(8, '0')}`;
     } finally {
       Object.assign(MUENDUNG, sicherung);
     }
   };
   const mit = lauf(true), ohne = lauf(false);
-  console.log(`\n  Mit Muendung:  ${mit}\n  Ohne Muendung: ${ohne}   (Schaden Erledigt Kristall Gold)`);
+  console.log(`\n  Mit Muendung:  ${mit}\n  Ohne Muendung: ${ohne}`
+    + `   (Schaden Erledigt Kristall Gold, dazu der Abdruck ueber alle Lagen `
+    + `in jedem Bild)`);
   if (mit !== ohne) {
     fail('Die Muendung veraendert den Spielverlauf. Sie ist Hoehe im Bild, '
       + 'keine Strecke auf der Karte - der Versatz gehoert in die Zeichnung, '

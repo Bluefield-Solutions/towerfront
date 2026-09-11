@@ -996,8 +996,16 @@ export const PROBEN = [
     // einer Stelle (`GameState.laufRampe`), und das Werkzeug liest sie ab.
     // Auf die neue Stelle nachgezogen (v333, K1): `laufFaktor` bekommt seit
     // S-N6-06 den Schwanz als dritten Eingang.
-    suche: '      * laufFaktor(this.laufAbschnitt, this.laufSteigung, this.laufSchwanz,',
-    ersatz: '      * 1;',
+    // **Und ein drittes Mal nachgezogen (v337), diesmal weil der Eingriff
+    // den Baum ZERBROCHEN hat statt ihn zu aendern.** v333 hat den Aufruf
+    // auf zwei Zeilen umgebrochen; `suche` traf nur die erste, und stehen
+    // blieb ein `this.laufEndlos);` ohne Aufruf davor. `sim` starb damit
+    // schon beim Uebersetzen und kam nie zu seiner Meldung - rot aus dem
+    // falschen Grund sieht in einem Probenlauf aus wie gruen aus dem
+    // falschen Grund: beides ist kein Beweis. Gegriffen wird jetzt der
+    // GANZE Aufruf ueber beide Zeilen, und das Ergebnis ist gueltiger Code.
+    regel: /\* laufFaktor\(this\.laufAbschnitt, this\.laufSteigung, this\.laufSchwanz,\n\s*this\.laufEndlos\)/,
+    ersatz: '* 1',
     tor: 'sim',
     meldet: 'steigt im Lauf nicht durch',
   },
@@ -6469,8 +6477,26 @@ for (const p of liste) {
       ? `"${p.tor}" meldet "${p.meldetNicht}", obwohl der Text richtig ist.`
       : `"${p.tor}" bleibt grün, obwohl der Fehler eingebaut ist.`;
 
+  // **Wenn die Probe nichts beweist, sagt der Befund WORAN es lag** (v337).
+  //
+  // Bis v336 stand da nur "meldet X nicht". Der Nachtlauf vom 11.09. hat
+  // damit eine Probe gemeldet, deren Eingriff den Baum gar nicht geaendert,
+  // sondern ZERBROCHEN hatte: `suche` traf eine von zwei Zeilen eines
+  // umgebrochenen Aufrufs, und `sim` starb beim Uebersetzen statt zu pruefen.
+  // Rot aus dem falschen Grund sieht im Befund genauso aus wie stumm aus dem
+  // richtigen - und die Ursache stand die ganze Zeit in der Ausgabe, die
+  // niemand mitgeschrieben hat.
+  //
+  // Mitgegeben werden die letzten drei nichtleeren Zeilen. Ganze Protokolle
+  // gehoeren nicht in einen Befund, der eingecheckt wird; drei Zeilen tragen
+  // den Uebersetzungsfehler, den Stapelabzug und die Schlusszeile eines Tors.
+  const letzte = ausgabe.split('\n').map((z) => z.trimEnd()).filter((z) => z.trim())
+    .slice(-3).join(' | ').slice(0, 400);
   console.log(`  ${p.name.padEnd(42)} ${p.tor.padEnd(11)} ${erfuellt ? art : art.toUpperCase() + ' NICHT'}`);
-  if (!erfuellt) fehler.push(`${p.name}: ${grund}`);
+  if (!erfuellt) {
+    fehler.push(`${p.name}: ${grund}`
+      + (letzte ? ` Zuletzt sagte "${p.tor}": ${letzte}` : ` "${p.tor}" sagte gar nichts.`));
+  }
 }
 
 // Zum Schluss in jedem Fall: sauberer Quelltext UND sauberer Bau.

@@ -1,6 +1,22 @@
 # Towerfront — Art Bible
 
-Stand: v330 · 11.09.2026
+Stand: v337 · 11.09.2026
+
+**Nachgesehen in v337 — gemessen mit `npm run bildtor`, nicht abgeschrieben.**
+Der Vorrat ist seit v233 unverändert; offen sind **vier von 22** Bildern, und
+es sind dieselben vier wie in v330: der Förderer (`31_foerderer.png`), die
+Werft (`32_werft.png`), der Sanitäter (`33_sanitaeter.png`, im Tor als
+`gegner: heiler`) und der Hetzer (`34_hetzer.png`). Die sieben Runden v331 bis
+v337 haben **kein** neues Bild bestellt: v331 bis v333 und v336 sind
+Messgeräte, v334, v335 und v337 Reparaturen an Gegenproben und Toren.
+
+**Eine Umnummerierung ist trotzdem passiert und gehört hierher** (v334): der
+Bannturm stand als `8d.4` / `33_bannturm.png` im Auftrag, und v328 gab dem
+Sanitäter dieselbe Kennung UND denselben Dateinamen. Eine Gegenprobe, die
+`### 8d.4` greift, traf seitdem den falschen Abschnitt und schwieg. Der
+Bannturm ist jetzt **`8d.6` / `35_bannturm.png`**; der Doku-Wächter prüft seit
+v334 beides — doppelte Kennung und doppelte Datei, letzteres nur INNERHALB
+einer Abschnittsfamilie (dass 8b und 8c dieselbe Karte bestellen, ist Absicht).
 
 **Nachgesehen in v330 — der Vorrat ist unverändert, die Bestellliste hat sich
 verdoppelt.** `npm run bildtor` nennt jetzt **vier** offene Bestellungen statt

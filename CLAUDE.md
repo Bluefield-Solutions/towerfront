@@ -481,6 +481,16 @@ npm run sim         Balance kopflos, drei Aussaaten - und seit v253 die
                     nicht reichte (Meister 45 %). Er tritt an die Stelle von
                     "Gold uebrig" - jene Zahl mass zur Haelfte den Deckel des
                     Bots: ungedeckelt bleiben 14,6 % liegen statt 35,2.
+npm run stufen      was der Wegfall der Stufen kostet (S-N1-05): derselbe Lauf
+                    mit `maxLevel` 1, 2, 3 und 6, je Stil und einmal mit
+                    Turmdeckel 12, einmal mit 200. Ohne eine Zeile Spiel zu
+                    aendern - die Bots tragen das Feld seit jeher. Gemessen
+                    kommt OHNE Ausbau kein Stil durch einen Abschnitt (0,0
+                    von 4), und mehr Tuerme retten es nicht (127 statt 48 ->
+                    0,3 von 4). Die Schwelle liegt bei Stufe 3. Kein Tor: es
+                    misst, es urteilt nicht - traegt aber einen Selbsttest,
+                    weil ein Werkzeug ohne gepruefte Eingaenge im Ernstfall
+                    kaputt ist (v229).
 npm run fruehstart  was die Ueberlappung bringt und was sie kostet: derselbe
                     Bot dreimal ueber alle Karten - nie ueberlappend, selektiv
                     und durchgehend. `--hub 0,1,2,3` probiert den Risikoaufschlag
@@ -716,6 +726,45 @@ tools/         Torkette, Bildabnahme, Schleifenwerkzeug
 art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
+
+**Der Wegfall der Stufen ist gemessen, BEVOR er gebaut wird - und er traegt
+nicht (v340, S-N1-05, Regel 9).** Der Rueckbau ist mechanisch und teuer: rund
+25 Pruefbloecke verlieren dabei ihren Gegenstand, allein `npm run guards`
+hatte in v314 58 Uebersetzungsfehler. Ihn zu fahren und danach zu messen
+hiesse, einen Tag Arbeit auf eine Vermutung zu setzen.
+
+Gemessen wird er **ohne eine Zeile Spiel zu aendern**: die Bots tragen seit
+jeher ein `maxLevel`, und ein Bot mit `maxLevel: 1` spielt genau das Spiel,
+das nach dem Rueckbau uebrig bliebe (`npm run stufen`).
+
+| bis Stufe | 12 Tuerme | 200 Tuerme |
+|---|---|---|
+| 1 | **0,0 / 0,0 / 0,0** von 4 Abschnitten | **0,3 / 0,0 / 0,0** (127 Tuerme gebaut) |
+| 2 | 1,7 / 0,0 / 0,0 | 2,3 / 0,7 / 1,7 |
+| **3** | **4,0 / 2,7 / 4,0** | 3,7 / 2,3 / 2,3 |
+| 6 (heute) | 4,0 / 4,0 / 3,3 | 3,7 / 2,0 / 2,3 |
+
+**Ohne Ausbau kommt kein Stil durch einen einzigen Abschnitt. Und mehr Tuerme
+retten es nicht** - das ist v291 noch einmal: die weiteren Plaetze sehen zu
+wenig. Genau diese Hoffnung steht in der Story („zusammen mit der MENGE an
+Tuermen, die das nicht mehr in Ausbauten gebundene Gold kauft"), und sie ist
+damit widerlegt.
+
+**Die Schwelle liegt bei Stufe 3** - fast das Spiel von heute bei einem
+Viertel der Steigerung. Das ist Weg **D** aus S-N1-07, und es ist der einzige
+der vier, den eine Messung traegt.
+
+**Warum C+A es nicht loest, obwohl die Zahlen reichen:** der Stapel muesste
+rund x23 MEHR tragen als heute; C+A liefert x487 bis x8452. Die
+Groessenordnung ist da - aber bei x487 entscheidet eine einzelne Karte, und
+das ist der Fehler im Entwurf, den `karten.ts` in seinem eigenen Kopf
+ausschliesst (Regel 10). Bei drei Karten je Welle faellt die Spanne zwischen
+den Stilen ausserdem auf 0,00 - jeder nimmt alles, die Wahl ist weg.
+
+**Kein Tor, wie `npm run fruehstart`: es misst, es urteilt nicht.** Es steht
+nicht in der Kette und traegt keine Gegenprobe - 24 Laeufe je Aussaat gehoeren
+nicht in einen Nachtlauf. Einen Selbsttest traegt es trotzdem (v229): bewegt
+der Deckel ueber die ganze Spanne nichts, misst er nichts.
 
 **Die Praemisse von S-N1-07 ist an einer Messstelle entstanden, die es nicht
 mehr gibt (v339, Regel 12).** Die Story steht auf „der Stapel traegt x1,48
@@ -1962,7 +2011,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v339. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v340. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

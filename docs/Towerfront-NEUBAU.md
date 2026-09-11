@@ -1,6 +1,33 @@
 # Towerfront — der Neubau
 
-Stand: v333 · beschlossen am 09.09.2026
+Stand: v340 · beschlossen am 09.09.2026
+
+**Nachgesehen in v340 — und einer der vier Sätze dieses Dokuments hat zum
+ersten Mal eine Messung gegen sich.**
+
+Der Satz lautet: *„Der Bogen wird ein Roguelite-Lauf mit Kartenzug je Welle
+und Kartenwahl je Abschnitt. Turmzweige, Stufen, Grade und Sterne entfallen
+dafür."* Grade und Sterne sind in v314 entfallen. **Für Stufen und Zweige
+sagen zwei Messungen jetzt etwas anderes:**
+
+| gemessen | Ergebnis |
+|---|---|
+| was der Stapel über einen ganzen Lauf trägt (v339) | ×12,0 im Mittel, **×32,4** für einen Stil, der auf eine Achse spielt |
+| was die Stufen tragen | ×5,4 bis ×39,1, im Mittel ×23,3 |
+| was **ohne** Ausbau vom Spiel bleibt (v340) | **0,0 von 4 Abschnitten** — bei jedem Stil, auch mit 127 Türmen statt 48 |
+| wo die Schwelle liegt | **Stufe 3** — Meister 4,0/4, Sparsam 4,0/4, Breite 2,7/4 |
+
+**Der Stapel ist also stark genug, um neben den Stufen zu stehen, aber nicht,
+um sie zu ersetzen.** Beides zusammen ergibt heute ×276 Feuerkraft über einen
+Lauf; nimmt man die Stufen heraus, bleiben ×12, und das Spiel endet im ersten
+Abschnitt. Die Hoffnung, die Menge an Türmen fange es auf, ist gemessen
+widerlegt (v291 zum zweiten Mal: die weiteren Plätze sehen zu wenig).
+
+**Was daraus für den Satz folgt, ist eine Entscheidung des Nutzers und steht
+hier als Frage, nicht als Beschluss.** Die Messung trägt genau einen der vier
+Wege aus S-N1-07: **die Türme behalten einen Teil ihrer Steigerung** (Stufe 3
+statt 6, also rund ×4 statt ×24). Dann misst die Balance weiter zwei Dinge —
+aber sie misst sie an einem Spiel, das es gibt.
 
 **Nachgesehen in v333 — Paket N6 ist bis auf zwei Stories durch, und es ist
 das Paket, das die vier Sätze dieses Dokuments am direktesten einlöst.**

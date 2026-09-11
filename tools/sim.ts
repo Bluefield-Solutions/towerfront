@@ -237,8 +237,8 @@ function aussaatGezaehlt(wo: string, aussaat: number): void {
   aussaatenJeMessung.set(wo, da);
 }
 
-function ueberAussaaten(run: (aussaat: number) => Result): {
-  runs: Result[]; mittel: number; spanne: number;
+function ueberAussaaten<T extends Result>(run: (aussaat: number) => T): {
+  runs: T[]; mittel: number; spanne: number;
 } {
   const runs = AUSSAATEN.map((a) => { aussaatGezaehlt('ueberAussaaten', a); return run(a); });
   const werte = runs.map((r) => (r.won ? r.lives : 0));
@@ -490,6 +490,10 @@ const NUR_MONO = process.argv.slice(2).includes('--monokultur');
 const NUR_VZ = process.argv.slice(2).includes('--vorzeichen');
 /** Nur der Schwanz des Laufs (S-N6-06) - derselbe Grund wie oben. */
 const NUR_SCHWANZ = process.argv.slice(2).some((a) => a === '--schwanz' || a.startsWith('--schwanz='));
+/** Nur der Durchlauf ueber die Stufen (S-N1-05) - derselbe Grund wie oben.
+ *  Er steht NICHT im vollen Lauf: er faehrt 24 Laeufe je Aussaat und misst
+ *  etwas, das sich ohne eine Entscheidung des Nutzers nicht aendert. */
+const NUR_STUFEN = process.argv.slice(2).includes('--stufen');
 
 /** Bauplaetze nach abgedeckter Wegstrecke bewertet.
  *
@@ -1596,6 +1600,86 @@ function stapelKurve(): void {
       + `${null0.karten} Karten. Dann misst die Kurve nicht den Stapel, sondern `
       + 'etwas, das auch ohne ihn da ist - und jede Zahl darueber ist um genau '
       + 'diesen Betrag daneben.');
+  }
+}
+
+/** **Was der Wegfall der Stufen kostet - gemessen, bevor er gebaut wird**
+ *  (v340, S-N1-05, Regel 9).
+ *
+ *  Die Story verlangt, Zweige und Stufen zugunsten des Kartenstapels
+ *  auszubauen, und nennt den Grund: solange beides nebeneinander steht,
+ *  misst die Balance zwei Dinge auf einmal (Regel 4). Sie stellt dazu eine
+ *  Frage an den Nutzer - und stuetzt sie auf eine Zahl, die v339 an der
+ *  falschen Messstelle nachgewiesen hat.
+ *
+ *  **Der Rueckbau selbst ist mechanisch und teuer:** rund 25 Pruefbloecke
+ *  verlieren dabei ihren Gegenstand, allein `npm run guards` hatte in v314
+ *  58 Uebersetzungsfehler. Ihn zu fahren und danach zu messen, hiesse einen
+ *  Tag Arbeit auf eine Vermutung zu setzen.
+ *
+ *  **Gemessen wird er deshalb vorher, und zwar ohne eine Zeile Spiel zu
+ *  aendern:** die Bots tragen seit jeher einen `maxLevel`. Ein Bot mit
+ *  `maxLevel: 1` spielt genau das Spiel, das nach dem Rueckbau uebrig
+ *  bliebe - Tuerme ohne Ausbau, der Stapel als einzige Steigerung.
+ *
+ *  **Und der Turmdeckel gehoert mit in den Durchlauf** (die Lehre aus v291):
+ *  wer nicht ausbaut, hat Gold uebrig, und die Story sagt selbst, dass die
+ *  MENGE an Tuermen einen Teil tragen soll. Mit `maxTowers: 12` maesse die
+ *  Zahl die Selbstbeschraenkung des Bots statt das Spiel.
+ *
+ *  **Kein Tor: es misst, es urteilt nicht** - wie `npm run fruehstart`. Es
+ *  steht deshalb nicht in der Torkette und traegt keine Gegenprobe; was es
+ *  misst, aendert sich ohne eine Entscheidung des Nutzers gar nicht, und 24
+ *  Laeufe je Aussaat gehoeren nicht in einen Lauf, der jede Nacht faehrt.
+ *
+ *  **Einen Selbsttest traegt es trotzdem** (v229: ein Werkzeug, dessen
+ *  Eingang niemand prueft, ist im Ernstfall kaputt): bewegt der Deckel ueber
+ *  die ganze Spanne nichts, misst er nichts, und dann ist jede Zeile darunter
+ *  eine Behauptung ueber eine Schraube, die gar nicht greift (Regel 13). */
+function stufenDeckel(): void {
+  console.log('\nWas der Wegfall der Stufen kostet (S-N1-05, GANZER LAUF ueber '
+    + `${LAUF_WELLEN} Wellen, ${AUSSAATEN.length} Aussaaten):`);
+  for (const deckel of [12, 200]) {
+    console.log(`  hoechstens ${deckel} Tuerme:`);
+    for (const stufe of [1, 2, 3, MAX_LEVEL]) {
+      const zeile: string[] = [];
+      for (const bot of BOTS) {
+        const o = ueberAussaaten((aussaat) => laufStil(
+          bot.plan ?? mixedPlanBase, () => 0, { ...bot, maxLevel: stufe, maxTowers: deckel },
+          'normal', { seed: aussaat },
+        ));
+        const geschafft = o.runs.reduce((a, r) => a + r.geschafft, 0) / o.runs.length;
+        const kristall = o.runs.reduce((a, r) => a + r.lives, 0) / o.runs.length;
+        const tuerme = o.runs.reduce((a, r) => a + r.towers, 0) / o.runs.length;
+        zeile.push(`${bot.name} ${geschafft.toFixed(1)}/${o.runs[0].abschnitte} `
+          + `K${kristall.toFixed(0)} T${tuerme.toFixed(0)}`);
+      }
+      console.log(`    bis Stufe ${String(stufe).padStart(2)}:  ${zeile.join('   ')}`);
+    }
+  }
+  console.log('    (Abschnitte geschafft / Kristall am Ende / gebaute Tuerme. '
+    + `Stufe ${MAX_LEVEL} ist das Spiel von heute.)`);
+
+  // **Der Selbsttest: greift der Deckel ueberhaupt?** (Regel 13)
+  //
+  // Gefragt an den zwei Raendern und am selben Bot - kommt dieselbe Zahl
+  // heraus, ist `maxLevel` wirkungslos, und die Tabelle darueber misst dann
+  // den Zufall der Aussaat statt der Stufen.
+  const rand = (stufe: number): number => {
+    const o = ueberAussaaten((aussaat) => laufStil(
+      MEISTER.plan ?? mixedPlanBase, () => 0, { ...MEISTER, maxLevel: stufe },
+      'normal', { seed: aussaat },
+    ));
+    return o.runs.reduce((a, r) => a + r.geschafft, 0) / o.runs.length;
+  };
+  const flach = rand(1), voll = rand(MAX_LEVEL);
+  console.log(`    Selbsttest: Stufe 1 schafft ${flach.toFixed(1)} Abschnitte, `
+    + `Stufe ${MAX_LEVEL} schafft ${voll.toFixed(1)}.`);
+  if (Math.abs(voll - flach) < 0.5) {
+    errors.push(`Der Stufendeckel bewegt nichts: Stufe 1 schafft ${flach.toFixed(1)} `
+      + `Abschnitte, Stufe ${MAX_LEVEL} ${voll.toFixed(1)}. Dann greift \`maxLevel\` `
+      + 'nicht, und jede Zeile der Tabelle darueber misst die Aussaat statt die '
+      + 'Stufen.');
   }
 }
 
@@ -3846,6 +3930,10 @@ const mixedPlan = mixedPlanBase;
     process.exit(errors.length ? 1 : 0);
   }
 
+  if (NUR_STUFEN) {
+    stufenDeckel();
+    process.exit(errors.length ? 1 : 0);
+  }
   if (NUR_SCHWANZ) {
     // **Vor dem Justieren den Raum ansehen** (Regel 9). `--schwanz=a,b,c`
     // faehrt den Schwanz je Wert einmal durch und legt nebeneinander, wie

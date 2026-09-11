@@ -93,7 +93,8 @@
     "wellenbau": "tsx tools/wellenbau.ts",
     "netz": "tsx tools/netz.ts",
     "netztor": "tsx tools/netz.ts --tor",
-    "weichenbau": "tsx tools/weichenbau.ts"
+    "weichenbau": "tsx tools/weichenbau.ts",
+    "stufen": "tsx tools/sim.ts --stufen"
   },
   "keywords": [],
   "author": "",

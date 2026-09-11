@@ -108,8 +108,24 @@ const RIM_HINWEIS = 1.5;        // darunter: sichtbar schwach, aber kein Abbruch
  *  bei `MIN_KANTE` = 1,5, und das kommt vom Handy, nicht von uns (Regel 10).
  *  Behoben wird es am BILD, nicht am Code - Befund B1, und der Beschluss aus
  *  v269 nennt genau diese Ursache: "Figuren verschwinden auf hellem Boden".
- *  Bis v273 konnte kein Werkzeug das bestaetigen; jetzt schon. */
-const MAX_SCHWACHE_KANTEN = 20;
+ *  Bis v273 konnte kein Werkzeug das bestaetigen; jetzt schon.
+ *
+ *  **In v326 von 20 auf 0, und behoben wurde es doch am Code.** Der Satz
+ *  darueber - "am BILD zu beheben" - war falsch, und die Messung hat es
+ *  gesagt: `BODEN_HELL` von 0,355 auf 0,26 und vier neu hergeleitete
+ *  Wegfarben bringen ALLE zwanzig Figuren ueber die Linie, ohne dass ein
+ *  einziger Bildpunkt angefasst wurde. Die schwaechste Kante steigt von 1,00
+ *  auf 1,58.
+ *
+ *  **Die Ursache war nicht der helle Boden, sondern zwei helle WEGE.** Bis
+ *  v325 lagen Ascheschlucht (14,2 %) und Frostspalte (14,0 %) genau auf der
+ *  Helligkeit der Figuren; fast jede "ZU SCHWACH"-Zeile nannte eine der
+ *  beiden. Ein Durchlauf ueber `BODEN_HELL` allein bewegte die Zahl kein
+ *  einziges Mal - von 0,355 bis 0,18 zwanzigmal 20 von 20 (`npm run boden`).
+ *
+ *  Bei null ist die Ratsche zugleich das Soll. Faellt eine einzige Figur
+ *  wieder unter `RIM_HINWEIS`, ist es ein Rueckschritt und kein Rauschen. */
+const MAX_SCHWACHE_KANTEN = 0;
 
 /** Der schlechteste Kantenwert im ganzen Satz - die Zahl, die die Zaehlung
  *  darueber nicht sehen kann.
@@ -120,7 +136,9 @@ const MAX_SCHWACHE_KANTEN = 20;
  *  unterbietet, nicht in einer Zaehlung untergeht. */
 // In v274 von 1,30 auf 1,10 gesetzt - aus demselben Grund wie
 // MAX_SCHWACHE_KANTEN: die 1,30 waren gegen das Rohbild gemessen.
-const MIN_KANTE_STAND = 1.00;
+// In v326 von 1,00 auf 1,58: der dunklere Boden und die vier neuen
+// Wegfarben heben die schwaechste Kante des ganzen Satzes ueber das Soll.
+const MIN_KANTE_STAND = 1.58;
 /** Koerper gegen den Untergrund - das SOLL, nicht der Stand.
  *
  *  Kommt wie `MIN_KANTE` vom Handy, nicht von uns (Regel 10), und bleibt
@@ -136,9 +154,14 @@ const MIN_KANTE_STAND = 1.00;
  *  Spannungsratsche in `npm run sim`: Stand halten, Soll anstreben. */
 const MIN_BODY_CONTRAST = 1.15;
 /** Wieviele Figuren das Soll heute verfehlen, und der schlechteste Wert.
- *  Beides in v275 gemessen, gegen die Wegflaeche. */
-const MAX_FLACHE_KOERPER = 14;
-const MIN_KOERPER_STAND = 1.00;
+ *
+ *  In v275 gegen die Wegflaeche gemessen: 14 von 20, schlechtester 1,00.
+ *  **In v326 auf 0 und 1,65** - dieselbe Ursache und dieselbe Reparatur wie
+ *  bei den Kanten. Damit ist aus der Ratsche wieder das Soll geworden: das
+ *  Band `MIN_BODY_CONTRAST` wird von allen zwanzig Figuren gehalten, und
+ *  jede, die darunter faellt, ist ein Rueckschritt. */
+const MAX_FLACHE_KOERPER = 0;
+const MIN_KOERPER_STAND = 1.65;
 const koerper = [];
 const MIN_TOWER_PX = 26;       // Bildschirmpunkte Breite der Turmsilhouette
 const MIN_ENEMY_PX = 13;       // dasselbe für Gegner

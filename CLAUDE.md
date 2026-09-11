@@ -224,6 +224,16 @@ npm run eichen      einen Wert durchprobieren, alle Kennzahlen nebeneinander.
                     Ruhig (seit v261), `--karte X --hp/--gold` den Ausgleich
                     einer Karte. Jede Zeile zeigt seit v260 auch Knappheit
                     und uebriges Gold.
+npm run boden       der Durchlauf ueber Backhelligkeit UND Wegfarbe zugleich
+                    (Regel 9). Er liest seine Zahlen aus `readability.mjs` und
+                    `wegdeckung.ts` AB, statt sie daneben noch einmal zu
+                    rechnen, aendert Quelltext und nimmt sich mit `git
+                    checkout` zurueck - deshalb verweigert er bei schmutzigem
+                    Baum den Dienst. `--wegsuche` sucht das Fenster der
+                    WEGFARBE je Karte; eine Schraube fuer alle vier gibt es
+                    gemessen nicht. Selbsttest: bewegt sich ueber die ganze
+                    Spanne keine Ergebniszahl, bricht er ab - genau das ist
+                    in v326 passiert und hat die Story widerlegt.
 npm run einbettung  misst, wie sehr eine Figur zur Karte gehört (--eichen: Raum)
 npm run zielplatte  findet die Zielplattform im Kartenbild und prüft die Zahl.
                     Seit v216 auch die GÜTE: die Suche gibt immer einen
@@ -695,6 +705,60 @@ tools/         Torkette, Bildabnahme, Schleifenwerkzeug
 art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
+
+**Der Grund wird dunkel (v326, S-N5-07) - und die Messung hat die Story auf
+halbem Weg widerlegt.** Die Story stuetzt sich auf eine Tabelle aus v274:
+`BODEN_HELL` von 0,355 auf 0,24 bringe „1 von 20 schwachen Kanten statt 20 von
+20". **Nachgemessen: 20 von 20 bei jedem Wert bis hinunter zu 0,18** - die Zahl
+bewegt sich kein einziges Mal.
+
+**Der Grund ist v275**, und es ist Regel 12, diesmal in einem Dokument statt in
+einem Werkzeug: seitdem misst die Lesbarkeit ZWEI Flaechen je Karte, Boden und
+Weg, und jede Figur zaehlt gegen ihre SCHLECHTERE. Die alte Tabelle ist gegen
+den Boden allein gemessen. **Der Taeter sind die zwei hellen WEGE** -
+Ascheschlucht 14,2 % und Frostspalte 14,0 % lagen genau auf der Helligkeit der
+Figuren, und fast jede „ZU SCHWACH"-Zeile nannte eine der beiden.
+
+Gebaut ist `npm run boden`: ein Durchlauf ueber beide Schrauben zugleich
+(Regel 9). Er liest seine Zahlen aus `readability.mjs` und `wegdeckung.ts` AB,
+statt sie daneben noch einmal zu rechnen (Regel 15, die Lehre aus v311),
+verweigert bei schmutzigem Baum den Dienst (Regel 1) und traegt einen
+Selbsttest: bewegt sich ueber die ganze Spanne keine Ergebniszahl, bricht er ab
+(Regel 13). **Genau der hat den Befund laut gemacht, statt ihn zu uebergehen.**
+
+Gesetzt sind **`BODEN_HELL` 0,355 -> 0,26** und vier durchgerechnete Wegfarben,
+alle auf der DUNKLEN Seite ihres Bodens - die helle Seite ist die Helligkeit
+der Figuren:
+
+| | v325 | **v326** |
+|---|---|---|
+| Figuren mit Kante unter 1,5 | 20 von 20 | **0** |
+| schwaechste Kante | 1,00 | **1,58** |
+| Koerperkontrast unter dem Soll | 14 von 20 | **0** |
+| schlechtester Koerperkontrast | 1,00 | **1,65** |
+
+**Keine einzige Grenze ist dafuer verschoben worden.** `wegdeckung` (40 bis 90
+Farbschritte, gemessen 65,1 / 61,1 / 44,1 / 72,5), `grafiktor`, `kristall` und
+`einbettung` sind unveraendert gruen. Die Untergrenze fuer den Boden kommt
+dabei aus einem anderen Tor und nicht aus dem Geschmack: bei 0,24 faellt die
+Frostspalte auf 37,8 Farbschritte, und dann rettet sie keine Wegfarbe mehr.
+
+**Zwei Ratschen sind auf den neuen Stand gezogen** (20 -> 0 und 14 -> 0), sonst
+haelt der Gewinn nichts (Regel 5). Ueber der ersten stand seit v274 der Satz,
+der Befund sei *„am BILD zu beheben, nicht am Code"*. Er war falsch - kein
+Bildpunkt wurde angefasst.
+
+**`bildtor` wurde an einer Aufnahme rot, und repariert ist das BEWEISMITTEL,
+nicht die Schwelle.** `weiche` stand als einzige Spielaufnahme bei 575 Farben
+gegen eine Schwelle von 500, jede andere bei 1300 bis 2100; der dunklere Boden
+kostete 13 %, und damit fiel genau sie darunter. Die Nahaufnahme zeigt jetzt
+mehr Karte (Zoom 1,7 -> 1,4). Eine Schwelle zu senken, weil die eigene
+Aenderung an ihr scheitert, waere kein Beweis mehr (v219).
+
+**Und zwei aeltere Gegenproben hingen an den alten Farbwerten.** `npm run
+muster` hat es in derselben Runde gemeldet, in der es passierte - sie greifen
+jetzt den PALETTENNAMEN statt einen Sechserwert, der bei jedem Durchrechnen
+ein anderer ist.
 
 **Der Meteor sagt jetzt, wohin er faellt (v325, S-N5-06).** Der Inspektorlauf
 v273 meldete zwei Anzeigen fuer dieselbe Handlung, die an verschiedene Orte
@@ -1405,7 +1469,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v325. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v326. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

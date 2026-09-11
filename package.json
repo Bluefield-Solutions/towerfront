@@ -27,6 +27,7 @@
     "appsymbol": "node tools/appsymbol.mjs",
     "bericht": "tsx tools/benchmark.ts",
     "lesbarkeit": "tsx tools/readability.mjs",
+    "boden": "node tools/boden.mjs",
     "bilder": "tsx tools/shots.mjs",
     "schleife": "node tools/loop.mjs",
     "eichen": "node tools/calibrate.mjs",

@@ -198,7 +198,18 @@ const MOOS: MapPalette = {
   // Erdton statt Sandton. Auf dem Waldboden vom 04.09.2026 war das alte
   // #C9A86A um Klassen heller als alles um es herum - ein cremefarbenes Band
   // auf olivem Gruen. Ein getretener Waldweg ist kaum heller als sein Rand.
-  path: '#3F3420', pathEdge: '#292214',
+  // **Die vier Wegfarben sind in v326 durchgerechnet, nicht gewaehlt**
+  // (`npm run boden`). Sie liegen alle vier auf der DUNKLEN Seite ihres
+  // Bodens: die helle Seite ist die Helligkeit der FIGUREN, und dort
+  // verschwindet jede, die darauf laeuft. Bis v325 lagen Ascheschlucht
+  // (14,2 %) und Frostspalte (14,0 %) genau dort, und fast jede schwache
+  // Kante des Spiels nannte eine der beiden.
+  //
+  // Gemessen am Bild, in Farbschritten vom Boden (erlaubt 40 bis 90):
+  // Spiralhain 65,1 · Ascheschlucht 61,1 · Frostspalte 44,1 · Farnkessel
+  // 72,5. Die Frostspalte ist die knappe: unter BODEN_HELL 0,26 kommt sie
+  // gar nicht mehr ueber 40, gleich welche Farbe der Weg traegt.
+  path: '#13100A', pathEdge: '#0C0A06',
   rock: '#2A3348', rockHi: '#3D4A66',
   mood: '#BEE2FF', haze: '#B4D6E2', sonne: '#FFC26A',
   // Spiralhain: Nieselregen. Moos steht nicht ohne Wasser.
@@ -210,7 +221,7 @@ const MOOS: MapPalette = {
  *  grauer, weil der Boden unter ihm kaelter gebacken ist. */
 const FARN: MapPalette = {
   terrain: '#16332F', terrainHi: '#1D4A44', terrainLo: '#0E2523',
-  path: '#363225', pathEdge: '#232017',
+  path: '#0A0907', pathEdge: '#060604',
   rock: '#26303F', rockHi: '#38455C',
   mood: '#BCDBE8', haze: '#A9C6D2', sonne: '#E8C48A',
   // Auch hier Regen - es ist derselbe Wald, nur eine Senke tiefer.
@@ -225,7 +236,7 @@ const LAUB: MapPalette = {
   //   Aschegrund rgb 75,74,75 sind das gemessen 170,0 Farbschritte, erlaubt
   //   sind 40 bis 90. Ein getretener Pfad im Aschefeld ist ein wenig heller
   //   als die Asche, nicht ein Sandband darauf.
-  path: '#969081', pathEdge: '#6E695F',
+  path: '#1B1A17', pathEdge: '#141311',
   rock: '#39332A', rockHi: '#5C5242',
   mood: '#FFD9A8', haze: '#B8A882', sonne: '#FFB661',
   // Ascheschlucht: Aschefall, warm und langsam. Der Name ist das Wetter.
@@ -239,7 +250,7 @@ const FROST: MapPalette = {
   //   gegen den gebackenen Boden rgb 84,101,118 sind das 236 Farbschritte,
   //   gemessen 224,8 im Bild. Erlaubt sind 40 bis 90: darunter verschwindet
   //   er im Gelaende, darueber liegt er darauf wie ausgeschnittenes Papier.
-  path: '#7A92A6', pathEdge: '#5B6D7C',
+  path: '#252C32', pathEdge: '#1B2125',
   rock: '#2C3E5B', rockHi: '#44608A',
   mood: '#D6ECFF', haze: '#CFE6F5', sonne: '#FFD9A0',
   // Frostspalte: Schneetreiben, seitlich verweht.

@@ -1,6 +1,6 @@
 # Towerfront — der Neubau
 
-Stand: v325 · beschlossen am 09.09.2026
+Stand: v326 · beschlossen am 09.09.2026
 
 **Nachgesehen in v325 — Paket N4 ist durch, und Paket N5 hat begonnen.**
 Nach S-N4-10 (v323) blieb von N4 nur N4L offen, und das ist eine Entscheidung
@@ -340,19 +340,36 @@ Mit der Reparatur steht der Durchlauf da:
 
 | `BODEN_HELL` | Figuren mit Kante unter 1,5 | schwächste Kante |
 |---|---|---|
-| **0,355** (heute) | **20 von 20** | 1,10 |
+| **0,355** (damals) | **20 von 20** | 1,10 |
 | 0,30 | 14 von 20 | 1,27 |
 | 0,24 | **1 von 20** | 1,49 |
 | 0,18 | **0 von 20** | 1,74 |
 
-Ein dunklerer Grund repariert die Lesbarkeit **jeder einzelnen Figur, ohne
-dass ein Bild angefasst wird**. Der Satz „Figuren verschwinden auf hellem
-Boden" ist damit keine Begründung mehr, sondern eine Messung.
+**Diese Tabelle ist in v326 nachgefahren worden und stimmt nicht mehr — und
+das ist selbst der Befund.** Gemessen stehen alle vier Werte heute bei **20 von
+20**; die Zahl bewegt sich über die ganze Spanne kein einziges Mal. Dazwischen
+liegt v275: seitdem misst `npm run lesbarkeit` **zwei Flächen je Karte**, Boden
+*und* Weg, und jede Figur zählt gegen ihre **schlechtere**. Die Tabelle oben
+ist gegen den Boden **allein** gemessen. Regel 12, diesmal in einem Dokument
+statt in einem Werkzeug.
 
-**Umgesetzt ist er noch nicht**, und der Grund gehört dazu: `BODEN_HELL` zu
-senken verschiebt `grafiktor` (Bodenband 0,30–0,36), `wegdeckung` (Weg gegen
-Boden 40–90 Farbschritte), `kristall` und `einbettung` in einem Zug. Das ist
-eine eigene Runde, und sie hängt an S-N5-01.
+**Der Täter waren die zwei hellen Wege**, nicht der Boden: Ascheschlucht
+14,2 % und Frostspalte 14,0 % lagen genau auf der Helligkeit der Figuren, und
+fast jede „ZU SCHWACH"-Zeile nannte eine der beiden. Umgesetzt ist der
+Beschluss trotzdem, und vollständig — `BODEN_HELL` 0,26 **zusammen mit** vier
+durchgerechneten Wegfarben auf der dunklen Seite ihres Bodens:
+
+| | v325 | **v326** |
+|---|---|---|
+| Figuren mit Kante unter 1,5 | 20 von 20 | **0** |
+| schwächste Kante | 1,00 | **1,58** |
+| Körperkontrast unter dem Soll | 14 von 20 | **0** |
+
+Der Satz „Figuren verschwinden auf hellem Boden" ist damit keine Begründung
+mehr, sondern eine Messung — sie sagt nur „auf hellem **Weg**". Und keine der
+vier Torgrenzen musste dafür verschoben werden; `grafiktor` hält ohnehin die
+**Dichte** des Bodens, nicht seine Helligkeit, und `wegdeckung`, `kristall` und
+`einbettung` sind unverändert grün.
 
 | **HUD** | **In Ebenen.** Ruhezustand minimal; jede Tiefe auf Anforderung **an Ort und Stelle** statt in einer Randleiste. | Mehr zeigen allein macht eine Tabelle, weniger zeigen allein nimmt die Entscheidungsgrundlage — und die fehlt heute: man sieht nicht, ob der Mörser etwas taugt. Bedingung: die Ratschen des UX-Tors dürfen nicht fallen. |
 

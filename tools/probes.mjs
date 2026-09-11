@@ -2943,10 +2943,15 @@ export const PROBEN = [
     // Die Wegfarbe des Spiralhains steht seit v234 auf #3F3420 (vorher
     // #5A4B2E) - der Weg laeuft jetzt NACH dem Tonwertabgleich, und die
     // alten Farben waren gegen die Kurve geeicht statt gegen den Boden.
+    // **In v326 an den PALETTENNAMEN gehaengt statt an den Farbwert.** Sie
+    // griff `#3F3420` - und genau diese Zahl ist in v326 durchgerechnet
+    // worden. `npm run muster` hat es in derselben Runde gemeldet, in der es
+    // passierte; ohne das haette sie still aufgehoert zu beweisen. Der Name
+    // `MOOS` aendert sich beim naechsten Durchrechnen nicht.
     name: 'Gezeichneter Weg wieder cremefarben',
     datei: 'src/data/maps.ts',
-    regel: /  path: '#3F3420', pathEdge: '#292214',/,
-    ersatz: "  path: '#EDE3C8', pathEdge: '#C9A86A',",
+    regel: /(const MOOS: MapPalette = \{[^}]*?)path: '#[0-9A-F]{6}', pathEdge: '#[0-9A-F]{6}',/,
+    ersatz: "$1path: '#EDE3C8', pathEdge: '#C9A86A',",
     tor: 'wegdeckungtor',
   },
   {
@@ -3840,10 +3845,12 @@ export const PROBEN = [
     // stand sie im Bild auf rgb 137,114,67 gegen einen Boden von 78,75,79,
     // also 72 Punkte waermer bei erlaubten 35. Der euklidische Abstand sah
     // das nicht; er lag mit 73,1 mitten im Band.
+    // Dieselbe Umhaengung wie oben, aus demselben Anlass (v326): sie griff
+    // `#969081`, die alte Wegfarbe der Ascheschlucht.
     name: 'Wegfarbe hat wieder einen anderen Farbton als ihr Boden',
     datei: 'src/data/maps.ts',
-    regel: /path: '#969081', pathEdge: '#6E695F',/,
-    ersatz: "path: '#D8B070', pathEdge: '#A88848',",
+    regel: /(const LAUB: MapPalette = \{[^}]*?)path: '#[0-9A-F]{6}', pathEdge: '#[0-9A-F]{6}',/,
+    ersatz: "$1path: '#D8B070', pathEdge: '#A88848',",
     tor: 'wegdeckungtor',
   },
   {
@@ -5380,6 +5387,38 @@ export const PROBEN = [
     ersatz: 'if (nah <= -9999) { wr += d[j];',
     tor: 'lesbarkeit',
     meldet: 'keine Wegflaeche im gebackenen Terrain',
+  },
+  {
+    // **Der Weg ist der Taeter, nicht der Boden (v326).** Bis v325 lagen
+    // Ascheschlucht und Frostspalte mit 14,2 und 14,0 % genau auf der
+    // Helligkeit der Figuren, und fast jede schwache Kante des Spiels nannte
+    // eine der beiden. Ein Durchlauf ueber `BODEN_HELL` ALLEIN bewegte die
+    // Zahl kein einziges Mal - von 0,355 bis 0,18 zwanzigmal 20 von 20.
+    //
+    // Der Eingriff holt eine Wegfarbe auf die helle Seite zurueck. Der Boden
+    // bleibt dunkel; es ist also wirklich der Weg, der gemessen wird
+    // (Regel 13). Die Ratsche steht seit v326 auf NULL, und damit muss schon
+    // die erste Figur, die wieder darunter faellt, das Tor rot machen.
+    //
+    // Als Regel und nicht auf eine Farbe: welchen Sechserwert eine Karte
+    // gerade traegt, aendert sich beim naechsten Durchrechnen. Gegriffen
+    // wird der PALETTENNAME - und zwei aeltere Proben, die genau diesen
+    // Fehler gemacht hatten, sind in derselben Runde mit umgehaengt worden.
+    // Zurueckgesetzt wird auf `#7A92A6`, die Wegfarbe der Frostspalte bis
+    // v325: 14,0 % Helligkeit, also mitten in der Figurenschar.
+    //
+    // **Der Palettenkopf muss dabei STEHENBLEIBEN** (`$1`), und der erste
+    // Entwurf hat ihn mitgenommen: `terrain`, `terrainHi` und `terrainLo`
+    // standen zwischen Kopf und Wegfarbe, danach war `pal.terrainLo`
+    // undefiniert und das Tor starb mit einem Stapelabzug statt zu melden.
+    // Ein Eingriff, der das Werkzeug zerstoert, prueft es nicht (Regel 3) -
+    // gefunden hat es die Probe selbst, beim ersten Lauf.
+    name: 'Eine Wegfarbe liegt wieder auf der Helligkeit der Figuren',
+    datei: 'src/data/maps.ts',
+    regel: /(const FROST: MapPalette = \{[^}]*?)path: '#[0-9A-F]{6}', pathEdge: '#[0-9A-F]{6}',/,
+    ersatz: "$1path: '#7A92A6', pathEdge: '#5B6D7C',",
+    tor: 'lesbarkeit',
+    meldet: 'Figuren haben eine Kante unter',
   },
   {
     name: 'Lesbarkeit sieht die Helligkeit des Bodens nicht',

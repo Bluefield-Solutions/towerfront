@@ -370,8 +370,19 @@ takes.push(['weiche', () => shot('weiche', 844, 390, (s, r) => {
   s.weicheGewaehlt = 'saeule1';
   // Naeher heran, sonst ist der Ring auf 844 x 390 ein Punkt - und der
   // gedaempfte Ast liefe halb aus dem Bild.
+  //
+  // **1,4 statt 1,7 seit v326, und der Grund ist eine knappe Marge, keine
+  // Schoenheit.** Die Farbschwelle des Tores (500) fragt, ob die
+  // eingebetteten Bilder ueberhaupt dekodiert wurden. Jede andere
+  // Spielaufnahme steht bei 1150 bis 2000 Farben, diese eine stand bei 575 -
+  // eine Nahaufnahme zeigt weniger Foto. Der dunklere Boden hat 13 % der
+  // Farben gekostet, und damit fiel genau diese Aufnahme unter die Schwelle.
+  // Repariert ist das BEWEISMITTEL, nicht die Schwelle: eine Aufnahme, die
+  // zu wenig Foto zeigt, kann die Frage des Tores nicht beantworten, und
+  // eine Schwelle zu senken, weil die eigene Aenderung an ihr scheitert,
+  // waere kein Beweis mehr (v219).
   r.resize();
-  r.zoomAt(1.7, 422, 195);
+  r.zoomAt(1.4, 422, 195);
   const p = r.worldToScreen(528, 640);
   r.panBy(422 - p.x, 195 - p.y);
   return 30;

@@ -315,13 +315,31 @@ export function bakeTerrain(
 
 // ------------------------------------------------------- Tonwert der Karten
 
-/** Wohin der Boden soll. Aus `REFERENZ` in `tools/artaudit.mjs`, Band
- *  0,30 bis 0,36 - hier die Mitte.
+/** Wohin der Boden soll.
  *
- *  Hochgerechnet auf VOR der Vignette: sie und der Saum ziehen gemessen rund
- *  ein Zehntel ab (Spiralhain 0,224 im Quellbild, 0,202 im gebackenen
- *  Terrain). Wer auf 0,33 korrigiert, landet hinterher bei 0,30. */
-const BODEN_HELL = 0.355;
+ *  **0,26 seit v326, vorher 0,355 - und der alte Wert kam aus einer
+ *  fremden Referenz.** Er stand auf der Mitte des Bandes 0,30 bis 0,36 aus
+ *  `REFERENZ.grund.helligkeit` in `tools/artaudit.mjs`, und ueber genau
+ *  diesem Band steht dort seit v106 der Satz, es stamme aus EINER Szene
+ *  ("warmer Sandboden in Ocker") und sei fuer eine Schneelandschaft "keine
+ *  Vorgabe, sondern eine Fehlanzeige". Es ist deshalb auch kein Befund und
+ *  wird von keinem Tor gehalten - `grafiktor` prueft die DICHTE des Bodens,
+ *  nicht seine Helligkeit.
+ *
+ *  Der Neubau hat sich in v269 fuer einen dunklen Grund entschieden, und der
+ *  Durchlauf in v326 (`npm run boden`) sagt, was er wert ist: zusammen mit
+ *  den vier neu hergeleiteten Wegfarben faellt die Zahl der Figuren unter
+ *  der Lesbarkeitslinie von 20 auf 0 und die des Koerperkontrasts von 14
+ *  auf 0.
+ *
+ *  **Gewaehlt ist 0,26 und nicht dunkler, und der Grund ist die
+ *  Frostspalte.** Ihr Weg muss nach `wegdeckung` mindestens 40 Farbschritte
+ *  von seinem Boden abstehen; ein fast schwarzer Weg kann das nur, wenn der
+ *  Boden selbst weit genug von Schwarz weg ist. Gemessen steht sie bei 0,26
+ *  auf 44,1 und bei 0,24 auf 37,8 - da ist keine Wegfarbe mehr, die sie
+ *  rettet. Die Untergrenze kommt also aus einem anderen Tor, nicht aus dem
+ *  Geschmack. */
+const BODEN_HELL = 0.26;
 
 /** Wieviel Kontrast nach dem Aufhellen zurueckgeholt wird.
  *

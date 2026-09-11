@@ -1,6 +1,6 @@
 # Towerfront — Stories
 
-Stand: v324 · 11.09.2026
+Stand: v326 · 11.09.2026
 
 **Nachgesehen in v324 — Paket N4 ist durch bis auf zwei Punkte, die dem Nutzer
 gehören, und die Kette hat dabei einen eigenen blinden Fleck gefunden.**
@@ -1922,6 +1922,14 @@ fliegendem Meteor namentlich melden.
 dorthin — auch einen, der dunkel geliefert wird. Solange das so ist, wäre die
 Bestellung aus Abschnitt 8d umsonst: das Bild käme dunkel an und würde beim
 Backen wieder aufgehellt.
+
+**Nachgefahren in v326: die Tabelle darunter stimmt nicht mehr, und das ist
+selbst der Befund.** Gemessen stehen heute alle vier Werte bei **20 von 20** —
+die Zahl bewegt sich über die ganze Spanne kein einziges Mal. Dazwischen liegt
+v275: seitdem misst die Lesbarkeit **zwei Flächen je Karte**, Boden *und* Weg,
+und jede Figur zählt gegen ihre **schlechtere**. Die Tabelle ist gegen den
+Boden allein gemessen (Regel 12). Der Täter waren die zwei hellen **Wege**.
+Gebaut wurde deshalb beides zusammen — siehe `npm run boden`.
 
 Was das kostet, ist gemessen (`npm run lesbarkeit`, Durchlauf über
 `BODEN_HELL`):

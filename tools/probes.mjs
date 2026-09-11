@@ -1222,6 +1222,24 @@ export const PROBEN = [
     // kein Beweis (Regel 5). Der Eingriff macht die Knoepfe so breit, dass
     // sechs davon nicht mehr nebeneinander passen - dann laufen sie
     // ineinander, und beide Zahlen muessen es sagen.
+    // **Eine Zeile der Wellenvorschau verliert ihren Namen** (v319, S-N4-05).
+    //
+    // Genau die Gegenprobe, die die Story verlangt. Der Eingriff laesst
+    // `vorschauName` immer nur die Zahl zurueckgeben - dann steht in jeder
+    // Welle OHNE erklaerenden Satz eine nackte Ziffer, und `streifen` muss
+    // die Welle namentlich melden.
+    //
+    // Gegriffen wird der Zweig, nicht die ganze Funktion: die Hoehe bleibt
+    // dabei unveraendert, also kann nur die neue Inhaltspruefung anschlagen
+    // und nicht die alte Bandmessung (Regel 13).
+    name: 'Eine Zeile der Wellenvorschau steht ohne Namen da',
+    datei: 'src/ui/ui.ts',
+    suche: 'return satz ? `${n}×` : `${n}× <span class="next-name">${name}</span>`;',
+    ersatz: 'return `${n}×`;',
+    tor: 'streifentor',
+    meldet: 'tragen weder Namen noch Bild',
+  },
+  {
     // **Ein Element schiebt sich ueber eine Textzeile** (v318, S-N4-04).
     //
     // Genau die Gegenprobe, die die Story verlangt. Der Eingriff nimmt dem

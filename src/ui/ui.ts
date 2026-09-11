@@ -20,6 +20,28 @@ import { VERBUND_STUFE } from '../game/verbund';
 import { bilanzblatt } from './statsblatt';
 import { aussaatLesen, laufAlsText } from '../game/mitschrift';
 
+/** **Was in einer Zeile der Wellenvorschau steht** (v319, S-N4-05).
+ *
+ *  Bis v318 stand dort Bild und Zahl, und der Name nur im `title` - also im
+ *  Zeigerhinweis, den es auf dem Zielgeraet nicht gibt. Das war in v194 eine
+ *  gemessene Entscheidung (D20): auf dem Telefon war die Zeile mit Namen zu
+ *  lang, und alle drei Vorbilder zeigen das BILD, nicht den Namen.
+ *
+ *  **Der Inspektorlauf v271 hat dagegen gehalten**, und er hatte an einer
+ *  Stelle recht: waehrend einer laufenden Welle steht in der Vorschau nur
+ *  eine Zahl, wenn die Welle keinen erklaerenden Satz traegt. Eine Vorschau,
+ *  die nicht sagt WAS kommt, ist eine Zahl ohne Gegenstand - und sie steht an
+ *  der Stelle, an der man entscheidet, wofuer das naechste Gold ausgegeben
+ *  wird.
+ *
+ *  Beides vertraegt sich, weil D20 an der BREITE hing und nicht am Namen:
+ *  der Name steht hier, `npm run streifen` misst die Bandhoehe in jeder
+ *  Welle jeder Karte gegen dieselben 86 Punkte wie vorher. Faellt er nicht
+ *  hinein, ist es D20 und nicht diese Zeile, die gilt. */
+export function vorschauName(name: string, n: number, satz: boolean): string {
+  return satz ? `${n}×` : `${n}× <span class="next-name">${name}</span>`;
+}
+
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
 export class UI {
@@ -1685,7 +1707,7 @@ export class UI {
       parts.push(`<button type="button" class="next-eintrag" data-gegner="${id}" `
         + `data-on="${s.gegnerInfo === id ? '1' : '0'}" `
         + `aria-pressed="${s.gegnerInfo === id}" `
-        + `title="${d.name}">${symbol}${n}×${mark}</button>`);
+        + `title="${d.name}">${symbol}${vorschauName(d.name, n, !!w.note)}${mark}</button>`);
     }
     if (w.note) parts.push(`<i class="next-note">${w.note}</i>`);
     this.nList.innerHTML = parts.join('');

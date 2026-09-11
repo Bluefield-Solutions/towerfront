@@ -696,6 +696,35 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Jede Zeile der Wellenvorschau traegt ihren Namen (v319, S-N4-05) - und das
+Beweismittel hat den Befund miterzeugt.** Der Inspektorlauf v271 sah in
+`bilder/wellenvorschau.png` nackte Zahlen ("9x") und schrieb "eine Vorschau
+ohne Gegenstand" als Befund auf. **Im SPIEL stand dort ein Gegnerbild.** Das
+Blatt setzte an seine Stelle ein DURCHSICHTIGES 1x1-GIF - fuer die HOEHE genau
+richtig, und die Begruendung dafuer stand als Regel 12 sogar daneben; fuer das
+BILD verheerend.
+
+**Ein Beweismittel, das eine Sache systematisch weglaesst, erzeugt Befunde
+ueber genau diese Sache.** Dort steht jetzt ein erkennbarer Platzhalter -
+dieselbe Groesse, also dieselbe Hoehe, und dieselbe Marke #FF00E5 wie
+`getPlatzhalter` im Bildvorrat (K5).
+
+**Der halbe Befund war trotzdem echt:** eine Welle ohne erklaerenden Satz trug
+nur Zahl, Bild und Marken - kein Wort. **Der volle Name passt aber nicht, und
+das ist gemessen:** mit Namen in jeder Zeile springt Welle 15 auf **113 Punkte
+gegen erlaubte 86** - genau die Zahl, an der D20 den Namen in v194
+herausgenommen hat. Die Entscheidung von damals haelt also; sie hing an der
+BREITE und nicht am Namen.
+
+Gebaut ist deshalb die Ableitung: **der Name steht, wo die Welle keinen Satz
+hat.** Beides zugleich braucht niemand, und beides zugleich passt nicht.
+Gemessen 60 Wellen ueber vier Karten, hoechste 67 von 86 - Punkt fuer Punkt
+wie vorher.
+
+**Und `npm run streifen` fuhr bis v318 nur den Spiralhain** - dieselbe Klasse
+wie D28-F ("die Pruefung laeuft nur auf MAPS[0]"). Es misst jetzt jede Welle
+jeder Karte und prueft neben der Hoehe den INHALT.
+
 **Kein Element verdeckt den Text eines anderen (v318, S-N4-04) - und der
 historische Befund stand noch da.** Der Inspektorlauf v271 hatte zwei
 Zustaende gefunden, in denen Bedienung Bedienung verdeckt, und beide sind
@@ -1226,7 +1255,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v318. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v319. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

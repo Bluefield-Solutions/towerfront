@@ -1840,3 +1840,13 @@ html, body {
 /* Am Rand ist er kein Schalter, also traegt er auch kein Zeichen und keinen
    Zeigefinger - sonst verspricht er etwas, was er dort nicht tut. */
 .inspector:not(.am-turm) .werte-auf::after { content: none; }
+
+
+/* **Der Gegnername in der Wellenvorschau** (v319, S-N4-05). Klein und
+   gedaempft: die ZAHL traegt die Menge und das Bild die Erkennung - der Name
+   sagt nur, wie das Ding heisst, damit eine Zeile ohne erklaerenden Satz
+   nicht als nackte Ziffer dasteht. */
+.next-name {
+  font-size: var(--s-klein); font-weight: 600; color: var(--muted);
+  letter-spacing: 0.01em;
+}

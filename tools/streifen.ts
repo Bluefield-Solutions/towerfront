@@ -80,7 +80,7 @@ const { GameState } = await import('../src/game/state');
 const { UI } = await import('../src/ui/ui');
 const state = new GameState();
 const ui = new UI(state);
-state.reset(1, 'normal', 'spiralhain');
+const { MAPS } = await import('../src/data/maps');
 const liste = win.document.getElementById('n-list')!;
 const streifen = win.document.getElementById('next')!;
 
@@ -92,18 +92,27 @@ const streifen = win.document.getElementById('next')!;
 // brechen ohnehin schon auf zwei Zeilen um; der Streifen machte drei daraus.
 // Er sitzt seitdem links im Wellenknopf, und diese Zeilen stehen hier, damit
 // niemand den Weg ein zweites Mal geht.
-const wellen: { nr: number; markup: string; sprung: string }[] = [];
-for (let i = 0; i < state.waves.length; i++) {
-  state.waveIndex = i;
-  state.wellenZumPruefen([]);
-  ui.sync();
-  const sprung = streifen.dataset.sprung ?? '0';
-  // **Das ganze Markup aus der Oberflaeche**, nicht von Hand nachgebaut.
-  // Bis v267 schrieb dieses Werkzeug seine Marke selbst ("Als nächstes",
-  // klein geschrieben, waehrend das Spiel "Als Nächstes" zeigt) - eine
-  // zweite Fassung desselben Streifens, und die haette den Strom von v268
-  // schlicht nicht gehabt (Regel 15).
-  wellen.push({ nr: i + 1, markup: streifen.innerHTML, sprung });
+// **Jede Welle JEDER Karte** (v319, S-N4-05).
+//
+// Bis v318 fuhr dieses Werkzeug allein den Spiralhain. Das ist dieselbe
+// Klasse wie D28-F ("die Pruefung laeuft nur auf MAPS[0]"): die vier Karten
+// haben verschiedene Wellenplaene, und der laengste Streifen ist nicht
+// notwendig der der ersten. Gemessen sind es jetzt 60 Wellen statt 15.
+const wellen: { karte: string; nr: number; markup: string; sprung: string }[] = [];
+for (const karte of MAPS) {
+  state.reset(1, 'normal', karte.id);
+  for (let i = 0; i < state.waves.length; i++) {
+    state.waveIndex = i;
+    state.wellenZumPruefen([]);
+    ui.sync();
+    const sprung = streifen.dataset.sprung ?? '0';
+    // **Das ganze Markup aus der Oberflaeche**, nicht von Hand nachgebaut.
+    // Bis v267 schrieb dieses Werkzeug seine Marke selbst ("Als nächstes",
+    // klein geschrieben, waehrend das Spiel "Als Nächstes" zeigt) - eine
+    // zweite Fassung desselben Streifens, und die haette den Strom von v268
+    // schlicht nicht gehabt (Regel 15).
+    wellen.push({ karte: karte.id, nr: i + 1, markup: streifen.innerHTML, sprung });
+  }
 }
 void liste;
 
@@ -115,12 +124,33 @@ const css = readFileSync(join(ROOT, 'src/style.css'), 'utf8');
 // jede Zeile acht Punkte zu niedrig (Regel 12). Der Tupfer wird deshalb
 // durch ein leeres Bild MIT der echten Klasse ersetzt - die Groesse kommt
 // dann wieder aus `src/style.css`, nicht von hier.
-const LEER = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+// **Sichtbar statt durchsichtig** (v319, S-N4-05, Regel 8 und Regel 12).
+//
+// Bis v318 war das ein durchsichtiges 1x1-GIF: fuer die HOEHE genau richtig,
+// fuer das BILD verheerend. Auf `bilder/wellenvorschau.png` stand dann in
+// jeder Zeile eine nackte Zahl, und genau das hat der Inspektorlauf v271 als
+// Befund aufgeschrieben - "9x, eine Zahl ohne Gegenstand". Im SPIEL steht
+// dort ein Gegnerbild; das Blatt hat einen Fehler gezeigt, den es nicht gab.
+//
+// Ein Beweismittel, das eine Sache systematisch weglaesst, erzeugt Befunde
+// ueber genau diese Sache. Es steht jetzt ein erkennbarer Platzhalter da -
+// dieselbe Groesse, also dieselbe Hoehe, und dieselbe Marke #FF00E5 wie
+// `getPlatzhalter` im Bildvorrat (K5): "hier steht ein Bild, das dieses
+// Blatt nicht laden kann".
+// `rgb(...)` und nicht `#FF00E5`: eine Raute in einer Datenadresse muss
+// kodiert werden, und der erste Entwurf hat sie zweimal kodiert - das Bild
+// laed nicht, das Blatt sah aus wie vorher, und die Hoehe stimmte trotzdem.
+// Genau die Art Fehler, die dieses Blatt gerade sichtbar machen soll.
+const MARKE = 'rgb(255,0,229)';
+const PLATZ = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+  + `<rect x="1" y="1" width="8" height="8" fill="none" stroke="${MARKE}" stroke-width="1.5"/>`
+  + `<path d="M1 1 L9 9 M9 1 L1 9" stroke="${MARKE}" stroke-width="1"/></svg>`);
 const echt = (markup: string): string =>
-  markup.replace(/<b style="[^"]*"><\/b>/g, `<img class="next-bild" src="${LEER}" alt="">`);
+  markup.replace(/<b style="[^"]*"><\/b>/g, `<img class="next-bild" src="${PLATZ}" alt="">`);
 const bloecke = wellen.map((w) =>
   `<div style="width:${BREITE}px">`
-  + `<div class="next" data-sprung="${w.sprung}" data-nr="${w.nr}">`
+  + `<div class="next" data-sprung="${w.sprung}" data-nr="${w.nr}" data-karte="${w.karte}">`
   + `${echt(w.markup)}</div></div>`).join('');
 
 // Genau 844 x 390 - nicht groesser (Regel 12). Zwei Stilregeln haengen
@@ -175,8 +205,27 @@ const blase = await seite.evaluate(([css2, ...alle]) => {
 const hoehen = await seite.evaluate(() => [...document.querySelectorAll('.next')]
   .map((e) => ({
     nr: Number((e as HTMLElement).dataset.nr),
+    karte: (e as HTMLElement).dataset.karte ?? '?',
     h: Math.round(e.getBoundingClientRect().height),
     sprung: (e as HTMLElement).dataset.sprung === '1',
+    // **Traegt jede Zeile Zahl, Bild und WORTE?** (v319, S-N4-05)
+    //
+    // Der Inspektorlauf v271 hat es zweimal gefunden: sobald eine Welle
+    // laeuft, steht dort "9x" - eine nackte Zahl ohne Gegnernamen. Die Hoehe
+    // hat davon nie etwas gesehen; sie misst, ob das Band passt, nicht ob es
+    // etwas sagt.
+    //
+    // Worte zaehlen doppelt: entweder traegt die ZEILE einen Namen, oder die
+    // WELLE einen erklaerenden Satz. Beides zugleich ist gemessen zu breit
+    // (Welle 15 sprang damit auf 113 Punkte gegen erlaubte 86 - das ist die
+    // Zahl, an der D20 in v194 den Namen herausgenommen hat).
+    stumm: [...e.querySelectorAll('.next-eintrag')].filter((b) => {
+      const hatNamen = !!b.querySelector('.next-name');
+      const hatBild = !!b.querySelector('.next-bild, b');
+      return !hatNamen || !hatBild;
+    }).length,
+    satz: !!e.querySelector('.next-note'),
+    zeilen: e.querySelectorAll('.next-eintrag').length,
   })));
 mkdirSync(join(ROOT, 'bilder'), { recursive: true });
 writeFileSync(join(ROOT, 'bilder/wellenvorschau.png'), await seite.screenshot({ fullPage: true }));
@@ -188,12 +237,21 @@ const grenze = SCHIRM_H * ANTEIL;
 for (const h of hoehen) {
   const anteil = h.h / SCHIRM_H;
   const schlecht = anteil > ANTEIL;
-  console.log(`  Welle ${String(h.nr).padStart(2)}: ${String(h.h).padStart(3)} Punkte `
+  const stumm = h.stumm > 0 && !h.satz;
+  console.log(`  ${h.karte.padEnd(14)} Welle ${String(h.nr).padStart(2)}: `
+    + `${String(h.h).padStart(3)} Punkte `
     + `(${(anteil * 100).toFixed(0)} % der Bildhoehe)${h.sprung ? '   ▲ Sprung' : ''}`
-    + `${schlecht ? '   ZU HOCH' : ''}`);
+    + `${h.satz ? '   Satz' : ''}${schlecht ? '   ZU HOCH' : ''}${stumm ? '   STUMM' : ''}`);
   if (schlecht) {
-    console.error(`  FEHLER: Welle ${h.nr}: die Vorschau ist ${h.h} Punkte hoch, erlaubt sind `
-      + `${grenze.toFixed(0)} (${(ANTEIL * 100).toFixed(0)} % von ${SCHIRM_H}).`);
+    console.error(`  FEHLER: ${h.karte} Welle ${h.nr}: die Vorschau ist ${h.h} Punkte hoch, `
+      + `erlaubt sind ${grenze.toFixed(0)} (${(ANTEIL * 100).toFixed(0)} % von ${SCHIRM_H}).`);
+    fehler++;
+  }
+  if (stumm) {
+    console.error(`  FEHLER: ${h.karte} Welle ${h.nr}: ${h.stumm} von ${h.zeilen} Zeilen `
+      + 'tragen weder Namen noch Bild, und die Welle hat keinen erklaerenden Satz. '
+      + 'Eine Vorschau, die nicht sagt WAS kommt, ist eine Zahl ohne Gegenstand - '
+      + 'und sie steht an der Stelle, an der man ueber das naechste Gold entscheidet.');
     fehler++;
   }
 }

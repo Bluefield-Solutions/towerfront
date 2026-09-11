@@ -2521,7 +2521,8 @@ export class Renderer {
   }
 
   /** Anflug und Einschlagmarke. Der Ring zieht sich zusammen, damit man den
-   *  Zeitpunkt sieht und nicht nur das Ergebnis. */
+   *  Zeitpunkt sieht und nicht nur das Ergebnis - und die anflugbahn
+   *  verbindet den fliegenden Brocken mit der Stelle, die er meint. */
   private drawMeteors(s: GameState, hi: boolean): void {
     if (!s.meteors.length) return;
     const ctx = this.ctx;
@@ -2536,6 +2537,9 @@ export class Renderer {
       // Der Brocken faellt von oben rechts ins Ziel.
       const fx = m.x + 340 * (1 - t);
       const fy = m.y - 620 * (1 - t);
+
+      this.anflugbahn(fx, fy, m.x, m.y, tone, t, s.crystalPulse);
+
       if (hi) stampGlow(ctx, tone, fx, fy, 46, 0.8);
       ctx.strokeStyle = hexA(tone, 0.75);
       ctx.lineWidth = 7 * t + 2;
@@ -2545,6 +2549,32 @@ export class Renderer {
       ctx.fillStyle = '#FFF3E2';
       ctx.beginPath(); ctx.arc(fx, fy, 11, 0, Math.PI * 2); ctx.fill();
     }
+  }
+
+  /** **Die anflugbahn sagt, wohin der Brocken faellt.** Bis v324 stand hinter
+   *  ihm nur ein Stummel von 46 x 84 Punkten, und ueber drei Viertel des
+   *  Fluges leuchtete damit ein Punkt irgendwo im Bild, ohne sichtbaren
+   *  Bezug zu dem Kreis, den er meint. Der Inspektorlauf v273 hat daraus
+   *  "zwei Anzeigen fuer dieselbe Handlung, die an verschiedene Orte zeigen"
+   *  gelesen - die Anzeige war RICHTIG, sie hat es nur nicht GESAGT.
+   *
+   *  Gestrichelt und nicht durchgezogen, damit sie nicht als Strahl gelesen
+   *  wird; die Striche laufen zum Ziel hin, also zeigt die Bewegung selbst
+   *  die Richtung. */
+  private anflugbahn(
+    fx: number, fy: number, zx: number, zy: number,
+    tone: string, t: number, puls: number,
+  ): void {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.strokeStyle = hexA(tone, 0.3 + t * 0.35);
+    ctx.lineWidth = 5;
+    ctx.setLineDash([26, 16]);
+    ctx.lineDashOffset = -puls * 90;
+    ctx.beginPath();
+    ctx.moveTo(fx, fy); ctx.lineTo(zx, zy);
+    ctx.stroke();
+    ctx.restore();
   }
 
   /** Zielhilfe fuer eine angewaehlte Faehigkeit. */

@@ -1,8 +1,37 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v318 · 10.09.2026
+Stand: v325 · 11.09.2026
 
-**Nachgesehen in v318 — die Kette hat unveraendert dreiunddreissig
+**Nachgesehen in v325 — die Kette hat unveraendert dreiunddreissig
+abbrechende Schritte, und was sich seit v318 geaendert hat, ist wieder nicht
+ihre Zahl, sondern ihr Umfang:**
+
+* **v320: `uxaudittor` haelt einen vierzehnten Punkt** — `feldVerdeckung`
+  fragt nicht mehr, WIEVIEL Flaeche die Bedienung nimmt, sondern ob es die
+  richtige ist. Eine Leiste am Rand und eine Leiste auf der Bahn messen
+  dieselben Prozente. Die Weltkoordinaten rechnet dabei der RENDERER ueber
+  einen Messgriff am `window`, nicht das Werkzeug (Regel 12) - und fehlt der
+  Griff, MELDET die Messung das, statt still eine Null zu liefern.
+* **v321: das Browsertor STELLT den Fall der gesperrten Kachel.** Beim ersten
+  Lauf fand es keinen Fleck, an dem eine Turmsorte gesperrt ist, und haette
+  ueber einer leeren Liste gruen gemeldet - die Lehre aus v219.
+* **v322: `browsertor` prueft, ob der Kristall ganz im Bild steht**, in allen
+  vier Formaten. Der erste Entwurf mass die Landkarte, weil er gleich nach
+  dem Zeigertest lief und der Renderer bei offenem Menue vor der
+  Kamerarechnung umkehrt (Regel 12).
+* **v325: `bildtor` prueft die Anflugbahn des Meteors** - und zwar die
+  groesste LUECKE zwischen Brocken und Einschlag, nicht die blosse Anwesenheit
+  einer Linie. Mit Nullprobe im Tor selbst: dasselbe Bild ohne Meteor, dort
+  muss die Strecke unberuehrt sein (Regel 13). Der Querschnitt des Tores
+  waechst damit von zwoelf auf dreizehn Aufnahmen.
+
+**Und einmal mehr hat eine Messstelle den Befund gemacht, nicht die Messung**
+(Regel 12): die erste Fassung der Meteor-Pruefung setzte den Einschlag auf
+`map.hint` (200, 200) - von dort startet der Brocken bei y = −284, ausserhalb
+der Welt. Die Zahl war 67 % Luecke, und keine Zeile Code haette sie heilen
+koennen.
+
+**Nachgesehen in v318 — die Kette hatte auch damals dreiunddreissig
 abbrechende Schritte** (vierunddreissig Eintraege; `bericht` urteilt nicht und
 sagt das in seiner ersten Zeile). Was sich seit v311 geaendert hat, ist nicht
 die Zahl, sondern was die Schritte halten:

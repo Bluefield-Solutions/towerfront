@@ -1,8 +1,34 @@
 # Towerfront — der Neubau
 
-Stand: v323 · beschlossen am 09.09.2026
+Stand: v325 · beschlossen am 09.09.2026
 
-**Nachgesehen in v323 — Paket N4 ist fast durch, und es hat zwei Sätze
+**Nachgesehen in v325 — Paket N4 ist durch, und Paket N5 hat begonnen.**
+Nach S-N4-10 (v323) blieb von N4 nur N4L offen, und das ist eine Entscheidung
+des Nutzers, keine Ausführung. v324 hat keine Story gebaut, sondern eine
+Stelle gefunden, an der die Kette eine Story anbot, deren Gegenstand es nicht
+gibt; v325 ist die erste Story aus N5.
+
+| Story | gebaut | gemessen |
+|---|---|---|
+| S-N5-06 · der Meteor sagt, wohin er fällt | v325 | größte Lücke **3,7 %** gegen erlaubte 15; ohne Anflugbahn 67 |
+
+**Satz drei, und er fasst fünf Runden zusammen: das Spiel tat das Richtige und
+sagte es nicht.** v317 (die Wirkungszahlen standen in der Messtafel für
+Entwickler), v319 (die Vorschau trug kein Wort), v321 (der Grund trat an die
+Stelle des Preises), v322 (die Kamera schnitt die Zielplattform an), v325 (der
+Brocken flog genau in seinen Kreis, ohne Linie dorthin). **Fünfmal war die
+Mechanik in Ordnung und die Auskunft nicht**, fünfmal kam der Befund aus einem
+Inspektorlauf und keinmal aus einer Zahl — zweiunddreissig Tore messen, ob
+etwas funktioniert, keines, ob man es sieht.
+
+**Dreimal davon war der Befund in seiner BEGRÜNDUNG falsch und in seinem
+URTEIL richtig.** Der Inspektor hielt den Meteor für zwei widersprüchliche
+Anzeigen (es war eine, die schwieg), die Kachel für unlesbar und die Vorschau
+für gegenstandslos. Die Sache traf er jedes Mal. **Ein unbefangener Blick ist
+im Was zuverlässig und im Warum nicht** — wer ihn nach der Ursache fragt statt
+nach dem Eindruck, baut am Befund vorbei.
+
+**Nachgesehen in v323 — Paket N4 war fast durch, und es hat zwei Sätze
 geliefert, die über die Oberfläche hinausgehen.**
 
 | Story | gebaut | gemessen |

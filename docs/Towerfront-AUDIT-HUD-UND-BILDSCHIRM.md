@@ -1,21 +1,38 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v318 · 10.09.2026
+Stand: v325 · 11.09.2026
 
-**Nachgesehen in v311 — nachgefahren, nicht geglaubt.** `npm run uxaudittor`
+**Nachgesehen in v325 — nachgefahren, nicht geglaubt.** `npm run uxaudittor`
 auf demselben Gerät und in derselben Auflösung:
 
-| Zustand | gesperrt | bemalt | Ratsche |
-|---|---|---|---|
-| `zug` (neu seit v303) | **7,9 %** | 10,3 % | 16 |
-| `ruhe` | 15,5 % | 18,5 % | 16 |
-| `bauwahl` | 24,5 % | 27,4 % | 26 |
-| `pruefsteg` | 34,2 % | 37,0 % | 35 |
-| `teurer` | 24,2 % | 26,9 % | 26 |
-| `welle` | 15,5 % | 17,7 % | 16 |
+| Zustand | gesperrt | bemalt | Ratsche | v311 |
+|---|---|---|---|---|
+| `zug` (neu seit v303) | **8,0 %** | 10,4 % | 16 | 7,9 % |
+| `ruhe` | **13,1 %** | 16,3 % | 14 | 15,5 % |
+| `bauwahl` | **22,0 %** | 25,2 % | 23 | 24,5 % |
+| `pruefsteg` | **27,0 %** | 30,2 % | 28 | 34,2 % |
+| `teurer` | **21,7 %** | 24,7 % | 23 | 24,2 % |
+| `welle` | **13,9 %** | 16,1 % | 14 | 15,5 % |
+
+**Fünf Zustände sind gefallen, und die Ratschen sind in v320 hinterhergezogen**
+— sie standen bis dahin auf den Zahlen von v294 und hätten einen Rückfall um
+zwei bis sieben Punkte stillschweigend zugelassen. Gebracht haben es v315 (die
+drei gesperrten Fähigkeitsfelder geben ihre Fläche her, `ruhe` 15,5 → 13,1) und
+v316 (das Turmmenü steht am Turm und klappt seine Werte zu, `pruefsteg`
+34,2 → 27,0). **Der Ort brachte davon 1,3 Punkte, das Zuklappen 3,3** — der
+Inhalt ist die Fläche, nicht die Lage.
 
 Fünf Schriftgrößen (8/10/12/15/17 px), keine Doppelungen, alle
 Trefferflächen über 44.
+
+**Seit v318 und v320 misst das Tor zwei Dinge mehr, und beide beantworten
+Fragen, die der Prozentwert nicht beantwortet.** `textVerdeckung` fragt, ob
+Bedienung Bedienung zudeckt (acht Zustände, alle auf null, mit gestelltem
+Fleck als Selbsttest); `feldVerdeckung` fragt, ob die Fläche an der richtigen
+Stelle liegt — eine Leiste am Rand und eine Leiste auf der Bahn messen
+dieselben Prozente. Gemessen liegen **17,8 % des Bahnschlauchs** unter `#dock`
+und `#b-wave`, in jedem Spielzustand; das ist H2 als Zahl und steht als **N4F**
+im Verzeichnis.
 
 **Der Kartenzug hat die Leiste nicht gesprengt, weil er sie ERSETZT.**
 `setSpielansicht` blendet das Dock aus, solange eine Karte zu ziehen ist;

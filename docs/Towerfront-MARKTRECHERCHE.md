@@ -1,6 +1,25 @@
 # Marktrecherche — was moderne Tower-Defense-Spiele ausmacht
 
-Stand: v318 · 10.09.2026
+Stand: v325 · 11.09.2026
+
+**Nachgesehen in v325 — inhaltlich unverändert gültig, und seit v318 sind
+drei weitere Stücke übernommen. Alle drei beantworten dieselbe Frage, und die
+Vorbilder beantworten sie einhellig:** *was gerade geschieht, steht im Bild,
+nicht in einer Tabelle daneben.*
+
+| übernommen | Vorbild | hier gemessen |
+|---|---|---|
+| Jede Zeile der Wellenvorschau trägt ihren **Namen**, wo sie keinen erklärenden Satz hat | Kingdom Rush und BTD6 benennen jede kommende Gegnerart in der Vorschau | v319: 60 Wellen über vier Karten, höchste Zeile 67 von 86 Punkten — der volle Name in JEDER Zeile sprengt sie (113) |
+| Eine gesperrte Kachel behält ihren **Preis** | alle drei zeigen den Preis auch da, wo gerade nicht gebaut werden kann; der Grund kommt dazu, nicht an seine Stelle | v321: `125` UND `Rand` statt „RAND" in Rot |
+| Ein anfliegendes Geschoss zeigt seine **Flugbahn** bis zum Einschlag | Defense Grid und BTD6 zeichnen bei Flächenangriffen die Bahn oder einen Schatten am Boden, nie nur den Brocken | v325: größte Lücke 3,7 % der Strecke gegen erlaubte 15 — ohne die Bahn 67 |
+
+**Die Lehre aus v325 gehört hierher, weil sie die Vorbilder erklärt:** die
+Anzeige des Meteors war die ganze Zeit RICHTIG — der Punkt wandert in den
+Kreis hinein und liegt am Ende in dessen Mitte. Sie hat es nur nicht gesagt.
+Die Vorbilder zeichnen die Bahn nicht, weil ihre Mechanik sie brauchte,
+sondern weil ein unbefangener Blick zwei Anzeigen ohne Verbindung als
+Widerspruch liest. **Genau das ist in Towerfront passiert, und es war ein
+Inspektorlauf, der es gemeldet hat, kein Tor** (Regel 8).
 
 **Nachgesehen in v318 — inhaltlich unverändert gültig, und seit v315 sind
 drei weitere Stücke übernommen und gemessen.** Alle drei kommen aus der

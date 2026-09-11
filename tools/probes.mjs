@@ -167,6 +167,20 @@ export const PROBEN = [
     meldet: 'zwei Namen fuer denselben Stil',
   },
   {
+    // **Der Brocken sagte nicht, wohin er faellt (S-N5-06).** Der Eingriff
+    // nimmt die Anflugbahn heraus und laesst alles andere stehen - Ring,
+    // Brocken und Stummel bleiben also im Bild. Genau dieser Zustand hat den
+    // Inspektorlauf v273 zu "zwei Anzeigen, die an verschiedene Orte zeigen"
+    // gebracht, und genau er muss die groesste Luecke von 3,7 auf ueber
+    // 60 % treiben.
+    name: 'Der Meteor zeigt seinen Einschlag nicht an',
+    datei: 'src/gfx/renderer.ts',
+    regel: /    ctx\.moveTo\(fx, fy\); ctx\.lineTo\(zx, zy\);\n/,
+    ersatz: '    ctx.moveTo(fx, fy); ctx.lineTo(fx, fy);\n',
+    tor: 'bildtor',
+    meldet: 'groesste Luecke zwischen Brocken und Einschlag',
+  },
+  {
     // **Eine Mechanik, die man nicht sieht, gibt es nicht.** Der Eingriff
     // nimmt die Zeichnung aus dem Bild; die Zahl der geaenderten Bildpunkte
     // muss dann auf null fallen. Ohne diese Probe bewiese die Messung nur,

@@ -86,7 +86,7 @@ const ersterTurm = (g) => g.gebaute[0];
 // das es bewacht, laesst genau die Luecke.
 const TOR = ['menu-karte', 'menu-einweisung', 'menu-fortschritt', 'menu-sieg',
   'menu-niederlage', 'welle8', 'kristall-riss', 'kernraub', 'zier-beruehrung',
-  'menu-tastatur', 'weiche', 'menu-wahl', 'menu-stapel'];
+  'menu-tastatur', 'weiche', 'menu-wahl', 'menu-stapel', 'meteor-anflug'];
 const nurTor = process.argv.includes('--tor');
 
 /** Eine Aufnahme: Zustand herstellen, ein paar Bilder laufen lassen, ausgeben.
@@ -375,6 +375,29 @@ takes.push(['weiche', () => shot('weiche', 844, 390, (s, r) => {
   const p = r.worldToScreen(528, 640);
   r.panBy(422 - p.x, 195 - p.y);
   return 30;
+})]);
+
+// Der Einschlagpunkt der Meteor-Aufnahme und ihrer Messung - ein Punkt auf
+// der Bahn des Spiralhains, tief genug fuer einen sichtbaren Anflug.
+const METEOR_ZIEL = { x: 820, y: 807 };
+
+takes.push(['meteor-anflug', () => shot('meteor-anflug', 844, 390, (s, r) => {
+  // **Fruehe Flugphase, weil genau dort der Befund entstand.** Bei t = 0,22
+  // steht der Brocken 265 Weltpunkte rechts und 484 ueber seinem
+  // Einschlagpunkt - der Inspektorlauf v273 hat daraus zwei Anzeigen
+  // gelesen, die an verschiedene Orte zeigen.
+  //
+  // Der Einschlag liegt auf der Bahn und tief genug, dass der Brocken im
+  // Bild steht: er kommt von 620 Weltpunkten weiter oben, und ueber der
+  // oberen Kartenhaelfte startet er ausserhalb der Welt.
+  s.reset(1, 'normal', 'spiralhain');
+  s.waveIndex = 3;
+  stock(s, 5);
+  s.meteors.push({ x: METEOR_ZIEL.x, y: METEOR_ZIEL.y, t: 0.22, dur: 0.7, radius: 140, damage: 100 });
+  r.resize();
+  const p = r.worldToScreen(METEOR_ZIEL.x + 130, METEOR_ZIEL.y - 240);
+  r.panBy(422 - p.x, 195 - p.y);
+  return 0;
 })]);
 
 takes.push(['bauauswahl', () => shot('bauauswahl', 844, 390, (s) => {
@@ -1584,6 +1607,135 @@ pruefungen.push(async () => {
     throw new Error(`die Wegvorschau bedeckt ${anders2} Bildpunkte - sie deckt die Karte zu, `
       + 'statt sie zu zeigen.');
   }
+});
+
+// --- Sagt der Meteor, wohin er faellt? (S-N5-06)
+//
+// Der Inspektorlauf v273 meldete "zwei Anzeigen fuer dieselbe Handlung, die
+// an verschiedene Orte zeigen": ein Punkt bei (835, 1078), der Wirkkreis bei
+// (1300, 880). Nachgesehen war die Anzeige RICHTIG - der Punkt ist der
+// fliegende Brocken und wandert in den Kreis hinein. Sie hat es nur nicht
+// GESAGT.
+//
+// Gemessen wird deshalb nicht "ist eine Linie da", sondern die groesste
+// LUECKE auf der Strecke zwischen Brocken und Einschlagpunkt: eine
+// gestrichelte Bahn darf Luecken haben, eine zu grosse reisst den Blick ab.
+// Ohne Anflugbahn ist die Luecke die ganze Strecke.
+//
+// Nullprobe im Tor selbst (Regel 13): dasselbe Bild ohne Meteor. Dort muss
+// die Strecke UNBERUEHRT sein - sonst misst die Zahl die Landschaft, nicht
+// die Bahn, und bezeugte die Anflugbahn, ohne sie je gesehen zu haben.
+pruefungen.push(async () => {
+  const canvas = createCanvas(844 * 2, 390 * 2);
+  Object.defineProperty(canvas, 'clientWidth', { get: () => 844 });
+  Object.defineProperty(canvas, 'clientHeight', { get: () => 390 });
+  const s = new GameState();
+  const r = new Renderer(canvas);
+  r.menu = null;
+  s.reset(1, 'normal', 'spiralhain');
+  s.quality = 'niedrig';
+  for (const k of Object.keys(OBJECT_ART)) getObjectArt(k);
+  getBackground(s.map.id);
+  for (const id of TOWER_ORDER) getTowerArt(id, null, 1, s.map.id);
+  r.resize();
+  r.draw(s);
+  await settle();
+  r.kartenaufbauAbschliessen(s);
+
+  const ziel = METEOR_ZIEL;
+  const pz = r.worldToScreen(ziel.x + 130, ziel.y - 240);
+  r.panBy(422 - pz.x, 195 - pz.y);
+
+  const g = canvas.getContext('2d');
+  const nimm = () => {
+    r.draw(s);
+    return Uint8ClampedArray.from(g.getImageData(0, 0, canvas.width, canvas.height).data);
+  };
+
+  const ohne = nimm();
+  const tFlug = 0.22;
+  s.meteors.push({ x: ziel.x, y: ziel.y, t: tFlug, dur: 0.7, radius: 140, damage: 100 });
+  const mit = nimm();
+
+  // Dieselbe Rechnung wie im Renderer - und sie steht hier zum zweiten Mal,
+  // was Regel 15 sonst verbietet. Der Grund ist genau umgekehrt: die Messung
+  // DARF die Lage nicht aus dem Renderer nehmen, sonst prueft sie seine
+  // Kopie und nicht sein Bild.
+  const fx = ziel.x + 340 * (1 - tFlug);
+  const fy = ziel.y - 620 * (1 - tFlug);
+
+  // Der Brocken selbst und der Einschlagring sind ohnehin zu sehen; gefragt
+  // ist die Strecke DAZWISCHEN. Also beide Enden ausgespart.
+  const A = r.worldToScreen(fx, fy);
+  const B = r.worldToScreen(ziel.x, ziel.y);
+  const laenge = Math.hypot(B.x - A.x, B.y - A.y);
+  if (laenge < 80) {
+    throw new Error(`Meteor-Anflug: Brocken und Einschlag liegen nur ${laenge.toFixed(0)} `
+      + 'Bildpunkte auseinander - so misst die Luecke nichts.');
+  }
+
+  const anders = (a, b, i) => Math.max(
+    Math.abs(a[i] - b[i]), Math.abs(a[i + 1] - b[i + 1]), Math.abs(a[i + 2] - b[i + 2]),
+  ) > 6;
+  const drin = (px, py) => px >= 0 && py >= 0 && px * 2 < canvas.width && py * 2 < canvas.height;
+  // Quer zur Bahn mitsuchen: eine Linie von 5 Weltpunkten ist auf dem
+  // Geraet ein bis zwei Bildpunkte breit, und ein Abtastpunkt trifft sie
+  // sonst knapp daneben. Drei Querlagen, nicht mehr - wer breiter sucht,
+  // findet den Bodennebel.
+  const nx = -(B.y - A.y) / laenge, ny = (B.x - A.x) / laenge;
+  const treffer = (u, quelle) => {
+    const px = A.x + (B.x - A.x) * u, py = A.y + (B.y - A.y) * u;
+    for (const q of [-1.5, 0, 1.5]) {
+      const x = Math.round((px + nx * q) * 2), y = Math.round((py + ny * q) * 2);
+      if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height) continue;
+      if (anders(ohne, quelle, (y * canvas.width + x) * 4)) return true;
+    }
+    return false;
+  };
+
+  // Gemessen wird nur, was im BILD steht. Der Brocken kommt von 620
+  // Weltpunkten weiter oben; ueber der oberen Kartenhaelfte startet er
+  // ausserhalb der Welt, und ein Abtastpunkt neben der Leinwand als "Luecke"
+  // zu zaehlen hiesse, dem Bild etwas vorzuwerfen, das gar nicht in ihm
+  // vorkommt.
+  const N = 400;
+  const messen = (quelle) => {
+    let lueckeMax = 0, lauf = 0, bedeckt = 0, sichtbar = 0;
+    for (let i = 0; i <= N; i++) {
+      const u = 0.10 + (0.86 - 0.10) * (i / N);   // beide Enden ausgespart
+      const px = A.x + (B.x - A.x) * u, py = A.y + (B.y - A.y) * u;
+      if (!drin(px, py)) continue;
+      sichtbar++;
+      if (treffer(u, quelle)) { bedeckt++; lauf = 0; } else { lauf++; if (lauf > lueckeMax) lueckeMax = lauf; }
+    }
+    return { luecke: sichtbar ? lueckeMax / sichtbar : 1, anteil: sichtbar ? bedeckt / sichtbar : 0, sichtbar };
+  };
+
+  const nullprobe = messen(ohne);
+  // Eine Strecke, die fast ganz neben der Leinwand liegt, beweist nichts -
+  // dann steht die Zahl auf null, weil nichts gemessen wurde.
+  if (nullprobe.sichtbar < N * 0.6) {
+    throw new Error(`Meteor-Anflug: nur ${nullprobe.sichtbar} von ${N} Abtastpunkten liegen im Bild `
+      + '- an dieser Stelle misst die Luecke nichts.');
+  }
+  if (nullprobe.anteil > 0.01) {
+    throw new Error(`Meteor-Anflug, Nullprobe: ohne Meteor sind ${(nullprobe.anteil * 100).toFixed(0)} % `
+      + 'der Strecke schon veraendert - die Messung sieht die Landschaft, nicht die Bahn.');
+  }
+
+  const befund = messen(mit);
+  // 15 % der Strecke: bei 26/16 gestrichelt sind es gemessen unter 5 %, ohne
+  // Anflugbahn 100. Die Grenze trennt also nicht knapp, sondern weit.
+  if (befund.luecke > 0.15) {
+    throw new Error(`meteor-anflug: die groesste Luecke zwischen Brocken und Einschlag ist `
+      + `${(befund.luecke * 100).toFixed(0)} % der Strecke (erlaubt 15) - ueber drei Viertel `
+      + 'des Fluges steht damit ein leuchtender Punkt ohne sichtbaren Bezug zu seinem Kreis.');
+  }
+
+  console.log(`  Meteor-Anflug: groesste Luecke ${(befund.luecke * 100).toFixed(1)} % der Strecke, `
+    + `${(befund.anteil * 100).toFixed(0)} % bedeckt, Strecke ${laenge.toFixed(0)} Bildpunkte `
+    + `(${befund.sichtbar} von ${N} Abtastpunkten im Bild), `
+    + `Nullprobe ${(nullprobe.anteil * 100).toFixed(1)} %`);
 });
 
 // --- Die anderen Karten

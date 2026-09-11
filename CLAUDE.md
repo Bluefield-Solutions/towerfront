@@ -696,6 +696,33 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der Meteor sagt jetzt, wohin er faellt (v325, S-N5-06).** Der Inspektorlauf
+v273 meldete zwei Anzeigen fuer dieselbe Handlung, die an verschiedene Orte
+zeigen: ein weisser Punkt bei (835, 1078), der Wirkkreis bei (1300, 880) - der
+markierte Punkt lag ausserhalb seines eigenen Kreises.
+
+**Nachgesehen war die Anzeige RICHTIG, und der Befund trotzdem auch.** Der
+Punkt ist der fliegende Brocken; er wandert in den Kreis hinein und liegt bei
+`t = 1` genau in dessen Mitte. Sie SAGT es nur nicht - gezeichnet war allein
+ein Stummel von 46 x 84 Punkten HINTER dem Brocken. Die `anflugbahn` verbindet
+ihn jetzt mit seinem Einschlagpunkt, gestrichelt statt durchgezogen (sonst
+liest es sich als Strahl) und mit zum Ziel laufenden Strichen, damit die
+Bewegung selbst die Richtung zeigt.
+
+**Gemessen wird nicht „ist eine Linie da", sondern die groesste LUECKE auf der
+Strecke** - eine gestrichelte Bahn darf Luecken haben, eine zu grosse reisst
+den Blick ab. 3,7 % gegen erlaubte 15; ohne Anflugbahn 67. Nullprobe im Tor
+selbst (Regel 13): dasselbe Bild ohne Meteor, dort muss die Strecke unberuehrt
+sein, sonst misst die Zahl die Landschaft.
+
+**Und die erste Messstelle war unbrauchbar - was zugleich ein Befund ueber das
+Spiel ist** (Regel 12). Sie setzte den Einschlag auf `map.hint` (200, 200), und
+von dort startet der Brocken bei y = **−284**, also ausserhalb der Welt. Fuer
+jeden Einschlag in der oberen Kartenhaelfte ist er einen Teil des Fluges gar
+nicht im Bild - „auf ihn warten" kann die Auskunft deshalb prinzipiell nicht
+sein. Gemessen wird seitdem nur, was im Bild steht, und eine Strecke, die zu
+weit danebenliegt, MELDET das, statt still auf null zu stehen.
+
 **Die Kette wollte eine Story bauen, deren Gegenstand es nicht gibt (v324).**
 `npm run naechste` bot S-N5-02 an ("Figuren bekommen Fuss und Schatten") - die
 Story setzt die SCHRAEGSICHT voraus, und im Vorrat liegt seit v233 kein neuer
@@ -1378,7 +1405,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v324. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v325. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

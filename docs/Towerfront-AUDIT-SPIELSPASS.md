@@ -1,6 +1,33 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v318 · 10.09.2026
+Stand: v325 · 11.09.2026
+
+**Nachgesehen in v325 — die Zahlen dieses Audits sind unverändert; was sich
+seit v318 geändert hat, ist eine ganze Klasse von Befunden, und sie gehört
+hierher.** Fünf Runden hintereinander haben dasselbe Muster gerichtet: **das
+Spiel tat das Richtige und sagte es nicht.**
+
+| Runde | die Mechanik war richtig | gesagt hat sie es nicht |
+|---|---|---|
+| v317 | jeder Turm führte Schüsse, Schild- und Panzerungsverluste mit | die Zahlen standen in der Messtafel für Entwickler |
+| v319 | die Wellenvorschau zeigte Bild und Marken jeder Gegnerart | ohne erklärenden Satz stand dort kein Wort |
+| v321 | der Mörser kostete auch auf einer gesperrten Kachel 125 | der Grund trat an die Stelle des Preises |
+| v322 | die Zielplattform stand, wo sie steht | die Kamera schnitt sie an, in allen vier Formaten |
+| v325 | der Brocken flog genau in seinen Wirkkreis | über drei Viertel des Fluges gab es keine Linie dorthin |
+
+**Das ist kein Zufall und auch kein Zeichen von Nachlässigkeit — es ist die
+Folge davon, wie hier geprüft wird.** Zweiunddreissig Tore messen, ob etwas
+FUNKTIONIERT; keines fragt, ob man es SIEHT. Genau deshalb kamen alle fünf
+Befunde aus Inspektorläufen und keiner aus einer Zahl (Regel 8). Und dreimal
+davon war der Befund des Inspektors in seiner Begründung falsch und in seinem
+Urteil richtig: er hat den Meteor für zwei widersprüchliche Anzeigen gehalten,
+die Kachel für unlesbar und die Vorschau für gegenstandslos — die Sache traf
+er jedes Mal.
+
+**Für den Spielspaß heißt das: die Lücke liegt nicht zwischen Können und
+Ausführung, sondern zwischen Zustand und Auskunft.** Wer den Konter auswendig
+lernen muss, statt ihn zu sehen, spielt ein anderes Spiel als der, dem das
+Bild es sagt — und beide sehen in jeder Messung gleich aus.
 
 **Nachgesehen in v318 — ein Befund dieses Audits ist zugefallen, und zwei
 Zahlen darin sind heute von einem Tor gehalten.**

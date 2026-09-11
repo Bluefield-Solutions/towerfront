@@ -1,6 +1,32 @@
 # Towerfront — Bildauftrag
 
-Stand: v318 · 10.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v325 · 11.09.2026 · **Auftragsdokument für den Bild-Agenten**
+
+**Nachgesehen in v325 — nachgesehen, nicht gestempelt.** `npm run bildtor`
+nennt unverändert **zwei** offene Bestellungen, `31_foerderer.png` (8d.2) und
+`32_werft.png` (8d.3); `git log -- src/gfx/assets/` nennt als letzten Eingriff
+weiterhin v233. `npm run autarkie` misst **1030 KB roh reserviert gegen 1072
+erlaubte, Abstand 42,2 KB** — in v318 standen dort 44, der Code ist also um
+rund 2 KB gewachsen und der erlaubte Bildvorrat um 1,5 geschrumpft. Die
+ausgelieferte Datei wiegt 1466 KB von 1800.
+
+**Zwei Bestellungen sind seit v318 dazugekommen, und beide stehen an anderer
+Stelle als die Prompts:**
+
+* **v322, Abschnitt 8b:** die Zielplattform gehört **mindestens 270
+  Weltpunkte** vom nächsten Kartenrand — so weit reicht der Warnring
+  (`r = 150 + not · 120` in `drawCrystal`). Gemessen stehen alle vier Karten
+  bei 186 bis 237, es fehlen also 33 bis 84 Punkte. **Der Ring ragt aus der
+  WELT heraus, nicht aus dem Bild** — keine Kameraeinstellung holt ihn herein,
+  auch `fitScale` nicht. Die Forderung steht neben der Abwägung, die an
+  derselben Stelle einmal das Gegenteil entschieden hat; welche wiegt,
+  entscheidet der Nutzer.
+* **v324, `S-N5-01b`:** die Bilder im neuen Stil (leichte Schrägsicht,
+  industriell, dunkler Grund) liegen noch nicht im Vorrat. Solange sie fehlen,
+  ist `S-N5-02` („Figuren bekommen Fuß und Schatten") nicht baubar — alle acht
+  Gegnerbilder sind Aufsichten, und dort IST die Mitte der Auflagepunkt. Der
+  Stilblock Neubau steht in Abschnitt 8d.0 und wird von `npm run bildprompt`
+  bei jedem Auftrag mit ausgegeben (Regel 15).
 
 **Nachgesehen in v318 — nachgesehen, nicht gestempelt:** `npm run bildtor`
 nennt unverändert **zwei** offene Bestellungen, `31_foerderer.png` (8d.2) und

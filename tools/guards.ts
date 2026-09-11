@@ -460,6 +460,27 @@ const SPREIZUNG_MAX = 2.50;
  *  Waechter nicht mehr alle, und das muss er sagen statt still zu stichproben. */
 const WEICHEN_MAX = 12;
 
+/** Die Gesamtlaenge aller Bahnen einer Karte in EINER Weichenstellung -
+ *  `null`, wenn die Stellung alles zusperrt.
+ *
+ *  Steht als eigene Funktion da, weil sie seit v343 zweimal gebraucht wird
+ *  (Fenster und Einzelweiche) und zwei Rechnungen fuer dieselbe Laenge
+ *  irgendwann auseinanderlaufen (Regel 15). */
+function laengeVon(
+  map: typeof MAPS[number], netz: (typeof WEGNETZ)[string], gestellt: Set<string>,
+): number | null {
+  let bahnen;
+  try { bahnen = bahnenAusNetz(netz, gestellt); } catch { return null; }
+  let summe = 0;
+  for (const b of bahnen) {
+    const kurve = new LanePath(map.ziel
+      ? [...b.slice(0, -1), { ...b[b.length - 1], ...map.ziel }]
+      : b);
+    summe += kurve.length;
+  }
+  return summe;
+}
+
 for (const map of MAPS) {
   const netz = WEGNETZ[map.id];
   const weichen = netz?.weichen ?? [];
@@ -509,6 +530,44 @@ for (const map of MAPS) {
     if (da) da.push(name); else abdruecke.set(abdruck, [name]);
   }
 
+  // **Und jede Weiche muss ALLEIN etwas aendern** (v343, N4W).
+  //
+  // Die Spreizung misst das FENSTER - kuerzeste gegen laengste Stellung -
+  // und sieht deshalb nicht, ob eine einzelne Weiche darin etwas beitraegt.
+  // Auf dem Spiralhain halten zwei Weichen das Fenster auf; eine dritte, die
+  // nichts tut, waere darin unsichtbar. Genau daran ist die untere Schranke
+  // seit v313 ohne Gegenprobe: fuenf Eingriffe wurden gebaut, keiner traf
+  // sie, weil die Rechnung nach jedem die kuerzeste Route neu sucht und die
+  // uebrigen Weichen das Fenster offenhalten.
+  //
+  // Gefragt wird deshalb je Weiche: was macht sie aus dem Grundzustand?
+  // Gemessen heute **1,26 und 1,17** (Spiralhain), **1,15** (Ascheschlucht),
+  // **1,13** (Frostspalte), **1,16** (Farnkessel) - alle vier ueber der
+  // Linie, und keine mit so wenig Abstand, dass die Zahl geraten waere.
+  //
+  // **Die Pruefung steht VOR der Dublettenpruefung**, und das ist kein
+  // Zufall: beide fangen die tote Weiche, aber diese sagt WELCHE es ist
+  // ("aendert allein nichts"), jene nur, dass zwei Stellungen zusammenfallen.
+  // Die Dublette behaelt ihren eigenen Gegenstand - zwei Weichen auf
+  // DERSELBEN Kante aendern jede fuer sich etwas und fallen trotzdem
+  // zusammen (die Gegenprobe aus v284 faehrt genau das).
+  const jeWeiche: string[] = [];
+  {
+    const offen = laengeVon(map, netz, new Set());
+    for (const w of weichen) {
+      const allein = laengeVon(map, netz, new Set([w.id]));
+      if (allein === null) continue; // sperrt alles zu - schon oben gemeldet
+      const eigen = allein / Math.max(1, offen ?? 1);
+      jeWeiche.push(`${w.id} x${eigen.toFixed(2)}`);
+      if (eigen < SPREIZUNG_MIN) {
+        fail(`${map.id}: die Weiche "${w.id}" aendert allein nur um Faktor `
+          + `${eigen.toFixed(3)} (unter ${SPREIZUNG_MIN}). Sie ist Dekoration - `
+          + 'ein Spieler, der sie umlegt und nichts davon hat, legt sie kein '
+          + 'zweites Mal um.');
+      }
+    }
+  }
+
   // **Keine zwei Stellungen duerfen dieselben Bahnen ergeben.**
   //
   // Gefunden von der Gegenprobe zu v284: haengt man zwei Weichen auf DIESELBE
@@ -538,7 +597,8 @@ for (const map of MAPS) {
   }
   warn(`Weichenfenster ${map.name}: ${geprueft} von ${2 ** weichen.length} Stellungen tragen, `
     + `Spreizung ${spreizung.toFixed(2)} (${kuerzeste.toFixed(0)} bei "${woKurz}" bis `
-    + `${laengste.toFixed(0)} bei "${woLang}", Band ${SPREIZUNG_MIN}-${SPREIZUNG_MAX}).`);
+    + `${laengste.toFixed(0)} bei "${woLang}", Band ${SPREIZUNG_MIN}-${SPREIZUNG_MAX}); `
+    + `je Weiche allein ${jeWeiche.join(', ')}.`);
 }
 
 for (const map of MAPS) {

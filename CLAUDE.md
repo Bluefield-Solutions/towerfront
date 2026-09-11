@@ -727,6 +727,32 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Die untere Schranke des Weichenfensters hat nach dreissig Fassungen wieder
+eine Gegenprobe (v343, N4W ist zu) - und die Luecke war die Messstelle, nicht
+der Eingriff.** `SPREIZUNG_MIN` faengt die Weiche, die den Weg nicht messbar
+aendert, und stand seit v313 ungehalten da: fuenf Eingriffe gebaut, keiner
+traf sie.
+
+**Die Spreizung misst das FENSTER** - kuerzeste gegen laengste Stellung - und
+sieht deshalb nicht, was eine EINZELNE Weiche darin beitraegt. Auf dem
+Spiralhain halten zwei das Fenster auf; eine dritte, die nichts tut, waere
+darin unsichtbar. Gefragt wird jetzt je Weiche, was sie allein aendert:
+Spiralhain **x1,26 und x1,17**, Ascheschlucht **x1,15**, Frostspalte
+**x1,13**, Farnkessel **x1,16**.
+
+**Die Einzelpruefung steht VOR der Dublettenpruefung**, und das ist
+begruendet: beide fangen die tote Weiche, aber diese sagt WELCHE es ist, jene
+nur, dass zwei Stellungen zusammenfallen. Die Dublette behaelt ihren eigenen
+Gegenstand.
+
+**Was weiterhin nicht zu stellen ist, steht als Messung daneben:** der Fall
+„aendert etwas, aber zu wenig". Ueber **alle 24 Kanten** der vier Netze
+gemessen gibt es keine einzige, deren Sperrung den Weg um weniger als zehn
+Prozent bewegt. **Und die erste Fassung dieser Kantenmessung hat nichts
+gemessen** (Regel 3): sie schrieb `kanten` statt `kante`, jede Sperrung lief
+ins Leere, und alle 24 Zahlen standen auf 1,000 - sie sah aus wie ein
+sauberes Ergebnis.
+
 **Der Stapel mischt Achsen, die sich verzinsen, mit solchen, die es nicht tun
 (v342, N1G) - und der naheliegende Hebel bewegt gemessen nichts.** Der Punkt
 stand seit v309 als „Gold kauft Tuerme, die Turmzahl ist gedeckelt, also kauft
@@ -2064,7 +2090,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v342. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v343. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

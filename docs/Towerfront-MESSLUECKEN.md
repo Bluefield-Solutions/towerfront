@@ -1,6 +1,6 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v336 · 11.09.2026
+Stand: v343 · 11.09.2026
 
 **Nachgesehen in v322 — und die sieben Runden v316 bis v322 haben die
 Sammlung in eine Richtung erweitert, die hier bisher fehlte: das
@@ -24,6 +24,31 @@ aussagte — und in beiden Fällen sah das Spiel **schlechter** aus, als es war:
 erzeugt Befunde über genau diese Sache.** Sie steht unten als **M22**.
 
 ---
+
+**Nachgesehen in v343 — und die Runden v337 bis v343 haben dreimal dasselbe
+gezeigt: die Lücke sass nicht im Eingriff, sondern in der Messstelle.**
+
+* **v337, Mündungstor:** es verglich vier Summen am Ende einer Partie. Der
+  eingebaute Fehler schiebt den Abschuss um hundert Weltpunkte, und alle vier
+  bleiben Ziffer für Ziffer gleich — keine von ihnen zählt Zeit. Gemessen wird
+  jetzt ein Abdruck über alle Lagen in jedem Bild.
+* **v342, N1G:** der Punkt nannte seit v309 die falsche Ursache. „Gold kauft
+  nichts mehr" ist gemessen kein Hebel (Exponent 0 bis 4, keine Wirkung); die
+  Ursache ist, dass der Stapel Faktoren mit Summanden mischt.
+* **v343, N4W:** die Spreizung misst das FENSTER und sieht nicht, was eine
+  einzelne Weiche darin beiträgt. Fünf Eingriffe waren daran gescheitert,
+  keiner war falsch gebaut.
+
+**Und zweimal in diesen Runden hat eine Messung von mir selbst nichts
+gemessen** — beide Male fiel es nur auf, weil Regel 3 gefahren wurde: die
+Kantenmessung in v343 schrieb `kanten` statt `kante` und stand auf 24
+sauberen Einsen; die Stufenmessung in v340 wäre ohne ihren Selbsttest eine
+Tabelle über eine Schraube gewesen, die gar nicht greift.
+
+**Was daraus als Lücke bleibt und hier hingehört:** es gibt kein Verfahren,
+das eine Messstelle auf ihren Gegenstand prüft. Ein Tor prüft, ob die Zahl im
+Band liegt; dass die Zahl die richtige Frage beantwortet, prüft nur ein
+Blick — und der kommt, wenn überhaupt, Runden später.
 
 **Nachgesehen in v336 — und eine ganze Klasse von Lücken ist damit zugefallen,
 ohne dass eine einzige Zahl besser geworden wäre.**

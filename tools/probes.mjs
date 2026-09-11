@@ -5596,6 +5596,39 @@ export const PROBEN = [
     // nichts gemessen hat, statt eine Zahl zu drucken, die aus einem
     // frueheren Lauf stammt oder gar keine ist - dieselbe Haltung wie beim
     // Messgriff des UX-Tors seit v320.
+    // **Die untere Schranke des Weichenfensters hat nach 30 Fassungen wieder
+    // eine Gegenprobe** (v343, N4W, Regel 5).
+    //
+    // `SPREIZUNG_MIN` faengt die Weiche, die den Weg nicht messbar aendert.
+    // Sie stand seit v313 ohne Probe da: fuenf Eingriffe wurden gebaut, und
+    // keiner traf sie, weil vier unabhaengige Weichen das FENSTER offenhalten
+    // und die Rechnung nach jedem Eingriff die kuerzeste Route neu sucht.
+    //
+    // Seit v343 fragt der Waechter zusaetzlich je WEICHE, was sie allein
+    // aendert - und daran greift der Eingriff: `saeule3` zeigt auf eine
+    // Kante, die es nicht gibt, sperrt also nichts, und ihr eigener Faktor
+    // faellt von 1,17 auf 1,000.
+    //
+    // **Die Dublettenpruefung faengt denselben Fall auch**, deshalb steht die
+    // Einzelpruefung im Waechter davor: sie sagt, WELCHE Weiche tot ist, die
+    // andere nur, dass zwei Stellungen zusammenfallen. Ihren eigenen
+    // Gegenstand behaelt die Dublette (zwei Weichen auf DERSELBEN Kante
+    // aendern jede fuer sich etwas und fallen trotzdem zusammen).
+    //
+    // **Was weiterhin NICHT zu stellen ist, steht als Messung daneben:** der
+    // Fall "aendert etwas, aber zu wenig". Ueber alle 24 Kanten der vier
+    // Netze gemessen gibt es keine einzige, deren Sperrung den Weg um
+    // weniger als zehn Prozent aendert - jede sperrt entweder alles zu oder
+    // bewegt ihn deutlich. Das ist derselbe strukturelle Befund wie in v313,
+    // nur diesmal ueber den ganzen Raum statt ueber fuenf Versuche.
+    name: 'Eine Weiche entscheidet nichts',
+    datei: 'src/data/wegnetz.ts',
+    regel: /\{ id: 'saeule3', kante: 'kreuz3-kreuz4', name: '([^']+)' \}/,
+    ersatz: "{ id: 'saeule3', kante: 'diese-kante-gibt-es-nicht', name: '$1' }",
+    tor: 'guards',
+    meldet: 'Dekoration',
+  },
+  {
     name: 'Der Hinweis nennt eine ungemessene Zahl',
     datei: 'tools/sim.ts',
     regel: /if \(!voll && v\.name === 'heute'\) \{/,

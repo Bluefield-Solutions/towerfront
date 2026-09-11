@@ -5508,6 +5508,43 @@ export const PROBEN = [
     meldet: 'zweimal bestellt',
   },
   {
+    // **Ein Stand von einer anderen Messstelle ist keine Ratsche, sondern
+    // eine Behauptung** (v336, S-N7-02).
+    //
+    // Der Eingriff gibt dem Stand von "stellen" die Kennung einer anderen
+    // Messstelle. Der Wert bleibt, die Richtung bleibt, das Soll bleibt -
+    // nur woran gemessen wurde, stimmt nicht mehr. Genau das war bis v335
+    // unsichtbar: die Messstelle stand in der gedruckten Meldung und nicht
+    // in der Datei, und wer die Messung umbaute und den Stand stehen liess,
+    // verglich zwei Zahlen zu verschiedenen Fragen.
+    //
+    // Gegriffen wird die KENNUNG und nicht der Wert: dass der Stand 2,00
+    // betraegt, ist eine Eichfrage und aendert sich; dass er von DIESER
+    // Messung stammt, ist die Zusage.
+    // **Ein Lauf, der sich nicht nachstellen laesst, traegt keine einzige
+    // Kennzahl** (v336, S-N7-02).
+    //
+    // Der Eingriff laesst den zweiten und jeden weiteren Abschnitt mit einer
+    // gewuerfelten Aussaat starten. Der ERSTE bleibt unberuehrt - genau das
+    // ist der Fall, der ohne diese Pruefung durchginge: eine Partie ist
+    // weiter nachstellbar, der LAUF nicht, und der Unterschied faellt
+    // niemandem auf, weil die gedruckten Zahlen ganz normal aussehen.
+    name: 'Der Lauf ist nicht nachstellbar',
+    datei: 'tools/sim.ts',
+    regel: /(      \.\.\.opts,\n      seed: lauf\.saat,)/,
+    ersatz: '      ...opts,\n      seed: lauf.saat + (teile.length ? Math.floor(Math.random() * 999) : 0),',
+    tor: 'sim',
+    meldet: 'nicht deterministisch',
+  },
+  {
+    name: 'Der Stand stammt von einer anderen Messstelle',
+    datei: 'tools/spannung-stand.txt',
+    regel: /^stellen hoch ([0-9.]+) (\S+) [0-9a-f]{8}$/m,
+    ersatz: 'stellen hoch $1 $2 deadbeef',
+    tor: 'sim',
+    meldet: 'ANDEREN Messstelle',
+  },
+  {
     // **Eine Kante, die niemand befaehrt, ist Kulisse in den Daten**
     // (v335, S-N7-01, D30).
     //

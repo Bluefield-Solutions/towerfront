@@ -1,6 +1,6 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v329 · 11.09.2026
+Stand: v336 · 11.09.2026
 
 **Nachgesehen in v322 — und die sieben Runden v316 bis v322 haben die
 Sammlung in eine Richtung erweitert, die hier bisher fehlte: das
@@ -22,6 +22,35 @@ aussagte — und in beiden Fällen sah das Spiel **schlechter** aus, als es war:
 
 **Die Klasse heißt: ein Beweismittel, das eine Sache systematisch weglässt,
 erzeugt Befunde über genau diese Sache.** Sie steht unten als **M22**.
+
+---
+
+**Nachgesehen in v336 — und eine ganze Klasse von Lücken ist damit zugefallen,
+ohne dass eine einzige Zahl besser geworden wäre.**
+
+Sieben der zehn Spannungskennzahlen wurden bis v335 an einer PARTIE gemessen
+(eine Karte, fünfzehn Wellen), während ein Spieler seit S-N1-01 einen LAUF
+über sechzig spielt. Keine von ihnen hat je gelogen; sie beantworteten eine
+andere Frage als die, unter der sie standen. Die härteste Zahl dazu: „längste
+folgenlose Strecke" steht an der Partie auf 13,0 Wellen und am Lauf auf
+**43,7**.
+
+**Die Lücke dahinter war aber nicht die Messstelle, sondern dass sie nirgends
+stand.** Sie wurde seit v253 GEDRUCKT und nicht GESPEICHERT — und damit ließ
+sich ein Stand gegen eine völlig andere Messung halten, ohne dass etwas
+anschlägt. Seit v336 trägt jeder Stand seine Messstelle als Kennung in der
+Datei, ein Bruch ist ein Fehler, und `--spannung-schreiben` erhebt neu statt
+zu übernehmen.
+
+**Der erste Fall kam in derselben Runde und war eine Regel-15-Falle:** `ruhe`
+trug als Messstelle den VERWEIS `gleiche Messstelle wie "stellen"`. Ein
+Verweis ändert sich nicht mit dem, worauf er zeigt — `stellen` wanderte zum
+Lauf, `ruhe` behielt Wort für Wort dieselbe Kennung. Eine Messstelle, die
+auf eine andere zeigt, statt sich aus ihr zu bilden, ist keine.
+
+**Was dabei offen BLEIBT, ist M18 von der anderen Seite** (siehe dort):
+`Breite` bringt 0 von 9 Läufen durch, und der Abstand der Spielstile steht
+deshalb auf UNBELEGT statt auf 22,22.
 
 ---
 

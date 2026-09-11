@@ -717,6 +717,47 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**`sim` faehrt Laeufe statt Partien (v336, S-N7-02) - und der Unterschied ist
+der Messwert selbst.** Sieben der zehn Spannungskennzahlen wurden auf EINER
+Karte ueber fuenfzehn Wellen gemessen, waehrend ein Spieler seit S-N1-01
+sechzig spielt. `laufStil` faltet einen ganzen Lauf zu EINEM Ergebnis:
+`leakByWave` wird angehaengt statt summiert (die zwei Verlaufskennzahlen
+fragen genau danach), Zeitanteile werden mit der DAUER gewichtet, `won`
+heisst „jeder Abschnitt". **„Laengste folgenlose Strecke" springt damit von
+13,0 auf 43,7 Wellen** - die 13 waren nie falsch, sie waren die Antwort auf
+eine andere Frage.
+
+**Jede Kennzahl traegt ihre Messstelle jetzt in der DATEI** (fuenfte Spalte
+in `tools/spannung-stand.txt`, Regel 12). Vorher stand sie nur in der
+gedruckten Meldung, und ein Stand liess sich gegen eine voellig andere
+Messung halten, ohne dass etwas anschlaegt. Ein Stand von einer anderen
+Messstelle ist ein FEHLER und wird beim Schreiben **neu erhoben statt
+uebernommen**: „nicht senken" setzt voraus, dass beide Zahlen dieselbe Frage
+beantworten.
+
+**Die Kennung hat in derselben Runde ihren ersten Fall gefangen.** `ruhe`
+trug als Messstelle den VERWEIS `gleiche Messstelle wie "stellen"`. Ein
+Verweis aendert sich nicht mit dem, worauf er zeigt - `stellen` wanderte zum
+Lauf, `ruhe` behielt Wort fuer Wort dieselbe Kennung, und der alte Stand
+waere an der neuen Messung haengengeblieben. Er wird jetzt aus dem Text von
+`stellen` GEBILDET (Regel 15).
+
+**Der Waechter aus v293 hatte seinen Gegenstand verloren und ist umgebaut,
+nicht stummgeschaltet (K1).** Er stand woertlich auf „gewinnt die erste
+Karte"; mit dem Umstieg wurde daraus ungewollt „gewinnt alle vier
+Abschnitte". Gefragt wird wieder am ERSTEN Abschnitt - sonst haette er nicht
+einen kaputten Bot gemeldet, sondern die Laenge des Laufs.
+
+**Der Abstand der Spielstile steht dafuer auf UNBELEGT:** `Breite` bringt 0
+von 9 Laeufen durch, `Sparsam` 7, `Meister` 9. Der Abstand betruege 22,22 und
+stuende zum ersten Mal auf „ERREICHT" (Soll >= 20) - eine Kennzahl, die sich
+durch einen scheiternden Bot verbessern laesst, ist keine. Als **N7B** im
+Verzeichnis, mit N1G als gemessener Ursache.
+
+**Vier Kennzahlen fuhren denselben Lauf viermal** (Regel 15). Zusammengelegt
+kostet `sim` **215 s statt 245**; gegen die 158 s der Partie bleiben **+57 s**,
+und das ist der Preis des Laufs.
+
 **Die Welle, die Monokultur bestraft (v330, S-N6-04).** S-N3-02 und S-N3-03
 haben Vielfalt billiger und eintraeglicher gemacht; beide BELOHNEN, keiner
 erzwingt. Die `MONOKULTURWELLE` schliesst den Kreis - jede Gruppe hat einen
@@ -1837,7 +1878,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v330. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v336. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

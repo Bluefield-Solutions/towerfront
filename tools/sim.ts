@@ -70,6 +70,29 @@ const spannungGemessen = (
   schluessel: string, wert: number | null, rauschen: number, messstelle: string,
 ): void => { spannung.set(schluessel, { wert, rauschen, messstelle }); };
 
+/** **Die Messstelle als kurze Kennung** (v336, S-N7-02).
+ *
+ *  Die Messstelle steht seit v253 in jeder Meldung - gedruckt, nicht
+ *  gespeichert. Damit liess sich der Stand einer Kennzahl gegen eine ANDERE
+ *  Messung vergleichen, ohne dass etwas anschlaegt: wer die Messstelle
+ *  umbaut und den alten Stand stehen laesst, hat keine Ratsche mehr, sondern
+ *  eine Behauptung. Genau das ist in v331 beinahe passiert
+ *  (`wiederholungMessen` bekam drei Aussaaten statt einer), und dort hat es
+ *  nur ein Blick verhindert.
+ *
+ *  Gespeichert wird nicht der ganze Satz, sondern seine Kennung: die Datei
+ *  ist spaltenweise gelesen, und ein Satz mit Leerzeichen darin waere die
+ *  naechste Stelle, an der sie auseinanderfaellt. Der volle Satz steht
+ *  weiter in jeder Meldung - die Kennung sagt nur, OB es dieselbe ist. */
+function messstellenKennung(text: string): string {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(16).padStart(8, '0');
+}
+
 /** Mittelwert und Spanne einer Kennzahl ueber mehrere Laeufe. */
 const mittelUndSpanne = (werte: number[]): { mittel: number; spanne: number } => ({
   mittel: werte.reduce((a, b) => a + b, 0) / werte.length,
@@ -88,24 +111,31 @@ const laengsteRuhe = (leakByWave: number[]): number => {
 
 const KOPF = `# Die Spannungsratsche - der Stand, unter den kein Lauf fallen darf.
 # Geschrieben von \`npx tsx tools/sim.ts --spannung-schreiben\`, gelesen von
-# jedem Lauf. Vier Spalten: Kennzahl, Richtung (hoch = mehr ist besser),
-# Stand, Soll. Das Soll wird von Hand gepflegt, der Stand nicht.
+# jedem Lauf. FUENF Spalten: Kennzahl, Richtung (hoch = mehr ist besser),
+# Stand, Soll, Messstelle. Das Soll wird von Hand gepflegt, der Stand nicht.
+#
+# Die fuenfte Spalte ist seit v336 da und ist der Grund, warum diese Datei
+# ueberhaupt eine Ratsche ist: sie sagt, WORAN der Stand gemessen wurde.
+# Vorher stand die Messstelle nur in der gedruckten Meldung, und ein Stand
+# liess sich damit gegen eine voellig andere Messung halten, ohne dass etwas
+# anschlaegt. Ein Stand ohne Kennung gilt als von unbekannter Messstelle und
+# wird gemeldet - nicht stillschweigend uebernommen.
 `;
 
 /** Den Stand lesen. Eine fehlende oder leere Datei gibt eine leere Karte
  *  zurueck - der Aufrufer meldet das, statt sie fuer sauber zu halten. */
 function leseSpannungsstand(): Map<string, {
-  richtung: 'hoch' | 'tief'; stand: number | null; soll: number | null;
+  richtung: 'hoch' | 'tief'; stand: number | null; soll: number | null; wo: string | null;
 }> {
   const karte = new Map<string, {
-    richtung: 'hoch' | 'tief'; stand: number | null; soll: number | null;
+    richtung: 'hoch' | 'tief'; stand: number | null; soll: number | null; wo: string | null;
   }>();
   let text: string;
   try { text = readFileSync(SPANNUNG_DATEI, 'utf8'); } catch { return karte; }
   for (const zeile of text.split('\n')) {
     const z = zeile.trim();
     if (!z || z.startsWith('#')) continue;
-    const [k, richtung, stand, soll] = z.split(/\s+/);
+    const [k, richtung, stand, soll, wo] = z.split(/\s+/);
     if (!k || (richtung !== 'hoch' && richtung !== 'tief') || soll === undefined) continue;
     // **Ein Soll darf fehlen, und das steht als `-` da.** Regel 10: das Soll
     // kommt aus der Referenz, nicht aus mir. Fuer die Knappheit gibt es
@@ -114,6 +144,12 @@ function leseSpannungsstand(): Map<string, {
     karte.set(k, {
       richtung, stand: stand === 'UNBELEGT' ? null : Number(stand),
       soll: soll === '-' ? null : Number(soll),
+      // **Fehlt die Kennung, gilt der Stand als von unbekannter Messstelle.**
+      // Nicht als "passt schon": ein Stand aus einer Datei vor v336 weiss
+      // nicht, woran er gemessen wurde, und das ist genau der Zustand, den
+      // diese Spalte abschafft (dieselbe Haltung wie bei der Zeitratsche -
+      // ein unbekanntes Alter zaehlt als zu alt).
+      wo: wo ?? null,
     });
   }
   return karte;
@@ -158,10 +194,10 @@ const VARIANTS = [0, 1, 2];
  *
  *  Die Spanne ueber alle neun Laeufe waere die falsche Zahl - sie enthielte
  *  die Streuung der Bauverlaeufe, und die ist gewollt, nicht Rauschen. */
-function overVariants(
-  run: (variant: number, aussaat: number) => Result,
-): { runs: Result[]; mean: number; spanne: number } {
-  const runs: Result[] = [];
+function overVariants<T extends Result>(
+  run: (variant: number, aussaat: number) => T,
+): { runs: T[]; mean: number; spanne: number } {
+  const runs: T[] = [];
   const jeAussaat: number[] = [];
   for (const aussaat of AUSSAATEN) {
     aussaatGezaehlt('overVariants', aussaat);
@@ -1239,7 +1275,198 @@ function schwanzMessen(steigerung = ENDLOS_STEIGERUNG): void {
   }
 }
 
+/** **Einen ganzen LAUF spielen und zu EINEM Ergebnis falten** (v336,
+ *  S-N7-02).
+ *
+ *  Der Name ist ein Hauptwort und das mit Absicht: `laufStil` ist der STIL,
+ *  in dem gemessen wird - ein Lauf statt einer Partie. Er steht neben
+ *  `play` wie `MEISTER` neben `SPARSAM`, und jede Messstelle sagt mit dem
+ *  Aufruf, welche Frage sie stellt.
+ *
+ *  `play` faehrt eine Partie auf einer Karte - fuenfzehn Wellen, eigenes
+ *  Gold, eigener Kristall, kein Deck, das mitwaechst. Der Lauf ist seit
+ *  S-N1-01 das, was ein Spieler wirklich spielt: vier Abschnitte
+ *  hintereinander, sechzig Wellen, Gold und Kristall wandern mit, das Deck
+ *  waechst. **Alle Spannungskennzahlen waren gegen die PARTIE geeicht**, und
+ *  genau das ist der Gegenstand dieser Story.
+ *
+ *  Zurueck kommt dieselbe Form wie von `play`, damit die Messstellen einen
+ *  Aufruf tauschen statt umgebaut zu werden. Gefaltet wird so:
+ *
+ *  * `leakByWave` wird ANGEHAENGT, nicht summiert - die Kennzahlen
+ *    "Stellen mit Verlust" und "laengste folgenlose Strecke" fragen nach dem
+ *    VERLAUF, und der laeuft ueber alle sechzig Wellen durch. Genau hier
+ *    liegt der Unterschied, den N1K gemessen hat: 0 / 0 / 0 / 6 je Abschnitt
+ *    sieht als Partie nach vier ruhigen Karten aus und als Lauf nach 45
+ *    folgenlosen Wellen mit einer Wand am Ende.
+ *  * `lives` und `maxLives` kommen vom LETZTEN gefahrenen Abschnitt - der
+ *    Kristall wandert mit, also ist sein Endstand der des Laufs.
+ *  * Zeitanteile (`leerlaufAnteil`, `duennAnteil`) werden mit der DAUER
+ *    gewichtet und nicht einfach gemittelt: ein Abschnitt von 700 Sekunden
+ *    und einer von 300 zaehlen sonst gleich viel.
+ *  * `won` heisst: jeder Abschnitt gewonnen. Ein Lauf, der im dritten
+ *    endet, ist kein halber Sieg.
+ *
+ *  **Gemessen kostet ein Lauf 1,3 s** (ein Stil, eine Aussaat, vier
+ *  Abschnitte, sechzig Wellen). Die dritte Abnahme der Story - "die Laufzeit
+ *  bleibt im Rahmen" - war damit nie in Gefahr; die 111 s von
+ *  `npm run sim -- --lauf` liegen in der Abschnittswahl und im Kartenzug,
+ *  nicht im Lauf. Ohne diese Messung haette hier eine Schaetzung gestanden,
+ *  und sie war um zwei Groessenordnungen daneben (Regel 9). */
+/** Ein Lauf-Ergebnis ist ein `Result` plus der Frage, WIE WEIT er kam.
+ *
+ *  `won` ist ueber einen Lauf eine viel haertere Aussage als ueber eine
+ *  Partie - es heisst "alle vier Abschnitte". Wer nur diesen Schalter hat,
+ *  kann "im letzten Abschnitt gescheitert" nicht von "im ersten gescheitert"
+ *  unterscheiden, und genau diese zwei Faelle verlangen entgegengesetzte
+ *  Antworten (v336). */
+interface LaufErgebnis extends Result {
+  /** Wieviele Abschnitte dieser Lauf gewonnen hat. */
+  geschafft: number;
+  /** Wieviele er insgesamt gefahren ist. */
+  abschnitte: number;
+  /** Hat er den ERSTEN Abschnitt gewonnen? Das ist der Gegenstand, den der
+   *  Waechter aus v293 wirklich hat: ein Stil, der die erste Karte nicht
+   *  gewinnt, traegt gar nicht. */
+  ersterGewonnen: boolean;
+}
+
+function laufStil(
+  strategy: TowerId[], pick: BranchPick = () => 0,
+  bot: Bot = MEISTER, difficulty: DifficultyId = 'normal',
+  opts: Parameters<typeof play>[5] = {},
+): LaufErgebnis {
+  let lauf = laufStarten(difficulty, opts.seed ?? AUSSAATEN[0]);
+  const teile: Result[] = [];
+  while (!planDurch(lauf)) {
+    const karte = laufendeKarte(lauf)!;
+    const r = play(strategy, pick, bot, difficulty, karte, {
+      ...opts,
+      seed: lauf.saat,
+      laufAbschnitt: lauf.abschnitt,
+      laufSchwanz: schwanzRunde(lauf),
+      zugStil: opts.zugStil ?? bot.name,
+    });
+    teile.push(r);
+    // **Weiter auch nach einer Niederlage** - gemessen wird der VERLAUF
+    // eines Laufs und nicht das Koennen des Bots. Bricht man hier ab, hat
+    // ein schlechter Lauf weniger Wellen, und "Stellen mit Verlust" waere
+    // dann teils eine Aussage ueber die Laenge.
+    lauf = abschnittGeschafft(lauf, r.lives, r.lives, wellenDesAbschnitts(karte));
+    const angebot = abschnittsWahl(lauf);
+    if (angebot.length) lauf = abschnittWaehlen(lauf, angebot[0].id);
+  }
+  const letzte = teile[teile.length - 1];
+  const dauer = teile.reduce((a, r) => a + r.dauer, 0);
+  const gewichtet = (f: (r: Result) => number): number =>
+    (dauer > 0 ? teile.reduce((a, r) => a + f(r) * r.dauer, 0) / dauer : 0);
+  return {
+    ...letzte,
+    won: teile.every((r) => r.won),
+    wave: teile.reduce((a, r) => a + r.wave, 0),
+    leakByWave: teile.flatMap((r) => r.leakByWave),
+    entscheidungenJeWelle: teile.flatMap((r) => r.entscheidungenJeWelle),
+    dauer,
+    leerlaufAnteil: gewichtet((r) => r.leerlaufAnteil),
+    duennAnteil: gewichtet((r) => r.duennAnteil),
+    knappheitsAnteil: gewichtet((r) => r.knappheitsAnteil),
+    earned: teile.reduce((a, r) => a + r.earned, 0),
+    spent: teile.reduce((a, r) => a + r.spent, 0),
+    towers: teile.reduce((a, r) => a + r.towers, 0),
+    upgrades: teile.reduce((a, r) => a + r.upgrades, 0),
+    raeuber: teile.reduce((a, r) => a + r.raeuber, 0),
+    gerettet: teile.reduce((a, r) => a + r.gerettet, 0),
+    gezogeneKarten: teile.reduce((a, r) => a + r.gezogeneKarten, 0),
+    geschafft: teile.filter((r) => r.won).length,
+    abschnitte: teile.length,
+    ersterGewonnen: teile[0].won,
+  };
+}
+
+/** Wieviele Wellen ein ganzer Lauf traegt - der Nenner jeder Kennzahl, die
+ *  am Verlauf haengt. */
+const LAUF_WELLEN = MAPS.reduce((a, m) => a + m.waves.length, 0);
+
+/** **Der Lauf des Meisters - EINMAL gefahren, viermal gefragt** (v336,
+ *  S-N7-02, Regel 15).
+ *
+ *  Vier Kennzahlen stellen dieselbe Frage an denselben Lauf: Wellen ohne
+ *  Entscheidung, duenne Zeit, Leerlauf, Knappheit und die Rettungen. Bis
+ *  v335 hat jede davon ihre neun Partien selbst gefahren - bei einer Partie
+ *  je Karte war das eine Unart, beim Lauf ueber sechzig Wellen kostet es
+ *  gemessen 35 Sekunden fuer nichts.
+ *
+ *  Zusammengelegt ist es ausserdem ehrlicher: vier Kennzahlen, die
+ *  "dieselbe Messstelle" behaupten, tun es jetzt auch. Wer die Parameter
+ *  aendert, aendert sie fuer alle vier zugleich - genau das ist an `ruhe`
+ *  in dieser Runde schiefgegangen, wo ein VERWEIS auf die Messstelle stand
+ *  statt der Messstelle selbst.
+ *
+ *  Eigene Laeufe behalten die zwei Messungen, die etwas ANDERES fahren: der
+ *  Abstand der Spielstile (drei Bots statt einem) und der Bestleistungs-Bot
+ *  ohne Turmdeckel. */
+let meisterLaufSpeicher: ReturnType<typeof overVariants<LaufErgebnis>> | null = null;
+function meisterLauf(): ReturnType<typeof overVariants<LaufErgebnis>> {
+  if (!meisterLaufSpeicher) {
+    meisterLaufSpeicher = overVariants((variant, aussaat) => laufStil(
+      mixedPlanBase, () => 0, MEISTER, 'normal', { variant, seed: aussaat },
+    ));
+  }
+  return meisterLaufSpeicher;
+}
+
+/** **Der Lauf ist deterministisch - gepruefte Abnahme, keine Zusage**
+ *  (v336, S-N7-02).
+ *
+ *  Ein Lauf ist vier Partien hintereinander, und zwischen ihnen liegen zwei
+ *  Dinge, die eine Partie nicht hat: der Kartenzug und die Abschnittswahl.
+ *  Beide ziehen aus der Aussaat, und beide sind seit S-N1-01 die Stelle, an
+ *  der ein Zufall aus dem laufenden Zustand einsickern koennte - dann waere
+ *  keine der neun Kennzahlen darunter nachstellbar, und ein Rueckschritt
+ *  liesse sich nicht von einem Wurf unterscheiden.
+ *
+ *  Gefragt wird an einem SPAETEN Punkt (dem ganzen Lauf, nicht der ersten
+ *  Welle) und ueber den ganzen Abdruck: Kristall, Wellen, geschaffte
+ *  Abschnitte, gezogene Karten und der Verlustverlauf. Die Gegenprobe dazu
+ *  ist die zweite Zeile - zwei verschiedene Aussaaten muessen sich
+ *  unterscheiden, sonst haengt der Lauf gar nicht an der Aussaat und die
+ *  erste Zeile bewiese nur, dass etwas Festes zweimal gleich ist (Regel 5). */
+function laufAbdruck(r: LaufErgebnis): string {
+  return `${r.lives}/${r.maxLives} W${r.wave} A${r.geschafft}/${r.abschnitte} `
+    + `K${r.gezogeneKarten} L${r.leakByWave.join('.')}`;
+}
+
+function laufDeterminismus(): void {
+  const a1 = laufAbdruck(laufStil(mixedPlanBase, () => 0, MEISTER, 'normal',
+    { seed: AUSSAATEN[0] }));
+  const a2 = laufAbdruck(laufStil(mixedPlanBase, () => 0, MEISTER, 'normal',
+    { seed: AUSSAATEN[0] }));
+  const b1 = laufAbdruck(laufStil(mixedPlanBase, () => 0, MEISTER, 'normal',
+    { seed: AUSSAATEN[1] }));
+  console.log(`
+Der Lauf ist nachstellbar: Aussaat A "${a1}", noch einmal `
+    + `${a1 === a2 ? 'gleich' : `ANDERS ("${a2}")`}, Aussaat B `
+    + `${b1 === a1 ? 'GLEICH' : 'anders'}.`);
+  if (a1 !== a2) {
+    errors.push(`Der Lauf ist nicht deterministisch: dieselbe Aussaat ergibt "${a1}" `
+      + `und "${a2}". Dann laesst sich kein Lauf nachstellen, und keine Kennzahl `
+      + 'darunter trennt einen Rueckschritt von einem Wurf.');
+  }
+  if (a1 === b1) {
+    errors.push(`Zwei verschiedene Aussaaten ergeben denselben Lauf ("${a1}"). Dann `
+      + 'haengt der Lauf gar nicht an der Aussaat, und die Zeile darueber beweist '
+      + 'nur, dass etwas Festes zweimal gleich ist.');
+  }
+}
+
+/** Die Messstelle dieses einen Laufs - einmal geschrieben, von jeder
+ *  Kennzahl mitgenommen (Regel 12 und Regel 15 in einem Satz). */
+const MEISTERLAUF_STELLE = () => `Meister, GANZER LAUF ueber ${LAUF_WELLEN} Wellen, `
+  + `normal, ${AUSSAATEN.length} Aussaaten x ${VARIANTS.length} Abwandlungen`;
+
 function laufMessen(steigung = LAUF_STEIGUNG, bot: Bot = MEISTER): void {
+
+  const t0 = Date.now();
   console.log(`\nDer Lauf ueber alle Abschnitte (S-N1-01), Steigung `
     + `${steigung.toFixed(2)}, Stil ${bot.name}:`);
   let lauf = laufStarten('normal', AUSSAATEN[0]);
@@ -1298,6 +1525,8 @@ function laufMessen(steigung = LAUF_STEIGUNG, bot: Bot = MEISTER): void {
   console.log(`  ${abschnitte} von ${lauf.abschnitte.length} Abschnitten gewonnen, `
     + `${gefahren} von ${gesamt} Wellen gefahren, ${dauer.toFixed(0)} s `
     + `(Horizont ${LAUF_HORIZONT_S} s).`);
+  console.log(`  MESSKOSTEN: ein Lauf, ein Stil, eine Aussaat - `
+    + `${((Date.now() - t0) / 1000).toFixed(1)} s.`);
   console.log(`  Rampe je Abschnitt: ${rampen.map((r) => r.toFixed(2)).join(' -> ')}`);
   console.log(`  Karten gezogen: ${karten} von ${gefahren} gefahrenen Wellen.`);
   if (karten < gefahren) {
@@ -2679,30 +2908,49 @@ for (const bot of BOTS) {
 // Welle haengen. Solange alle Verluste in der letzten Welle liegen, ist jeder
 // Lauf entweder makellos oder gescheitert - und jede Aenderung am Sortiment
 // kippt genau diese eine Entscheidung, statt sie zu verschieben.
+// **Erst nachstellbar, dann gemessen** (v336, S-N7-02). Der Determinismus
+// steht VOR den Kennzahlen, weil ohne ihn keine von ihnen etwas heisst.
+laufDeterminismus();
+
 {
   // **Ueber die Aussaaten, nicht ueber einen Lauf** (v253). Bis v252 stand
   // hier ein einziges `play(mixedPlanBase)`, und aus dieser einen Partie kam
   // die Zahl, an der "die Verluste haengen an einer Welle" gemessen wurde.
   // Sie schwankt gemessen zwischen zwei und vier Stellen, je nach Aussaat -
   // als Ratsche waere sie damit ein Wuerfel gewesen.
-  const o = ueberAussaaten((aussaat) => play(
-    mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { seed: aussaat },
+  // **Ueber den LAUF, nicht ueber eine Partie** (v336, S-N7-02). Bis v335
+  // stand hier eine Partie auf der ersten Karte - fuenfzehn Wellen. Der
+  // Spieler spielt seit S-N1-01 einen Lauf ueber sechzig, mit wachsendem
+  // Deck und wanderndem Kristall, und die zwei Kennzahlen darunter fragen
+  // genau nach dem VERLAUF. An der Partie gemessen konnten sie nicht sehen,
+  // was N1K laengst weiss: drei ruhige Abschnitte und eine Wand.
+  const o = ueberAussaaten((aussaat) => laufStil(
+    mixedPlanBase, () => 0, MEISTER, 'normal', { seed: aussaat },
   ));
   const r = o.runs[0];
   const hot = r.leakByWave
     .map((v, i) => ({ w: i + 1, v }))
     .filter((o2) => o2.v > 0);
-  const last = MAPS[0].waves.length;
+  const last = LAUF_WELLEN;
   const share = hot.length ? (r.leakByWave[last - 1] ?? 0) / hot.reduce((a, o2) => a + o2.v, 0) : 0;
   const stellen = mittelUndSpanne(o.runs.map(
     (x) => x.leakByWave.filter((v) => v > 0).length,
   ));
   const ruhe = mittelUndSpanne(o.runs.map((x) => laengsteRuhe(x.leakByWave)));
-  spannungGemessen('stellen', stellen.mittel, stellen.spanne,
-    `Wellen mit Verlust, gemischtes Feld, Meister, ${MAPS[0].id}, normal, `
-    + `${AUSSAATEN.length} Aussaaten`);
+  // **Die zweite Messstelle wird aus der ersten GEBILDET, nicht daneben
+  //   geschrieben** (Regel 15, v336).
+  //
+  // Hier stand `gleiche Messstelle wie "stellen"` - ein VERWEIS. Er sieht
+  // aus wie eine Beschreibung, aendert sich aber nicht mit dem, worauf er
+  // verweist: beim Umstieg auf den Lauf wanderte `stellen` von der Partie
+  // zum Lauf, und `ruhe` behielt Wort fuer Wort dieselbe Kennung. Der alte
+  // Stand waere damit an der neuen Messung haengengeblieben, ohne dass
+  // etwas anschlaegt - genau der Fall, gegen den die Kennung gebaut ist.
+  const stellenStelle = `Wellen mit Verlust, gemischtes Feld, Meister, GANZER LAUF ueber `
+    + `${LAUF_WELLEN} Wellen, normal, ${AUSSAATEN.length} Aussaaten`;
+  spannungGemessen('stellen', stellen.mittel, stellen.spanne, stellenStelle);
   spannungGemessen('ruhe', ruhe.mittel, ruhe.spanne,
-    `laengste Strecke Wellen ohne Verlust, gleiche Messstelle wie "stellen"`);
+    `laengste Strecke Wellen ohne Verlust, ${stellenStelle}`);
   console.log(
     `\nVerteilung der Verluste: ${hot.length ? hot.map((o2) => `W${o2.w}:${o2.v}`).join('  ') : 'keine'}` +
     `   davon in der letzten Welle ${Math.round(share * 100)} %`,
@@ -2713,10 +2961,8 @@ for (const bot of BOTS) {
   // abhaengt: wann Gold ankommt, entscheidet, ob in Welle 7 gebaut wird
   // oder in Welle 8. Ein einzelner Verlauf zaehlt hier einen Zufall.
   {
-    const o2 = overVariants((variant, aussaat) => play(
-      mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { variant, seed: aussaat },
-    ));
-    const wellen = MAPS[0].waves.length;
+    const o2 = meisterLauf();
+    const wellen = LAUF_WELLEN;
     const jeWelle = Array.from({ length: wellen }, (_, i) =>
       o2.runs.reduce((a, r2) => a + (r2.entscheidungenJeWelle[i] ?? 0), 0) / o2.runs.length);
     const summe = jeWelle.reduce((a, b) => a + b, 0);
@@ -2737,8 +2983,8 @@ for (const bot of BOTS) {
       + `${leer.mittel.toFixed(1)} von ${wellen} (Rauschen ${leer.spanne.toFixed(1)})`
       + `   in der ersten Haelfte ${summe > 0 ? Math.round((haelfte / summe) * 100) : 0} %`);
     spannungGemessen('leereWellen', leer.mittel, leer.spanne,
-      `Wellen ohne eine einzige Entscheidung des Bots, gemischtes Feld, Meister, `
-      + `${MAPS[0].id}, normal, ${AUSSAATEN.length} Aussaaten x ${VARIANTS.length} Abwandlungen`);
+      `Wellen ohne eine einzige Entscheidung des Bots, gemischtes Feld, `
+      + MEISTERLAUF_STELLE());
   }
   console.log(
     `  ueber ${AUSSAATEN.length} Aussaaten: ${stellen.mittel.toFixed(1)} Stelle(n) `
@@ -2763,11 +3009,16 @@ for (const bot of BOTS) {
 // verteilen, verlieren die schwaecheren Stile sofort ganz. Solange der Abstand
 // so gross ist, gibt es kein Fenster, in dem beides zugleich gilt.
 {
+  // **Ueber den ganzen LAUF** (v336, S-N7-02). Drei Spielstile auf EINER
+  // Karte unterscheiden sich gemessen um sechs Punkte (M18) - ueber vier
+  // Abschnitte mit wachsendem Deck haben sie vier Gelegenheiten, sich zu
+  // unterscheiden, und genau davon lebt die Frage nach dem Abstand.
   const runs = BOTS.map((b) => {
-    const o = overVariants((variant, aussaat) => play(
-      b.plan ?? mixedPlanBase, () => 0, b, 'normal', MAPS[0].id, { variant, seed: aussaat },
+    const o = overVariants((variant, aussaat) => laufStil(
+      b.plan ?? mixedPlanBase, () => 0, b, 'normal', { variant, seed: aussaat },
     ));
-    const avg = (f: (r: Result) => number) => o.runs.reduce((a, r) => a + f(r), 0) / o.runs.length;
+    const avg = (f: (r: LaufErgebnis) => number) =>
+      o.runs.reduce((a, r) => a + f(r), 0) / o.runs.length;
     return {
       name: b.name, mean: o.mean, rauschen: o.spanne,
       // Die neun Einzelwerte in fester Reihenfolge (Aussaat-Haupt-,
@@ -2788,15 +3039,30 @@ for (const bot of BOTS) {
       // `Sparsam` dieser Runde gewann null von neun. Die Mehrheit trennt
       // beides und ist keine geratene Feinheit, sondern die Aussage "dieser
       // Stil geht normalerweise auf".
-      gewinnt: o.runs.filter((r) => r.won).length * 2 > o.runs.length,
-      siege: `${o.runs.filter((r) => r.won).length} von ${o.runs.length}`,
+      //
+      // **Seit v336 gefragt am ERSTEN Abschnitt** (S-N7-02). Der Waechter
+      // stand woertlich auf "gewinnt die erste Karte"; mit dem Umstieg auf
+      // Laeufe wurde daraus ungewollt "gewinnt alle vier Abschnitte", und
+      // das ist eine andere, viel haertere Zusage. Gemessen faellt `Breite`
+      // daran durch, waehrend es die erste Karte in jedem der neun Laeufe
+      // gewinnt - der Waechter haette dann nicht einen kaputten Bot
+      // gemeldet, sondern die Laenge des Laufs (Regel 12).
+      gewinnt: o.runs.filter((r) => r.ersterGewonnen).length * 2 > o.runs.length,
+      siege: `${o.runs.filter((r) => r.ersterGewonnen).length} von ${o.runs.length}`,
+      // Wie weit der Stil im Mittel kommt - die Zahl, die der Umstieg auf
+      // Laeufe neu sichtbar macht.
+      geschafft: avg((r) => r.geschafft),
+      abschnitte: Math.max(...o.runs.map((r) => r.abschnitte)),
+      durch: o.runs.filter((r) => r.won).length,
     };
   });
   for (const r of runs) {
     console.log(
       `  ${r.name.padEnd(9)} ${r.mean.toFixed(0).padStart(4)} Punkte   ` +
       `${r.towers.toFixed(0).padStart(2)} Tuerme, ${r.ups.toFixed(0).padStart(2)} Ausbauten, ` +
-      `${r.earned.toFixed(0).padStart(5)} Gold verdient, ${r.left.toFixed(0)} uebrig`,
+      `${r.earned.toFixed(0).padStart(5)} Gold verdient, ${r.left.toFixed(0)} uebrig, `
+      + `${r.geschafft.toFixed(1)} von ${r.abschnitte} Abschnitten `
+      + `(ganz durch in ${r.durch} von ${VARIANTS.length * AUSSAATEN.length} Laeufen)`,
     );
   }
   const best = Math.max(...runs.map((r) => r.mean));
@@ -2847,16 +3113,40 @@ for (const bot of BOTS) {
   // laesst, ist keine.
   for (const r of runs) {
     if (!r.gewinnt) {
-      errors.push(`Der Spielstil "${r.name}" gewinnt ${MAPS[0].id} nicht in jedem Lauf `
-        + `(${r.siege} Laeufe, Punktzahl ${r.mean.toFixed(0)}). Der Abstand der Spielstile `
-        + 'misst dann '
+      errors.push(`Der Spielstil "${r.name}" gewinnt den ERSTEN Abschnitt nicht in der `
+        + `Mehrheit der Laeufe (${r.siege} Laeufe, Punktzahl ${r.mean.toFixed(0)}). `
+        + 'Der Abstand der Spielstile misst dann '
         + 'die Schwaeche des schlechtesten statt die Verschiedenheit der drei - und er '
         + 'laesst sich hochtreiben, indem man einen Bot verschlechtert.');
     }
   }
+  // **Kommt nicht jeder Stil durch, ist der Abstand UNBELEGT** (v336,
+  // S-N7-02) - und genau das ist heute der Fall.
+  //
+  // Gemessen: `Meister` und `Sparsam` bringen den Lauf durch, `Breite`
+  // nicht ein einziges Mal von neun. Der Abstand springt damit von 12 auf
+  // 22 und stuende zum ersten Mal auf "ERREICHT" (Soll >= 20) - und das
+  // waere Punkt fuer Punkt der Fehler, den v293 aufgeschrieben hat: eine
+  // Kennzahl, die sich durch einen scheiternden Bot verbessern laesst.
+  //
+  // Die Zahl wird deshalb NICHT geratscht, solange das gilt, sondern als
+  // UNBELEGT gefuehrt - dieselbe Antwort, die `zweigWirkung` seit v251
+  // bekommt, wenn der Abstand unter dem Rauschen liegt. Ein Stand, den man
+  // nur durch eine Niederlage haelt, ist keine Ratsche.
+  //
+  // Ein FEHLER ist es nicht: dass ein Stil ueber sechzig Wellen nicht
+  // durchkommt, ist eine Aussage ueber die Balance und nicht ueber das
+  // Messgeraet. Sie steht als N7B im Rueckstandsverzeichnis.
+  const alleDurch = runs.every((r) => r.durch === VARIANTS.length * AUSSAATEN.length);
   const stilAbstand = best - worst;
-  spannungGemessen('stilAbstand', stilAbstand, stilRauschen,
-    `bester minus schlechtester Stil, ${MAPS[0].id}, normal, `
+  if (!alleDurch) {
+    console.log('    UNBELEGT: nicht jeder Stil bringt den Lauf durch ('
+      + runs.map((r) => `${r.name} ${r.durch}`).join(' / ')
+      + ` von ${VARIANTS.length * AUSSAATEN.length}). Der Abstand betruege `
+      + `${stilAbstand.toFixed(2)} und maesse zum Teil die Niederlage (v293, N7B).`);
+  }
+  spannungGemessen('stilAbstand', alleDurch ? stilAbstand : null, stilRauschen,
+    `bester minus schlechtester Stil, GANZER LAUF ueber ${LAUF_WELLEN} Wellen, normal, `
     + `${AUSSAATEN.length} Aussaaten x ${VARIANTS.length} Abwandlungen`);
   // **Gold uebrig am Ende** - die Zahl hinter "es fehlt an nichts". Wer am
   // Ende 43 % seines Goldes nicht ausgegeben hat, hatte keine Entscheidung
@@ -2866,7 +3156,7 @@ for (const bot of BOTS) {
   const gold = mittelUndSpanne(uebrigJeStil);
   spannungGemessen('goldUebrig', gold.mittel, Math.max(...runs.map((r) => r.rauschen)),
     `(verdient - ausgegeben) / verdient, Mittel ueber die ${runs.length} Stile, `
-    + `${MAPS[0].id}, normal`);
+    + `GANZER LAUF ueber ${LAUF_WELLEN} Wellen, normal`);
   console.log(`  Gold uebrig am Ende: ${gold.mittel.toFixed(1)} % `
     + `(je Stil ${uebrigJeStil.map((v) => v.toFixed(0)).join(' / ')} %)`);
 
@@ -2891,9 +3181,11 @@ for (const bot of BOTS) {
   // dann waere G1 von der anderen Seite kaputt: es koennte nichts mehr
   // passieren, weil alles zurueckkommt.
   {
-    const o = overVariants((variant, aussaat) => play(
-      mixedPlanBase, () => 0, MEISTER, 'normal', MAPS[0].id, { variant, seed: aussaat },
-    ));
+    // **Ueber den ganzen LAUF** (v336, S-N7-02): der Kernraub ist die
+    // Mechanik, die einen Durchbruch zurueckholbar macht, und wie oft er
+    // gelingt, haengt am ausgebauten Feld - also an der Stelle im Lauf.
+    // Auf der ersten Karte allein gemessen zaehlte sie nur den Anfang mit.
+    const o = meisterLauf();
     // **Erst ueber die Abwandlungen mitteln, dann die Spanne ueber die
     // Aussaaten nehmen** - so definiert diese Datei ihre Rauschgrenze seit
     // v251 (`overVariants`). Die Spanne ueber alle neun Laeufe enthielte die
@@ -2913,12 +3205,11 @@ for (const bot of BOTS) {
       const a = mittelUndSpanne(anteile);
       console.log(
         `\nRettungen: ${a.mittel.toFixed(0)} % der Raeuber werden erwischt `
-        + `(Spanne ${a.spanne.toFixed(0)}), ${raeuber.toFixed(1)} Raeuber je Partie, `
+        + `(Spanne ${a.spanne.toFixed(0)}), ${raeuber.toFixed(1)} Raeuber je Lauf, `
         + `${punkte.toFixed(1)} Kristall zurueckgeholt`,
       );
       spannungGemessen('rettungen', a.mittel, a.spanne,
-        `Anteil der Raeuber, die vor ihrem Tor sterben, Meister, ${MAPS[0].id}, normal, `
-        + `${AUSSAATEN.length} Aussaaten x ${VARIANTS.length} Abwandlungen`);
+        `Anteil der Raeuber, die vor ihrem Tor sterben, ` + MEISTERLAUF_STELLE());
       if (a.mittel < 33) {
         errors.push(`Rettungen: nur ${a.mittel.toFixed(0)} % der Raeuber werden erwischt `
           + '(mindestens 33 %). Unter einem Drittel ist der Kernraub Dekoration - der '
@@ -2957,11 +3248,18 @@ for (const bot of BOTS) {
       console.log(`  ${k.name.padEnd(15)} ${k.mittel.toFixed(1).padStart(5)} % `
         + `(Meister, Spanne ${k.spanne.toFixed(1)})`);
     }
-    const meister = knappJeStil.find((k) => k.name === MEISTER.name)!;
-    spannungGemessen('knappheitsAnteil', meister.mittel, meister.spanne,
+    // **Und ueber den ganzen LAUF** (v336, S-N7-02). Die Knappheit ist die
+    // Kennzahl, an der der Lauf am meisten aendert: Gold wandert von
+    // Abschnitt zu Abschnitt mit, und das Deck waechst - wer nach vier
+    // Karten sein Feld stehen hat, ist knapper oder eben gar nicht mehr
+    // knapp. An einer einzelnen Partie gemessen konnte das keine Zahl sehen.
+    const imLauf = meisterLauf();
+    const lauf = mittelUndSpanne(imLauf.runs.map((r) => r.knappheitsAnteil * 100));
+    console.log(`  ${'GANZER LAUF'.padEnd(15)} ${lauf.mittel.toFixed(1).padStart(5)} % `
+      + `(Meister, Spanne ${lauf.spanne.toFixed(1)})`);
+    spannungGemessen('knappheitsAnteil', lauf.mittel, lauf.spanne,
       `Anteil der Entscheidungszeitpunkte, an denen das Gold fuer den gewollten `
-      + `Kauf nicht reichte, Meister, ${MAPS[0].id}, normal, ${AUSSAATEN.length} `
-      + `Aussaaten x ${VARIANTS.length} Abwandlungen`);
+      + `Kauf nicht reichte, ` + MEISTERLAUF_STELLE());
   }
   console.log(
     `\nAbstand der Spielstile: ` + runs.map((r) => `${r.name} ${r.mean.toFixed(0)}`).join('   ') +
@@ -3148,14 +3446,33 @@ for (const m of MAPS) {
     + `(Spanne ${l.spanne.toFixed(1)})   duenn ${du.mittel.toFixed(1).padStart(5)} % `
     + `(Spanne ${du.spanne.toFixed(1)})`,
   );
-  if (m.id === MAPS[0].id) {
-    spannungGemessen('duennAnteil', du.mittel, du.spanne,
-      `Anteil der Spielzeit mit hoechstens EINEM Gegner auf dem Feld, Meister, `
-      + `${m.id}, normal, ${AUSSAATEN.length} Aussaaten x ${VARIANTS.length} Abwandlungen`);
-    spannungGemessen('leerlaufAnteil', l.mittel, l.spanne,
-      `Anteil der Spielzeit ohne lebenden und ohne ausstehenden Gegner, Meister, `
-      + `${m.id}, normal, ${AUSSAATEN.length} Aussaaten x ${VARIANTS.length} Abwandlungen`);
-  }
+}
+
+// **Und dieselben zwei Zahlen ueber den ganzen LAUF** (v336, S-N7-02).
+//
+// Die Tabelle darueber bleibt: sie sagt, welche KARTE zaeh ist, und das ist
+// eine Auskunft ueber den Kartenentwurf. Die RATSCHE haengt seit v336 am
+// Lauf - was ein Spieler als Warten erlebt, erlebt er ueber sechzig Wellen
+// und nicht ueber fuenfzehn, und die Zeitanteile eines Laufs sind mit der
+// Dauer seiner Abschnitte gewichtet (ein Abschnitt von 700 Sekunden und
+// einer von 300 zaehlen sonst gleich viel).
+{
+  const o = meisterLauf();
+  const d = mittelUndSpanne(o.runs.map((r) => r.dauer));
+  const l = mittelUndSpanne(o.runs.map((r) => r.leerlaufAnteil * 100));
+  const du = mittelUndSpanne(o.runs.map((r) => r.duennAnteil * 100));
+  console.log(
+    `  ${'GANZER LAUF'.padEnd(15)} Dauer ${d.mittel.toFixed(0).padStart(4)} s `
+    + `(Spanne ${d.spanne.toFixed(0)})   Leerlauf ${l.mittel.toFixed(1).padStart(5)} % `
+    + `(Spanne ${l.spanne.toFixed(1)})   duenn ${du.mittel.toFixed(1).padStart(5)} % `
+    + `(Spanne ${du.spanne.toFixed(1)})`,
+  );
+  spannungGemessen('duennAnteil', du.mittel, du.spanne,
+    `Anteil der Spielzeit mit hoechstens EINEM Gegner auf dem Feld, `
+    + MEISTERLAUF_STELLE());
+  spannungGemessen('leerlaufAnteil', l.mittel, l.spanne,
+    `Anteil der Spielzeit ohne lebenden und ohne ausstehenden Gegner, `
+    + MEISTERLAUF_STELLE());
 }
 
 // Jeder Schwierigkeitsgrad bekommt eine eigene Pruefung. Ein Grad, den kein
@@ -3735,14 +4052,32 @@ if (hot.length) {
     // Anzeige. Wer wirklich senken will, aendert die Datei von Hand und
     // schreibt daneben, warum.
     const gesenkt: string[] = [];
+    const neuErhoben: string[] = [];
     const zeilen = ORDNUNG.map((k) => {
       const m = spannung.get(k)!;
       const a = alt2.get(k);
       const tiefer = ['ruhe', 'goldUebrig', 'leereWellen', 'leerlaufAnteil',
         'duennAnteil'].includes(k);
       const richtung = a?.richtung ?? (tiefer ? 'tief' : 'hoch');
+      // **Eine geaenderte Messstelle setzt die Ratsche zurueck** (v336,
+      // S-N7-02).
+      //
+      // Der Schreiber senkt keinen Stand - aber "senken" setzt voraus, dass
+      // beide Zahlen dieselbe Frage beantworten. Stammt der alte Stand von
+      // einer ANDEREN Messstelle, gibt es an dieser hier gar keine
+      // Geschichte, und der alte Wert waere kein Schutz, sondern eine
+      // Behauptung ueber eine Messung, die es nicht mehr gibt. Genau das
+      // verlangt die Story beim Umstieg auf Laeufe: neu erheben, nicht
+      // uebernehmen.
+      //
+      // Es ist auch kein Schlupfloch: wer die Ratsche loswerden will,
+      // muesste die Messstelle wirklich umbauen, und dann faellt der Stand
+      // mit ihr - der Lauf davor meldet den Bruch als Fehler, und der
+      // Schritt steht als Zeile in der Datei.
+      const wo = messstellenKennung(m.messstelle);
+      const dieselbeStelle = a !== undefined && a.wo === wo;
       let wert = m.wert;
-      if (a && a.stand !== null && wert !== null) {
+      if (a && dieselbeStelle && a.stand !== null && wert !== null) {
         // Auf zwei Stellen vergleichen - in der Datei stehen zwei, und ein
         // Rundungsrest hinter der zweiten meldete sonst "44,66 statt 44,66".
         const gerundet = Number(wert.toFixed(2));
@@ -3752,10 +4087,19 @@ if (hot.length) {
           wert = a.stand;
         }
       }
+      if (a !== undefined && !dieselbeStelle) {
+        neuErhoben.push(`${k} ${wert === null ? 'UNBELEGT' : wert.toFixed(2)} `
+          + `(vorher ${a.stand === null ? 'UNBELEGT' : a.stand.toFixed(2)} an ${a.wo ?? '?'})`);
+      }
       return `${k} ${richtung} `
         + `${wert === null ? 'UNBELEGT' : wert.toFixed(2)} `
-        + `${a === undefined ? 0 : (a.soll === null ? '-' : a.soll)}`;
+        + `${a === undefined ? 0 : (a.soll === null ? '-' : a.soll)} `
+        + `${wo}`;
     });
+    if (neuErhoben.length) {
+      console.log('  Neu erhoben (die Messstelle hat sich geaendert, der alte Stand '
+        + `gehoert zu einer anderen Frage): ${neuErhoben.join(', ')}.`);
+    }
     if (gesenkt.length) {
       console.log(`  Nicht gesenkt (der alte Stand bleibt): ${gesenkt.join(', ')}.`);
     }
@@ -3785,6 +4129,35 @@ if (hot.length) {
       if (stand.size > 0) {
         errors.push(`Spannungsratsche: fuer "${k}" steht kein Stand in der Datei.`);
       }
+      continue;
+    }
+    // **Stammt der Stand von DIESER Messung?** (v336, S-N7-02)
+    //
+    // Eine Ratsche vergleicht zwei Zahlen; das ergibt nur einen Sinn, wenn
+    // beide woran dasselbe gemessen sind. Bis v335 stand die Messstelle nur
+    // in der gedruckten Meldung - wer sie umbaute und den Stand stehen
+    // liess, hielt seitdem eine Zahl gegen eine andere Frage. Das ist keine
+    // Ratsche mehr, sondern eine Behauptung.
+    //
+    // Gemeldet wird es als FEHLER und nicht als Hinweis: ein Stand von einer
+    // anderen Messstelle ist nicht ungenau, er ist gegenstandslos. Wer die
+    // Messstelle absichtlich aendert, erhebt den Stand neu
+    // (`--spannung-schreiben`) - genau das verlangt S-N7-02 beim Umstieg auf
+    // Laeufe, und genau das soll nicht aus Versehen unterbleiben.
+    const wo = messstellenKennung(m.messstelle);
+    if (z.wo === null) {
+      errors.push(`Spannungsratsche: der Stand fuer "${k}" traegt keine Messstelle. `
+        + 'Dann ist nicht zu sagen, woran er gemessen wurde, und der Vergleich darunter '
+        + `behauptet nur. Neu erheben mit \`--spannung-schreiben\` (heute gemessen an: `
+        + `${m.messstelle}).`);
+      continue;
+    }
+    if (z.wo !== wo) {
+      errors.push(`Spannungsratsche: der Stand fuer "${k}" ist an einer ANDEREN Messstelle `
+        + `entstanden (${z.wo}) als der Wert dieses Laufs (${wo}). Eine Ratsche haelt zwei `
+        + 'Zahlen gegeneinander; stammen sie aus verschiedenen Messungen, haelt sie nichts. '
+        + `Heute gemessen an: ${m.messstelle}. Wer die Messstelle absichtlich geaendert hat, `
+        + 'erhebt den Stand neu (`--spannung-schreiben`).');
       continue;
     }
     const besser = z.richtung === 'hoch' ? '>=' : '<=';

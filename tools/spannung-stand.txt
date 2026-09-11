@@ -1,14 +1,21 @@
 # Die Spannungsratsche - der Stand, unter den kein Lauf fallen darf.
 # Geschrieben von `npx tsx tools/sim.ts --spannung-schreiben`, gelesen von
-# jedem Lauf. Vier Spalten: Kennzahl, Richtung (hoch = mehr ist besser),
-# Stand, Soll. Das Soll wird von Hand gepflegt, der Stand nicht.
-stellen hoch 2.00 5
-ruhe tief 13.00 3
-leereWellen tief 0.00 0
-leerlaufAnteil tief 0.09 0
-duennAnteil tief 15.06 10
-knappheitsAnteil hoch 44.66 -
-rettungen hoch 53.00 -
-goldUebrig tief 35.18 20
-stilAbstand hoch 12.43 20
-zweigWirkung hoch UNBELEGT 9
+# jedem Lauf. FUENF Spalten: Kennzahl, Richtung (hoch = mehr ist besser),
+# Stand, Soll, Messstelle. Das Soll wird von Hand gepflegt, der Stand nicht.
+#
+# Die fuenfte Spalte ist seit v336 da und ist der Grund, warum diese Datei
+# ueberhaupt eine Ratsche ist: sie sagt, WORAN der Stand gemessen wurde.
+# Vorher stand die Messstelle nur in der gedruckten Meldung, und ein Stand
+# liess sich damit gegen eine voellig andere Messung halten, ohne dass etwas
+# anschlaegt. Ein Stand ohne Kennung gilt als von unbekannter Messstelle und
+# wird gemeldet - nicht stillschweigend uebernommen.
+stellen hoch 4.67 5 82e12eaf
+ruhe tief 43.67 3 cc3e70c7
+leereWellen tief 0.00 0 cce5ee08
+leerlaufAnteil tief 0.14 0 17977089
+duennAnteil tief 17.79 10 f0c961bb
+knappheitsAnteil hoch 48.99 - b8bf5120
+rettungen hoch 45.91 - 83add2b9
+goldUebrig tief 34.78 20 b28a527a
+stilAbstand hoch UNBELEGT 20 11196c1a
+zweigWirkung hoch UNBELEGT 9 bed753ff

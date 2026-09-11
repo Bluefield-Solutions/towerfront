@@ -93,7 +93,8 @@ const { TOWERS, TOWER_ORDER, BAU_ORDER, MAX_LEVEL, nextFor, statsFor, rangeFor }
 
 const { TUTORIAL } = await import('../src/game/tutorial');
 const { auswertung } = await import('../src/game/auswertung');
-const { getBest, getProgress, getSettings, gegnerVergessen, recordRun, saveSettings } = await import('../src/core/storage');
+const { bestVergessen, getBest, getProgress, getSettings, gegnerVergessen, recordRun,
+  saveSettings } = await import('../src/core/storage');
 const { Sfx } = await import('../src/core/audio');
 const { konterSatz } = await import('../src/data/konter');
 const { wirkungAnlegen, wirkungenTicken, tempoFaktor } = await import('../src/data/wirkungen');
@@ -1116,6 +1117,15 @@ step('Wegvorschau beim Betreten', () => {
 step('Bestwert nach Niederlage', () => {
   const probe = new GameState();
   probe.reset(777, 'normal', state.map.id);
+  // **Den Bestwert dieser Karte vergessen, BEVOR verloren wird** (v334).
+  //
+  // `recordRun` schreibt nur, was besser ist. Der Durchlauf weiter oben hat
+  // jede Karte gewonnen, also steht der Schluessel auf 15 - und dahinter
+  // verschwindet jeder spaetere Wert lautlos, auch ein falscher. Die Zusage
+  // darunter konnte deshalb nur pruefen, ob der Wert zu NIEDRIG ist; ein zu
+  // hoher kam gar nicht erst an. Genau daran ist die Gegenprobe "Bestwert
+  // eine Welle zu weit" gestorben, und der Nachtlauf hat es gemeldet.
+  bestVergessen(probe.map.id, probe.difficulty);
   probe.lives = 1;
   for (let i = 0; i < 60 * 600 && probe.phase === 'playing'; i++) {
     if (probe.canStartWave) probe.startWave();
@@ -1134,9 +1144,15 @@ step('Bestwert nach Niederlage', () => {
   // Namensraum war, den sonst niemand beschrieb. Mit einem Grad ist er weg,
   // und der Durchlauf weiter oben hat jede Karte schon durchgespielt: der
   // Schluessel steht auf 15, bevor diese Probe beginnt.
-  if (best.wave < erreicht) {
+  // **Gleich, nicht nur "nicht kleiner"** (v334). Bis v333 stand hier `<`,
+  // und damit war eine Welle ZU WEIT kein Fehler: wer in Welle 3 faellt, hat
+  // 2 ueberstanden, und ein eingetragenes 3 haette die Pruefung anstandslos
+  // passiert. Der Schluessel ist eine Zeile weiter oben geleert, also gibt es
+  // jetzt einen Wert, gegen den sich das sagen laesst.
+  if (best.wave !== erreicht) {
     throw new Error(`Bestwert steht auf Welle ${best.wave}, ueberstanden wurde Welle `
-      + `${erreicht} (Welle ${probe.waveNumber} lief noch).`);
+      + `${erreicht} (Welle ${probe.waveNumber} lief noch). Eine Niederlage traegt die `
+      + 'zuletzt UEBERSTANDENE Welle ein, nicht die laufende.');
   }
 
   // **Und damit das nicht zur leeren Zusage wird** (Regel 5): die Regel

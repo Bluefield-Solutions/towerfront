@@ -352,6 +352,25 @@ export function ersterGegner(id: string): boolean {
   return true;
 }
 
+/** **Den Bestwert einer Karte vergessen** - fuer die Tore (v334).
+ *
+ *  `recordRun` schreibt nur, was BESSER ist. Damit laesst sich nicht pruefen,
+ *  ob eine Niederlage die richtige Welle eintraegt: sobald der Durchlauf eine
+ *  Karte einmal gewonnen hat, steht der Schluessel auf 15, und jeder spaetere
+ *  Wert - auch ein falscher - verschwindet lautlos dahinter. Genau daran ist
+ *  die Gegenprobe "Bestwert eine Welle zu weit" gestorben: die Zusage im
+ *  Rauchtest fragte nur, ob der Wert nicht zu NIEDRIG ist, und ein zu hoher
+ *  kam gar nicht erst an.
+ *
+ *  Dieselbe Bauart wie `gegnerVergessen` daneben, und aus demselben Grund:
+ *  ohne diesen Weg liesse sich die Sache nach dem ersten Lauf nie wieder
+ *  pruefen. */
+export function bestVergessen(mapId: string, difficulty: string): void {
+  delete store.best[bestSchluessel(mapId, difficulty)];
+  delete store.best[bestSchluessel(mapId, difficulty, true)];
+  write(store);
+}
+
 /** Alle Gegner wieder unbekannt machen - fuer die Tore und fuer den
  *  Schalter "Einfuehrung neu". Ohne diesen Weg liesse sich der Satz nach dem
  *  ersten Lauf nie wieder pruefen. */

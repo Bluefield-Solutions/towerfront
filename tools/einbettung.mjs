@@ -363,7 +363,16 @@ const befunde = [];
   geruestStellen();
   const { getEnemyArt } = await import('../src/gfx/enemyart.ts');
   const { ENEMIES } = await import('../src/data/enemies.ts');
-  const ids = Object.keys(ENEMIES);
+  // **Eine offene Bestellung ist kein Fehler, aber auch kein Schweigen**
+  // (K5, v328). Der Platzhalter ist auf jeder Karte derselbe - er wird nicht
+  // ins Klima gebacken, das ist seine Aufgabe. Ihn mitzuzaehlen hiesse, dem
+  // Zwischenspeicher vorzuwerfen, was der Vorrat noch gar nicht hergibt.
+  // Ein Bild, das fehlt und in KEINER Bestellung steht, zaehlt weiter mit.
+  const { offeneBestellungen } = await import('../src/gfx/bestellung.ts');
+  const bestellteGegner = new Set(offeneBestellungen()
+    .filter((b) => b.art === 'gegner').map((b) => b.schluessel));
+  const ids = Object.keys(ENEMIES).filter((id) => !bestellteGegner.has(id));
+  const wartend = Object.keys(ENEMIES).filter((id) => bestellteGegner.has(id));
   for (const id of ids) for (const k of KARTEN) getEnemyArt(id, false, k.id);
   await bilderAbwarten();
   // Der Nachschlag bleibt: das Einbetten rechnet nach dem Laden noch, und
@@ -384,7 +393,10 @@ const befunde = [];
     if (summen.size < KARTEN.length) gleich++;
   }
   console.log(`Kartenbindung: ${geprueft} Gegnerbilder ueber ${KARTEN.length} Karten geholt, `
-    + `${gleich} davon mehrfach identisch.`);
+    + `${gleich} davon mehrfach identisch.`
+    + (wartend.length
+      ? ` (${wartend.length} nicht gemessen, weil bestellt: ${wartend.join(', ')})`
+      : ''));
 
   // --- Der Saumkontrast am GEBACKENEN Bild (TF-012).
   //

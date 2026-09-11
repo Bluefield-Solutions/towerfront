@@ -112,7 +112,20 @@ export const ZIER_AUFHELLUNG = 0.45;
  *
  *  800 ist gemessen, nicht gewaehlt: der Leerentitan hat 682 Lebenspunkte,
  *  und der Traeger muss auch neben ihm gewaehlt werden. Darunter faellt er
- *  in der Bosswelle des Farnkessels wieder hinten runter. */
+ *  in der Bosswelle des Farnkessels wieder hinten runter.
+ *
+ *  **Seit v328 gilt derselbe Zuschlag fuer den Sanitaeter** (S-N6-02), und
+ *  zwar aus genau demselben Grund - er ist der zweite Gegner, der etwas
+ *  GIBT statt nur zu nehmen. `npm run konter` sagt ueber ihn "Nimm ihn
+ *  zuerst"; ein Modus, der "den gefaehrlichsten" heisst und ihn nicht
+ *  nimmt, widerspricht dem eigenen Rat des Spiels.
+ *
+ *  **Gemessen war das noetig, nicht schmueckend.** Ohne diese Zeile meldete
+ *  `npm run sim` "Ziellogik Gefahr: in keiner Welle auf keiner Karte vorn -
+ *  eine Wahl ohne Folgen". Der Modus hatte seit v244 nur noch geteilte Siege
+ *  (F6 fuehrt es), und die neue Welle hat den letzten davon gekostet. Eine
+ *  neue Gegnerart, die genau seine Aufgabe ist, ist die Antwort darauf -
+ *  nicht eine gelockerte Ratsche. */
 const GEFAHR_TRAEGER = 800;
 
 /** **Wie lange ein Brand und eine Markierung halten** (S-N6-01).
@@ -2048,8 +2061,47 @@ export class GameState {
     }
   }
 
+  /** Wie weit ein Heiler wirkt. Enger als der Schildtraeger (190): er GIBT
+   *  Lebenspunkte statt Treffer abzufangen, und eine zu weite Reichweite
+   *  macht aus einer Stuetze eine Regel ueber die ganze Welle. */
+  private static readonly HEILER_REICHWEITE = 150;
+
+  /** **Der Heiler stellt seine Nachbarn wieder her** (S-N6-02).
+   *
+   *  Anders als der Schildtraeger hat er keinen Takt: er heilt STETIG, und
+   *  das ist die Auskunft, um die es geht. Ein getakteter Heiler wuerde in
+   *  Stufen springen, und der Spieler saehe nicht, ob sein Feuer reicht -
+   *  er saehe nur, dass die Leiste manchmal hochspringt. Stetig gerechnet
+   *  steht die Leiste still, solange sich Schaden und Heilung die Waage
+   *  halten, und genau das ist der Satz: "so kommst du nicht durch".
+   *
+   *  **Nie sich selbst** - dieselbe Entscheidung wie beim Traeger in v110
+   *  und aus demselben Grund. Und nie ueber das Hoechstmass: ein Gegner mit
+   *  mehr Leben als beim Start waere eine zweite Lebenskurve neben der
+   *  geeichten.
+   *
+   *  Kein Takt heisst: diese Schleife laeuft in JEDEM Bild ueber alle Paare.
+   *  Sie ist deshalb an dieselbe Bedingung gehaengt wie die des Traegers -
+   *  ohne einen Heiler auf dem Feld kostet sie einen Durchlauf ueber die
+   *  Gegnerliste und nichts weiter. */
+  private updateHeiler(dt: number): void {
+    const R2 = GameState.HEILER_REICHWEITE ** 2;
+    for (const h of this.enemies) {
+      if (h.dead) continue;
+      const heilt = ENEMIES[h.def].heilt ?? 0;
+      if (heilt <= 0) continue;
+      const menge = heilt * dt;
+      for (const e of this.enemies) {
+        if (e === h || e.dead || e.hp >= e.hpMax) continue;
+        if (dist2(h.x, h.y, e.x, e.y) > R2) continue;
+        e.hp = Math.min(e.hpMax, e.hp + menge);
+      }
+    }
+  }
+
   private updateEnemies(dt: number): void {
     this.updateTraeger(dt);
+    this.updateHeiler(dt);
     let leaked = false;
     for (const e of this.enemies) {
       // **Tote werden nicht mehr bewegt** (v262).
@@ -2562,7 +2614,8 @@ export class GameState {
       // Ein gemeinsames Mass, bei dem immer der groesste Wert gewinnt: dann
       // steht die Vergleichslogik einmal da und nicht viermal.
       const wert = wahl === 'vorn' ? e.travelled
-        : wahl === 'stark' ? e.hp + (e.traeger > 0 ? GEFAHR_TRAEGER : 0)
+        : wahl === 'stark'
+          ? e.hp + (e.traeger > 0 || (ENEMIES[e.def].heilt ?? 0) > 0 ? GEFAHR_TRAEGER : 0)
           : wahl === 'schwach' ? -e.hp
             : -d2;
       if (!best || wert > bestWert) { best = e; bestWert = wert; }

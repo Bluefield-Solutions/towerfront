@@ -2229,12 +2229,26 @@ export const PROBEN = [
     // die Falle, die bei "Kachelraster" schon einmal aufgeschrieben ist.
     // Hier wird die Bedingung durch eine andere, ebenso UNerfuellte ersetzt:
     // der Punkt bleibt zu Recht offen, und das Tor muss schweigen.
+    // **Zum ZWEITEN Mal an einem Fortschritt gestorben** (v328). Sie griff
+    // bis dahin C6 ("Heiler, regeneriert Umstehende") - und C6 ist mit
+    // S-N6-02 zugefallen, der Punkt steht nicht mehr im Verzeichnis. Genau
+    // dieselbe Verfallsart hatten zwei Proben schon in v313, und die
+    // Reparatur damals hiess: an etwas greifen, das der Fortschritt nicht
+    // wegnimmt.
+    //
+    // **Das ist bei einem OFFENEN Punkt nicht moeglich** - jeder offene
+    // Punkt soll irgendwann zufallen, das ist sein Zweck. Gegriffen wird
+    // deshalb jetzt **C16** (die Flakstellung): sie haengt an einem BILD,
+    // das bestellt und nicht geliefert ist, und kann darum nicht nebenbei
+    // durch eine Code-Runde zufallen. Wer sie liefert, faengt diese Probe
+    // beim naechsten `npm run muster` - und das ist die richtige Stelle,
+    // es zu merken.
     name: 'Offener Punkt bleibt zu Recht offen',
     datei: 'docs/Towerfront-BACKLOG.md',
-    suche: '`text src/data/enemies.ts "Heiler" >= 1`',
-    ersatz: '`text src/data/enemies.ts "Wunderheiler" >= 1`',
+    suche: '`text src/data/towers.ts "Flakstellung" >= 1`',
+    ersatz: '`text src/data/towers.ts "Wunderflak" >= 1`',
     tor: 'doku',
-    meldetNicht: 'Backlog C6',
+    meldetNicht: 'Backlog C16',
   },
   {
     // Neu mit der Hoehe: der Waechter deckelt sie bei 1,25. Ohne Probe waere
@@ -5379,6 +5393,21 @@ export const PROBEN = [
     regel: /### 8d\.0 Der Stilblock Neubau/,
     ersatz: '### 8d.0 Stilangaben',
     tor: 'guards',
+  },
+  {
+    // **Der Heiler ohne Heilung ist ein Gegner mit einem Namen** (S-N6-02).
+    // Der Eingriff setzt seine Heilung auf null und laesst alles andere
+    // stehen - Bild, Ring, Faeden, Wellenplan. Der gestellte Fall im
+    // Rauchtest muss dann kippen: der Verwundete holt nichts mehr zurueck.
+    //
+    // Gegriffen wird das FELD und nicht die Zahl: wie stark er heilt, ist
+    // eine Eichfrage und aendert sich.
+    name: 'Der Sanitaeter heilt nicht mehr',
+    datei: 'src/data/enemies.ts',
+    regel: /heilt: \d+,/,
+    ersatz: 'heilt: 0,',
+    tor: 'smoke',
+    meldet: 'Sanitaeter',
   },
   {
     // **Zwei Karten, die dasselbe tun, sind eine Karte mit zwei Namen**

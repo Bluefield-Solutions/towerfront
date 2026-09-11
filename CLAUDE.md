@@ -706,6 +706,45 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der Sanitaeter (v328, S-N6-02) - die erste Gegnerart, die etwas GIBT.** Alle
+acht bisherigen sind Ziele; keiner aendert, was der Spieler tun MUSS. Der
+Schildtraeger tut es und ist gemessen die interessanteste Sache im Wellenplan -
+nur ist er ein Zusatz an einer Gruppe und keine Art. Damit ist **C6** zu.
+
+Er stellt Lebenspunkte seiner Nachbarn wieder her, **stetig und nicht
+getaktet**: ein getakteter Heiler springt in Stufen, und der Spieler saehe
+nicht, ob sein Feuer reicht. Stetig gerechnet steht die Leiste still, solange
+sich Schaden und Heilung die Waage halten - und genau das ist der Satz „so
+kommst du nicht durch". Nie sich selbst (dieselbe Entscheidung wie beim
+Traeger in v110), nie ueber das Hoechstmass.
+
+**Der Rauchtest STELLT den Fall** (die Lehre aus v219): ein Verwundeter auf
+einem Zehntel seiner Lebenspunkte, ein Heiler daneben, eine Sekunde ohne jeden
+Turm - gemessen **14,0 zurueckgeholt**, mit dem Heiler ausser Reichweite
+**0,0** (Regel 13).
+
+**Sichtbar wie der Traeger, aber nicht gleich:** gruen statt violett,
+durchgezogen statt gestrichelt, ein Kreuz in der Mitte des Rings. Der Traeger
+gibt in Stufen, der Sanitaeter stetig - zwei Stuetzen, die gleich aussehen,
+sind eine Stuetze mit zwei Namen. Die Faeden gehen nur zu VERWUNDETEN
+Nachbarn, sonst haengt an ihm ein Stern aus zwanzig Linien.
+
+**Und der Rauchtest hat ein Tor entlarvt, das seinen Gegenstand seit v273
+verloren hatte** (K1). Dort stand: *„jede Gegnerart braucht ein gerendertes
+Bild - sonst laeuft eine gezeichnete Silhouette zwischen gerenderten
+Fahrzeugen"*. Seit dem Platzhalter stimmt der Satz nicht mehr, und zwei Tore
+beantworteten dieselbe Frage verschieden: hier „Fehler", in `bildtor` „kein
+Fehler, eine Bestellung". K5 entscheidet. **Gestrichen wurde es trotzdem
+nicht, sondern umgebaut** - es haelt jetzt, dass die zwei Listen
+UEBEREINSTIMMEN: ein fehlendes Bild, das in keiner Bestellung steht, ist genau
+die stille Luecke, die `bestellung.ts` in v272 abschaffen sollte.
+
+**Und der Sanitaeter hat dem Modus „Gefahr" seine Aufgabe zurueckgegeben.** `npm run sim` wurde rot: *„Ziellogik Gefahr: in keiner Welle auf keiner Karte vorn - eine Wahl ohne Folgen"*. Der Modus hatte seit v244 nur noch geteilte Siege (F6 fuehrt es), und die neue Welle hat den letzten davon gekostet. Die Antwort ist nicht eine gelockerte Ratsche, sondern die neue Gegnerart selbst: **derselbe Zuschlag wie fuer den Schildtraeger** - ein Modus, der „den gefaehrlichsten" heisst und den Sanitaeter stehen laesst, widerspricht dem eigenen Rat des Spiels (`npm run konter` sagt ueber ihn „Nimm ihn zuerst"). Der Rauchtest stellt auch diesen Fall: ein Titan mit 682 Lebenspunkten und ein Sanitaeter mit 96, beide in Reichweite - der Turm muss den Sanitaeter nehmen.
+
+**Der erste Versuch, es zu richten, war falsch und lehrreich:** ich hatte den Sanitaeter vorangestellt und dabei die vier uebrigen Gruppen um zwei Sekunden nach hinten geschoben - zwei Aenderungen in einem Zug. Die Taktung zurueckzunehmen hat gar nichts bewegt; es war nie die Taktung. Wer eine Wirkung messen will, aendert eine Sache (Regel 13).
+
+Das Bild ist als **8d.4** bestellt; gebaut wird gegen den Platzhalter.
+
 **Wirkungen als Kartenmaterial (v327, S-N6-01).** Der Stapel bestand aus sechs
 Achsen, die alle dasselbe tun: eine Zahl wird groesser. Die Wahl zwischen +6 %
 und +10 % Schaden ist keine. Gebaut sind jetzt die sechs Wirkungen aus dem
@@ -1523,9 +1562,9 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v327. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v328. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
-Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
+Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), acht Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
 gewichtet 100 %.
 

@@ -21,6 +21,7 @@
  *  Messstelle (Regel 12): gepackter Bildvorrat, Deckkraft ueber 60 von 255;
  *  Wegbreiten aus `lanePaths`, in Weltpunkten, ueber die ganze Bahn. */
 import { ENEMIES, type EnemyId } from '../src/data/enemies';
+import { offeneBestellungen } from '../src/gfx/bestellung';
 import { enemyArtWidth } from '../src/gfx/enemyart';
 import { figurbreite } from './figurbreite';
 import { MAPS, lanePaths } from '../src/data/maps';
@@ -32,15 +33,29 @@ const warn = (m: string): void => { console.log(`  Hinweis: ${m}`); };
 
 console.log('GEDRAENGE\n');
 
+// **Eine offene Bestellung ist kein Fehler, aber auch kein Schweigen** (K5,
+// v328). Die Breite eines Platzhalters ist die Breite eines Platzhalters -
+// sie sagt nichts darueber, ob die gelieferte Figur durch die engste
+// Wegstelle passt. Was fehlt, nennt `npm run bildtor` mit Namen; ein Bild,
+// das fehlt und in KEINER Bestellung steht, bleibt hier ein Fehler.
+const bestellteGegner = new Set(offeneBestellungen()
+  .filter((b) => b.art === 'gegner').map((b) => b.schluessel));
+const wartend: string[] = [];
+
 const figuren = new Map<EnemyId, { voll: number; rumpf: number }>();
 for (const id of Object.keys(ENEMIES) as EnemyId[]) {
   const f = await figurbreite(id);
+  if (!f && bestellteGegner.has(id)) { wartend.push(id); continue; }
   if (!f) { fail(`${id}: kein Bild im Vorrat - dann misst diese Pruefung nichts.`); continue; }
   figuren.set(id, f);
   const kachel = enemyArtWidth(id);
   console.log(`  ${ENEMIES[id].name.padEnd(14)} Kachel ${kachel.toFixed(0).padStart(4)}   `
     + `Figur ${f.voll.toFixed(0).padStart(4)} (${((f.voll / kachel) * 100).toFixed(0)} % der Kachel)   `
     + `Rumpf ${f.rumpf.toFixed(0)}`);
+}
+if (wartend.length) {
+  console.log(`  (${wartend.length} nicht gemessen, weil das Bild bestellt und noch nicht `
+    + `geliefert ist: ${wartend.join(', ')} - siehe \`npm run bildtor\`)`);
 }
 
 console.log('');

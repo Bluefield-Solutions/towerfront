@@ -1,8 +1,27 @@
 # Referenzabgleich — Stützturm (C3, „Bannturm")
 
-Stand: v321 · 11.09.2026
+Stand: v328 · 11.09.2026
 
-**Nachgesehen in v321 — unverändert, und diesmal ist das eine Aussage über die
+**Nachgesehen in v328 — und diesmal ist etwas dazugekommen, das den Stützturm
+wirklich betrifft.** Mit **S-N6-01** (v327) gibt es sechs Karten, die das
+Verhalten ändern statt einer Zahl, und zwei davon sind Stützwirkungen:
+**Raureif** verlängert jede Bremse, **Eisgriff** macht aus zwei Bremsen einen
+Stillstand. Damit hat der Frostturm zum ersten Mal Material, das ihn vom
+Beiwerk zum Träger macht — und zwar ohne einen neuen Turm.
+
+**Das verschiebt die Frage hinter C3.** Sie hiess „fehlt ein fünfter Turm, der
+stützt statt zu töten"; sie heisst jetzt „fehlt er noch, wenn der vorhandene
+Stützturm über Karten wachsen kann". Gemessen ist das noch nicht: die sechs
+Wirkungen sind in v327 auf *Unterscheidbarkeit* gemessen worden, nicht darauf,
+wie stark sie einen einzelnen Turm heben. Das ist eine eigene Runde und steht
+hier, damit sie nicht vergessen wird.
+
+**Und mit S-N6-02** (v328) gibt es auf der Gegenseite eine Stütze: der
+Sanitäter heilt seine Nachbarn. Ein Stützturm, der gegen eine Stütze steht,
+ist eine andere Sache als einer, der gegen Masse steht — das Vorbild dafür ist
+da, es ist nur noch nicht gemessen.
+
+**Nachgesehen in v321 — unverändert, und das war eine Aussage über die
 Runden und nicht über den Turm.** Der Bannturm ist seit v295 nicht angefasst;
 v315 bis v321 haben an der Oberfläche und am Messgerät gearbeitet, nicht an
 der Mechanik. S5 hält weiter.

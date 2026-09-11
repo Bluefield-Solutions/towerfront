@@ -1,8 +1,24 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v321 · 11.09.2026
+Stand: v328 · 11.09.2026
 
-**Nachgesehen in v321 — jede Zahl dieser Tabelle hat sich bewegt, und zwar
+**Nachgesehen in v328 — jede Zahl steht, wo sie in v321 stand.** `npm run
+uxaudittor` misst unverändert `zug` 8,0 · `ruhe` 13,1 · `bauwahl` 22,0 ·
+`pruefsteg` 27,0 · `teurer` 21,7 · `welle` 13,9 %, und die Ratschen stehen seit
+v320 auf den heutigen Werten statt auf denen von v294.
+
+**Sieben Runden ohne Bewegung sind hier eine gute Nachricht und keine
+schlechte:** v322 bis v328 haben am Kristallbild, am Meteor, am Untergrund, am
+Kartenstapel und an einer neuen Gegnerart gearbeitet — also überall dort, wo
+ein Rückschritt in der Bedienung am ehesten unbemerkt passiert. Der Sanitäter
+(v328) bringt zum Beispiel einen Ring und Fäden ins Bild; sie liegen auf dem
+Spielfeld und nicht in der Bedienung, und die Zahlen sagen genau das.
+
+**Was offen bleibt, ist unverändert N4M und N4F** — die letzten zwei Punkte
+auf H1 und die 17,8 % der Bahn unter `#dock` und `#b-wave`. Beide sind in v320
+gemessen und seitdem nicht angefasst.
+
+**Nachgesehen in v321 — jede Zahl dieser Tabelle hatte sich bewegt, und zwar
 nach unten.** Gemessen mit `npm run uxaudittor`, dasselbe Gerät, dieselbe
 Auflösung:
 

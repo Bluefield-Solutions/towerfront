@@ -260,13 +260,32 @@ export const PLAN_ASCHESCHLUCHT: Wave[] = [
     { enemy: 'splitter', count: 4, gap: 1.0, delay: 0 },
     { enemy: 'runner', count: 9, gap: 0.3, delay: 5 },
     { enemy: 'flyer', count: 5, gap: 0.9, delay: 10 } ] },
-  { bonus: 334, note: 'Alles gleichzeitig', groups: [
+  { bonus: 334, note: 'Sanitäter — erst ihn, dann die Wand', groups: [
+    // **Der Heiler steht auf der Ascheschlucht** (S-N6-02), und das ist
+    // keine Willkuer: sie hat den laengsten Weg des Spiels, die Gegner
+    // stehen also am laengsten unter Feuer - genau dort wiegt eine Heilung
+    // je Sekunde am meisten, und genau dort merkt man, dass die Leiste
+    // stehenbleibt statt zu fallen.
+    //
+    // **Spaet, und nach dem Schildtraeger des Spiralhains.** Die Reihenfolge
+    // ist dieselbe Ueberlegung wie dort: erst lernt man, dass eine Stuetze
+    // im Pulk steht, dann trifft man auf eine zweite Art davon. Zwei
+    // Sanitaeter, nicht einer - bei einem waere die Welle mit einem
+    // Gluecksschuss entschieden.
+    // **Die Taktung der uebrigen vier Gruppen bleibt unangetastet.** Der
+    // erste Entwurf hat den Sanitaeter vorangestellt und alle anderen um
+    // zwei Sekunden nach hinten geschoben - zwei Aenderungen in einem Zug,
+    // und `npm run sim` wurde rot ("Ziellogik stark: in keiner Welle auf
+    // keiner Karte vorn"). Wer eine Wirkung messen will, aendert eine Sache
+    // (Regel 13).
+    { enemy: 'heiler', count: 2, gap: 5, delay: 0 },
     { enemy: 'brute', count: 3, gap: 1.2, delay: 0 },
     { enemy: 'splitter', count: 3, gap: 1.2, delay: 4 },
     { enemy: 'runner', count: 7, gap: 0.3, delay: 8 },
     { enemy: 'flyer', count: 5, gap: 0.9, delay: 12 } ] },
-  { bonus: 1089, note: 'Zwei Titanen und der ganze Rest', groups: [
+  { bonus: 1089, note: 'Zwei Titanen, und einer hält sie am Leben', groups: [
     { enemy: 'titan', count: 1, gap: 8, delay: 0 },
+    { enemy: 'heiler', count: 1, gap: 1, delay: 2 },
     { enemy: 'brute', count: 3, gap: 1.4, delay: 4 },
     { enemy: 'splitter', count: 3, gap: 1.0, delay: 8 },
     { enemy: 'runner', count: 6, gap: 0.28, delay: 13 } ] },

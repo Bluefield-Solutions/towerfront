@@ -1,9 +1,23 @@
 # Referenzabgleich — Fähigkeiten freischalten (C18)
 
-Stand: v321 · 11.09.2026
+Stand: v328 · 11.09.2026
 
-**Nachgesehen in v321 — nachgefahren, nicht gestempelt: unverändert.**
+**Nachgesehen in v328 — nachgefahren, nicht gestempelt: unverändert.**
 `npm run c18` meldet die erste Karte mit **einer** Fähigkeit als gewonnen,
+Kristall **19 von 42** — dieselbe Zahl wie in v307 und v321, über einundzwanzig
+Runden auf den Punkt.
+
+**Und das ist bei dieser Zahl kein Stillstand, sondern die Zusage selbst.**
+In diesen einundzwanzig Runden sind ein dunklerer Boden mit vier neuen
+Wegfarben (v326), sechs Wirkungskarten (v327) und eine neue Gegnerart (v328)
+dazugekommen. Dass die Eröffnung dabei auf den Kristallpunkt genau gleich
+bleibt, ist gemessen — nicht angenommen: die sechs Wirkungskarten kosten alle
+Erfahrung, der Grundstapel ist unverändert zwölf, und der Sanitäter steht auf
+einer anderen Karte. **Genau dafür ist `npm run c18` da** — zwei Sekunden
+statt zwei Minuten, jede Runde nachfahrbar.
+
+**Nachgesehen in v321:**
+`npm run c18` meldete die erste Karte mit **einer** Fähigkeit als gewonnen,
 Kristall **19 von 42** — dieselbe Zahl wie in v307. An den Fähigkeiten ist
 seit v286 nichts angefasst worden, und die sieben Runden v315 bis v321 haben
 ausschließlich an der Oberfläche und am Messgerät gearbeitet.

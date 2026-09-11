@@ -87,7 +87,7 @@ const ersterTurm = (g) => g.gebaute[0];
 const TOR = ['menu-karte', 'menu-einweisung', 'menu-fortschritt', 'menu-sieg',
   'menu-niederlage', 'welle8', 'kristall-riss', 'kernraub', 'zier-beruehrung',
   'menu-tastatur', 'weiche', 'menu-wahl', 'menu-stapel', 'meteor-anflug',
-  'wirkungen'];
+  'wirkungen', 'sanitaeter'];
 const nurTor = process.argv.includes('--tor');
 
 /** Eine Aufnahme: Zustand herstellen, ein paar Bilder laufen lassen, ausgeben.
@@ -387,6 +387,35 @@ takes.push(['weiche', () => shot('weiche', 844, 390, (s, r) => {
   const p = r.worldToScreen(528, 640);
   r.panBy(422 - p.x, 195 - p.y);
   return 30;
+})]);
+
+takes.push(['sanitaeter', () => shot('sanitaeter', 844, 390, (s, r) => {
+  // **Der Sanitaeter zwischen Verwundeten** (S-N6-02) - gestellt, nicht
+  // abgewartet: er kommt in Welle 13 der Ascheschlucht, und eine Aufnahme,
+  // die dorthin simuliert, dauert Minuten und haengt an einem Wellenplan.
+  //
+  // Gefragt wird genau das, was die Story fordert: sieht man, WER hier
+  // heilt und WEN. Der Ring sagt das erste, die Faeden das zweite.
+  s.reset(7, 'normal', 'ascheschlucht');
+  s.waveIndex = 5;
+  stock(s, 4);
+  s.startWave();
+  for (let i = 0; i < 60 * 7; i++) s.update(DT);
+  const lebende = s.enemies.filter((e) => !e.dead);
+  const arzt = s.spawnZumPruefen('heiler', 0);
+  if (arzt && lebende.length) {
+    // Mitten in den Pulk, und die Nachbarn verwundet - sonst haengt an ihm
+    // kein einziger Faden, und die Aufnahme zeigte die halbe Sache.
+    arzt.x = lebende[0].x; arzt.y = lebende[0].y - 40;
+    arzt.travelled = lebende[0].travelled;
+    for (const e of lebende) e.hp = Math.max(1, Math.round(e.hpMax * 0.4));
+    s.update(DT);
+    r.resize();
+    r.zoomAt(2.4, 422, 195);
+    const p = r.worldToScreen(arzt.x, arzt.y);
+    r.panBy(422 - p.x, 195 - p.y);
+  }
+  return 0;
 })]);
 
 takes.push(['wirkungen', () => shot('wirkungen', 844, 390, (s, r) => {

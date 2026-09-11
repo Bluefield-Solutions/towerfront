@@ -1,13 +1,23 @@
 # Towerfront — Genre-Abgleich
 
-Stand: v321 · 11.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+Stand: v328 · 11.09.2026 · Gemessen von `npm run bericht`: **30 von 30
 
-**Nachgefahren in v321, nicht geglaubt:** unverändert **30 von 30, gewichtet
-100 %** — Fokus 4/4, Rollen 6/6, Gegner 6/6, Karten 6/6, Politur 8/8. Von Hand
-beurteilt bleiben P6 und P7.
+**Nachgefahren in v328, nicht geglaubt** (`npm run bericht`): unverändert
+**30 von 30, gewichtet 100 %**. Von Hand beurteilt bleiben P6 und P7.
 
-**Und die Zahl steht seit sieben Runden still, während sich das Spiel bewegt
-hat** (v315 bis v321: Ruhezustand, Turmmenü am Turm, Wirkungsbilanz,
+**Die Zahl steht jetzt seit vierzehn Runden still, und in diesen vierzehn hat
+das Spiel sechs Wirkungskarten und eine neue Gegnerart bekommen** (v327, v328)
+— beides Dinge, nach denen ein Genre-Abgleich normalerweise fragt. Er fragt
+nur nicht mehr: seine sechs Gegner-Kriterien sind seit v110 erfüllt, und ob es
+acht Gegnerarten sind oder neun, steht in keinem davon.
+
+**Das ist die eigentliche Auskunft dieses Dokuments und sie wird mit jeder
+Runde deutlicher:** eine Messung, die bei jeder Veränderung dieselbe Zahl
+sagt, misst etwas, das fertig ist. Sie hält den Stand — sie zeigt keinen Weg
+mehr.
+
+**Und die Zahl stand schon von v315 bis v321 still, während sich das Spiel
+bewegt hat** (v315 bis v321: Ruhezustand, Turmmenü am Turm, Wirkungsbilanz,
 Verdeckung, Wellenvorschau, Feldverdeckung, gesperrte Kachel). Das ist kein
 Fehler der Messung, sondern ihre Aussage: **dieser Abgleich misst
 Vollständigkeit gegen das Genre, nicht Güte.** Der wichtigste Satz des

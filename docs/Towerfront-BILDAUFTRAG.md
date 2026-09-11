@@ -3021,6 +3021,77 @@ Gerüst hat Löcher, ein Trichter nicht — und ein Anteil durchsichtiger Punkte
 innerhalb des Umrisses misst genau das, ohne dass jemand „wirkt offen genug"
 sagen muss (Regel 8 arbeitet hier für uns, nicht gegen uns).
 
+---
+
+### 8d.4 `33_sanitaeter.png` — der Sanitäter, die erste Gegnerart, die *gibt*
+
+**Warum er anders aussehen muss als die anderen acht.** Alle bisherigen Gegner
+sind Ziele: man schiesst sie der Reihe nach ab, und die Reihenfolge ist
+gleichgültig. Der Sanitäter stellt die Lebenspunkte seiner Nachbarn wieder
+her, solange er lebt — wer ihn stehen lässt, kommt gegen den Pulk nicht an.
+**Das muss die Silhouette auf 22 Bildschirmpunkten sagen**, sonst ist er
+dieselbe Überraschung wie ein Schildträger ohne Ring.
+
+Er ist **kein Kämpfer**: keine Waffe, kein Rohr, kein Geschützturm. Was er
+trägt, arbeitet nach hinten und nicht nach vorn — Tanks, Schläuche, eine
+Auslegerarm-Andeutung, ein Kran.
+
+**Maße im Prompt selbst** (v230): 512 × 512, quadratisch, freigestellt auf
+Transparenz.
+
+```
+[STILBLOCK NEUBAU EINFÜGEN]
+
+SUBJECT: a single unarmed field-repair vehicle of the invading faction, seen
+from directly above (top-down), 512 x 512 pixels, square, isolated on full
+transparency with no background and no ground shadow - the game bakes its own
+shadow.
+
+It is a tracked or six-wheeled service rig, WIDER and LOWER than the other
+vehicles of this faction: fluid tanks along both flanks, a coiled hose reel,
+a short articulated arm folded back over the hull, a pair of clamps. Nothing
+on it points forward. There is NO weapon of any kind - no barrel, no muzzle,
+no turret, no aimed device. Every other vehicle in this faction shoots; this
+one is the only one that does not.
+
+Its one saturated accent is a cold violet-tinted glow and it belongs to the
+REPAIR APPARATUS - the fluid in the tanks, the tip of the arm, the hose
+coupling - never to a sight or a sensor. The accent should read as "something
+is being given out here", not "something is aiming".
+
+The silhouette must be clearly distinguishable from the armoured brute and
+the splitter of the same faction at a glance: those are compact and angular,
+this one is wide, open and cluttered with equipment - the outline should have
+gaps in it where the arm and the reel stand off the hull.
+```
+
+[AUSGABE-BLOCK FIGUR EINFÜGEN]
+
+### Abnahme 8d.4
+
+Gemessen wird mit `npm run probebild -- <ordner>`; Format, Alpha, Rand, reines
+Schwarz, Feindetail und Lichtwinkel stehen **einmal** in Abschnitt 5 und
+gelten unverändert (Regel 15).
+
+| Prüfung | Gefordert | Womit |
+|---|---|---|
+| Silhouetten-Abstand zu den acht Gegnern | Überdeckung **höchstens 0,60** | `npm run probebild` |
+| Offene Form | Anteil durchsichtiger Punkte **innerhalb** des Umrisses mindestens 15 % | `npm run probebild` |
+| Breite auf dem Bildschirm | mindestens 13 px | `npm run lesbarkeit` |
+| Kante gegen den Untergrund | mindestens 1,5 | `npm run lesbarkeit` |
+| Anteil gesättigter Akzente | höchstens 5 % der Fläche | Stilblock 8d |
+
+**Die Kante von 1,5 ist seit v326 keine Wunschzahl mehr, sondern der Stand:**
+alle zwanzig heutigen Figuren liegen darüber, und die Ratsche in
+`npm run lesbarkeit` steht auf null. Eine Lieferung, die darunter bleibt,
+macht das Tor rot — das ist gewollt.
+
+**Was im Spiel schon steht und nicht bestellt werden muss:** der Ring um ihn
+und die Fäden zu denen, die er versorgt. Dieselbe Sprache wie beim
+Schildträger seit v110, nur grün statt violett und durchgezogen statt
+gestrichelt — der Träger gibt in Stufen, der Sanitäter stetig. Das Bild muss
+die Rolle also nicht allein tragen; es muss ihr nur nicht widersprechen.
+
 **Bis das Bild da ist, baut das Spiel gegen den Platzhalter** (K5), und
 `npm run bildtor` nennt `werft_1_1` bei jedem Lauf als offene Bestellung.
 

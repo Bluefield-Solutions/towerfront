@@ -1992,13 +1992,37 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
   }
 }
 
-// Jede Gegnerart braucht ein gerendertes Bild - sonst laeuft eine gezeichnete
-// Silhouette zwischen gerenderten Fahrzeugen.
+// **Jede Gegnerart hat ein Bild ODER eine laufende Bestellung** (K1, v328).
+//
+// Bis v327 stand hier "jede Gegnerart braucht ein gerendertes Bild - sonst
+// laeuft eine gezeichnete Silhouette zwischen gerenderten Fahrzeugen". Dieser
+// Satz ist seit v273 nicht mehr wahr: ein fehlendes Bild faellt nicht mehr
+// auf eine gezeichnete Ersatzform zurueck, sondern auf `getPlatzhalter` -
+// Silhouette in der richtigen Groesse, Schraffur, Marke #FF00E5 - und
+// `npm run bildtor` nennt es als OFFENE BESTELLUNG.
+//
+// Damit beantworteten zwei Tore dieselbe Frage und gaben verschiedene
+// Antworten: hier "Fehler", dort "kein Fehler, eine Bestellung". K5
+// entscheidet, welche gilt - gebaut wird gegen den Platzhalter, sonst haelt
+// eine neue Gegnerart die ganze Kette an, bis jemand malt.
+//
+// **Gestrichen wird die Pruefung trotzdem nicht, sie wird umgebaut** (K1).
+// Was sie jetzt haelt, haelt sonst niemand: dass die zwei Listen
+// UEBEREINSTIMMEN. Ein Bild, das fehlt und NICHT als Bestellung gefuehrt
+// wird, ist genau der stille Fall, den `bestellung.ts` in v272 abschaffen
+// sollte - und der kaeme zurueck, sobald jemand die Ableitung dort aendert.
 {
   const { hasEnemyArt } = await import('../src/gfx/enemyart');
   const { ENEMIES } = await import('../src/data/enemies');
+  const { offeneBestellungen } = await import('../src/gfx/bestellung');
+  const bestellt = new Set(offeneBestellungen()
+    .filter((b) => b.art === 'gegner').map((b) => b.schluessel));
   for (const id of Object.keys(ENEMIES) as (keyof typeof ENEMIES)[]) {
-    if (!hasEnemyArt(id)) problems.push(`Gegnerbild fehlt: ${id}.`);
+    if (!hasEnemyArt(id) && !bestellt.has(id)) {
+      problems.push(`Gegnerbild fehlt: ${id} - und es steht in KEINER offenen `
+        + 'Bestellung. Ein Bild, das fehlt und nicht gefuehrt wird, ist genau die '
+        + 'stille Luecke, die `src/gfx/bestellung.ts` abschaffen sollte.');
+    }
   }
 }
 
@@ -3249,6 +3273,93 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
         + 'Schildtraeger. Der Traeger haelt den ganzen Pulk am Leben - ihn stehen zu '
         + 'lassen ist der teuerste Fehler, den die Ziellogik machen kann.');
     }
+  }
+  // **Und dasselbe fuer den Sanitaeter** (S-N6-02). Er ist der zweite
+  // Gegner, der etwas GIBT, und `npm run konter` sagt ueber ihn "Nimm ihn
+  // zuerst" - ein Modus, der "den gefaehrlichsten" heisst und ihn stehen
+  // laesst, widerspricht dem eigenen Rat des Spiels.
+  //
+  // Derselbe gestellte Fall wie darueber, nur mit dem Heiler an der Stelle
+  // des Traegers: ohne den Zuschlag nimmt der Modus den Titanen.
+  {
+    state.reset(778, 'normal', 'farnkessel');
+    state.gold = 99999;
+    const sp = candidateSpots(state)[0];
+    if (!state.build(sp.x, sp.y, 'arrow')) throw new Error('Gefahr/Heiler: kein Turm setzbar.');
+    const turm = ersterTurm(state);
+    turm.zielwahl = 'stark';
+    const bahn = state.lanes[0];
+    let beste = 0, dm = Infinity;
+    for (let t = 0; t <= bahn.length; t += 5) {
+      const q = bahn.at(t);
+      const d = Math.hypot(q.x - turm.x, q.y - turm.y);
+      if (d < dm) { dm = d; beste = t; }
+    }
+    const titan = state.spawnZumPruefen('titan', 0);
+    const arzt = state.spawnZumPruefen('heiler', 0);
+    if (!titan || !arzt) throw new Error('Gefahr/Heiler: Gegner nicht setzbar.');
+    titan.travelled = beste;
+    arzt.travelled = beste - 30;
+    state.update(1 / 60);
+    const ziel = turm.target;
+    if (!ziel) {
+      problems.push('Ziellogik "Gefahr" (Heiler): der Turm hat gar kein Ziel gefasst - '
+        + 'dann sagt die Pruefung nichts (Regel 3).');
+    } else if (ziel !== arzt) {
+      problems.push(`Ziellogik "Gefahr" nimmt "${ziel.def}" statt den Sanitaeter. `
+        + 'Er stellt den ganzen Pulk wieder her - ihn neben einem Titanen stehen zu '
+        + 'lassen ist genau der Fehler, den dieser Modus verhindern soll.');
+    }
+  }
+  // **Der Sanitaeter haelt seine Nachbarn am Leben** (S-N6-02).
+  //
+  // Der Fall wird GESTELLT und nicht abgewartet - die Lehre aus v219: ein
+  // Messplatz, der darauf wartet, dass in einer Welle zufaellig ein Heiler
+  // neben einem Verwundeten steht, hoert leise auf zu pruefen, sobald sich
+  // ein Wellenplan aendert.
+  //
+  // Gestellt sind ein Verwundeter auf einem Zehntel seiner Lebenspunkte und
+  // ein Heiler daneben; gerechnet wird eine Sekunde ohne jeden Turm. Danach
+  // muss der Verwundete MEHR Leben haben als vorher. Die Nullprobe steht
+  // daneben und ist der ganze Beweis: derselbe Aufbau mit dem Heiler WEIT
+  // weg darf nichts zurueckholen - sonst misst die Zahl irgendeine andere
+  // Erholung und bezeugt den Heiler, ohne ihn je gesehen zu haben
+  // (Regel 13).
+  {
+    state.reset(4242, 'normal', 'ascheschlucht');
+    const stellen = (abstand: number): number => {
+      state.enemies.length = 0;
+      const wund = state.spawnZumPruefen('infantry', 0);
+      const arzt = state.spawnZumPruefen('heiler', 0);
+      if (!wund || !arzt) throw new Error('Sanitaeter: Gegner nicht setzbar.');
+      wund.hp = Math.max(1, Math.round(wund.hpMax * 0.1));
+      const vorher = wund.hp;
+      const bahn = state.lanes[0];
+      wund.travelled = 400;
+      arzt.travelled = 400 + abstand;
+      const a = bahn.at(wund.travelled), b = bahn.at(arzt.travelled);
+      wund.x = a.x; wund.y = a.y;
+      arzt.x = b.x; arzt.y = b.y;
+      for (let i = 0; i < 60; i++) state.update(1 / 60);
+      return wund.hp - vorher;
+    };
+    // Erst die Nullprobe: der Heiler steht ausser Reichweite.
+    const ohne = stellen(1200);
+    const mit = stellen(20);
+    if (ohne > 0.5) {
+      problems.push(`Sanitaeter, Nullprobe: ein Verwundeter holt ${ohne.toFixed(1)} `
+        + 'Lebenspunkte zurueck, obwohl der Heiler ausser Reichweite steht. Dann misst '
+        + 'die Pruefung nicht den Heiler, sondern irgendeine andere Erholung.');
+    }
+    if (mit <= 0.5) {
+      problems.push(`Sanitaeter: ein Verwundeter neben einem Heiler holt ${mit.toFixed(1)} `
+        + 'Lebenspunkte in einer Sekunde zurueck. Der Heiler ist die einzige Gegnerart, '
+        + 'die etwas GIBT - tut er es nicht, ist er ein Gegner mit einem Namen.');
+    }
+    // Die Zahl steht im Protokoll, nicht nur im Urteil: eine Pruefung, die
+    // nur schweigt, sagt nicht, ob sie ueberhaupt etwas gemessen hat.
+    console.log(`  Sanitaeter: ein Verwundeter holt in einer Sekunde ${mit.toFixed(1)} `
+      + `Lebenspunkte zurueck, ausser Reichweite ${ohne.toFixed(1)}.`);
   }
   // Und die Einstellung muss den Spielstand ueberleben.
   {

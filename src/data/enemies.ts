@@ -1,6 +1,6 @@
 export type EnemyId =
   | 'crawler' | 'runner' | 'brute' | 'titan' | 'flyer' | 'splitter' | 'splitling'
-  | 'infantry';
+  | 'infantry' | 'heiler';
 
 export interface SplitRule {
   into: EnemyId;
@@ -27,6 +27,17 @@ export interface EnemyDef {
    *  Die uebrigen Gegner sind Seitenansichten und werden nur gespiegelt - ein
    *  Fahrzeug in Dreiviertelansicht kippt beim Drehen. Eine Aufsicht kippt
    *  nicht, sie dreht sich richtig mit. */
+  /** **Wieviele Lebenspunkte er seinen NACHBARN je Sekunde zurueckgibt**
+   *  (S-N6-02).
+   *
+   *  Nie sich selbst - aus demselben Grund wie beim Schildtraeger seit v110:
+   *  ein Heiler, der sich selbst heilt, ist ein unsterblicher Einzelgaenger
+   *  statt einer Stuetze, und die Zielreihenfolge waere wieder egal.
+   *
+   *  Die Zahl steht hier und nicht an der Wellengruppe, weil der Heiler eine
+   *  eigene ART ist und kein Zusatz: der Schild sitzt an der Gruppe, weil
+   *  jede Art ihn tragen kann; heilen kann nur einer. */
+  heilt?: number;
   /** Zerfaellt beim Tod. */
   split?: SplitRule;
   boss?: boolean;
@@ -108,6 +119,26 @@ export const ENEMIES: Record<EnemyId, EnemyDef> = {
     hp: 40, speed: 178, bounty: 1, leak: 1, radius: 14, armor: 0, slowResist: 0,
     // Bruchstueck - Blassgelb
     body: '#4A5260', trim: '#EFE24C',
+  },
+  // **Der Heiler ist die erste Gegnerart, die etwas GIBT** (S-N6-02).
+  //
+  // Alle acht anderen sind Ziele; keiner aendert, was der Spieler tun MUSS.
+  // Der Schildtraeger tut es und ist gemessen die interessanteste Sache im
+  // Wellenplan - nur ist er ein Zusatz an einer Gruppe und keine Art.
+  //
+  // **Seine Zahlen sagen "lass mich nicht stehen":** wenig Leben (er soll
+  // zu erledigen sein, wenn man ihn erkennt), langsam (er bleibt im Pulk,
+  // sonst heilt er niemanden), und eine Heilung, die ueber eine Welle
+  // gerechnet mehr wiegt als er selbst. Panzerung 0 - wer ihn findet,
+  // soll ihn auch mit dem ersten Turm nehmen koennen; die Schwierigkeit ist
+  // das Erkennen und das Zielen, nicht das Durchdringen.
+  heiler: {
+    id: 'heiler', name: 'Sanitäter',
+    hp: 96, speed: 88, bounty: 9, leak: 1, radius: 22, armor: 0, slowResist: 0.2,
+    heilt: 14,
+    // Stuetzrolle - dasselbe Violett wie der Schildtraeger sie im Ring
+    // traegt: die Farbe sagt die ROLLE, nicht die Art (siehe `trim`).
+    body: '#434B58', trim: '#B07CFF',
   },
   titan: {
     id: 'titan', name: 'Leerentitan',

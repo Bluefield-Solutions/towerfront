@@ -740,10 +740,25 @@ console.log('  Stufe 1 gegen Stufe 6: '
   }
 }
 
+// **Eine offene Bestellung ist kein Fehler, aber auch kein Schweigen** (K5,
+// v328). Eine Figur, die noch gar nicht geliefert ist, laeuft im Spiel als
+// Platzhalter - magenta, schraffiert, in der richtigen Groesse. Ihren
+// Kontrast zu messen hiesse, den Platzhalter zu bewerten; dass sie fehlt,
+// nennt `npm run bildtor` mit Namen.
+//
+// **Uebersprungen wird trotzdem nur, was WIRKLICH bestellt ist.** Ein Bild,
+// das fehlt und in keiner Bestellung steht, bleibt ein Fehler - sonst waere
+// diese Zeile ein Weg, jede unbequeme Figur aus der Messung zu nehmen.
+const { offeneBestellungen } = await import('../src/gfx/bestellung.ts');
+const bestellteGegner = new Set(offeneBestellungen()
+  .filter((b) => b.art === 'gegner').map((b) => b.schluessel));
+
 console.log('\nGegner (Kontrast, Breite, Farbe):');
 const enemyColours = [];
+const uebersprungen = [];
 for (const [id, def] of Object.entries(ENEMIES)) {
   const buf = enemyArt.get(id);
+  if (!buf && bestellteGegner.has(id)) { uebersprungen.push(id); continue; }
   if (!buf) { problems.push(`Gegnerbild ${id} fehlt.`); continue; }
   const body = hexRgb(def.body);
   const m = await measureSprite(buf, body, SCHLEIER_GEGNER);
@@ -787,6 +802,11 @@ for (const [id, def] of Object.entries(ENEMIES)) {
 // Figur braucht, sagt diese Pruefung nicht - sie sagt nur, dass keine
 // deutlich weniger mitbringen darf als ihre Nachbarn. Sonst ist sie im Feld
 // matschig, waehrend alle anderen scharf sind.
+if (uebersprungen.length) {
+  console.log(`  (${uebersprungen.length} nicht gemessen, weil das Bild bestellt und noch `
+    + `nicht geliefert ist: ${uebersprungen.join(', ')} - siehe \`npm run bildtor\`)`);
+}
+
 console.log('\nBildpunkte je Weltpunkt (D21):');
 {
   const dichten = [];

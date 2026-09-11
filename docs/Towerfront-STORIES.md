@@ -1,6 +1,6 @@
 # Towerfront — Stories
 
-Stand: v327 · 11.09.2026
+Stand: v328 · 11.09.2026
 
 **Nachgesehen in v324 — Paket N4 ist durch bis auf zwei Punkte, die dem Nutzer
 gehören, und die Kette hat dabei einen eigenen blinden Fleck gefunden.**

@@ -1,8 +1,33 @@
 # Towerfront — Anforderungskatalog
 
-Stand: v321 · 11.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+Stand: v328 · 11.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
 
-**Nachgesehen in v321 — Paket N4 (die Oberfläche) ist zur Hälfte gebaut, und
+**Nachgesehen in v328 — Paket N4 ist durch, N5 und N6 haben begonnen.**
+
+| Story | gebaut | gemessen |
+|---|---|---|
+| S-N4-09 · Kristall ganz im Bild | v322 | vier Formate, Körper drin |
+| S-N4-10 · ein Ding, ein Wort | v323 | „Karte", überall |
+| S-N5-06 · der Meteor sagt, wohin er fällt | v325 | größte Lücke **3,7 %** von erlaubten 15 |
+| S-N5-07 · der Grund wird dunkel | v326 | Figuren unter der Lesbarkeitslinie **20 → 0** |
+| S-N6-01 · Wirkungen als Kartenmaterial | v327 | 6 Wirkungen, **0 Paare** mit gleichem Abdruck |
+| S-N6-02 · der Sanitäter | v328 | gestellter Fall: **14,0** zurückgeholt, Nullprobe 0,0 |
+
+**Der wichtigste Satz dieses Katalogs bekommt damit seine erste echte
+Antwort.** Er hiess: *der Genre-Abgleich steht auf 30 von 30, und das Spiel
+macht trotzdem wenig Spaß.* Die Runden v325 bis v328 haben viermal hintereinander
+an derselben Stelle angesetzt — **nicht an dem, was das Spiel KANN, sondern an
+dem, was es SAGT und was es zu ENTSCHEIDEN gibt.** Der Meteor konnte immer
+schon zielen, der Stapel konnte immer schon wachsen; was fehlte, war eine
+Linie zum Einschlag und ein Unterschied zwischen zwei Karten.
+
+**Gemessen ist die Wirkung davon noch nicht**, und das gehört hierher statt in
+eine Fussnote: die vier Zielzahlen aus Abschnitt 2.1 haben sich nicht bewegt
+(`npm run sim`: Stellen mit Verlust 2,0 von 5; längste folgenlose Strecke 13,0
+von 3; Abstand der Spielstile 11,2 von 20). Sie hängen an P2 (Knappheit) und
+an der Laufstruktur, nicht an N5 und N6.
+
+**Nachgesehen in v321 — Paket N4 (die Oberfläche) war zur Hälfte gebaut, und
 es hat eine Regel geliefert, die über den Katalog hinausgeht.**
 
 | Story | gebaut | gemessen |

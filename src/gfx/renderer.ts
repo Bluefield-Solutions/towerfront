@@ -2280,6 +2280,58 @@ export class Renderer {
         ctx.restore();
       }
 
+      // **Der Heiler: derselbe Satz wie beim Schildtraeger, andere Farbe**
+      // (S-N6-02). Ein Ring um ihn und Faeden zu denen, die er versorgt -
+      // die Reihenfolge muss man SEHEN, nicht erschliessen (G5).
+      //
+      // Der Faden geht nur zu VERWUNDETEN Nachbarn, nicht zu allen in
+      // Reichweite. Sonst haengt an einem Heiler im Pulk ein Stern aus
+      // zwanzig Linien, und die Auskunft "hier wird gerade etwas
+      // zurueckgeholt" ginge in ihm unter - dieselbe Ueberlegung wie beim
+      // Traeger, dessen Faeden nur zu denen gehen, die wirklich Schild
+      // tragen.
+      //
+      // Durchgezogen statt gestrichelt und in Gegenrichtung pulsierend: der
+      // Traeger gibt in Stufen (sein Takt ist 1,6 s), der Heiler stetig.
+      // Zwei Stuetzen, die gleich aussehen, sind eine Stuetze mit zwei
+      // Namen.
+      const heilt = ENEMIES[e.def].heilt ?? 0;
+      if (heilt > 0) {
+        ctx.save();
+        const puls = 0.55 + 0.35 * Math.sin(-s.time * 4 + e.wobble);
+        ctx.strokeStyle = hexA('#6BE6A8', 0.55 + 0.25 * puls);
+        ctx.lineWidth = 3;
+        for (const o of s.enemies) {
+          if (o === e || o.dead || o.hp >= o.hpMax) continue;
+          const dx = o.x - e.x, dy = o.y - e.y;
+          if (dx * dx + dy * dy > 150 * 150) continue;
+          ctx.beginPath();
+          ctx.moveTo(e.x, e.y - alt);
+          ctx.lineTo(o.x, o.y);
+          ctx.stroke();
+        }
+        ctx.translate(e.x, e.y - alt);
+        ctx.strokeStyle = hexA('#6BE6A8', 0.7 + 0.3 * puls);
+        ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(0, 0, sicht * 1.75, 0, Math.PI * 2); ctx.stroke();
+        // Ein Kreuz AM RING, nicht in seiner Mitte: der Ring sagt "Stuetze",
+        // das Kreuz sagt WELCHE. Ohne es ist er vom Traegerring nur an der
+        // Farbe zu unterscheiden, und Farbe allein traegt keine Auskunft
+        // (dieselbe Lehre wie bei den acht Gegnerfarben in v168).
+        //
+        // In der Mitte lag es auf der Figur und verdeckte genau das, was man
+        // erkennen soll - gesehen, nicht gemessen (Regel 8). Am oberen
+        // Scheitel steht es frei und wandert nicht mit der Laufrichtung.
+        const rr = sicht * 1.75;
+        const k = Math.max(4, sicht * 0.3);
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-k, -rr); ctx.lineTo(k, -rr);
+        ctx.moveTo(0, -rr - k); ctx.lineTo(0, -rr + k);
+        ctx.stroke();
+        ctx.restore();
+      }
+
       // Der Schild: ein Ring, dessen Staerke die Restzahl zeigt.
       //
       // Kein Zahlentext. Wieviele Treffer noch kommen muessen, liest man an

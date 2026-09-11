@@ -137,6 +137,26 @@ function befunde(d: EnemyDef): Befund[] {
     }
   }
 
+  // 3b. **Er heilt die anderen** (S-N6-02) - und das ist die einzige
+  //     Auffaelligkeit, bei der nicht der Turm die Antwort ist, sondern die
+  //     REIHENFOLGE. Deshalb steht sie ueber Panzerung und Tempo: wer sie
+  //     nicht befolgt, bei dem hilft kein Turm.
+  //
+  //     Die Staerke wird nicht geschaetzt, sondern gerechnet: wieviel er
+  //     ueber die Zeit zurueckholt, in der ein Turm ihn in Reichweite hat.
+  //     Ein Heiler, der weniger zurueckholt als ein einzelner Schuss
+  //     anrichtet, waere keine Ansage wert.
+  if ((d.heilt ?? 0) > 0) {
+    const h = schwerster();
+    raus.push({
+      staerke: 80,
+      kern: `heilt seine Nachbarn um ${d.heilt} je Sekunde`,
+      rat: `Nimm ihn zuerst — der ${h.name} braucht `
+        + `${Math.max(1, Math.ceil(d.hp / schadenJeSchuss(h)))} Treffer für ihn, `
+        + 'und solange er steht, kommst du gegen den Pulk nicht an.',
+    });
+  }
+
   // 4. Bremsresistenz: die eine Wirkung, die man nicht sieht, bis sie fehlt.
   const br = bremser();
   if (br && d.slowResist > 0.5) {

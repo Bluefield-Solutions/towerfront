@@ -717,6 +717,30 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der Waechter `Kartenstapel` (v338, S-N7-03).** Der Daten-Waechter prueft
+Tuerme, Gegner, Wellen, Karten und Grade - und seit v303 haengt jede einzelne
+Welle am Kartenstapel, der keinen hatte. Gemessen 24 Karten, davon 12 von
+Anfang an.
+
+**Gefragt wird die WIRKUNG, nicht der Eintrag.** Jede der vier Zusagen laeuft
+ueber `kartenWirkung([id])` gegen `KEINE_KARTEN`. Welche Achse multipliziert
+und welche summiert, steht damit weiter nur in `kartenWirkung` - eine zweite
+Liste im Waechter waere genau die, die beim naechsten `KartenArt` veraltet
+(Regel 15); und eine Karte, deren Wirkung sich abschalten laesst, ohne dass
+sich etwas aendert, hat keine (Regel 13).
+
+Vier Zusagen: jede Karte wirkt · keine zwei sind gleich (am ABDRUCK gefragt,
+nicht an `art` und `wert` - zwei Karten koennen ueber verschiedene Felder
+dasselbe tun) · jede ist ziehbar, auf dem Weg, den sie wirklich nimmt · keine
+schlaegt alles andere.
+
+**Die Preisschranke ist gemessen und nicht gesetzt** (Regel 10): die teuerste
+Karte kostet 1000 Erfahrung, ein ganz durchgebrachter Lauf bringt 1300 -
+abgelesen an `erfahrungFuer` statt danebengerechnet. **Die vierte Zusage wird
+JE ACHSE gefragt**, denn zwischen den Achsen gibt es kein gemeinsames Mass:
+120 Gold und 0,18 Markierung sind nicht zu vergleichen, und ein erfundener
+Umrechnungskurs waere eine Zahl ohne Messstelle (Regel 12).
+
 **Zwei Gegenproben bewiesen nichts mehr - und die zweite hat ein Loch im
 BEFUND aufgedeckt (v337).** Der Nachtlauf vom 11.09. fand sie auf v334.
 
@@ -1903,7 +1927,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v337. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v338. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

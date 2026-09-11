@@ -5537,6 +5537,37 @@ export const PROBEN = [
     // ist der Fall, der ohne diese Pruefung durchginge: eine Partie ist
     // weiter nachstellbar, der LAUF nicht, und der Unterschied faellt
     // niemandem auf, weil die gedruckten Zahlen ganz normal aussehen.
+    // **Zwei Namen fuer eine Karte** (v338, S-N7-03) - die Gegenprobe, die
+    // die Story woertlich verlangt.
+    //
+    // Der Eingriff gibt `wucht` den Wert von `schliff`. Beide sind
+    // Grundkarten derselben Achse, also faellt weder ein Preis noch eine
+    // Rangfolge auf; was bleibt, ist ein Angebot, in dem zwei Kacheln
+    // dasselbe tun. Der Waechter muss BEIDE nennen - eine Meldung, die nur
+    // die zweite nennt, sagt nicht, wogegen sie sich reibt.
+    name: 'Zwei Karten sind dieselbe Karte',
+    datei: 'src/data/karten.ts',
+    regel: /\{ id: 'wucht', name: 'Wucht', text: '([^']+)', art: 'schaden', wert: 1\.10, kosten: 0 \}/,
+    ersatz: "{ id: 'wucht', name: 'Wucht', text: '$1', art: 'schaden', wert: 1.06, kosten: 0 }",
+    tor: 'guards',
+    meldet: 'dieselbe Karte mit zwei Namen',
+  },
+  {
+    // **Eine Karte, die nichts tut** (v338, S-N7-03).
+    //
+    // Der Eingriff setzt `schliff` auf den neutralen Faktor. Im Quelltext
+    // sieht das unauffaellig aus - eine Zahl unter zwoelf anderen -, und im
+    // Spiel verdraengt die Karte bei jedem Zug eine, die etwas bewirkt. Der
+    // Waechter fragt deshalb nicht nach dem Eintrag, sondern nach der
+    // WIRKUNG: `kartenWirkung([id])` gegen `KEINE_KARTEN` (Regel 13).
+    name: 'Eine Karte ohne Wirkung',
+    datei: 'src/data/karten.ts',
+    regel: /art: 'schaden', wert: 1\.06, kosten: 0 \}/,
+    ersatz: "art: 'schaden', wert: 1.00, kosten: 0 }",
+    tor: 'guards',
+    meldet: 'aendert am Wirkungsvektor nichts',
+  },
+  {
     name: 'Der Lauf ist nicht nachstellbar',
     datei: 'tools/sim.ts',
     regel: /(      \.\.\.opts,\n      seed: lauf\.saat,)/,

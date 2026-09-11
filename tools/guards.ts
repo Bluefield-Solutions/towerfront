@@ -46,6 +46,10 @@ import { fehltVorKauf } from '../src/game/turmwerte';
 import { enemyArtWidth } from '../src/gfx/enemyart';
 
 import { ABILITIES, ABILITY_ORDER } from '../src/data/abilities';
+import {
+  GRUNDSTAPEL, KARTENSTAPEL, KEINE_KARTEN, kartenWirkung, stapelAus, type Karte,
+} from '../src/data/karten';
+import { erfahrungFuer, laufStarten, type LaufZustand } from '../src/game/lauf';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const errors: string[] = [];
@@ -115,6 +119,144 @@ const isHex = (s: string) => /^#[0-9A-Fa-f]{6}$/.test(s);
   }
   warn(`Bildauftrag: ${abschnitte.length} Prompts, der kuerzeste ${kuerzester} Zeichen `
     + `mit eingesetztem Stil-Block (alt ${stil.length}, Neubau ${neubau.length} Zeichen).`);
+}
+
+// ------------------------------------------------------------ Kartenstapel
+
+// **Der Waechter `Kartenstapel`** (v338, S-N7-03).
+//
+// Der Waechter prueft Tuerme, Gegner, Wellen, Karten und Grade - und seit
+// v303 ist der Kartenstapel die Datenmenge, an der jede einzelne Welle
+// haengt. Er hatte keinen.
+//
+// **Gemessen wird die WIRKUNG, nicht der Eintrag.** Jede Frage hier laeuft
+// ueber `kartenWirkung([k.id])` gegen `KEINE_KARTEN` - also ueber das, was
+// die Karte im Spiel tut, und nicht ueber ihre Felder. Das ist Regel 15 an
+// der Stelle, an der sie hier wehgetan haette: welche Achse multipliziert
+// und welche summiert, steht in `kartenWirkung`, und eine zweite Liste
+// daneben waere genau die, die beim naechsten `KartenArt` veraltet. Und es
+// ist zugleich Regel 13: eine Karte, deren Wirkung sich ABSCHALTEN laesst,
+// ohne dass sich etwas aendert, hat keine.
+{
+  /** Was eine einzelne Karte am Wirkungsvektor bewegt - Feld fuer Feld, als
+   *  Abstand vom neutralen Stand. Leer heisst: sie tut nichts. */
+  const bewegung = (k: Karte): Array<[string, number]> => {
+    const w = kartenWirkung([k.id]) as unknown as Record<string, number>;
+    const n = KEINE_KARTEN as unknown as Record<string, number>;
+    return Object.keys(n)
+      .filter((f) => w[f] !== n[f])
+      .map((f) => [f, Math.abs(w[f] - n[f])] as [string, number]);
+  };
+  /** Der Abdruck einer Karte: welche Felder sie wie weit bewegt. Zwei
+   *  gleiche Abdruecke sind zwei Namen fuer eine Karte. */
+  const abdruck = (k: Karte): string =>
+    bewegung(k).map(([f, d]) => `${f}=${d.toFixed(4)}`).join(' ') || 'NICHTS';
+
+  // --- Erstens: jede Karte wirkt.
+  for (const k of KARTENSTAPEL) {
+    if (!bewegung(k).length) {
+      fail(`Die Karte "${k.name}" (${k.id}) aendert am Wirkungsvektor nichts - `
+        + `Art ${k.art}, Wert ${k.wert}. Eine Karte ohne Wirkung ist eine Wahl `
+        + 'ohne Folgen, und sie verdraengt bei jedem Zug eine, die eine hat.');
+    }
+  }
+
+  // --- Zweitens: keine zwei Karten sind gleich.
+  //
+  // Gefragt wird am Abdruck und nicht an `art` und `wert`: zwei Karten
+  // koennen ueber verschiedene Felder dasselbe tun, und zwei Namen fuer eine
+  // Wirkung sind im Angebot eine Wahl, die keine ist.
+  const gesehen = new Map<string, Karte>();
+  for (const k of KARTENSTAPEL) {
+    const a = abdruck(k);
+    const alt = gesehen.get(a);
+    if (alt) {
+      fail(`Die Karten "${alt.name}" (${alt.id}) und "${k.name}" (${k.id}) sind `
+        + `dieselbe Karte mit zwei Namen: beide bewirken ${a}. Im Angebot `
+        + 'nebeneinander ist das eine Wahl ohne Unterschied.');
+    } else gesehen.set(a, k);
+  }
+
+  // --- Drittens: jede Karte ist irgendwann ziehbar.
+  //
+  // Zwei Wege hinein, und beide werden gefahren statt geglaubt: die
+  // Grundkarten stehen in `GRUNDSTAPEL`, die uebrigen muessen ueber
+  // `stapelAus([id])` hereinkommen. Eine Karte, die auf keinem der beiden
+  // Wege im Stapel landet, ist Quelltext und kein Spiel.
+  for (const k of KARTENSTAPEL) {
+    const drin = k.kosten === 0
+      ? GRUNDSTAPEL.some((g) => g.id === k.id)
+      : stapelAus([k.id]).some((g) => g.id === k.id);
+    if (!drin) {
+      fail(`Die Karte "${k.name}" (${k.id}) kommt in keinen Stapel - `
+        + `Kosten ${k.kosten}. Sie wird nie angeboten und nie gezogen.`);
+    }
+  }
+
+  // --- Und der Preis muss zu verdienen sein.
+  //
+  // **Die Schranke ist gemessen und nicht gesetzt** (Regel 10): sie ist die
+  // Erfahrung, die EIN durchgebrachter Lauf einbringt, abgelesen an
+  // `erfahrungFuer` statt daneben nachgerechnet (Regel 15, die Lehre aus
+  // v311). Eine Karte, die teurer ist als das, verlangt zwei Laeufe, und
+  // das ist eine Entscheidung - keine, die aus Versehen entstehen darf.
+  {
+    const voll = laufStarten('normal', 1);
+    const ganz: LaufZustand = {
+      ...voll,
+      abschnitt: voll.abschnitte.length,
+      welleGesamt: MAPS.reduce((a, m) => a + m.waves.length, 0),
+    };
+    const lohn = erfahrungFuer(ganz);
+    const teuerste = KARTENSTAPEL.reduce((a, k) => Math.max(a, k.kosten), 0);
+    if (teuerste > lohn) {
+      fail(`Die teuerste Karte kostet ${teuerste} Erfahrung, ein ganz `
+        + `durchgebrachter Lauf bringt ${lohn}. Dann ist sie in einem Lauf nicht `
+        + 'zu haben, und der Stapel waechst langsamer, als er sich anfuehlt.');
+    }
+    warn(`Kartenstapel: ${KARTENSTAPEL.length} Karten, davon ${GRUNDSTAPEL.length} `
+      + `von Anfang an; teuerste ${teuerste} Erfahrung gegen ${lohn} je Lauf.`);
+  }
+
+  // --- Viertens: keine Karte schlaegt alles andere.
+  //
+  // Gefragt je ACHSE, denn zwischen den Achsen gibt es kein gemeinsames Mass
+  // - 120 Gold und 0,18 Markierung sind nicht zu vergleichen, und ein
+  // erfundener Umrechnungskurs waere eine Zahl ohne Messstelle (Regel 12).
+  //
+  // Innerhalb einer Achse ist es dagegen genau zu sagen: eine Karte, die
+  // MEHR kostet und WENIGER bewegt, ist tot - sie wird nie gekauft, und wer
+  // sie doch kauft, hat sich geirrt. Und eine Grundkarte, die die staerkste
+  // ihrer Achse ist, macht jede gekaufte derselben Achse tot; dann waere der
+  // ganze Zweig des Stapels Zierde.
+  {
+    const achsen = new Map<string, Karte[]>();
+    for (const k of KARTENSTAPEL) {
+      if (!achsen.has(k.art)) achsen.set(k.art, []);
+      achsen.get(k.art)!.push(k);
+    }
+    const staerke = (k: Karte): number =>
+      bewegung(k).reduce((a, [, d]) => a + d, 0);
+    for (const [art, ks] of achsen) {
+      for (const a of ks) {
+        for (const b of ks) {
+          if (a === b) continue;
+          if (b.kosten > a.kosten && staerke(b) <= staerke(a)) {
+            fail(`Auf der Achse "${art}" kostet "${b.name}" ${b.kosten} und bewegt `
+              + `${staerke(b).toFixed(4)}, waehrend "${a.name}" fuer ${a.kosten} `
+              + `${staerke(a).toFixed(4)} bewegt. Die teurere ist tot - sie wird `
+              + 'nie gekauft, und im Stapel steht sie trotzdem.');
+          }
+        }
+      }
+      const best = ks.reduce((x, y) => (staerke(y) > staerke(x) ? y : x));
+      if (best.kosten === 0 && ks.some((k) => k.kosten > 0)) {
+        fail(`Auf der Achse "${art}" ist die staerkste Karte "${best.name}" `
+          + 'umsonst dabei. Dann ist jede gekaufte Karte dieser Achse tot, und '
+          + 'der Lauf schaltet Zierde frei.');
+      }
+    }
+  }
 }
 
 // ------------------------------------------------------------ Der Foerderer

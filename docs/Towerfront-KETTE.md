@@ -1,6 +1,30 @@
 # Towerfront — die Kette
 
-Stand: v331 · 11.09.2026
+Stand: v338 · 11.09.2026
+
+**Nachgesehen in v338 — und die sieben Runden v332 bis v338 haben am Ablauf
+genau eine Sache geändert, dafür an der wichtigsten Stelle: dem BEFUND des
+Nachtlaufs.** Heute sind es **408 Proben** (401 in v331); die Zahl steht
+wieder nur als Größenordnung hier, gezählt wird sie in 0,4 s.
+
+**Der Befund sagte bis v336 nicht, woran eine Probe gescheitert ist.** Er
+schrieb „meldet X nicht" — und das heißt zweierlei, das im Text gleich
+aussieht: das Tor lief und schwieg, oder das Tor lief gar nicht erst. Am
+11.09. war es das zweite: der Eingriff einer Probe traf eine von zwei Zeilen
+eines umgebrochenen Aufrufs, `sim` starb beim Übersetzen, und der Befund sah
+aus wie ein stummes Tor. Die Ursache stand die ganze Zeit in einer Ausgabe,
+die niemand mitgeschrieben hat. **Seit v337 trägt jede Befundzeile die
+letzten drei nichtleeren Zeilen des Tores mit** — an einem gestellten Fall
+nachgefahren, und dort nennt sie die Ursache wörtlich.
+
+**Eine zweite Erfahrung aus denselben Runden gehört daneben, weil sie den
+Ablauf selbst betrifft:** ein Befund ist an den COMMIT gebunden, auf dem er
+gemessen wurde, und die Datei sagt das in ihrer Kopfzeile. Am 11.09. stand
+hier ein Befund von v331 im Baum, während v334 seine sieben Proben längst
+gerichtet hatte — zwei davon gab es gar nicht mehr. **Der Weg heraus ist ein
+frischer voller Lauf und niemals ein von Hand geschriebenes „sauber"**; das
+ist genau der Griff, den v227 ausgeschlossen hat, und die Kopfzeile ist das
+Mittel, es zu merken.
 
 **Nachgesehen in v331 — am Ablauf hat sich seit v324 nichts geändert, und
 das ist die Aussage.** Sieben Runden (v325 bis v331) sind ohne eine einzige

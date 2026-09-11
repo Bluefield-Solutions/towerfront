@@ -1222,6 +1222,36 @@ export const PROBEN = [
     // kein Beweis (Regel 5). Der Eingriff macht die Knoepfe so breit, dass
     // sechs davon nicht mehr nebeneinander passen - dann laufen sie
     // ineinander, und beide Zahlen muessen es sagen.
+    // **Der Messgriff wird abgeschraubt** (v320, S-N4-06).
+    //
+    // Die staerkere der beiden Proben zu dieser Story, und sie ist Regel 13:
+    // wer eine Wirkung misst, schaltet sie zuerst ab. `feldVerdeckung`
+    // rechnet Weltpunkte mit `window.weltZuSchirm` auf den Schirm. Ohne den
+    // Griff koennte es still eine Null liefern - "nichts liegt ueber dem
+    // Feld", weil gar nichts gemessen wurde. Es meldet stattdessen, dass es
+    // nicht messen kann.
+    name: 'Der Messgriff fuer die Feldverdeckung fehlt',
+    datei: 'src/main.ts',
+    suche: '(window as unknown as Record<string, unknown>).weltZuSchirm =',
+    ersatz: 'const unbenutzt =',
+    tor: 'uxaudittor',
+    meldet: 'Messgriff',
+  },
+  {
+    // **Die Bauleiste schiebt sich weiter ueber die Bahn** (v320, S-N4-06).
+    //
+    // Genau die Gegenprobe, die die Story verlangt: "die Leiste ueber die
+    // Bahn schieben - das Tor muss den Zustand namentlich melden". Der
+    // Eingriff hebt sie vom unteren Rand weg nach oben, also mitten ins
+    // Feld; die Bahn des Spiralhains laeuft dort entlang.
+    name: 'Die Bauleiste schiebt sich ueber die Bahn',
+    datei: 'src/style.css',
+    suche: '  bottom: calc(10px + var(--sab));\n  z-index: 3; display: flex; align-items: flex-end; gap: 8px;',
+    ersatz: '  bottom: calc(90px + var(--sab));\n  z-index: 3; display: flex; align-items: flex-end; gap: 8px;',
+    tor: 'uxaudittor',
+    meldet: 'Feldverdeckung',
+  },
+  {
     // **Eine Zeile der Wellenvorschau verliert ihren Namen** (v319, S-N4-05).
     //
     // Genau die Gegenprobe, die die Story verlangt. Der Eingriff laesst

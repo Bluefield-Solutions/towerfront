@@ -1,6 +1,28 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v313 · 10.09.2026
+Stand: v320 · 11.09.2026
+
+**Nachgesehen in v320, und der Abstand ist wieder geschrumpft.** Gemessen mit
+`npm run autarkie`:
+
+| | v313 | **v320** |
+|---|---|---|
+| Gruppen reservieren | 1030 KB roh | 1030 KB roh |
+| erlaubt | 1074,75 | **1073** |
+| Abstand | 44,8 KB | **42,8 KB** |
+| ausgelieferte Datei | — | **1465 KB** von 1800 |
+
+**Die Reservierung steht still, die Erlaubnis sinkt** — genau so, wie die
+Regel seit v186 gedacht ist: *wächst der Code, schrumpft der erlaubte
+Bildvorrat von selbst.* Über die sieben Runden v313 bis v320 sind rund 2,3 KB
+erlaubter Bildvorrat verschwunden, also **rund 3 KB Code**. Jedes KB Code
+kostet 0,75 KB Bildvorrat, und das Tor nennt den Abstand seit v313 bei jedem
+Lauf statt erst bei der Kollision.
+
+**Was daran hängt und noch nicht bezahlt ist:** die zwei offenen Bestellungen
+(`31_foerderer.png`, `32_werft.png`) sind in der Reservierung mit rund 50 KB
+angesetzt und liegen noch nicht im Vorrat. Der Abstand von 42,8 KB ist also
+der Puffer *nach* ihnen, nicht davor.
 
 **Die zwei Haushalte sind in v313 zusammengestossen — mit 0,2 KB Abstand.**
 `npm run autarkie` wurde rot: die Gruppen reservierten zusammen **1075 KB

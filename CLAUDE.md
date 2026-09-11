@@ -696,6 +696,34 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Die Bedienung liegt ueber dem Spielfeld - jetzt als Zahl (v320, S-N4-06,
+H2).** Die Belegung sagt, WIEVIEL Flaeche die Bedienung nimmt; sie sagt nicht,
+ob es die richtige ist - eine Leiste am Rand und eine Leiste auf der Bahn
+messen dieselben Prozente. `feldVerdeckung` fragt an den Punkten, an denen das
+Spiel stattfindet: dem abgetasteten Bahnschlauch (329 Punkte) und den
+Bauplaetzen (202), beide aus `tools/bahnmass.ts` - derselben Datei wie
+`npm run guards` (Regel 15).
+
+**Beide Befunde des Inspektorlaufs v272 stehen damit als Zahl da:** 17,8 % der
+Bahn liegen unter `#dock` (27 Punkte) und `#b-wave` (16), in JEDEM
+Spielzustand; die Statuskachel deckt drei Bauplaetze oben links.
+
+**Die Weltkoordinaten rechnet der RENDERER, nicht das Werkzeug** (Regel 12):
+dafuer haengt seit v320 ein Messgriff am `window`. Die Faustformel des
+Werkzeugs (`nachSchirm`) rechnet EINPASSEND, der Renderer FUELLEND - auf der
+Landkarte trifft sie, im Spiel nicht. Fehlt der Griff, MELDET die Messung das,
+statt still eine Null zu liefern; die Gegenprobe schraubt ihn ab (Regel 13).
+
+**Die Null der Abnahme ist gemessen nicht erreichbar, und das Einklappen der
+Leiste ist nicht der Hebel** - obwohl `12-dock-zu.png` genau danach aussieht:
+17,8 -> 13,2 % auf der Bahn, und an den Bauplaetzen gar nichts (4,6 % so wie
+so). **Zwei Entscheidungen ziehen gegeneinander, und beide waren fuer sich
+richtig:** v219 hat die Bahn an den unteren Rand gezogen, um die Kartennutzung
+von 68 auf 74 % zu heben - und am unteren Rand wohnt die Bedienung. Die Ratsche
+haelt deshalb je Zustand den STAND; was offen bleibt, steht als **N4F** im
+Verzeichnis, mit beiden Zahlen und der Stelle, an der es zu loesen waere (die
+Geometrie, nicht die Leiste).
+
 **Jede Zeile der Wellenvorschau traegt ihren Namen (v319, S-N4-05) - und das
 Beweismittel hat den Befund miterzeugt.** Der Inspektorlauf v271 sah in
 `bilder/wellenvorschau.png` nackte Zahlen ("9x") und schrieb "eine Vorschau
@@ -1255,7 +1283,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v319. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v320. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

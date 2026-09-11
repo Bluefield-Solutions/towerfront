@@ -221,6 +221,26 @@ ui.onQuit = () => {
 ui.worldToScreen = (x, y) => renderer.worldToScreen(x, y);
 ui.onPick = (id, x, y) => { if (state.build(x, y, id)) Sfx.play('build'); };
 
+/** **Ein Messgriff, kein Spielweg** (v320, S-N4-06).
+ *
+ *  `npm run uxaudit` fragt, ob Bedienung ueber dem Bahnschlauch oder ueber
+ *  einem Bauplatz liegt - und dafuer muss es Weltpunkte auf den Schirm
+ *  rechnen. Diese Rechnung kennt nur der Renderer: sie haengt an Massstab,
+ *  Mitte und Zoom, und ein zweiter Nachbau davon im Werkzeug waere Regel 15
+ *  in ihrer teuersten Form - er stimmte solange, bis jemand am Zoom dreht.
+ *
+ *  Das Werkzeug klickt bis heute mit einer eigenen Faustformel ins Spiel
+ *  (`nachSchirm`), und die rechnet EINPASSEND, waehrend der Renderer FUELLEND
+ *  rechnet. Auf der Landkarte trifft sie, im Spiel nicht - dieselbe Zahl,
+ *  andere Wirklichkeit (Regel 12).
+ *
+ *  Er haengt am `window` und nicht am Spielzustand: er liest, er schreibt
+ *  nicht, und kein Spielweg fuehrt an ihm vorbei. Wer ihn entfernt, wird von
+ *  `uxaudittor` erwischt - es meldet dann, dass es gar nicht messen kann.
+ */
+(window as unknown as Record<string, unknown>).weltZuSchirm =
+  (x: number, y: number) => renderer.worldToScreen(x, y);
+
 layout();
 bindInput(canvas, state, renderer);
 

@@ -68,6 +68,20 @@ if (!existsSync(DATEI)) {
 }
 
 const BREIT = 844, HOCH = 390;
+
+// **Die Punkte, an denen das Spiel stattfindet** (v320, S-N4-06).
+//
+// Aus `tools/bahnmass.ts` und `src/data/maps.ts` - also aus derselben
+// Rechnung wie `npm run guards`. Gemessen wird die erste Karte, weil
+// `insSpiel` sie betritt; die Messstelle steht ueber jedem Lauf.
+const { MAPS } = await import('../src/data/maps.js');
+const { bahnenAus, abtasten, bauplaetze } = await import('./bahnmass.js');
+const KARTE = MAPS[0];
+const BAHNEN = bahnenAus(KARTE.lanes, KARTE.ziel);
+const FELDPUNKTE = {
+  bahn: BAHNEN.flatMap((b) => abtasten(b)).map((p) => [p.x, p.y]),
+  bau: bauplaetze(KARTE, BAHNEN).map((p) => [p.x, p.y]),
+};
 const messwerte = {};
 
 /** Im Torbetrieb wird nur gemessen, nicht aufgenommen und nicht getastet.
@@ -151,6 +165,21 @@ const GRENZEN = {
   // Ruhezustand mit Leiste, und das ist kein Zufall: der Zug ersetzt sie,
   // er kommt nicht dazu. 16 wie `ruhe`, weil es derselbe Augenblick ist.
   zug: 16,         // gemessen 7,9 %
+};
+/** **Wieviel Bahn und Bauflaeche unter der Bedienung liegen duerfen**
+ *  (v320, S-N4-06, H2).
+ *
+ *  Eine Ratsche und kein Soll: das Soll ist null, erreichbar ist es heute
+ *  nicht (siehe die Begruendung am Urteil und N4F im Verzeichnis). Jede Zahl
+ *  traegt ihren Verlauf, damit die naechste Runde sieht, wohin sie sich
+ *  bewegt hat. */
+const FELD_GRENZEN = {
+  ruhe: { bahn: 19, bau: 6 },        // gemessen 17,8 / 4,6 (v320)
+  bauwahl: { bahn: 19, bau: 19 },    // gemessen 17,8 / 17,2 - `#pick` steht am Bauplatz, das ist der Sinn
+  pruefsteg: { bahn: 28, bau: 28 },  // gemessen 26,4 / 26,4 - die Turmkarte steht am Turm (v316)
+  welle: { bahn: 19, bau: 6 },       // gemessen 17,8 / 4,0
+  zug: { bahn: 2, bau: 12 },         // gemessen 0,0 / 10,3 - der Kartenzug steht mitten im Bild
+  'dock-zu': { bahn: 15, bau: 6 },   // gemessen 13,2 / 4,6
 };
 /** Wieviele Beschriftungen zugleich doppelt im Bild stehen duerfen.
  *
@@ -301,6 +330,48 @@ const textVerdeckung = (seite) => seite.evaluate(() => {
   }
   return funde;
 });
+
+/** **Liegt Bedienung ueber dem SPIELFELD?** (v320, S-N4-06, H2)
+ *
+ *  Die Belegung sagt, wieviel Flaeche die Bedienung nimmt. Sie sagt nicht,
+ *  ob sie die richtige Flaeche nimmt: eine Leiste am Rand und eine Leiste auf
+ *  der Bahn messen dieselben Prozente. Der Inspektorlauf v272 hat beide Faelle
+ *  gefunden, und beide Male ist das Verdeckte das, worum es im Spiel geht -
+ *  unten schauen Gegner halb hinter Turmkacheln hervor, oben links liegt die
+ *  Bauvorschau zu zwei Dritteln hinter der Statuskachel.
+ *
+ *  Gefragt wird an den Punkten, an denen das Spiel wirklich stattfindet: dem
+ *  abgetasteten BAHNSCHLAUCH und den BAUPLAETZEN. Beide kommen aus
+ *  `tools/bahnmass.ts` - derselben Datei, aus der `npm run guards` seine
+ *  Zahlen nimmt, also nicht aus einer zweiten Rechnung (Regel 15).
+ *
+ *  **Die Weltkoordinaten rechnet der RENDERER auf den Schirm, nicht dieses
+ *  Werkzeug** (Regel 12). Seine Faustformel `nachSchirm` rechnet einpassend,
+ *  der Renderer fuellend; auf der Landkarte trifft sie, im Spiel nicht.
+ *  Deshalb haengt seit v320 ein Messgriff am `window` - und wenn er fehlt,
+ *  meldet diese Messung das, statt eine Null zu liefern. */
+const feldVerdeckung = (seite, punkte) => seite.evaluate(({ bahn, bau }) => {
+  const WURZELN = '#hud, #dock, #b-wave, #b-wave-l, #inspector, #pick, #zug, #coach, #werkzeuge';
+  const rechnen = window.weltZuSchirm;
+  if (typeof rechnen !== 'function') return { fehlt: true };
+  const pruefen = (liste) => {
+    let drin = 0, zu = 0;
+    const taeter = {};
+    for (const [wx, wy] of liste) {
+      const p = rechnen(wx, wy);
+      if (!p || p.x < 0 || p.y < 0 || p.x >= innerWidth || p.y >= innerHeight) continue;
+      drin += 1;
+      const e = document.elementFromPoint(p.x, p.y);
+      const wurzel = e && e.closest(WURZELN);
+      if (!wurzel) continue;
+      zu += 1;
+      const n = wurzel.id ? `#${wurzel.id}` : wurzel.tagName.toLowerCase();
+      taeter[n] = (taeter[n] ?? 0) + 1;
+    }
+    return { drin, zu, anteil: drin ? (100 * zu) / drin : 0, taeter };
+  };
+  return { fehlt: false, bahn: pruefen(bahn), bau: pruefen(bau) };
+}, punkte);
 
 /** Wieviel des Bildschirms gehoert der Bedienung?
  *
@@ -528,6 +599,7 @@ await a.waitForTimeout(600);
     await schuss(a, 'zug');
     messwerte.belegung = { zug: await belegung(a) };
   messwerte.verdeckung = { ...(messwerte.verdeckung ?? {}), zug: await textVerdeckung(a) };
+  messwerte.feld = { ...(messwerte.feld ?? {}), zug: await feldVerdeckung(a, FELDPUNKTE) };
     messwerte.doppelt = { zug: await doppelteBeschriftung(a) };
     messwerte.groessen = { zug: await schriftgroessen(a) };
     const karten = await a.evaluate(() => [...document
@@ -552,6 +624,7 @@ await schuss(a, 'spiel-ruhe');
 messwerte.ruhe = await layout(a);
 messwerte.belegung = { ...(messwerte.belegung ?? {}), ruhe: await belegung(a) };
   messwerte.verdeckung = { ...(messwerte.verdeckung ?? {}), ruhe: await textVerdeckung(a) };
+  messwerte.feld = { ...(messwerte.feld ?? {}), ruhe: await feldVerdeckung(a, FELDPUNKTE) };
 messwerte.doppelt = { ...(messwerte.doppelt ?? {}), ruhe: await doppelteBeschriftung(a) };
 messwerte.groessen = { ...(messwerte.groessen ?? {}), ruhe: await schriftgroessen(a) };
 
@@ -650,6 +723,7 @@ else {
   messwerte.bauwahl = await layout(a);
 messwerte.belegung.bauwahl = await belegung(a);
   messwerte.verdeckung.bauwahl = await textVerdeckung(a);
+  messwerte.feld.bauwahl = await feldVerdeckung(a, FELDPUNKTE);
   messwerte.doppelt.bauwahl = await doppelteBeschriftung(a);
   messwerte.ueberlauf = { bauwahl: await ueberlaufInDerWahl(a) };
   messwerte.groessen.bauwahl = await schriftgroessen(a);
@@ -662,6 +736,7 @@ messwerte.belegung.bauwahl = await belegung(a);
   messwerte.pruefsteg = await layout(a);
 messwerte.belegung.pruefsteg = await belegung(a);
   messwerte.verdeckung.pruefsteg = await textVerdeckung(a);
+  messwerte.feld.pruefsteg = await feldVerdeckung(a, FELDPUNKTE);
   messwerte.groessen.pruefsteg = await schriftgroessen(a);
   // **Der Zustand, in dem der Inspektor den ERSTEN Befund gefunden hat**
   // (v318, S-N4-04): die Aufwertungskarten lagen ueber `SCHADEN 8` und
@@ -805,6 +880,7 @@ await schuss(a, 'welle-mitte');
 messwerte.welle = await layout(a);
 messwerte.belegung.welle = await belegung(a);
 messwerte.verdeckung.welle = await textVerdeckung(a);
+  messwerte.feld.welle = await feldVerdeckung(a, FELDPUNKTE);
 await a.waitForTimeout(5200);
 await schuss(a, 'welle-spaet');
 
@@ -821,6 +897,10 @@ await a.waitForTimeout(300);
 await a.evaluate(() => document.getElementById('dock-toggle')?.click());
 await a.waitForTimeout(350);
 await schuss(a, 'dock-zu');
+// **Was das Einklappen wirklich bringt** (v320, S-N4-06). Die Story nennt
+// `12-dock-zu.png` als das Bild, das sagt, was zu holen ist - hier steht die
+// Zahl dazu, statt dass sie jemand schaetzt (Regel 9).
+messwerte.feld['dock-zu'] = await feldVerdeckung(a, FELDPUNKTE);
 
 // ======================================================= Seite B: Bauraster
 //
@@ -942,6 +1022,18 @@ for (const [k, v] of Object.entries(messwerte.verdeckung ?? {})) {
   }
 }
 
+console.log(`\nBedienung ueber dem Spielfeld (${KARTE.id}, `
+  + `${FELDPUNKTE.bahn.length} Bahnpunkte, ${FELDPUNKTE.bau.length} Bauplaetze):`);
+for (const [k, v] of Object.entries(messwerte.feld ?? {})) {
+  if (v.fehlt) { console.log(`  ${k.padEnd(11)} MESSGRIFF FEHLT`); continue; }
+  const wer = (t) => Object.entries(t).sort((x, y) => y[1] - x[1])
+    .map(([n, c]) => `${n} ${c}`).join(' · ');
+  console.log(`  ${k.padEnd(11)} Bahn ${v.bahn.anteil.toFixed(1)} % von ${v.bahn.drin}`
+    + `${v.bahn.zu ? ` (${wer(v.bahn.taeter)})` : ''}`
+    + `   Bauplaetze ${v.bau.anteil.toFixed(1)} % von ${v.bau.drin}`
+    + `${v.bau.zu ? ` (${wer(v.bau.taeter)})` : ''}`);
+}
+
 writeFileSync(join(AUS, 'messwerte.json'), JSON.stringify(messwerte, null, 1));
 console.log(`\nMesswerte: ${join(AUS, 'messwerte.json')}`);
 
@@ -959,6 +1051,45 @@ if (TOR) {
         + (gross ? ` Verteilt auf: ${gross}.` : ''));
     }
   }
+  // **Bedienung ueber dem Spielfeld: Ratsche je Zustand** (v320, S-N4-06).
+  //
+  // **Keine Null, und das ist gemessen und nicht bequem.** Die Story verlangt
+  // null - kein Punkt des Bahnschlauchs unter einem Bedienelement. Gemessen
+  // sind es 17,8 % in jedem Spielzustand, und die Ursache sind zwei
+  // Entscheidungen, die beide fuer sich richtig waren und gegeneinander
+  // ziehen: v219 hat die Bahn des Spiralhains an den UNTEREN Rand gezogen,
+  // um die Kartennutzung von 68 auf 74 % zu heben - und am unteren Rand
+  // wohnt die Bedienung.
+  //
+  // **Das Einklappen der Leiste ist gemessen NICHT der Hebel**, obwohl die
+  // Story `12-dock-zu.png` dafuer nennt: es bringt 17,8 auf 13,2 % und an
+  // den Bauplaetzen gar nichts (4,6 % so wie so). Was bleibt, sind 16
+  // Bahnpunkte unter dem eingeklappten Dock und 16 unter dem Wellenknopf.
+  //
+  // Die Ratsche haelt deshalb den STAND und laesst ihn nicht steigen; was
+  // offen bleibt, steht als N4F im Verzeichnis, mit beiden Zahlen.
+  for (const [zustand, grenze] of Object.entries(FELD_GRENZEN)) {
+    const w = messwerte.feld?.[zustand];
+    if (!w) { fail(`Feldverdeckung "${zustand}" wurde gar nicht gemessen.`); continue; }
+    if (w.fehlt) {
+      fail(`Feldverdeckung "${zustand}": der Messgriff \`window.weltZuSchirm\` fehlt. `
+        + 'Ohne ihn laesst sich kein Weltpunkt auf den Schirm rechnen, und die '
+        + 'Nullen darunter waeren erfunden (Regel 5).');
+      continue;
+    }
+    for (const [was, wert] of [['Bahn', w.bahn], ['Bauplaetze', w.bau]]) {
+      const g = was === 'Bahn' ? grenze.bahn : grenze.bau;
+      if (wert.anteil > g) {
+        const wer = Object.entries(wert.taeter).sort((x, y) => y[1] - x[1])
+          .map(([n, c]) => `${n} ${c}`).join(', ');
+        fail(`Feldverdeckung "${zustand}": ${wert.anteil.toFixed(1)} % der ${was} liegen `
+          + `unter der Bedienung, gehalten sind ${g} %. Verteilt auf: ${wer}. `
+          + 'Auf dem Zielgeraet ist das Feld das Spiel - was darueber liegt, '
+          + 'kann man weder sehen noch bebauen (H2).');
+      }
+    }
+  }
+
   // **Null verdeckte Textzeilen, und das ist eine Ratsche** (v318, S-N4-04).
   //
   // Keine anteilige Grenze und kein Band: eine halb zugedeckte Zahl ist
@@ -1048,6 +1179,6 @@ if (TOR) {
     await browser.close();
     process.exit(1);
   }
-  console.log('UX-TOR: Belegung, Verdeckung, Doppelungen und Trefferflaechen in Ordnung.');
+  console.log('UX-TOR: Belegung, Verdeckung, Feld, Doppelungen und Trefferflaechen in Ordnung.');
 }
 await browser.close();

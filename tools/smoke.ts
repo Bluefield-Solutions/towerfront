@@ -89,7 +89,7 @@ const { Renderer } = await import('../src/gfx/renderer');
 const { UI } = await import('../src/ui/ui');
 const { bindInput } = await import('../src/core/input');
 const { ABILITIES } = await import('../src/data/abilities');
-const { TOWERS, TOWER_ORDER, BAU_ORDER, MAX_LEVEL, nextFor, statsFor } = await import('../src/data/towers');
+const { TOWERS, TOWER_ORDER, BAU_ORDER, MAX_LEVEL, nextFor, statsFor, rangeFor } = await import('../src/data/towers');
 
 const { TUTORIAL } = await import('../src/game/tutorial');
 const { auswertung } = await import('../src/game/auswertung');
@@ -3360,6 +3360,87 @@ if (outcome === 'playing') problems.push('Partie endet nicht - moeglicher Haenge
     // nur schweigt, sagt nicht, ob sie ueberhaupt etwas gemessen hat.
     console.log(`  Sanitaeter: ein Verwundeter holt in einer Sekunde ${mit.toFixed(1)} `
       + `Lebenspunkte zurueck, ausser Reichweite ${ohne.toFixed(1)}.`);
+  }
+  // **Der Hetzer macht die WEICHE scharf** (S-N6-03).
+  //
+  // Gefragt ist genau das, was die Story fordert: derselbe Aufbau haelt ihn
+  // auf der einen Weichenstellung und nicht auf der anderen. Gestellt, nicht
+  // abgewartet - er kommt in Welle 11 des Spiralhains, und ein Messplatz,
+  // der auf die richtige Welle UND die richtige Stellung wartet, hoert leise
+  // auf zu pruefen (die Lehre aus v219).
+  //
+  // **Der Aufbau steht fuer die LANGE Route**: die Weiche wird gesperrt,
+  // DANN werden die Tuerme gestellt (`candidateSpots` bewertet jeden Platz
+  // an den heutigen Bahnen - wer erst baut und dann umlegt, misst einen
+  // Messfehler, siehe S-N2-06). Danach laeuft je ein Hetzer, einmal bei
+  // gesperrter und einmal bei offener Weiche.
+  //
+  // Die Zusage ist ein VERHAELTNIS und keine absolute Strecke: auf der
+  // langen Route muss er weiter kommen - gemessen an dem, was von ihm noch
+  // uebrig ist.
+  {
+    // **Die Tuerme stehen NUR am Umweg**, und das ist der ganze Punkt. Ein
+    // Aufbau auf der gemeinsamen Strecke erledigt ihn auf beiden Wegen -
+    // gemessen beim ersten Entwurf: 0 Lebenspunkte hier wie dort, und die
+    // Pruefung sagte nichts (Regel 13). Gefragt wird deshalb, was die kurze
+    // Route NICHT sieht: jeder Platz, der weiter als eine Reichweite von der
+    // kurzen Bahn entfernt liegt.
+    const nurAmUmweg = (): { x: number; y: number }[] => {
+      state.reset(31, 'normal', 'spiralhain');
+      for (const w of state.weichenPunkte()) state.weicheStellen(w.id, false);
+      const kurzeBahn = state.lanes[0];
+      const fern = (p: { x: number; y: number }): boolean => {
+        let d = Infinity;
+        for (let t = 0; t <= kurzeBahn.length; t += 20) {
+          const q = kurzeBahn.at(t);
+          d = Math.min(d, Math.hypot(q.x - p.x, q.y - p.y));
+        }
+        return d > rangeFor('arrow', null, 1);
+      };
+      for (const w of state.weichenPunkte()) state.weicheStellen(w.id, true);
+      return candidateSpots(state).filter(fern);
+    };
+    const umwegPlaetze = nurAmUmweg();
+    if (umwegPlaetze.length < 3) {
+      problems.push(`Hetzer: nur ${umwegPlaetze.length} Bauplaetze liegen allein am Umweg - `
+        + 'dann stellt diese Pruefung den Fall gar nicht her, um den es geht.');
+    }
+    // **Gefragt ist "kommt er DURCH", nicht "stirbt er"** - und der
+    // Unterschied hat den ersten Entwurf hereingelegt. Gemessen meldeten
+    // beide Stellungen "tot": auf der kurzen Route erreicht er den Kristall,
+    // nimmt einen Splitter und wird auf dem RUECKWEG erwischt (Kernraub,
+    // v262). Er war also tot und trotzdem durchgekommen. Die Zahl, die es
+    // sagt, ist `leaked`.
+    const hetzerLauf = (zu: boolean): boolean => {
+      state.reset(31, 'normal', 'spiralhain');
+      state.gold = 99999;
+      for (const w of state.weichenPunkte()) state.weicheStellen(w.id, zu);
+      for (let i = 0; i < 6 && i < umwegPlaetze.length; i++) {
+        state.build(umwegPlaetze[i].x, umwegPlaetze[i].y, 'arrow');
+      }
+      state.enemies.length = 0;
+      const h = state.spawnZumPruefen('hetzer', 0);
+      if (!h) throw new Error('Hetzer: Gegner nicht setzbar.');
+      h.travelled = 0;
+      // Lang genug, dass er die ganze Bahn schaffen KOENNTE: die laengste
+      // Route ist 4974 Weltpunkte, er laeuft 238 je Sekunde.
+      for (let i = 0; i < 60 * 40 && !h.leaked && !h.dead; i++) state.update(1 / 60);
+      return h.leaked;
+    };
+    const langDurch = hetzerLauf(true);
+    const kurzDurch = hetzerLauf(false);
+    console.log(`  Hetzer an der Weiche: lange Route ${langDurch ? 'kommt durch' : 'gehalten'}, `
+      + `kurze ${kurzDurch ? 'kommt durch' : 'gehalten'} `
+      + `(${umwegPlaetze.length} Plaetze allein am Umweg).`);
+    if (langDurch === kurzDurch) {
+      problems.push('Hetzer: beide Weichenstellungen enden gleich ('
+        + `${langDurch ? 'kommt durch' : 'gehalten'}). Dann bestraft er die Wegwahl nicht, `
+        + 'und die Weiche ist fuer ihn keine Entscheidung.');
+    } else if (langDurch) {
+      problems.push('Hetzer: er kommt auf der LANGEN Route durch und auf der kurzen nicht. '
+        + 'Das ist verkehrt herum - der Umweg soll ihn unter mehr Feuer bringen, nicht '
+        + 'unter weniger.');
+    }
   }
   // Und die Einstellung muss den Spielstand ueberleben.
   {

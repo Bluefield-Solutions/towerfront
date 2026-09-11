@@ -706,6 +706,48 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der Hetzer (v329, S-N6-03) - die Gegnerart, die die WEICHE scharf macht.**
+Seit v280 stellt der Spieler Weichen, und die Route ist damit eine
+Entscheidung - nur bestrafte sie bisher niemand. 238 Weltpunkte je Sekunde
+(der Spaeher lief mit 206), 26 Lebenspunkte, keine Panzerung: leicht zu
+toeten, WENN ein Turm ihn sieht.
+
+**Der Rauchtest stellt den Fall, und er stellt ihn scharf:** die Tuerme werden
+nur dort gebaut, wo allein die lange Route vorbeikommt - jeder Platz weiter
+als eine Reichweite von der kurzen Bahn, gemessen 60 von 189. Ergebnis: **lange
+Route gehalten, kurze kommt durch.**
+
+**Der erste Entwurf stellte die falsche Frage** und meldete auf beiden
+Stellungen "tot": auf der kurzen Route erreicht er den Kristall, nimmt einen
+Splitter und wird auf dem RUECKWEG erwischt (Kernraub, v262). Er war tot UND
+durchgekommen. Gefragt wird seitdem `leaked`, nicht `dead`.
+
+**Und der Einbau hat einen Haushalt sichtbar gemacht, den niemand gemessen
+hatte.** Drei zusaetzliche Gegner brechen die elfte Welle des Spiralhains, und
+zwar gleich welcher Art:
+
+| in Welle 11 | `npm run c18` ueber fuenf Aussaaten |
+|---|---|
+| nichts dazu | **5 von 5 gewonnen** |
+| drei Schleicher dazu | 3 von 5 |
+| drei Hetzer dazu | 2 von 5 |
+| drei Hetzer STATT drei Schleichern | **5 von 5** |
+
+Er wird deshalb **getauscht statt addiert** (Schleicher 39 -> 36). Der
+Wellenplan ist an dieser Stelle ein Haushalt und keine Liste.
+
+**Der Weg dorthin ist die eigentliche Lehre** (Regel 9 und 13). Der Verdacht
+fiel zuerst auf sein TEMPO - gemessen faellt C18 auch bei Infanterietempo.
+Dann auf Lebenspunkte und Durchschlag, beide ohne Wirkung. Dann auf die
+BEUTE, und dort schien es zu liegen: mit 2 Gold gewann die Standard-Aussaat,
+mit 4 verlor sie. **Erst fuenf Aussaaten haben es aufgeklaert - es war nie die
+Beute, es war die Gruppe.** Eine Zahl aus EINER Aussaat haette hier die
+falsche Ursache behauptet, und sie haette ueberzeugend ausgesehen.
+
+**Daraus eine Zahl, die hierher gehoert:** `npm run c18` traegt C18 auf einer
+einzigen Aussaat. Heute gewinnen alle fuenf - aber der Abstand zur Niederlage
+ist EIN zusaetzlicher Gegner.
+
 **Der Sanitaeter (v328, S-N6-02) - die erste Gegnerart, die etwas GIBT.** Alle
 acht bisherigen sind Ziele; keiner aendert, was der Spieler tun MUSS. Der
 Schildtraeger tut es und ist gemessen die interessanteste Sache im Wellenplan -
@@ -1562,9 +1604,9 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v328. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v329. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
-Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), acht Gegnerarten in den Wellen plus den Span, in den der
+Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
 gewichtet 100 %.
 

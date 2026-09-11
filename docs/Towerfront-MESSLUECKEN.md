@@ -1,6 +1,6 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v322 · 11.09.2026
+Stand: v329 · 11.09.2026
 
 **Nachgesehen in v322 — und die sieben Runden v316 bis v322 haben die
 Sammlung in eine Richtung erweitert, die hier bisher fehlte: das
@@ -22,6 +22,27 @@ aussagte — und in beiden Fällen sah das Spiel **schlechter** aus, als es war:
 
 **Die Klasse heißt: ein Beweismittel, das eine Sache systematisch weglässt,
 erzeugt Befunde über genau diese Sache.** Sie steht unten als **M22**.
+
+---
+
+**Nachgesehen in v329 — und diese Runde hat eine Lücke geliefert, die
+gefährlicher ist als die meisten hier, weil sie nicht schweigt, sondern eine
+falsche Ursache BEHAUPTET.** Sie steht unten als **M23**.
+
+Der Hetzer (S-N6-03) brach beim Einbau `npm run c18`. Die Ursachensuche lief
+über vier Verdächtige, alle einzeln gemessen und alle falsch — Tempo,
+Lebenspunkte, Durchschlag, Beute. Bei der Beute schien es zu sitzen: mit 2
+Gold gewann die Standard-Aussaat, mit 4 verlor sie, sauber reproduzierbar.
+
+**Erst fünf Aussaaten haben es aufgeklärt: es war nie die Beute, es war die
+Gruppe.** Drei zusätzliche Gegner brechen diese Welle, gleich welcher Art —
+mit drei zusätzlichen Schleichern gewinnt der Lauf 3 von 5, mit drei Hetzern
+2 von 5, ohne sie 5 von 5.
+
+**Eine Zahl aus einer Aussaat hätte hier eine Balance-Änderung an der Beute
+begründet, die mit der Sache nichts zu tun hat** — und sie hätte überzeugend
+ausgesehen, weil sie reproduzierbar war. Reproduzierbar heißt nicht richtig:
+derselbe Weg gibt dasselbe Ergebnis, auch wenn es der falsche Weg ist.
 
 **Dazu ein dritter Fall derselben Familie, gefunden in v322:** die erste
 Fassung von `kristallSichtbar` maß auf der LANDKARTE statt im Spiel — der
@@ -911,6 +932,54 @@ jede Nacht faehrt.
 das der Fortschritt nicht wegnimmt — die eine an der **Bedingung** statt an
 ihrem Gegenstand, die andere an der **letzten** Story des Katalogs. Das ist
 eine Gewohnheit, kein Tor.
+
+---
+
+## M23 · `npm run c18` trägt eine Abnahme auf EINER Aussaat, und das kann eine falsche Ursache belegen
+
+**Was fehlt.** C18 heisst: die erste Karte muss mit einer Fähigkeit und ohne
+Verbesserungen zu gewinnen sein. Gemessen wird das von `npm run c18` und vom
+Rauchtest — beide auf der **einen** Aussaat 4242.
+
+**Warum das nicht reicht, und zwar gemessen (v329).** Beim Einbau des Hetzers
+lief die Ursachensuche über vier Verdächtige:
+
+| geändert | Aussaat 4242 |
+|---|---|
+| Tempo 238 → 178 → 114 | verliert, verliert, verliert |
+| Lebenspunkte 26 → 34 | verliert |
+| Durchschlag 2 → 1 | verliert |
+| **Beute 4 → 2** | **gewinnt, 19 von 42** |
+
+Das sieht nach einer klaren Antwort aus: die Beute ist es. Sie war es nicht.
+Über fünf Aussaaten gemessen:
+
+| in Welle 11 des Spiralhains | gewonnen |
+|---|---|
+| nichts dazu | **5 von 5** |
+| drei Schleicher dazu | 3 von 5 |
+| drei Hetzer dazu (Beute 2) | 2 von 5 |
+| drei Hetzer dazu (Beute 4) | 0 von 5 |
+
+Die Beute kippt nur die **eine** Aussaat, die zufällig noch knapp gewann. Die
+Ursache ist die Gruppengröße, und die sieht man erst, wenn man mehr als einen
+Weg fährt.
+
+**Warum es nicht einfach zu schliessen ist.** Der Rauchtest fährt C18 einmal,
+und jede zusätzliche Aussaat kostet dort einen vollen Durchlauf. `npm run c18`
+kann seit jeher mehrere (`npm run c18 -- 7 99`), nur fragt das niemand ab —
+die Zahl im Rauchtest bleibt die eine.
+
+**Was es billig besser machen würde:** der Rauchtest fährt drei Aussaaten
+statt einer und meldet „3 von 3 gewonnen". Das kostet gemessen zwei Sekunden
+je zusätzlicher Aussaat (`npm run c18` ist genau dafür gebaut) und macht aus
+einer Behauptung über einen Weg eine über drei. **Nicht in derselben Runde
+gemacht, in der die Lücke gefunden wurde** — ein Tor zu ändern, während die
+eigene Änderung an ihm hängt, ist kein Beweis (v219).
+
+**Die allgemeine Form.** Reproduzierbar heisst nicht richtig. Eine Messung,
+die immer denselben Weg fährt, gibt immer dasselbe Ergebnis — auch dann, wenn
+das Ergebnis an diesem Weg hängt und nicht an der Sache.
 
 ---
 

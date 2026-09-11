@@ -3086,6 +3086,72 @@ alle zwanzig heutigen Figuren liegen darüber, und die Ratsche in
 `npm run lesbarkeit` steht auf null. Eine Lieferung, die darunter bleibt,
 macht das Tor rot — das ist gewollt.
 
+---
+
+### 8d.5 `34_hetzer.png` — der Hetzer, die schnellste Figur des Spiels
+
+**Warum er auf den ersten Blick als schnell zu erkennen sein muss.** Seit v280
+stellt der Spieler Weichen, und die Route ist damit eine Entscheidung; der
+Hetzer ist der Gegner, der sie bestraft. Wer seine Türme für die lange Route
+gestellt hat, sieht ihn auf der kurzen durchlaufen — und er hat dafür genau so
+lange Zeit, wie er braucht, ihn zu erkennen. Bei 238 Weltpunkten je Sekunde
+sind das **zwei Sekunden**.
+
+Er ist der Gegensatz zum Koloss: **schmal, tief, nach vorn gestreckt.** Keine
+Panzerung, keine Wucht, nichts Breites. Was ihn trägt, ist Antrieb.
+
+**Maße im Prompt selbst** (v230): 512 × 512, quadratisch, freigestellt auf
+Transparenz.
+
+```
+[STILBLOCK NEUBAU EINFÜGEN]
+
+SUBJECT: a single very fast, lightly built raider vehicle of the invading
+faction, seen from directly above (top-down), 512 x 512 pixels, square,
+isolated on full transparency with no background and no ground shadow - the
+game bakes its own shadow.
+
+It is NARROW and LONG, stretched along its direction of travel: a low
+open-frame chassis on four small wheels or a single track, a pair of
+oversized boost nozzles at the rear, swept intake vanes, almost no armour -
+you can see through the frame in places. Its proportions are the opposite of
+the armoured brute of the same faction: that one is a wide compact block,
+this one is a thin arrow.
+
+It carries a small forward-mounted ram or cutter and nothing else. It is not
+a gun platform - it is built to GET THERE, and the silhouette must say that
+before anything else.
+
+Its one saturated accent is a hot amber and it belongs to the DRIVE - the
+nozzle throats, a glowing strip along the spine. The accent should read as
+"this thing is moving fast", not "this thing is aiming".
+
+At roughly 16 pixels on screen it must still read as long-and-thin rather
+than as a blob: keep the outline simple and the long axis unmistakable.
+
+[AUSGABE-BLOCK FIGUR EINFÜGEN]
+```
+
+### Abnahme 8d.5
+
+| Prüfung | Gefordert | Womit |
+|---|---|---|
+| Silhouetten-Abstand zu den neun Gegnern | Überdeckung **höchstens 0,60** | `npm run probebild` |
+| Längenverhältnis | lange Achse mindestens **1,8-mal** die kurze | Blick, Regel 8 |
+| Breite auf dem Bildschirm | mindestens 13 px | `npm run lesbarkeit` |
+| Kante gegen den Untergrund | mindestens 1,5 | `npm run lesbarkeit` |
+| Passt durch die engste Wegstelle | `npm run gedraenge` grün | `npm run gedraenge` |
+| Anteil gesättigter Akzente | höchstens 5 % der Fläche | Stilblock 8d |
+
+**Die Zeile „passt durch die engste Wegstelle" ist bei ihm die eigentliche
+Abnahme und kann erst nach der Lieferung fallen.** `npm run gedraenge` misst
+die WIRKLICHE Breite der Figur gegen die schmalste Stelle der Bahn — solange
+nur der Platzhalter da ist, überspringt es ihn und sagt das. Auf dem
+Spiralhain trägt die schmalste Stelle acht Weltpunkte; ein Fahrzeug, das quer
+zur Fahrtrichtung breit ist, fällt dort durch.
+
+---
+
 **Was im Spiel schon steht und nicht bestellt werden muss:** der Ring um ihn
 und die Fäden zu denen, die er versorgt. Dieselbe Sprache wie beim
 Schildträger seit v110, nur grün statt violett und durchgezogen statt

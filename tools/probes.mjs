@@ -5395,6 +5395,21 @@ export const PROBEN = [
     tor: 'guards',
   },
   {
+    // **Der Hetzer ohne Tempo ist ein Spaeher** (S-N6-03). Der Eingriff
+    // setzt ihn auf das Tempo der Infanterie und laesst alles andere stehen.
+    // Der gestellte Fall muss dann kippen: wer so langsam laeuft, kommt auch
+    // auf der kurzen Route nicht durch.
+    //
+    // Gegriffen wird das Tempofeld ueber die Kennung davor - die Zahl selbst
+    // ist eine Eichfrage und aendert sich; welche Zeile es ist, nicht.
+    name: 'Der Hetzer ist nicht mehr schnell',
+    datei: 'src/data/enemies.ts',
+    regel: /id: 'hetzer', name: 'Hetzer',\n    hp: (\d+), speed: \d+,/,
+    ersatz: "id: 'hetzer', name: 'Hetzer',\n    hp: 26, speed: 96,",
+    tor: 'smoke',
+    meldet: 'Hetzer',
+  },
+  {
     // **Der Heiler ohne Heilung ist ein Gegner mit einem Namen** (S-N6-02).
     // Der Eingriff setzt seine Heilung auf null und laesst alles andere
     // stehen - Bild, Ring, Faeden, Wellenplan. Der gestellte Fall im

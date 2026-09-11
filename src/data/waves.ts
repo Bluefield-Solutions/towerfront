@@ -175,8 +175,27 @@ export const PLAN_SPIRALHAIN: Wave[] = [
     { enemy: 'infantry', count: 5, gap: 1.2, delay: 0, shield: 2 },
     { enemy: 'brute', count: 6, gap: 2.2, delay: 3 },
     { enemy: 'splitter', count: 8, gap: 1.5, delay: 7 } ] },
-  { bonus: 238, groups: [
-    { enemy: 'crawler', count: 39, gap: 0.4, delay: 0 },
+  { bonus: 238, note: 'Hetzer — sie nehmen die kurze Route', groups: [
+    // **Der Hetzer steht auf dem Spiralhain** (S-N6-03), und das ist keine
+    // Willkuer: die Karte hat zwei Weichen (`saeule1`, `saeule3`), also die
+    // Entscheidung, die er bestraft. Auf einer Karte ohne Weiche waere er
+    // nur ein schneller Spaeher.
+    //
+    // **GETAUSCHT, nicht addiert - und das ist gemessen** (Regel 9). Drei
+    // zusaetzliche Gegner brechen diese Welle, und zwar gleich welcher Art:
+    // ueber fuenf Aussaaten gewinnt `npm run c18` mit drei zusaetzlichen
+    // Schleichern nur 3 von 5, mit drei Hetzern 2 von 5 - ohne sie 5 von 5.
+    // Der Wellenplan ist an dieser Stelle ein Haushalt und keine Liste.
+    //
+    // Drei Schleicher geben ihren Platz her (39 -> 36), die Taktung der
+    // uebrigen Gruppen bleibt Zeichen fuer Zeichen. Damit stehen alle fuenf
+    // Aussaaten wieder auf "gewonnen".
+    //
+    // **Drei und nicht einer:** bei einem waere die Welle mit einem
+    // Gluecksschuss entschieden - dieselbe Ueberlegung wie beim
+    // Schildtraeger (v218) und beim Sanitaeter (v328).
+    { enemy: 'hetzer', count: 3, gap: 1.5, delay: 0 },
+    { enemy: 'crawler', count: 36, gap: 0.4, delay: 0 },
     { enemy: 'runner', count: 25, gap: 0.4, delay: 5 },
     { enemy: 'brute', count: 7, gap: 2.4, delay: 9 } ] },
   { bonus: 563, note: 'Ein Leerentitan', groups: [

@@ -1,6 +1,6 @@
 export type EnemyId =
   | 'crawler' | 'runner' | 'brute' | 'titan' | 'flyer' | 'splitter' | 'splitling'
-  | 'infantry' | 'heiler';
+  | 'infantry' | 'heiler' | 'hetzer';
 
 export interface SplitRule {
   into: EnemyId;
@@ -139,6 +139,31 @@ export const ENEMIES: Record<EnemyId, EnemyDef> = {
     // Stuetzrolle - dasselbe Violett wie der Schildtraeger sie im Ring
     // traegt: die Farbe sagt die ROLLE, nicht die Art (siehe `trim`).
     body: '#434B58', trim: '#B07CFF',
+  },
+  // **Der Hetzer macht die WEICHE scharf** (S-N6-03).
+  //
+  // Seit v280 stellt der Spieler Weichen, und die Route wird damit zur
+  // Entscheidung - nur bestraft sie bisher niemand. Defense Grids Racer ist
+  // das Vorbild: er stuermt zu den Kernen und ist als Traeger kaum noch
+  // einzuholen. Wer seine Tuerme fuer die lange Route gestellt hat, sieht
+  // ihn auf der kurzen durchlaufen.
+  //
+  // **Seine Zahlen sind die schnellste und duennste Figur des Spiels:**
+  // 238 Weltpunkte je Sekunde (der Spaeher lief bisher mit 206), 26
+  // Lebenspunkte. Er ist damit leicht zu toeten - WENN ein Turm ihn sieht.
+  // Genau darum geht es; die Schwierigkeit ist die Strecke, nicht die
+  // Huelle. Panzerung 0 und kein Bremswiderstand: ein Frostturm ist die
+  // Antwort auf ihn, und das soll er auch sein.
+  //
+  // **Durchschlag 2, obwohl er duenn ist.** Ein Gegner, der nur wegen der
+  // Wegwahl durchkommt, muss auch etwas kosten - sonst ist die Weiche eine
+  // Frage ohne Einsatz.
+  hetzer: {
+    id: 'hetzer', name: 'Hetzer',
+    hp: 26, speed: 238, bounty: 2, leak: 2, radius: 16, armor: 0, slowResist: 0,
+    // Leicht und schnell - dasselbe Signalgelb wie Schleicher und Spaeher.
+    // Die Farbe sagt die ROLLE, nicht die Art (siehe `trim`).
+    body: '#464E5B', trim: '#F2D544',
   },
   titan: {
     id: 'titan', name: 'Leerentitan',

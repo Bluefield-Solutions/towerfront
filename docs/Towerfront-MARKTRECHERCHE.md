@@ -1,6 +1,22 @@
 # Marktrecherche — was moderne Tower-Defense-Spiele ausmacht
 
-Stand: v332 · 11.09.2026
+Stand: v339 · 11.09.2026
+
+**Nachgesehen in v339 — inhaltlich unverändert gültig, und die Runden v333
+bis v339 haben eine ihrer Zahlen zum ersten Mal am eigenen Haus geprüft.**
+
+Rogue Tower gibt je Karte einen Schritt, den man nicht sofort spürt, und
+vierzig davon in einem Lauf; die Wirkung entsteht aus der Menge, nicht aus der
+einzelnen Karte. Dieses Haus zieht **sechzig** Karten je Lauf — und `sim`
+misst seit v339, was das trägt: **×12,0 Feuerkraft im Mittel, ×32,4 für einen
+Stil, der auf eine Achse spielt.** Die Vorlage trägt also, und zwar genau in
+der Größenordnung, die die Türme über ihre Stufen tragen (×5,4 bis ×39,1).
+
+**Was daraus als Lehre für die Recherche bleibt:** eine übernommene Zahl gilt
+nur mit dem Horizont, an dem sie gemessen wurde. Die ×1,48, mit der S-N1-07
+den Stapel für zu schwach erklärt, ist über **fünfzehn** Wellen entstanden —
+über sechzig sind es ×12. Nicht die Vorlage war falsch, sondern die Länge des
+Laufs, gegen den gerechnet wurde.
 
 **Nachgesehen in v332 — inhaltlich unverändert gültig, und seit v325 sind
 drei weitere Stücke übernommen. Alle drei beantworten dieselbe Frage, und

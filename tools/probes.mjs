@@ -5545,6 +5545,24 @@ export const PROBEN = [
     // Rangfolge auf; was bleibt, ist ein Angebot, in dem zwei Kacheln
     // dasselbe tun. Der Waechter muss BEIDE nennen - eine Meldung, die nur
     // die zweite nennt, sagt nicht, wogegen sie sich reibt.
+    // **Die Nullprobe der Stapelkurve** (v339, S-N1-07, Regel 13).
+    //
+    // `stapelKurve` misst, was der Kartenstapel ueber einen ganzen Lauf
+    // traegt - und jede ihrer Zahlen ist nur so viel wert wie die Zusage,
+    // dass OHNE Karten genau 1,00 herauskommt. Der Eingriff laesst die
+    // Nullprobe eine Karte je Welle nehmen: sie steht dann nicht mehr auf
+    // 1,00, und die Messung muss es sagen, statt die Tabelle darueber
+    // unveraendert zu drucken. Genau diese Tabelle hat in dieser Runde die
+    // Praemisse einer Story widerlegt - eine Messung, die das kann, braucht
+    // eine Nullprobe, die man nicht abschalten kann.
+    name: 'Die Stapelkurve misst ohne Nullprobe',
+    datei: 'tools/sim.ts',
+    regel: /const KURVE_NULL = 0;/,
+    ersatz: 'const KURVE_NULL = 1;',
+    tor: 'sim',
+    meldet: 'Nullprobe der Stapelkurve',
+  },
+  {
     name: 'Zwei Karten sind dieselbe Karte',
     datei: 'src/data/karten.ts',
     regel: /\{ id: 'wucht', name: 'Wucht', text: '([^']+)', art: 'schaden', wert: 1\.10, kosten: 0 \}/,

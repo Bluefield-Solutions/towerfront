@@ -1,6 +1,31 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v332 · 11.09.2026
+Stand: v339 · 11.09.2026
+
+**Nachgesehen in v339 — nachgefahren, nicht geglaubt.** `npm run uxtor` auf
+demselben Gerät und in derselben Auflösung, nach sieben Runden (v333 bis
+v339):
+
+| Zustand | gesperrt | bemalt | Bahn | Bauplätze |
+|---|---|---|---|---|
+| zug | 7,9 % | 10,3 % | 0,0 % | 10,3 % |
+| ruhe | **13,1 %** | 16,3 % | 17,8 % | 4,6 % |
+| welle | 13,9 % | 16,1 % | 17,8 % | 4,0 % |
+| bauwahl | 22,0 % | 25,2 % | 17,8 % | 17,2 % |
+| prüfsteg | **27,0 %** | 30,2 % | 26,4 % | 26,4 % |
+| dock zu | — | — | 13,2 % | 4,6 % |
+
+**Punkt für Punkt dieselben Zahlen wie in v332** — keine der sieben Runden hat
+die Oberfläche angefasst; sie sind Messgeräte und Torreparaturen. H1 verlangt
+höchstens 25 % bei offenem Turmmenü, gemessen 27,0; die zwei Punkte liegen
+unverändert als **N4M** im Verzeichnis, mit beiden gemessenen Wegen daneben.
+17,8 % der Bahn unter der Bedienung stehen als **N4F** da, und das Einklappen
+der Leiste ist gemessen nicht der Hebel (17,8 → 13,2, an den Bauplätzen gar
+nichts).
+
+**Der Selbsttest der Verdeckung trägt weiter** (ohne Fleck 0 Funde, mit Fleck
+1, danach wieder 0) — eine Reihe aus acht Nullen sagt ohne ihn nichts
+(Regel 5).
 
 **Nachgesehen in v332 — nachgefahren, nicht geglaubt.** `npm run uxaudittor`
 auf demselben Gerät und in derselben Auflösung, mit der Ankündigung der

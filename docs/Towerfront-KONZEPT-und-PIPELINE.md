@@ -1,6 +1,28 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v332 · 11.09.2026
+Stand: v339 · 11.09.2026
+
+**Nachgesehen in v339 — die Kette hat unveraendert dreiunddreissig
+abbrechende Schritte, und die sieben Runden v333 bis v339 haben an ihrem
+teuersten etwas geaendert, das man ihr nicht ansieht: `sim` misst seit v336
+LAEUFE statt Partien.**
+
+Sieben der zehn Spannungskennzahlen liefen auf einer Karte ueber fuenfzehn
+Wellen, waehrend ein Spieler seit S-N1-01 sechzig spielt. Der Schritt kostet
+dadurch **215 s statt 158** — und vier Kennzahlen, die denselben Lauf viermal
+gefahren haben, teilen ihn seitdem (Regel 15), was 35 s zurueckholt. Jede
+Kennzahl traegt ihre Messstelle jetzt als Kennung in `tools/spannung-stand.txt`;
+ein Stand von einer anderen Messstelle ist ein Fehler und wird neu erhoben
+statt uebernommen.
+
+**Und die Kette hat in diesen Runden zweimal gezeigt, wozu der Nachtlauf da
+ist:** v337 hat zwei Gegenproben gerichtet, die ihren Gegenstand verloren
+hatten, und dabei ein Loch im BEFUND geschlossen — er sagte „meldet X nicht"
+und verschwieg, dass das Tor gar nicht erst uebersetzt hat. Er traegt jetzt
+die letzten drei Zeilen des Tores mit.
+
+**Neu in der Kette, ohne dass ein Schritt dazugekommen waere:** der Waechter
+`Kartenstapel` (v338, in `guards`) und die Stapelkurve (v339, in `sim`).
 
 **Nachgesehen in v332 — die Kette hat unveraendert dreiunddreissig
 abbrechende Schritte, und was sich seit v325 geaendert hat, ist wieder nicht

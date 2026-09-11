@@ -1,6 +1,21 @@
 # Towerfront — Bildauftrag
 
-Stand: v332 · 11.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v339 · 11.09.2026 · **Auftragsdokument für den Bild-Agenten**
+
+**Nachgesehen in v339 — gemessen mit `npm run bildtor`, nicht abgeschrieben.**
+Offen sind unverändert **vier von 22** Bildern: `31_foerderer.png`,
+`32_werft.png`, `33_sanitaeter.png` (im Tor als `gegner: heiler`) und
+`34_hetzer.png`. Die sieben Runden v333 bis v339 haben **keine** neue
+Bestellung erzeugt — v333, v336 und v339 sind Messgeräte, v334, v335, v337
+und v338 Reparaturen an Toren und Gegenproben.
+
+**Die Umnummerierung aus v334 steht hier, weil sie genau dieses Dokument
+betraf:** der Bannturm war als `8d.4` / `33_bannturm.png` bestellt, und v328
+gab dem Sanitäter dieselbe Kennung UND denselben Dateinamen. Eine Gegenprobe,
+die `### 8d.4` greift, traf seitdem den falschen Abschnitt und schwieg. Der
+Bannturm ist jetzt **`8d.6` / `35_bannturm.png`**; der Doku-Wächter prüft seit
+v334 beides — doppelte Kennung und doppelte Datei, letzteres nur INNERHALB
+einer Abschnittsfamilie (dass 8b und 8c dieselbe Karte bestellen, ist Absicht).
 
 **Nachgesehen in v332 — nachgesehen, nicht gestempelt.** `npm run bildtor`
 nennt jetzt **vier** offene Bestellungen statt zweier, und das ist die

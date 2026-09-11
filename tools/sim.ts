@@ -20,11 +20,12 @@ import {
 } from '../src/core/storage';
 
 const START_LIVES = DIFFICULTIES.normal.startLives;
-import { TOWERS, TOWER_ORDER, MAX_LEVEL, WIEDERHOLUNG_ZUSCHLAG, VIELFALT_BEUTE, nextFor, rangeFor, type TowerId } from '../src/data/towers';
+import { TOWERS, TOWER_ORDER, MAX_LEVEL, WIEDERHOLUNG_ZUSCHLAG, VIELFALT_BEUTE, nextFor, rangeFor, statsFor, type TowerId } from '../src/data/towers';
 
 import { MAPS } from '../src/data/maps';
 import {
-  KARTENSTAPEL, GRUNDSTAPEL, kartenWirkung, zieheKarten, type Karte, type KartenArt,
+  KARTENSTAPEL, GRUNDSTAPEL, KARTEN_JE_WELLE, KEINE_KARTEN as KEINE_KARTEN_SIM,
+  kartenWirkung, zieheKarten, type Karte, type KartenArt,
 } from '../src/data/karten';
 import { MONOKULTURWELLE, PLAN_SPIRALHAIN, type Wave } from '../src/data/waves';
 import { VORZEICHEN_ORDNUNG, vorzeichenZahl, type Vorzeichen } from '../src/data/vorzeichen';
@@ -1413,6 +1414,189 @@ function meisterLauf(): ReturnType<typeof overVariants<LaufErgebnis>> {
     ));
   }
   return meisterLaufSpeicher;
+}
+
+/** **Wieviele Karten die Nullprobe nimmt** (v339, S-N1-07).
+ *
+ *  Null, und das ist der ganze Sinn: ein Lauf, der KEINE Karte nimmt, muss
+ *  auf jeder Achse genau 1,00 herauskommen. Tut er das nicht, misst
+ *  `stapelKurve` etwas anderes als den Stapel - eine Grundeinstellung, einen
+ *  Rundungsfehler, eine doppelt gezaehlte Karte (Regel 13). Die Zahl steht
+ *  hier als Konstante, damit die Gegenprobe sie greifen kann. */
+const KURVE_NULL = 0;
+
+/** **Was der Kartenstapel ueber einen ganzen Lauf traegt** (v339, S-N1-07).
+ *
+ *  **Die Frage ist eine Entscheidung des Nutzers, und diese Messung
+ *  entscheidet sie nicht - sie stellt den Raum auf** (Regel 9). v314 hat
+ *  gemessen, was Stufen und Zweige tragen: das **5,4- bis 39,1-fache** der
+ *  ersten Stufe, im Mittel rund x24. Der Stapel, der das auffangen soll,
+ *  trug ueber einen Lauf **x1,48** Feuerkraft. Faktor 16 dazwischen, und die
+ *  Story nennt vier Wege - hier gemessen werden die zwei, die der Nutzer
+ *  gewaehlt hat:
+ *
+ *  * **C - reiner Stapel:** Gold, Beute und Kristall fliegen heraus, es
+ *    bleiben die Achsen, die auf die Tuerme wirken.
+ *  * **A - mehr Zuege:** mehrere Karten je Welle statt einer.
+ *
+ *  **Gemessen wird der ZUG, nicht eine Partie** - dieselbe Messstelle wie
+ *  v314, damit die x1,48 vergleichbar bleibt: `zieheKarten` legt drei
+ *  Karten vor, `karteWaehlen` nimmt, `kartenWirkung` rechnet zusammen. Kein
+ *  Spiel laeuft dabei; die Zahl sagt, was der Stapel HERGIBT, nicht was ein
+ *  Bot daraus macht.
+ *
+ *  **Die Feuerkraft ist Schaden durch Takt**, nicht Schaden allein: eine
+ *  Taktkarte von 0,95 ist dieselbe Feuerkraft wie eine Schadenskarte von
+ *  1,053, und wer nur den Schaden zaehlt, misst den halben Stapel.
+ *
+ *  **Ueber die Stile gemittelt und mit ihrer Spanne daneben** (Regel 12):
+ *  `karteWaehlen` waehlt nach der Vorliebe des Stils, und C nimmt zwei von
+ *  drei Stilen genau ihre Vorliebe weg. Das ist kein Nebeneffekt, sondern
+ *  eine der Zahlen, an denen die Entscheidung haengt - es steht deshalb
+ *  eigens da. */
+function stapelKurve(): void {
+  // **200 Aussaaten, und die Zahl ist die von v314** (Regel 12): diese
+  // Messung soll mit der x1,48 der Story vergleichbar sein, und dazu gehoert
+  // auch, wie oft gewuerfelt wurde. Gemessen kostet sie damit rund zehn
+  // Sekunden; mit 60 Aussaaten steht dieselbe Zahl auf x11,95 statt x12,02,
+  // also 0,6 % daneben - die Genauigkeit ist hier gratis und wird deshalb
+  // genommen.
+  const AUSSAATEN_KURVE = 200;
+  const STILE = Object.keys(KARTENSTIL);
+  /** Die Achsen, die auf die Tuerme wirken - alles andere ist Einkommen.
+   *  Abgeleitet aus `kartenWirkung` und nicht danebengeschrieben: eine Karte
+   *  zaehlt als Feuerkraft, wenn ihre Wirkung eines der Turmfelder bewegt
+   *  (Regel 15). */
+  const wirktAufTuerme = (k: Karte): boolean => {
+    const w = kartenWirkung([k.id]) as unknown as Record<string, number>;
+    const n = KEINE_KARTEN_SIM as unknown as Record<string, number>;
+    return ['schadenMul', 'taktMul', 'reichweiteMul', 'brandAnteil', 'markierung',
+      'frostDauer', 'weit', 'nah', 'bremsdauerMul']
+      .some((f) => w[f] !== n[f]);
+  };
+
+  /** Einen ganzen Lauf lang ziehen und nehmen - und zurueckgeben, was der
+   *  Stapel am Ende traegt. */
+  const lauf = (saat: number, stil: string, stapel: readonly Karte[], jeWelle: number,
+    wellen = LAUF_WELLEN) => {
+    const genommen: string[] = [];
+    for (let w = 1; w <= wellen; w += 1) {
+      const angebot = zieheKarten(saat, w, KARTEN_JE_WELLE, stapel);
+      for (let i = 0; i < jeWelle && angebot.length; i += 1) {
+        const k = karteWaehlen(stil, angebot);
+        genommen.push(k.id);
+        angebot.splice(angebot.indexOf(k), 1);
+      }
+    }
+    const w = kartenWirkung(genommen);
+    return {
+      feuer: w.schadenMul / w.taktMul,
+      reichweite: w.reichweiteMul,
+      gold: w.gold,
+      karten: genommen.length,
+    };
+  };
+
+  const varianten: Array<{ name: string; rein: boolean; jeWelle: number }> = [
+    { name: 'heute', rein: false, jeWelle: 1 },
+    { name: 'C reiner Stapel', rein: true, jeWelle: 1 },
+    { name: 'A zwei je Welle', rein: false, jeWelle: 2 },
+    { name: 'A drei je Welle', rein: false, jeWelle: 3 },
+    { name: 'C+A zwei je Welle', rein: true, jeWelle: 2 },
+    { name: 'C+A drei je Welle', rein: true, jeWelle: 3 },
+  ];
+
+  for (const voll of [false, true]) {
+    const basis = voll ? KARTENSTAPEL : GRUNDSTAPEL;
+    console.log(`\nWas der Kartenstapel ueber ${LAUF_WELLEN} Wellen traegt `
+      + `(${voll ? 'voller Stapel' : 'Grundstapel'}, ${basis.length} Karten, `
+      + `${AUSSAATEN_KURVE} Aussaaten, ${STILE.length} Stile):`);
+    for (const v of varianten) {
+      const stapel = v.rein ? basis.filter(wirktAufTuerme) : basis;
+      const jeStil = STILE.map((stil) => {
+        const werte: number[] = [];
+        for (let i = 0; i < AUSSAATEN_KURVE; i += 1) {
+          werte.push(lauf(20260000 + i, stil, stapel, v.jeWelle).feuer);
+        }
+        return werte.reduce((a, b) => a + b, 0) / werte.length;
+      });
+      const mittel = jeStil.reduce((a, b) => a + b, 0) / jeStil.length;
+      const spanne = Math.max(...jeStil) - Math.min(...jeStil);
+      const eine = lauf(20260000, STILE[0], stapel, v.jeWelle);
+      console.log(
+        `  ${v.name.padEnd(18)} Feuerkraft x${mittel.toFixed(2).padStart(6)}`
+        + `   (je Stil ${jeStil.map((x) => `x${x.toFixed(2)}`).join(' / ')})`
+        + `   Spanne ${spanne.toFixed(2)}`
+        + `   Reichweite x${eine.reichweite.toFixed(2)}`
+        + `   ${eine.karten} Karten, ${stapel.length} im Stapel`,
+      );
+    }
+  }
+
+  // **Die Zahl der Story ist an einer anderen Messstelle entstanden, und das
+  //   ist der eigentliche Befund dieser Runde** (Regel 12).
+  //
+  // S-N1-07 steht auf "der Stapel traegt x1,48 Feuerkraft" - und ihre eigene
+  // Fussnote sagt, woran: *fuenfzehn Wellen*. Das war der Lauf, als es ihn
+  // noch nicht gab; seit S-N1-01 sind es SECHZIG, und der Stapel zieht in
+  // jeder einzelnen. Dieselbe Rechnung ueber beide Horizonte, damit der
+  // Unterschied nicht behauptet, sondern gezeigt ist.
+  {
+    const STILE_K = Object.keys(KARTENSTIL);
+    console.log('\n  Dieselbe Messung ueber zwei Horizonte '
+      + '(Grundstapel, eine Karte je Welle):');
+    for (const wellen of [15, LAUF_WELLEN]) {
+      const jeStil = STILE_K.map((stil) => {
+        const werte: number[] = [];
+        for (let i = 0; i < AUSSAATEN_KURVE; i += 1) {
+          werte.push(lauf(20260000 + i, stil, GRUNDSTAPEL, 1, wellen).feuer);
+        }
+        return werte.reduce((a, b) => a + b, 0) / werte.length;
+      });
+      const mittel = jeStil.reduce((a, b) => a + b, 0) / jeStil.length;
+      console.log(`    ${String(wellen).padStart(2)} Wellen: Feuerkraft `
+        + `x${mittel.toFixed(2).padStart(7)}   `
+        + `(je Stil ${jeStil.map((x) => `x${x.toFixed(2)}`).join(' / ')})`);
+    }
+  }
+
+  // **Was aufzuholen ist, steht daneben und ist gemessen** (v314): ein voll
+  // ausgebauter Turm leistet das 5,4- bis 39,1-fache seiner ersten Stufe.
+  // Die Zahl wird hier ABGELESEN und nicht abgeschrieben (Regel 15) - sie
+  // wandert mit den Turmwerten mit, und eine abgeschriebene waere beim
+  // naechsten Wert eine Behauptung.
+  {
+    const faktoren = TOWER_ORDER.flatMap((id) => {
+      const def = TOWERS[id];
+      return [0, 1].map((zweig) => {
+        const eins = statsFor(def, zweig as 0 | 1, 1);
+        const voll = statsFor(def, zweig as 0 | 1, MAX_LEVEL);
+        const dps = (st: { damage: number; cooldown: number }) => st.damage / st.cooldown;
+        return dps(voll) / dps(eins);
+      });
+    });
+    const klein = Math.min(...faktoren), gross = Math.max(...faktoren);
+    const mittel = faktoren.reduce((a, b) => a + b, 0) / faktoren.length;
+    console.log(`  Was die Stufen tragen (Stufe 1 gegen ${MAX_LEVEL}, Schaden je Sekunde, `
+      + `${faktoren.length} Zweige): x${klein.toFixed(1)} bis x${gross.toFixed(1)}, `
+      + `im Mittel x${mittel.toFixed(1)}.`);
+  }
+
+  // **Die Nullprobe** (Regel 13): wer keine Karte nimmt, steht auf 1,00.
+  // Ohne sie sagt keine der Zahlen darueber etwas - sie koennten alle eine
+  // Grundeinstellung messen statt den Stapel.
+  const null0 = lauf(20260000, STILE[0], GRUNDSTAPEL, KURVE_NULL);
+  console.log(`  Nullprobe (${KURVE_NULL} Karten je Welle): Feuerkraft `
+    + `x${null0.feuer.toFixed(2)}, Reichweite x${null0.reichweite.toFixed(2)}, `
+    + `${null0.karten} Karten genommen.`);
+  if (null0.karten !== 0 || Math.abs(null0.feuer - 1) > 1e-9
+    || Math.abs(null0.reichweite - 1) > 1e-9) {
+    errors.push(`Die Nullprobe der Stapelkurve steht nicht auf 1,00: Feuerkraft `
+      + `x${null0.feuer.toFixed(4)}, Reichweite x${null0.reichweite.toFixed(4)}, `
+      + `${null0.karten} Karten. Dann misst die Kurve nicht den Stapel, sondern `
+      + 'etwas, das auch ohne ihn da ist - und jede Zahl darueber ist um genau '
+      + 'diesen Betrag daneben.');
+  }
 }
 
 /** **Der Lauf ist deterministisch - gepruefte Abnahme, keine Zusage**
@@ -2911,6 +3095,10 @@ for (const bot of BOTS) {
 // **Erst nachstellbar, dann gemessen** (v336, S-N7-02). Der Determinismus
 // steht VOR den Kennzahlen, weil ohne ihn keine von ihnen etwas heisst.
 laufDeterminismus();
+
+// **Der Raum vor der Entscheidung** (v339, S-N1-07, Regel 9). Es urteilt
+// nicht - es legt nebeneinander, was die zwei gewaehlten Wege tragen.
+stapelKurve();
 
 {
   // **Ueber die Aussaaten, nicht ueber einen Lauf** (v253). Bis v252 stand

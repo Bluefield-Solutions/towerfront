@@ -1,6 +1,24 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v332 · 11.09.2026
+Stand: v339 · 11.09.2026
+
+**Nachgesehen in v339 — die Kennzahlen dieses Audits sind nicht mehr
+dieselben Zahlen, obwohl sie dasselbe heißen.** Seit v336 misst `npm run sim`
+LÄUFE statt Partien, und das verschiebt genau die Größe, um die es diesem
+Audit geht: „längste folgenlose Strecke" stand über fünfzehn Wellen auf
+**13,0** und steht über sechzig auf **43,7**. Die 13 war nie falsch — sie
+beantwortete eine andere Frage.
+
+**Damit ist der härteste Satz dieses Audits zum ersten Mal an der richtigen
+Länge gemessen:** 43,7 Wellen ohne eine Folge sind kein Verlauf, sondern eine
+Einführung mit Anhang (N1K). Was das Audit bisher als Zahl über eine Karte
+führte, ist eine Aussage über den ganzen Lauf geworden.
+
+**Und eine zweite Zahl steht seitdem auf UNBELEGT statt auf einem Wert:** der
+Abstand der Spielstile. `Breite` bringt 0 von 9 Läufen durch, `Sparsam` 7,
+`Meister` 9 — der Abstand beträge 22,22 und stünde zum ersten Mal auf
+„ERREICHT". Eine Kennzahl, die sich durch einen scheiternden Bot verbessern
+lässt, ist keine (v293). Als **N7B** im Verzeichnis.
 
 **Nachgesehen in v332 — die Kennzahlen dieses Audits sind unverändert, und
 was sich seit v325 geändert hat, ist wieder eine ganze Klasse.** Sieben Runden

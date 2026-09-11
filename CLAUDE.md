@@ -717,6 +717,41 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Die Praemisse von S-N1-07 ist an einer Messstelle entstanden, die es nicht
+mehr gibt (v339, Regel 12).** Die Story steht auf „der Stapel traegt x1,48
+Feuerkraft, die Stufen x5,4 bis x39,1 - Faktor 16 dazwischen". Ihre eigene
+Fussnote nennt die Messstelle: **fuenfzehn Wellen**. Das war der Lauf, als es
+ihn noch nicht gab; seit S-N1-01 sind es **sechzig**, und der Stapel zieht in
+jeder einzelnen.
+
+`stapelKurve` faehrt dieselbe Rechnung ueber beide Horizonte:
+
+| Grundstapel, eine Karte je Welle | Feuerkraft | je Stil |
+|---|---|---|
+| 15 Wellen (die Messstelle der Story) | **x1,57** | x2,39 / x1,17 / x1,16 |
+| 60 Wellen (der Lauf von heute) | **x12,02** | **x32,4** / x1,83 / x1,80 |
+| was die Stufen tragen | x5,4 bis x39,1 | im Mittel **x23,3** |
+
+**Der Faktor 16 existiert ueber einen echten Lauf nicht** - beide liegen im
+selben Band. Die x1,48 ist reproduziert (x1,57 bei 200 Aussaaten) und war nie
+falsch; sie beantwortete eine andere Frage.
+
+**Gemessen wurden trotzdem beide vom Nutzer gewaehlten Wege, und beide
+schiessen weit ueber das Ziel:** C (reiner Stapel) x53,8 · A zwei je Welle
+x36,0 · A drei je Welle x94,1 · C+A x487 bis **x8452**.
+
+**Zwei Nebenbefunde tragen die Entscheidung mit.** A mit DREI Karten je Welle
+schafft die Wahl ab - bei drei Angeboten nimmt jeder Stil alle drei, und die
+Spanne zwischen den Stilen faellt auf **0,00**. Und C nimmt zwei von drei
+Stilen ihre Vorliebe weg (Breite lebt von Gold und Beute, Sparsam von
+Kristall): die Spanne springt von 30,6 auf **136,1**.
+
+**Gemessen wird der ZUG und keine Partie** - dieselbe Messstelle wie v314,
+damit die x1,48 vergleichbar bleibt; kein Spiel laeuft dabei. Die Feuerkraft
+ist Schaden DURCH Takt: eine Taktkarte von 0,95 ist dieselbe Feuerkraft wie
+eine Schadenskarte von 1,053, und wer nur den Schaden zaehlt, misst den halben
+Stapel. **Ausgeliefert ist nichts** - der Schalter steht im MESSWERKZEUG.
+
 **Der Waechter `Kartenstapel` (v338, S-N7-03).** Der Daten-Waechter prueft
 Tuerme, Gegner, Wellen, Karten und Grade - und seit v303 haengt jede einzelne
 Welle am Kartenstapel, der keinen hatte. Gemessen 24 Karten, davon 12 von
@@ -1927,7 +1962,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v338. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v339. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

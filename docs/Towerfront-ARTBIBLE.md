@@ -1,11 +1,33 @@
 # Towerfront — Art Bible
 
-Stand: v323 · 11.09.2026
+Stand: v330 · 11.09.2026
 
-**Nachgesehen in v323 — am Vorrat unverändert, an der SCHRIFT eine
-Entscheidung.** `npm run bildtor` nennt weiterhin zwei offene Bestellungen
-(`31_foerderer.png`, `32_werft.png`); seit v233 ist kein Bildpunkt
-dazugekommen.
+**Nachgesehen in v330 — der Vorrat ist unverändert, die Bestellliste hat sich
+verdoppelt.** `npm run bildtor` nennt jetzt **vier** offene Bestellungen statt
+zwei: `31_foerderer.png` und `32_werft.png` wie bisher, dazu
+`33_sanitaeter.png` (v328) und `34_hetzer.png` (v329). Seit v233 ist kein
+Bildpunkt dazugekommen.
+
+**Zwei Regeln, die dabei zum ersten Mal wirklich getragen haben, gehören
+hierher:**
+
+* **Eine neue Figur hält die Kette nicht an** (K5). Beide neuen Gegnerarten
+  sind gegen den Platzhalter gebaut worden — Silhouette in der richtigen
+  Größe, Schraffur, Marke `#FF00E5` —, und das Spiel ist vollständig
+  spielbar. Vier Tore sind dabei rot geworden, weil ein Platzhalter keine
+  Messwerte hat (`lesbarkeit`, `gedraenge`, `einbettung`, `smoke`); alle vier
+  überspringen jetzt, was **wirklich bestellt** ist, und **nennen es**. Ein
+  fehlendes Bild ohne Bestellung bleibt überall ein Fehler.
+* **Die Rolle steht im SPIEL, nicht nur im Bild.** Der Sanitäter trägt einen
+  grünen Ring mit Kreuz und Fäden zu den Verwundeten, der Schildträger seit
+  v110 einen violetten gestrichelten. Das Bild muss die Rolle also nicht
+  allein tragen — es darf ihr nur nicht widersprechen. Genau das steht in
+  beiden neuen Aufträgen als Satz.
+
+**Und eine Farbregel ist dabei zum zweiten Mal bestätigt worden** (4.1): beide
+neuen Arten tragen den Akzent ihrer ROLLE, nicht ihrer Art — der Sanitäter
+dasselbe Violett, das der Schildträgerring trägt, der Hetzer dasselbe
+Signalgelb wie Schleicher und Späher.
 
 **Neu und für jeden künftigen Text verbindlich (v323, S-N4-10): ein Ding, ein
 Wort.** Für dieselbe Sache standen drei im Bild — „Level neu starten",

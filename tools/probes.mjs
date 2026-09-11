@@ -5395,6 +5395,22 @@ export const PROBEN = [
     tor: 'guards',
   },
   {
+    // **Eine entschaerfte Monokulturwelle bestraft niemanden** (S-N6-04).
+    // Der Eingriff nimmt ihr die zwei Titanen - genau die Gruppe, die
+    // Frostturm und Prisma trifft. Ohne sie halten beide die Welle mit null
+    // Verlust, und die Messung muss das MELDEN: ein Vergleich, bei dem das
+    // beste reine Feld null verliert, prueft nichts (Regel 5).
+    //
+    // Gegriffen wird die GRUPPE und nicht ihre Zahlen: wieviele Titanen es
+    // sind und wie weit sie auseinanderstehen, ist eine Eichfrage.
+    name: 'Die Monokulturwelle ist entschaerft',
+    datei: 'src/data/waves.ts',
+    regel: /\n    \{ enemy: 'titan', count: \d+, gap: \d+, delay: \d+ \},\n  \],\n\};/,
+    ersatz: '\n  ],\n};',
+    tor: 'sim',
+    meldet: 'verliert keinen Kristall',
+  },
+  {
     // **Der Hetzer ohne Tempo ist ein Spaeher** (S-N6-03). Der Eingriff
     // setzt ihn auf das Tempo der Infanterie und laesst alles andere stehen.
     // Der gestellte Fall muss dann kippen: wer so langsam laeuft, kommt auch

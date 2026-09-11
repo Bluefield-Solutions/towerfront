@@ -513,6 +513,17 @@ npm run inspektor   stellt die Beweismittel fuer den INSPEKTOR: Aufnahmen des
                     weit kostet einen ueberfluessigen Durchgang, zu eng einen
                     ungesehenen Stand.
 npm run kritik      Wertung nach Testerkategorien, Ziel über 90
+npm run sim -- --wirkungen  nur die sechs Wirkungskarten (S-N6-01): je Karte ein
+                    Lauf mit genau EINER Wirkung gegen einen ohne, Abdruck aus
+                    Kristall und Gold. Zwei gleiche Abdruecke ueber alle vier
+                    Karten sind zwei Namen fuer eine Wirkung. Die Nullprobe ist
+                    der Lauf OHNE jede Karte und wird einmal je Karte gerechnet,
+                    nicht je Wirkung.
+npm run sim -- --monokultur  nur die Monokulturwelle (S-N6-04): vier reine
+                    Felder gegen ein gemischtes, dieselbe Aussaat, dieselben
+                    Plaetze, dasselbe Gold. Gemessen 28/21/10/10 gegen 5. Die
+                    Zusage ist ein VERGLEICH - eine feste Grenze haenge an der
+                    Wellenstaerke und wuerde still bedeutungslos (Regel 2).
 npm run sim -- --lauf  nur der Lauf und seine Abschnittswahl - gemessen 104 s
                     statt eines vollen Durchlaufs. Es urteilt trotzdem: die
                     Spreizung zwischen den Auflagen (v305 gemessen 142,4) und
@@ -705,6 +716,39 @@ tools/         Torkette, Bildabnahme, Schleifenwerkzeug
 art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
+
+**Die Welle, die Monokultur bestraft (v330, S-N6-04).** S-N3-02 und S-N3-03
+haben Vielfalt billiger und eintraeglicher gemacht; beide BELOHNEN, keiner
+erzwingt. Die `MONOKULTURWELLE` schliesst den Kreis - jede Gruppe hat einen
+Adressaten, und zusammen decken sie alle vier Turmarten ab:
+
+| Gruppe | trifft wen |
+|---|---|
+| Gleiter | den **Moerser** - er erreicht sie gar nicht |
+| Kolosse | den **Bogenturm** - Panzerung frisst seine kleinen Treffer |
+| beschildete Infanterie | das **Prisma** - der Schild zaehlt TREFFER, jeder Kettensprung verbraucht einen ohne Wirkung |
+| zwei weit stehende Titanen | **Frostturm und Prisma** - beide leben von der Traube |
+
+**Gemessen mit `npm run sim -- --monokultur`:** nur Bogen 28, nur Moerser 21,
+nur Frost 10, nur Prisma 10 - **gemischt 5**.
+
+**Zwei Entwuerfe waren vorher falsch, und beide Male hat die Messung es gesagt
+statt zu schweigen.** Der erste reihte die Welle als `welle: 0` ein; dort
+traegt jeder Gegner die Lebenspunkte der ERSTEN Welle, und drei der vier
+reinen Felder hielten sie mit null Verlust - die Zahl mass die Lebenskurve und
+nicht die Zusammensetzung (Regel 12). Der zweite hatte die Titanen noch nicht:
+Frostturm und Prisma standen auf null. **Ein einzelner, weit stehender Gegner
+nimmt beiden genau das, wovon sie leben** - der Blitz hat niemanden zum
+Springen, die Aura trifft einen statt zwanzig.
+
+Die Zusage ist ein VERGLEICH und keine absolute Zahl (Regel 2). Daneben steht
+die Forderung, dass ueberhaupt etwas durchkommt: eine Welle, die jeder haelt,
+bestraft niemanden, und 0 gegen 0 saehe aus wie ein bestandener Vergleich
+(Regel 5).
+
+**`welleEinreihen` ist aus `startWave` herausgeloest**, damit die Messung eine
+gestellte Welle fahren kann, ohne den Anmarsch daneben noch einmal zu
+schreiben (Regel 15). `startWave` bleibt der einzige Weg, den das SPIEL nimmt.
 
 **Der Hetzer (v329, S-N6-03) - die Gegnerart, die die WEICHE scharf macht.**
 Seit v280 stellt der Spieler Weichen, und die Route ist damit eine
@@ -1604,7 +1648,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v329. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v330. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

@@ -12,7 +12,9 @@ import {
   VIELFALT_BEUTE, vielfaltsBeute,
   werftErtrag, werftHoechstmass, bannZuschlag, bannStapel,
 } from '../data/towers';
-import { EARLY_BONUS_MAX, EARLY_BONUS_WINDOW, EARLY_RISIKO_HUB } from '../data/waves';
+import {
+  EARLY_BONUS_MAX, EARLY_BONUS_WINDOW, EARLY_RISIKO_HUB, type Wave,
+} from '../data/waves';
 import { VERBUND_MAX, VERBUND_STUFE, VERBUND_UMKREIS } from './verbund';
 import {
   DIFFICULTIES, hpScale, laufFaktor, LAUF_STEIGUNG,
@@ -1551,7 +1553,24 @@ export class GameState {
       this.float(this.goal.x, this.goal.y - 70, `Frueh gestartet  +${bonus}`, C.gold, 22);
     }
     const welle = this.waveIndex;
-    const wave = this.waveAt(welle);
+    this.welleEinreihen(this.waveAt(welle), welle);
+    this.waveIndex++;
+    this.idleTime = 0;
+    Sfx.play('wave');
+  }
+
+  /** **Eine Welle in den Anmarsch stellen** - der eine Ort, an dem aus
+   *  Wellengruppen Gegner werden.
+   *
+   *  Herausgeloest aus `startWave` in v330 (S-N6-04), damit eine Messung
+   *  eine GESTELLTE Welle fahren kann, ohne den Ablauf daneben noch einmal
+   *  zu schreiben. Ein zweites Anmarschrechenwerk waere Regel 15 in
+   *  Reinform - und in v311 hat genau das ein Tor seine eigene Kopie
+   *  pruefen lassen.
+   *
+   *  Der Aufruf von aussen ist der Messgriff und nichts weiter: `startWave`
+   *  bleibt der einzige Weg, den das SPIEL nimmt (Bonus, Zaehler, Ton). */
+  welleEinreihen(wave: Wave, welle: number): void {
     // Spaetere Wellen kommen dichter: was zaehlt, ist die Huelle je Sekunde.
     const dense = 1 + welle * this.diff.densityRamp;
     // **Angehaengt, nicht ersetzt** (S-P4-01, `ueberlappendeWellen`). Bis
@@ -1578,9 +1597,6 @@ export class GameState {
     eigene.sort((a, b) => a.time - b.time);
     this.pending = this.pending.filter((p) => p.welle !== welle).concat(eigene);
     this.laufende.push({ welle, uhr: 0 });
-    this.waveIndex++;
-    this.idleTime = 0;
-    Sfx.play('wave');
   }
 
   /** Eine EINZELNE Welle ist durch: nichts mehr im Anmarsch, nichts mehr von

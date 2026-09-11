@@ -143,6 +143,53 @@ export const EARLY_BONUS_WINDOW = 22; // Sekunden
  *  `tools/fruehstart.ts` (Regel 12). */
 export const EARLY_RISIKO_HUB = 2.0;
 
+/** **Die Monokulturwelle** (S-N6-04) - eine Zusammensetzung, an der ein Feld
+ *  aus EINER Turmart scheitert, waehrend ein gemischtes durchkommt.
+ *
+ *  **Sie ist kein Wellenplan, sondern ein Gegenstand zum Messen.** Sie steht
+ *  hier bei den Wellen und nicht im Werkzeug, weil sie DATEN sind wie jede
+ *  andere Welle - wer sie einmal in einen Plan setzen will, kopiert sie
+ *  nicht, er verweist auf sie (Regel 15). Ob sie in einen Plan gehoert, ist
+ *  eine Balance-Entscheidung und war nicht die Frage dieser Runde.
+ *
+ *  **Jede Gruppe hat einen Adressaten, und zusammen decken sie alle vier
+ *  Turmarten ab.** Das ist der ganze Entwurf: es gibt keine einzelne Sorte,
+ *  die auf alle drei Fragen dieselbe Antwort hat.
+ *
+ *  | Gruppe | trifft wen |
+ *  |---|---|
+ *  | Gleiter (fliegen) | den **Moerser** - er erreicht sie gar nicht (`hitsAir: false`) |
+ *  | Kolosse (Panzerung 3) | den **Bogenturm** - Panzerung nimmt jedem seiner kleinen Treffer denselben Anteil |
+ *  | Infanterie mit Schild | das **Prisma** - der Schild zaehlt TREFFER, und jeder Kettensprung verbraucht einen ohne Wirkung |
+ *  | alle zusammen, in Masse | den **Frostturm** - er bremst, er toetet nicht |
+ *
+ *  **Der Schild ist dabei der Teil, der am wenigsten offensichtlich ist und
+ *  am meisten traegt:** gegen Panzerung hilft Wucht, gegen einen Schild
+ *  Schnellfeuer - die zwei Antworten schliessen einander aus, und kein
+ *  einzelner Turm gibt beide. */
+export const MONOKULTURWELLE: Wave = {
+  bonus: 300,
+  note: 'Alles auf einmal — und keine Turmart hat auf alles eine Antwort',
+  groups: [
+    { enemy: 'flyer', count: 8, gap: 0.9, delay: 0 },
+    { enemy: 'brute', count: 6, gap: 1.6, delay: 2 },
+    { enemy: 'infantry', count: 10, gap: 0.8, delay: 5, shield: 3 },
+    { enemy: 'crawler', count: 16, gap: 0.45, delay: 8 },
+    // **Zwei Titanen, WEIT auseinander** - und die zwei Zahlen `gap: 9` und
+    // `slowResist: 0.55` sind der ganze Grund fuer diese Gruppe.
+    //
+    // Gemessen hielten Frostturm und Prisma die Welle ohne sie mit NULL
+    // Verlust, waehrend Bogenturm und Moerser 25 und 16 verloren. Beide
+    // leben von der Traube: die Aura trifft alles im Umkreis, der
+    // Kettenblitz springt von Nachbar zu Nachbar. Ein einzelner, weit
+    // stehender Gegner nimmt beiden genau das - der Blitz hat niemanden zum
+    // Springen, die Aura trifft einen statt zwanzig -, und der
+    // Bremswiderstand des Titanen nimmt dem Frostturm auch noch die Zeit,
+    // die er zum Toeten braucht.
+    { enemy: 'titan', count: 2, gap: 9, delay: 12 },
+  ],
+};
+
 export const PLAN_SPIRALHAIN: Wave[] = [
   { bonus: 92, note: 'Erste Fühler', groups: [
     { enemy: 'crawler', count: 6, gap: 1.1, delay: 0 } ] },

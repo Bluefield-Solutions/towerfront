@@ -25,6 +25,7 @@ import { MAPS } from '../src/data/maps';
 import {
   KARTENSTAPEL, GRUNDSTAPEL, kartenWirkung, zieheKarten, type Karte, type KartenArt,
 } from '../src/data/karten';
+import { MONOKULTURWELLE } from '../src/data/waves';
 import { WEGNETZ } from '../src/data/wegnetz';
 import { ALL_PERKS, NO_PERKS } from '../src/data/perks';
 import { ABILITIES } from '../src/data/abilities';
@@ -444,6 +445,8 @@ const NUR_LAUF = process.argv.slice(2).includes('--lauf');
  *  "ist diese Wirkung von jener zu unterscheiden" ist eine Eichfrage und
  *  soll nicht den ganzen Durchlauf kosten. Es urteilt trotzdem. */
 const NUR_WIRKUNG = process.argv.slice(2).includes('--wirkungen');
+/** Nur die Monokulturwelle (S-N6-04) - derselbe Grund wie oben. */
+const NUR_MONO = process.argv.slice(2).includes('--monokultur');
 
 /** Bauplaetze nach abgedeckter Wegstrecke bewertet.
  *
@@ -1398,6 +1401,122 @@ function vielfaltMessen(): void {
  *  Feld, und eine, die an der Entfernung haengt, braucht Tuerme in mehreren
  *  Abstaenden. */
 const WIRKUNGSKARTEN = ['zunder', 'kerbe', 'eisgriff', 'zielfernrohr', 'bajonett', 'raureif'];
+
+/** **Bestraft die Monokulturwelle wirklich die Monokultur?** (S-N6-04)
+ *
+ *  S-N3-02 und S-N3-03 haben Vielfalt billiger und eintraeglicher gemacht -
+ *  der Verbund gibt Schaden je NACHBARART, die Vielfaltsbeute zahlt je
+ *  Turmart, die einen Gegner beschaedigt hat. Beide belohnen; keiner
+ *  ERZWINGT. Diese Messung schliesst den Kreis: eine Welle, an der ein Feld
+ *  aus einer einzigen Turmart scheitert.
+ *
+ *  **Gemessen wird die Monokulturwelle allein, nicht eine ganze Partie.**
+ *  Eine Partie misst fuenfzehn Wellen und ein Bauverhalten dazu; hier geht
+ *  es um EINE Zusammensetzung. Gestellt werden fuenf Felder mit derselben
+ *  Aussaat, denselben Plaetzen und demselben Gold - vier Monokulturen und
+ *  ein gemischtes.
+ *
+ *  **Die Zusage ist ein VERGLEICH und keine absolute Zahl** (Regel 2): das
+ *  gemischte Feld muss weniger durchlassen als JEDE Monokultur. Eine feste
+ *  Grenze ("hoechstens drei kommen durch") haenge an der Wellenstaerke und
+ *  wuerde still bedeutungslos, sobald jemand an ihr dreht.
+ *
+ *  **Und sie braucht ihre Gegenprobe von aussen**, nicht von innen: wird die
+ *  Welle entschaerft, kommt auch die Monokultur durch, und die Messung muss
+ *  das MELDEN statt zu schweigen. Deshalb steht unten nicht nur der
+ *  Vergleich, sondern auch die Forderung, dass die Monokulturen ueberhaupt
+ *  etwas durchlassen - eine Welle, die jeder haelt, bestraft niemanden. */
+function monokulturMessen(): void {
+  console.log('\nMonokulturwelle (vier reine Felder gegen ein gemischtes, dieselbe Aussaat):');
+  const felder: { was: string; plan: TowerId[] }[] = [
+    { was: 'nur Bogen', plan: ['arrow'] },
+    { was: 'nur Frost', plan: ['frost'] },
+    { was: 'nur Moerser', plan: ['mortar'] },
+    { was: 'nur Prisma', plan: ['prism'] },
+    { was: 'gemischt', plan: ['arrow', 'frost', 'mortar', 'prism'] },
+  ];
+  const durch = (plan: TowerId[]): number => {
+    const s = new GameState(MAPS[0].id);
+    s.reset(AUSSAATEN[0], 'normal', MAPS[0].id,
+      { perks: NO_PERKS, karten: MAPS.length, stapel: [] });
+    // Gleiches Gold, gleiche Plaetze, gleiche Zahl - nur die Sorte wechselt.
+    // Sonst maesse die Zahl den Preis der Tuerme und nicht ihre Rolle.
+    s.gold = 100000;
+    const plaetze = buildSpots(s);
+    let i = 0;
+    for (const sp of plaetze) {
+      if (i >= MONOKULTUR_TUERME) break;
+      if (s.build(sp.x, sp.y, plan[i % plan.length])) i++;
+    }
+    if (i < MONOKULTUR_TUERME) {
+      errors.push(`Monokulturwelle: nur ${i} von ${MONOKULTUR_TUERME} Tuermen gesetzt - `
+        + 'dann vergleicht die Messung verschieden grosse Felder.');
+    }
+    // **Mittlerer Ausbau, nicht voll** - das Feld, das ein Spieler in der
+    // zwoelften Welle wirklich hat. Voll ausgebaut waere ein Endspielfeld,
+    // und dort haelt jede Sorte alles; auf Grundstufe waere es ein Feld aus
+    // der dritten Welle. Beides maesse etwas anderes als die Rolle.
+    for (const t of s.gebaute) {
+      for (let k = 0; k < MONOKULTUR_STUFEN; k++) s.upgrade(t, (t.id % 2) as 0 | 1);
+    }
+    const vorher = s.lives;
+    // **Als SPAETE Welle eingereiht, nicht als erste** (Regel 12). Der erste
+    // Entwurf stellte sie auf `welle: 0` - dort traegt jeder Gegner die
+    // Lebenspunkte der ersten Welle, und drei der vier reinen Felder hielten
+    // sie mit null Verlust. Die Zahl mass die Lebenskurve, nicht die
+    // Zusammensetzung. `MONOKULTUR_WELLE` ist der Platz im Plan, an dem
+    // so eine Welle stuende.
+    s.welleEinreihen(MONOKULTURWELLE, MONOKULTUR_WELLE);
+    // Lang genug, dass die Welle wirklich durch ist - der letzte Gegner
+    // startet nach 8 s und laeuft dann die ganze Bahn. Gefragt wird
+    // `laufendeReste` und nicht die Gegnerliste: es zaehlt Anmarsch UND
+    // Feld, und genau das heisst "die Welle ist durch".
+    let bilder = 0;
+    const offen = (): number => s.laufendeReste.reduce((n, l) => n + l.rest, 0);
+    for (; bilder < 60 * 120 && offen() > 0; bilder++) s.update(1 / 60);
+    if (offen() > 0) {
+      errors.push(`Monokulturwelle: nach ${(bilder / 60).toFixed(0)} s stehen noch `
+        + `${offen()} Gegner aus - die Welle war nicht durch, als gezaehlt wurde.`);
+    }
+    return vorher - s.lives;
+  };
+  const werte = felder.map((f) => ({ ...f, verlust: durch(f.plan) }));
+  for (const w of werte) {
+    console.log(`  ${w.was.padEnd(12)} ${w.verlust} Kristall verloren`);
+  }
+  const gemischt = werte[werte.length - 1];
+  const reine = werte.slice(0, -1);
+  const beste = reine.reduce((a, b) => (b.verlust < a.verlust ? b : a));
+  console.log(`  Bestes reines Feld: ${beste.was} mit ${beste.verlust}, `
+    + `gemischt ${gemischt.verlust}.`);
+  // **Kommt ueberhaupt etwas durch?** Ohne diese Zeile bestuende die Messung
+  // jede entschaerfte Welle: 0 gegen 0 ist kein Unterschied, sieht aber aus
+  // wie "das gemischte Feld ist nicht schlechter" (Regel 5).
+  if (beste.verlust === 0) {
+    errors.push('Monokulturwelle: selbst das beste REINE Feld verliert keinen Kristall. '
+      + 'Dann bestraft diese Welle keine Monokultur - sie ist eine Welle wie jede andere, '
+      + 'und der Vergleich darunter prueft nichts.');
+    return;
+  }
+  if (gemischt.verlust >= beste.verlust) {
+    errors.push(`Monokulturwelle: das gemischte Feld verliert ${gemischt.verlust} Kristall, `
+      + `das beste reine (${beste.was}) ${beste.verlust}. Wenn Mischen nicht besser ist, `
+      + 'belohnt diese Welle die Vielfalt nicht - und S-N3-02 und S-N3-03 haben nichts, '
+      + 'worauf sie einzahlen.');
+  }
+}
+
+/** Der Platz im Wellenplan, an dem die Monokulturwelle gemessen wird. Zwoelf
+ *  ist die zwoelfte von fuenfzehn - spaet genug, dass ein ausgebautes Feld
+ *  dasteht, und frueh genug, dass es nicht die Bosswelle ist. */
+const MONOKULTUR_WELLE = 12;
+/** Wie weit die Tuerme ausgebaut sind - Stufe 3 von 6. */
+const MONOKULTUR_STUFEN = 2;
+/** Wieviele Tuerme jedes Feld der Monokulturmessung bekommt. Zwoelf wie bei
+ *  jeder anderen Messung dieses Werkzeugs - drei je Sorte im gemischten
+ *  Feld, also die Zahl, fuer die die Freimenge des Wiederholungsaufschlags
+ *  gemacht ist (v287). */
+const MONOKULTUR_TUERME = 12;
 
 function wirkungenMessen(): void {
   console.log('\nWirkungen als Kartenmaterial (jede allein gegen keine):');
@@ -2865,6 +2984,12 @@ const mixedPlan = mixedPlanBase;
       + `   Mittel ${mittel.toFixed(2)}`);
   }
 
+  if (NUR_MONO) {
+    monokulturMessen();
+    for (const e of errors) console.log(`FEHLER: ${e}`);
+    process.exit(errors.length ? 1 : 0);
+  }
+
   if (NUR_WIRKUNG) {
     wirkungenMessen();
     for (const e of errors) console.log(`FEHLER: ${e}`);
@@ -2901,6 +3026,7 @@ const mixedPlan = mixedPlanBase;
   weichenstileMessen();
   foerdererMessen();
   wirkungenMessen();
+  monokulturMessen();
   wiederholungMessen();
   vielfaltMessen();
   laufMessen();

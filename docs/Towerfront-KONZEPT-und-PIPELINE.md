@@ -1,6 +1,33 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v311 · 10.09.2026
+Stand: v318 · 10.09.2026
+
+**Nachgesehen in v318 — die Kette hat unveraendert dreiunddreissig
+abbrechende Schritte** (vierunddreissig Eintraege; `bericht` urteilt nicht und
+sagt das in seiner ersten Zeile). Was sich seit v311 geaendert hat, ist nicht
+die Zahl, sondern was die Schritte halten:
+
+* **v312: der Nachtlauf konnte gar nicht rot werden, und das seit v221.** Der
+  Schritt endete auf `| tee`, und der Ausgang einer Rohrleitung ist der des
+  LETZTEN Gliedes. Jetzt `set -o pipefail` UND der Protokollgriff. Danach ist
+  die naheliegende Frage fuer alle vierunddreissig Eintraege gestellt worden -
+  kennt dieses Werkzeug ueberhaupt einen Ausgang 1? Drei fallen auf, alle drei
+  zu Recht: `tsc` und `build` sind fremde Werkzeuge und melden selbst,
+  `bericht` ist kein Tor.
+* **v313: vier Rauchtest-Schritte konnten still scheitern.** `step` nahm
+  `fn: () => void`, vier Schritte aus v303 bis v306 sind `async`, und eine
+  abgelehnte Zusage kam nie in den Befund.
+* **v318: `uxaudittor` haelt einen dreizehnten Punkt** — `textVerdeckung`,
+  kein Element verdeckt den Text oder die Trefferflaeche eines anderen. Die
+  Ratsche steht auf null, und das Tor stellt sich den Fall selbst her.
+
+**Eine Luecke der Zahlpruefung ist dabei nachgesehen und ABSICHTLICH offen
+geblieben.** `npm run doku` faengt „<Zahlwort> Pruefungen/Tore/Toren"; das Wort
+**Schritte** steht nicht in der Aufzaehlung. Es nachzutragen wuerde hier prompt
+einen Fehlalarm erzeugen: `CLAUDE.md` schreibt korrekt „vierunddreissig
+Schritte der Torkette" (alle Eintraege) gegen dreiunddreissig abbrechende, und
+beide Zahlen sind richtig. Eine Pruefung, die bei richtiger Prosa anschlaegt,
+wird ueberlesen - dieselbe Lehre wie beim engen „Offen" in v226.
 
 **Nachgesehen in v311 — an der Kette hat sich das Wichtigste seit v269
 geändert, und es war eine Reparatur.**

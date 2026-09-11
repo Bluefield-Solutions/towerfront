@@ -1222,6 +1222,25 @@ export const PROBEN = [
     // kein Beweis (Regel 5). Der Eingriff macht die Knoepfe so breit, dass
     // sechs davon nicht mehr nebeneinander passen - dann laufen sie
     // ineinander, und beide Zahlen muessen es sagen.
+    // **Ein Element schiebt sich ueber eine Textzeile** (v318, S-N4-04).
+    //
+    // Genau die Gegenprobe, die die Story verlangt. Der Eingriff nimmt dem
+    // Einweisungsband seine Lage - bis v317 stand dort gar kein `top`, und
+    // genau so lag es ueber `GOLD`, `KRISTALL`, `WELLE`. Der Fehler ist also
+    // nicht erfunden, sondern der historische.
+    //
+    // Das Tor hat dazu einen eigenen Selbsttest, der sich die Verdeckung
+    // SELBST herstellt (ein deckender Fleck ueber der Goldzahl). Beides
+    // nebeneinander ist Absicht: der Selbsttest beweist, dass die Messung
+    // sieht; die Gegenprobe beweist, dass das URTEIL rot wird.
+    name: 'Das Einweisungsband liegt wieder auf der Kopfzeile',
+    datei: 'src/style.css',
+    suche: '  top: calc(var(--kopf) + var(--sat));\n  display: flex; align-items: center; gap: 12px;',
+    ersatz: '  display: flex; align-items: center; gap: 12px;',
+    tor: 'uxaudittor',
+    meldet: 'Verdeckung im Zustand',
+  },
+  {
     // **Das Turmmenue kehrt an den Rand zurueck** (v316, S-N4-02, H4).
     //
     // Der Eingriff laesst `turmRing` die Klasse nie setzen - der Steg steht
@@ -2822,7 +2841,10 @@ export const PROBEN = [
     // trifft den Kompaktblock.
     name: 'Der Pruefsteg spannt ueber die ganze Fensterhoehe',
     datei: 'src/style.css',
-    regel: /^  max-height: calc\(100% - 56px - var\(--sat\) - 58px - var\(--sab\)\);$/m,
+    // Die zwei nackten Zahlen sind in v318 zu `--kopf` und `--fuss`
+    // geworden - was zweimal dasteht, veraltet einmal (Regel 15), und
+    // diese Probe ist die Stelle, an der es aufgefallen waere.
+    regel: /^  max-height: calc\(100% - var\(--kopf\) - var\(--sat\) - var\(--fuss\) - var\(--sab\)\);$/m,
     ersatz: '  bottom: calc(58px + var(--sab));',
     tor: 'browsertor',
   },

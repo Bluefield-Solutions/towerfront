@@ -1,6 +1,20 @@
 # Towerfront — Bildauftrag
 
-Stand: v311 · 10.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v318 · 10.09.2026 · **Auftragsdokument für den Bild-Agenten**
+
+**Nachgesehen in v318 — nachgesehen, nicht gestempelt:** `npm run bildtor`
+nennt unverändert **zwei** offene Bestellungen, `31_foerderer.png` (8d.2) und
+`32_werft.png` (8d.3); `git log -- src/gfx/assets/` nennt als letzten Eingriff
+v233. Es ist also seit fünf Runden kein Bild dazugekommen und keines
+weggefallen.
+
+**Und die Rechnung dahinter hat sich in v313 geändert**, auch wenn kein
+Prompt davon berührt ist: die Gruppenbudgets reservierten 1075 KB roh gegen
+1074,75 erlaubte — zwei Haushalte, 0,2 KB Abstand. Gerichtet wurde die
+RESERVIERUNG (`tuerme` von 445 auf 400 über gemessenen 302 plus rund 50 für
+die offenen Bestellungen), nicht die Obergrenze. **Jedes KB Code kostet 0,75
+KB Bildvorrat**, und das Tor nennt seitdem den Abstand statt nur die
+Überschreitung — heute 44 KB.
 
 **Nachgesehen in v311:** die Reparatur aus v304 hält — Abschnitt **1c** (der
 Ausgabeblock für Figuren und Bauwerke) steht, `tools/auftrag.ts` setzt ihn

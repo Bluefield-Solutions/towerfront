@@ -186,6 +186,122 @@ const schuss = async (seite, name) => {
   return p;
 };
 
+/** **Verdeckt ein Bedienelement den Text oder den Knopf eines anderen?**
+ *  (v318, S-N4-04, aus dem Inspektorlauf v271/v272)
+ *
+ *  Der Inspektor hat zwei Zustaende gefunden, in denen Bedienung Bedienung
+ *  verdeckt - und beide Male genau die Zahlen, wegen derer man hinsieht: die
+ *  Aufwertungskarten lagen ueber `SCHADEN 8` und `REICHWEITE 326`, und das
+ *  Einweisungsband schnitt `GOLD`, `KRISTALL`, `WELLE` ab, sodass beim ERSTEN
+ *  Betreten einer Karte drei nackte Zahlen dastanden. **Beide Zustaende sind
+ *  durch alle Tore gruen durchgegangen**, weil die Belegung misst, wieviel
+ *  Flaeche die Bedienung nimmt, und nicht, ob sie sich selbst zudeckt.
+ *
+ *  **`elementFromPoint` taugt hier NICHT, und das ist gemessen.** Der erste
+ *  Entwurf fragte danach - dieselbe Messstelle wie die Belegung, und deshalb
+ *  naheliegend. Er meldete in JEDEM Zustand `GOLD`, `KRISTALL` und `WELLE`
+ *  als zu 100 % verdeckt, Taeter `#view`: die Kopfzeile ist eine ANZEIGE und
+ *  laesst Tipps durch (`pointer-events: none`), also gibt der Browser dort
+ *  die Leinwand darunter zurueck. Die Frage "wer faengt den Finger" ist eine
+ *  andere als "wer deckt das Bild zu", und diese Stelle stellt die zweite.
+ *
+ *  Gefragt wird deshalb nach UEBERLAPPUNG und MALORDNUNG: ein Element
+ *  verdeckt ein anderes, wenn seine Flaeche ueber einem Drittel von dessen
+ *  Flaeche liegt und es in der Malordnung darueber steht. Verglichen wird die
+ *  naechste gesetzte `z-index`-Ebene, bei Gleichstand die Dokumentreihenfolge
+ *  - das ist die Regel, nach der der Browser selbst malt.
+ *
+ *  **Nur wer wirklich etwas malt, zaehlt als Taeter**: ein durchsichtiger
+ *  Behaelter liegt ueber allem Moeglichen und deckt nichts zu. Gefordert wird
+ *  ein Grund mit ueber 50 % Deckkraft oder ein Hintergrundbild.
+ *
+ *  **Ein Drittel, nicht ein Punkt.** Runde Ecken und Schatten lassen einen
+ *  Nachbarn an einer Ecke ueberlappen, ohne dass etwas verdeckt waere; wer
+ *  bei jeder Beruehrung meldet, wird ueberlesen.
+ *
+ *  Gemessen werden Textblaetter UND Knoepfe: ein angeschnittener Text ist
+ *  unlesbar, ein angeschnittener Knopf ist unter dem Daumen auch noch
+ *  unerreichbar. */
+const textVerdeckung = (seite) => seite.evaluate(() => {
+  const WURZELN = '#hud, #dock, #b-wave, #b-wave-l, #inspector, #pick, #zug, #coach, #werkzeuge';
+  const alle = [...document.querySelectorAll(
+    `${WURZELN}, ${WURZELN.split(', ').map((x) => `${x} *`).join(', ')}`,
+  )];
+  const sichtbar = (e) => {
+    const r = e.getBoundingClientRect();
+    const cs = getComputedStyle(e);
+    return r.width > 2 && r.height > 2 && cs.display !== 'none' && cs.visibility !== 'hidden'
+      && Number(cs.opacity) > 0.05 && r.right > 0 && r.bottom > 0
+      && r.left < innerWidth && r.top < innerHeight;
+  };
+  /** Malt dieses Element wirklich etwas Deckendes? */
+  const malt = (e) => {
+    const cs = getComputedStyle(e);
+    if (cs.backgroundImage !== 'none') return true;
+    const m = cs.backgroundColor.match(/rgba?\(([^)]+)\)/);
+    if (!m) return false;
+    const teile = m[1].split(',');
+    return Number(teile[3] ?? 1) > 0.5;
+  };
+  /** Die naechste gesetzte Ebene ueber diesem Element. */
+  const ebene = (e) => {
+    for (let n = e; n && n !== document.body; n = n.parentElement) {
+      const cs = getComputedStyle(n);
+      if (cs.position !== 'static' && cs.zIndex !== 'auto') return Number(cs.zIndex) || 0;
+    }
+    return 0;
+  };
+  /** Liegt `o` in der Malordnung ueber `e`? */
+  const drueber = (o, e) => {
+    // **Verwandtschaft zuerst, und das ist gemessen.** Ein Vorfahr malt
+    // seinen Grund, BEVOR der Inhalt seiner Kinder gemalt wird - er kann sie
+    // nie verdecken. Im ersten Entwurf stand diese Zeile hinter dem
+    // Ebenenvergleich, und damit meldete der Wellenknopf in jedem Zustand
+    // seine eigene Aufschrift: `ebene()` steigt vom Textfeld auf, findet
+    // dessen eigenes `z-index: 1` und vergleicht es mit der 3 des Knopfes
+    // darum herum. Eine Zahl, die jedes Bild meldet, wird ueberlesen.
+    if (o.contains(e) || e.contains(o)) return false;
+    const zo = ebene(o), ze = ebene(e);
+    if (zo !== ze) return zo > ze;
+    // Gleiche Ebene: spaeter im Dokument malt spaeter.
+    return (e.compareDocumentPosition(o) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+  };
+  const kandidaten = alle.filter((e) => {
+    if (!sichtbar(e)) return false;
+    if (e.tagName === 'BUTTON') return true;
+    return [...e.childNodes].some((n) => n.nodeType === 3 && (n.textContent ?? '').trim());
+  });
+  const maler = alle.filter((e) => sichtbar(e) && malt(e));
+  const funde = [];
+  for (const e of kandidaten) {
+    const r = e.getBoundingClientRect();
+    const flaeche = r.width * r.height;
+    if (flaeche <= 0) continue;
+    let anteil = 0, taeter = null;
+    for (const o of maler) {
+      if (o === e || !drueber(o, e)) continue;
+      const q = o.getBoundingClientRect();
+      const w = Math.min(r.right, q.right) - Math.max(r.left, q.left);
+      const h = Math.min(r.bottom, q.bottom) - Math.max(r.top, q.top);
+      if (w <= 0 || h <= 0) continue;
+      const teil = (w * h) / flaeche;
+      if (teil > anteil) {
+        anteil = teil;
+        taeter = o.id ? `#${o.id}` : `.${(o.className || o.tagName).toString().split(' ')[0]}`;
+      }
+    }
+    if (anteil > 0.34) {
+      funde.push({
+        was: e.id ? `#${e.id}` : `.${(e.className || e.tagName).toString().split(' ')[0]}`,
+        text: (e.textContent ?? '').trim().slice(0, 24),
+        anteil: Math.round(100 * anteil),
+        taeter,
+      });
+    }
+  }
+  return funde;
+});
+
 /** Wieviel des Bildschirms gehoert der Bedienung?
  *
  *  **Nicht ueber Umrisskaesten.** Die lassen sich durch Verschachteln
@@ -340,11 +456,30 @@ const nachSchirm = (wx, wy, w, h) => {
   const k = Math.min(w / WELT_B, h / WELT_H);
   return [wx * k + (w - WELT_B * k) / 2, wy * k + (h - WELT_H * k) / 2];
 };
-const insSpiel = async (s, w, h) => {
+const insSpiel = async (s, w, h, messen = false) => {
   for (const [wx, wy] of [[384, 620], [1209, 838]]) {
     const [x, y] = nachSchirm(wx, wy, w, h);
     await s.mouse.click(x, y);
     await s.waitForTimeout(500);
+  }
+  // **Der Zustand, in dem der Inspektor den zweiten Befund gefunden hat**
+  // (v318, S-N4-04): das Einweisungsband beim ERSTEN Betreten einer Karte.
+  // Er kommt in keiner Aufnahmereihe vor, weil die Einweisung zwei Zeilen
+  // tiefer weggeklickt wird - gemessen wurde er deshalb nie. Ein Zustand,
+  // den kein Tor besucht, ist ein Zustand ohne Tor.
+  if (messen) {
+    await s.waitForTimeout(400);
+    const da = await s.evaluate(() => {
+      const c = document.getElementById('coach');
+      if (!c) return 'kein #coach im Dokument';
+      if (c.hidden) return 'versteckt';
+      const r = c.getBoundingClientRect();
+      return r.width > 2 && r.height > 2 ? 'sichtbar' : 'ohne Flaeche';
+    });
+    console.log(`  (Einweisungsband beim ersten Betreten: ${da})`);
+    if (da === 'sichtbar') {
+      messwerte.verdeckung = { ...(messwerte.verdeckung ?? {}), einweisung: await textVerdeckung(s) };
+    }
   }
   for (let i = 0; i < 8; i += 1) {
     if (await s.evaluate(() => document.getElementById('coach')?.hidden !== false)) break;
@@ -372,7 +507,7 @@ console.log('Aufnahmen:');
 const a = await neueSeite(BREIT, HOCH);
 await schuss(a, 'landkarte');
 messwerte.landkarte = await layout(a);
-if (!(await insSpiel(a, BREIT, HOCH))) { console.error('Kein Weg ins Spiel.'); process.exit(1); }
+if (!(await insSpiel(a, BREIT, HOCH, true))) { console.error('Kein Weg ins Spiel.'); process.exit(1); }
 await a.waitForTimeout(600);
 
 // ---------------------------------------------- Der Kartenzug (v303, S-N1-02)
@@ -392,6 +527,7 @@ await a.waitForTimeout(600);
   } else {
     await schuss(a, 'zug');
     messwerte.belegung = { zug: await belegung(a) };
+  messwerte.verdeckung = { ...(messwerte.verdeckung ?? {}), zug: await textVerdeckung(a) };
     messwerte.doppelt = { zug: await doppelteBeschriftung(a) };
     messwerte.groessen = { zug: await schriftgroessen(a) };
     const karten = await a.evaluate(() => [...document
@@ -415,6 +551,7 @@ await a.waitForTimeout(600);
 await schuss(a, 'spiel-ruhe');
 messwerte.ruhe = await layout(a);
 messwerte.belegung = { ...(messwerte.belegung ?? {}), ruhe: await belegung(a) };
+  messwerte.verdeckung = { ...(messwerte.verdeckung ?? {}), ruhe: await textVerdeckung(a) };
 messwerte.doppelt = { ...(messwerte.doppelt ?? {}), ruhe: await doppelteBeschriftung(a) };
 messwerte.groessen = { ...(messwerte.groessen ?? {}), ruhe: await schriftgroessen(a) };
 
@@ -512,6 +649,7 @@ else {
   await schuss(a, 'bauwahl');
   messwerte.bauwahl = await layout(a);
 messwerte.belegung.bauwahl = await belegung(a);
+  messwerte.verdeckung.bauwahl = await textVerdeckung(a);
   messwerte.doppelt.bauwahl = await doppelteBeschriftung(a);
   messwerte.ueberlauf = { bauwahl: await ueberlaufInDerWahl(a) };
   messwerte.groessen.bauwahl = await schriftgroessen(a);
@@ -523,7 +661,18 @@ messwerte.belegung.bauwahl = await belegung(a);
   await schuss(a, 'pruefsteg');
   messwerte.pruefsteg = await layout(a);
 messwerte.belegung.pruefsteg = await belegung(a);
+  messwerte.verdeckung.pruefsteg = await textVerdeckung(a);
   messwerte.groessen.pruefsteg = await schriftgroessen(a);
+  // **Der Zustand, in dem der Inspektor den ERSTEN Befund gefunden hat**
+  // (v318, S-N4-04): die Aufwertungskarten lagen ueber `SCHADEN 8` und
+  // `REICHWEITE 326`. Seit v316 sind die Werte am Turm zugeklappt, also gibt
+  // es die Zeile im Normalfall gar nicht - gemessen wird deshalb eigens mit
+  // AUFGEKLAPPTEN Werten. Ohne das waere "behoben" eine Behauptung.
+  await a.evaluate(() => document.getElementById('i-name')?.click());
+  await a.waitForTimeout(250);
+  messwerte.verdeckung['pruefsteg-werte'] = await textVerdeckung(a);
+  await a.evaluate(() => document.getElementById('i-name')?.click());
+  await a.waitForTimeout(150);
   await a.evaluate(() => document.getElementById('i-ziel-auf')?.click());
   await a.waitForTimeout(300);
   await schuss(a, 'pruefsteg-ziel');
@@ -599,6 +748,7 @@ messwerte.belegung.pruefsteg = await belegung(a);
   {
     await schuss(a, 'teurer');
     messwerte.belegung.teurer = await belegung(a);
+  messwerte.verdeckung.teurer = await textVerdeckung(a);
     messwerte.doppelt.teurer = await doppelteBeschriftung(a);
     messwerte.groessen.teurer = await schriftgroessen(a);
     messwerte.ueberlauf.teurer = await ueberlaufInDerWahl(a);
@@ -654,6 +804,7 @@ await a.waitForTimeout(4200);
 await schuss(a, 'welle-mitte');
 messwerte.welle = await layout(a);
 messwerte.belegung.welle = await belegung(a);
+messwerte.verdeckung.welle = await textVerdeckung(a);
 await a.waitForTimeout(5200);
 await schuss(a, 'welle-spaet');
 
@@ -745,6 +896,52 @@ for (const [k, v] of Object.entries(messwerte.belegung ?? {})) {
   }
 }
 
+console.log('\nVerdeckung (Text und Knoepfe, Ueberlappung mal Malordnung):');
+for (const [k, v] of Object.entries(messwerte.verdeckung ?? {})) {
+  console.log(`  ${k.padEnd(11)} ${v.length === 0 ? 'nichts verdeckt'
+    : v.map((f) => `${f.was} "${f.text}" zu ${f.anteil} % unter ${f.taeter}`).join(' · ')}`);
+}
+
+// **Der Selbsttest, ohne den die acht Nullen nichts sagen** (v318, S-N4-04).
+//
+// Eine Pruefung, die nie etwas meldet, ist kein Beweis (Regel 5) - und diese
+// meldet seit der Behebung in genau derselben Runde nichts mehr. Eine
+// Gegenprobe allein reicht hier nicht: sie greift den QUELLTEXT, und was
+// bewiesen werden muss, ist, dass die MESSUNG eine Verdeckung ueberhaupt
+// sieht. Also stellt das Werkzeug sie sich selbst her - dieselbe Bauart wie
+// die Nullprobe von `zielplatte` (v234), die sich die Platte zudeckt.
+//
+// Gelegt wird ein deckender Fleck ueber die Goldzahl, in der obersten Ebene.
+// Danach MUSS der Fund dastehen, und nach dem Wegnehmen darf er es nicht
+// mehr - beide Richtungen, sonst beweist der Test nur die Haelfte.
+{
+  const vorher = (await textVerdeckung(a)).length;
+  await a.evaluate(() => {
+    const r = document.getElementById('v-gold').getBoundingClientRect();
+    const d = document.createElement('div');
+    d.id = 'selbsttest-verdeckung';
+    d.style.cssText = `position:absolute;z-index:99;left:${r.left}px;top:${r.top}px;`
+      + `width:${r.width}px;height:${r.height}px;background:#123456;`;
+    document.getElementById('hud').appendChild(d);
+  });
+  await a.waitForTimeout(120);
+  const mit = await textVerdeckung(a);
+  await a.evaluate(() => document.getElementById('selbsttest-verdeckung')?.remove());
+  await a.waitForTimeout(120);
+  const danach = (await textVerdeckung(a)).length;
+  const traf = mit.some((f) => f.was === '#v-gold');
+  console.log(`  Selbsttest: ohne Fleck ${vorher} Fund(e), mit Fleck ${mit.length}, `
+    + `danach ${danach} - die Goldzahl ${traf ? 'wird' : 'WIRD NICHT'} gemeldet.`);
+  if (!traf) {
+    fail('Selbsttest der Verdeckung: ein deckender Fleck ueber der Goldzahl wird '
+      + 'NICHT gemeldet. Dann sagen die Nullen darueber nichts (Regel 5).');
+  }
+  if (danach !== vorher) {
+    fail(`Selbsttest der Verdeckung: nach dem Wegnehmen des Flecks stehen ${danach} `
+      + `Funde statt ${vorher}. Die Messung haengt an etwas anderem als am Fleck.`);
+  }
+}
+
 writeFileSync(join(AUS, 'messwerte.json'), JSON.stringify(messwerte, null, 1));
 console.log(`\nMesswerte: ${join(AUS, 'messwerte.json')}`);
 
@@ -761,6 +958,22 @@ if (TOR) {
         + 'das Spiel; was darueber liegt, nimmt es weg.'
         + (gross ? ` Verteilt auf: ${gross}.` : ''));
     }
+  }
+  // **Null verdeckte Textzeilen, und das ist eine Ratsche** (v318, S-N4-04).
+  //
+  // Keine anteilige Grenze und kein Band: eine halb zugedeckte Zahl ist
+  // genauso unlesbar wie eine ganz zugedeckte, und "hoechstens zwei" waere
+  // eine Einladung, zwei zu haben.
+  for (const [zustand, liste] of Object.entries(messwerte.verdeckung ?? {})) {
+    for (const f of liste) {
+      fail(`Verdeckung im Zustand "${zustand}": ${f.was} ("${f.text}") liegt zu `
+        + `${f.anteil} % unter ${f.taeter}. Ein angeschnittener Text ist unlesbar, `
+        + 'ein angeschnittener Knopf unter dem Daumen auch noch unerreichbar.');
+    }
+  }
+  if (!Object.keys(messwerte.verdeckung ?? {}).length) {
+    fail('Die Verdeckung wurde in keinem Zustand gemessen - dann sagt die Null '
+      + 'darueber nichts (Regel 5).');
   }
   for (const [zustand, liste] of Object.entries(messwerte.doppelt ?? {})) {
     if (liste.length > DOPPELT_MAX) {
@@ -835,6 +1048,6 @@ if (TOR) {
     await browser.close();
     process.exit(1);
   }
-  console.log('UX-TOR: Belegung, Doppelungen und Trefferflaechen in Ordnung.');
+  console.log('UX-TOR: Belegung, Verdeckung, Doppelungen und Trefferflaechen in Ordnung.');
 }
 await browser.close();

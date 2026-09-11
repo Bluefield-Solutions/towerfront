@@ -696,6 +696,57 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Kein Element verdeckt den Text eines anderen (v318, S-N4-04) - und der
+historische Befund stand noch da.** Der Inspektorlauf v271 hatte zwei
+Zustaende gefunden, in denen Bedienung Bedienung verdeckt, und beide sind
+sieben Fassungen lang durch zweiunddreissig Tore gegangen: das UX-Tor misst
+BELEGUNG (wieviel Flaeche die Bedienung nimmt) und nicht, ob sie sich selbst
+zudeckt.
+
+`textVerdeckung` misst es jetzt in acht Zustaenden - **zwei davon gab es
+vorher gar nicht**: das Einweisungsband beim ERSTEN Betreten einer Karte (die
+Aufnahmereihe klickt es zwei Zeilen frueher weg, und ein Zustand, den kein Tor
+besucht, ist ein Zustand ohne Tor) und die Turmkarte mit AUFGEKLAPPTEN Werten
+(seit v316 sind sie zu; ohne diesen Zustand waere "behoben" eine Behauptung).
+
+**`elementFromPoint` taugt hier gemessen NICHT**, obwohl es die Messstelle der
+Belegung ist. Der erste Entwurf meldete in jedem Zustand `GOLD`, `KRISTALL`,
+`WELLE` zu 100 % verdeckt, Taeter `#view`: die Kopfzeile ist eine Anzeige und
+laesst Tipps durch, also gibt der Browser die Leinwand darunter zurueck.
+**"Wer faengt den Finger" ist eine andere Frage als "wer deckt das Bild zu".**
+Gefragt wird seitdem nach UEBERLAPPUNG mal MALORDNUNG - z-Ebene, bei
+Gleichstand Dokumentreihenfolge -, und nur wer wirklich deckend malt, zaehlt
+als Taeter. Die Verwandtschaftsregel stand dabei zuerst an der falschen
+Stelle: ein Vorfahr malt seinen Grund VOR dem Inhalt seiner Kinder und kann sie
+nie verdecken; hinter dem Ebenenvergleich meldete der Wellenknopf in jedem Bild
+seine eigene Aufschrift.
+
+**Drei echte Befunde, alle drei gerichtet.** Das Einweisungsband lag zu 100 %
+ueber allen sechs Angaben der Kopfzeile und zu 60 % ueber den drei runden
+Knoepfen - es trug gar kein `top`, also blieb es, wo es im Fluss stuende.
+Verschoben lag es dann zu 40 % unter dem Kartenzug. Und die Turmkarte mit
+aufgeklappten Werten deckte erst `42` und `1/15`, danach die Wellenvorschau.
+
+**Zwei der Reparaturen waren Reihenfolge und nicht Geometrie:** `turmRing` lief
+VOR dem Auf- und Zuklappen der Werte und rechnete mit der Hoehe von vorher (die
+Karte stand auf 28 statt 60). Ein zweiter Durchlauf haette es nicht gerichtet,
+weil `sync` ueber eine Signatur laeuft und die sich im naechsten Bild nicht
+mehr aendert. **Das Band wegzuschalten, solange ein Kartenzug ansteht, war der
+erste Versuch und ist verworfen:** ein Zug steht zwischen JEDEN zwei Wellen an,
+auch vor der ersten - die Einweisung waere genau in den Minuten verschwunden,
+in denen sie unterrichtet. Verschoben wurde der Zug.
+
+`--kopf` und `--fuss` stehen jetzt einmal statt als nackte 56/58/60/62 an vier
+Stellen, und `turmRing()` liest sie aus dem Stilblatt statt sie noch einmal
+hinzuschreiben (Regel 15). Die vierte hat prompt eine Gegenprobe gebrochen,
+und `npm run muster` hat es gemeldet.
+
+**Selbsttest im Tor, weil die acht Nullen sonst nichts sagen** (Regel 5): es
+legt sich einen deckenden Fleck ueber die Goldzahl und verlangt den Fund -
+und nach dem Wegnehmen wieder null. Dieselbe Bauart wie die Nullprobe von
+`zielplatte` (v234). Die Ratsche steht auf null ohne Band: eine halb zugedeckte
+Zahl ist so unlesbar wie eine ganz zugedeckte.
+
 **Man sieht, was ein Schuss bewirkt hat (v317, S-N4-03).** Die Zahlen gab es
 schon - als SUMME ueber alle Tuerme, in der Messtafel fuer Entwickler und
 nirgends sonst. Die Frage des Spielers ist eine andere: taugt DIESER Moerser
@@ -1166,7 +1217,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v317. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v318. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

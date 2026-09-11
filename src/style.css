@@ -1,4 +1,18 @@
 :root {
+  /* **Die Hoehe der Kopfzeile, einmal** (v318, S-N4-04). Sie stand als nackte
+     56 an drei Stellen; was zweimal dasteht, veraltet einmal (Regel 15). Und
+     sie ist jetzt eine Zusage und keine Zahl: das Einweisungsband haengt
+     daran, der Pruefsteg haengt daran, und wer die Kopfzeile hoeher macht,
+     schiebt beide mit. */
+  --kopf: 56px;
+  /* **Und was unten weg ist** (v318). Bedienband 58 plus die
+     Wellenvorschau darueber: der Turmkasten mit aufgeklappten Werten ist 248
+     Punkte hoch, das freie Band zwischen Kopfzeile und Leiste 276 - er passte
+     also rechnerisch und deckte trotzdem "Als Nächstes · 6× Erste Fühler" zu
+     46 % zu, weil der Streifen IM Band liegt. Beide Zahlen stehen jetzt
+     einmal, und `turmRing()` liest sie von hier statt sie noch einmal
+     hinzuschreiben (Regel 15). */
+  --fuss: 100px;
   --void: #080B18;
   --panel: rgba(11, 16, 34, 0.82);
   --edge: rgba(127, 231, 224, 0.22);
@@ -336,9 +350,21 @@ html, body {
  *  Die Trefferflaeche ist bewusst gross: das ist die eine Entscheidung der
  *  Welle, und sie wird mit dem Daumen getroffen. 44 Punkte ist die Grenze,
  *  hier stehen 64. */
+/* **Der Kartenzug steht unter dem Einweisungsband, nicht darauf** (v318,
+   S-N4-04). Er sass auf 52 Punkten und das Band seit v318 auf 56 - beide
+   gehoeren zu denselben ersten Minuten einer Karte, und gemessen lag der
+   Einweisungssatz zu 40 % unter dem Zug.
+
+   **Das Band wegzuschalten, solange ein Zug ansteht, war der erste Versuch
+   und ist verworfen**: ein Zug steht zwischen JEDEN zwei Wellen an, auch vor
+   der ersten - die Einweisung waere damit genau in den Minuten verschwunden,
+   in denen sie unterrichtet. Verschoben wird deshalb der Zug, und zwar immer
+   und nicht nur bei sichtbarem Band: eine Lage, die vom Zustand eines
+   anderen Elements abhaengt, ist die naechste Stelle, an der man es
+   vergisst. */
 .zug {
   position: absolute; left: 50%; transform: translateX(-50%);
-  top: 52px; z-index: 6;
+  top: calc(var(--kopf) + var(--sat) + 44px); z-index: 6;
   display: flex; flex-direction: column; gap: 4px; align-items: center;
   padding: 6px 8px; border-radius: 12px;
   background: var(--panel);
@@ -500,7 +526,7 @@ html, body {
    Vorher hatte er keine Höhenbegrenzung: auf dem Handy quer rutschte der
    zweite Zweigknopf unter den unteren Rand und war nicht antippbar. */
 .inspector {
-  position: absolute; z-index: 3; top: calc(56px + var(--sat)); right: calc(12px + var(--sar));
+  position: absolute; z-index: 3; top: calc(var(--kopf) + var(--sat)); right: calc(12px + var(--sar));
   bottom: calc(58px + var(--sab));
   /* **Eine Breite, nicht drei.** 208 galt als Grundwert, das Telefon bekam
      seit jeher 250, und in v206 bekam der Schreibtisch ebenfalls 250 - womit
@@ -684,7 +710,7 @@ html, body {
    nach oben, sondern auch nach unten. */
 .inspector {
   bottom: auto;
-  max-height: calc(100% - 56px - var(--sat) - 58px - var(--sab));
+  max-height: calc(100% - var(--kopf) - var(--sat) - var(--fuss) - var(--sab));
 }
 /* **`flex: 0 1 auto` stand hier eine halbe Runde lang und war wirkungslos.**
    Die Ueberlegung war richtig - `flex: 1 1 auto` laesst die Liste jede
@@ -922,8 +948,18 @@ html, body {
 
 /* ------------------------------------------------------------- Einfuehrung */
 
+/* **Das Einweisungsband liegt UNTER der Kopfzeile** (v318, S-N4-04).
+   Bis v317 trug es gar kein `top` - eine absolut gesetzte Leiste ohne Lage
+   bleibt, wo sie im Fluss stuende, und das war genau ueber `GOLD`,
+   `KRISTALL`, `WELLE`. Gemessen: alle drei Beschriftungen und alle drei
+   Zahlen zu 100 % verdeckt, dazu die drei runden Kopfknoepfe zu 60 % - und
+   zwar beim ERSTEN Betreten einer Karte, wenn niemand weiss, was die Zahlen
+   bedeuten. Der Inspektorlauf v271 hat es gesehen, zweiunddreissig Tore
+   nicht; seit v318 gibt es `textVerdeckung`, und die Ratsche steht auf
+   null. */
 .coach {
   position: absolute; z-index: 4; left: 0; right: 0;
+  top: calc(var(--kopf) + var(--sat));
   display: flex; align-items: center; gap: 12px;
   padding: 7px calc(14px + var(--sar)) 7px calc(14px + var(--sal));
   background: rgba(10, 18, 38, 0.96);
@@ -1734,7 +1770,14 @@ html, body {
    Seite wechselt nur am Bildrand. Dieselbe Bewegung wie bei der Bauwahl
    (`.pick.unten`), nur waagerecht. */
 .inspector.am-turm {
-  right: auto; bottom: auto; max-height: none;
+  right: auto; bottom: auto;
+  /* **Auch am Turm endet der Kasten an den Baendern** (v318, S-N4-04).
+     `max-height: none` liess ihn mit aufgeklappten Werten ueber die
+     Kopfzeile wachsen: gemessen lagen `42` und `1/15` zu 75 % darunter -
+     genau der Befund, den der Inspektor in v271 an den Aufwertungskarten
+     gesehen hat, nur eine Fassung spaeter und an anderer Stelle. Jetzt rollt
+     die Werteliste, statt die Zahlen zuzudecken. */
+  max-height: calc(100% - var(--kopf) - var(--sat) - var(--fuss) - var(--sab));
   /* Der Kasten haengt an seiner rechten Kante am Turm - `turmRing()` setzt
      `left` auf den Turm und zieht den Abstand selbst ab. */
   transform: translate(-100%, -50%);

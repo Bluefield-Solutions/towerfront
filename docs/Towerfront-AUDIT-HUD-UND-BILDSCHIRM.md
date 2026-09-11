@@ -1,6 +1,6 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v311 · 10.09.2026
+Stand: v318 · 10.09.2026
 
 **Nachgesehen in v311 — nachgefahren, nicht geglaubt.** `npm run uxaudittor`
 auf demselben Gerät und in derselben Auflösung:
@@ -402,28 +402,62 @@ Feld.
 
 ## Teil 4 — Abstand
 
-| # | Soll | v238 | v248 | Stand |
-|---|---|---|---|---|
-| H1 | ≤ 14 % / ≤ 25 % | 17,6 % / 39,5 % | **14,2 % / 32,9 %** | erste Hälfte auf 0,2 Punkte heran, zweite offen — sie hängt an H4 |
-| H2 | nichts über der Bahn | Turmleiste verdeckt zwei von vier Gegnern | Band 96 statt 151 Punkte, eine Reihe statt drei | erledigt in v239, gemessen an einem A/B-Paar im selben Augenblick: 4 statt 2 sichtbare Gegner |
-| H3 | Fläche, immer abrufbar | Kontur, nur bei gewählter Sorte | Fläche (v238), und eine Sorte ist von Anfang an vorgewählt (v242) | erledigt |
-| H4 | Menü am Turm | am rechten Bildschirmrand, braucht 265 Punkte bei 218 freien | am Rand, braucht **228** bei 218 | offen — noch zehn Punkte, siehe E9 |
-| H5 | Turm als Bild | Text und Preis, kein Bild | Bild auf dem Leistenknopf (v239) und im Kopf des Menüs (v247) | erledigt |
-| H6 | Ausbauweg | zwei Preisknöpfe, keine Auskunft | zwei Knöpfe, die in Zahlen sagen, worin sie sich unterscheiden (v248) | halb — die Auskunft ist da, der **Weg mit Stufen** nicht |
-| H7 | ≤ 5 Größen | 11 | 8, 10, 12, 15, 17 | erledigt in v241, vom UX-Tor gehalten |
-| H8 | Text auf Fläche | 32 Knoten ohne Fläche | die drei Zahlen haben seit v239 eine Fläche | halb — der Versionsstempel steht weiter nackt am Rand |
-| H9 | keine Doppelung | 5 Beschriftungen doppelt | keine | erledigt in v239, vom UX-Tor gehalten |
-| H10 | Telefon ≥ Schreibtisch | Telefon zeigt weniger | Frühstart (v243) und Zweigwirkung (v248) stehen jetzt auf beiden | halb — der erklärende Zweigsatz bleibt Schreibtisch-only, dafür fehlen 90 Punkte |
-| H11 | keine Werkzeuge vorn | „Messung" ist das breiteste Element oben | hinter der Werkzeugklappe (v239) | erledigt |
-| H12 | ≥ 44 | kleinste 38 × 20 | Kasten 40 × 20, **Trefferfläche 52 × 46** | erledigt — gemessen wird die Trefferfläche, nicht der Kasten |
+| # | Soll | v238 | v248 | v318 | Stand |
+|---|---|---|---|---|---|
+| H1 | ≤ 14 % / ≤ 25 % | 17,6 % / 39,5 % | 14,2 % / 32,9 % | **13,1 % / 27,0 %** | erste Hälfte **erledigt** (v315); zweite noch 2,0 Punkte, als **N4M** im Verzeichnis |
+| H2 | nichts über der Bahn | Turmleiste verdeckt zwei von vier Gegnern | Band 96 statt 151 Punkte, eine Reihe statt drei | — | erledigt in v239, gemessen an einem A/B-Paar im selben Augenblick: 4 statt 2 sichtbare Gegner |
+| H3 | Fläche, immer abrufbar | Kontur, nur bei gewählter Sorte | Fläche (v238), und eine Sorte ist von Anfang an vorgewählt (v242) | — | erledigt |
+| H4 | Menü am Turm | am rechten Bildschirmrand, braucht 265 Punkte bei 218 freien | am Rand, braucht 228 bei 218 | **am Turm**, 175 bei 218 | **erledigt in v316** — der Kasten tritt zur Seite, links wenn dort Platz ist, sonst rechts; die Werte klappen zu und geben die fehlenden Punkte her |
+| H5 | Turm als Bild | Text und Preis, kein Bild | Bild auf dem Leistenknopf (v239) und im Kopf des Menüs (v247) | — | erledigt |
+| H6 | Ausbauweg | zwei Preisknöpfe, keine Auskunft | zwei Knöpfe, die in Zahlen sagen, worin sie sich unterscheiden (v248) | — | halb — die Auskunft ist da, der **Weg mit Stufen** nicht |
+| H7 | ≤ 5 Größen | 11 | 8, 10, 12, 15, 17 | — | erledigt in v241, vom UX-Tor gehalten |
+| H8 | Text auf Fläche | 32 Knoten ohne Fläche | die drei Zahlen haben seit v239 eine Fläche | — | halb — der Versionsstempel steht weiter nackt am Rand |
+| H9 | keine Doppelung | 5 Beschriftungen doppelt | keine | — | erledigt in v239, vom UX-Tor gehalten |
+| H10 | Telefon ≥ Schreibtisch | Telefon zeigt weniger | Frühstart (v243) und Zweigwirkung (v248) stehen jetzt auf beiden | — | halb — der erklärende Zweigsatz bleibt Schreibtisch-only, dafür fehlen 90 Punkte |
+| H11 | keine Werkzeuge vorn | „Messung" ist das breiteste Element oben | hinter der Werkzeugklappe (v239) | — | erledigt |
+| H12 | ≥ 44 | kleinste 38 × 20 | Kasten 40 × 20, **Trefferfläche 52 × 46** | — | erledigt — gemessen wird die Trefferfläche, nicht der Kasten |
 
-**Zwölf Punkte: sieben erledigt, drei halb, zwei offen.** Beim Abgleich in
-v238 war einer halb erfüllt und elf offen.
+**Dreizehn Punkte: neun erledigt, drei halb, einer fast.** Beim Abgleich in
+v238 war einer halb erfüllt und elf offen. H1 (erste Hälfte) ist in v315
+zugefallen, H4 in v316, und H13 ist in v318 dazugekommen — siehe unten.
 
-**Die zwei offenen hängen aneinander.** H4 (Menü am Turm) fehlen noch zehn
-Punkte Höhe, und dieselben zehn kämen aus H6 und H10 — der Zweigsatz, der auf
-dem Telefon nicht passt. Beides löst dieselbe Sache: **Symbole statt Sätze**.
-Das ist Bildmaterial, kein Code, und steht als E9.
+**Was an H1 noch fehlt, ist gemessen und steht als N4M im Verzeichnis:** 2,0
+Punkte. Der Ortswechsel des Turmmenüs hat 1,3 gebracht, das Zuklappen der
+Werte 3,3 — **der Ort kostet fast nichts, der Inhalt IST die Fläche.** Die
+zwei verbleibenden Punkte liegen in der Bauleiste (8,3 %, und sie steht auch
+dann da, wenn man gerade keinen Turm baut) oder in H6 und H10, die beide
+dieselbe Sache lösen: **Symbole statt Sätze**. Das ist Bildmaterial, kein
+Code, und steht als E9.
+
+---
+
+## H13 — kein Element verdeckt den Text eines anderen (v318)
+
+**Ein dreizehnter Punkt, und er kommt nicht aus der Referenz, sondern aus dem
+eigenen Inspektorlauf v271.** Zwei Zustände, in denen Bedienung Bedienung
+verdeckt — und beide Male genau die Zahlen, wegen derer man hinsieht:
+
+| gefunden | was | bis wann |
+|---|---|---|
+| v271 | das Einweisungsband lag zu **100 %** über `GOLD`, `KRISTALL`, `WELLE` und ihren Zahlen, dazu zu 60 % über den drei runden Kopfknöpfen — beim ERSTEN Betreten einer Karte | v318 |
+| v271 | die Aufwertungskarten lagen über `SCHADEN 8` und `REICHWEITE 326` | v316 (die Werte klappen zu), nachgemessen in v318 im Zustand mit aufgeklappten Werten |
+
+**Beide sind sieben Fassungen lang durch alle Tore gegangen**, weil das UX-Tor
+BELEGUNG misst — wieviel Fläche die Bedienung nimmt — und nicht, ob sie sich
+selbst zudeckt. Seit v318 misst `textVerdeckung` das in acht Zuständen, zwei
+davon eigens dafür hergestellt (das Einweisungsband wird in der Aufnahmereihe
+zwei Zeilen früher weggeklickt; die Turmwerte sind seit v316 zugeklappt).
+
+**Die Messstelle ist nicht `elementFromPoint`, und das ist gemessen** (Regel
+12). Der erste Entwurf fragte danach — dieselbe Stelle wie die Belegung — und
+meldete in jedem Zustand `GOLD`, `KRISTALL`, `WELLE` als zu 100 % verdeckt,
+Täter `#view`: die Kopfzeile ist eine Anzeige und lässt Tipps durch, also gibt
+der Browser die Leinwand darunter zurück. **„Wer fängt den Finger" ist eine
+andere Frage als „wer deckt das Bild zu".** Gefragt wird seitdem nach
+Überlappung mal Malordnung.
+
+Die Ratsche steht auf **null** — ohne Band, weil eine halb zugedeckte Zahl so
+unlesbar ist wie eine ganz zugedeckte.
 
 Der Abgleich für die *Bedienung* stand nach v203 auf sieben von sieben
 erfüllt — und das stimmt weiterhin. Gemessen wurde damals der **Ablauf**; nie

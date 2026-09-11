@@ -1043,10 +1043,21 @@ export class UI {
       // nachgeben, solange die Ziellogik Platz braucht.
       this.insp.dataset.ziel = this.zielOffen ? '1' : '0';
       this.iSell.textContent = `Verkaufen · ${sellValue(def, sel.branch, sel.level)}`;
-      this.turmRing(sel);
-      const amTurm = this.insp.classList.contains('am-turm');
+      // **Erst den Inhalt, dann die Lage** (v318, S-N4-04).
+      //
+      // `turmRing` haelt den Kasten zwischen Kopfzeile und Bedienband ein und
+      // braucht dafuer seine HOEHE. Stand der Aufruf vor dem Auf- und
+      // Zuklappen der Werte, rechnete er mit der Hoehe von vorher: gemessen
+      // stand die Karte danach auf 28 statt 60, und `42` und `1/15` lagen zu
+      // 75 % darunter. Ein zweiter Durchlauf haette es gerichtet - nur laeuft
+      // `sync` ueber eine Signatur, und die aendert sich im naechsten Bild
+      // nicht mehr. Die Reihenfolge ist die Reparatur, nicht ein zweiter
+      // Aufruf.
+      const amTurm = this.insp.classList.contains('am-turm')
+        || this.worldToScreen?.(sel.x, sel.y) != null;
       this.iStats.hidden = amTurm && !this.werteOffen;
       this.iName.setAttribute('aria-expanded', String(!this.iStats.hidden));
+      this.turmRing(sel);
     } else {
       this.insp.hidden = true;
       this.turmRing(null);
@@ -1089,6 +1100,13 @@ export class UI {
     const b = this.insp.getBoundingClientRect();
     const breite = b.width || 276;
     const halbH = (b.height || 180) / 2;
+    // **Die zwei Baender stehen im Stilblatt, nicht hier** (v318, S-N4-04).
+    // Vorher standen 60 und 62 als nackte Zahlen in dieser Rechnung, waehrend
+    // das Stilblatt mit 56 und 58 rechnete - zwei Wahrheiten ueber dieselbe
+    // Kante (Regel 15). Und die untere war zu klein: die Wellenvorschau liegt
+    // IM freien Band, der Kasten passte rechnerisch und deckte sie zu.
+    const mass = (name: string, ersatz: number): number =>
+      parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || ersatz;
     // **Die Seite waehlt der Platz, nicht die Vorliebe.** Links vom Turm,
     // solange der Kasten dort ganz hinpasst; sonst rechts. Der Abstand haelt
     // den Turm samt Sockel frei - 120 Weltpunkte Platzbedarf sind auf dem
@@ -1100,8 +1118,8 @@ export class UI {
     // Oben die Kopfzeile, unten das Bedienband - dieselben zwei Zahlen, mit
     // denen `.inspector` am Rand rechnet. Passt der Kasten zwischen sie gar
     // nicht (E9: 218 Punkte frei), steht er mittig statt halb ausserhalb.
-    const oben = halbH + 60;
-    const unten = window.innerHeight - halbH - 62;
+    const oben = halbH + mass('--kopf', 56);
+    const unten = window.innerHeight - halbH - mass('--fuss', 100);
     this.insp.style.top = `${oben > unten ? (oben + unten) / 2 : Math.min(Math.max(p.y, oben), unten)}px`;
   }
 

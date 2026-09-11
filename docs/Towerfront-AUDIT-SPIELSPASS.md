@@ -1,6 +1,23 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v311 · 10.09.2026
+Stand: v318 · 10.09.2026
+
+**Nachgesehen in v318 — ein Befund dieses Audits ist zugefallen, und zwei
+Zahlen darin sind heute von einem Tor gehalten.**
+
+* *„Man sieht nicht, ob der Mörser etwas taugt — die Zahlen dazu stehen in
+  der Messtafel für Entwickler und nirgends sonst."* Seit **v317** steht die
+  Wirkungsbilanz am Turm: Angerichtet, Verpufft, Schild schluckt, Panzerung
+  frisst, Ohne Luftziel. **Die zweite Hälfte ist die wichtigere** — warum ein
+  Schuss nichts bewirkt hat. Ohne sie ist der Konter etwas, das man auswendig
+  lernt, statt es zu sehen.
+* Gebucht wird in denselben Zeilen wie die Summe, und der Rauchtest hält
+  nach, dass die Anzeige genau die Zahl zeigt, die `npm run geschosse` misst
+  — zwei Zählwerke für dieselbe Sache wären Regel 15 in Reinform.
+
+**Unverändert offen bleibt, was dieses Audit zuerst gesagt hat:** der
+Genre-Abgleich steht auf 30 von 30, und das Spiel macht trotzdem wenig Spaß.
+Die Tore prüfen Korrektheit, nicht Spannung.
 
 **Nachgesehen in v311 — der Lauf ist zum ersten Mal ein Bogen und nicht vier
 Partien hintereinander.** Gemessen über einen vollen Lauf mit Deck

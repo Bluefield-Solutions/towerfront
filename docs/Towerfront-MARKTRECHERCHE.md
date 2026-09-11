@@ -1,6 +1,21 @@
 # Marktrecherche — was moderne Tower-Defense-Spiele ausmacht
 
-Stand: v311 · 10.09.2026
+Stand: v318 · 10.09.2026
+
+**Nachgesehen in v318 — inhaltlich unverändert gültig, und seit v315 sind
+drei weitere Stücke übernommen und gemessen.** Alle drei kommen aus der
+Oberfläche, nicht aus der Mechanik:
+
+| übernommen | Vorbild | hier gemessen |
+|---|---|---|
+| Das Turmmenü sitzt **am Turm** statt am Bildschirmrand | Defense Grid (ein kleiner Kreis am Turm), Kingdom Rush (ein Ring am Ort der Handlung) | v316: Belegung 31,7 → 27,0 %, und der gemeinte Turm steht nicht mehr hinter seinem eigenen Menü |
+| **Selten Gebrauchtes ist selten sichtbar** | alle drei — keines zeigt dauerhaft alle Türme, alle Fähigkeiten und alle Einstellungen | v315: gesperrte Fähigkeitsfelder falten sich zu einer Zeile mit `+N`, Ruhezustand 15,5 → 13,1 % |
+| Was ein Turm **ausgerichtet** hat, steht am Turm | BTD6 zeigt es in der Seitenspalte, Kingdom Rush im Ring | v317: Angerichtet, Verpufft, und warum ein Schuss nichts bewirkt hat |
+
+**Die Lehre aus v316 gehört hierher und nicht in eine Story:** der ORT einer
+Bedienung kostet fast nichts (1,3 Punkte), der INHALT ist die Fläche (3,3).
+Wer eine Oberfläche kleiner haben will, muss weniger zeigen, nicht umräumen —
+und genau das tun die Vorbilder.
 
 **Nachgesehen in v311:** unverändert gültig, und seit v304 sind drei weitere
 Stücke aus den Vorbildern übernommen und **gemessen** worden:

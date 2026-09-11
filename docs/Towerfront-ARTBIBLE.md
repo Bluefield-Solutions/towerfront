@@ -1,6 +1,23 @@
 # Towerfront — Art Bible
 
-Stand: v316 · 10.09.2026
+Stand: v323 · 11.09.2026
+
+**Nachgesehen in v323 — am Vorrat unverändert, an der SCHRIFT eine
+Entscheidung.** `npm run bildtor` nennt weiterhin zwei offene Bestellungen
+(`31_foerderer.png`, `32_werft.png`); seit v233 ist kein Bildpunkt
+dazugekommen.
+
+**Neu und für jeden künftigen Text verbindlich (v323, S-N4-10): ein Ding, ein
+Wort.** Für dieselbe Sache standen drei im Bild — „Level neu starten",
+„Zurück zur Karte", „Wähle ein Land" —, und eines davon war das einzige
+englische in einer sonst durchgehend deutschen Oberfläche. Es heißt **Karte**,
+so wie in `maps.ts`, im Quelltext und in den Dokumenten; der Rauchtest hält es
+am sichtbaren Text fest.
+
+**Und eine Forderung an das nächste KARTENBILD ist in v322 dazugekommen** (sie
+steht ausführlich in Abschnitt 8b des Bildauftrags): die Zielplattform gehört
+mindestens **270 Weltpunkte** vom Kartenrand entfernt, sonst läuft der
+Warnring des Kristalls aus der Welt. Heute sind es 186 bis 237.
 
 **Nachgesehen in v316 — am Stil unverändert, am Vorrat auch, und diesmal
 nachgesehen statt angenommen.** `git log -- src/gfx/assets/` nennt als

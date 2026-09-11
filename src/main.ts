@@ -195,7 +195,7 @@ menu.onRetry = () => {
   ui.setSpielansicht(true);
 };
 
-/** Level neu starten - dieselbe Karte, derselbe Grad, von Welle eins.
+/** Karte neu starten - dieselbe Karte, derselbe Grad, von Welle eins.
  *
  *  Der Fortschritt der laufenden Partie ist damit weg; das ist gewollt, denn
  *  genau dafuer druecken Leute "neu starten". Der Spielstand anderer Karten

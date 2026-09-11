@@ -1,6 +1,30 @@
 # Towerfront — der Neubau
 
-Stand: v316 · beschlossen am 09.09.2026
+Stand: v323 · beschlossen am 09.09.2026
+
+**Nachgesehen in v323 — Paket N4 ist fast durch, und es hat zwei Sätze
+geliefert, die über die Oberfläche hinausgehen.**
+
+| Story | gebaut | gemessen |
+|---|---|---|
+| S-N4-01 · Ruhezustand | v315 | 15,5 → **13,1 %** |
+| S-N4-02 · Menü am Turm | v316 | 31,7 → **27,0 %** |
+| S-N4-03 · Wirkung sichtbar | v317 | `wirkungsBilanz` am Turm |
+| S-N4-04 · nichts verdeckt Text | v318 | Ratsche null, in acht Zuständen |
+| S-N4-05 · Vorschau mit Namen | v319 | 60 Wellen, vier Karten |
+| S-N4-06 · nichts über dem Feld | v320 | **17,8 %** der Bahn liegen darunter — offen als N4F |
+| S-N4-07 · eine Wahl, eine Leiste | v321, **halb** | Rest als N4L, eine Entscheidung des Nutzers |
+| S-N4-09 · Kristall ganz im Bild | v322 | vier Formate, Körper drin; der Warnring braucht ein Kartenbild |
+| S-N4-10 · ein Ding, ein Wort | v323 | „Karte", überall |
+
+**Satz eins: der ORT einer Bedienung kostet fast nichts, der INHALT ist die
+Fläche.** Menü an den Turm = 1,3 Punkte, Werte zuklappen = 3,3.
+
+**Satz zwei: ein Beweismittel, das eine Sache systematisch weglässt, erzeugt
+Befunde über genau diese Sache.** Zweimal in zwei Runden hat ein Inspektorbild
+einen Fehler gezeigt, den das Spiel nicht hatte (M22 im Messlücken-Verzeichnis).
+Für ein Verfahren, dessen dritter Schritt ein unbefangener Blick auf Bilder
+ist, ist das keine Kleinigkeit.
 
 **Nachgesehen in v316 — und eine der vier Grundentscheidungen dieses
 Dokuments ist gemessen zu teuer.**

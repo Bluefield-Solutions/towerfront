@@ -3811,6 +3811,41 @@ step('Einrasten', () => {
 // die eine Stelle, an der die Frage beantwortet wird, und die Oberflaeche
 // fragt dieselbe (Regel 6). Jede Bedingung einzeln, jede mit ihrer Nullprobe -
 // sonst pruefte die Reihe nur, dass die Ableitung immer falsch zurueckgibt.
+step('Ein Ding, ein Wort: die Oberflaeche sagt "Karte"', () => {
+  // **Regel 15 in der Oberflaeche** (v323, S-N4-10, aus dem Inspektorlauf
+  // v273). Fuer dieselbe Sache standen drei Woerter im Bild: "Level neu
+  // starten", "Zurueck zur Karte", "Waehle ein Land" - und eines davon war
+  // das einzige englische in einer sonst durchgehend deutschen Oberflaeche.
+  //
+  // **Geprueft wird SICHTBARER Text, nicht der Quelltext.** `TowerLevel`,
+  // `levels` und `Landkarte` sind etwas anderes und duerfen bleiben; wer den
+  // ganzen Baum nach dem Wort durchsucht, faengt zwanzig Treffer und wird
+  // nach zwei Runden abgeschaltet. Gegriffen wird deshalb die Beschriftung
+  // eines Knopfes im Dokument und der Text, den das Menue MALT.
+  const doc = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const menue = readFileSync(new URL('../src/gfx/menurender.ts', import.meta.url), 'utf8');
+  const verboten = [];
+  for (const [text] of doc.matchAll(/>([^<>]*\S[^<>]*)</g)) {
+    if (/\bLevel\b/.test(text)) verboten.push(`index.html: "${text.trim()}"`);
+    if (/\bLand\b/.test(text)) verboten.push(`index.html: "${text.trim()}"`);
+  }
+  for (const [, text] of menue.matchAll(/fillText\('([^']*)'/g)) {
+    if (/\bLevel\b/.test(text)) verboten.push(`menurender.ts: "${text}"`);
+    if (/\bLand\b/.test(text)) verboten.push(`menurender.ts: "${text}"`);
+  }
+  if (verboten.length) {
+    throw new Error(`Die Oberflaeche nennt dieselbe Sache mit mehreren Woertern: `
+      + `${verboten.join(', ')}. Es heisst "Karte" - so wie in maps.ts, im Quelltext `
+      + 'und in den Dokumenten (S-N4-10).');
+  }
+  // Und der Eingriff muss ankommen koennen: steht das Wort "Karte" ueberhaupt
+  // dort, wo es stehen soll? Eine Pruefung ohne Gegenstand ist keine.
+  if (!/>Karte neu starten</.test(doc)) {
+    throw new Error('Der Knopf "Karte neu starten" steht nicht im Dokument - dann '
+      + 'prueft die Zeile darueber ueber einer leeren Oberflaeche (Regel 3).');
+  }
+});
+
 step('Die Wirkungsbilanz am Turm ist dieselbe Zahl wie die Messung', async () => {
   // **Die Abnahme aus S-N4-03, und sie ist der ganze Punkt der Story.**
   //

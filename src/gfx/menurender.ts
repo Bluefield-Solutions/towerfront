@@ -146,7 +146,15 @@ function drawMap(
   ctx.fillText('Towerfront', WORLD_W / 2, 130);
   ctx.font = '400 26px system-ui, sans-serif';
   ctx.fillStyle = C.stoneDark;
-  ctx.fillText('Wähle ein Land', WORLD_W / 2, 172);
+  // **Ein Ding, ein Wort** (v323, S-N4-10). Bis v322 standen fuer dieselbe
+  // Sache drei Woerter im Bild - "Level neu starten", "Zurueck zur Karte",
+  // "Waehle ein Land" -, und der Inspektorlauf v273 hat sie nebeneinander
+  // gesehen und gefragt, was der Unterschied ist. Es gibt keinen.
+  //
+  // Gewonnen hat `Karte`, und zwar nicht nach Geschmack: es steht in
+  // `maps.ts`, im ganzen Quelltext und in den Dokumenten, `Level` und `Land`
+  // standen je einmal in der Oberflaeche. Der Bestand entscheidet.
+  ctx.fillText('Wähle eine Karte', WORLD_W / 2, 172);
 
   // Der Weg zwischen den Orten - gestrichelt, wie auf einer Wanderkarte.
   ctx.save();

@@ -696,6 +696,18 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Ein Ding, ein Wort (v323, S-N4-10).** Fuer dieselbe Sache standen drei
+Woerter im Bild - "Level neu starten", "Zurueck zur Karte", "Waehle ein Land"
+-, und eines davon war das einzige englische in einer sonst durchgehend
+deutschen Oberflaeche. Gewonnen hat `Karte`, nach dem Bestand und nicht nach
+Geschmack: es steht in `maps.ts`, im ganzen Quelltext und in den Dokumenten.
+
+**Geprueft wird SICHTBARER Text, nicht der Quelltext.** `TowerLevel`, `levels`
+und `Landkarte` sind etwas anderes und bleiben; gegriffen wird die
+Beschriftung eines Knopfes im Dokument und der Text, den das Menue MALT. Wer
+den ganzen Baum nach dem Wort durchsucht, faengt zwanzig Treffer und wird nach
+zwei Runden abgeschaltet.
+
 **Der Kristall gehoert ganz ins Bild (v322, S-N4-09) - und die Messung hat die
 offene Frage der Story entschieden.** Das Ding, das man verteidigt, ragte in
 ALLEN VIER Formaten heraus, nicht nur in den zweien, die der Inspektorlauf
@@ -1341,7 +1353,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v322. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v323. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

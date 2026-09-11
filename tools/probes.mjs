@@ -1222,6 +1222,19 @@ export const PROBEN = [
     // kein Beweis (Regel 5). Der Eingriff macht die Knoepfe so breit, dass
     // sechs davon nicht mehr nebeneinander passen - dann laufen sie
     // ineinander, und beide Zahlen muessen es sagen.
+    // **Das englische Wort kehrt zurueck** (v323, S-N4-10).
+    //
+    // Genau die Gegenprobe, die die Story verlangt: eines der drei Woerter
+    // wieder einsetzen. Gegriffen wird der KNOPFTEXT im Dokument, also das,
+    // was der Spieler sieht - und nicht ein Kommentar oder ein Bezeichner.
+    name: 'Die Oberflaeche sagt wieder "Level"',
+    datei: 'index.html',
+    suche: '<button class="pause-btn warn" id="p-restart">Karte neu starten</button>',
+    ersatz: '<button class="pause-btn warn" id="p-restart">Level neu starten</button>',
+    tor: 'smoke',
+    meldet: 'mehreren Woertern',
+  },
+  {
     // **Die Kamera laesst den Kristall wieder an den Rand** (v322, S-N4-09).
     //
     // Genau die Gegenprobe, die die Story verlangt. Der Eingriff schaltet

@@ -25,7 +25,8 @@ import { MAPS } from '../src/data/maps';
 import {
   KARTENSTAPEL, GRUNDSTAPEL, kartenWirkung, zieheKarten, type Karte, type KartenArt,
 } from '../src/data/karten';
-import { MONOKULTURWELLE } from '../src/data/waves';
+import { MONOKULTURWELLE, PLAN_SPIRALHAIN, type Wave } from '../src/data/waves';
+import { VORZEICHEN_ORDNUNG, vorzeichenZahl, type Vorzeichen } from '../src/data/vorzeichen';
 import { WEGNETZ } from '../src/data/wegnetz';
 import { ALL_PERKS, NO_PERKS } from '../src/data/perks';
 import { ABILITIES } from '../src/data/abilities';
@@ -447,6 +448,8 @@ const NUR_LAUF = process.argv.slice(2).includes('--lauf');
 const NUR_WIRKUNG = process.argv.slice(2).includes('--wirkungen');
 /** Nur die Monokulturwelle (S-N6-04) - derselbe Grund wie oben. */
 const NUR_MONO = process.argv.slice(2).includes('--monokultur');
+/** Nur die sechs Vorzeichen (S-N6-05) - derselbe Grund wie oben. */
+const NUR_VZ = process.argv.slice(2).includes('--vorzeichen');
 
 /** Bauplaetze nach abgedeckter Wegstrecke bewertet.
  *
@@ -1426,6 +1429,90 @@ const WIRKUNGSKARTEN = ['zunder', 'kerbe', 'eisgriff', 'zielfernrohr', 'bajonett
  *  das MELDEN statt zu schweigen. Deshalb steht unten nicht nur der
  *  Vergleich, sondern auch die Forderung, dass die Monokulturen ueberhaupt
  *  etwas durchlassen - eine Welle, die jeder haelt, bestraft niemanden. */
+/** **Ein GESTELLTES Feld gegen eine GESTELLTE Welle** - der eine Ort, an dem
+ *  das in diesem Werkzeug passiert.
+ *
+ *  Herausgeloest in v331 (S-N6-05), weil die Vorzeichenmessung genau dasselbe
+ *  braucht: gleiches Gold, gleiche Plaetze, gleiche Zahl, gleicher Ausbau -
+ *  nur eine Sache wechselt. Ein zweiter Aufbau daneben waere Regel 15 in
+ *  Reinform gewesen, und in v311 hat genau das ein Tor seine eigene Kopie
+ *  pruefen lassen.
+ *
+ *  `vz` geht unveraendert an `welleEinreihen` weiter: `undefined` heisst
+ *  "wie im Spiel", `null` heisst "ausdruecklich keines".
+ *
+ *  **`kristall` hebt die Deckung auf.** Der Verlust je Gegner ist auf das
+ *  gedeckelt, was der Kristall noch hat - wer bei 42 anfaengt, misst ab dem
+ *  42. Punkt gar nichts mehr (Regel 2: eine Grenze, die der Gegenstand
+ *  erreicht, hoert auf zu messen). Gemessen stand die Bogenreihe in Welle 14
+ *  bei fuenf von sechs Vorzeichen auf demselben vollen Verlust. Mit einem
+ *  unerreichbar hohen Kristall ist die Zahl der DURCHSCHLAG selbst, und der
+ *  hat Aufloesung.
+ *
+ *  Gibt Kristallverlust, Rest und Zeit zurueck; wer davon was braucht,
+ *  entscheidet der Aufrufer. */
+interface GestelltErgebnis {
+  /** Wieviel Kristall die Welle gekostet hat. */
+  verlust: number;
+  /** Wieviele Gegner am Ende noch ausstehen - Anmarsch und Feld. */
+  offen: number;
+  /** Dasselbe anteilig an der ganzen Welle (Regel 2). */
+  anteil: number;
+  /** Wie lange gerechnet wurde, in Sekunden. */
+  sekunden: number;
+}
+
+function gestellteWelle(
+  plan: TowerId[], wave: Wave, welle: number,
+  opt: { vz?: Vorzeichen | null; kristall?: number; sekunden?: number } = {},
+): GestelltErgebnis {
+  const s = new GameState(MAPS[0].id);
+  s.reset(AUSSAATEN[0], 'normal', MAPS[0].id,
+    { perks: NO_PERKS, karten: MAPS.length, stapel: [] });
+  // Gleiches Gold, gleiche Plaetze, gleiche Zahl - nur die Sorte wechselt.
+  // Sonst maesse die Zahl den Preis der Tuerme und nicht ihre Rolle.
+  s.gold = 100000;
+  const plaetze = buildSpots(s);
+  let i = 0;
+  for (const sp of plaetze) {
+    if (i >= GESTELLT_TUERME) break;
+    if (s.build(sp.x, sp.y, plan[i % plan.length])) i++;
+  }
+  if (i < GESTELLT_TUERME) {
+    errors.push(`Gestellte Welle: nur ${i} von ${GESTELLT_TUERME} Tuermen gesetzt - `
+      + 'dann vergleicht die Messung verschieden grosse Felder.');
+  }
+  // **Mittlerer Ausbau, nicht voll** - das Feld, das ein Spieler in der
+  // zwoelften Welle wirklich hat. Voll ausgebaut waere ein Endspielfeld,
+  // und dort haelt jede Sorte alles; auf Grundstufe waere es ein Feld aus
+  // der dritten Welle. Beides maesse etwas anderes als die Rolle.
+  for (const t of s.gebaute) {
+    for (let k = 0; k < GESTELLT_STUFEN; k++) s.upgrade(t, (t.id % 2) as 0 | 1);
+  }
+  if (opt.kristall !== undefined) s.lives = opt.kristall;
+  const vorher = s.lives;
+  // **Als SPAETE Welle eingereiht, nicht als erste** (Regel 12). Der erste
+  // Entwurf stellte sie auf `welle: 0` - dort traegt jeder Gegner die
+  // Lebenspunkte der ersten Welle, und drei der vier reinen Felder hielten
+  // sie mit null Verlust. Die Zahl mass die Lebenskurve, nicht die
+  // Zusammensetzung. `welle` ist der Platz im Plan, an dem die gestellte
+  // Welle stuende.
+  s.welleEinreihen(wave, welle, opt.vz);
+  // Lang genug, dass die Welle wirklich durch ist - der letzte Gegner
+  // startet nach 8 s und laeuft dann die ganze Bahn. Gefragt wird
+  // `laufendeReste` und nicht die Gegnerliste: es zaehlt Anmarsch UND
+  // Feld, und genau das heisst "die Welle ist durch".
+  let bilder = 0;
+  const offen = (): number => s.laufendeReste.reduce((n, l) => n + l.rest, 0);
+  const gesamt = Math.max(1, offen());
+  const horizont = 60 * (opt.sekunden ?? 120);
+  for (; bilder < horizont && offen() > 0; bilder++) s.update(1 / 60);
+  return {
+    verlust: vorher - s.lives, offen: offen(), anteil: offen() / gesamt,
+    sekunden: bilder / 60,
+  };
+}
+
 function monokulturMessen(): void {
   console.log('\nMonokulturwelle (vier reine Felder gegen ein gemischtes, dieselbe Aussaat):');
   const felder: { was: string; plan: TowerId[] }[] = [
@@ -1436,49 +1523,15 @@ function monokulturMessen(): void {
     { was: 'gemischt', plan: ['arrow', 'frost', 'mortar', 'prism'] },
   ];
   const durch = (plan: TowerId[]): number => {
-    const s = new GameState(MAPS[0].id);
-    s.reset(AUSSAATEN[0], 'normal', MAPS[0].id,
-      { perks: NO_PERKS, karten: MAPS.length, stapel: [] });
-    // Gleiches Gold, gleiche Plaetze, gleiche Zahl - nur die Sorte wechselt.
-    // Sonst maesse die Zahl den Preis der Tuerme und nicht ihre Rolle.
-    s.gold = 100000;
-    const plaetze = buildSpots(s);
-    let i = 0;
-    for (const sp of plaetze) {
-      if (i >= MONOKULTUR_TUERME) break;
-      if (s.build(sp.x, sp.y, plan[i % plan.length])) i++;
+    const r = gestellteWelle(plan, MONOKULTURWELLE, MONOKULTUR_WELLE);
+    // Diese Welle MUSS durch sein, wenn gezaehlt wird - sie ist so gebaut,
+    // dass jede Sorte an ihr etwas durchlaesst, und ein abgeschnittener Lauf
+    // zaehlte den Rest einfach nicht mit.
+    if (r.offen > 0) {
+      errors.push(`Monokulturwelle: nach ${r.sekunden.toFixed(0)} s stehen noch `
+        + `${r.offen} Gegner aus - die Welle war nicht durch, als gezaehlt wurde.`);
     }
-    if (i < MONOKULTUR_TUERME) {
-      errors.push(`Monokulturwelle: nur ${i} von ${MONOKULTUR_TUERME} Tuermen gesetzt - `
-        + 'dann vergleicht die Messung verschieden grosse Felder.');
-    }
-    // **Mittlerer Ausbau, nicht voll** - das Feld, das ein Spieler in der
-    // zwoelften Welle wirklich hat. Voll ausgebaut waere ein Endspielfeld,
-    // und dort haelt jede Sorte alles; auf Grundstufe waere es ein Feld aus
-    // der dritten Welle. Beides maesse etwas anderes als die Rolle.
-    for (const t of s.gebaute) {
-      for (let k = 0; k < MONOKULTUR_STUFEN; k++) s.upgrade(t, (t.id % 2) as 0 | 1);
-    }
-    const vorher = s.lives;
-    // **Als SPAETE Welle eingereiht, nicht als erste** (Regel 12). Der erste
-    // Entwurf stellte sie auf `welle: 0` - dort traegt jeder Gegner die
-    // Lebenspunkte der ersten Welle, und drei der vier reinen Felder hielten
-    // sie mit null Verlust. Die Zahl mass die Lebenskurve, nicht die
-    // Zusammensetzung. `MONOKULTUR_WELLE` ist der Platz im Plan, an dem
-    // so eine Welle stuende.
-    s.welleEinreihen(MONOKULTURWELLE, MONOKULTUR_WELLE);
-    // Lang genug, dass die Welle wirklich durch ist - der letzte Gegner
-    // startet nach 8 s und laeuft dann die ganze Bahn. Gefragt wird
-    // `laufendeReste` und nicht die Gegnerliste: es zaehlt Anmarsch UND
-    // Feld, und genau das heisst "die Welle ist durch".
-    let bilder = 0;
-    const offen = (): number => s.laufendeReste.reduce((n, l) => n + l.rest, 0);
-    for (; bilder < 60 * 120 && offen() > 0; bilder++) s.update(1 / 60);
-    if (offen() > 0) {
-      errors.push(`Monokulturwelle: nach ${(bilder / 60).toFixed(0)} s stehen noch `
-        + `${offen()} Gegner aus - die Welle war nicht durch, als gezaehlt wurde.`);
-    }
-    return vorher - s.lives;
+    return r.verlust;
   };
   const werte = felder.map((f) => ({ ...f, verlust: durch(f.plan) }));
   for (const w of werte) {
@@ -1510,13 +1563,120 @@ function monokulturMessen(): void {
  *  ist die zwoelfte von fuenfzehn - spaet genug, dass ein ausgebautes Feld
  *  dasteht, und frueh genug, dass es nicht die Bosswelle ist. */
 const MONOKULTUR_WELLE = 12;
-/** Wie weit die Tuerme ausgebaut sind - Stufe 3 von 6. */
-const MONOKULTUR_STUFEN = 2;
-/** Wieviele Tuerme jedes Feld der Monokulturmessung bekommt. Zwoelf wie bei
+/** Wie weit die Tuerme eines gestellten Feldes ausgebaut sind - Stufe 3 von
+ *  6. */
+const GESTELLT_STUFEN = 2;
+/** Wieviele Tuerme ein gestelltes Feld bekommt. Zwoelf wie bei
  *  jeder anderen Messung dieses Werkzeugs - drei je Sorte im gemischten
  *  Feld, also die Zahl, fuer die die Freimenge des Wiederholungsaufschlags
  *  gemacht ist (v287). */
-const MONOKULTUR_TUERME = 12;
+const GESTELLT_TUERME = 12;
+
+/** **Die Welle, auf der die Vorzeichen gemessen werden.**
+ *
+ *  Eine ECHTE Welle aus dem Plan der ersten Karte, nicht die
+ *  Monokulturwelle: die ist eigens so gebaut, dass jede Turmsorte an ihr
+ *  scheitert, und ueber ihr saehen sechs Vorzeichen einander aehnlicher, als
+ *  sie sind. Genommen wird die elfte - spaet genug fuer ein ausgebautes
+ *  Feld, und die Nummer, auf der auch `VORZEICHEN_TAKT` eines ausspielt. */
+const VZ_WELLE = 13;
+/** Wie lange je gestelltem Feld gerechnet wird. Nicht "bis die Welle durch
+ *  ist": ein reines Frostfeld toetet nichts, seine Welle ist NIE durch, und
+ *  ein Lauf ohne Ende waere keine Messung. Sechzig Sekunden sind laenger,
+ *  als die Welle zum Anmarsch braucht - was danach noch steht, steht als
+ *  Rest daneben. */
+const VZ_SEKUNDEN = 60;
+/** Der Kristall der gestellten Felder - unerreichbar hoch, damit die Deckung
+ *  nicht misst (siehe `gestellteWelle`). */
+const VZ_KRISTALL = 1000000;
+
+/** **Ist jedes Vorzeichen von den anderen zu unterscheiden?** (S-N6-05)
+ *
+ *  Dieselbe Bauart wie die Wirkungsmessung aus v327 und aus demselben Grund:
+ *  zwei Vorzeichen, gegen die man dasselbe tut, sind ein Vorzeichen mit zwei
+ *  Namen - und die Ankuendigung ueber der Welle waere dann eine Verzierung.
+ *
+ *  **Gemessen wird gegen VIER REINE Felder, nicht gegen eines.** Das ist der
+ *  Punkt der ganzen Messung und nicht ihre Genauigkeit: ein Vorzeichen ist
+ *  eine Frage nach der ANTWORT, und eine Antwort ist eine Turmsorte. Ueber
+ *  ein gemischtes Feld gemittelt saehen Eisenregen und Bollwerk gleich aus -
+ *  beide machen die Welle haerter. Getrennt nach Sorten sagt der Abdruck,
+ *  WELCHER Turm daran scheitert, und genau das soll der Spieler lesen.
+ *
+ *  Verglichen wird jeweils gegen denselben Lauf OHNE Vorzeichen (Regel 13) -
+ *  sonst maesse die Zahl die Welle und nicht das Zeichen darueber. */
+function vorzeichenMessen(): void {
+  console.log(`\nVorzeichen (jedes gegen keines, je reinem Feld, Welle ${VZ_WELLE + 1} `
+    + `des Spiralhains, ${VZ_SEKUNDEN} s, Kristall ohne Deckung):`);
+  const felder: { was: string; plan: TowerId[] }[] = [
+    { was: 'Bogen', plan: ['arrow'] },
+    { was: 'Frost', plan: ['frost'] },
+    { was: 'Moerser', plan: ['mortar'] },
+    { was: 'Prisma', plan: ['prism'] },
+  ];
+  const welle = PLAN_SPIRALHAIN[VZ_WELLE];
+  if (!welle) {
+    errors.push(`Die Vorzeichenmessung kennt Welle ${VZ_WELLE + 1} des Spiralhains nicht - `
+      + 'der Plan ist kuerzer geworden, und die Messung faehrt seitdem ins Leere (Regel 5).');
+    return;
+  }
+  // **Die Nullprobe einmal je Feld**, nicht je Vorzeichen: derselbe Lauf,
+  // dieselbe Aussaat, dasselbe Ergebnis. Sechsmal gefahren waere sie auch
+  // nicht EINE Nullprobe mehr, sondern sechs, die zufaellig gleich ausgehen.
+  const fahren = (plan: TowerId[], vz: Vorzeichen | null): number =>
+    gestellteWelle(plan, welle, VZ_WELLE,
+      { vz, kristall: VZ_KRISTALL, sekunden: VZ_SEKUNDEN }).verlust;
+  const ohne = felder.map((f) => fahren(f.plan, null));
+  console.log(`  ${'ohne Vorzeichen'.padEnd(16)} `
+    + felder.map((f, i) => `${f.was} ${String(ohne[i]).padStart(3)}`).join('  ')
+    + '   (Durchschlag)');
+  const abdruck = new Map<string, string>();
+  for (const vz of VORZEICHEN_ORDNUNG) {
+    const spur = felder.map((f, i) => fahren(f.plan, vz) - ohne[i]);
+    abdruck.set(vz.id, spur.join('/'));
+    console.log(`  ${vz.name.padEnd(16)} `
+      + felder.map((f, i) => `${f.was} ${spur[i] >= 0 ? '+' : ''}${String(spur[i]).padStart(3)}`)
+        .join('  ')
+      + `   Abdruck ${spur.join('/')}   ${vorzeichenZahl(vz)}`);
+  }
+  // **Hat die Messstelle ueberhaupt Luft nach unten?** Ein Feld, das schon
+  // ohne Vorzeichen nichts durchlaesst, kann keine Verschaerfung zeigen -
+  // seine Spalte stuende bei allen sechs auf null und saehe aus wie
+  // Uebereinstimmung (Regel 13).
+  felder.forEach((f, i) => {
+    if (ohne[i] === 0) {
+      errors.push(`Die Vorzeichenmessung misst am Feld "${f.was}" nichts: es laesst schon `
+        + 'ohne Vorzeichen keinen Punkt durch. Eine Spalte ohne Spielraum trennt nichts - '
+        + 'dann ist die Welle zu leicht oder das Feld zu stark gewaehlt (Regel 13).');
+    }
+  });
+  // **Kommt ueberhaupt jedes an?** Ein Abdruck aus lauter Nullen heisst, dass
+  // das Zeichen im Spiel nichts aendert. In der Gleichheitspruefung darunter
+  // saehe das aus wie "von fuenf anderen unterscheidbar", solange nur eines
+  // so dasteht - genau die Luecke, die Regel 5 beschreibt.
+  for (const vz of VORZEICHEN_ORDNUNG) {
+    if (abdruck.get(vz.id) === felder.map(() => 0).join('/')) {
+      errors.push(`Das Vorzeichen "${vz.name}" aendert an KEINEM der vier reinen Felder `
+        + 'etwas. Es steht ueber der Welle und kommt im Spiel nicht an - die Ankuendigung '
+        + 'ist dann eine Verzierung.');
+    }
+  }
+  const gleich: string[] = [];
+  const ids = [...abdruck.keys()];
+  for (let i = 0; i < ids.length; i++) {
+    for (let j = i + 1; j < ids.length; j++) {
+      if (abdruck.get(ids[i]) === abdruck.get(ids[j])) gleich.push(`${ids[i]} und ${ids[j]}`);
+    }
+  }
+  console.log(`  ${ids.length} Vorzeichen, ${gleich.length} Paar(e) mit gleichem Abdruck `
+    + `ueber alle ${felder.length} reinen Felder.`);
+  if (gleich.length) {
+    errors.push(`Diese Vorzeichen sind im Spiel nicht zu unterscheiden: ${gleich.join(', ')}. `
+      + 'Auf jedem der vier reinen Felder derselbe Kristallverlust - das sind nicht zwei '
+      + 'Ankuendigungen, sondern eine mit zwei Namen, und wer sie liest, lernt nichts '
+      + 'daraus, was er nicht schon wusste.');
+  }
+}
 
 function wirkungenMessen(): void {
   console.log('\nWirkungen als Kartenmaterial (jede allein gegen keine):');
@@ -2990,6 +3150,12 @@ const mixedPlan = mixedPlanBase;
     process.exit(errors.length ? 1 : 0);
   }
 
+  if (NUR_VZ) {
+    vorzeichenMessen();
+    for (const e of errors) console.log(`FEHLER: ${e}`);
+    process.exit(errors.length ? 1 : 0);
+  }
+
   if (NUR_WIRKUNG) {
     wirkungenMessen();
     for (const e of errors) console.log(`FEHLER: ${e}`);
@@ -3027,6 +3193,7 @@ const mixedPlan = mixedPlanBase;
   foerdererMessen();
   wirkungenMessen();
   monokulturMessen();
+  vorzeichenMessen();
   wiederholungMessen();
   vielfaltMessen();
   laufMessen();

@@ -149,6 +149,11 @@ export interface SaveGame {
     // Angehaengte Felder waren immer vertraeglich - ein aelterer Stand laedt
     // ohne dieses Feld und faengt mit null Beute an, was fuer ihn stimmt.
     number?, number?,
+    // Seit v331 angehaengt: was das Vorzeichen der Welle an diesem Gegner
+    // geaendert hat (S-N6-05) - Zusatzpanzerung und Zusatz-Bremswiderstand.
+    // Ein aelterer Stand hat kein Vorzeichen gekannt, also ist null fuer ihn
+    // richtig und nicht "unbekannt".
+    number?, number?,
   ][];
 }
 

@@ -34,6 +34,17 @@ export interface Enemy {
   arten: number;
   /** Wieviele Treffer der Schild noch schluckt. 0 heisst: keiner mehr. */
   shield: number;
+  /** **Was das Vorzeichen dieser Welle an diesem Gegner geaendert hat**
+   *  (S-N6-05). Beide stehen am GEGNER und nicht an seiner Art: dieselbe
+   *  Gegnerart laeuft in zwei Wellen mit und ohne Vorzeichen, und ein Wert
+   *  an der Art waere fuer beide derselbe.
+   *
+   *  Zusatzpanzerung, die auf `ENEMIES[def].armor` daraufkommt. */
+  panzerPlus: number;
+  /** Zusaetzlicher Bremswiderstand, gedeckelt bei 0,95 - ein Gegner, den
+   *  keine Bremse mehr erreicht, macht den Frostturm nicht schwaecher,
+   *  sondern gegenstandslos. */
+  starrPlus: number;
   /** Wieviel Schild dieser Gegner an NACHBARN vergibt. 0 = kein Traeger. */
   traeger: number;
   /** Sekunden bis zur naechsten Vergabe.

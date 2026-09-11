@@ -15,6 +15,7 @@ import {
 import {
   EARLY_BONUS_MAX, EARLY_BONUS_WINDOW, EARLY_RISIKO_HUB, type Wave,
 } from '../data/waves';
+import { vorzeichenFuer, type Vorzeichen } from '../data/vorzeichen';
 import { VERBUND_MAX, VERBUND_STUFE, VERBUND_UMKREIS } from './verbund';
 import {
   DIFFICULTIES, hpScale, laufFaktor, LAUF_STEIGUNG,
@@ -67,6 +68,8 @@ interface PendingSpawn {
    *  Verlusts, die Skalierung der Lebenspunkte und das Ende der Welle. */
   welle: number;
   shield?: number; traeger?: number;
+  /** Was das Vorzeichen der Welle an diesem Gegner aendert (S-N6-05). */
+  panzerPlus?: number; starrPlus?: number; tempo?: number;
 }
 
 /** Wieviele Bits in einer Zahl gesetzt sind - hier: wieviele Turmarten einen
@@ -1559,6 +1562,29 @@ export class GameState {
     Sfx.play('wave');
   }
 
+  /** **Wie stark eine Bremse an diesem Gegner abprallt** - seine Art plus
+   *  das, was das Vorzeichen seiner Welle daraufgelegt hat (S-N6-05).
+   *
+   *  An EINER Stelle, weil vier Aufrufer danach fragen: die zwei
+   *  Faehigkeiten, das Festfrieren und der Treffer. Vier Rechnungen waeren
+   *  vier Stellen zum Vergessen (Regel 15).
+   *
+   *  Gedeckelt bei 0,95: ein Gegner, den keine Bremse mehr erreicht, macht
+   *  den Frostturm nicht schwaecher, sondern gegenstandslos. */
+  bremswiderstand(e: Enemy): number {
+    return Math.min(0.95, ENEMIES[e.def].slowResist + e.starrPlus);
+  }
+
+  /** **Welches Vorzeichen ueber der naechsten startbaren Welle steht.**
+   *
+   *  Eine Ableitung und kein gemerkter Wert - dieselbe Bauart wie
+   *  `angeboteneKarten`: gerechnet aus Aussaat und Wellennummer, also nach
+   *  einem Neustart dasselbe. Ein gemerktes Feld muesste in den Spielstand,
+   *  und dort waere es die naechste Zahl, die still falsch wird. */
+  get naechstesVorzeichen(): Vorzeichen | null {
+    return this.endless ? null : vorzeichenFuer(this.seed, this.waveIndex);
+  }
+
   /** **Eine Welle in den Anmarsch stellen** - der eine Ort, an dem aus
    *  Wellengruppen Gegner werden.
    *
@@ -1570,23 +1596,49 @@ export class GameState {
    *
    *  Der Aufruf von aussen ist der Messgriff und nichts weiter: `startWave`
    *  bleibt der einzige Weg, den das SPIEL nimmt (Bonus, Zaehler, Ton). */
-  welleEinreihen(wave: Wave, welle: number): void {
+  welleEinreihen(wave: Wave, welle: number, vorzeichen?: Vorzeichen | null): void {
     // Spaetere Wellen kommen dichter: was zaehlt, ist die Huelle je Sekunde.
     const dense = 1 + welle * this.diff.densityRamp;
+    // **Das Vorzeichen wirkt HIER, wo die Welle entsteht** (S-N6-05), und
+    // nicht am einzelnen Gegner: es gilt der Welle, also muss es genau
+    // einmal je Welle gefragt werden. Gefragt wird eine reine Funktion aus
+    // Aussaat und Wellennummer - kein laufender Zufallszustand, sonst
+    // haengt `npm run determinism` daran.
+    // **Der zweite Messgriff dieser Funktion** (v331, S-N6-05). Ohne ihn
+    // muesste eine Messung, die ein BESTIMMTES Vorzeichen sehen will, sich
+    // eine Wellennummer suchen, die es zieht - und maesse dann die
+    // Lebenskurve dieser Nummer mit, nicht das Vorzeichen (Regel 12).
+    // `undefined` heisst "wie im Spiel", `null` heisst "ausdruecklich
+    // keines" - das ist der Unterschied, an dem die Nullprobe haengt.
+    const vz = vorzeichen === undefined ? vorzeichenFuer(this.seed, welle) : vorzeichen;
+    const zahl = vz?.zahl ?? 1;
+    const leben = vz?.leben ?? 1;
+    const tempo = vz?.tempo ?? 1;
+    const panzerPlus = vz?.panzer ?? 0;
+    // Gedeckelt: ein Gegner, den keine Bremse mehr erreicht, macht den
+    // Frostturm nicht schwaecher, sondern gegenstandslos.
+    const starrPlus = Math.min(0.95, vz?.starr ?? 0);
+    const schildPlus = vz?.schild ?? 0;
     // **Angehaengt, nicht ersetzt** (S-P4-01, `ueberlappendeWellen`). Bis
     // v265 stand hier `this.pending = []` - die zweite Welle haette die
     // erste einfach geloescht.
     const laneCount = this.lanes.length;
     let laneTurn = welle % laneCount;
     for (const g of wave.groups) {
-      for (let i = 0; i < g.count; i++) {
+      // Die Zahl waechst, der ABSTAND schrumpft entsprechend: sonst waere
+      // "mehr Gegner" zugleich "die Welle dauert laenger", und die Zahl
+      // maesse zwei Dinge auf einmal.
+      const anzahl = Math.max(1, Math.round(g.count * zahl));
+      const abstand = (g.gap * g.count) / anzahl;
+      for (let i = 0; i < anzahl; i++) {
         this.pending.push({
-          time: g.delay + (i * g.gap) / dense,
-          enemy: g.enemy, hpMul: g.hpMul ?? 1,
+          time: g.delay + (i * abstand) / dense,
+          enemy: g.enemy, hpMul: (g.hpMul ?? 1) * leben,
           welle,
-          shield: g.shield ?? 0,
+          shield: (g.shield ?? 0) + schildPlus,
           traeger: g.traeger ?? 0,
           lane: laneTurn % laneCount,
+          panzerPlus, starrPlus, tempo,
         });
         laneTurn++;
       }
@@ -1758,7 +1810,7 @@ export class GameState {
       for (const e of this.enemies) {
         if (e.dead) continue;
         if (dist2(x, y, e.x, e.y) > r2) continue;
-        const w = 1 - ENEMIES[e.def].slowResist;
+        const w = 1 - this.bremswiderstand(e);
         e.wirkungen = wirkungAnlegen(e.wirkungen, 'bremse', (def.slow ?? 1) * w,
           def.slowTime ?? 3);
         this.ring(e.x, e.y, ENEMIES[e.def].radius * 2.2, def.color, 0.3, 2);
@@ -1786,7 +1838,7 @@ export class GameState {
     const eff = def.slow ?? 0.6;
     for (const e of this.enemies) {
       if (e.dead) continue;
-      const r = 1 - ENEMIES[e.def].slowResist;
+      const r = 1 - this.bremswiderstand(e);
       e.wirkungen = wirkungAnlegen(e.wirkungen, 'bremse', eff * r, def.slowTime ?? 3);
       this.ring(e.x, e.y, ENEMIES[e.def].radius * 2.4, def.color, 0.35, 2);
     }
@@ -1904,7 +1956,7 @@ export class GameState {
         if (uhr === undefined || p.time > uhr) { i++; continue; }
         this.pending.splice(i, 1);
         this.spawnEnemy(p.enemy, p.hpMul, this.offeneBahn(p.lane), p.shield ?? 0,
-          p.traeger ?? 0, p.welle);
+          p.traeger ?? 0, p.welle, p.panzerPlus ?? 0, p.starrPlus ?? 0, p.tempo ?? 1);
       }
       // **Ein fliehender Raeuber haelt die Welle nicht auf** (S-P3-01).
       //
@@ -1990,7 +2042,7 @@ export class GameState {
 
   private spawnEnemy(
     id: EnemyId, hpMul: number, lane: number, shield = 0, traeger = 0,
-    welle = this.waveIndex,
+    welle = this.waveIndex, panzerPlus = 0, starrPlus = 0, tempo = 1,
   ): void {
     this.spawnsJeBahn[lane] = (this.spawnsJeBahn[lane] ?? 0) + 1;
     if (this.torZu(lane)) this.spawnsTrotzSperre++;
@@ -2007,9 +2059,10 @@ export class GameState {
     const off = def.flying ? (this.rng.next() - 0.5) * 200 : 0;
     this.enemies.push({
       id: this.nextId++, def: id, x: p0.x, y: p0.y + off,
-      hp, hpMax: hp, speed: def.speed, lane: ln, heading: 0,
+      hp, hpMax: hp, speed: def.speed * tempo, lane: ln, heading: 0,
       side: (this.rng.next() * 2 - 1) * 0.85, travelled: 0,
       wirkungen: null, auraIn: 0, arten: 0, shield, traeger,
+      panzerPlus, starrPlus,
       hitFlash: 0, squash: 0, hpShown: hp, wobble: this.rng.next() * 9,
       dead: false, leaked: false, kernraub: 0, welle,
     });
@@ -2030,6 +2083,9 @@ export class GameState {
         // ein Gegner mit drei Schilden - einer fuer sich, zwei fuer die
         // Bruchstuecke -, und das steht in keiner Wellenzeile.
         lane: parent.lane, heading: parent.heading, auraIn: 0, arten: 0, shield: 0, traeger: 0,
+        // Spaene erben das Vorzeichen ihres Erzeugers: es galt der WELLE,
+        // und sie gehoeren zu derselben.
+        panzerPlus: parent.panzerPlus, starrPlus: parent.starrPlus,
         // Spaene stieben zur Seite auseinander.
         side: Math.max(-1, Math.min(1, parent.side + (this.rng.next() - 0.5) * 0.9)),
         travelled: Math.max(0, parent.travelled - 6),
@@ -2805,7 +2861,10 @@ export class GameState {
     // Jetzt zaehlt das Verhaeltnis: jeder Punkt Panzerung nimmt 11 Prozent,
     // gedeckelt bei zwei Dritteln. Sechs Punkte lassen also ein Drittel
     // durch - auf jeder Stufe gleich. Durchschlag (`pierce`) zieht vorher ab.
-    const rest = Math.max(0, def.armor - pierce);
+    // **Die Zusatzpanzerung des Vorzeichens zaehlt wie jede andere** - sie
+    // steht am GEGNER und nicht an seiner Art, weil dieselbe Gegnerart in
+    // zwei Wellen mit und ohne Vorzeichen laeuft (S-N6-05).
+    const rest = Math.max(0, def.armor + e.panzerPlus - pierce);
     const schluck = Math.min(0.66, rest * 0.11);
     // **Weitschuss und Nahkampf haengen an der ENTFERNUNG, und gerechnet
     // wird an genau EINER Stelle** (S-N6-01, Regel 15). Sie hier zu rechnen
@@ -2893,10 +2952,10 @@ export class GameState {
       const zug = this.zugWirkung;
       if (zug.frostDauer > 0 && tempoFaktor(e.wirkungen) < 1) {
         e.wirkungen = wirkungAnlegen(e.wirkungen, 'frost', 1,
-          zug.frostDauer * (1 - def.slowResist));
+          zug.frostDauer * (1 - this.bremswiderstand(e)));
       }
       e.wirkungen = wirkungAnlegen(e.wirkungen, 'bremse',
-        slow * (1 - def.slowResist), slowTime * this.zugWirkung.bremsdauerMul);
+        slow * (1 - this.bremswiderstand(e)), slowTime * this.zugWirkung.bremsdauerMul);
     }
     // **Brand und Markierung haengen am TREFFER, nicht am Turm** (S-N6-01):
     // was der Meteor entzuendet, brennt genauso. Der Brand rechnet seinen
@@ -3279,6 +3338,12 @@ export class GameState {
         // liefe ein geladener Raeuber wieder auf den Kristall zu, den er
         // gerade bestohlen hat - und zoege ein zweites Mal ab.
         e.kernraub, e.welle,
+        // **Seit v331: was das Vorzeichen seiner Welle an ihm geaendert hat**
+        // (S-N6-05). Ohne diese zwei Zahlen verloere ein geladener Gegner
+        // seine Panzerung und seinen Bremswiderstand - und die Welle waere
+        // nach einem Neustart eine andere als vorher. Genau diese Klasse hat
+        // v306 gekostet: geschrieben und nie zurueckgelesen.
+        e.panzerPlus, e.starrPlus,
       ]),
     };
   }
@@ -3424,7 +3489,7 @@ export class GameState {
     });
 
     for (const [def, x, y, hp, hpMax, travelled, roh, wobble, lane, auraIn, side,
-      shield, traeger, kernraub, welle] of zeilen) {
+      shield, traeger, kernraub, welle, panzerPlus, starrPlus] of zeilen) {
       const wirkungen: Wirkung[] = [];
       const liste = roh as (string | number)[];
       for (let i = 0; i + 2 < (liste?.length ?? 0); i += 3) {
@@ -3438,6 +3503,9 @@ export class GameState {
         wirkungen: wirkungen.length ? wirkungen : null,
         auraIn: auraIn ?? 0, arten: 0, shield: shield ?? 0, traeger: traeger ?? 0,
         kernraub: kernraub ?? 0, welle: welle ?? 0,
+        // Ein Stand aus einer Fassung ohne Vorzeichen traegt sie nicht -
+        // dann ist null richtig, und nicht "unbekannt".
+        panzerPlus: Number(panzerPlus ?? 0), starrPlus: Number(starrPlus ?? 0),
         hitFlash: 0, squash: 0, hpShown: hp,
         side: side ?? 0,
         wobble,

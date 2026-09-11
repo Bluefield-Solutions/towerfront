@@ -2471,9 +2471,15 @@ export const PROBEN = [
   {
     // Der Widerstand der Gegner muss weiter wirken - sonst steht der
     // Leerentitan so lange wie der kleinste Schleicher.
+    //
+    // Auf die neue Stelle nachgezogen (v331, K1): der Widerstand wird seit
+    // S-N6-05 an EINER Stelle gerechnet (`bremswiderstand`), weil das
+    // Vorzeichen noch etwas darauflegt - vorher stand `ENEMIES[e.def]
+    // .slowResist` an vier Stellen. Der Musterlauf hat es in derselben Runde
+    // gemeldet, in der es passierte.
     name: 'Bollwerk ignoriert den Widerstand der Gegner',
     datei: 'src/game/state.ts',
-    regel: /const w = 1 - ENEMIES\[e\.def\]\.slowResist;/,
+    regel: /const w = 1 - this\.bremswiderstand\(e\);/,
     ersatz: 'const w = 1;',
     tor: 'smoke',
   },
@@ -5452,6 +5458,26 @@ export const PROBEN = [
     datei: 'src/data/karten.ts',
     regel: /\{ id: 'bajonett', name: '[^']+', text: '[^']+', art: 'nah', wert: ([0-9.]+), kosten: (\d+) \}/,
     ersatz: "{ id: 'bajonett', name: 'Bajonett', text: 'Mehr Schaden dicht am Turm.', art: 'weit', wert: 0.35, kosten: 700 }",
+    tor: 'sim',
+    meldet: 'nicht zu unterscheiden',
+  },
+  {
+    // **Zwei Vorzeichen, gegen die man dasselbe tut, sind eines mit zwei
+    // Namen** (S-N6-05) - dieselbe Ueberlegung wie eine Probe weiter oben
+    // bei den Wirkungskarten und wie bei den Zielmodi seit v223.
+    //
+    // Der Eingriff macht aus dem Stoersender einen zweiten Eisenregen:
+    // gleiche Achse, gleicher Wert. Danach muessen die beiden in der
+    // Vorzeichenmessung denselben Abdruck ueber alle vier reinen Felder
+    // tragen, und `sim` muss sie als ununterscheidbar melden.
+    //
+    // Gegriffen wird die ZEILE des Vorzeichens und nicht sein Wert: wie
+    // stark ein Zeichen gerade zieht, aendert die naechste Eichrunde - der
+    // NAME und die Achse bleiben.
+    name: 'Zwei Vorzeichen sind dasselbe',
+    datei: 'src/data/vorzeichen.ts',
+    regel: /(id: 'stoersender', name: 'St\u00f6rsender',\n    text: '[^']+',\n    )starr: [0-9.]+,/,
+    ersatz: "$1panzer: 2,",
     tor: 'sim',
     meldet: 'nicht zu unterscheiden',
   },

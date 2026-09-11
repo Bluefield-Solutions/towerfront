@@ -754,9 +754,18 @@ if (!start) {
                 if (ab > schlimm.ab) schlimm = { was: (dts[i] ?? dds[i]).textContent.trim(), ab };
               }
               if (steg && vorher) { [steg.style.height, steg.style.maxHeight] = vorher; }
-              return schlimm;
+              return { ...schlimm, zeilen: dds.length };
             });
-            if (weit.ab > ZEILE_MAX) {
+            // **Eine Messung ueber eine LEERE Liste ist keine** (v334,
+            // Regel 5). `schlimm.ab` startet auf -1; findet die Abfrage
+            // keine einzige Wertezeile, bleibt sie dort stehen und der
+            // Vergleich darunter ist immer falsch - das sieht aus wie ein
+            // bestandenes Tor. Genau so hat der Nachtlauf die Gegenprobe
+            // gefunden: der Eingriff kam an, das Tor schwieg.
+            if (weit.zeilen === 0) {
+              fail(`Prüfsteg (Ziellogik ${wie}): die Zeilenmessung findet keine einzige `
+                + 'Wertezeile. Dann misst sie nichts, und ihr Schweigen ist kein Beweis.');
+            } else if (weit.ab > ZEILE_MAX) {
               fail(`Prüfsteg (Ziellogik ${wie}): die Wertezeile "${weit.was}" ist `
                 + `${Math.round(weit.ab)} Punkte hoch (erlaubt ${ZEILE_MAX}), sobald der Steg `
                 + 'mehr Hoehe hat als seine Zeilen brauchen. Ein Raster ohne `align-content` '

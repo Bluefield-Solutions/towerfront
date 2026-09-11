@@ -112,6 +112,15 @@ const alterText = (ms) => (ms < 3600000
  *  lange Begruendung steht bei `QUELLEN`. */
 const laufZeitAus = (zeiten) => (zeiten.length ? Math.max(...zeiten) : 0);
 
+/** Liegt der Lauf VOR dem gebauten Spiel?
+ *
+ *  Als reine Entscheidung, damit der Selbsttest sie gestellt fahren kann -
+ *  die lange Begruendung steht bei `GEBAUT`. Ein fehlender Bau und ein
+ *  fehlender Lauf sind kein Befund, sondern eine Frage, die sich nicht
+ *  stellt: dafuer meldet das Werkzeug schon an anderer Stelle. */
+const laufVorBau = (laufMs, bauMs) => (laufMs && bauMs && bauMs > laufMs
+  ? { gebaut: bauMs, alter: bauMs - laufMs } : null);
+
 
 const version = () => (readFileSync(join(ROOT, 'src/data/config.ts'), 'utf8')
   .match(/VERSION = '(v\d+)'/) ?? [])[1] ?? 'v?';
@@ -265,12 +274,33 @@ const selbsttest = () => {
       process.exit(1);
     }
   }
+  // 6. Faellt ein Aufnahmesatz auf, der ALTER ist als das gebaute Spiel?
+  //
+  // v345 hat geklaert, welche Aufnahmen zu einem Lauf gehoeren; ob dieser
+  // Lauf den heutigen Stand zeigt, fragte niemand. Gemessen am 11.09. lagen
+  // die Bilder bei 18:14 und der Build bei 18:18, die Kopfzeilen trugen
+  // `v346` gegen ein `config.ts` auf v347 - und das Werkzeug meldete "es
+  // gibt etwas zu sehen".
+  //
+  // Beide Richtungen: ein Lauf VOR dem Bau muss auffallen, ein Lauf danach
+  // nicht. Ohne die zweite Haelfte bestuende den Test auch eine Regel, die
+  // jeden Satz zurueckweist - und die waere schlimmer als keine.
+  {
+    const bau = 1000 * 3600;
+    if (!laufVorBau(bau - 60000, bau) || laufVorBau(bau + 60000, bau)
+      || laufVorBau(bau, bau)) {
+      console.error('INSPEKTOR: der Selbsttest der Bauregel ist gescheitert - '
+        + 'ein Aufnahmesatz, der aelter ist als das gebaute Spiel, faellt nicht auf.');
+      process.exit(1);
+    }
+  }
   console.log(`  Selbsttest: die Quelltext-Sperre trifft .ts und laesst .png und .md `
     + `durch; es gibt genau ${URTEILE.length} Urteile; was mehr als `
     + `${TOLERANZ_MS / 60000} min hinter dem Lauf liegt, bleibt draussen - `
     + 'Aufnahmen wie Bericht; der Abdruck sieht eine geaenderte und eine '
-    + 'umbenannte Datei, die Fassungsnummer aber nicht; und eine Quelle mit '
-    + 'einer einzigen Aufnahme misst sich nicht an sich selbst.');
+    + 'umbenannte Datei, die Fassungsnummer aber nicht; eine Quelle mit '
+    + 'einer einzigen Aufnahme misst sich nicht an sich selbst; und ein '
+    + 'Aufnahmesatz, der aelter ist als das gebaute Spiel, faellt auf.');
 };
 selbsttest();
 
@@ -421,6 +451,35 @@ mkdirSync(ORDNER, { recursive: true });
 const bilder = [];
 const veraltet = [];
 const LAUF_MS = laufZeitAus(QUELLEN.flatMap(zeitenVon));
+
+/** **Zeigen die Aufnahmen ueberhaupt den heutigen Stand? (v348)**
+ *
+ *  v345 hat geklaert, welche Aufnahmen zu EINEM Lauf gehoeren - alle messen
+ *  sich am juengsten Bild. Was dabei niemand fragt: ob dieser Lauf das Spiel
+ *  zeigt, das gerade im Baum steht. Beide Pruefungen des Werkzeugs sehen
+ *  daran vorbei: der Abdruck vergleicht die EINGAENGE gegen das letzte
+ *  Urteil, die Altersregel die Aufnahmen gegeneinander.
+ *
+ *  **Gemessen am 11.09., und es ist genau so passiert:** die Aufnahmen lagen
+ *  bei 18:14, `dist/index.html` bei 18:18, und die Bilder trugen in ihrer
+ *  Kopfzeile `v346`, waehrend `config.ts` auf v347 stand. Das Werkzeug
+ *  meldete trotzdem „die Bildeingaenge haben sich geaendert - es gibt etwas
+ *  zu sehen", und der Durchgang haette ueber einem Stand geurteilt, den es
+ *  nicht mehr gibt.
+ *
+ *  Die v271-Regel fing die einzelne Leiche zwischen lauter frischen Bildern.
+ *  Der Fall, dass der GANZE Satz alt ist, war nie gedeckt - und er ist der
+ *  wahrscheinlichere, weil `npm run build` in jeder Runde laeuft und
+ *  `npm run uxaudit` nicht.
+ *
+ *  Verglichen wird gegen das gebaute Buendel und nicht gegen den Quelltext:
+ *  die Aufnahmen zeigen, was GEBAUT wurde. Ein Quelltext, der noch nicht
+ *  gebaut ist, steht in keinem Bild, und ihn hier zu verlangen hiesse, nach
+ *  jeder Zeile neu aufzunehmen. */
+const GEBAUT = join(ROOT, 'dist/index.html');
+
+const laufIstAlt = () => (existsSync(GEBAUT)
+  ? laufVorBau(LAUF_MS, statSync(GEBAUT).mtimeMs) : null);
 for (const q of QUELLEN) {
   if (!existsSync(q.ordner)) continue;
   for (const f of readdirSync(q.ordner).filter((x) => q.muster.test(x)).sort()) {
@@ -510,6 +569,16 @@ const fremd = readdirSync(ORDNER).filter((f) => QUELLTEXT.includes(extname(f)));
 if (fremd.length) {
   console.error(`INSPEKTOR: im Beweismittelordner liegt Quelltext: ${fremd.join(', ')}.`);
   console.error('  Damit waere die Trennung aufgehoben, auf der das ganze Verfahren steht.');
+  process.exit(1);
+}
+
+const veraltetGegenBau = laufIstAlt();
+if (veraltetGegenBau) {
+  console.error('INSPEKTOR: die Aufnahmen zeigen nicht den gebauten Stand.');
+  console.error(`  Der Lauf liegt ${alterText(veraltetGegenBau.alter)} VOR `
+    + 'dem letzten Build. Die Bilder zeigen damit ein Spiel, das es so nicht');
+  console.error('  mehr gibt - und ein Urteil darueber gilt fuer nichts.');
+  console.error('  `npm run uxaudit` nimmt den heutigen Stand auf, danach hier weiter.');
   process.exit(1);
 }
 

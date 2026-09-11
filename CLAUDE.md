@@ -727,6 +727,31 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der Inspektor hat mir Beweismittel vorgelegt, die einen Stand zeigen, den
+es nicht mehr gibt - und dabei „es gibt etwas zu sehen" gemeldet (v348).**
+Gemessen: die Aufnahmen lagen bei **18:14**, `dist/index.html` bei **18:18**,
+und die Bilder trugen in ihrer Kopfzeile `v346`, waehrend `config.ts` auf
+v347 stand.
+
+**Beide Pruefungen des Werkzeugs sehen daran vorbei:** der Abdruck vergleicht
+die EINGAENGE gegen das letzte Urteil, die Altersregel die Aufnahmen
+GEGENEINANDER (v345). Dass der ganze Satz aelter sein koennte als das gebaute
+Spiel, fragte keine von beiden - die v271-Regel deckte nur die einzelne
+Leiche zwischen lauter frischen Bildern ab. **Der Fall, dass ALLE alt sind,
+ist der wahrscheinlichere:** `npm run build` laeuft in jeder Runde,
+`npm run uxaudit` nicht.
+
+Verglichen wird gegen das gebaute BUENDEL und nicht gegen den Quelltext
+(Regel 12): die Aufnahmen zeigen, was gebaut wurde. Ist der Lauf aelter,
+bricht das Werkzeug ab statt die Bilder vorzulegen - ein Urteil ueber einen
+Stand, den es nicht gibt, gilt fuer nichts.
+
+**Danach neu gebaut, neu aufgenommen und geurteilt: FREIGABE fuer v347** -
+das erste Urteil dieser Art, seit die Kette wieder urteilt. Beide
+Weichenringe tragen ihren Pfeil, und was im Bild sonst auffaellt (der Ring
+hinter der Leiste, die volle Bauleiste bei GOLD 0) steht als N4F und N4M
+laengst im Verzeichnis.
+
 **Die Feldverdeckung mass eine von zwei Fragen (v347) - und die Antwort auf
 die andere nimmt einem Befund aus v344 die Haelfte seiner Groesse.** Die
 Zusage des Tores lautet seit v320: *was darueber liegt, kann man weder SEHEN
@@ -2234,7 +2259,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v347. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v348. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

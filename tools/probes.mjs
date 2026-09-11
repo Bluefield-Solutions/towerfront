@@ -5700,6 +5700,26 @@ export const PROBEN = [
     meldet: 'sehen aus wie einer',
   },
   {
+    // **Der Inspektor urteilt ueber einen Stand, den es nicht mehr gibt.**
+    //
+    // v345 hat geklaert, welche Aufnahmen zu EINEM Lauf gehoeren. Ob dieser
+    // Lauf das Spiel zeigt, das gerade gebaut ist, fragte niemand: der
+    // Abdruck vergleicht die Eingaenge gegen das letzte Urteil, die
+    // Altersregel die Aufnahmen gegeneinander. Gemessen am 11.09. lagen die
+    // Bilder bei 18:14 und `dist/index.html` bei 18:18; die Kopfzeilen
+    // trugen `v346` gegen ein `config.ts` auf v347 - und das Werkzeug
+    // meldete "es gibt etwas zu sehen".
+    //
+    // Der Eingriff dreht den Vergleich um: ein Lauf VOR dem Bau gilt dann
+    // als frisch. Der sechste Selbsttest muss das melden.
+    name: 'Der Inspektor urteilt ueber einen ungebauten Stand',
+    datei: 'tools/inspektor.mjs',
+    regel: /const laufVorBau = \(laufMs, bauMs\) => \(laufMs && bauMs && bauMs > laufMs/,
+    ersatz: 'const laufVorBau = (laufMs, bauMs) => (laufMs && bauMs && bauMs < laufMs',
+    tor: 'inspektortest',
+    meldet: 'Bauregel ist gescheitert',
+  },
+  {
     // **Die Altersregel des Inspektors mass jede Quelle an sich selbst.**
     //
     // Bis v344 hatte jede Bildquelle ihren eigenen Nullpunkt: bei EINEM

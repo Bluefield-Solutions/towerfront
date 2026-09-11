@@ -1,6 +1,26 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v341 · 11.09.2026
+Stand: v348 · 11.09.2026
+
+**Nachgesehen in v348 — die Zahlen sind gemessen, nicht abgeschrieben**
+(`npm run art` und `npm run autarkie`, beide auf dem gebauten Bündel):
+
+| Gruppe | belegt | reserviert |
+|---|---|---|
+| gegner | 71 KB | 80 |
+| objekte | 192 KB | 250 |
+| tuerme | 302 KB | 400 |
+| untergrund | 256 KB | 300 |
+| **zusammen** | **821 KB** | **1030** |
+
+Erlaubt sind **1065 KB**, reserviert 1030 — **Abstand 35,4 KB**, und jedes KB
+Code kostet 0,75 KB Bildvorrat. Die ausgelieferte Datei wiegt **1475 KB** von
+1800 erlaubten.
+
+**Gegen v341 ist der Abstand von 36,6 auf 35,4 KB geschrumpft**, also um
+1,2 KB über sieben Fassungen. Das ist eine Verbrauchsangabe und keine
+Zeitangabe: v342 bis v348 haben fast nur am Messgerät gearbeitet, `src/` also
+kaum angefasst. Eine Runde, die am Spiel baut, kostet mehr.
 
 **Nachgesehen in v341 — und zum ersten Mal seit v313 hat sich nichts bewegt.**
 Gemessen mit `npm run build && npm run autarkie`:

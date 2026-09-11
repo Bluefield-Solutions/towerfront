@@ -86,7 +86,8 @@ const ersterTurm = (g) => g.gebaute[0];
 // das es bewacht, laesst genau die Luecke.
 const TOR = ['menu-karte', 'menu-einweisung', 'menu-fortschritt', 'menu-sieg',
   'menu-niederlage', 'welle8', 'kristall-riss', 'kernraub', 'zier-beruehrung',
-  'menu-tastatur', 'weiche', 'menu-wahl', 'menu-stapel', 'meteor-anflug'];
+  'menu-tastatur', 'weiche', 'menu-wahl', 'menu-stapel', 'meteor-anflug',
+  'wirkungen'];
 const nurTor = process.argv.includes('--tor');
 
 /** Eine Aufnahme: Zustand herstellen, ein paar Bilder laufen lassen, ausgeben.
@@ -386,6 +387,37 @@ takes.push(['weiche', () => shot('weiche', 844, 390, (s, r) => {
   const p = r.worldToScreen(528, 640);
   r.panBy(422 - p.x, 195 - p.y);
   return 30;
+})]);
+
+takes.push(['wirkungen', () => shot('wirkungen', 844, 390, (s, r) => {
+  // **Alle drei sichtbaren Wirkungen nebeneinander** (S-N6-01). Sie werden
+  // GESTELLT und nicht abgewartet: sie haengen an Karten, die ein Lauf erst
+  // freischaltet, und eine Aufnahme, die auf einen Zufall wartet, hoert
+  // leise auf zu zeigen (die Lehre aus v219).
+  //
+  // Nebeneinander und nicht je eine Aufnahme, weil genau das die Frage ist:
+  // sind Brand, Markierung und Frost im Bild auseinanderzuhalten? Drei
+  // Bilder beantworten sie nicht.
+  s.reset(1, 'normal', 'spiralhain');
+  s.waveIndex = 5;
+  stock(s, 4);
+  s.startWave();
+  for (let i = 0; i < 60 * 6; i++) s.update(DT);
+  const lebende = s.enemies.filter((e) => !e.dead);
+  const arten = ['brand', 'markierung', 'frost'];
+  for (let i = 0; i < lebende.length; i++) {
+    const e = lebende[i];
+    const art = arten[i % arten.length];
+    e.wirkungen = wirkungAnlegen(e.wirkungen, art,
+      art === 'brand' ? 12 : art === 'markierung' ? 0.18 : 1, 9);
+  }
+  r.resize();
+  if (lebende.length) {
+    r.zoomAt(2.2, 422, 195);
+    const p = r.worldToScreen(lebende[0].x, lebende[0].y);
+    r.panBy(422 - p.x, 195 - p.y);
+  }
+  return 0;
 })]);
 
 // Der Einschlagpunkt der Meteor-Aufnahme und ihrer Messung - ein Punkt auf

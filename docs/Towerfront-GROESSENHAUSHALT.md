@@ -1,23 +1,32 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v320 · 11.09.2026
+Stand: v327 · 11.09.2026
 
-**Nachgesehen in v320, und der Abstand ist wieder geschrumpft.** Gemessen mit
-`npm run autarkie`:
+**Nachgesehen in v327, und der Abstand schrumpft weiter — gleichmäßig.**
+Gemessen mit `npm run build && npm run autarkie` (die Zahl hängt am GEBAUTEN
+Bündel, ein `autarkie` auf einem alten `dist/` misst die vorige Runde,
+Regel 12):
 
-| | v313 | **v320** |
-|---|---|---|
-| Gruppen reservieren | 1030 KB roh | 1030 KB roh |
-| erlaubt | 1074,75 | **1073** |
-| Abstand | 44,8 KB | **42,8 KB** |
-| ausgelieferte Datei | — | **1465 KB** von 1800 |
+| | v313 | v320 | **v327** |
+|---|---|---|---|
+| Gruppen reservieren | 1030 KB roh | 1030 KB roh | 1030 KB roh |
+| erlaubt | 1074,75 | 1073 | **1070** |
+| Abstand | 44,8 KB | 42,8 KB | **39,8 KB** |
+| ausgelieferte Datei | — | 1465 KB | **1469 KB** von 1800 |
 
 **Die Reservierung steht still, die Erlaubnis sinkt** — genau so, wie die
 Regel seit v186 gedacht ist: *wächst der Code, schrumpft der erlaubte
-Bildvorrat von selbst.* Über die sieben Runden v313 bis v320 sind rund 2,3 KB
-erlaubter Bildvorrat verschwunden, also **rund 3 KB Code**. Jedes KB Code
-kostet 0,75 KB Bildvorrat, und das Tor nennt den Abstand seit v313 bei jedem
-Lauf statt erst bei der Kollision.
+Bildvorrat von selbst.* Jedes KB Code kostet 0,75 KB Bildvorrat, und das Tor
+nennt den Abstand seit v313 bei jedem Lauf statt erst bei der Kollision.
+
+**Der Verbrauch ist gemessen erstaunlich gleichmäßig:** v313 bis v320 haben
+2,0 KB erlaubten Bildvorrat gekostet (rund 2,7 KB Code) über sieben Runden,
+v320 bis v327 noch einmal 3,0 KB (rund 4 KB Code) über sieben. Das sind rund
+**0,4 KB erlaubter Bildvorrat je Runde** — bei 39,8 KB Abstand also rund
+**hundert Runden**, wenn niemand etwas Großes einbaut. Die Zahl steht hier,
+damit die nächste Kollision nicht wieder aus dem Nichts kommt: in v313 kamen
+die zwei Haushalte mit 0,2 KB Abstand zusammen, und vorher hatte niemand den
+Verlauf angesehen.
 
 **Was daran hängt und noch nicht bezahlt ist:** die zwei offenen Bestellungen
 (`31_foerderer.png`, `32_werft.png`) sind in der Reservierung mit rund 50 KB

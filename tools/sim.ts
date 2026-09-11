@@ -23,7 +23,7 @@ import { TOWERS, TOWER_ORDER, MAX_LEVEL, WIEDERHOLUNG_ZUSCHLAG, VIELFALT_BEUTE, 
 
 import { MAPS } from '../src/data/maps';
 import {
-  KARTENSTAPEL, GRUNDSTAPEL, zieheKarten, type Karte, type KartenArt,
+  KARTENSTAPEL, GRUNDSTAPEL, kartenWirkung, zieheKarten, type Karte, type KartenArt,
 } from '../src/data/karten';
 import { WEGNETZ } from '../src/data/wegnetz';
 import { ALL_PERKS, NO_PERKS } from '../src/data/perks';
@@ -440,6 +440,10 @@ const NUR_MESSEN = process.argv.slice(2).includes('--faehigkeiten');
  *  `--faehigkeiten`: eine Frage von zwei Minuten soll nicht den ganzen
  *  Durchlauf kosten. Es urteilt trotzdem, es meldet dieselben Fehler. */
 const NUR_LAUF = process.argv.slice(2).includes('--lauf');
+/** Nur die sechs Wirkungen (S-N6-01). Derselbe Grund wie oben: die Frage
+ *  "ist diese Wirkung von jener zu unterscheiden" ist eine Eichfrage und
+ *  soll nicht den ganzen Durchlauf kosten. Es urteilt trotzdem. */
+const NUR_WIRKUNG = process.argv.slice(2).includes('--wirkungen');
 
 /** Bauplaetze nach abgedeckter Wegstrecke bewertet.
  *
@@ -1371,6 +1375,95 @@ function vielfaltMessen(): void {
   }
 }
 
+/** **Sind die sechs Wirkungen voneinander zu unterscheiden?** (S-N6-01)
+ *
+ *  Die Frage der Story ist nicht "wirkt jede", sondern "ist jede eine
+ *  EIGENE Entscheidung". Ein Stapel, in dem zwei Karten dasselbe tun, hat
+ *  eine Karte zu viel - und zwar eine, die man nie bereut und nie vermisst.
+ *
+ *  Gemessen wird je Karte des Spiels ein Lauf mit GENAU dieser Wirkung
+ *  gegen einen Lauf ganz ohne. Der Abstand ist ein Zahlenpaar: was die
+ *  Wirkung an Kristall haelt und was sie an Gold einbringt. Zwei Wirkungen
+ *  gelten als dasselbe, wenn beide Zahlen auf ALLEN Karten uebereinstimmen -
+ *  auf einer Karte kann sich viel zufaellig treffen, auf vieren nicht.
+ *
+ *  **Die Nullprobe ist der Lauf ohne jede Karte**, nicht der Lauf mit einer
+ *  anderen Wirkung (Regel 13): sonst maesse die Zahl den Abstand zweier
+ *  Wirkungen und nicht die Wirkung selbst, und wer beide gleich stark
+ *  macht, bekaeme eine Null gemeldet, die nach "kein Unterschied" aussieht
+ *  und "beide wirken gleich viel" heisst.
+ *
+ *  Gefahren wird auf EINER Bauliste mit allen vier Turmarten: eine Wirkung,
+ *  die nur der Frostturm ausloest (Bremsdauer, Festfrieren), braucht ihn im
+ *  Feld, und eine, die an der Entfernung haengt, braucht Tuerme in mehreren
+ *  Abstaenden. */
+const WIRKUNGSKARTEN = ['zunder', 'kerbe', 'eisgriff', 'zielfernrohr', 'bajonett', 'raureif'];
+
+function wirkungenMessen(): void {
+  console.log('\nWirkungen als Kartenmaterial (jede allein gegen keine):');
+  const plan: TowerId[] = ['arrow', 'frost', 'mortar', 'prism'];
+  // Abdruck je Wirkung: je Karte ein Paar aus Kristall und Gold gegen die
+  // Nullprobe. Zwei gleiche Abdruecke sind zwei Namen fuer eine Wirkung.
+  const abdruck = new Map<string, string[]>();
+  const zeilen: string[] = [];
+  // **Die Nullprobe wird EINMAL je Karte gerechnet, nicht je Wirkung.**
+  // Der erste Entwurf fuhr sie sechsmal - denselben Lauf, dieselbe Aussaat,
+  // dasselbe Ergebnis, 24 Laeufe von 48 umsonst. Und sie ist damit auch
+  // wirklich EINE Nullprobe und nicht sechs, die zufaellig gleich ausgehen.
+  const nullprobe = new Map<string, { lives: number; earned: number }>();
+  for (const mm of MAPS) {
+    const r = play(plan, () => 0, MEISTER, 'normal', mm.id);
+    nullprobe.set(mm.id, { lives: r.lives, earned: r.earned });
+  }
+  for (const id of WIRKUNGSKARTEN) {
+    const karte = KARTENSTAPEL.find((k) => k.id === id);
+    if (!karte) {
+      errors.push(`Die Wirkungsmessung kennt die Karte "${id}" nicht - der Stapel hat sie `
+        + 'verloren, und die Messung prueft seitdem eine leere Liste (Regel 5).');
+      return;
+    }
+    const spuren: string[] = [];
+    const teile: string[] = [];
+    for (const mm of MAPS) {
+      const ohne = nullprobe.get(mm.id)!;
+      const mit = play(plan, () => 0, MEISTER, 'normal', mm.id, { genommen: [id] });
+      const dk = mit.lives - ohne.lives;
+      const dg = mit.earned - ohne.earned;
+      spuren.push(`${dk}/${dg}`);
+      teile.push(`${mm.id.slice(0, 5)} ${dk >= 0 ? '+' : ''}${dk}`);
+    }
+    abdruck.set(id, spuren);
+    zeilen.push(`  ${karte.name.padEnd(14)} ${teile.join('  ')}   Abdruck ${spuren.join(' ')}`);
+  }
+  for (const z of zeilen) console.log(z);
+
+  // **Wirkt ueberhaupt jede?** Ein Abdruck aus lauter Nullen sagt, dass die
+  // Karte im Spiel gar nicht ankommt - das sieht in der Gleichheitspruefung
+  // darunter aus wie "unterscheidbar von fuenf anderen", solange nur eine
+  // einzige so dasteht.
+  for (const [id, spur] of abdruck) {
+    if (spur.every((x) => x === '0/0')) {
+      errors.push(`Die Wirkung "${id}" aendert auf KEINER Karte etwas - weder Kristall noch `
+        + 'Gold. Sie steht im Stapel und kommt im Spiel nicht an.');
+    }
+  }
+  const gleich: string[] = [];
+  const ids = [...abdruck.keys()];
+  for (let i = 0; i < ids.length; i++) {
+    for (let j = i + 1; j < ids.length; j++) {
+      const a = abdruck.get(ids[i])!, b = abdruck.get(ids[j])!;
+      if (a.join(' ') === b.join(' ')) gleich.push(`${ids[i]} und ${ids[j]}`);
+    }
+  }
+  console.log(`  ${ids.length} Wirkungen, ${gleich.length} Paar(e) mit gleichem Abdruck `
+    + `ueber alle ${MAPS.length} Karten.`);
+  if (gleich.length) {
+    errors.push(`Diese Wirkungen sind im Spiel nicht zu unterscheiden: ${gleich.join(', ')}. `
+      + 'Auf allen vier Karten dasselbe Ergebnis - das sind nicht zwei Karten, sondern eine '
+      + 'mit zwei Namen, und die Wahl zwischen ihnen ist keine.');
+  }
+}
+
 function wiederholungMessen(): void {
   console.log('\nWiederholung (Haeufen gegen Verteilen, mit Aufschlag und ohne):');
   const trennung: number[] = [];
@@ -1638,6 +1731,16 @@ function play(
      *  diesen Bot zu formen hiesse, sie gegen jemanden zu formen, den es
      *  nicht gibt. */
     zugStil?: string;
+    /** **Welche Karten als GENOMMEN gelten** (S-N6-01).
+     *
+     *  `stapel` legt eine Karte in den Zug, `genommen` spielt sie. Fuer die
+     *  Frage "ist diese Wirkung von jener zu unterscheiden" braucht es
+     *  genau eine Wirkung und keine zweite, und ein Bot, der ziehen darf,
+     *  nimmt irgendwann auch etwas anderes.
+     *
+     *  Ohne Angabe KEINE - die Nullprobe ist damit derselbe Lauf ohne jede
+     *  Wirkung, und nicht ein Lauf mit einer anderen (Regel 13). */
+    genommen?: readonly string[];
   } = {},
 ): Result {
   const s = new GameState(mapId);
@@ -1666,6 +1769,12 @@ function play(
   // die Gegenprobe hat es sofort gefunden: sie legt `weichenWahl` lahm, und
   // der Stil stellte trotzdem, weil die zweite Stelle unberuehrt blieb. Zwei
   // Stellen, die dasselbe entscheiden, sind eine zu viel.
+  // Nach `reset`, weil das den Zustand neu aufbaut - davor gesetzt waere es
+  // im naechsten Zeichen wieder weg.
+  if (opts.genommen?.length) {
+    s.genommeneKarten = [...opts.genommen];
+    s.zugWirkung = kartenWirkung(s.genommeneKarten);
+  }
   const start = weichenWahl(s, bot);
   for (const w of s.weichenPunkte()) s.weicheStellen(w.id, start.has(w.id));
   let spots = buildSpots(s);
@@ -2756,6 +2865,12 @@ const mixedPlan = mixedPlanBase;
       + `   Mittel ${mittel.toFixed(2)}`);
   }
 
+  if (NUR_WIRKUNG) {
+    wirkungenMessen();
+    for (const e of errors) console.log(`FEHLER: ${e}`);
+    process.exit(errors.length ? 1 : 0);
+  }
+
   if (NUR_LAUF) {
     // **Vor dem Justieren den Raum ansehen** (Regel 9). `--steigung a,b,c`
     // faehrt den Lauf je Wert einmal durch und legt die Kristallverluste
@@ -2785,6 +2900,7 @@ const mixedPlan = mixedPlanBase;
 
   weichenstileMessen();
   foerdererMessen();
+  wirkungenMessen();
   wiederholungMessen();
   vielfaltMessen();
   laufMessen();

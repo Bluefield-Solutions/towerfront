@@ -5381,6 +5381,21 @@ export const PROBEN = [
     tor: 'guards',
   },
   {
+    // **Zwei Karten, die dasselbe tun, sind eine Karte mit zwei Namen**
+    // (S-N6-01). Der Eingriff macht aus dem Bajonett ein zweites
+    // Zielfernrohr - gleiche Achse, gleicher Wert -, und die Messung muss
+    // die beiden als ununterscheidbar melden.
+    //
+    // Gegriffen wird die ZEILE der Karte und nicht ihr Wert: welchen Anteil
+    // eine Wirkung gerade traegt, aendert die naechste Eichrunde.
+    name: 'Zwei Wirkungen sind dieselbe Karte',
+    datei: 'src/data/karten.ts',
+    regel: /\{ id: 'bajonett', name: '[^']+', text: '[^']+', art: 'nah', wert: ([0-9.]+), kosten: (\d+) \}/,
+    ersatz: "{ id: 'bajonett', name: 'Bajonett', text: 'Mehr Schaden dicht am Turm.', art: 'weit', wert: 0.35, kosten: 700 }",
+    tor: 'sim',
+    meldet: 'nicht zu unterscheiden',
+  },
+  {
     name: 'Lesbarkeit findet die Wegflaeche nicht mehr',
     datei: 'tools/readability.mjs',
     regel: /if \(nah <= 0\) \{ wr \+= d\[j\];/,

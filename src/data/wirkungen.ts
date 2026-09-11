@@ -29,7 +29,21 @@ export type WirkungsArt =
    *  30 % langsamer. Der Widerstand des Gegners (`slowResist`) wird beim
    *  Anlegen eingerechnet, nicht beim Auslesen — sonst müsste jede
    *  auslesende Stelle ihn kennen. */
-  | 'bremse';
+  | 'bremse'
+  /** **Brand** (S-N6-01). `staerke` ist Schaden je SEKUNDE. Er läuft weiter,
+   *  wenn kein Turm mehr trifft — das ist der Unterschied zu einer
+   *  Schadenskarte, die nur die Zahl eines Treffers hebt. */
+  | 'brand'
+  /** **Markierung** (S-N6-01). `staerke` ist der ANTEIL, den jeder weitere
+   *  Treffer zusätzlich anrichtet. Sie belohnt, dasselbe Ziel zu halten,
+   *  statt die Feuerkraft zu verteilen. */
+  | 'markierung'
+  /** **Festgefroren** (S-N6-01). Voller Stillstand, kein Anteil: `staerke`
+   *  trägt hier keine Bedeutung und steht auf 1. Getrennt von `bremse`,
+   *  weil der Unterschied zwischen „langsam" und „steht" der ganze Punkt
+   *  ist — eine Bremse von 100 % wäre dieselbe Zahl und ein anderes
+   *  Spielgefühl. */
+  | 'frost';
 
 export interface Wirkung {
   art: WirkungsArt;
@@ -120,9 +134,46 @@ export function tempoFaktor(liste: Wirkung[] | null): number {
   let stark = 0;
   for (let i = 0; i < liste.length; i++) {
     const w = liste[i];
+    // Festgefroren schlaegt jede Bremse - und zwar sofort, nicht als
+    // groesster Anteil. Ein Stillstand ist kein besonders starkes Bremsen.
+    if (w.art === 'frost') return 0;
     if (w.art === 'bremse' && w.staerke > stark) stark = w.staerke;
   }
   return 1 - stark;
+}
+
+/** **Wieviel Schaden der Brand in diesem Bild anrichtet.**
+ *
+ *  `brandSchaden` nimmt die STAERKSTE anliegende Flamme, nicht ihre Summe -
+ *  aus demselben Grund wie `tempoFaktor`: zwei brennende Quellen sollen
+ *  nicht doppelt so schnell verzehren, sonst kauft man die Karte zweimal
+ *  statt sie zu spielen.
+ *
+ *  Die Funktion RECHNET nur; verbucht wird der Schaden dort, wo auch jeder
+ *  Treffer verbucht wird. Eine zweite Buchungsstelle waere eine zweite
+ *  Wahrheit (Regel 15), und genau daran ist in v311 ein Tor gescheitert. */
+export function brandSchaden(liste: Wirkung[] | null, dt: number): number {
+  if (!liste) return 0;
+  let stark = 0;
+  for (let i = 0; i < liste.length; i++) {
+    const w = liste[i];
+    if (w.art === 'brand' && w.staerke > stark) stark = w.staerke;
+  }
+  return stark * dt;
+}
+
+/** **Wieviel ein Treffer auf ein markiertes Ziel zusaetzlich anrichtet.**
+ *
+ *  1,0 heisst: keine Markierung. Wie beim Brand zaehlt die staerkste
+ *  Markierung, nicht die Summe. */
+export function markierungsFaktor(liste: Wirkung[] | null): number {
+  if (!liste) return 1;
+  let stark = 0;
+  for (let i = 0; i < liste.length; i++) {
+    const w = liste[i];
+    if (w.art === 'markierung' && w.staerke > stark) stark = w.staerke;
+  }
+  return 1 + stark;
 }
 
 /** Wieviel Restzeit von dieser Art noch anliegt — 0, wenn keine.

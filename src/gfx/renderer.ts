@@ -11,7 +11,7 @@ import {
 import { turmMasse, muendung, WAFFE_HOCH, WAFFE_BREIT } from '../data/turmgestalt';
 import { ABILITIES } from '../data/abilities';
 import { makeRng } from '../core/math';
-import { GameState } from '../game/state';
+import { BRAND_FARBE, GameState, MARKE_FARBE } from '../game/state';
 import type { Enemy, Husk, Projectile, Tower } from '../game/types';
 import { beginGlowBatch, endGlowBatch, hexA, stampGlow, stampGlowFast } from './glow';
 import { terrainAuftrag, type TerrainAuftrag } from './terrain';
@@ -2082,7 +2082,45 @@ export class Renderer {
       // ein Muster und keine Auskunft, und sie verdecken genau das, was man
       // sehen will. Der Ton sitzt jetzt auf dem Koerper: er sagt dasselbe,
       // verdeckt nichts und zaehlt richtig.
-      const bremse = wirkungRest(e.wirkungen, 'bremse');
+      // **Festgefroren sieht anders aus als gebremst** (S-N6-01): der
+      // Ueberzug steht voll deckend statt nach Restdauer, dazu ein harter
+      // heller Rand. Der Unterschied zwischen "langsam" und "steht" ist der
+      // ganze Punkt der Karte - waere er im Bild derselbe, waere sie eine
+      // Zahl.
+      const frost = wirkungRest(e.wirkungen, 'frost');
+      const bremse = frost > 0 ? 0 : wirkungRest(e.wirkungen, 'bremse');
+      if (frost > 0) {
+        // **Ein BLOCK, kein Rahmen.** Der erste Entwurf zog einen weissen
+        // Strich um die Figur - und ein weisser Kasten um eine Einheit
+        // heisst in jedem Strategiespiel "ausgewaehlt", nicht
+        // "festgefroren". Gesehen, nicht gemessen (Regel 8).
+        //
+        // Jetzt steht die Figur IN etwas: eine helle, leicht deckende
+        // Flaeche mit abgeschraegten Ecken, der Ueberzug voll darauf. Das
+        // liest sich als Eis und nicht als Markierung - und es unterscheidet
+        // sich von der Bremse, die nur den Ueberzug traegt und mit der
+        // Restdauer auftaut.
+        const bx = -w / 2 - 3, by = oben - 3, bw = w + 6, bh = h + 6;
+        const ec = Math.min(bw, bh) * 0.22;
+        ctx.beginPath();
+        ctx.moveTo(bx + ec, by);
+        ctx.lineTo(bx + bw - ec, by); ctx.lineTo(bx + bw, by + ec);
+        ctx.lineTo(bx + bw, by + bh - ec); ctx.lineTo(bx + bw - ec, by + bh);
+        ctx.lineTo(bx + ec, by + bh); ctx.lineTo(bx, by + bh - ec);
+        ctx.lineTo(bx, by + ec);
+        ctx.closePath();
+        ctx.fillStyle = '#BFE9FF';
+        ctx.globalAlpha = 0.3;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        const kalt = getEnemyFrost(e.def, s.map.id);
+        if (kalt) ctx.drawImage(kalt, -w / 2, oben, w, h);
+        ctx.strokeStyle = '#EAF9FF';
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.75;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
       if (bremse > 0) {
         const kalt = getEnemyFrost(e.def, s.map.id);
         if (kalt) {
@@ -2092,6 +2130,50 @@ export class Renderer {
           ctx.drawImage(kalt, -w / 2, oben, w, h);
           ctx.globalAlpha = 1;
         }
+      }
+      // **Brand und Markierung stehen AUF der Figur, nicht als Ring darum**
+      // - dieselbe Entscheidung wie beim Frost in v140: ein Frostturm bremst
+      // eine ganze Traube, und zwoelf Ringe uebereinander sind ein Muster
+      // und keine Auskunft.
+      //
+      // Der Brand flackert (er richtet laufend Schaden an, das soll man
+      // sehen), die Markierung steht still (sie richtet nichts an, sie
+      // verspricht etwas). Zwei Wirkungen, die gleich aussehen, sind eine
+      // Wirkung mit zwei Namen.
+      const brand = wirkungRest(e.wirkungen, 'brand');
+      if (brand > 0) {
+        const hot = getEnemyArt(e.def, true, s.map.id);
+        const flacker = 0.45 + 0.35 * Math.sin(s.crystalPulse * 13 + e.id);
+        if (hot) {
+          ctx.globalAlpha = Math.min(1, brand * 1.2) * flacker;
+          ctx.drawImage(hot, -w / 2, oben, w, h);
+          ctx.globalAlpha = 1;
+        }
+        ctx.fillStyle = BRAND_FARBE;
+        ctx.globalAlpha = flacker * 0.75;
+        for (let i = 0; i < 3; i++) {
+          const fx = (i - 1) * w * 0.26;
+          const fy = oben - 6 - ((s.crystalPulse * 90 + i * 37 + e.id * 11) % 26);
+          ctx.beginPath(); ctx.arc(fx, fy, 3.5 - i * 0.6, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+      const marke = wirkungRest(e.wirkungen, 'markierung');
+      if (marke > 0) {
+        ctx.strokeStyle = MARKE_FARBE;
+        ctx.lineWidth = 2.5;
+        ctx.globalAlpha = 0.85;
+        const r = Math.max(w, h) * 0.42;
+        // Ein Fadenkreuz, kein Ring: es sagt "hier wird gezielt", und es
+        // laesst die Figur darunter frei.
+        ctx.beginPath();
+        for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) {
+          ctx.moveTo(dx * r, dy * r * 0.62);
+          ctx.lineTo(dx * r, dy * r);
+          ctx.lineTo(dx * r * 0.62, dy * r);
+        }
+        ctx.stroke();
+        ctx.globalAlpha = 1;
       }
       if (e.hitFlash > 0.01) {
         const hot = getEnemyArt(e.def, true, s.map.id);

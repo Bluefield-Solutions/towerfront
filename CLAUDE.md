@@ -706,6 +706,60 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Wirkungen als Kartenmaterial (v327, S-N6-01).** Der Stapel bestand aus sechs
+Achsen, die alle dasselbe tun: eine Zahl wird groesser. Die Wahl zwischen +6 %
+und +10 % Schaden ist keine. Gebaut sind jetzt die sechs Wirkungen aus dem
+alten Paket P5 - dort entworfen und nie gebaut:
+
+| Karte | was sie AENDERT |
+|---|---|
+| **Zunder** | Treffer setzen in Flammen. Der Brand laeuft weiter, wenn kein Turm mehr trifft |
+| **Kerbe** | Getroffene Ziele nehmen mehr Schaden - belohnt Halten statt Verteilen |
+| **Eisgriff** | Wer schon gebremst ist, friert fest. Aus zwei Bremsen wird ein Stillstand |
+| **Zielfernrohr** / **Bajonett** | Mehr Schaden aussen bzw. innen. Sie ziehen absichtlich gegeneinander - wer beide nimmt, hat in der Mitte nichts gewonnen |
+| **Raureif** | Bremsen halten laenger. Der Frostturm wird vom Beiwerk zum Traeger |
+
+**Alle sechs kosten Erfahrung, der Grundstapel bleibt bei zwoelf.** Was ein
+Lauf freischaltet, ist neues MATERIAL und keine neue Grundeinstellung - damit
+ist die Balance der ersten Karte unberuehrt.
+
+**Gemessen mit `npm run sim -- --wirkungen` (94 s):** je Karte ein Lauf mit
+genau EINER Wirkung gegen einen ohne, Abdruck aus Kristall und Gold.
+**6 Wirkungen, 0 Paare mit gleichem Abdruck ueber alle vier Karten.** Die
+Nullprobe ist der Lauf ohne jede Karte und nicht der mit einer anderen
+(Regel 13) - sonst maesse die Zahl den Abstand zweier Wirkungen statt der
+Wirkung selbst. Sie wird EINMAL je Karte gerechnet statt je Wirkung; der erste
+Entwurf fuhr 48 Laeufe, 24 davon denselben.
+
+**Dazu eine Pruefung, die die Gleichheitsfrage erst sinnvoll macht:** ein
+Abdruck aus lauter Nullen heisst, dass die Karte im Spiel gar nicht ankommt -
+und das saehe in der Paarsuche aus wie "unterscheidbar von fuenf anderen"
+(Regel 5).
+
+**Im Bild sind die drei sichtbaren Wirkungen auseinanderzuhalten:** der Brand
+flackert und wirft Funken nach oben (er richtet laufend Schaden an), die
+Markierung steht still als Fadenkreuz (sie verspricht etwas), der Frost steckt
+die Figur in einen Eisblock. **Der erste Entwurf zog dafuer einen weissen
+RAHMEN - und ein weisser Kasten um eine Einheit heisst in jedem
+Strategiespiel "ausgewaehlt", nicht "festgefroren".** Gesehen, nicht gemessen
+(Regel 8).
+
+**Weitschuss und Nahkampf rechnen in `damage()` und nicht am Schuss**, also
+an EINER Stelle (Regel 15): der Aurenturm trifft zwanzig Gegner in zwanzig
+Entfernungen, der Kettenblitz springt ueber die Reichweite hinaus, und der
+Moerser schlaegt dort ein, wo das Ziel steht - nicht dort, wo es beim Abschuss
+stand. Am Schuss gerechnet haetten alle drei eine andere Antwort gegeben als
+das Bild zeigt.
+
+**Und `npm run doku` hat dabei eine Wortkollision gefangen, in derselben
+Runde, in der sie entstand.** Die Karte hiess im ersten Entwurf
+"Nahzuschlag" - und `nahZuschlag` ist die Schliessbedingung von **F6**, die
+etwas ganz anderes meint (eine Aufgabe fuer den ZIELMODUS "nah"). Beim
+naechsten Lauf waere F6 als zugefallen gemeldet worden, ohne dass jemand
+daran gearbeitet haette. Sie heisst jetzt **Nahkampf**: ein Ding, ein Wort
+(v323) - und diesmal andersherum, zwei Dinge duerfen nicht dasselbe Wort
+nehmen.
+
 **Der Grund wird dunkel (v326, S-N5-07) - und die Messung hat die Story auf
 halbem Weg widerlegt.** Die Story stuetzt sich auf eine Tabelle aus v274:
 `BODEN_HELL` von 0,355 auf 0,24 bringe „1 von 20 schwachen Kanten statt 20 von
@@ -1469,7 +1523,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v326. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v327. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

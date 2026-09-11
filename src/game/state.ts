@@ -1,6 +1,9 @@
 import { WORLD_W, WORLD_H, C } from '../data/config';
 import { muendung } from '../data/turmgestalt';
-import { tempoFaktor, wirkungAnlegen, wirkungenTicken, type Wirkung, type WirkungsArt } from '../data/wirkungen';
+import {
+  brandSchaden, markierungsFaktor, tempoFaktor, wirkungAnlegen, wirkungenTicken,
+  type Wirkung, type WirkungsArt,
+} from '../data/wirkungen';
 import { ENEMIES, type EnemyId } from '../data/enemies';
 import {
   TOWERS, TOWER_ORDER, MAX_LEVEL, accentFor, sellValue, statsFor, nextFor, hatZweigwahl,
@@ -111,6 +114,27 @@ export const ZIER_AUFHELLUNG = 0.45;
  *  und der Traeger muss auch neben ihm gewaehlt werden. Darunter faellt er
  *  in der Bosswelle des Farnkessels wieder hinten runter. */
 const GEFAHR_TRAEGER = 800;
+
+/** **Wie lange ein Brand und eine Markierung halten** (S-N6-01).
+ *
+ *  Beide stehen hier als Dauer und nicht auf der Karte, weil die Karte den
+ *  ANTEIL waehlt und nicht die Zeit: zwei Brandkarten sollen heisser
+ *  brennen, nicht laenger. Sonst waere jede zweite Karte derselben Achse
+ *  eine Verlaengerung, und die Wahl zwischen ihnen keine.
+ *
+ *  Drei Sekunden sind gemessen laenger als der Weg eines Gegners durch die
+ *  Reichweite eines Turms (rund 2 s bei 300 Weltpunkten Reichweite) - der
+ *  Brand laeuft also wirklich weiter, wenn kein Turm mehr trifft. Genau das
+ *  unterscheidet ihn von einer Schadenskarte. */
+const BRAND_DAUER = 3;
+/** Die Farbe des Brandes - eine Stelle fuer Funken und Zeichnung. */
+export const BRAND_FARBE = '#FF8A3D';
+/** Die Farbe der Markierung, aus demselben Grund. */
+export const MARKE_FARBE = '#FF4FA3';
+/** Kuerzer als der Brand: die Markierung soll das HALTEN eines Ziels
+ *  belohnen, nicht das einmalige Antippen. Laeuft sie zu lang, markiert ein
+ *  Streuschuss die halbe Welle. */
+const MARKE_DAUER = 1.6;
 
 /** Suchraum fuer ein Ersatzziel (TF-007), in Weltpunkten. Etwa eine halbe
  *  Turmreichweite - weit genug, damit der Nachbar im Pulk erreicht wird,
@@ -2046,8 +2070,15 @@ export class GameState {
       // Zweig in JEDEM Bild ueber JEDEN Gegner laeuft.
       if (e.wirkungen) {
         wirkungenTicken(e.wirkungen, dt);
-        if (!e.wirkungen.length) e.wirkungen = null;
+        // **Der Brand richtet seinen Schaden hier an** (S-N6-01) - nach der
+        // Uhr, damit eine gerade abgelaufene Flamme nicht noch ein Bild
+        // nachbrennt, und ueber `damage`, damit Beute, Zaehlwerk und Tod an
+        // genau der Stelle verbucht werden wie bei jedem Treffer (Regel 15).
+        const brand = brandSchaden(e.wirkungen, dt);
+        if (brand > 0) this.damage(e, brand, null, BRAND_FARBE, 0, 0, 99, 'brand');
+        if (e.wirkungen && !e.wirkungen.length) e.wirkungen = null;
       }
+      if (e.dead) continue;
       if (e.hitFlash > 0) e.hitFlash = Math.max(0, e.hitFlash - dt * 5);
       if (e.squash > 0) e.squash = Math.max(0, e.squash - dt * 6);
       // Die Lebensleiste laeuft dem echten Wert nach - schnell, aber sichtbar.
@@ -2672,7 +2703,7 @@ export class GameState {
 
   private damage(
     e: Enemy, raw: number, owner: Tower | null, color: string,
-    slow: number, slowTime: number, pierce = 0,
+    slow: number, slowTime: number, pierce = 0, quelle: 'treffer' | 'brand' = 'treffer',
   ): void {
     if (e.dead) return;
     const def = ENEMIES[e.def];
@@ -2707,7 +2738,46 @@ export class GameState {
     // durch - auf jeder Stufe gleich. Durchschlag (`pierce`) zieht vorher ab.
     const rest = Math.max(0, def.armor - pierce);
     const schluck = Math.min(0.66, rest * 0.11);
-    const roh = raw * this.perks.damageMul;
+    // **Weitschuss und Nahkampf haengen an der ENTFERNUNG, und gerechnet
+    // wird an genau EINER Stelle** (S-N6-01, Regel 15). Sie hier zu rechnen
+    // und nicht am Schuss ist die Entscheidung der Runde: der Aurenturm
+    // trifft zwanzig Gegner auf einmal in zwanzig Entfernungen, der
+    // Kettenblitz springt ueber die Reichweite hinaus, und der Moerser
+    // schlaegt dort ein, wo das Ziel steht - nicht dort, wo es beim Abschuss
+    // stand. Am Schuss gerechnet haetten alle drei eine andere Antwort
+    // gegeben als das Bild zeigt.
+    //
+    // Die beiden ziehen absichtlich gegeneinander: wer beide nimmt, hat in
+    // der Mitte der Reichweite gar nichts gewonnen. Das ist der Punkt - die
+    // LAGE eines Turms wird zur Entscheidung, und zwei Karten, die dasselbe
+    // sagen, gibt es damit nicht.
+    //
+    // **Sie heisst "Nahkampf", und das ist kein Geschmack.** Das
+    // naheliegende Wort ist in dieser Datei belegt: F6 im Verzeichnis
+    // schliesst, sobald es hier steht, und meint etwas ganz anderes - eine
+    // Aufgabe fuer den ZIELMODUS "nah". Haette diese Karte es genommen,
+    // waere F6 beim naechsten Lauf des Doku-Waechters als zugefallen
+    // gemeldet worden, ohne dass jemand daran gearbeitet haette. Ein Ding,
+    // ein Wort (v323), diesmal andersherum.
+    //
+    // **Und der erste Versuch, genau das hier zu erklaeren, hat es
+    // ausgeloest:** ein Satz UEBER das Wort enthaelt das Wort, und die
+    // Bedingung greift einen nackten Treffer. Deshalb steht es nirgends in
+    // dieser Datei - auch nicht in diesem Kommentar.
+    let lage = 1;
+    const zugL = this.zugWirkung;
+    if (owner && (zugL.weit > 0 || zugL.nah > 0)) {
+      const reichweite = this.towerStats(owner).range;
+      const anteil = reichweite > 0
+        ? Math.min(1, dist(owner.x, owner.y, e.x, e.y) / reichweite)
+        : 0;
+      lage += zugL.weit * anteil + zugL.nah * (1 - anteil);
+    }
+    // **Die Markierung wirkt VOR der Panzerung, nicht danach** (S-N6-01).
+    // Sonst waere sie eine Schadenskarte mit Umweg: hinter der Panzerung
+    // gerechnet, haengt ihr Wert an der Gegnerart statt am Zielen. Vorne
+    // gerechnet belohnt sie genau das, was sie soll - dasselbe Ziel halten.
+    const roh = raw * this.perks.damageMul * markierungsFaktor(e.wirkungen) * lage;
     const dmg = Math.max(1, Math.round(roh * (1 - schluck)));
     // Was die Panzerung geschluckt hat - an DERSELBEN Stelle gerechnet,
     // an der sie schluckt. Eine zweite Rechnung waere eine zweite Wahrheit.
@@ -2739,14 +2809,47 @@ export class GameState {
     // Wie beim Verlust: verbucht an der Welle DES GEGNERS (S-P4-01). Der
     // Zaehler des Spiels zeigt bei Ueberlappung auf die neuere Welle.
     this.stats.damageByWave[e.welle] = (this.stats.damageByWave[e.welle] ?? 0) + dmg;
-    const src = owner ? owner.def : 'meteor';
+    const src = quelle === 'brand' ? 'brand' : (owner ? owner.def : 'meteor');
     this.stats.damageBy[src] = (this.stats.damageBy[src] ?? 0) + dmg;
-    if (slow > 0) {
+    // **Ein Brand entzuendet keinen zweiten** (S-N6-01). Ohne diese Klammer
+    // frischt er sich in jedem Bild selbst auf und brennt bis ans Ende der
+    // Welle - aus einer Nachwirkung wuerde eine Kettenreaktion. Der Tod
+    // unten wird trotzdem durchlaufen: wer verbrennt, ist genauso tot, und
+    // seine Beute wird an derselben Stelle verbucht wie jede andere.
+    if (quelle !== 'brand' && slow > 0) {
+      // **Festfrieren, bevor die neue Bremse anliegt** (S-N6-01). Gefragt
+      // ist, ob das Ziel SCHON gebremst war - wer es danach fragt, friert
+      // jedes Ziel beim ersten Treffer ein, und aus einer Bedingung wird
+      // eine Selbstverstaendlichkeit.
+      const zug = this.zugWirkung;
+      if (zug.frostDauer > 0 && tempoFaktor(e.wirkungen) < 1) {
+        e.wirkungen = wirkungAnlegen(e.wirkungen, 'frost', 1,
+          zug.frostDauer * (1 - def.slowResist));
+      }
       e.wirkungen = wirkungAnlegen(e.wirkungen, 'bremse',
-        slow * (1 - def.slowResist), slowTime);
+        slow * (1 - def.slowResist), slowTime * this.zugWirkung.bremsdauerMul);
     }
-    this.spark(e.x, e.y, color, this.quality === 'hoch' ? 3 : 1, 140);
-    Sfx.play('hit');
+    // **Brand und Markierung haengen am TREFFER, nicht am Turm** (S-N6-01):
+    // was der Meteor entzuendet, brennt genauso. Der Brand rechnet seinen
+    // Schaden je Sekunde aus dem, was gerade angekommen ist - damit
+    // skaliert er mit dem Spiel und braucht keine eigene Kurve.
+    if (quelle !== 'brand' && this.zugWirkung.brandAnteil > 0) {
+      e.wirkungen = wirkungAnlegen(e.wirkungen, 'brand',
+        dmg * this.zugWirkung.brandAnteil, BRAND_DAUER);
+    }
+    if (quelle !== 'brand' && this.zugWirkung.markierung > 0) {
+      e.wirkungen = wirkungAnlegen(e.wirkungen, 'markierung',
+        this.zugWirkung.markierung, MARKE_DAUER);
+    }
+    // Ein Brand knistert, er schlaegt nicht ein: weniger Funken, kein
+    // Treffergeraeusch. Sonst klaenge eine Welle brennender Gegner wie ein
+    // Dauerfeuer, das niemand ausloest.
+    if (quelle === 'brand') {
+      this.spark(e.x, e.y, BRAND_FARBE, 1, 70);
+    } else {
+      this.spark(e.x, e.y, color, this.quality === 'hoch' ? 3 : 1, 140);
+      Sfx.play('hit');
+    }
     if (e.hp <= 0) {
       e.dead = true;
       if (e.kernraub > 0) this.splitterLoesen(e);

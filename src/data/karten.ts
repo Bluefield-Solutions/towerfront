@@ -30,7 +30,36 @@ export type KartenArt =
   /** Beute je Gegner, als Faktor. */
   | 'beute'
   /** Kristall sofort - gedeckelt am Hoechstmass wie jede Reparatur. */
-  | 'kristall';
+  | 'kristall'
+  // --- **Sechs Achsen, die das VERHALTEN aendern** (S-N6-01).
+  //
+  // Die sechs darueber sind alle dieselbe Sorte Karte: eine Zahl wird
+  // groesser. Ein Stapel aus nichts als Zahlen ist eine Liste von Prozenten,
+  // und die Wahl zwischen +6 % und +10 % Schaden ist keine. Diese sechs
+  // aendern, WIE ein Turm sich verhaelt - sie sind aus dem alten Paket P5
+  // uebernommen, dort entworfen und nie gebaut.
+  //
+  // **Alle sechs kosten Erfahrung.** Der Grundstapel bleibt damit bei
+  // zwoelf, und die Balance der ersten Karte ist unberuehrt: was ein Lauf
+  // freischaltet, ist neues MATERIAL und keine neue Grundeinstellung.
+  /** Brand: Treffer setzen in Flammen, `wert` ist der Anteil des
+   *  Treffschadens, der je Sekunde nachbrennt. */
+  | 'brand'
+  /** Markierung: ein getroffenes Ziel nimmt mehr Schaden, `wert` ist der
+   *  Anteil. */
+  | 'markierung'
+  /** Festfrieren: wer schon gebremst ist und noch einmal getroffen wird,
+   *  steht still. `wert` ist die Dauer in Sekunden. */
+  | 'frost'
+  /** Weitschuss: mehr Schaden am aeusseren Rand der Reichweite, `wert` ist
+   *  der Anteil ganz aussen. */
+  | 'weit'
+  /** Nahkampf: mehr Schaden dicht am Turm, `wert` ist der Anteil
+   *  unmittelbar davor. Der Name meidet `nahZuschlag` - das Wort gehoert
+   *  F6 und meint den ZIELMODUS "nah" (Regel 15). */
+  | 'nah'
+  /** Bremsdauer: jede Bremse haelt laenger, `wert` ist der Faktor. */
+  | 'bremsdauer';
 
 /** **Wie eine Achse in einem Wort heisst.**
  *
@@ -46,6 +75,12 @@ export const ACHSE_NAME: Record<KartenArt, string> = {
   gold: 'Gold',
   beute: 'Beute',
   kristall: 'Kristall',
+  brand: 'Brand',
+  markierung: 'Markierung',
+  frost: 'Frost',
+  weit: 'Weitschuss',
+  nah: 'Nahkampf',
+  bremsdauer: 'Bremsdauer',
 };
 
 export interface Karte {
@@ -112,6 +147,24 @@ export const KARTENSTAPEL: Karte[] = [
   { id: 'spende', name: 'Spende', text: 'Gold sofort.', art: 'gold', wert: 220, kosten: 500 },
   { id: 'schatzamt', name: 'Schatzamt', text: 'Jeder Gegner bringt mehr.', art: 'beute', wert: 1.22, kosten: 900 },
   { id: 'bergung', name: 'Bergung', text: 'Kristall zurück.', art: 'kristall', wert: 12, kosten: 900 },
+  // **Sechs Wirkungen statt sechs Prozentzahlen** (S-N6-01).
+  //
+  // Jede aendert das Verhalten und nicht die Hoehe: der Brand laeuft weiter,
+  // wenn kein Turm mehr trifft; die Markierung belohnt, dasselbe Ziel zu
+  // halten, statt zu verteilen; der Frost macht aus zwei Bremsen einen
+  // Stillstand; Weitschuss und Nahkampf machen die LAGE eines Turms zur
+  // Entscheidung, und zwar in entgegengesetzte Richtungen; die Bremsdauer
+  // macht den Frostturm zum Traeger statt zum Beiwerk.
+  //
+  // **Die Zahlen sind so klein wie die der uebrigen Karten** und aus
+  // demselben Grund (Regel 10, Rogue Tower): eine Karte, die fuer sich schon
+  // entscheidet, waere bei 60 Karten je Lauf ein Fehler im Entwurf.
+  { id: 'zunder', name: 'Zunder', text: 'Treffer setzen in Flammen.', art: 'brand', wert: 0.30, kosten: 800 },
+  { id: 'kerbe', name: 'Kerbe', text: 'Getroffene Ziele nehmen mehr Schaden.', art: 'markierung', wert: 0.18, kosten: 800 },
+  { id: 'eisgriff', name: 'Eisgriff', text: 'Wer schon bremst, friert fest.', art: 'frost', wert: 0.9, kosten: 1000 },
+  { id: 'zielfernrohr', name: 'Zielfernrohr', text: 'Mehr Schaden am Rand der Reichweite.', art: 'weit', wert: 0.35, kosten: 700 },
+  { id: 'bajonett', name: 'Bajonett', text: 'Mehr Schaden dicht am Turm.', art: 'nah', wert: 0.35, kosten: 700 },
+  { id: 'raureif', name: 'Raureif', text: 'Bremsen halten länger.', art: 'bremsdauer', wert: 1.6, kosten: 600 },
 ];
 
 /** **Der Stapel, mit dem ein frischer Spielstand anfaengt.**
@@ -143,10 +196,26 @@ export interface KartenWirkung {
   gold: number;
   /** Kristall, der beim Nehmen sofort zusammengesetzt wurde. */
   kristall: number;
+  // --- Die sechs Wirkungen (S-N6-01). Alle SUMMIEREN sich, sie
+  // multiplizieren nicht: zwei Anteile von 0,18 sind 0,36 und nicht 1,39.
+  // Nur die Bremsdauer ist ein Faktor und multipliziert deshalb.
+  /** Anteil des Treffschadens, der je Sekunde nachbrennt. 0 = kein Brand. */
+  brandAnteil: number;
+  /** Anteil, den ein Treffer auf ein markiertes Ziel zusaetzlich anrichtet. */
+  markierung: number;
+  /** Dauer des Stillstands in Sekunden. 0 = kein Festfrieren. */
+  frostDauer: number;
+  /** Anteil Zuschlag ganz aussen an der Reichweite. */
+  weit: number;
+  /** Anteil Zuschlag unmittelbar vor dem Turm. */
+  nah: number;
+  /** Faktor auf die Dauer jeder Bremse. */
+  bremsdauerMul: number;
 }
 
 export const KEINE_KARTEN: KartenWirkung = {
   schadenMul: 1, taktMul: 1, reichweiteMul: 1, beuteMul: 1, gold: 0, kristall: 0,
+  brandAnteil: 0, markierung: 0, frostDauer: 0, weit: 0, nah: 0, bremsdauerMul: 1,
 };
 
 export function kartenWirkung(genommen: readonly string[]): KartenWirkung {
@@ -161,6 +230,12 @@ export function kartenWirkung(genommen: readonly string[]): KartenWirkung {
       case 'beute': w.beuteMul *= k.wert; break;
       case 'gold': w.gold += k.wert; break;
       case 'kristall': w.kristall += k.wert; break;
+      case 'brand': w.brandAnteil += k.wert; break;
+      case 'markierung': w.markierung += k.wert; break;
+      case 'frost': w.frostDauer += k.wert; break;
+      case 'weit': w.weit += k.wert; break;
+      case 'nah': w.nah += k.wert; break;
+      case 'bremsdauer': w.bremsdauerMul *= k.wert; break;
     }
   }
   return w;

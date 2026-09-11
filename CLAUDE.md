@@ -696,6 +696,41 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der Kristall gehoert ganz ins Bild (v322, S-N4-09) - und die Messung hat die
+offene Frage der Story entschieden.** Das Ding, das man verteidigt, ragte in
+ALLEN VIER Formaten heraus, nicht nur in den zweien, die der Inspektorlauf
+v273 gesehen hat. Die Ursache steht im Renderer: Startzoom ist `coverScale`;
+ist das Fenster hoeher als 16:9, fuellt die HOEHE, und links und rechts wird
+beschnitten - die Zielplattform steht in der Ecke und faellt genau in diesen
+Schnitt.
+
+`zielEinpassen` zieht den automatischen Zoom so weit auf, dass der KOERPER
+hineinpasst, und nur den automatischen: wer selbst herangezogen hat, hat eine
+Entscheidung getroffen. **Als Ableitung im gezeichneten Bild, nicht als
+Schalter** (dieselbe Bauart wie Regel 6) - es gibt vier Wege in eine Karte
+hinein, und vier Verkabelungen waeren vier Stellen zum Vergessen.
+
+**Die Story liess offen, ob es ueber die Kamera oder ueber die Lage der
+Plattform geht. Die Zahl sagt: beides, und die zweite Haelfte ist eine
+Bestellung.** Der Warnring reicht 270 Weltpunkte, die Plattform steht auf
+allen vier Karten nur **186 bis 237** vom Kartenrand entfernt - er ragt aus
+der WELT heraus, nicht aus dem Bild, und keine Kameraeinstellung holt ihn
+herein, auch `fitScale` nicht. Gemeldet wird es als Hinweis mit den fehlenden
+33 bis 84 Punkten, nicht als Fehler: ein Tor, das eine Bestellung einfordert,
+macht die Kette rot, bis jemand malt (K5). Die Forderung steht in Abschnitt 8b
+des Bildauftrags, neben der Abwaegung, die dort **das Gegenteil** entschieden
+hat - eine Messung gegen eine Messung, und welche wiegt, entscheidet der
+Nutzer.
+
+**Der zweite Weg zum selben Schaden ist mit v316 nebenbei zugefallen:** die
+Turmkarte lag frueher vollstaendig ueber der Station; seit sie am Turm steht,
+misst das Tor in drei Formaten "ganz im Bild".
+
+**Und der erste Entwurf der Messung mass die Landkarte** (Regel 12): sie lief
+gleich nach dem Zeigertest, da steht aber noch das Menue, und der Renderer
+kehrt bei offenem Menue vor der Kamerarechnung um. Dasselbe Fenster meldete
+"ragt 472 px heraus", waehrend im Spiel 31 herausragten.
+
 **Eine gesperrte Kachel behaelt ihren Preis - und die andere Haelfte der Story
 ist ABSICHTLICH nicht gebaut (v321, S-N4-07).** Bis v320 trat der Grund an die
 Stelle des Preises: der Moerser stand in der Bauwahl als "RAND" in Rot da,
@@ -1306,7 +1341,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v321. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v322. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), sieben Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

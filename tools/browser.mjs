@@ -51,6 +51,105 @@ const DATEI = join(ROOT, 'dist/index.html');
 // Das Zielgerät, nicht der Schreibtisch. Dieselben Maße wie die Bildabnahme.
 const BREIT = 844, HOCH = 390;
 
+/** **Liegt der Kristall ganz im Bild?** (v322, S-N4-09)
+ *
+ *  Das Ding, das man verteidigt, ragte in BEIDEN Schreibtischformaten aus dem
+ *  Bild: in `browser.png` links angeschnitten, in `14-notebook-spiel.png`
+ *  rechts, rund ein Drittel fehlend. Im Telefonformat steht es vollstaendig
+ *  da - der Fehler ist FORMATABHAENGIG, und das ist die Sorte, die kein
+ *  Standardfall zeigt.
+ *
+ *  Die Ursache steht im Renderer: der Startzoom ist `coverScale`, also
+ *  `max(b/1920, h/1080)`. Ist das Fenster hoeher als 16:9, fuellt die HOEHE
+ *  und links und rechts wird beschnitten - auf 1400 x 900 rund 240
+ *  Weltpunkte. Die Zielplattform steht in der Ecke, und damit faellt sie
+ *  genau in diesen Schnitt. Das Verzeichnis sagt es seit v219: *der Ausweg
+ *  ist eine Bestellung, kein Code - die Zielplattform naeher zur Mitte.*
+ *
+ *  Gemessen wird mitsamt dem WARNRING: `r = 150 + not * 120`, also
+ *  hoechstens 270 Weltpunkte, senkrecht davon 55 % (der Ring ist gestaucht).
+ *  Ein Kristall, dessen Warnung aus dem Bild laeuft, warnt nur halb.
+ *
+ *  Beide Griffe kommen aus dem Spiel und nicht aus einer zweiten Rechnung
+ *  (Regel 15): `weltZuSchirm` ist die Kamera des Renderers, `spielZiel`
+ *  dieselbe Ableitung, nach der der Kristall gezeichnet wird. */
+// **Zwei Halbmesser, zwei Urteile** (v322, S-N4-09 - und die Messung hat die
+// offene Frage der Story entschieden). Der KOERPER (130 Weltpunkte, dieselbe
+// Zahl, mit der `npm run guards` die Zielplatte gegen unwegsame Flecken haelt)
+// muss ganz im Bild liegen - das ist eine Frage an die Kamera.
+//
+// Der WARNRING reicht 270 weit, und die Plattform steht auf allen vier Karten
+// nur 186 bis 237 Weltpunkte vom Kartenrand entfernt: er ragt aus der WELT
+// heraus, nicht aus dem Bild, und keine Kameraeinstellung holt ihn herein. Die
+// Story liess offen, ob es ueber die Kamera oder ueber die Lage der Plattform
+// geht; die Zahl sagt: ueber die LAGE. Gemeldet wird das als Hinweis mit den
+// fehlenden Weltpunkten - ein Tor, das eine Bestellung einfordert, macht die
+// Kette rot, bis jemand malt (K5).
+const KOERPER = 130;
+const kristallSichtbar = (seite) => seite.evaluate(([rx, ry]) => {
+  const rechnen = window.weltZuSchirm;
+  const ziel = window.spielZiel;
+  if (typeof rechnen !== 'function' || typeof ziel !== 'function') return { fehlt: true };
+  const z = ziel();
+  const leinwand = document.getElementById('view');
+  if (!z || !leinwand) return { fehlt: true };
+  const l = leinwand.getBoundingClientRect();
+  const mitte = rechnen(z.x, z.y);
+  const links = rechnen(z.x - rx, z.y);
+  const rechts = rechnen(z.x + rx, z.y);
+  const oben = rechnen(z.x, z.y - ry);
+  const unten = rechnen(z.x, z.y + ry);
+  return {
+    fehlt: false,
+    mitte: { x: Math.round(mitte.x), y: Math.round(mitte.y) },
+    raus: {
+      links: Math.round(Math.max(0, l.left - links.x)),
+      rechts: Math.round(Math.max(0, rechts.x - l.right)),
+      oben: Math.round(Math.max(0, l.top - oben.y)),
+      unten: Math.round(Math.max(0, unten.y - l.bottom)),
+    },
+    // Und was von der Bedienung darueber liegt - der zweite Weg zum selben
+    // Schaden: solange man einen Turm ansieht, sieht man den Kristall nicht.
+    // Wieviel Welt der Warnring braucht (270) und wieviel er hat.
+    randWelt: Math.round(Math.min(z.x, 1920 - z.x, z.y, 1080 - z.y)),
+    unter: (() => {
+      const e = document.elementFromPoint(mitte.x, mitte.y);
+      const w = e && e.closest('#hud, #dock, #b-wave, #inspector, #pick, #zug, #coach');
+      return w ? (w.id ? `#${w.id}` : w.tagName.toLowerCase()) : null;
+    })(),
+  };
+}, [KOERPER, KOERPER * 0.55]);
+
+/** Die Auswertung steht einmal - sie laeuft im Telefonformat und in den drei
+ *  Schreibtischformaten, und zwei Fassungen davon waeren zwei Urteile. */
+const kristallUrteilen = async (seite, name, fail) => {
+  const k = await kristallSichtbar(seite);
+  if (k.fehlt) {
+    fail(`Kristallsicht ${name}: die Messgriffe \`weltZuSchirm\`/\`spielZiel\` fehlen. `
+      + 'Ohne sie waere die Null darunter erfunden (Regel 5).');
+    return;
+  }
+  const raus = Object.entries(k.raus).filter(([, v]) => v > 0);
+  console.log(`  Kristall ${name}: Mitte ${k.mitte.x},${k.mitte.y}`
+    + `${raus.length ? ` - RAGT HERAUS ${raus.map(([s2, v]) => `${s2} ${v} px`).join(', ')}` : ' - ganz im Bild'}`
+    + `${k.unter ? ` - liegt unter ${k.unter}` : ''}`);
+  for (const [seiteName, wieviel] of raus) {
+    fail(`Kristallsicht ${name}: der Kristall ragt mitsamt seinem Warnring `
+      + `${wieviel} px ueber den ${seiteName}en Rand hinaus. Das Ding, das man `
+      + 'verteidigt, gehoert ganz ins Bild - und eine Warnung, die aus dem Bild '
+      + 'laeuft, warnt nur halb (S-N4-09).');
+  }
+  if (k.unter) {
+    fail(`Kristallsicht ${name}: die Bedienung (${k.unter}) liegt ueber dem Kristall. `
+      + 'Solange man etwas anderes ansieht, sieht man nicht, was man verliert.');
+  }
+  if (k.randWelt < 270) {
+    console.log(`  Warnring ${name}: die Plattform steht ${k.randWelt} Weltpunkte vom `
+      + `Kartenrand, der Warnring reicht 270 - es fehlen ${270 - k.randWelt}. `
+      + 'Offene Bestellung, kein Fehler (Abschnitt 8b des Bildauftrags).');
+  }
+};
+
 // Derselbe Richtwert wie in `npm run beruehrung` — dort ist er aus der
 // Stilvorlage gelesen, hier gemessen. Zwei Wege zur selben Zahl, und der
 // zweite ist der, der zählt.
@@ -430,6 +529,7 @@ if (!start) {
   };
 
   await inZustand('im Spiel');
+  await kristallUrteilen(seite, 'Telefon 844x390', fail);
 
   // **Den echten Bauablauf gehen, nicht einen Zustand herbeireden.**
   //
@@ -1966,6 +2066,13 @@ if (streuung < 6) {
     console.log(`Schreibtisch ${name.padEnd(6)} ${w}x${h}: `
       + `${drin ? 'spielbar' : 'NICHT spielbar'}`
       + `${deckel.length ? `, verdeckt von ${deckel.join(', ')}` : ''}`);
+    // **Erst im Spiel messen** (v322, S-N4-09). Der erste Entwurf fragte
+    // gleich nach dem Zeigertest - da steht aber noch die Landkarte, und der
+    // Renderer kehrt bei offenem Menue vor der Kamerarechnung um. Gemessen
+    // wurden damit drei Zahlen aus einem Bild, das es im Spiel nicht gibt
+    // (Regel 12): dasselbe Fenster meldete "ragt 472 px heraus", waehrend im
+    // Spiel gar nichts herausragte.
+    if (drin) await kristallUrteilen(s3, `${name} ${w}x${h}`, fail);
 
     // **Und antwortet hier ueberhaupt etwas auf den Zeiger?** (v204)
     //
@@ -2067,6 +2174,12 @@ if (streuung < 6) {
           nameText: name ? name.textContent.trim() : '',
         };
       });
+      // **Und jetzt, mit offener Turmkarte** (v322, S-N4-09). Der zweite Weg
+      // zum selben Schaden: der Inspektorlauf v273 fand in `05-pruefsteg.png`
+      // und `06` die Karte VOLLSTAENDIG ueber der Station - solange man einen
+      // Turm ansieht, sieht man den Kristall nicht. Seit v316 steht sie am
+      // Turm statt am Rand; ob das reicht, sagt die Messung und nicht ich.
+      if (steg) await kristallUrteilen(s3, `${name} mit Turmkarte`, fail);
       if (!steg) {
         fail(`Schreibtischprobe ${name}: der Pruefsteg liess sich nicht oeffnen - `
           + 'ohne ihn misst dieser Block nichts.');

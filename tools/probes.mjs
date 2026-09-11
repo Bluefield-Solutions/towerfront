@@ -1222,6 +1222,21 @@ export const PROBEN = [
     // kein Beweis (Regel 5). Der Eingriff macht die Knoepfe so breit, dass
     // sechs davon nicht mehr nebeneinander passen - dann laufen sie
     // ineinander, und beide Zahlen muessen es sagen.
+    // **Die Kamera laesst den Kristall wieder an den Rand** (v322, S-N4-09).
+    //
+    // Genau die Gegenprobe, die die Story verlangt. Der Eingriff schaltet
+    // `zielEinpassen` ab - dann steht der Startzoom wieder auf `coverScale`,
+    // und der Kristall ragt in allen vier Formaten heraus (gemessen 37 px auf
+    // dem Telefon, 44 bis 61 am Schreibtisch). Das Browsertor nennt jedes
+    // Format einzeln.
+    name: 'Die Kamera laesst den Kristall am Rand liegen',
+    datei: 'src/gfx/renderer.ts',
+    suche: '    if (this.zoom > this.coverScale * 1.001) return;',
+    ersatz: '    if (this.zoom > 0) return;',
+    tor: 'browsertor',
+    meldet: 'ragt mitsamt seinem Warnring',
+  },
+  {
     // **Die gesperrte Kachel verliert ihren Preis** (v321, S-N4-07).
     //
     // Genau die Gegenprobe, die die Story verlangt. Der Eingriff stellt den

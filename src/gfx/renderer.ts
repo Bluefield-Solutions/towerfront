@@ -265,6 +265,47 @@ export class Renderer {
   private get minZoom(): number { return this.fitScale; }
   private get maxZoom(): number { return this.coverScale * 3; }
 
+  /** **Der Kristall gehoert ganz ins Bild** (v322, S-N4-09).
+   *
+   *  Der Startzoom ist `coverScale`, also `max(b/1920, h/1080)`. Ist das
+   *  Fenster hoeher als 16:9, fuellt die HOEHE - und links und rechts wird
+   *  beschnitten, auf 1400 x 900 rund 240 Weltpunkte. Die Zielplattform
+   *  steht in der Ecke, und damit faellt sie genau in diesen Schnitt.
+   *
+   *  Gemessen mit dem Browsertor, bevor diese Zeilen standen: der Kristall
+   *  ragte in ALLEN VIER Formaten heraus - 37 px auf dem Telefon, 99 auf
+   *  1000 x 620, 170 auf 1400 x 900 und 472 auf 700 x 850, dort also ganz
+   *  aus dem Bild. Der Inspektorlauf v273 hatte zwei davon gesehen.
+   *
+   *  **Gezogen wird der Zoom, nicht die Kamera.** Die Kamera mittig zu
+   *  lassen und das Feld zu verschieben hiesse, den Rand des Feldes ins Bild
+   *  zu holen - genau das verbietet `clamp` seit jeher. Kleiner zoomen zeigt
+   *  stattdessen mehr, und weiter als `fitScale` geht es ohnehin nicht: dort
+   *  ist die ganze Karte zu sehen, und damit auch der Kristall.
+   *
+   *  **Es gilt nur fuer den automatischen Zoom.** Wer selbst herangezogen
+   *  hat, hat eine Entscheidung getroffen; ihm den Ausschnitt wegzunehmen,
+   *  weil der Kristall nicht hineinpasst, waere eine Bevormundung. Deshalb
+   *  haengt es an `zoom <= coverScale` - heranzoomen bleibt frei. */
+  private zielEinpassen(zx: number, zy: number): void {
+    // **Eingepasst wird der KOERPER, nicht der Warnring** - und das ist
+    // gemessen, nicht bequem. Die Zielplattform steht auf allen vier Karten
+    // 186 bis 237 Weltpunkte vom Kartenrand entfernt, der Ring reicht 270
+    // weit: er ragt also aus der WELT heraus, nicht aus dem Bild. Weiter
+    // herauszuzoomen als `fitScale` zeigt dort nur noch Sternengrund.
+    //
+    // Der Koerper misst 130 Weltpunkte im Halbmesser - dieselbe Zahl, mit
+    // der `npm run guards` prueft, dass kein unwegsamer Fleck in die Platte
+    // ragt. Was am Ring fehlt, ist eine Frage an das naechste Kartenbild
+    // (Abschnitt 8b des Bildauftrags), und das Browsertor sagt es.
+    const rx = 130, ry = 130 * 0.55;
+    if (this.zoom > this.coverScale * 1.001) return;
+    const noetigX = this.cssW / 2 / Math.max(1e-6, Math.abs(zx - WORLD_W / 2) + rx);
+    const noetigY = this.cssH / 2 / Math.max(1e-6, Math.abs(zy - WORLD_H / 2) + ry);
+    const passt = Math.min(noetigX, noetigY);
+    if (passt < this.zoom) this.zoom = Math.max(this.minZoom, passt);
+  }
+
   resize(): void {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
@@ -406,6 +447,16 @@ export class Renderer {
     this.ensureFrame();
     const ctx = this.ctx;
     if (this.menu) { this.drawMenuFrame(); return; }
+    // **Eine Ableitung, kein Schalter** (S-N4-09, dieselbe Bauart wie Regel
+    // 6). Der Kristall steht je Karte woanders, und es gibt vier Wege in
+    // eine Karte hinein (neuer Lauf, Abschnittswahl, Fortsetzen, Endlos).
+    // Sie alle zu verkabeln hiesse, vier Stellen zu haben, an denen man es
+    // vergessen kann; hier steht es einmal, im Bild, das ohnehin gezeichnet
+    // wird. Der Zielpunkt kommt aus derselben Ableitung wie die Zeichnung
+    // selbst (`drawCrystal`).
+    const ziel = s.map.ziel ?? s.goal;
+    this.zielEinpassen(ziel.x, ziel.y);
+    this.clamp();
     // Neu backen bei Kartenwechsel - und noch einmal, sobald das
     // Untergrundbild fertig dekodiert ist.
     const bgV = backgroundVersion();

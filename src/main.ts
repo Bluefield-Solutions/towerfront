@@ -240,6 +240,14 @@ ui.onPick = (id, x, y) => { if (state.build(x, y, id)) Sfx.play('build'); };
  */
 (window as unknown as Record<string, unknown>).weltZuSchirm =
   (x: number, y: number) => renderer.worldToScreen(x, y);
+/** Und wo der Kristall steht (v322, S-N4-09).
+ *
+ *  Dieselbe Ableitung wie im Renderer - `s.map.ziel ?? s.goal` -, und zwar
+ *  nicht abgeschrieben, sondern gelesen: das Werkzeug soll nicht wissen
+ *  muessen, welche Karte gerade laeuft, und erst recht nicht, welche der
+ *  beiden Quellen gilt. */
+(window as unknown as Record<string, unknown>).spielZiel =
+  () => state.map.ziel ?? state.goal;
 
 layout();
 bindInput(canvas, state, renderer);

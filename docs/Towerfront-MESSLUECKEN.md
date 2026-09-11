@@ -1,8 +1,36 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v315 · 10.09.2026
+Stand: v322 · 11.09.2026
 
-**Einundzwanzig Luecken, sechs davon abgeraeumt** — fuenf geschlossen (M1,
+**Nachgesehen in v322 — und die sieben Runden v316 bis v322 haben die
+Sammlung in eine Richtung erweitert, die hier bisher fehlte: das
+BEWEISMITTEL.**
+
+Bis v315 handelte jede Lücke davon, dass eine Zahl etwas anderes misst, als
+sie behauptet. Zweimal hintereinander war es diesmal das Bild, das falsch
+aussagte — und in beiden Fällen sah das Spiel **schlechter** aus, als es war:
+
+* **v319:** `bilder/wellenvorschau.png` setzte an die Stelle des Gegnerbilds
+  ein durchsichtiges 1×1-GIF — für die Höhenmessung genau richtig, und die
+  Begründung dafür stand als Regel 12 daneben. Der Inspektorlauf v271 las die
+  Zeilen als nackte Zahlen und schrieb „eine Vorschau ohne Gegenstand" als
+  Befund auf. Im Spiel stand dort immer ein Bild.
+* **v318:** `elementFromPoint` meldete `GOLD`, `KRISTALL`, `WELLE` in jedem
+  Zustand als zu 100 % verdeckt, Täter `#view` — die Kopfzeile ist eine
+  Anzeige und lässt Tipps durch. „Wer fängt den Finger" ist eine andere Frage
+  als „wer deckt das Bild zu".
+
+**Die Klasse heißt: ein Beweismittel, das eine Sache systematisch weglässt,
+erzeugt Befunde über genau diese Sache.** Sie steht unten als **M22**.
+
+**Dazu ein dritter Fall derselben Familie, gefunden in v322:** die erste
+Fassung von `kristallSichtbar` maß auf der LANDKARTE statt im Spiel — der
+Renderer kehrt bei offenem Menü vor der Kamerarechnung um. Dasselbe Fenster
+meldete „ragt 472 px heraus", während im Spiel 31 herausragten. Dieselbe
+Regel 12 wie immer, nur diesmal im Werkzeug einer Story, die gerade erst
+entstand.
+
+**Zweiundzwanzig Luecken, sechs davon abgeraeumt** — fuenf geschlossen (M1,
 M3, M6, M7, M10) und eine gegenstandslos (M8). Die Zahl steht hier, weil sie
 falsch dastand: der Kopf sprach von „fuenfzehn", waehrend zwanzig Abschnitte
 darunter lagen — und `M8` fuehrte einen Schwierigkeitsgrad, den es seit v314
@@ -804,6 +832,40 @@ Frage, und ihm hilft heute niemand: die Karte zeigt seit v282 beide Routen,
 aber nicht, welche die bessere ist. Eine Entscheidung, deren Folgen man nicht
 abschätzen kann, ist ein Ratespiel — genau der Vorwurf, den das
 Spielspaß-Audit dem alten Turmausbau macht.
+
+---
+
+## M22 · Ein Beweismittel, das eine Sache weglässt, erzeugt Befunde über genau diese Sache
+
+**Gefunden zweimal in zwei Runden (v318, v319), und beide Male hat es einen
+Befund über das Spiel erzeugt, den es nicht gab.**
+
+Der Inspektor sieht Bericht und Bilder, nicht den Code — das ist der Sinn der
+Einrichtung, und sie hat elf von 57 Befunden geliefert. Sie hat aber eine
+Voraussetzung, die nirgends geprüft wird: **dass das Bild zeigt, was das Spiel
+zeigt.**
+
+| Runde | was das Blatt weggelassen hat | was der Inspektor daraus las |
+|---|---|---|
+| v319 | das Gegnerbild in der Wellenvorschau (durchsichtiges 1×1-GIF, damit die HÖHE stimmt) | „9×, eine Zahl ohne Gegenstand" |
+| v318 | nichts — hier war es die Messung: `elementFromPoint` sieht durchlässige Anzeigen nicht | „`GOLD` zu 100 % verdeckt" |
+
+**Die Frage.** Woran erkennt jemand, dass ein Beweisbild weniger zeigt als das
+Spiel?
+
+**Warum die Werkzeuge sie nicht beantworten.** Jedes dieser Blätter ist für
+seine eigene Frage richtig gebaut, und die Begründung steht jeweils im Code —
+in v319 sogar mit Regel 12 als Beleg. Was fehlt, ist die Gegenrichtung: die
+Auslassung ist dokumentiert, aber **im Bild unsichtbar**, und der Inspektor
+sieht nur das Bild.
+
+**Wie man es misst.** Nicht direkt; billig ist nur die Gewohnheit, und die ist
+in v319 eingeführt: **was ein Beweisblatt nicht laden kann, bekommt einen
+sichtbaren Platzhalter** statt einer Lücke — dieselbe Größe, dieselbe Marke
+`#FF00E5` wie `getPlatzhalter`. Dann sagt das Bild selbst „hier fehlt etwas,
+das das Spiel hat". Für die zwei anderen Beweisblätter der Kette
+(`bilder/browser.png`, `schleife/inspektion/`) ist es **nicht** nachgeholt, und
+das steht hier, statt als erledigt zu gelten.
 
 ---
 

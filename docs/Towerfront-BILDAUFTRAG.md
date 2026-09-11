@@ -1939,6 +1939,34 @@ Danach ist **D28-D** fällig (Bauen auf gemalter Straße verbieten). Heute
 kostete das 12 Punkte bebaubare Fläche, nach dieser Lieferung nichts mehr —
 weil dann keine Straße mehr gemalt ist, auf der niemand läuft.
 
+**Und v322 hat eine zweite Zahl gefunden, die dagegen spricht — sie steht
+hier, weil eine Messung gegen eine Messung gehört und nicht gegen eine
+Meinung.** `npm run browsertor` prüft seit v322, ob der Kristall ganz im Bild
+liegt (`kristallSichtbar`):
+
+| | gemessen |
+|---|---|
+| Abstand der Plattform zum Kartenrand | **186** (Spiralhain, Ascheschlucht, Farnkessel), **237** (Frostspalte) |
+| Reichweite des Warnrings | **270** Weltpunkte (`r = 150 + not · 120` in `drawCrystal`) |
+| es fehlen | **33 bis 84** Weltpunkte |
+
+**Der Warnring ragt also aus der WELT heraus, nicht aus dem Bild** — keine
+Kameraeinstellung holt ihn herein, auch die weiteste nicht (bei `fitScale` ist
+die ganze Karte zu sehen, und dort ist er trotzdem draußen). Der KÖRPER der
+Station (130 Weltpunkte Halbmesser) liegt seit v322 in allen vier Formaten des
+Browsertores vollständig im Bild; das war die Kamerahälfte, und sie ist
+erledigt.
+
+**Was das für eine künftige Bestellung heißt, und nur dafür:** die
+Zielplattform gehört **mindestens 270 Weltpunkte** vom nächsten Kartenrand
+entfernt. Das ist eine Forderung an das nächste Kartenbild, kein Auftrag zum
+Neumalen der drei vorhandenen — die Abwägung oben (Bahngeometrie gegen
+Kartennutzung) gilt unverändert, und sie gegen eine zweite Messung
+einzutauschen wäre dieselbe Vermutung, vor der sie warnt. **Vier Kartenbilder
+neu zu bestellen ist eine Entscheidung des Nutzers**, nicht meine; solange sie
+aussteht, meldet das Browsertor die fehlenden Weltpunkte bei jedem Lauf als
+Hinweis und nicht als Fehler (K5).
+
 Ablage: `art/roh/untergrund/` · **2400 × 1350 PNG** · Budget 700 KB je Datei.
 
 ### 8b.1 `12_laubbreit.png` — Spiralhain, Laubwald

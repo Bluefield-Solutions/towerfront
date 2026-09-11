@@ -1,6 +1,39 @@
 # Towerfront — der Neubau
 
-Stand: v326 · beschlossen am 09.09.2026
+Stand: v333 · beschlossen am 09.09.2026
+
+**Nachgesehen in v333 — Paket N6 ist bis auf zwei Stories durch, und es ist
+das Paket, das die vier Sätze dieses Dokuments am direktesten einlöst.**
+
+| Story | gebaut | gemessen |
+|---|---|---|
+| S-N6-01 · Wirkungen als Kartenmaterial | v327 | sechs Karten, **null Paare** mit gleichem Abdruck über vier Karten |
+| S-N6-02 · der Sanitäter | v328 | 14,0 Lebenspunkte je Sekunde in Reichweite, **0,0** außerhalb |
+| S-N6-03 · der Hetzer | v329 | lange Route gehalten, kurze kommt durch (60 Plätze allein am Umweg) |
+| S-N6-04 · die Monokulturwelle | v330 | jede reine Sorte verliert mehr als das gemischte Feld (28/21/10/10 gegen **5**) |
+| S-N6-05 · Vorzeichen | v332 | sechs Ankündigungen, **null Paare** mit gleichem Abdruck über vier reine Felder |
+| S-N6-06 · der Schwanz des Laufs | v333 | bester Stil **5 Umläufe**, ohne Steigerung 12+ (also kein Ende) |
+
+**Alle sechs zahlen auf denselben der vier Sätze ein — „der Bogen wird ein
+Roguelite-Lauf".** Und sie tun es auf eine Art, die dieses Dokument so nicht
+vorgesehen hatte: nicht durch mehr Inhalt, sondern indem jede neue Sache
+**gegen die anderen abgegrenzt** wird. Die Abnahme lautet in fünf von sechs
+Fällen nicht „wirkt es", sondern „ist es von den anderen zu UNTERSCHEIDEN" —
+zwei Dinge, die dieselbe Antwort verlangen, sind ein Ding mit zwei Namen.
+
+**Zwei Befunde aus v333 gehören in dieses Dokument und nicht nur ins
+Verzeichnis**, weil sie den Neubau selbst betreffen:
+
+* **Die Steigerung des Laufs erreichte das Spiel gar nicht.** `laufAbschnitt`
+  wurde außerhalb von `npm run sim` nirgends gesetzt — der gespielte Lauf
+  rechnete in jedem Abschnitt mit Faktor 1, während das Werkzeug daneben eine
+  steigende Kurve maß. **Der Lauf war als Modell gemessen und als Spiel
+  ungespielt**, und das seit v309. Seit v333 setzt `main.ts` ihn.
+* **Nur ein Spielstil von dreien kommt in den Schwanz** (N6S), und auch das
+  ohne jede Steigerung. Die anderen zwei verlieren schon den letzten
+  geplanten Abschnitt. Damit steht die Frage, die N1G stellt, zum ersten Mal
+  als Zahl im Weg einer Story: **eine Roguelite-Klammer, die nur ein Spielstil
+  zu Ende bringt, ist keine Klammer, sondern ein Trichter.**
 
 **Nachgesehen in v325 — Paket N4 ist durch, und Paket N5 hat begonnen.**
 Nach S-N4-10 (v323) blieb von N4 nur N4L offen, und das ist eine Entscheidung

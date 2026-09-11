@@ -15,7 +15,7 @@ import { messungAus, messungGewuenscht, messungLaeuft, messungStarten } from './
 import { bildspeicherByte } from './gfx/speicher';
 import {
   type LaufZustand, laufStarten, laufLaden, laufSpeichern, laufLoeschen,
-  abschnittGeschafft, abschnittWaehlen, laufendeKarte, istLaufZuEnde, erfahrungFuer,
+  abschnittGeschafft, abschnittWaehlen, laufendeKarte, erfahrungFuer, schwanzRunde,
 } from './game/lauf';
 import { laufErfahrungGutschreiben } from './core/storage';
 import { MAPS } from './data/maps';
@@ -76,9 +76,9 @@ function laufSetzen(l: LaufZustand | null): void {
  *  `welleGesamt` bekommt die Wellen des angefangenen Abschnitts noch mit:
  *  wer in Welle neun eines Abschnitts faellt, hat neun Wellen gefahren, und
  *  genau dieser Posten trennt eine Niederlage von null. */
-function laufBeenden(l: LaufZustand, geschafft: boolean, angefangeneWellen = 0): void {
+function laufBeenden(l: LaufZustand, angefangeneWellen = 0): void {
   const stand = { ...l, welleGesamt: l.welleGesamt + angefangeneWellen };
-  menu.erfahrungPlus = erfahrungFuer(stand, geschafft);
+  menu.erfahrungPlus = erfahrungFuer(stand);
   laufErfahrungGutschreiben(menu.erfahrungPlus);
   laufSetzen(null);
 }
@@ -91,6 +91,13 @@ function abschnittBetreten(mapId: string, difficulty: typeof state.difficulty,
   // NACH `reset`: die Auflage gehoert zum Abschnitt, nicht zur Karte.
   state.laufDruck = lauf?.druck ?? 1;
   state.laufBeute = lauf?.beute ?? 1;
+  // **Und die Steigerung des Laufs auch** (v333, S-N6-06). Bis v332 stand
+  // `laufAbschnitt` im gespielten Lauf auf 0 - `laufFaktor` gab immer 1, und
+  // die ganze Steigerung ueber die Abschnitte war gemessenes Modell und
+  // ungespielte Wirklichkeit. Ein Schwanz, der sich steigert, haette daran
+  // nichts geaendert (Regel 13).
+  state.laufAbschnitt = lauf?.abschnitt ?? 0;
+  state.laufSchwanz = lauf ? schwanzRunde(lauf) : 0;
   renderer.menu = null;
   ui.setSpielansicht(true);
 }
@@ -110,7 +117,7 @@ menu.onWahl = (angebotId) => {
 
 menu.onLaufEnde = () => {
   // Aufgeben ist auch ein Ende: was gefahren wurde, bleibt angerechnet.
-  if (lauf) laufBeenden(lauf, false);
+  if (lauf) laufBeenden(lauf);
 };
 
 menu.onStart = (mapId, difficulty, endless) => {
@@ -175,10 +182,24 @@ function showResult(): void {
   if (lauf) {
     if (state.phase === 'won' && !state.endless) {
       const weiter = abschnittGeschafft(lauf, state.gold, state.lives, state.totalWaves);
-      if (istLaufZuEnde(weiter)) laufBeenden(weiter, true);
-      else laufSetzen(weiter);
+      // **Der Plan endet, der Lauf nicht** (v333, S-N6-06).
+      //
+      // Bis v332 stand hier `laufBeenden(weiter, true)`: der letzte geplante
+      // Abschnitt beendete den Lauf, und wer weiterspielen wollte, ging
+      // ueber die Landkarte in den Endlosmodus - ein zweiter Bildschirm und
+      // eine zweite Zaehlweise fuer dieselbe Sache. Jetzt geht es weiter wie
+      // an jeder anderen Grenze: dieselbe Wahl, derselbe Wellenzaehler,
+      // dieselbe Erfahrung, nur haerter.
+      //
+      // **Die Erfahrung fuers Durchbringen bleibt an EINER Stelle.** Sie
+      // wird nicht hier an der Grenze gezahlt, sondern weiter unten, wo jeder
+      // Lauf endet - und ob sie faellig ist, LEITET `erfahrungFuer` aus dem
+      // Zustand ab, statt einen Schalter zu bekommen. Zwei Zahlstellen waeren
+      // zwei Gelegenheiten, doppelt oder gar nicht zu zahlen, und dieselbe
+      // Bauart hat Regel 6 schon einmal begruendet.
+      laufSetzen(weiter);
     } else {
-      laufBeenden(lauf, false, state.waveIndex);
+      laufBeenden(lauf, state.waveIndex);
     }
   }
   menu.view = 'result';

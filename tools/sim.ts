@@ -7,10 +7,11 @@ import { GameState } from '../src/game/state';
 import { ZIELWAHL_ORDNUNG, type Zielwahl, type Tower } from '../src/game/types';
 
 import {
-  DIFFICULTIES, DIFFICULTY_ORDER, LAUF_STEIGUNG, type DifficultyId,
+  DIFFICULTIES, DIFFICULTY_ORDER, LAUF_STEIGUNG, ENDLOS_STEIGERUNG, type DifficultyId,
 } from '../src/data/difficulty';
 import {
-  laufStarten, abschnittGeschafft, laufendeKarte, istLaufZuEnde, wellenDesLaufs,
+  laufStarten, abschnittGeschafft, laufendeKarte, planDurch, wellenDesLaufs,
+  schwanzRunde,
   wellenDesAbschnitts, abschnittsWahl, abschnittWaehlen, WAHLARTEN, erfahrungFuer,
   type AbschnittsAngebot,
 } from '../src/game/lauf';
@@ -450,6 +451,8 @@ const NUR_WIRKUNG = process.argv.slice(2).includes('--wirkungen');
 const NUR_MONO = process.argv.slice(2).includes('--monokultur');
 /** Nur die sechs Vorzeichen (S-N6-05) - derselbe Grund wie oben. */
 const NUR_VZ = process.argv.slice(2).includes('--vorzeichen');
+/** Nur der Schwanz des Laufs (S-N6-06) - derselbe Grund wie oben. */
+const NUR_SCHWANZ = process.argv.slice(2).some((a) => a === '--schwanz' || a.startsWith('--schwanz='));
 
 /** Bauplaetze nach abgedeckter Wegstrecke bewertet.
  *
@@ -1080,12 +1083,12 @@ function erfahrungMessen(): void {
   // Ein ganzer Lauf, alle Abschnitte gewonnen - gerechnet, nicht gespielt:
   // was ein Lauf EINBRINGT, haengt an seinen Zahlen und nicht am Bot.
   let ganz = laufStarten('normal', AUSSAATEN[0]);
-  while (!istLaufZuEnde(ganz)) {
+  while (!planDurch(ganz)) {
     ganz = abschnittGeschafft(ganz, 0, 0, wellenDesAbschnitts(laufendeKarte(ganz) ?? ''));
     const angebot = abschnittsWahl(ganz);
     if (angebot.length) ganz = abschnittWaehlen(ganz, angebot[0].id);
   }
-  const gewonnen = erfahrungFuer(ganz, true);
+  const gewonnen = erfahrungFuer(ganz);
 
   // **Der Wellenzaehler zaehlt wirklich durch** (S-N1-01, neu geprueft in
   // v309). Bis v308 hing die Lebenskurve daran und der Fehler waere in der
@@ -1105,7 +1108,7 @@ function erfahrungMessen(): void {
   kurz = abschnittGeschafft(kurz, 0, 0, wellenDesAbschnitts(laufendeKarte(kurz) ?? ''));
   const angebot = abschnittsWahl(kurz);
   if (angebot.length) kurz = abschnittWaehlen(kurz, angebot[0].id);
-  const verloren = erfahrungFuer({ ...kurz, welleGesamt: kurz.welleGesamt + 9 }, false);
+  const verloren = erfahrungFuer({ ...kurz, welleGesamt: kurz.welleGesamt + 9 });
 
   const stapelPreis = KARTENSTAPEL.reduce((a, k) => a + k.kosten, 0);
   console.log(`  gewonnen ${gewonnen} · in Welle 9 des zweiten Abschnitts verloren `
@@ -1155,6 +1158,87 @@ function erfahrungMessen(): void {
   void vorher;
 }
 
+/** **Wie weit ein Lauf in seinem SCHWANZ kommt** (v333, S-N6-06).
+ *
+ *  Die zweite Abnahme der Story ist ein VERGLEICH und keine absolute Zahl
+ *  (Regel 2): ein guter Lauf muss messbar weiterkommen als ein mittelmaessiger.
+ *  Gemessen wird deshalb derselbe Schwanz mit drei Spielstilen - wer im Plan
+ *  mehr geholt hat, haelt im Schwanz laenger durch, oder die Steigerung misst
+ *  nichts ueber das Koennen.
+ *
+ *  **Und er muss ENDEN.** Ein Schwanz, in dem jeder Stil bis zur Zeitgrenze
+ *  laeuft, ist kein Ende, sondern ein Bildschirmschoner - das ist die
+ *  Nullprobe dieser Messung und genau das, was die Gegenprobe herstellt,
+ *  indem sie die Steigerung auf 1 setzt.
+ *
+ *  Gefahren wird ohne den Plan davor: gemessen wird die STEIGERUNG des
+ *  Schwanzes, nicht der Weg dorthin. Der Stand aus dem Plan steckt im
+ *  Abschnittsindex, mit dem er anfaengt. */
+const SCHWANZ_MAX = 12;
+
+function schwanzMessen(steigerung = ENDLOS_STEIGERUNG): void {
+  console.log(`\nSchwanz des Laufs (Steigerung ${steigerung.toFixed(2)}, `
+    + `hoechstens ${SCHWANZ_MAX} Umlaeufe je Stil):`);
+  const weiten: { stil: string; umlauf: number }[] = [];
+  for (const bot of BOTS) {
+    let lauf = laufStarten('normal', AUSSAATEN[0]);
+    // Direkt an den Anfang des Schwanzes: der Plan ist durch.
+    lauf = { ...lauf, abschnitt: lauf.abschnitte.length };
+    let umlauf = 0;
+    for (; umlauf < SCHWANZ_MAX; umlauf++) {
+      const karte = laufendeKarte(lauf)!;
+      const r = play(bot.plan ?? mixedPlanBase, () => 0, bot, 'normal', karte, {
+        seed: lauf.saat, laufAbschnitt: lauf.abschnitt,
+        laufSchwanz: schwanzRunde(lauf), laufSteigerung: steigerung,
+        zugStil: bot.name,
+      });
+      if (!r.won) break;
+      lauf = abschnittGeschafft(lauf, r.lives, r.lives, wellenDesAbschnitts(karte));
+      const angebot = abschnittsWahl(lauf);
+      if (angebot.length) lauf = abschnittWaehlen(lauf, angebot[0].id);
+    }
+    weiten.push({ stil: bot.name, umlauf });
+    console.log(`  ${bot.name.padEnd(10)} ${umlauf} Umlauf/Umlaeufe geschafft`);
+  }
+  const beste = Math.max(...weiten.map((w) => w.umlauf));
+  const schlechteste = Math.min(...weiten.map((w) => w.umlauf));
+  console.log(`  bester Stil ${beste}, schlechtester ${schlechteste}, `
+    + `Abstand ${beste - schlechteste}.`);
+  // **Endet er ueberhaupt?** Ohne diese Zeile bestuende die Messung jede
+  // Steigerung, die gar keine ist: alle drei laufen bis zur Grenze, der
+  // Abstand ist 0, und das saehe aus wie "kein Unterschied zwischen den
+  // Stilen" statt wie "der Schwanz hoert nicht auf" (Regel 5).
+  if (beste >= SCHWANZ_MAX) {
+    errors.push(`Der Schwanz endet nicht: der beste Stil haelt alle ${SCHWANZ_MAX} `
+      + 'gemessenen Umlaeufe durch. Eine Fortsetzung, die niemanden mehr stellt, '
+      + 'ist kein Ende des Laufs, sondern ein Bildschirmschoner - dann ist die '
+      + 'Steigerung zu flach.');
+    return;
+  }
+  // **Wer kommt ueberhaupt hinein?** Gemessen schafft nur der Meister
+  // Umlaeufe; Breite und Sparsam stehen auf null, und zwar auch bei
+  // Steigerung 1,00 - sie scheitern nicht am Schwanz, sondern schon am
+  // letzten geplanten Abschnitt (N1G). Solange das gilt, ist der Abstand
+  // eine Zusage ueber EINEN Stil, und das gehoert gesagt statt verschwiegen.
+  //
+  // Als Hinweis und nicht als Fehler, dieselbe Bauart wie `OFFEN (N1-Kurve)`:
+  // der Schwanz tut, was diese Story von ihm verlangt; was fehlt, liegt
+  // ausserhalb.
+  if (weiten.filter((w) => w.umlauf > 0).length < weiten.length) {
+    const drin = weiten.filter((w) => w.umlauf > 0).map((w) => w.stil);
+    console.log(`  OFFEN (N6-Schwanz): von ${weiten.length} Spielstilen kommt nur `
+      + `${drin.join(', ') || 'keiner'} ueberhaupt in den Schwanz. Die uebrigen `
+      + 'verlieren schon den letzten geplanten Abschnitt - das ist N1G und nicht '
+      + 'die Steigerung des Schwanzes.');
+  }
+  if (beste <= schlechteste) {
+    errors.push(`Der Schwanz trennt die Spielstile nicht: bester ${beste} Umlaeufe, `
+      + `schlechtester ${schlechteste}. Wie weit man kommt, haengt dann nicht davon ab, `
+      + 'wie gut man gespielt hat - und damit misst der Schwanz die Steigerung und '
+      + 'nicht den Spieler.');
+  }
+}
+
 function laufMessen(steigung = LAUF_STEIGUNG, bot: Bot = MEISTER): void {
   console.log(`\nDer Lauf ueber alle Abschnitte (S-N1-01), Steigung `
     + `${steigung.toFixed(2)}, Stil ${bot.name}:`);
@@ -1168,7 +1252,7 @@ function laufMessen(steigung = LAUF_STEIGUNG, bot: Bot = MEISTER): void {
   let karten = 0;
   const verluste: number[] = [];
 
-  while (!istLaufZuEnde(lauf)) {
+  while (!planDurch(lauf)) {
     const karte = laufendeKarte(lauf)!;
     const mm = MAPS.find((m) => m.id === karte)!;
     // Die Rampe der ERSTEN Welle dieses Abschnitts - gerechnet, nicht
@@ -1222,10 +1306,20 @@ function laufMessen(steigung = LAUF_STEIGUNG, bot: Bot = MEISTER): void {
       + 'Spieler, den es nicht gibt.');
   }
   if (gewaehlt.length) console.log(`  Gewaehlt an den Grenzen: ${gewaehlt.join(' -> ')}`);
-  if (lauf.gewaehlt.length !== lauf.abschnitte.length - 1) {
-    errors.push(`Der Lauf hat ${lauf.abschnitte.length} Abschnitte, aber nur `
-      + `${lauf.gewaehlt.length} Wahlen. An jeder Grenze steht eine - sonst faellt der `
-      + 'Lauf still auf seinen Plan zurueck, und die Wahl waere ein Bild ohne Wirkung.');
+  // **Eine Wahl an JEDER Grenze, auch an der letzten** (v333, S-N6-06).
+  //
+  // Bis v332 stand hier `abschnitte.length - 1`: die letzte Grenze war das
+  // Ende des Laufs, und dort eine Wahl offen zu lassen hiesse einen Knopf
+  // hinstellen, der ins Nichts fuehrt. Seit der Plan in den Schwanz
+  // uebergeht, fuehrt er dorthin - also sind es so viele Wahlen wie
+  // Abschnitte. **Die Zahl ist um eins gestiegen, weil die Mechanik es ist**,
+  // und nicht, weil die Pruefung nachgegeben haette: eine Grenze weniger
+  // waere jetzt der Fehler.
+  if (lauf.gewaehlt.length !== lauf.abschnitte.length) {
+    errors.push(`Der Lauf hat ${lauf.abschnitte.length} Abschnitte, aber `
+      + `${lauf.gewaehlt.length} Wahlen. An jeder Grenze steht eine - auch an der `
+      + 'letzten, denn dahinter faengt der Schwanz an. Sonst faellt der Lauf still auf '
+      + 'seinen Plan zurueck, und die Wahl waere ein Bild ohne Wirkung.');
   }
 
   if (dauer > LAUF_HORIZONT_S) {
@@ -2056,6 +2150,12 @@ function play(
      *  Wert des Spiels; eine Wirkung, die sich nicht abschalten laesst, ist
      *  nicht gemessen, sondern behauptet (Regel 13). */
     laufSteigung?: number;
+    /** Der wievielte Umlauf NACH dem Plan (v333, S-N6-06). Ohne Angabe 0 -
+     *  dann rechnet der Lauf, als gaebe es keinen Schwanz. */
+    laufSchwanz?: number;
+    /** Wie stark ein Umlauf des Schwanzes zulegt. Ohne Angabe der Wert des
+     *  Spiels; durchprobiert wird er mit `--schwanz=a,b,c` (Regel 9). */
+    laufSteigerung?: number;
     /** Die Auflage der Abschnittswahl (S-N1-03): Faktor auf die
      *  Lebenspunkte und Faktor auf alles Gold. Ohne Angabe je 1 - eine
      *  Wirkung, die sich nicht abschalten laesst, ist nicht gemessen,
@@ -2097,6 +2197,8 @@ function play(
   if (opts.vielfalt !== undefined) s.vielfaltZuschlag = opts.vielfalt;
   if (opts.laufAbschnitt !== undefined) s.laufAbschnitt = opts.laufAbschnitt;
   if (opts.laufSteigung !== undefined) s.laufSteigung = opts.laufSteigung;
+  if (opts.laufSchwanz !== undefined) s.laufSchwanz = opts.laufSchwanz;
+  if (opts.laufSteigerung !== undefined) s.laufEndlos = opts.laufSteigerung;
   if (opts.druck !== undefined) s.laufDruck = opts.druck;
   if (opts.beute !== undefined) s.laufBeute = opts.beute;
   s.reset(opts.seed ?? AUSSAATEN[0], difficulty, mapId,
@@ -3220,6 +3322,23 @@ const mixedPlan = mixedPlanBase;
     process.exit(errors.length ? 1 : 0);
   }
 
+  if (NUR_SCHWANZ) {
+    // **Vor dem Justieren den Raum ansehen** (Regel 9). `--schwanz=a,b,c`
+    // faehrt den Schwanz je Wert einmal durch und legt nebeneinander, wie
+    // weit jeder Stil kommt - blind eine Steigerung zu setzen hiesse, durch
+    // ein Schluesselloch zu schauen.
+    const sweep = process.argv.find((a) => a.startsWith('--schwanz='));
+    if (sweep) {
+      for (const w of sweep.slice('--schwanz='.length).split(',').map(Number)) {
+        schwanzMessen(w);
+      }
+    } else {
+      schwanzMessen();
+    }
+    for (const e of errors) console.log(`FEHLER: ${e}`);
+    process.exit(errors.length ? 1 : 0);
+  }
+
   if (NUR_VZ) {
     vorzeichenMessen();
     for (const e of errors) console.log(`FEHLER: ${e}`);
@@ -3264,6 +3383,7 @@ const mixedPlan = mixedPlanBase;
   wirkungenMessen();
   monokulturMessen();
   vorzeichenMessen();
+  schwanzMessen();
   wiederholungMessen();
   vielfaltMessen();
   laufMessen();

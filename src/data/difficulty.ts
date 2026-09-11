@@ -147,8 +147,55 @@ function smoothstep(a: number, b: number, x: number): number {
  *  ueber sechzig Wellen kauft diese Achse damit irgendwann nichts mehr. */
 export const LAUF_STEIGUNG = 1.3;
 
-export function laufFaktor(abschnitt: number, steigung = LAUF_STEIGUNG): number {
-  return steigung ** Math.max(0, abschnitt);
+/** **Was der Schwanz des Laufs je Umlauf obendrauf legt** (v333, S-N6-06).
+ *
+ *  Nach dem letzten geplanten Abschnitt geht der Lauf weiter, und er nimmt
+ *  dafuer einen EIGENEN Faktor - nicht weil der Schwanz etwas anderes waere,
+ *  sondern weil die Frage eine andere ist. Im Plan soll jeder Abschnitt
+ *  etwas kosten und jeder Spielstil durchkommen; deshalb steht `LAUF_STEIGUNG`
+ *  auf 1,3, dem niedrigsten Wert, der das tut. Im Schwanz soll der Lauf
+ *  ENDEN, und zwar umso spaeter, je besser er war - ein Schwanz, der nicht
+ *  endet, ist kein Ende, sondern ein Bildschirmschoner.
+ *
+ *  Hier und nicht in `lauf.ts`, obwohl der Schwanz dort wohnt: `laufFaktor`
+ *  braucht ihn, und `src/data` darf nicht von `src/game` abhaengen. Der
+ *  Wert steht damit neben dem, mit dem er verglichen wird.
+ *
+ *  **Durchprobiert und nicht gesetzt** (Regel 9) - `npm run sim -- --schwanz`
+ *  faehrt drei Spielstile durch hoechstens zwoelf Umlaeufe. Gemessen, wie
+ *  weit der beste kommt:
+ *
+ *  | Steigerung | 1,00 | 1,02 | 1,05 | 1,08 | 1,12 | 1,15 | 1,30 | 1,45 |
+ *  |---|---|---|---|---|---|---|---|---|
+ *  | Umlaeufe | 12+ | 12+ | 5 | **5** | 2 | 1 | 1 | 0 |
+ *
+ *  Unter 1,05 endet der Schwanz gar nicht - der beste Stil haelt alle zwoelf
+ *  gemessenen Umlaeufe durch, und eine Fortsetzung, die niemanden mehr
+ *  stellt, ist kein Ende, sondern ein Bildschirmschoner. Ab 1,45 schafft
+ *  niemand mehr einen einzigen.
+ *
+ *  **Gesetzt ist 1,08 und nicht 1,05, obwohl beide fuenf Umlaeufe tragen:**
+ *  1,05 ist der Rand des Fensters, 1,08 seine Mitte. Eine Nadel statt einer
+ *  Flaeche hat dieses Verzeichnis schon einmal eine Runde gekostet (v210).
+ *
+ *  **Und sie ist gemessen NICHT dieselbe Zahl wie `LAUF_STEIGUNG`**, obwohl
+ *  beide dieselbe Form haben: bei 1,3 ist der Schwanz nach einem Umlauf
+ *  vorbei. Die zwei Fenster liegen auseinander, und das ist der Grund, warum
+ *  es zwei Konstanten sind und nicht eine. */
+export const ENDLOS_STEIGERUNG = 1.08;
+
+export function laufFaktor(
+  abschnitt: number, steigung = LAUF_STEIGUNG, schwanz = 0,
+  endlos = ENDLOS_STEIGERUNG,
+): number {
+  // **Der Schwanz setzt AUF den Plan auf, er faengt nicht neu an** (v333,
+  // S-N6-06). `abschnitt` zaehlt auch dort weiter durch - es gibt keine
+  // zweite Zaehlweise -, deshalb wird der geplante Anteil bei der Zahl der
+  // Umlaeufe gedeckelt und der Rest mit `ENDLOS_STEIGERUNG` gerechnet.
+  // Stuende beides multiplikativ nebeneinander, zaehlte jeder Umlauf des
+  // Schwanzes doppelt.
+  const geplant = Math.max(0, abschnitt - Math.max(0, schwanz));
+  return steigung ** geplant * endlos ** Math.max(0, schwanz);
 }
 
 /** Lebenspunktfaktor der Welle mit dem Index i (0-basiert).

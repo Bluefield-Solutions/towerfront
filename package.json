@@ -10,6 +10,7 @@
     "guards": "tsx tools/guards.ts",
     "art": "node tools/pack-art.mjs --check",
     "sim": "tsx tools/sim.ts",
+    "schwanz": "tsx tools/sim.ts --schwanz",
     "smoke": "tsx tools/smoke.ts",
     "bench": "tsx tools/bench.ts",
     "autarkie": "node tools/check-autarkie.mjs",

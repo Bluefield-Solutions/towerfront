@@ -18,7 +18,7 @@ import {
 import { vorzeichenFuer, type Vorzeichen } from '../data/vorzeichen';
 import { VERBUND_MAX, VERBUND_STUFE, VERBUND_UMKREIS } from './verbund';
 import {
-  DIFFICULTIES, hpScale, laufFaktor, LAUF_STEIGUNG,
+  DIFFICULTIES, hpScale, laufFaktor, LAUF_STEIGUNG, ENDLOS_STEIGERUNG,
   type DifficultyDef, type DifficultyId,
 } from '../data/difficulty';
 import { ABILITIES, ABILITY_ORDER, type AbilityId } from '../data/abilities';
@@ -1524,13 +1524,34 @@ export class GameState {
    *  Jetzt fragt das Werkzeug hier, und beide sehen dieselbe Zahl. */
   laufRampe(welle: number): number {
     return hpScale(this.diff, welle, this.waves.length, this.map.balance.hpMul)
-      * laufFaktor(this.laufAbschnitt, this.laufSteigung);
+      * laufFaktor(this.laufAbschnitt, this.laufSteigung, this.laufSchwanz,
+        this.laufEndlos);
   }
 
   /** **Der wievielte Abschnitt eines Laufs das hier ist**, 0-basiert
    *  (v309, N1K). 0 heisst: einzelne Karte oder erster Abschnitt - dann steht
-   *  der Faktor auf 1 und alles rechnet wie ohne Lauf. */
+   *  der Faktor auf 1 und alles rechnet wie ohne Lauf.
+   *
+   *  **Seit v333 setzt ihn auch das SPIEL** und nicht nur `npm run sim`
+   *  (S-N6-06). Bis v332 stand er im gespielten Lauf auf 0 - `laufFaktor`
+   *  gab immer 1, und die ganze Steigerung ueber die Abschnitte war
+   *  gemessenes Modell und ungespielte Wirklichkeit. Ein Schwanz, der sich
+   *  steigert, haette daran gar nichts geaendert (Regel 13: wer eine Wirkung
+   *  misst, muss sie erst einmal haben).
+   *
+   *  **Im Schwanz zaehlt er weiter durch** - es gibt keine zweite Zaehlweise
+   *  (die erste Abnahme von S-N6-06). Was der Schwanz anders macht, steht
+   *  allein in `laufSchwanz`. */
   laufAbschnitt = 0;
+  /** **Der wievielte Umlauf NACH dem Plan das hier ist** - 0, solange der
+   *  Plan laeuft (v333, S-N6-06). Gefuellt aus `schwanzRunde`; im Spiel von
+   *  `main.ts`, in den Werkzeugen von Hand. */
+  laufSchwanz = 0;
+  /** Wie stark ein Umlauf des Schwanzes gegenueber dem vorigen zulegt. Wie
+   *  `laufSteigung` auf dem Wert des Spiels; die Werkzeuge stellen ihn um,
+   *  damit sich die Wirkung durchprobieren UND abschalten laesst (Regel 9
+   *  und Regel 13). */
+  laufEndlos = ENDLOS_STEIGERUNG;
   /** Wie stark ein Abschnitt gegenueber dem vorigen zulegt. Steht auf dem
    *  Wert aus `difficulty.ts`; die Werkzeuge stellen ihn um, damit sich die
    *  Wirkung abschalten laesst (Regel 13). */

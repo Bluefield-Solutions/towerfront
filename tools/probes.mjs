@@ -988,7 +988,9 @@ export const PROBEN = [
     // seine Rampentabelle DANEBEN noch einmal selbst rechnete. Das Tor mass
     // seine eigene Arithmetik statt des Spiels. Die Rampe steht seitdem an
     // einer Stelle (`GameState.laufRampe`), und das Werkzeug liest sie ab.
-    suche: '      * laufFaktor(this.laufAbschnitt, this.laufSteigung);',
+    // Auf die neue Stelle nachgezogen (v333, K1): `laufFaktor` bekommt seit
+    // S-N6-06 den Schwanz als dritten Eingang.
+    suche: '      * laufFaktor(this.laufAbschnitt, this.laufSteigung, this.laufSchwanz,',
     ersatz: '      * 1;',
     tor: 'sim',
     meldet: 'steigt im Lauf nicht durch',
@@ -1073,8 +1075,11 @@ export const PROBEN = [
     // das man nie zu sehen bekommt, ist keine Mechanik.
     name: 'Die Abschnittswahl geht nie auf',
     datei: 'src/game/lauf.ts',
-    suche: 'wahlOffen: weiter < l.abschnitte.length,',
-    ersatz: 'wahlOffen: false,',
+    // Auf die neue Stelle nachgezogen (v333, K1): seit S-N6-06 geht die Wahl
+    // an JEDER Grenze auf, auch am Ende des Plans - dort faengt der Schwanz
+    // an, und der ist dieselbe Wahl und kein zweiter Bildschirm.
+    suche: '    wahlOffen: true,',
+    ersatz: '    wahlOffen: false,',
     tor: 'sim',
     meldet: 'Wahlen',
   },
@@ -1145,10 +1150,14 @@ export const PROBEN = [
     // 450 fuers Durchspielen gegen 1350 fuer den Sieg - nicht 0 gegen 1350.
     name: 'Ein verlorener Lauf bringt keine Erfahrung',
     datei: 'src/game/lauf.ts',
+    // Auf die neue Stelle nachgezogen (v333, K1): `geschafft` ist seit
+    // S-N6-06 eine Ableitung aus dem Zustand und kein Schalter mehr - der
+    // Lauf endet nicht mehr am letzten geplanten Abschnitt, also gibt es
+    // keinen Aufrufer, der es wuesste.
     suche: '  return l.welleGesamt * ERFAHRUNG_JE_WELLE\n'
       + '    + l.abschnitt * ERFAHRUNG_JE_ABSCHNITT\n'
-      + '    + (geschafft ? ERFAHRUNG_LAUF_GESCHAFFT : 0);',
-    ersatz: '  return geschafft ? ERFAHRUNG_LAUF_GESCHAFFT : 0;',
+      + '    + (planDurch(l) ? ERFAHRUNG_LAUF_GESCHAFFT : 0);',
+    ersatz: '  return planDurch(l) ? ERFAHRUNG_LAUF_GESCHAFFT : 0;',
     tor: 'sim',
     meldet: 'bringt nichts',
   },
@@ -5460,6 +5469,26 @@ export const PROBEN = [
     ersatz: "{ id: 'bajonett', name: 'Bajonett', text: 'Mehr Schaden dicht am Turm.', art: 'weit', wert: 0.35, kosten: 700 }",
     tor: 'sim',
     meldet: 'nicht zu unterscheiden',
+  },
+  {
+    // **Ein Schwanz, der nicht endet, ist kein Ende** (S-N6-06). Der Eingriff
+    // setzt die Steigerung des Schwanzes auf 1 - dann laeuft der beste Stil
+    // durch alle zwoelf gemessenen Umlaeufe, und `sim` muss sagen, dass das
+    // ein Bildschirmschoner ist und kein Abschluss.
+    //
+    // Das ist zugleich die Nullprobe der ganzen Messung (Regel 13): ohne die
+    // Steigerung faellt die gemessene Weite von 5 auf 12+, sie misst also
+    // wirklich die Steigerung und nicht die Karte.
+    //
+    // Gegriffen wird der WERT und nicht die Rechnung: wie stark der Schwanz
+    // zulegt, ist eine Eichfrage und aendert sich; dass er ueberhaupt zulegt,
+    // ist die Zusage.
+    name: 'Der Schwanz des Laufs endet nie',
+    datei: 'src/data/difficulty.ts',
+    regel: /export const ENDLOS_STEIGERUNG = [0-9.]+;/,
+    ersatz: 'export const ENDLOS_STEIGERUNG = 1;',
+    tor: 'sim',
+    meldet: 'endet nicht',
   },
   {
     // **Die Trennung wird ueber drei Aussaaten gemittelt** (v331) - bis v330

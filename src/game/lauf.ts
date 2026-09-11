@@ -1,5 +1,6 @@
 import type { DifficultyId } from '../data/difficulty';
 import { MAPS } from '../data/maps';
+import { ENDLOS_STEIGERUNG } from '../data/difficulty';
 
 /** **Der Lauf als Zustand** (v302, S-N1-01).
  *
@@ -116,11 +117,37 @@ export function laufStarten(
 
 /** Die Karte, die gerade dran ist - oder `null`, wenn der Lauf zu Ende ist. */
 export function laufendeKarte(l: LaufZustand): string | null {
-  return l.abschnitte[l.abschnitt] ?? null;
+  // **Im Schwanz wird umgelaufen** (v333, S-N6-06): nach dem letzten
+  // geplanten Abschnitt geht es bei der ersten Karte weiter. Kein
+  // Bildschirm dazwischen, keine zweite Zaehlweise - dieselbe Wahl, dieselbe
+  // Erfahrung, derselbe Wellenzaehler, nur eine haertere Runde.
+  //
+  // Umgelaufen und nicht neu gewuerfelt: WELCHE Karte kommt, entscheidet
+  // ohnehin `abschnittsWahl` an jeder Grenze; diese Zeile ist nur der
+  // Rueckfall, wenn niemand gewaehlt hat.
+  if (!l.abschnitte.length) return null;
+  return l.abschnitte[l.abschnitt % l.abschnitte.length] ?? null;
 }
 
-export function istLaufZuEnde(l: LaufZustand): boolean {
+/** **Ist der geplante Teil durch?**
+ *
+ *  Hiess bis v333 `istLaufZuEnde`, und der Name war seit S-N6-06 falsch: der
+ *  Lauf ENDET hier nicht mehr, er geht in seinen Schwanz ueber. Die Frage,
+ *  die die Aufrufer wirklich stellen, ist die nach dem PLAN - deshalb heisst
+ *  sie jetzt so. Ein Name, der etwas anderes behauptet als er prueft, ist
+ *  die stillste Art, eine Bedingung zu verlieren. */
+export function planDurch(l: LaufZustand): boolean {
   return l.abschnitt >= l.abschnitte.length;
+}
+
+/** **Der wievielte Abschnitt des SCHWANZES gerade laeuft** - 0, solange der
+ *  Plan laeuft, dann 1, 2, 3 ...
+ *
+ *  Die Zahl, an der die Steigerung des Schwanzes haengt, und die einzige.
+ *  `abschnitt` zaehlt weiter durch (es gibt keine zweite Zaehlweise - das
+ *  ist die erste Abnahme dieser Story), der Schwanz ist der Ueberhang. */
+export function schwanzRunde(l: LaufZustand): number {
+  return Math.max(0, l.abschnitt - l.abschnitte.length + 1);
 }
 
 /** Einen Abschnitt abschliessen und in den naechsten gehen.
@@ -142,11 +169,15 @@ export function abschnittGeschafft(
     welleGesamt: l.welleGesamt + gefahreneWellen,
     gold,
     kristall,
-    // **Die Wahl geht auf, sobald ein Abschnitt zu Ende ist** (S-N1-03) -
-    // und nur dann, wenn ueberhaupt noch einer kommt. Am Ende des Laufs eine
-    // Wahl offen zu lassen hiesse, dem Spieler einen Knopf hinzustellen, der
-    // ins Nichts fuehrt.
-    wahlOffen: weiter < l.abschnitte.length,
+    // **Die Wahl geht auf, sobald ein Abschnitt zu Ende ist** (S-N1-03).
+    //
+    // Bis v332 stand hier `weiter < l.abschnitte.length` - am Ende des Plans
+    // eine Wahl offen zu lassen hiesse einen Knopf hinstellen, der ins
+    // Nichts fuehrt. Seit S-N6-06 fuehrt er nirgends mehr ins Nichts: nach
+    // dem letzten geplanten Abschnitt kommt der Schwanz, und dort gibt es
+    // dieselbe Wahl wie vorher. Das IST die nahtlose Fortsetzung - nicht ein
+    // zweiter Bildschirm, sondern derselbe.
+    wahlOffen: true,
     // Die Auflage gilt fuer den Abschnitt, der gerade zu Ende ist, nicht fuer
     // den naechsten. Bis die naechste Wahl getroffen ist, steht sie auf 1.
     druck: 1,
@@ -223,10 +254,30 @@ export const ERFAHRUNG_JE_WELLE = 10;
 export const ERFAHRUNG_JE_ABSCHNITT = 100;
 export const ERFAHRUNG_LAUF_GESCHAFFT = 300;
 
-export function erfahrungFuer(l: LaufZustand, geschafft: boolean): number {
+/** **Der Faktor, mit dem der laufende Abschnitt rechnet.**
+ *
+ *  Eine Stelle, nicht zwei: der Plan steigert mit `steigung`, der Schwanz
+ *  setzt mit `ENDLOS_STEIGERUNG` auf dem Stand des letzten geplanten
+ *  Abschnitts auf. Beides danebenzurechnen waere Regel 15, und in v311 hat
+ *  genau das ein Tor seine eigene Kopie pruefen lassen. */
+export function laufSteigerung(l: LaufZustand, steigung: number): number {
+  const geplant = Math.min(l.abschnitt, Math.max(0, l.abschnitte.length - 1));
+  return steigung ** geplant * ENDLOS_STEIGERUNG ** schwanzRunde(l);
+}
+
+/** **`geschafft` ist eine ABLEITUNG, kein Schalter** (v333, S-N6-06).
+ *
+ *  Bis v332 gab der Aufrufer ein `true` mit, und das ging, solange der Lauf
+ *  am letzten geplanten Abschnitt endete: dort wusste `main.ts`, dass er
+ *  geschafft war. Seit der Lauf in seinen Schwanz uebergeht, endet er nur
+ *  noch durch Verlieren oder Aufgeben - und an dieser einen Stelle steht die
+ *  Frage "war der Plan durch" nirgends mehr als Tatsache herum, sondern
+ *  IM ZUSTAND. Dieselbe Bauart wie die Sichtbarkeitsregel von Regel 6: es
+ *  gibt keine Stelle mehr, an der man es vergessen kann. */
+export function erfahrungFuer(l: LaufZustand): number {
   return l.welleGesamt * ERFAHRUNG_JE_WELLE
     + l.abschnitt * ERFAHRUNG_JE_ABSCHNITT
-    + (geschafft ? ERFAHRUNG_LAUF_GESCHAFFT : 0);
+    + (planDurch(l) ? ERFAHRUNG_LAUF_GESCHAFFT : 0);
 }
 
 // --------------------------------------------------------- Die Abschnittswahl
@@ -345,8 +396,8 @@ function mischen<T>(liste: T[], wuerfel: () => number): T[] {
  *  hat; bleiben davon weniger als zwei, fuellen die schon besuchten auf.
  *  Ein einziges Angebot waere keine Wahl. */
 export function abschnittsWahl(l: LaufZustand): AbschnittsAngebot[] {
-  if (!l.wahlOffen || istLaufZuEnde(l)) return [];
-  const gesehen = new Set(l.abschnitte.slice(0, l.abschnitt));
+  if (!l.wahlOffen) return [];
+  const gesehen = new Set(l.abschnitte.slice(0, Math.min(l.abschnitt, l.abschnitte.length)));
   const wuerfel = mischer(l.saat, l.abschnitt);
   const frisch = mischen(MAPS.filter((m) => !gesehen.has(m.id)), wuerfel);
   const alt = mischen(MAPS.filter((m) => gesehen.has(m.id)), wuerfel);
@@ -376,14 +427,22 @@ export function abschnittWaehlen(l: LaufZustand, angebotId: string): LaufZustand
   const angebot = abschnittsWahl(l).find((a) => a.id === angebotId);
   if (!angebot) return l;
   const abschnitte = l.abschnitte.slice();
-  abschnitte[l.abschnitt] = angebot.karte;
+  // **Der Plan waechst nicht** (v333, S-N6-06). Im Schwanz zaehlt `abschnitt`
+  // ueber die Planlaenge hinaus; `abschnitte[l.abschnitt] = ...` haette die
+  // Liste dabei VERLAENGERT - und dann ist der Plan nie durch, `planDurch`
+  // nie wahr und jede Schleife darueber endlos. Genau das ist beim ersten
+  // Lauf passiert: `npm run sim -- --lauf` lief zwanzig Minuten statt
+  // hundert Sekunden. Der Plan ist der Nenner der Lebenskurve; er darf sich
+  // nicht aendern, weil jemand weiterspielt.
+  const stelle = l.abschnitt % Math.max(1, l.abschnitte.length);
+  abschnitte[stelle] = angebot.karte;
   // Den Plan dahinter nachziehen, damit keine Karte zweimal darin steht.
   // Er entscheidet nichts - gewaehlt wird an jeder Grenze neu -, aber er ist
   // der Nenner der Lebenskurve, und ein Plan mit Dubletten laese sich nicht
   // erklaeren.
-  const gesetzt = new Set(abschnitte.slice(0, l.abschnitt + 1));
+  const gesetzt = new Set(abschnitte.slice(0, stelle + 1));
   const rest = MAPS.map((m) => m.id).filter((id) => !gesetzt.has(id));
-  for (let i = l.abschnitt + 1; i < abschnitte.length; i += 1) {
+  for (let i = stelle + 1; i < abschnitte.length; i += 1) {
     abschnitte[i] = rest.shift() ?? abschnitte[i];
   }
   return {

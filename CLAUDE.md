@@ -912,6 +912,43 @@ bewusst NICHT in dieser Runde ausgeliefert: eine Messstelle in derselben Runde
 umzubauen, in der die eigene Aenderung an ihr scheitert, waere kein Beweis mehr
 (v219). Erst das Messgeraet, dann das Gemessene.
 
+**Der Lauf hoert nicht mehr auf (v333, S-N6-06) - und die Runde hat zwei
+Fehler gefunden, die seit Fassungen dastanden.** Nach dem letzten geplanten
+Abschnitt geht es weiter: die Karten laufen um, die Wahl geht an JEDER Grenze
+auf, `abschnitt` und `welleGesamt` zaehlen durch. Kein Bildschirm dazwischen,
+keine zweite Zaehlweise.
+
+**`ENDLOS_STEIGERUNG` ist durchprobiert** (Regel 9) - `npm run sim --
+--schwanz=a,b,c`, drei Stile durch hoechstens zwoelf Umlaeufe, gemessen wie
+weit der beste kommt: 1,00 → 12+ · 1,02 → 12+ · 1,05 → 5 · **1,08 → 5** ·
+1,12 → 2 · 1,15 → 1 · 1,30 → 1 · 1,45 → 0. Gesetzt ist 1,08, die MITTE des
+Fensters und nicht sein Rand (v210). Die Messung traegt ihre Nullprobe selbst:
+haelt der beste Stil alle zwoelf durch, meldet sie das - eine Fortsetzung, die
+niemanden mehr stellt, ist kein Ende, sondern ein Bildschirmschoner.
+
+**Die Steigerung des Laufs erreichte das SPIEL gar nicht.** `laufAbschnitt`
+wurde ausserhalb von `npm run sim` nirgends gesetzt - im gespielten Lauf stand
+er auf 0, `laufFaktor` gab immer 1, und die ganze Kurve war gemessenes Modell
+und ungespielte Wirklichkeit (seit v309). Ein Schwanz, der sich steigert,
+haette daran nichts geaendert (Regel 13).
+
+**Und die Wahl im Schwanz liess den PLAN wachsen - eine Endlosschleife.**
+`abschnitte[l.abschnitt] = karte` verlaengert die Liste, sobald `abschnitt`
+ueber ihre Laenge hinauszaehlt; dann ist der Plan nie durch und jede Schleife
+darueber endlos. Gemessen lief `npm run sim -- --lauf` zwanzig Minuten statt
+hundert Sekunden.
+
+**Vier Pruefstellen haben dabei ihren Gegenstand verloren und sind nachgezogen
+(K1)**, und zwei Namen sind Ableitungen geworden statt Behauptungen:
+`istLaufZuEnde` heisst `planDurch` (der Lauf endet dort nicht mehr), und
+`geschafft` in `erfahrungFuer` wird aus dem Zustand abgeleitet statt als
+Schalter uebergeben.
+
+**Was der Schwanz nicht kann, steht als N6S offen:** nur der Meister kommt
+hinein (5 Umlaeufe), Breite und Sparsam schaffen null - auch ohne jede
+Steigerung. Sie verlieren schon den letzten geplanten Abschnitt, und das ist
+N1G.
+
 **Die Welle sagt an, was kommt (v332, S-N6-05) - und die Staerke war nicht der
 Hebel, die STELLE war es.** Sechs Vorzeichen (`src/data/vorzeichen.ts`) stehen
 als Gegensatzpaare: Eisenregen gegen Schildwache (Wucht gegen Schnellfeuer),

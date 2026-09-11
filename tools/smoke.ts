@@ -4180,7 +4180,7 @@ step('Der Kartenzug liegt zwischen den Wellen', async () => {
 // verlorener Lauf, der Gegenwert ein Zustand, den niemand erraten muss.
 step('Der Lauf ueberlebt einen Neustart', async () => {
   const { laufStarten, abschnittGeschafft, laufSpeichern, laufLaden, laufLoeschen,
-    laufendeKarte, istLaufZuEnde, wellenDesLaufs } = await import('../src/game/lauf');
+    laufendeKarte, planDurch, wellenDesLaufs } = await import('../src/game/lauf');
 
   laufLoeschen();
   if (laufLaden() !== null) throw new Error('Eine leere Ablage liefert einen Lauf.');
@@ -4235,7 +4235,7 @@ step('Der Lauf ueberlebt einen Neustart', async () => {
 
   // Am Ende der Abschnitte ist der Lauf zu Ende, nicht vorher.
   let ende = zurueck;
-  while (!istLaufZuEnde(ende)) ende = abschnittGeschafft(ende, 0, 0, 1);
+  while (!planDurch(ende)) ende = abschnittGeschafft(ende, 0, 0, 1);
   if (ende.abschnitt !== ende.abschnitte.length) {
     throw new Error('Ein Lauf endet nicht am letzten Abschnitt.');
   }
@@ -4383,10 +4383,13 @@ step('Erfahrung und Stapel ueberleben einen Neustart', async () => {
 
   // 2. Verloren bringt weniger als gewonnen, aber nicht null.
   const lauf = laufStarten('normal', 4242);
+  // `abschnitt: 4` heisst seit v333 "der Plan ist durch" - die Erfahrung
+  // fuers Durchbringen wird daraus ABGELEITET und nicht mehr als Schalter
+  // uebergeben (S-N6-06).
   const ganz = { ...lauf, welleGesamt: 60, abschnitt: 4 };
   const kurz = { ...lauf, welleGesamt: 9, abschnitt: 0 };
-  const gewonnen = erfahrungFuer(ganz, true);
-  const verloren = erfahrungFuer(kurz, false);
+  const gewonnen = erfahrungFuer(ganz);
+  const verloren = erfahrungFuer(kurz);
   if (verloren <= 0) throw new Error('Ein verlorener Lauf bringt nichts.');
   if (gewonnen <= verloren) {
     throw new Error(`Ein gewonnener Lauf bringt ${gewonnen}, ein verlorener ${verloren}.`);

@@ -885,6 +885,34 @@ daran gearbeitet haette. Sie heisst jetzt **Nahkampf**: ein Ding, ein Wort
 (v323) - und diesmal andersherum, zwei Dinge duerfen nicht dasselbe Wort
 nehmen.
 
+**Die Welle sagt an, was kommt (v331, S-N6-05) - und die Staerke war nicht der
+Hebel, die STELLE war es.** Sechs Vorzeichen (`src/data/vorzeichen.ts`) stehen
+als Gegensatzpaare: Eisenregen gegen Schildwache (Wucht gegen Schnellfeuer),
+Sturmlauf gegen Schwerlast, Schwarm gegen Stoersender. `npm run sim --
+--vorzeichen` misst jedes an VIER REINEN Feldern gegen denselben Lauf ohne
+Zeichen - **null Paare mit gleichem Abdruck**, und jeder Abdruck liest sich als
+die Antwort, die er verlangt (der Stoersender trifft nur das Frostfeld,
+Schwerlast macht die Welle fuer den Bogenturm sogar leichter).
+
+**Die Messstelle war zweimal falsch, bevor sie gemessen hat.** Auf Welle 11
+lassen Frost- und Prismafeld schon ohne Zeichen nichts durch - eine Spalte ohne
+Spielraum trennt nichts (Regel 13). Und der gedeckelte Kristall mass sich
+selbst: bei 42 Punkten stand die Bogenreihe bei fuenf von sechs Zeichen auf
+demselben vollen Verlust (Regel 2). Gemessen wird seitdem der DURCHSCHLAG an
+einem Kristall ohne Deckung.
+
+**Ein Vorzeichen auf dem Finale bricht die erste Karte, und Abschwaechen hilft
+nicht** (Regel 9): ohne Zeichen gewinnt sie ueber fuenf Aussaaten mit 11 bis 17
+Kristall, mit einem auf Welle 14 verliert sie fuenfmal von fuenf - bei Staerke
+0,35 · 0,5 · 0,65 · 0,8 · 1,0 sind es 1, 4, 1, 1 und 1 Sieg. Die Zahl schwankt
+mit dem ZEICHEN, das gerade dort faellt, nicht mit seiner Hoehe. Die letzten
+zwei Wellen bleiben frei; die Spitze baut der Wellenplan selbst.
+
+**Und ein Gewinn zum Zeichen ist gebaut und gemessen wieder heraus** (N6V): ein
+Faktor auf den Wellenbonus macht die erste Karte SCHLECHTER (5/5 ohne ihn, 3/5
+mit), weil der C18-Bot von jedem Ueberschuss einen weiteren Turm kauft statt
+auszubauen - derselbe Effekt wie in v291.
+
 **Der Grund wird dunkel (v326, S-N5-07) - und die Messung hat die Story auf
 halbem Weg widerlegt.** Die Story stuetzt sich auf eine Tabelle aus v274:
 `BODEN_HELL` von 0,355 auf 0,24 bringe „1 von 20 schwachen Kanten statt 20 von
@@ -1648,7 +1676,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v330. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v331. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

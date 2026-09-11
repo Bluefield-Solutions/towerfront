@@ -1,6 +1,33 @@
 # Towerfront — die Kette
 
-Stand: v324 · 11.09.2026
+Stand: v331 · 11.09.2026
+
+**Nachgesehen in v331 — am Ablauf hat sich seit v324 nichts geändert, und
+das ist die Aussage.** Sieben Runden (v325 bis v331) sind ohne eine einzige
+Änderung an dieser Datei durchgelaufen: `npm run naechste` bietet an,
+`npm run vorlauf` übersetzt, der Runner fährt das Tor, `npm run muster`
+meldet, was seinen Gegenstand verloren hat. **Heute sind es 401 Proben**
+(386 in v317) — die Zahl steht wieder nur als Größenordnung hier, gezählt
+wird sie in 0,4 s.
+
+**Zwei Lehren aus diesen sieben Runden gehören trotzdem hierher, weil sie
+den ABLAUF betreffen und nicht eine einzelne Story:**
+
+1. **Der Musterlauf fängt die Nachzieharbeit, und zwar in derselben Runde.**
+   In v331 hat eine Änderung an `state.ts` (der Bremswiderstand steht seit
+   S-N6-05 an EINER Stelle statt an vieren) eine Gegenprobe aus einer alten
+   Runde ins Leere zeigen lassen. `npm run muster` hat es gemeldet, bevor
+   irgendetwas eingecheckt war — K1 kostet dann fünf Minuten statt einer
+   Runde. **Wer eine Stelle zusammenzieht, fährt danach `npm run muster`**,
+   auch wenn er kein Tor angefasst hat.
+2. **Eine neue Messung ist erst dann eine, wenn ihre Messstelle Spielraum
+   hat.** Zweimal in v331 stand eine Zahl grün da, die nichts messen konnte:
+   einmal, weil die gewählte Welle für zwei der vier Felder zu leicht war
+   (Spalte konstant null), einmal, weil der Kristall seinen eigenen Deckel
+   erreichte (fünf von sechs Werten auf demselben Vollverlust). Beide Male
+   war die Regel schon aufgeschrieben — Regel 13 und Regel 2 —, und beide
+   Male fiel es erst beim Hinsehen auf. **Die Messung meldet es jetzt
+   selbst**, statt sich auf den Blick zu verlassen.
 
 **Nachgesehen in v324 — die Kette hat zum ersten Mal eine Story angeboten,
 deren Gegenstand es nicht gibt.** S-N5-02 („Figuren bekommen Fuß und

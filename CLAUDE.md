@@ -727,6 +727,33 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der Inspektorlauf hat einen Befund am BILD gefunden, den kein Tor sah - und
+die Messung hat ihn geschaerft statt bestaetigt (v344, Regel 8).** Seit v313
+lag kein Urteil mehr vor; das Werkzeug sagte es selbst. Gefahren, angesehen,
+Urteil **Schleife**.
+
+**Der Befund:** in `10-welle-mitte.png` liegt der linke Weichenring zur
+Haelfte unter der Wellenvorschau und der Turmleiste, in `03-spiel-ruhe.png`
+steht derselbe Ring frei. Die Weiche ist kein Bild, sondern ein KNOPF - damit
+wird seit v280 die Route gestellt -, und `feldVerdeckung` kannte nur Bahn und
+Bauplaetze.
+
+| Zustand | ruhe | bauwahl | zug | pruefsteg | dock-zu | welle |
+|---|---|---|---|---|---|---|
+| Weichenring verdeckt | **0,0** | 0,0 | 0,0 | 11,5 | **26,9** | **50,0 %** |
+
+**Der Ring ist genau dann verdeckt, wenn er gar nicht bedienbar ist:**
+`weicheStellen` lehnt waehrend einer Welle ab, und in `ruhe` - dem Zustand, in
+dem man sie wirklich umlegt - liegen null Prozent darunter. Damit ist der
+Befund beantwortet, ohne dass eine Zeile Spiel geaendert wurde.
+
+**Was trotzdem bleibt, ist `dock-zu` mit 26,9 %:** die EINGEKLAPPTE Leiste
+deckt mehr vom Ring zu als die ausgeklappte in `ruhe`. Das ist die Sorte Zahl,
+die kein Blick findet. Gemessen wird der RING und nicht sein Mittelpunkt
+(zwoelf Punkte auf dem Kranz, Regel 14), und die Orte kommen aus dem SPIEL -
+ein dritter Messgriff am `window`, nach dem Muster von `weltZuSchirm` und
+`spielZiel`.
+
 **Die untere Schranke des Weichenfensters hat nach dreissig Fassungen wieder
 eine Gegenprobe (v343, N4W ist zu) - und die Luecke war die Messstelle, nicht
 der Eingriff.** `SPREIZUNG_MIN` faengt die Weiche, die den Weg nicht messbar
@@ -2090,7 +2117,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v343. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v344. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

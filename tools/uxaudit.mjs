@@ -174,12 +174,12 @@ const GRENZEN = {
  *  traegt ihren Verlauf, damit die naechste Runde sieht, wohin sie sich
  *  bewegt hat. */
 const FELD_GRENZEN = {
-  ruhe: { bahn: 19, bau: 6 },        // gemessen 17,8 / 4,6 (v320)
-  bauwahl: { bahn: 19, bau: 19 },    // gemessen 17,8 / 17,2 - `#pick` steht am Bauplatz, das ist der Sinn
-  pruefsteg: { bahn: 28, bau: 28 },  // gemessen 26,4 / 26,4 - die Turmkarte steht am Turm (v316)
-  welle: { bahn: 19, bau: 6 },       // gemessen 17,8 / 4,0
-  zug: { bahn: 2, bau: 12 },         // gemessen 0,0 / 10,3 - der Kartenzug steht mitten im Bild
-  'dock-zu': { bahn: 15, bau: 6 },   // gemessen 13,2 / 4,6
+  ruhe: { bahn: 19, bau: 6, weiche: 2 },        // gemessen 17,8 / 4,6 / 0,0
+  bauwahl: { bahn: 19, bau: 19, weiche: 2 },    // gemessen 17,8 / 17,2 / 0,0 - `#pick` steht am Bauplatz, das ist der Sinn
+  pruefsteg: { bahn: 28, bau: 28, weiche: 13 }, // gemessen 26,4 / 26,4 / 11,5 - die Turmkarte steht am Turm (v316)
+  welle: { bahn: 19, bau: 6, weiche: 52 },      // gemessen 17,8 / 4,0 / 50,0
+  zug: { bahn: 2, bau: 12, weiche: 2 },         // gemessen 0,0 / 10,3 / 0,0 - der Kartenzug steht mitten im Bild
+  'dock-zu': { bahn: 15, bau: 6, weiche: 28 },  // gemessen 13,2 / 4,6 / 26,9
 };
 /** Wieviele Beschriftungen zugleich doppelt im Bild stehen duerfen.
  *
@@ -354,6 +354,21 @@ const feldVerdeckung = (seite, punkte) => seite.evaluate(({ bahn, bau }) => {
   const WURZELN = '#hud, #dock, #b-wave, #b-wave-l, #inspector, #pick, #zug, #coach, #werkzeuge';
   const rechnen = window.weltZuSchirm;
   if (typeof rechnen !== 'function') return { fehlt: true };
+  // **Die Weichen kommen aus dem SPIEL, nicht aus einer zweiten Rechnung**
+  // (v344, Regel 15). Gemessen wird der Ring, nicht sein Mittelpunkt: der
+  // Befund des Inspektorlaufs zu v343 lautet "zur Haelfte verdeckt", und ein
+  // Punkt in der Mitte haette das nicht gesehen. Zwoelf Punkte auf dem Kranz
+  // plus die Mitte - dreissig Grad Schritt, also feiner als jede Leiste breit
+  // ist (Regel 14: ein Raster ist nur so fein wie sein kleinstes Ziel).
+  const marken = typeof window.weichenMarken === 'function' ? window.weichenMarken() : null;
+  const weichen = [];
+  for (const w of marken ?? []) {
+    weichen.push([w.x, w.y]);
+    for (let i = 0; i < 12; i += 1) {
+      const a = (i / 12) * Math.PI * 2;
+      weichen.push([w.x + Math.cos(a) * w.r, w.y + Math.sin(a) * w.r]);
+    }
+  }
   const pruefen = (liste) => {
     let drin = 0, zu = 0;
     const taeter = {};
@@ -370,7 +385,15 @@ const feldVerdeckung = (seite, punkte) => seite.evaluate(({ bahn, bau }) => {
     }
     return { drin, zu, anteil: drin ? (100 * zu) / drin : 0, taeter };
   };
-  return { fehlt: false, bahn: pruefen(bahn), bau: pruefen(bau) };
+  return {
+    fehlt: false,
+    bahn: pruefen(bahn),
+    bau: pruefen(bau),
+    // `null`, wenn der Messgriff fehlt - eine Null waere hier eine Luege
+    // ueber eine Messung, die gar nicht stattgefunden hat (dieselbe Haltung
+    // wie beim Griff `weltZuSchirm` seit v320).
+    weiche: marken ? pruefen(weichen) : null,
+  };
 }, punkte);
 
 /** Wieviel des Bildschirms gehoert der Bedienung?
@@ -1031,7 +1054,10 @@ for (const [k, v] of Object.entries(messwerte.feld ?? {})) {
   console.log(`  ${k.padEnd(11)} Bahn ${v.bahn.anteil.toFixed(1)} % von ${v.bahn.drin}`
     + `${v.bahn.zu ? ` (${wer(v.bahn.taeter)})` : ''}`
     + `   Bauplaetze ${v.bau.anteil.toFixed(1)} % von ${v.bau.drin}`
-    + `${v.bau.zu ? ` (${wer(v.bau.taeter)})` : ''}`);
+    + `${v.bau.zu ? ` (${wer(v.bau.taeter)})` : ''}`
+    + `   Weichen ${v.weiche === null ? 'MESSGRIFF FEHLT'
+      : `${v.weiche.anteil.toFixed(1)} % von ${v.weiche.drin}`
+        + `${v.weiche.zu ? ` (${wer(v.weiche.taeter)})` : ''}`}`);
 }
 
 writeFileSync(join(AUS, 'messwerte.json'), JSON.stringify(messwerte, null, 1));
@@ -1077,8 +1103,34 @@ if (TOR) {
         + 'Nullen darunter waeren erfunden (Regel 5).');
       continue;
     }
-    for (const [was, wert] of [['Bahn', w.bahn], ['Bauplaetze', w.bau]]) {
-      const g = was === 'Bahn' ? grenze.bahn : grenze.bau;
+    // **Die Weichen kommen in v344 dazu, und ihre Zahlen sind die
+    //   ueberraschendsten des ganzen Blocks.**
+    //
+    // Gefunden hat es der Inspektorlauf zu v343 am Bild (`10-welle-mitte.png`:
+    // der linke Ring zur Haelfte unter der Wellenvorschau). Gemessen ist es
+    // schaerfer und differenzierter, als das Bild sagt:
+    //
+    //   ruhe 0,0 · bauwahl 0,0 · zug 0,0 · pruefsteg 11,5 · dock-zu 26,9 ·
+    //   welle 50,0 %
+    //
+    // **Der Ring ist genau dann verdeckt, wenn er gar nicht bedienbar ist.**
+    // `weicheStellen` lehnt waehrend einer Welle ab (der Gegner traegt nur
+    // seine Strecke; die Bahn unter ihm zu tauschen waere eine neue Mechanik,
+    // nicht eine Korrektur). In `ruhe` - dem Zustand, in dem man sie wirklich
+    // umlegt - liegen null Prozent darunter.
+    //
+    // **Was trotzdem bleibt, ist `dock-zu` mit 26,9 %**: die eingeklappte
+    // Leiste deckt MEHR vom Ring zu als die ausgeklappte in `ruhe`. Das ist
+    // die Sorte Zahl, die kein Blick findet und die als Ratsche stehen
+    // bleibt, bis jemand die Geometrie anfasst (N4F).
+    for (const [was, wert] of [['Bahn', w.bahn], ['Bauplaetze', w.bau], ['Weichen', w.weiche]]) {
+      if (was === 'Weichen' && wert === null) {
+        fail(`Feldverdeckung "${zustand}": der Messgriff \`window.weichenMarken\` fehlt. `
+          + 'Ohne ihn ist nicht zu sagen, wo die Weichen liegen, und eine Null waere '
+          + 'erfunden (Regel 5).');
+        continue;
+      }
+      const g = was === 'Bahn' ? grenze.bahn : was === 'Bauplaetze' ? grenze.bau : grenze.weiche;
       if (wert.anteil > g) {
         const wer = Object.entries(wert.taeter).sort((x, y) => y[1] - x[1])
           .map(([n, c]) => `${n} ${c}`).join(', ');

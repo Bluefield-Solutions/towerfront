@@ -5621,6 +5621,23 @@ export const PROBEN = [
     // weniger als zehn Prozent aendert - jede sperrt entweder alles zu oder
     // bewegt ihn deutlich. Das ist derselbe strukturelle Befund wie in v313,
     // nur diesmal ueber den ganzen Raum statt ueber fuenf Versuche.
+    // **Der Messgriff fuer die Weichen** (v344, Regel 5 und Regel 13).
+    //
+    // `feldVerdeckung` misst seit v344 auch, wieviel der Weichenringe unter
+    // der Bedienung liegt - und sie liest dafuer aus dem SPIEL, wo die
+    // Weichen sitzen (`window.weichenMarken`), statt es daneben zu rechnen.
+    // Der Eingriff schraubt den Griff ab. Die Messung muss dann MELDEN, dass
+    // sie nicht messen kann, statt sechs schoene Nullen zu drucken -
+    // dieselbe Haltung und dieselbe Gegenprobe wie beim Griff
+    // `weltZuSchirm` seit v320.
+    name: 'Der Messgriff der Weichen fehlt',
+    datei: 'src/main.ts',
+    regel: /\(window as unknown as Record<string, unknown>\)\.weichenMarken =/,
+    ersatz: '(window as unknown as Record<string, unknown>).weichenMarkenAbgeschraubt =',
+    tor: 'uxtor',
+    meldet: 'weichenMarken` fehlt',
+  },
+  {
     name: 'Eine Weiche entscheidet nichts',
     datei: 'src/data/wegnetz.ts',
     regel: /\{ id: 'saeule3', kante: 'kreuz3-kreuz4', name: '([^']+)' \}/,

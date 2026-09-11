@@ -269,6 +269,24 @@ ui.onPick = (id, x, y) => { if (state.build(x, y, id)) Sfx.play('build'); };
  *  beiden Quellen gilt. */
 (window as unknown as Record<string, unknown>).spielZiel =
   () => state.map.ziel ?? state.goal;
+/** Und wo die Weichen sitzen (v344).
+ *
+ *  Der Inspektorlauf zu v343 hat es am Bild gefunden: in
+ *  `10-welle-mitte.png` liegt der linke Weichenring zur Haelfte unter der
+ *  Wellenvorschau und der Turmleiste, und man sieht nur seinen oberen Bogen.
+ *  In `03-spiel-ruhe.png` steht derselbe Ring frei - die Verdeckung kommt
+ *  also mit der Bedienung, nicht mit der Karte.
+ *
+ *  `feldVerdeckung` misst seit v320 den Bahnschlauch und die Bauplaetze. Die
+ *  Weiche ist das DRITTE, was auf dem Feld liegt, und seit v280 die
+ *  Entscheidung des Spiels - ein Knopf, kein Bild. Er fehlte in der Messung.
+ *
+ *  Gelesen statt nachgebaut: `weichenPunkte` leitet den Ort aus dem Netz ab
+ *  (Regel 15), und der Radius steht als `WEICHE_RADIUS` an einer Stelle. Ein
+ *  Werkzeug, das beides noch einmal rechnet, stimmt bis zur ersten
+ *  Verschiebung. */
+(window as unknown as Record<string, unknown>).weichenMarken =
+  () => state.weichenPunkte().map((w) => ({ ...w, r: GameState.WEICHE_RADIUS }));
 
 layout();
 bindInput(canvas, state, renderer);

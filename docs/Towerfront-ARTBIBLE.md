@@ -1,6 +1,25 @@
 # Towerfront — Art Bible
 
-Stand: v337 · 11.09.2026
+Stand: v344 · 11.09.2026
+
+**Nachgesehen in v344 — der Vorrat ist unverändert, und zum ersten Mal seit
+Langem hat ein BLICK etwas darüber gesagt.**
+
+Vier von 22 Bildern sind weiterhin offen (Förderer, Werft, Sanitäter, Hetzer);
+die Runden v338 bis v344 haben keine neue Bestellung erzeugt. Was sie geliefert
+haben, ist ein Inspektorurteil — das erste seit v313 — und daraus zwei Sätze,
+die hierher gehören:
+
+* **Die Platzhalter tun, was sie sollen.** In `03-spiel-ruhe.png` stehen
+  `F 90` und `W 150` als magenta Kacheln in der Bauleiste, in derselben Größe
+  wie die vier fertigen Türme. Man sieht sofort, dass dort ein Bild fehlt, und
+  man kann trotzdem spielen — genau die Zusage von K5, zum ersten Mal am
+  gebauten Spiel abgelesen statt am Tor.
+* **Ein gezeichnetes Bedienelement war halb verdeckt, und kein Tor sah es.**
+  Der Weichenring liegt in `10-welle-mitte.png` zur Hälfte unter der Leiste.
+  Das ist keine Bildfrage, aber es ist eine Lehre für dieses Dokument: was das
+  Spiel ZEICHNET, steht unter derselben Bedienung wie das, was es MALT — und
+  nur das Gemalte hatte bisher eine Messung.
 
 **Nachgesehen in v337 — gemessen mit `npm run bildtor`, nicht abgeschrieben.**
 Der Vorrat ist seit v233 unverändert; offen sind **vier von 22** Bildern, und

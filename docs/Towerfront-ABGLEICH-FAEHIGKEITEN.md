@@ -1,6 +1,17 @@
 # Referenzabgleich — Fähigkeiten freischalten (C18)
 
-Stand: v342 · 11.09.2026
+Stand: v349 · 11.09.2026
+
+**Nachgesehen in v349 — inhaltlich unverändert, und S2 ist in v315 auf die
+Art eingelöst worden, die dieses Dokument fordert.** Die drei gesperrten
+Felder belegten 260 × 46 Punkte, ohne dass eines davon zu drücken war;
+S2 verlangt aber, dass ein gesperrtes Feld ein PLAN ist und kein leerer
+Fleck. Beides verträgt sich, wenn der Plan bleibt und die FLÄCHE geht —
+sichtbar ist die nächste Freischaltung, die weiteren stehen als Zahl daran.
+
+**Im Bild ist das seitdem nachzusehen:** in `09-welle-frueh.png` (v347)
+steht `Frostschlag · 1 KARTE` als gestrichelter Kasten neben dem Meteor —
+erkennbar als etwas, das noch kommt, und nicht als Lücke.
 
 **Nachgesehen in v342 — nachgefahren, nicht gestempelt.** `npm run c18`
 meldet die erste Karte weiterhin als gewonnen, **Kristall 15 von 42** auf der

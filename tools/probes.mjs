@@ -5700,6 +5700,30 @@ export const PROBEN = [
     meldet: 'sehen aus wie einer',
   },
   {
+    // **Ein Urteil ueber ein ANDERES Bild darf nicht weitertragen.**
+    //
+    // Bis v348 entschied das die Fassungsnummer. Die bewegt sich aber in
+    // jeder Runde, auch in einer, die nur Werkzeuge und Dokumente anfasst -
+    // und verlangte dann ein zweites Urteil ueber ein Bild, an dem sich kein
+    // Bildpunkt geaendert hat. Genau das stand nach v348 da: Urteil auf
+    // v347, Spiel auf v348, und derselbe Lauf meldete "UNVERAENDERT".
+    //
+    // Gefragt wird seitdem der ABDRUCK der Bildeingaenge. Der Eingriff dreht
+    // die Entscheidung um: dann traegt ein Urteil ueber ein anderes Bild
+    // weiter und eines ueber dasselbe nicht - also genau die Sorge, die die
+    // alte Zeile aufgeschrieben hatte.
+    //
+    // Gefahren gegen `inspektortest` und nicht gegen `--pruefen`: `schleife/`
+    // ist in `.gitignore`, auf dem Runner gibt es also weder Urteil noch
+    // Abdruck, und das Tor waere dort OHNE eingebauten Fehler rot (v313).
+    name: 'Ein Urteil ueber ein anderes Bild traegt weiter',
+    datei: 'tools/inspektor.mjs',
+    regel: /const urteilGilt = \(gemerkt, jetzt\) => Boolean\(jetzt && gemerkt && gemerkt\[0\] === jetzt\);/,
+    ersatz: 'const urteilGilt = (gemerkt, jetzt) => Boolean(jetzt && gemerkt && gemerkt[0] !== jetzt);',
+    tor: 'inspektortest',
+    meldet: 'Urteilsgeltung ist gescheitert',
+  },
+  {
     // **Der Inspektor urteilt ueber einen Stand, den es nicht mehr gibt.**
     //
     // v345 hat geklaert, welche Aufnahmen zu EINEM Lauf gehoeren. Ob dieser

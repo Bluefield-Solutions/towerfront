@@ -727,6 +727,27 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der Inspektor widersprach sich selbst (v349): sein Abdruck sagte
+„unveraendert", seine Fassungspruefung verlangte trotzdem ein neues Urteil.**
+Nach v348 stand das Urteil auf v347 und das Spiel auf v348 - und derselbe
+Lauf meldete drei Zeilen hoeher *„UNVERAENDERT: an den Bildeingaengen hat
+sich nichts geaendert"*.
+
+**Die Sorge der alten Zeile war richtig, ihr Stellvertreter falsch.** Sie
+stand da, damit nicht *„das Urteil der letzten Runde die naechste mittraegt"*
+- nur bewegt sich die Fassungsnummer in JEDER Runde, auch in einer, die nur
+Werkzeuge und Dokumente anfasst. Dann verlangt sie ein zweites Urteil ueber
+ein Bild, an dem sich kein Bildpunkt geaendert hat, **und das ist keine
+Pruefung, sondern ein Stempel** - was dieses Werkzeug an seiner eigenen
+`--urteil`-Zeile ausdruecklich ausschliesst.
+
+Gefragt wird jetzt der ABDRUCK der Bildeingaenge, der seit v275 neben dem
+Urteil liegt: alles unter `src/` und `index.html`, allein die Zeile mit
+`VERSION` ausgenommen. **Damit ist die Pruefung SCHAERFER als vorher, nicht
+lockerer** - sie fragt, was sie meint. Die Fassungsnummer steht weiter in der
+Meldung, sie urteilt nur nicht mehr (dieselbe Bewegung wie die Zeitratsche in
+v269).
+
 **Der Inspektor hat mir Beweismittel vorgelegt, die einen Stand zeigen, den
 es nicht mehr gibt - und dabei „es gibt etwas zu sehen" gemeldet (v348).**
 Gemessen: die Aufnahmen lagen bei **18:14**, `dist/index.html` bei **18:18**,
@@ -2259,7 +2280,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v348. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v349. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

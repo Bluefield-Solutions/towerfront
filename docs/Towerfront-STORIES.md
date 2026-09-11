@@ -1,6 +1,27 @@
 # Towerfront — Stories
 
-Stand: v342 · 11.09.2026
+Stand: v349 · 11.09.2026
+
+**Nachgesehen in v349 — der Katalog ist an seinem Ende angekommen, und das
+ist kein Zwischenstand, sondern die Lage.** `npm run naechste --alle` zählt
+**53 Stories: 44 zu, 5 Handarbeit, 2 bedingt, 2 offen** — und keine der
+beiden offenen lässt sich ohne den Nutzer fahren:
+
+* **S-N1-05** ist zur Hälfte gebaut (Grade und Sterne sind in v314
+  ausgebaut). Die zweite Hälfte ist seit v314 ausdrücklich eine
+  **Entscheidung über den Stapel** und nicht mehr eine Ausführungsfrage —
+  dreimal gemessen (v339, v340, v342), und getragen wird allein Weg D:
+  die Stufen bei 3 deckeln.
+* **S-N5-02** wartet auf **S-N5-01b**, und das ist HANDARBEIT: ein Bild im
+  neuen Stil muss im Vorrat liegen. Der Auftrag 8d.1 (Werkhof) ist gestellt.
+
+Die fünf Handarbeits-Stories und die zwei bedingten Rückbauten sind es
+ebenfalls nicht anders: `blick:` und `nutzer:` schließen es ehrlich aus, was
+kein Tor beantworten kann (Regel 8).
+
+**Was seitdem gearbeitet wurde, steht deshalb nicht hier, sondern im
+Rückstandsverzeichnis** — sieben Runden am Messgerät, zwei geschlossene
+Punkte (N4W, N4X), und ein Inspektorurteil **Freigabe** auf v347.
 
 **Nachgesehen in v342 — 44 von 53 sind zu, und was übrig ist, ist zum ersten
 Mal nicht mehr Ausführung.**

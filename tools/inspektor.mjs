@@ -121,6 +121,13 @@ const laufZeitAus = (zeiten) => (zeiten.length ? Math.max(...zeiten) : 0);
 const laufVorBau = (laufMs, bauMs) => (laufMs && bauMs && bauMs > laufMs
   ? { gebaut: bauMs, alter: bauMs - laufMs } : null);
 
+/** Gilt ein festgehaltenes Urteil noch fuer das Bild, das jetzt entstuende?
+ *
+ *  Gefragt wird der ABDRUCK der Bildeingaenge und nicht die Fassungsnummer -
+ *  die lange Begruendung steht bei `--pruefen`. Als reine Entscheidung,
+ *  damit der Selbsttest beide Richtungen gestellt fahren kann. */
+const urteilGilt = (gemerkt, jetzt) => Boolean(jetzt && gemerkt && gemerkt[0] === jetzt);
+
 
 const version = () => (readFileSync(join(ROOT, 'src/data/config.ts'), 'utf8')
   .match(/VERSION = '(v\d+)'/) ?? [])[1] ?? 'v?';
@@ -294,13 +301,36 @@ const selbsttest = () => {
       process.exit(1);
     }
   }
+  // 7. Traegt ein Urteil ueber dieselben Bildeingaenge weiter - und eines
+  //    ueber andere NICHT?
+  //
+  // Bis v348 entschied das die Fassungsnummer, und die bewegt sich in jeder
+  // Runde: nach v348 stand das Urteil auf v347, das Spiel auf v348, und
+  // derselbe Lauf meldete "UNVERAENDERT: an den Bildeingaengen hat sich
+  // nichts geaendert". Ein zweites Urteil ueber dasselbe Bild ist ein
+  // Stempel, und Stempel schliesst dieses Werkzeug ausdruecklich aus.
+  //
+  // Beide Richtungen, und die zweite traegt die Sorge der alten Zeile: ein
+  // Urteil ueber ein ANDERES Bild darf nicht weitertragen. Dass die
+  // Fassungsnummer den Abdruck nicht bewegt, prueft Selbsttest 4.
+  {
+    if (!urteilGilt(['abc', 'v1', 'Freigabe'], 'abc')
+      || urteilGilt(['abc', 'v1', 'Freigabe'], 'xyz')
+      || urteilGilt(null, 'abc') || urteilGilt(['abc'], null)) {
+      console.error('INSPEKTOR: der Selbsttest der Urteilsgeltung ist gescheitert - '
+        + 'ein Urteil ueber ein anderes Bild traegt weiter, oder eines ueber '
+        + 'dasselbe traegt nicht.');
+      process.exit(1);
+    }
+  }
   console.log(`  Selbsttest: die Quelltext-Sperre trifft .ts und laesst .png und .md `
     + `durch; es gibt genau ${URTEILE.length} Urteile; was mehr als `
     + `${TOLERANZ_MS / 60000} min hinter dem Lauf liegt, bleibt draussen - `
     + 'Aufnahmen wie Bericht; der Abdruck sieht eine geaenderte und eine '
     + 'umbenannte Datei, die Fassungsnummer aber nicht; eine Quelle mit '
     + 'einer einzigen Aufnahme misst sich nicht an sich selbst; und ein '
-    + 'Aufnahmesatz, der aelter ist als das gebaute Spiel, faellt auf.');
+    + 'Aufnahmesatz, der aelter ist als das gebaute Spiel, faellt auf; und ein '
+    + 'Urteil gilt weiter, solange die Bildeingaenge dieselben sind.');
 };
 selbsttest();
 
@@ -331,15 +361,42 @@ if (args.includes('--pruefen')) {
       + `(${URTEILE.join(', ')}).`);
     process.exit(1);
   }
-  // **Ein Urteil ueber eine andere Fassung ist keins ueber diese.** Ohne
-  // diese Zeile traegt das Urteil der letzten Runde die naechste mit - und
-  // genau so hoert eine Pruefung leise auf zu pruefen.
-  if (!f || f[1] !== version()) {
+  // **Gefragt wird das BILD und nicht die Fassungsnummer (v349).**
+  //
+  // Bis v348 stand hier `f[1] !== version()`, mit der Begruendung: *ohne
+  // diese Zeile traegt das Urteil der letzten Runde die naechste mit, und
+  // genau so hoert eine Pruefung leise auf zu pruefen.* Die Sorge ist
+  // richtig, die Fassungsnummer ist nur der falsche Stellvertreter dafuer.
+  //
+  // Sie bewegt sich in JEDER Runde, auch in einer, die nur Werkzeuge und
+  // Dokumente anfasst - und dann verlangt sie ein zweites Urteil ueber ein
+  // Bild, an dem sich kein Bildpunkt geaendert hat. Genau das stand nach
+  // v348 da: das Urteil auf v347, das Spiel auf v348, und derselbe Lauf
+  // meldete drei Zeilen hoeher "UNVERAENDERT: an den Bildeingaengen hat sich
+  // nichts geaendert". Ein Urteil, das aus dieser Lage entsteht, ist keine
+  // Pruefung, sondern ein Stempel - und Stempel schliesst dieses Werkzeug an
+  // seiner eigenen `--urteil`-Zeile ausdruecklich aus.
+  //
+  // Der ABDRUCK beantwortet dieselbe Frage genauer, und er liegt seit v275
+  // neben dem Urteil: er deckt alles unter `src/` und `index.html` ab und
+  // nimmt allein die Zeile mit `VERSION` aus. Eine einzige geaenderte Zeile,
+  // die ins Bild geht, und er ist ein anderer. Damit ist die Pruefung
+  // SCHAERFER als vorher, nicht lockerer: sie fragt, was sie meint.
+  //
+  // Die Fassungsnummer steht weiter in der Meldung, sie urteilt nur nicht
+  // mehr - dieselbe Bewegung wie bei der Zeitratsche in v269.
+  const jetzt = abdruckVon(bildEingaenge());
+  const gemerkt = existsSync(ABDRUCK)
+    ? readFileSync(ABDRUCK, 'utf8').trim().split(/\s+/) : null;
+  if (!urteilGilt(gemerkt, jetzt)) {
     console.error(`INSPEKTOR: das Urteil steht auf ${f ? f[1] : '(keiner Fassung)'}, `
-      + `das Spiel auf ${version()}. Ein Urteil ueber eine andere Fassung ist keins.`);
+      + `das Spiel auf ${version()} - und die BILDEINGAENGE haben sich seitdem `
+      + 'geaendert. Ein Urteil ueber ein anderes Bild ist keins ueber dieses.');
     process.exit(1);
   }
-  console.log(`INSPEKTOR: Urteil "${m[1]}" fuer ${version()} liegt vor.`);
+  const dazu = f && f[1] !== version()
+    ? ` (festgehalten fuer ${f[1]}, seitdem hat sich am Bild nichts geaendert)` : '';
+  console.log(`INSPEKTOR: Urteil "${m[1]}" fuer ${version()} liegt vor${dazu}.`);
   process.exit(0);
 }
 

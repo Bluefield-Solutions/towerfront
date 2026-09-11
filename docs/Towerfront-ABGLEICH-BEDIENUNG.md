@@ -1,6 +1,22 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v342 · 11.09.2026
+Stand: v349 · 11.09.2026
+
+**Nachgesehen in v349 — B2 und der offene Punkt N4L haben sich beide
+bewegt, und zwar in verschiedene Richtungen.**
+
+**B2 hält unverändert:** eine gesperrte Kachel trägt seit v321 ihren Preis
+UND ihren Grund (`125` und `Rand`).
+
+**N4L hat seinen dritten Blick bekommen**, den die Zeile seit v321 verlangt.
+Der Inspektorlauf auf v345 nennt `04-bauwahl.png` von sich aus: *dieselben
+sechs Bauwerke mit denselben sechs Preisen zweimal — oben als Namensleiste,
+unten als Bildknöpfe. Zwei Leisten für eine Wahl.* Damit steht es **2:1**
+(v272 und v345 gegen v273). **Entschieden ist es damit nicht** — drei Blicke
+sind kein Soll (Regel 10), und `doppelteBeschriftung` nimmt reine Zahlen
+weiter ausdrücklich aus, weil der Preis nach B2 an beiden Stellen stehen
+soll. Die zwei Messgeräte widersprechen einander, und welches wiegt,
+entscheidet der Nutzer.
 
 **Nachgesehen in v342 — keine Zahl hat sich bewegt, und das ist die Aussage.**
 `npm run uxtor` misst unverändert `zug` 7,9 · `ruhe` 13,1 · `bauwahl` 22,0 ·

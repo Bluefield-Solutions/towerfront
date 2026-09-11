@@ -1,6 +1,17 @@
 # Referenzabgleich — Stützturm (C3, „Bannturm")
 
-Stand: v342 · 11.09.2026
+Stand: v349 · 11.09.2026
+
+**Nachgesehen in v349 — unverändert gültig, und der Abgleich hat seit v328
+einen zweiten Gegenstand bekommen, den er vorher nicht hatte.** Der
+Sanitäter ist die erste Gegnerart, die etwas GIBT: er stellt Lebenspunkte
+seiner Nachbarn stetig wieder her, nie sich selbst, nie über das Höchstmaß.
+
+**Damit steht die Frage dieses Dokuments auf beiden Seiten des Feldes:** was
+eine Stütze taugt, entscheidet sich nicht an ihrer Zahl, sondern daran, ob
+man sie SIEHT und ob sie die Reihenfolge ändert. Der Sanitäter tut beides —
+grün statt violett, durchgezogen statt gestrichelt, ein Kreuz im Ring, und
+der Zielmodus „Gefahr" zieht ihn seit v328 vor.
 
 **Nachgesehen in v342 — unverändert, und die Bestellung steht.** Der Bannturm
 ist seit v334 als **`8d.6` / `35_bannturm.png`** geführt; `npm run bildtor`

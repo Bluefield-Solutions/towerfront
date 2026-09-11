@@ -1,6 +1,23 @@
 # Towerfront — Anforderungskatalog
 
-Stand: v342 · 11.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+Stand: v349 · 11.09.2026
+
+**Nachgesehen in v349 — der wichtigste Satz dieses Katalogs steht
+unverändert da, und die letzten sieben Runden sind sein Beleg.** *Der
+Genre-Abgleich steht auf 30 von 30, und das Spiel macht trotzdem wenig
+Spaß; die Tore prüfen Korrektheit, nicht Spannung.*
+
+**v346 ist der Fall in Reinform.** Die Weiche — die einzige Stelle, an der
+„der Weg wird die Entscheidung" wirklich stattfindet — war seit v280 gebaut,
+gemessen und von Toren gehalten. Ihr Knopf zeigte trotzdem einen liegenden
+Strich im Kreis, also das Zeichen für „entfernen". **66 Fassungen lang hat
+kein Tor etwas gemeldet**, weil die Weiche ja funktionierte. Gefunden hat es
+der Blick (Regel 8), gehalten wird es seitdem von zwei Zahlen.
+
+**Die Reihenfolge des Katalogs ist damit nicht widerlegt, sondern bestätigt:**
+P1 (Messung) vor P2 (Knappheit) — nur reicht „messen" weiter, als dieser
+Katalog es gefasst hat. Auch ein Beweismittel kann falsch messen, und drei
+der sieben Runden (v345, v348, v349) lagen genau dort. · erstellt gegen den Spielstand **v248** (`5623c3b`)
 
 **Nachgesehen in v342 — N7 ist durch, und der wichtigste Satz dieses Katalogs
 hat zum ersten Mal Zahlen hinter sich.**

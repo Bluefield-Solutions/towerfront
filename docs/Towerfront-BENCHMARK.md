@@ -1,5 +1,19 @@
 # Towerfront — Genre-Abgleich
 
+Stand: v349 · 11.09.2026
+
+**Nachgefahren in v349, nicht geglaubt** (`npm run bench`): der Dichtefaktor
+steht auf **4,62** bei 13,3-facher Last, die Ratsche auf 4,56 mit einem
+Rauschband von 30 % — erlaubt bis 5,93. Das Verhältnis liegt damit 1,3 %
+über dem festgehaltenen Stand und deutlich unter der Grenze.
+
+**Die sieben Runden v343 bis v349 haben am heissen Pfad nichts geändert** —
+sie lagen alle am Messgerät: der Weichenfenster-Wächter, die Ringverdeckung,
+das Beweismittel des Inspektors (zweimal), die Feldverdeckung und der
+Weichenknopf. Der einzige Eingriff ins gezeichnete Bild ist die Gabel am
+Weichenring (v346), und sie kostet zwei Striche je Weiche bei höchstens vier
+Weichen je Karte.
+
 Stand: v342 · 11.09.2026 · Gemessen von `npm run bericht`: **30 von 30
 
 **Nachgefahren in v342, nicht geglaubt** (`npm run bericht`): unverändert

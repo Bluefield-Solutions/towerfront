@@ -1,6 +1,18 @@
 # Referenzabgleich — Fähigkeiten freischalten (C18)
 
-Stand: v335 · 11.09.2026
+Stand: v342 · 11.09.2026
+
+**Nachgesehen in v342 — nachgefahren, nicht gestempelt.** `npm run c18`
+meldet die erste Karte weiterhin als gewonnen, **Kristall 15 von 42** auf der
+Standard-Aussaat. Die sieben Runden v336 bis v342 haben weder Wellen noch
+Türme noch Fähigkeiten angefasst; die Zahl ist deshalb erwartungsgemäß
+dieselbe — nachgefahren wird sie trotzdem, weil „erwartungsgemäß" in diesem
+Verzeichnis schon mehrfach falsch war.
+
+**Der Abstand zur Niederlage bleibt, was v329 gemessen hat: ein einzelner
+zusätzlicher Gegner.** Das ist keine Randnotiz, sondern die Messstelle selbst
+— wer an Welle 11 des Spiralhains etwas addiert, kippt C18, gleich welcher Art
+der Gegner ist.
 
 **Nachgesehen in v335 — nachgefahren, nicht gestempelt.** `npm run c18` meldet
 die erste Karte mit **einer** Fähigkeit als gewonnen, und seit v329 wird sie

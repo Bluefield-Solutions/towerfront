@@ -1420,6 +1420,11 @@ function meisterLauf(): ReturnType<typeof overVariants<LaufErgebnis>> {
   return meisterLaufSpeicher;
 }
 
+/** **Was der Grundstapel je Spielstil ueber einen ganzen Lauf traegt.**
+ *  Von `stapelKurve` gefuellt und vom N1-Gold-Hinweis gelesen - eine
+ *  Messung, zwei Leser (Regel 15). Leer, solange nicht gemessen wurde. */
+let STAPEL_JE_STIL: Array<[string, number]> = [];
+
 /** **Wieviele Karten die Nullprobe nimmt** (v339, S-N1-07).
  *
  *  Null, und das ist der ganze Sinn: ein Lauf, der KEINE Karte nimmt, muss
@@ -1526,6 +1531,13 @@ function stapelKurve(): void {
       });
       const mittel = jeStil.reduce((a, b) => a + b, 0) / jeStil.length;
       const spanne = Math.max(...jeStil) - Math.min(...jeStil);
+      // **Der heutige Stand wird festgehalten, nicht nur gedruckt** (v342):
+      // der N1-Gold-Hinweis weiter unten nennt dieselben Zahlen, und zwei
+      // Rechnungen fuer dieselbe Frage laufen irgendwann auseinander
+      // (Regel 15).
+      if (!voll && v.name === 'heute') {
+        STAPEL_JE_STIL = STILE.map((n, i) => [n, jeStil[i]] as [string, number]);
+      }
       const eine = lauf(20260000, STILE[0], stapel, v.jeWelle);
       console.log(
         `  ${v.name.padEnd(18)} Feuerkraft x${mittel.toFixed(2).padStart(6)}`
@@ -1898,9 +1910,30 @@ function laufMessen(steigung = LAUF_STEIGUNG, bot: Bot = MEISTER): void {
   // Ausbau des Feldes nichts mehr. Ueber fuenfzehn Wellen faellt das nicht
   // auf, ueber sechzig entscheidet es - und vier der zwoelf Grundkarten
   // liegen darauf.
-  console.log('  OFFEN (N1-Gold): Gold und Beute kaufen Tuerme, und die Turmzahl ist '
-    + 'begrenzt - nach dem Ausbau kauft diese Achse nichts mehr. Gemessen: der Stil '
-    + 'Breite gewinnt bei Steigung 1,0 alle vier Abschnitte, bei 1,3 drei, bei 1,6 zwei.');
+  // **Der Hinweis nannte bis v341 eine Ursache, die gemessen falsch ist**
+  // (K1, N1G). Er sagte: "Gold kauft Tuerme, die Turmzahl ist begrenzt, also
+  // kauft diese Achse nach dem Ausbau nichts mehr". Die naheliegende Folge
+  // daraus - die Goldkarten mit dem Lauf mitwachsen zu lassen - ist in v342
+  // gebaut und durchprobiert worden und bewegt gemessen NICHTS: `Breite`
+  // steht bei jedem Exponenten von 0 bis 4 auf 2,7 bis 3,0 von vier
+  // Abschnitten, und das verdiente Gold bleibt bei rund 25 000. Er scheitert
+  // auch gar nicht am Geld - er verdient so viel wie der Meister.
+  //
+  // **Die Ursache ist die Art der Achse, nicht ihre Hoehe:** Schaden, Takt,
+  // Reichweite und Beute sind FAKTOREN und verzinsen sich ueber sechzig
+  // Zuege, Gold und Kristall sind Summanden und tun es nicht. Die Zahl dazu
+  // steht nicht hier, sondern kommt aus `stapelKurve` - gemessen statt
+  // behauptet (Regel 15).
+  {
+    const zahlen = STAPEL_JE_STIL.length
+      ? STAPEL_JE_STIL.map(([n, f]) => `${n} x${f.toFixed(2)}`).join(', ')
+      : 'nicht gemessen in diesem Lauf';
+    console.log('  OFFEN (N1-Gold): der Stapel mischt Achsen, die sich verzinsen '
+      + '(Schaden, Takt, Reichweite, Beute), mit solchen, die es nicht tun (Gold, '
+      + 'Kristall). Wer eine Goldkarte nimmt, nimmt keine Schadenskarte - ueber 60 '
+      + `Zuege traegt das Deck je Stil: ${zahlen}. Mehr Gold ist gemessen NICHT der `
+      + 'Hebel (v342: Exponent 0 bis 4, keine Wirkung).');
+  }
   if (makellos > 1 || abschnitte < lauf.abschnitte.length) {
     console.log(`  OFFEN (N1-Kurve): ${makellos} von ${lauf.abschnitte.length} `
       + 'Abschnitten enden mit vollem Kristall, und '

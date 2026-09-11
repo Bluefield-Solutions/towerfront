@@ -5586,6 +5586,24 @@ export const PROBEN = [
     // unveraendert zu drucken. Genau diese Tabelle hat in dieser Runde die
     // Praemisse einer Story widerlegt - eine Messung, die das kann, braucht
     // eine Nullprobe, die man nicht abschalten kann.
+    // **Ein Hinweis darf keine Zahl nennen, die er nicht gemessen hat**
+    // (v342, N1G, Regel 5).
+    //
+    // Der N1-Gold-Hinweis nennt seit v342, was das Deck je Spielstil ueber
+    // einen ganzen Lauf traegt - und er nennt es, indem er die Zahl von
+    // `stapelKurve` ABLIEST statt sie daneben zu behaupten (Regel 15). Der
+    // Eingriff schaltet das Ablegen ab. Der Hinweis muss dann SAGEN, dass er
+    // nichts gemessen hat, statt eine Zahl zu drucken, die aus einem
+    // frueheren Lauf stammt oder gar keine ist - dieselbe Haltung wie beim
+    // Messgriff des UX-Tors seit v320.
+    name: 'Der Hinweis nennt eine ungemessene Zahl',
+    datei: 'tools/sim.ts',
+    regel: /if \(!voll && v\.name === 'heute'\) \{/,
+    ersatz: "if (false) {",
+    tor: 'sim',
+    meldet: 'nicht gemessen in diesem Lauf',
+  },
+  {
     name: 'Die Stapelkurve misst ohne Nullprobe',
     datei: 'tools/sim.ts',
     regel: /const KURVE_NULL = 0;/,

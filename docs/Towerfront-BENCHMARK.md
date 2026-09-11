@@ -1,9 +1,26 @@
 # Towerfront — Genre-Abgleich
 
-Stand: v335 · 11.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+Stand: v342 · 11.09.2026 · Gemessen von `npm run bericht`: **30 von 30
 
-**Nachgefahren in v335, nicht geglaubt** (`npm run bericht`): unverändert
-**30 von 30, gewichtet 100 %**. Von Hand beurteilt bleiben P6 und P7.
+**Nachgefahren in v342, nicht geglaubt** (`npm run bericht`): unverändert
+**30 von 30, gewichtet 100 %** — und die sieben Runden v336 bis v342 haben
+genau den Satz belegt, der unter dieser Zahl steht.
+
+Keine davon hat ein Genre-Kriterium berührt, und jede hat etwas gefunden, das
+die dreiunddreissig Tore nicht gesehen haben: sieben Spannungskennzahlen, die
+eine andere Frage beantworteten als die, unter der sie standen (v336); zwei
+Gegenproben, die ihren Gegenstand verloren hatten (v337, v341); die Prämisse
+einer Story, die an einer Messstelle entstand, die es nicht mehr gibt (v339);
+einen Rückbau, der das Spiel gemessen unspielbar macht (v340); und eine
+Ursache, die seit v309 falsch im Verzeichnis stand (v342).
+
+**Das ist die Aussage dieses Dokuments, nicht die 30.** Der Abgleich misst,
+ob das Spiel die Dinge HAT, die das Genre ausmacht. Ob sie etwas bewirken,
+misst er nicht — und genau dort liegt seit v269 die ganze Arbeit.
+
+**Die Bildratenratsche ist in derselben Runde nachgefahren:** Dichtefaktor
+**4,09** bei 13,3-facher Last, Stand 4,56, erlaubt bis 5,93. Sie steht seit
+v334 auf dem schlechtesten von fünf Messwerten und hält. Von Hand beurteilt bleiben P6 und P7.
 
 **Die Zahl steht jetzt seit einundzwanzig Runden still, und in diesen
 einundzwanzig hat das Spiel zwei Gegnerarten, sechs Wirkungskarten, eine

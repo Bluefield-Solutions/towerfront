@@ -727,6 +727,33 @@ art/roh/       Rohbilder → tools/pack-art.mjs → src/gfx/assets/
 docs/          Konzept, Rückstandsverzeichnis, Referenzabgleiche
 ```
 
+**Der Stapel mischt Achsen, die sich verzinsen, mit solchen, die es nicht tun
+(v342, N1G) - und der naheliegende Hebel bewegt gemessen nichts.** Der Punkt
+stand seit v309 als „Gold kauft Tuerme, die Turmzahl ist gedeckelt, also kauft
+diese Achse nach dem Ausbau nichts mehr". Die Folgerung daraus - die
+Goldkarten mit dem Lauf mitwachsen zu lassen - ist gebaut, durchprobiert und
+wieder ausgebaut:
+
+| Exponent | 0 | 0,25 | 0,5 | 0,75 | 1 | 2 | 4 |
+|---|---|---|---|---|---|---|---|
+| `Breite` schafft | 2,7 | 2,7 | 3,0 | 2,7 | 3,0 | 3,0 | 3,0 von 4 |
+
+**Kein Wert bringt ihn durch**, und das verdiente Gold bleibt bei rund 25 000.
+Zwei Groessen erklaeren es: `Fund` gibt 60 Gold neben **25 000 je Lauf**, und
+Gold ist gar nicht knapp - `Breite` verdient 24890, `Meister` 25535.
+
+**Die wirkliche Ursache steht seit v339 als Zahl da:** Schaden, Takt,
+Reichweite und Beute sind FAKTOREN und verzinsen sich ueber sechzig Zuege,
+Gold und Kristall sind Summanden und tun es nicht. Wer eine Goldkarte nimmt,
+nimmt keine Schadenskarte - das Deck traegt **Meister x32,4, Breite x1,83,
+Sparsam x1,80**. Damit ist es zugleich die Ursache von **N7B** und **N6S**.
+
+**Der Hinweis im Lauf ist umgebaut, nicht stehengelassen** (K1), und die Zahl
+darin wird aus `stapelKurve` ABGELESEN statt daneben behauptet (Regel 15).
+**Der Schalter ist nach der Messung wieder heraus** - ein Schalter, der
+nachweislich nichts bewegt, ist die Falle aus v147 (`topdown`); dieselbe
+Bewegung wie N6V in v332.
+
 **Ein Eingriff, der sich einen VORHANDENEN Gegenstand borgt, stirbt an dessen
 Fortschritt (v341).** Der Nachtlauf auf v337 meldete zwei Gegenproben, und der
 Befundtext aus v337 nannte beide Ursachen in seiner ersten Zeile - aus je
@@ -2037,7 +2064,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v341. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v342. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,

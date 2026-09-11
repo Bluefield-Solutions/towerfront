@@ -1,6 +1,28 @@
 # Towerfront — Stories
 
-Stand: v335 · 11.09.2026
+Stand: v342 · 11.09.2026
+
+**Nachgesehen in v342 — 44 von 53 sind zu, und was übrig ist, ist zum ersten
+Mal nicht mehr Ausführung.**
+
+| Stand | Zahl | was es heisst |
+|---|---|---|
+| zu | **44** | gebaut und durch die Torkette gegangen |
+| Handarbeit | 5 | braucht Bilder oder einen Blick (Regel 8) |
+| bedingt | 2 | Rückbau, nur zu fahren, wenn eine Abnahme dreimal nicht hält |
+| offen | **2** | S-N1-05 und S-N5-02 |
+
+**Und beide offenen warten auf dieselbe Art von Antwort, nicht auf Arbeit.**
+S-N5-02 wartet auf Bilder im neuen Stil (S-N5-01b). S-N1-05 wartet auf eine
+Entscheidung über die Machtkurve — und die ist in v339 und v340 zweimal
+gemessen worden, statt sie zu bauen: der Stapel ist stark genug, um neben den
+Stufen zu stehen (×12 bis ×32 über einen Lauf), aber nicht, um sie zu
+ersetzen (ohne Ausbau 0,0 von 4 Abschnitten, auch mit 127 Türmen statt 48).
+
+**Was die Story dazu selbst sagt, gilt unverändert:** *„Das ist eine Frage an
+den Nutzer, keine, die sich aus der Story ableiten lässt."* Die Messung hat
+die Frage nicht beantwortet — sie hat sie geschärft und einen der vier Wege
+als einzigen gemessen tragfähigen ausgewiesen.
 
 **Nachgesehen in v324 — Paket N4 ist durch bis auf zwei Punkte, die dem Nutzer
 gehören, und die Kette hat dabei einen eigenen blinden Fleck gefunden.**

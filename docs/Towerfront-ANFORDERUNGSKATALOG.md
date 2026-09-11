@@ -1,6 +1,27 @@
 # Towerfront — Anforderungskatalog
 
-Stand: v335 · 11.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+Stand: v342 · 11.09.2026 · erstellt gegen den Spielstand **v248** (`5623c3b`)
+
+**Nachgesehen in v342 — N7 ist durch, und der wichtigste Satz dieses Katalogs
+hat zum ersten Mal Zahlen hinter sich.**
+
+Der Satz lautet: *der Genre-Abgleich steht auf 30 von 30, und das Spiel macht
+trotzdem wenig Spaß — die Tore prüfen Korrektheit, nicht Spannung.* Abschnitt
+2.1 fordert daraus die Reihenfolge **erst die Messung, dann das Gemessene**.
+Die Runden v336 bis v342 sind genau das, und sie haben es teuer belegt:
+
+* **v336:** sieben von zehn Spannungskennzahlen beantworteten eine andere
+  Frage, als über ihnen stand — eine Partie statt eines Laufs. „Längste
+  folgenlose Strecke" 13,0 → **43,7**.
+* **v339:** die Prämisse einer ganzen Story war an einer Messstelle
+  entstanden, die es nicht mehr gibt.
+* **v340:** ein geplanter Rückbau macht das Spiel gemessen unspielbar — 0,0
+  von 4 Abschnitten. Gemessen **bevor** ein Tag Arbeit hineinlief.
+* **v342:** ein Rückstandspunkt nannte seit v309 die falsche Ursache.
+
+**Keiner dieser vier Funde war ohne das Messgerät zu haben, und keiner hätte
+ein Tor rot gemacht.** Das ist der Beleg für 2.1 — nicht als Meinung, sondern
+als vier Zahlen.
 
 **Nachgesehen in v335 — Paket N6 ist bis auf zwei Stories durch, N7 hat
 begonnen.**

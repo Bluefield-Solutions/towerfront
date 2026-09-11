@@ -1,6 +1,17 @@
 # Referenzabgleich — Bauen und Prüfsteg (Bedienung)
 
-Stand: v335 · 11.09.2026
+Stand: v342 · 11.09.2026
+
+**Nachgesehen in v342 — keine Zahl hat sich bewegt, und das ist die Aussage.**
+`npm run uxtor` misst unverändert `zug` 7,9 · `ruhe` 13,1 · `bauwahl` 22,0 ·
+`pruefsteg` 27,0 · `welle` 13,9 %. Die sieben Runden v336 bis v342 haben die
+Bedienung nicht angefasst: sie sind Messgeräte (v336, v339, v340, v342) und
+Torreparaturen (v337, v338, v341).
+
+**Was offen bleibt, bleibt aus demselben Grund wie in v335:** H1 verlangt
+höchstens 25 % bei offenem Turmmenü, gemessen 27,0 — die zwei Punkte liegen
+als **N4M** im Verzeichnis, und beide gemessenen Wege dorthin kosten Inhalt,
+nicht Ordnung. 17,8 % der Bahn unter der Bedienung stehen als **N4F** da.
 
 **Nachgesehen in v335 — eine Zahl hat sich bewegt, und sie ist bezahlt.**
 `npm run uxaudittor` misst `zug` 7,9 · `ruhe` 13,1 · `bauwahl` 22,0 ·

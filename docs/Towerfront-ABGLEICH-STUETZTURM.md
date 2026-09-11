@@ -1,6 +1,19 @@
 # Referenzabgleich — Stützturm (C3, „Bannturm")
 
-Stand: v335 · 11.09.2026
+Stand: v342 · 11.09.2026
+
+**Nachgesehen in v342 — unverändert, und die Bestellung steht.** Der Bannturm
+ist seit v334 als **`8d.6` / `35_bannturm.png`** geführt; `npm run bildtor`
+zählt ihn nicht unter den vier offenen Bestellungen, weil er kein Gebäude im
+Spiel ist, das ein Bild erwartet — er ist der Bogenturm mit dem Zweig, der
+C3 erfüllt (zugefallen seit v295).
+
+**Die sieben Runden v336 bis v342 haben an Türmen und Zweigen nichts
+geändert** — was sie über die Zweige gemessen haben, gehört trotzdem hierher:
+`npm run sim` führt alle vier Zweigpaare als **UNBELEGT** (Abstand kleiner als
+das Rauschen des Verfahrens, G2). Die Zweigwahl bewegt heute nichts, was
+messbar wäre; S-N1-05 will sie deshalb ausbauen, und die Entscheidung darüber
+liegt beim Nutzer.
 
 **Nachgesehen in v335 — und der Bannturm hat seine Bestellung verloren und
 eine neue bekommen.** Sein Bildauftrag stand seit v295 als `8d.4` mit

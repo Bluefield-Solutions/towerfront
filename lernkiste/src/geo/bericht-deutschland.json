@@ -1,0 +1,46 @@
+{
+  "ebene": "deutschland",
+  "quelle": "Natural Earth 1:10m admin_1 (ZWISCHENSTAND, siehe README)",
+  "grenze": 0.75,
+  "stufen": [
+    {
+      "stufe": "grob",
+      "breitePx": 200,
+      "inselnBehalten": 19,
+      "inselnWeg": 19,
+      "anteil": 58.7,
+      "hausdorffPx": 0.487,
+      "laeufe": 8,
+      "punkte": 7671,
+      "bytes": 93355,
+      "gzip": 35118,
+      "sekunden": 0.4
+    },
+    {
+      "stufe": "mittel",
+      "breitePx": 800,
+      "inselnBehalten": 32,
+      "inselnWeg": 6,
+      "anteil": 91.6,
+      "hausdorffPx": 0.521,
+      "laeufe": 8,
+      "punkte": 12993,
+      "bytes": 157674,
+      "gzip": 57030,
+      "sekunden": 0.4
+    },
+    {
+      "stufe": "fein",
+      "breitePx": 2000,
+      "inselnBehalten": 36,
+      "inselnWeg": 2,
+      "anteil": 94.3,
+      "hausdorffPx": 0.515,
+      "laeufe": 8,
+      "punkte": 13485,
+      "bytes": 163569,
+      "gzip": 58854,
+      "sekunden": 0.4
+    }
+  ]
+}

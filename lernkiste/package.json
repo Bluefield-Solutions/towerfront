@@ -1,0 +1,31 @@
+{
+  "name": "smart-kids",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Erdkunde-Lernspiel fuer Fiona und Lea - Kontinente, Laender, Bundeslaender, Landeshauptstaedte",
+  "scripts": {
+    "geo-holen": "node tools/geo-holen.mjs",
+    "backen": "node --max-old-space-size=6144 tools/backen-kontinente.mjs && node --max-old-space-size=6144 tools/backen-deutschland.mjs && node --max-old-space-size=6144 tools/backen-laender.mjs && node --max-old-space-size=4096 tools/backen-antarktika.mjs && node tools/backen-staedte.mjs",
+    "schrift": "node tools/holen-schrift.mjs",
+    "symbol": "node tools/backen-symbol.mjs && node tools/backen-symbol-png.mjs",
+    "bauen": "node entwuerfe/bauen.mjs && node prototyp/bauen.mjs",
+    "prototyp": "node prototyp/bauen.mjs",
+    "entwuerfe": "node entwuerfe/bauen.mjs",
+    "inhalt": "node tor/inhalt.mjs",
+    "vergleich": "node tor/vergleich.mjs",
+    "ansicht": "node tor/ansicht.mjs",
+    "pwa": "node tor/pwa.mjs",
+    "smoke": "node tor/smoke.mjs",
+    "tor": "npm run inhalt && npm run vergleich && npm run bauen && npm run ansicht && npm run pwa && npm run smoke"
+  },
+  "devDependencies": {
+    "d3-geo": "^3.1.1",
+    "mapshaper": "^0.6.102",
+    "topojson-client": "^3.1.0"
+  },
+  "dependencies": {
+    "playwright": "^1.62.1",
+    "pngjs": "^7.0.0"
+  }
+}

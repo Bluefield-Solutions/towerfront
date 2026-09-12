@@ -1,0 +1,92 @@
+{
+ "DE-SH": [
+  "DE-HH",
+  "DE-NI",
+  "DE-MV"
+ ],
+ "DE-HH": [
+  "DE-SH",
+  "DE-NI"
+ ],
+ "DE-MV": [
+  "DE-SH",
+  "DE-NI",
+  "DE-BB"
+ ],
+ "DE-NI": [
+  "DE-SH",
+  "DE-HH",
+  "DE-MV",
+  "DE-BB",
+  "DE-ST",
+  "DE-TH",
+  "DE-HE",
+  "DE-NW",
+  "DE-HB"
+ ],
+ "DE-HB": [
+  "DE-NI"
+ ],
+ "DE-BB": [
+  "DE-MV",
+  "DE-NI",
+  "DE-ST",
+  "DE-SN",
+  "DE-BE"
+ ],
+ "DE-BE": [
+  "DE-BB"
+ ],
+ "DE-ST": [
+  "DE-NI",
+  "DE-BB",
+  "DE-SN",
+  "DE-TH"
+ ],
+ "DE-SN": [
+  "DE-BB",
+  "DE-ST",
+  "DE-TH",
+  "DE-BY"
+ ],
+ "DE-TH": [
+  "DE-NI",
+  "DE-ST",
+  "DE-SN",
+  "DE-BY",
+  "DE-HE"
+ ],
+ "DE-NW": [
+  "DE-NI",
+  "DE-HE",
+  "DE-RP"
+ ],
+ "DE-HE": [
+  "DE-NI",
+  "DE-TH",
+  "DE-BY",
+  "DE-BW",
+  "DE-RP",
+  "DE-NW"
+ ],
+ "DE-RP": [
+  "DE-NW",
+  "DE-HE",
+  "DE-BW",
+  "DE-SL"
+ ],
+ "DE-SL": [
+  "DE-RP"
+ ],
+ "DE-BW": [
+  "DE-RP",
+  "DE-HE",
+  "DE-BY"
+ ],
+ "DE-BY": [
+  "DE-HE",
+  "DE-TH",
+  "DE-SN",
+  "DE-BW"
+ ]
+}

@@ -3354,12 +3354,35 @@ export const PROBEN = [
     // 30 von 30 mass: seine Zeile begann mit "Messung: v" statt "Stand: v",
     // und wer die erwartete Form nicht traf, wurde gar nicht geprueft.
     // Dreizehn von vierundzwanzig Dokumenten standen so draussen.
+    // **Die Regel greift seit v350 ALLE Angaben, nicht die erste.** Sie
+    // meint "nimm dem Dokument seine Standangabe" - mit einer zweiten Zeile
+    // daneben nahm sie ihm die erste, `doku` wurde aus dem anderen Grund rot
+    // (Rueckstand statt Fehlanzeige), und die Probe bewies nichts mehr.
+    // Genau so ist sie im Nachtlauf vom 12.09. gestorben, nachdem v349 in
+    // BENCHMARK.md einen zweiten Stand-Block hinterlassen hatte. Der
+    // Musterlauf hat den Grund sogar gedruckt - "2 Treffer, greift den
+    // ersten" -, aber als Hinweis, und ein Hinweis urteilt nicht.
     name: 'Dokument ohne Standangabe faellt durch das Netz',
     datei: 'docs/Towerfront-BENCHMARK.md',
-    regel: /^Stand: v\d+ · /m,
+    regel: /^Stand: v\d+ · /gm,
     ersatz: 'Messung: v35 · ',
     tor: 'doku',
     meldet: 'weder "Stand: vNN" noch "Aufgezeichnet: vNN"',
+  },
+  {
+    // **Und die Regel, an der v349 vorbeigelaufen ist:** ein Dokument
+    // erklaert sich GENAU EINMAL. Zwei Standangaben sind zwei Wahrheiten
+    // ueber dieselbe Sache, und geprueft wurde immer nur die erste.
+    //
+    // Der Eingriff verdoppelt die EIGENE Standzeile des Dokuments, statt
+    // eine fremde Fassungsnummer hineinzuschreiben: damit haengt er an
+    // keinem Fortschritt, den eine spaetere Runde wegnehmen kann (v341).
+    name: 'Ein Dokument traegt zwei Standangaben',
+    datei: 'docs/Towerfront-KETTE.md',
+    regel: /^(Stand: v\d+ · )/m,
+    ersatz: '$1\n$1',
+    tor: 'doku',
+    meldet: 'Standangaben',
   },
   {
     // **Und die Gegenrichtung, ohne die die Probe darueber nichts beweist:**

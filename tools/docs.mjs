@@ -363,21 +363,54 @@ for (const [name, text] of alle) {
 // Verzeichnis zu sehen und muss beim Schreiben gewaehlt werden. Eine
 // Ausnahme, die man ausspricht, ist etwas anderes als eine, die entsteht,
 // weil niemand hingesehen hat.
+//
+// **Und seit v350 muss es sich GENAU EINMAL erklaeren.** Bis dahin las die
+// Pruefung `text.match(...)`, also die ERSTE Angabe, und hoerte dort auf.
+// Eine zweite daneben wurde nie angesehen - sie konnte beliebig weit
+// zurueckfallen, ohne dass etwas rot wird. Genau das ist in v349 passiert:
+// beim Nachziehen von `Towerfront-BENCHMARK.md` ist der neue Stand-Block
+// UEBER den alten geraten statt an seine Stelle, und das Dokument trug
+// seitdem `Stand: v349` und `Stand: v342` zugleich. Sieben Fassungen
+// Rueckstand, unsichtbar hinter der ersten Zeile - Regel 15 in Reinform.
+//
+// Gemeldet hat es kein Tor, sondern der Nachtlauf, und auch der nur auf
+// einem Umweg: die Gegenprobe zur Standregel ersetzt die erste Angabe und
+// verlangt "weder ... noch". Mit einer zweiten Zeile daneben wurde `doku`
+// zwar rot, aber aus dem anderen Grund - die Probe bewies nichts mehr.
+// Dieselbe Klasse wie v341: ein Eingriff, der sich einen vorhandenen
+// Gegenstand borgt, stirbt an dessen Fortschritt.
+//
+// Gemessen ueber alle 29 Dokumente traegt heute jedes GENAU EINE Angabe und
+// keines beide Formen - die Regel haelt also den Bestand und faengt nur den
+// Fall, der sie verletzt (Regel 10). Gezaehlt wird am ZEILENANFANG statt
+// irgendwo im Text; gemessen aendert das heute an keinem Dokument etwas,
+// aber es fragt, was es meint: eine Standangabe ist eine Zeile, keine
+// Erwaehnung.
+const STANDZEILE = /^Stand: (v\d+)/gm;
+const PROTOKOLLZEILE = /^Aufgezeichnet: (v\d+|\d{2}\.\d{2}\.\d{4})/gm;
+
 for (const [name, text] of alle) {
-  const m = text.match(/Stand: (v\d+)/);
-  if (!m) {
-    if (!/^Aufgezeichnet: (v\d+|\d{2}\.\d{2}\.\d{4})/m.test(text)) {
-      fail(`${name}: hat weder "Stand: vNN" noch "Aufgezeichnet: vNN". `
-        + 'Ohne eine der beiden Zeilen prueft niemand, ob der Inhalt noch stimmt - '
-        + 'und genau so stand der Genre-Abgleich 213 Fassungen lang falsch da.');
-    }
+  const staende = [...text.matchAll(STANDZEILE)];
+  const protokolle = [...text.matchAll(PROTOKOLLZEILE)];
+  const angaben = staende.length + protokolle.length;
+  if (angaben === 0) {
+    fail(`${name}: hat weder "Stand: vNN" noch "Aufgezeichnet: vNN". `
+      + 'Ohne eine der beiden Zeilen prueft niemand, ob der Inhalt noch stimmt - '
+      + 'und genau so stand der Genre-Abgleich 213 Fassungen lang falsch da.');
     continue;
   }
-  const alt = Number(m[1].slice(1)), neu = Number(version.slice(1));
+  if (angaben > 1) {
+    fail(`${name}: traegt ${angaben} Standangaben (${staende.length}x "Stand:", `
+      + `${protokolle.length}x "Aufgezeichnet:") - geprueft wird die erste, `
+      + 'die uebrigen veralten ungesehen. Ein Dokument erklaert sich einmal.');
+    continue;
+  }
+  if (!staende.length) continue;
+  const alt = Number(staende[0][1].slice(1)), neu = Number(version.slice(1));
   if (neu - alt > 6) {
-    fail(`${name}: steht auf ${m[1]}, aktuell ist ${version} - ${neu - alt} Versionen Rückstand.`);
+    fail(`${name}: steht auf ${staende[0][1]}, aktuell ist ${version} - ${neu - alt} Versionen Rückstand.`);
   } else if (alt !== neu) {
-    warn(`${name}: steht auf ${m[1]}, aktuell ist ${version}.`);
+    warn(`${name}: steht auf ${staende[0][1]}, aktuell ist ${version}.`);
   }
 }
 

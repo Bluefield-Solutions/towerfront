@@ -1,6 +1,6 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v343 · 11.09.2026
+Stand: v350 · 12.09.2026
 
 **Nachgesehen in v322 — und die sieben Runden v316 bis v322 haben die
 Sammlung in eine Richtung erweitert, die hier bisher fehlte: das
@@ -38,6 +38,31 @@ gezeigt: die Lücke sass nicht im Eingriff, sondern in der Messstelle.**
 * **v343, N4W:** die Spreizung misst das FENSTER und sieht nicht, was eine
   einzelne Weiche darin beiträgt. Fünf Eingriffe waren daran gescheitert,
   keiner war falsch gebaut.
+
+---
+
+**Nachgesehen in v350 — und die Runden v344 bis v350 haben eine Lücke
+geliefert, die keine der bisherigen ist: eine Prüfung, die MISST, aber nur
+den ersten von mehreren Fällen, und den Rest gar nicht ansieht.** Sie steht
+unten als **M24**.
+
+* **v350:** `doku` las `text.match(/Stand: (v\d+)/)` — die erste Standangabe
+  eines Dokuments — und hörte dort auf. `Towerfront-BENCHMARK.md` trug seit
+  v349 zwei davon, `v349` und `v342`; die zweite lag sieben Fassungen zurück
+  und wäre allein für sich rot gewesen. Gemeldet hat es kein Tor, sondern der
+  Nachtlauf, und auch der nur, weil die Gegenprobe zur Standregel an derselben
+  Stelle stumm wurde.
+* **v347:** dieselbe Form eine Ebene höher — `feldVerdeckung` beantwortete von
+  zwei Zusagen nur eine. Gemessen fallen sie weit auseinander: der Weichenring
+  steht in `welle` auf **50,0 % gefangen gegen 15,4 % zugedeckt**.
+
+**Die Klasse heisst: eine Prüfung, die den ersten von mehreren Treffern nimmt,
+prüft eine Stichprobe und meldet ein Urteil.** Sie ist gefährlicher als eine
+fehlende Prüfung, weil sie grün aussieht — und sie ist in diesem Baum nicht
+selten: `npm run muster` zählt **22 von 419 Gegenproben**, die auf den ersten
+von mehreren Treffern greifen, und nennt das als Hinweis. Vor dieser Runde
+waren es 23 — und die eine, die dabei wegfällt, ist genau die, die am 12.09.
+nichts mehr bewiesen hat. Der Hinweis stand also über ihr, jeden Lauf.
 
 **Und zweimal in diesen Runden hat eine Messung von mir selbst nichts
 gemessen** — beide Male fiel es nur auf, weil Regel 3 gefahren wurde: die
@@ -1034,6 +1059,37 @@ eigene Änderung an ihm hängt, ist kein Beweis (v219).
 **Die allgemeine Form.** Reproduzierbar heisst nicht richtig. Eine Messung,
 die immer denselben Weg fährt, gibt immer dasselbe Ergebnis — auch dann, wenn
 das Ergebnis an diesem Weg hängt und nicht an der Sache.
+
+---
+
+## M24 · Eine Prüfung, die den ERSTEN von mehreren Treffern nimmt, misst eine Stichprobe
+
+**Was fehlt.** Es gibt kein Verfahren, das sagt, welche Prüfungen dieses Baums
+an einem `match`, `find` oder `replace` ohne `g` hängen — also überall dort, wo
+ein zweiter Fall danebenstehen könnte und nie angesehen wird.
+
+**Warum das nicht theoretisch ist, und zwar gemessen (v350).** `doku` las die
+erste Standangabe je Dokument. `Towerfront-BENCHMARK.md` trug zwei, und die
+zweite stand sieben Fassungen zurück, ohne dass etwas rot wurde. Der Fall ist
+jetzt zu — der Wächter verlangt **genau eine** Angabe, gemessen über alle 29
+Dokumente —, aber die Frage bleibt für jede andere Prüfung offen.
+
+**Was dagegen spricht, es einfach zu verbieten.** Bei sechs Gegenproben ist
+„der erste Treffer" ausdrücklich Absicht; die Zeile über dem Hinweis in
+`tools/probes.mjs` erklärt das seit v149 („trifft 321 Wegbreiten und will
+genau eine davon"). Ein Werkzeug, das alle 23 Fälle zu Fehlern macht, wird
+nach zwei Runden abgeschaltet — dieselbe Lehre wie bei der engen
+Offen-Erkennung in v226.
+
+**Was es bräuchte.** Eine Unterscheidung zwischen „der erste Treffer ist der
+gemeinte" und „es dürfte nur einen geben". Die zweite Hälfte lässt sich
+erzwingen, wo der Gegenstand eine Liste mit bekannter Länge ist — so wie es
+`doku` jetzt für die Standangabe tut. Für den allgemeinen Fall gibt es heute
+kein billiges Verfahren, und deshalb steht es hier statt als Tor.
+
+**Behelf bis dahin, gemessen wirksam:** der Musterlauf DRUCKT die Zahl schon
+(„22 davon auf den ersten von mehreren Treffern"). Wer eine Probe anfasst,
+liest ihre Zeile — das ist eine Gewohnheit, kein Tor.
 
 ---
 

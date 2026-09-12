@@ -1,6 +1,6 @@
 # Towerfront — Genre-Abgleich
 
-Stand: v349 · 11.09.2026
+Stand: v350 · 12.09.2026
 
 **Nachgefahren in v349, nicht geglaubt** (`npm run bench`): der Dichtefaktor
 steht auf **4,62** bei 13,3-facher Last, die Ratsche auf 4,56 mit einem
@@ -14,7 +14,8 @@ Weichenknopf. Der einzige Eingriff ins gezeichnete Bild ist die Gabel am
 Weichenring (v346), und sie kostet zwei Striche je Weiche bei höchstens vier
 Weichen je Karte.
 
-Stand: v342 · 11.09.2026 · Gemessen von `npm run bericht`: **30 von 30
+**Der Stand davor, festgehalten in v342** · Gemessen von `npm run bericht`:
+**30 von 30**
 
 **Nachgefahren in v342, nicht geglaubt** (`npm run bericht`): unverändert
 **30 von 30, gewichtet 100 %** — und die sieben Runden v336 bis v342 haben

@@ -1,1 +1,3 @@
-sauber 2026-09-11 e0b9b8ba
+BEFUND vom 2026-09-12T08:18Z auf 7e47be12:
+PROBEN: 1 von 70 Toren beweisen nichts
+  - Dokument ohne Standangabe faellt durch das Netz: "doku" meldet "weder "Stand: vNN" noch "Aufgezeichnet: vNN"" nicht, obwohl der Fehler eingebaut ist. Zuletzt sagte "doku":   Hinweis: Towerfront-NEUBAU.md: steht auf v347, aktuell ist v349. | DOKU-WAECHTER: 1 Fehler |   - Towerfront-BENCHMARK.md: steht auf v342, aktuell ist v349 - 7 Versionen Rückstand.

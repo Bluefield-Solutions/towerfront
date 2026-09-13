@@ -1,6 +1,23 @@
 # Audit — HUD, Bildschirmaufteilung und Turmmenüs
 
-Stand: v346 · 11.09.2026
+Stand: v353 · 13.09.2026
+
+**Nachgesehen in v353 — an der Bedienoberfläche hat sich in sieben Runden
+nichts bewegt, und das ist die Auskunft.** v347 bis v353 haben ausnahmslos am
+Messgerät gearbeitet: am Inspektor (v348, v349), an der Standregel (v350), an
+den Schließbedingungen (v351, v352) und am Stand-Absatz von CLAUDE.md (v353).
+Keine Zahl dieses Audits ist dabei angefasst worden.
+
+**Die eine Bewegung, die hierher gehört, liegt in v347 und ist eine
+Messstelle** (Regel 12): `feldVerdeckung` maß von zwei Fragen nur eine. Die
+Zusage lautet seit v320 *„was darüber liegt, kann man weder SEHEN noch
+BEBAUEN"*, und `elementFromPoint` beantwortet allein die zweite — wer den
+Finger fängt. Die zwei Zahlen fallen weit auseinander: der Weichenring in
+`welle` ist zu **50,0 %** fingerdicht, aber nur zu **15,4 %** zugedeckt, in
+`dock-zu` zu 26,9 gegen **3,8 %**. Damit ist der Nebenbefund aus v344 auf ein
+Siebtel geschrumpft, ohne dass eine alte Zahl falsch war — sie beantwortete
+die andere Frage. Beide Messungen stehen seitdem nebeneinander, keine ersetzt
+die andere.
 
 **Nachgesehen in v346 — die Belegungszahlen stehen unverändert, und der
 wichtigste Befund der sieben Runden ist einer, den keine von ihnen messen

@@ -3482,6 +3482,28 @@ export const PROBEN = [
     meldet: 'zeigt auf eine Datei, in der ihr Wort nicht steht',
   },
   {
+    // **Der Stand-Absatz von CLAUDE.md behauptet eine Zahl, die der Quelltext
+    // nicht hergibt** (v353).
+    //
+    // Dort stand achtunddreissig Fassungen lang "drei Grade", waehrend v314
+    // sie ausgebaut hat: `DIFFICULTY_ORDER` haelt einen Eintrag. Gehalten hat
+    // es nichts - die Standregel prueft die FASSUNGSNUMMER hinter "Stand:",
+    // nicht die Zahlen davor. Und diese Datei wird zu Beginn JEDER Sitzung
+    // gelesen; eine falsche Zahl darin traegt sich in jede Runde weiter.
+    //
+    // Der Eingriff greift die KARTENZAHL, nicht die Grade: die vier Karten
+    // sind der aelteste und stabilste Eintrag des Satzes, waehrend die Grade
+    // gerade erst richtiggestellt wurden - eine Probe an einer frisch
+    // reparierten Zeile borgt sich ihren Gegenstand von einer Reparatur
+    // (v341, v350, v352).
+    name: 'Der Stand-Absatz zaehlt falsch',
+    datei: 'CLAUDE.md',
+    suche: '**Vier** Karten (Spiralhain,',
+    ersatz: '**Sieben** Karten (Spiralhain,',
+    tor: 'doku',
+    meldet: 'gemessen sind es 4',
+  },
+  {
     // **Und die Gegenrichtung, ohne die die Probe darueber nichts beweist:**
     // ein PROTOKOLL darf schweigen. Sonst besteht die Pruefung auch ein Tor,
     // das jedes Dokument zum Nachziehen zwingt - und dann waeren die zwoelf

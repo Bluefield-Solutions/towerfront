@@ -1,6 +1,18 @@
 # Marktrecherche — was moderne Tower-Defense-Spiele ausmacht
 
-Stand: v346 · 11.09.2026
+Stand: v353 · 13.09.2026
+
+**Nachgesehen in v353 — inhaltlich unverändert gültig.** Die Runden v347 bis
+v353 haben die Recherche nicht berührt; sie haben am Messgerät gearbeitet.
+
+**Ein Satz dieser Recherche ist dabei trotzdem eingelöst worden, und zwar an
+einer Stelle, an der ihn niemand erwartet hätte.** Die Vorbilder machen den
+Weg zur Entscheidung — und genau diese Entscheidung stand seit v280 gebaut,
+gemessen und von Toren gehalten da, während ihr Knopf sechsundsechzig
+Fassungen lang das Zeichen für „entfernen" trug (v346, N4X). Kein Tor hat
+etwas gemeldet, weil die Weiche ja funktionierte. Was die Recherche fordert,
+ist damit nicht nur zu bauen, sondern auch zu **zeigen** — und das sieht kein
+Messwert, nur ein Blick (Regel 8).
 
 **Nachgesehen in v346 — inhaltlich unverändert gültig.** Die Runden v340 bis
 v346 haben nichts an der Recherche berührt, aber einen ihrer Sätze zum

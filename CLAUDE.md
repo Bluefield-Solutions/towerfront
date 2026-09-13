@@ -2280,14 +2280,26 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v352. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v353. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
-Spalter zerfällt, drei Grade, Endlosmodus. Genre-Abgleich 30 von 30,
+Spalter zerfällt, **ein** Grad, der Lauf als Bogen. Genre-Abgleich 30 von 30,
 gewichtet 100 %.
 
 Die Zahl hinter „Stand" muss zu `VERSION` in `src/data/config.ts` passen —
 `npm run doku` vergleicht beide und schlägt ab sechs Versionen Rückstand an.
+
+**Und seit v353 auch der SATZ darunter, nicht nur die Fassungsnummer.** Hier
+stand achtunddreissig Fassungen lang „drei Grade", während v314 sie ausgebaut
+hat — `DIFFICULTY_ORDER` hält seitdem **einen** Eintrag. Gehalten hat es
+nichts: die Standregel prüft die Zahl hinter „Stand:", nicht die Zahlen davor.
+Dieselbe Sorte Stellvertreter wie in v351 und v352 — geprüft wurde, was leicht
+zu prüfen ist, statt dessen, was behauptet wird. Und diese Datei wird zu
+Beginn **jeder** Sitzung gelesen; eine falsche Zahl darin trägt sich in jede
+Runde weiter. Vier Zählungen hängen jetzt an ihren Listen (Karten, Türme,
+Fähigkeiten, Grade); die neun Gegnerarten nicht, weil `ENEMIES` ein Record ist
+und der Satz anders zählt als die Datei — nachgezählt ist er richtig, und eine
+Prüfung, die die Zählweise rät, wäre schlimmer als keine.
 Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
 „Version vNN" kennt der Wächter nicht, also fiel der Rückstand von
 61 Versionen keinem auf.

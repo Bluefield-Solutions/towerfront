@@ -1,6 +1,25 @@
 # Towerfront — Konzept und Entwicklungspipeline
 
-Stand: v346 · 11.09.2026
+Stand: v353 · 13.09.2026
+
+**Nachgesehen in v353 — die Kette hat unverändert dreiunddreissig abbrechende
+Schritte, und an ihrem Ablauf haben die Runden v347 bis v353 nichts
+geändert.** Was sich bewegt hat, steht daneben: **423 Gegenproben** (415 in
+v346), gezählt mit `npm run muster` in 0,4 s.
+
+**Gewachsen ist dabei nicht das Spiel, sondern das, was die Pipeline über sich
+selbst weiß** — und die Lehre der Woche gehört in dieses Dokument: **eine
+Schließbedingung ist ein STELLVERTRETER der Abnahme, nicht die Abnahme.** Sie
+kann von etwas anderem erfüllt werden als der Sache (v351: das Messgerät, das
+für die Frage gebaut wurde), sie kann auf einen Ort zeigen, an dem die Sache
+nie entsteht (v352: ein Wort, das in der genannten Datei nie stand), und sie
+kann neben einer Behauptung stehen, die niemand prüft (v353: „drei Grade" in
+CLAUDE.md, während v314 sie ausgebaut hatte — achtunddreissig Fassungen lang).
+
+Alle drei sehen von außen gleich aus: der Wächter fährt die Bedingung, sie
+antwortet sauber, und nichts wird rot. Erzwungen ist seitdem, was sich
+mechanisch fassen lässt; der allgemeine Fall steht als **M25** in den
+Messlücken.
 
 **Nachgesehen in v346 — die Kette hat unverändert dreiunddreissig
 abbrechende Schritte, und an ihrem Ablauf haben die Runden v340 bis v346

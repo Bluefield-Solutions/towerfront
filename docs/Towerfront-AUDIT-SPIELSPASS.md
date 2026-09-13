@@ -1,6 +1,27 @@
 # Audit — Spielspaß, Entscheidungen und Verlauf
 
-Stand: v346 · 11.09.2026
+Stand: v353 · 13.09.2026
+
+**Nachgesehen in v353 — keine Kennzahl dieses Audits hat sich bewegt, und der
+Grund ist der wichtigste Satz, den es über diese Woche zu sagen gibt.** Die
+Runden v347 bis v353 haben ausschließlich am Messgerät gearbeitet, weil die
+zwei Fragen, die den Spielspaß noch tragen, **beim Nutzer liegen** und keine
+Runde sie beantworten kann: die Machtkurve (S-N1-07) und ein Bild im neuen
+Stil (S-N5-01b).
+
+**Was diese Woche dafür geleistet hat, ist die Sichtbarkeit dieser Blockade.**
+Bis v350 stand S-N1-07 im Katalog als **zu** — erfüllt hatte ihre Bedingung
+das Messgerät, das in v339 gebaut wurde, um genau ihre Frage zu beantworten,
+während ihre eigene Abnahme messbar offen ist (`Breite` bringt 0 von 9 Läufen
+durch, N7B). `npm run naechste` bot daraufhin die daran hängende S-N1-05 an,
+und der Grund für den Stillstand stand **in keiner Werkzeugausgabe**. Seit
+v351 sagt die Kette es selbst.
+
+**Die offene Ursache ist unverändert N1G und steht als Zahl da:** Schaden,
+Takt, Reichweite und Beute sind Faktoren und verzinsen sich über sechzig Züge,
+Gold und Kristall sind Summanden und tun es nicht — das Deck trägt
+**Meister ×32,4, Breite ×1,83, Sparsam ×1,80**. Dieselbe Ursache trägt N7B
+und N6S.
 
 **Nachgesehen in v346 — die Kennzahlen dieses Audits sind seit v336 an einer
 anderen Messstelle erhoben, und das ist beim Lesen mitzudenken:** `sim`

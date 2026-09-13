@@ -17,7 +17,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ausDatei, gestellt, werte, zeigtAufFalscheDatei } from './schliessbedingung.mjs';
+import { ausDatei, gestellt, listenLaenge, werte, zeigtAufFalscheDatei } from './schliessbedingung.mjs';
 
 /** **Der Quelltextbaum, einmal gelesen** - Eingang fuer
  *  `zeigtAufFalscheDatei`. Zwischengespeichert, weil die Regel ueber jede
@@ -107,7 +107,15 @@ for (const [name, text] of alle) {
 // eingebautes "sieben Prüfungen" rutschte in der Gegenprobe durch. Eine
 // Prüfung mit Lücke ist eine Prüfung, der man nicht trauen kann.
 const zahlwort = {
-  3: 'drei', 4: 'vier', 5: 'fünf', 6: 'sechs', 7: 'sieben', 8: 'acht', 9: 'neun',
+  // **Eins und zwei kamen in v353 dazu, und sie waren genau die Luecke.** Die
+  // Tabelle begann bei drei, weil die Torkette nie weniger Schritte hatte -
+  // und der neue Stand-Abgleich eine Zeile tiefer haelt ZAEHLUNGEN, die sehr
+  // wohl auf eins fallen koennen: seit v314 gibt es genau EINEN
+  // Schwierigkeitsgrad. Ohne diese zwei Eintraege waere die Pruefung an dem
+  // Fall blind gewesen, fuer den sie gebaut wurde (dieselbe Lehre wie v230,
+  // wo die Tabelle bei fuenfundzwanzig endete und die Kette 31 Schritte
+  // hatte).
+  1: 'ein', 2: 'zwei', 3: 'drei', 4: 'vier', 5: 'fünf', 6: 'sechs', 7: 'sieben', 8: 'acht', 9: 'neun',
   10: 'zehn', 11: 'elf', 12: 'zwölf', 13: 'dreizehn', 14: 'vierzehn', 15: 'fünfzehn',
   16: 'sechzehn', 17: 'siebzehn', 18: 'achtzehn', 19: 'neunzehn', 20: 'zwanzig',
   21: 'einundzwanzig', 22: 'zweiundzwanzig', 23: 'dreiundzwanzig',
@@ -700,6 +708,104 @@ const offeneIds = new Set();
         + 'geaendert, und dann prueft hier nichts mehr.');
     }
     void geprueft;
+  }
+}
+
+// --- 7b. Der Stand-Absatz von CLAUDE.md muss zum Quelltext passen (v353).
+//
+// **Der Fall, aus dem die Pruefung entstanden ist.** Unter "## Stand" stand
+// seit v314 *„drei Grade"* - und v314 hat die Grade ausgebaut (S-N1-05):
+// `DIFFICULTY_ORDER` haelt seitdem **einen** Eintrag. Achtunddreissig
+// Fassungen lang hat diese Zeile das Gegenteil dessen behauptet, was im Baum
+// steht.
+//
+// **Und sie steht an der folgenreichsten Stelle, die es gibt.** CLAUDE.md
+// sagt in ihrer eigenen dritten Zeile, dass sie zu Beginn JEDER Sitzung
+// gelesen wird. Eine falsche Zahl dort traegt sich in jede Runde weiter,
+// waehrend ein falsches Wort in einem `docs/`-Dokument erst auffaellt, wenn
+// jemand hineinsieht.
+//
+// **Gehalten hat es bisher nichts.** Die Standregel (Abschnitt 3) prueft die
+// FASSUNGSNUMMER hinter „Stand:", nicht den Satz darunter - dieselbe Sorte
+// Stellvertreter, an der v351 und v352 gestorben sind: geprueft wird, was
+// leicht zu pruefen ist, nicht was behauptet wird.
+//
+// **Die Tabelle ist eine Liste, und das ist hier richtig** (die Ausnahme von
+// Regel 15): sie verbindet PROSA mit CODE, und diese Verbindung laesst sich
+// aus keiner Seite ableiten. Sie ist dafuer so klein wie moeglich - vier
+// Zeilen, jede eine Zaehlung, die als Array im Baum steht und deren Zahl der
+// Satz ausschreibt.
+//
+// **Was NICHT drinsteht und warum:** die neun Gegnerarten. `ENEMIES` ist ein
+// Record und kein Array, `listenLaenge` greift daran nicht - und der Satz
+// zaehlt ausserdem anders als die Datei („neun Gegnerarten IN DEN WELLEN plus
+// den Span, in den der Spalter zerfaellt" gegen zehn Eintraege). Eine halbe
+// Pruefung, die die Zaehlweise raet, waere schlimmer als keine; nachgezaehlt
+// ist der Satz heute richtig, und das steht hier statt in einer Regel, die
+// beim naechsten Gegner falsch wird.
+{
+  // **Das Wort steht als Muster da, und zwar mit Einzahl UND Mehrzahl.** Der
+  // erste Entwurf suchte nur „Grade" - und der richtiggestellte Satz sagt
+  // „ein Grad". Die Pruefung meldete daraufhin „der Satz nennt keine Zahl vor
+  // Grade", also einen Fehler an einem Satz, den sie selbst erzwungen hatte.
+  // Die deutsche Mehrzahl ist nicht ableitbar (Grad/Grade, Turm/Tuerme), also
+  // gehoert sie hierher statt in eine Regel, die sie raet.
+  const STAND_ZAHLEN = [
+    { was: 'Karten?', zeig: 'Karten', datei: 'src/data/maps.ts', liste: 'MAPS' },
+    { was: 'T(?:urm|ürme)', zeig: 'Türme', datei: 'src/data/towers.ts', liste: 'TOWER_ORDER' },
+    { was: 'Fähigkeit(?:en)?', zeig: 'Fähigkeiten', datei: 'src/data/abilities.ts', liste: 'ABILITY_ORDER' },
+    { was: 'Grad(?:e)?', zeig: 'Grade', datei: 'src/data/difficulty.ts', liste: 'DIFFICULTY_ORDER' },
+  ];
+  const m = claude.match(/^Stand: v\d+\.([\s\S]*?)\n\n/m);
+  if (!m) {
+    fail('CLAUDE.md: den Abschnitt "## Stand" gibt es nicht mehr in der Form '
+      + '"Stand: vNN. ...". Dann prueft hier nichts mehr, und die Datei, die '
+      + 'jede Sitzung eroeffnet, behauptet ungeprueft.');
+  } else {
+    const satz = m[1];
+    for (const z of STAND_ZAHLEN) {
+      const inhalt = ausDatei(z.datei);
+      if (inhalt === null) {
+        fail(`CLAUDE.md/Stand: ${z.datei} gibt es nicht - die Zahl fuer `
+          + `"${z.zeig}" haengt damit an nichts.`);
+        continue;
+      }
+      const echt = listenLaenge(inhalt, z.liste);
+      if (echt === null) {
+        fail(`CLAUDE.md/Stand: die Liste ${z.liste} steht nicht in ${z.datei} - `
+          + `die Zahl fuer "${z.zeig}" ist nicht mehr zu pruefen.`);
+        continue;
+      }
+      if (!zahlwort[echt]) {
+        fail(`CLAUDE.md/Stand: ${z.liste} haelt ${echt} Eintraege, und die `
+          + 'Zahlworttabelle reicht nicht so weit. Erst dort nachtragen - eine '
+          + 'Pruefung, deren Wertebereich hinter ihrem Gegenstand '
+          + 'zurueckbleibt, sieht aus wie eine Pruefung (v230).');
+        continue;
+      }
+      // Gesucht wird die Zahl UNMITTELBAR vor dem Wort - als Ziffer oder
+      // ausgeschrieben, mit oder ohne Fettung, und mit der Endung, die der
+      // Satzbau verlangt ("ein Grad", "einen Grad", "vier Karten").
+      const wort = zahlwort[echt];
+      const treffer = new RegExp(
+        `(?:\\*\\*)?(\\d+|[A-Za-zÄÖÜäöüß]+)(?:\\*\\*)?\\s+${z.was}\\b`, 'i');
+      const t = satz.match(treffer);
+      if (!t) {
+        fail(`CLAUDE.md/Stand: der Satz nennt keine Zahl vor "${z.zeig}". `
+          + `Gemessen sind es ${echt} (${z.liste} in ${z.datei}).`);
+        continue;
+      }
+      const genannt = t[1].toLowerCase();
+      const passt = genannt === String(echt)
+        || genannt === wort || genannt === `${wort}e` || genannt === `${wort}en`;
+      if (!passt) {
+        fail(`CLAUDE.md/Stand: der Satz sagt "${t[1]} ${z.zeig}", gemessen sind `
+          + `es ${echt} (${wort}) - ${z.liste} in ${z.datei}. Diese Datei wird zu `
+          + 'Beginn JEDER Sitzung gelesen; eine falsche Zahl darin traegt sich '
+          + 'in jede Runde weiter. Genau so stand "drei Grade" 38 Fassungen '
+          + 'lang da, waehrend v314 sie ausgebaut hatte.');
+      }
+    }
   }
 }
 

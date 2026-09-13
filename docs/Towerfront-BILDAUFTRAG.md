@@ -1,6 +1,18 @@
 # Towerfront — Bildauftrag
 
-Stand: v346 · 11.09.2026 · **Auftragsdokument für den Bild-Agenten**
+Stand: v353 · 13.09.2026 · **Auftragsdokument für den Bild-Agenten**
+
+**Nachgesehen in v353 — gemessen mit `npm run bildtor`, nicht abgeschrieben:
+die vier offenen Bestellungen sind unverändert dieselben, jetzt seit v339.**
+Es fehlen `gegner: heiler`, `gegner: hetzer`, `turm: foerderer_1_1` und
+`turm: werft_1_1`. Die sieben Runden v347 bis v353 haben **keine** neue
+Bestellung erzeugt; sie haben ausnahmslos am Messgerät gearbeitet.
+
+**Der Platzhalter trägt weiter, und das ist gemessen:** 83 % der deckenden
+Punkte tragen die Marke #FF00E5, und zwei Platzhalter unterscheiden sich
+untereinander um **20 %** ihrer Punkte. Die zweite Zahl ist die wichtigere —
+ohne sie sähen Förderer und Werft in der Bauleiste gleich aus, und „hier fehlt
+ein Bild" würde zu „hier fehlen zwei gleiche Bilder".
 
 **Nachgesehen in v346 — gemessen mit `npm run bildtor`, nicht abgeschrieben:
 vier offene Bestellungen, unverändert seit v339.** Es fehlen `heiler`,

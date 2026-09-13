@@ -2280,7 +2280,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v353. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v354. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, **ein** Grad, der Lauf als Bogen. Genre-Abgleich 30 von 30,
@@ -2288,6 +2288,10 @@ gewichtet 100 %.
 
 Die Zahl hinter „Stand" muss zu `VERSION` in `src/data/config.ts` passen —
 `npm run doku` vergleicht beide und schlägt ab sechs Versionen Rückstand an.
+
+Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
+„Version vNN" kennt der Wächter nicht, also fiel der Rückstand von
+61 Versionen keinem auf.
 
 **Und seit v353 auch der SATZ darunter, nicht nur die Fassungsnummer.** Hier
 stand achtunddreissig Fassungen lang „drei Grade", während v314 sie ausgebaut
@@ -2300,9 +2304,6 @@ Runde weiter. Vier Zählungen hängen jetzt an ihren Listen (Karten, Türme,
 Fähigkeiten, Grade); die neun Gegnerarten nicht, weil `ENEMIES` ein Record ist
 und der Satz anders zählt als die Datei — nachgezählt ist er richtig, und eine
 Prüfung, die die Zählweise rät, wäre schlimmer als keine.
-Vorher stand hier „Version v42", während das Spiel bei v103 war: die Form
-„Version vNN" kennt der Wächter nicht, also fiel der Rückstand von
-61 Versionen keinem auf.
 
 **Das Rückstandsverzeichnis wird seit v224 gefahren, nicht geglaubt.** Drei
 Punkte standen als offen darin, während sie längst zugefallen waren: **C24**

@@ -1,6 +1,36 @@
 # Towerfront — der Neubau
 
-Stand: v347 · beschlossen am 09.09.2026
+Stand: v354 · beschlossen am 09.09.2026
+
+**Nachgesehen in v354 — an den vier Sätzen hat sich nichts geändert, und das
+ist diesmal keine Beruhigung, sondern der Befund.** Die Runden v348 bis v354
+haben ausnahmslos am Messgerät gearbeitet: am Inspektor, an der Standregel, an
+den Schließbedingungen, am Stand-Absatz. **Kein einziger Bildpunkt des Spiels
+hat sich bewegt** — der Inspektor meldet seit v347 „unverändert" und trägt sein
+Urteil weiter.
+
+**Der Grund steht in den zwei Sätzen, die der Nutzer entscheiden muss**, und
+beide hängen an diesem Dokument:
+
+* **„Der Bogen wird ein Roguelite-Lauf … Turmzweige, Stufen, Grade und Sterne
+  entfallen dafür."** Grade und Sterne sind seit v314 draußen. Die Stufen
+  nicht, und dreimal gemessen (v339, v340, v342) trägt nur **Weg D**: bei Stufe
+  3 deckeln. Ohne Ausbau schafft **kein** Spielstil einen einzigen Abschnitt
+  (0,0 von 4); mehr Türme retten es nicht (127 Türme → 0,3 von 4); der Stapel
+  müsste rund ×23 mehr tragen, und C+A liefert ×487 bis ×8452 — die
+  Größenordnung ist da, aber dann entscheidet eine einzelne Karte. **Der Satz
+  dieses Dokuments steht damit zur Hälfte ungebaut, und das ist keine
+  Ausführungsfrage mehr.**
+* **„Leichte Schrägsicht, industrieller Stil, dunkler Grund."** Im Vorrat
+  liegt seit v233 kein Bildpunkt im neuen Stil. Vier Bestellungen sind offen
+  (Förderer, Werft, Sanitäter, Hetzer), gebaut wird gegen den Platzhalter.
+
+**Was die sieben Runden dafür geleistet haben, ist die Sichtbarkeit dieser
+Blockade — und sie war nicht sichtbar.** Bis v350 stand S-N1-07 im Katalog als
+**zu**, weil das Messgerät ihre Bedingung erfüllt hatte; `npm run naechste` bot
+die daran hängende Story an, und der Grund für den Stillstand stand in keiner
+Werkzeugausgabe. Seit v351 sagt die Kette selbst, dass keine Story ohne den
+Nutzer zu fahren ist.
 
 **Nachgesehen in v347 — an den vier Sätzen hat sich nichts geändert, und der
 erste hat in v346 zum ersten Mal seinen KNOPF bekommen.** *Der Weg wird die

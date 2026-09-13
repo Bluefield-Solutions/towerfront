@@ -1,6 +1,6 @@
 # Towerfront — Stories
 
-Stand: v349 · 11.09.2026
+Stand: v351 · 13.09.2026
 
 **Nachgesehen in v349 — der Katalog ist an seinem Ende angekommen, und das
 ist kein Zwischenstand, sondern die Lage.** `npm run naechste --alle` zählt
@@ -2307,7 +2307,13 @@ die Stufen stellt, damit die Zahl nicht wieder auseinanderläuft.
 **Gegenprobe.** Die Messung selbst: fällt die Kurve des Stapels unter das, was
 sie tragen soll, meldet es der Lauf.
 
-**Schliesst, wenn:** `text tools/sim.ts "stapelKurve" >= 2`
+**Schliesst, wenn:** `nutzer: welcher der vier Wege gefahren wird, steht in dieser Story selbst als Entscheidung des Nutzers - gemessen ist alles, gebaut werden kann erst nach der Wahl`
+
+**Die Bedingung stand bis v350 auf `text tools/sim.ts "stapelKurve" >= 2` — und die hat das MESSGERÄT erfüllt, nicht die Sache.** `stapelKurve` ist in v339 gebaut worden, um genau diese Frage zu beantworten; seitdem las der Katalog die Story als **zu**, während ihre eigene Abnahme messbar offen ist: `Breite` bringt 0 von 9 Läufen durch (N7B), gewinnt also nicht jede Karte.
+
+**Der Schaden war nicht die falsche Zahl, sondern die unsichtbare Blockade.** S-N1-05 hängt an dieser Story, `npm run naechste` hielt sie für erfüllt und bot S-N1-05 an — eine Story, die ohne die Entscheidung niemand fahren kann. Die Kette stand einen Tag lang vor ihr, und der Grund stand in keiner Werkzeugausgabe.
+
+**Eine Story, deren Text die Entscheidung dem Nutzer zuschreibt, kann mechanisch gar nicht zufallen** — `npm run doku` hält das seit v351.
 
 ### S-N1-06 · Rückbau: der Kartenzug wieder heraus
 

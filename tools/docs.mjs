@@ -675,21 +675,55 @@ const offeneIds = new Set();
 // prueft - nur mit einem Unterschied, und der ist der wichtige: eine
 // ERFUELLTE Bedingung ist hier kein Fehler. Eine Story, die zu ist, ist
 // getan; ein offener Punkt, der zu ist, luegt.
+// **Woran man eine Nutzerentscheidung im Text erkennt.** Absichtlich eng
+// gefasst, nach der Lehre aus v226: ein Waechter, der bei richtiger Prosa
+// anschlaegt, wird ueberlesen. Gesucht wird die AUSSAGE, dass die Wahl dem
+// Nutzer gehoert - nicht jede Erwaehnung des Wortes.
+const NUTZERSACHE = /Entscheidung des Nutzers|geh(?:ö|oe)rt dem Nutzer|entscheidet der Nutzer|der Nutzer entscheidet/i;
+
 {
   const stories = alle.find(([n]) => n === 'Towerfront-STORIES.md');
   if (!stories) {
     fail('Towerfront-STORIES.md fehlt - dann weiss die Kette nicht mehr, woran '
       + 'sie arbeitet.');
   } else {
-    const koepfe = [...stories[1].matchAll(/^### (S-[A-Z0-9-]+) · (.+)$/gm)];
+    // **Eine Kennung darf auf einen Kleinbuchstaben enden** (v351) - hier
+    // stand `[A-Z0-9-]+`, und damit las dieser Waechter `S-N5-01b` nicht.
+    // Dieselbe Klasse zum DRITTEN Mal: v313 im Rueckstandsverzeichnis
+    // (`N1K`, `N1G`), v324 in `naechste.mjs` (`S-N5-01b`) - und hier stand
+    // sie seitdem weiter. Gemessen 52 statt 53 Stories.
+    //
+    // **Der Blockleser eine Zeile tiefer war schlimmer als blind:** er las
+    // aus dem Block `S-N5-01b` die Kennung `S-N5-01`, und die gibt es
+    // wirklich. Eine Meldung nannte damit die falsche, VORHANDENE Story -
+    // wer ihr folgt, sucht am gesunden Ort.
+    const koepfe = [...stories[1].matchAll(/^### (S-[A-Za-z0-9-]+) · (.+)$/gm)];
     if (koepfe.length < 10) {
       fail(`Towerfront-STORIES.md: nur ${koepfe.length} Stories erkannt - die `
         + 'Form der Ueberschriften hat sich geaendert, und dann liest '
         + '`npm run naechste` die falsche Reihenfolge.');
     }
     const bloecke = stories[1].split(/^### (?=S-)/m).slice(1);
+    // **Die zwei Zaehlungen muessen dieselbe Zahl nennen** (v351).
+    //
+    // Ohne diese Zeile ist die Kennungsregel eine Zeile ohne Zaehne: liest sie
+    // eine Ueberschrift nicht, faellt die Story aus `koepfe` heraus und bleibt
+    // in `bloecke` stehen - und 52 statt 53 ist immer noch mehr als 10, also
+    // meldet niemand etwas. Genau so ist `S-N5-01b` seit v324 an diesem
+    // Waechter vorbeigelaufen.
+    //
+    // Der Trenner kennt nur `### S-`, die Kennungsregel den ganzen Namen. Wo
+    // sie auseinandergehen, hat die Regel eine Kennung nicht gelesen - und
+    // eine Zaehlung, die eine Kennung nicht lesen kann, meldet nichts, sie
+    // zaehlt einfach eine weniger (v324).
+    if (koepfe.length !== bloecke.length) {
+      fail(`Towerfront-STORIES.md: ${bloecke.length} Storybloecke, aber nur `
+        + `${koepfe.length} lesbare Kennungen. Eine Ueberschrift trifft die `
+        + 'Kennungsregel nicht - die Story faellt lautlos aus jeder Zaehlung '
+        + 'und aus `npm run naechste` heraus.');
+    }
     for (const block of bloecke) {
-      const id = block.match(/^(S-[A-Z0-9-]+)/)[1];
+      const id = block.match(/^(S-[A-Za-z0-9-]+)/)[1];
       const b = block.match(/\*\*Schliesst, wenn:\*\* `([^`]+)`/);
       if (!b) {
         fail(`Story ${id}: keine Schliessbedingung. Dann kann die Kette nicht `
@@ -697,6 +731,40 @@ const offeneIds = new Set();
         continue;
       }
       const bed = b[1];
+      // **Eine Story, die die Entscheidung dem NUTZER zuschreibt, darf keine
+      // mechanische Schliessbedingung tragen** (v351).
+      //
+      // Der Fall, aus dem die Regel entstanden ist: S-N1-07 sagt in ihrem
+      // eigenen Text "Was gebaut wird, ist eine Entscheidung des Nutzers" und
+      // schloss auf `text tools/sim.ts "stapelKurve" >= 2`. Erfuellt hat diese
+      // Bedingung das MESSGERAET, das in v339 gebaut wurde, um genau diese
+      // Frage zu beantworten - nicht die Sache. Ihre eigene Abnahme ("`npm run
+      // sim` gewinnt jede Karte mit jedem der drei Spielstile") ist messbar
+      // offen: `Breite` bringt 0 von 9 Laeufen durch (N7B).
+      //
+      // **Der Schaden ist nicht die falsche Zahl, sondern die unsichtbare
+      // Blockade.** S-N1-05 haengt an S-N1-07; `npm run naechste` hielt die
+      // Vorbedingung fuer erfuellt und bot eine Story an, die ohne die
+      // Entscheidung niemand fahren kann. Der Grund stand in keiner
+      // Werkzeugausgabe - dieselbe Klasse wie v350, wo die Standregel den
+      // ersten von zwei Treffern nahm.
+      //
+      // `blick:` und `nutzer:` gibt es genau dafuer seit v224: sie schliessen
+      // die Sache ehrlich aus, statt sie mechanisch zu behaupten.
+      //
+      // **Die Regel gilt in EINE Richtung.** Wer den Nutzer nennt, braucht die
+      // ehrliche Form; wer sie traegt, muss ihn nicht nennen - `blick:` steht
+      // viermal fuer Regel 8 und hat mit einer Entscheidung nichts zu tun.
+      // Gemessen ueber alle 53 Stories trifft sie heute GENAU EINE, und das
+      // ist die, die sie meint (Regel 10).
+      if (NUTZERSACHE.test(block) && !/^(blick|nutzer): /.test(bed)) {
+        fail(`Story ${id}: ihr Text schreibt die Entscheidung dem Nutzer zu, `
+          + `aber sie schliesst mechanisch auf \`${bed}\`. Eine Wahl, die der `
+          + 'Nutzer trifft, faellt nicht dadurch, dass jemand ein Werkzeug '
+          + 'baut - genau so stand S-N1-07 als "zu" da, waehrend ihre Abnahme '
+          + 'offen war. Richtige Form: `nutzer: <Grund>`.');
+        continue;
+      }
       if (/^(blick|nutzer): /.test(bed)) continue;
       // Die Form muss der Auswerter kennen. Ob die ZIELDATEI schon da ist,
       // wird hier NICHT verlangt - eine Story beschreibt Arbeit, die noch

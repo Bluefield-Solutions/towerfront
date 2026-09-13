@@ -3385,6 +3385,50 @@ export const PROBEN = [
     meldet: 'Standangaben',
   },
   {
+    // **Eine Nutzerentscheidung faellt zu, weil jemand ein Werkzeug gebaut
+    // hat** (v351).
+    //
+    // So stand S-N1-07 da: ihr Text sagt "Was gebaut wird, ist eine
+    // Entscheidung des Nutzers", ihre Bedingung lautete
+    // `text tools/sim.ts "stapelKurve" >= 2` - und erfuellt hat die das
+    // MESSGERAET, das in v339 gebaut wurde, um genau diese Frage zu
+    // beantworten. Der Katalog las die Story als "zu", waehrend ihre eigene
+    // Abnahme messbar offen ist (`Breite` 0 von 9 Laeufen, N7B), und
+    // `npm run naechste` bot die daran haengende S-N1-05 an.
+    //
+    // **Der Eingriff greift NICHT an S-N1-07.** Sobald der Nutzer entscheidet,
+    // wird diese Story umgebaut, und eine Probe, die sich ihren Gegenstand von
+    // ihr borgt, stirbt an deren Fortschritt - das ist die Klasse aus v341 und
+    // v350. Er setzt die Marke stattdessen in eine beliebige Story mit
+    // mechanischer Bedingung; davon gibt es heute 44, und dass es sie gibt,
+    // nimmt kein Fortschritt weg.
+    name: 'Eine Nutzerentscheidung schliesst mechanisch',
+    datei: 'docs/Towerfront-STORIES.md',
+    regel: /^(\*\*Paket:\*\* N0 · \*\*Aufwand:\*\* [SML] · \*\*H(?:ä|ae)ngt an:\*\*[^\n]*)$/m,
+    ersatz: '$1\n\nWas gebaut wird, ist eine Entscheidung des Nutzers.',
+    tor: 'doku',
+    meldet: 'schreibt die Entscheidung dem Nutzer zu',
+  },
+  {
+    // **Eine Story faellt lautlos aus jeder Zaehlung, weil der Waechter ihre
+    // Kennung nicht lesen kann** (v351).
+    //
+    // Dieselbe Klasse zum dritten Mal - v313 im Rueckstandsverzeichnis
+    // (`N1K`, `N1G`), v324 in `naechste.mjs` (`S-N5-01b`), und hier stand sie
+    // seitdem weiter: gemessen 52 statt 53 Stories.
+    //
+    // **Die Kennungsregel allein zu weiten haette keine Zaehne** - 52 ist
+    // immer noch mehr als die 10, an denen der Waechter bisher haengt, also
+    // meldet niemand etwas. Der Eingriff trifft deshalb die Regel, gefangen
+    // wird er vom Abgleich der beiden Zaehlungen.
+    name: 'Kennungsregel liest eine Story nicht',
+    datei: 'tools/docs.mjs',
+    suche: '/^### (S-[A-Za-z0-9-]+) · (.+)$/gm',
+    ersatz: '/^### (S-[A-Z0-9-]+) · (.+)$/gm',
+    tor: 'doku',
+    meldet: 'lesbare Kennungen',
+  },
+  {
     // **Und die Gegenrichtung, ohne die die Probe darueber nichts beweist:**
     // ein PROTOKOLL darf schweigen. Sonst besteht die Pruefung auch ein Tor,
     // das jedes Dokument zum Nachziehen zwingt - und dann waeren die zwoelf

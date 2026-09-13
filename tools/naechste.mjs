@@ -164,12 +164,61 @@ if (ALLE) {
   process.exit(0);
 }
 
+// **Warten auf Handarbeit ist kein Ring** (v351).
+//
+// Bis v350 hat dieses Werkzeug jeden Stillstand gleich behandelt und dem
+// Katalog die Schuld gegeben: "ein Ring in den Abhaengigkeiten oder eine
+// falsche Zeile Haengt an - beides gehoert im Katalog gerichtet". Fuer den
+// Fall, der jetzt eintritt, ist das FALSCH, und zwar in die gefaehrliche
+// Richtung: es schickt den naechsten Durchgang los, eine Reihenfolge zu
+// reparieren, die stimmt.
+//
+// Der Unterschied ist keine Feinheit, sondern der ganze Unterschied zwischen
+// "hier ist ein Fehler" und "hier ist das Ende der Fahnenstange". Eine Story,
+// die auf HANDARBEIT wartet, wartet auf den Nutzer - ein Bild, einen Blick,
+// eine Entscheidung. Die Kette hat dann nichts falsch gemacht und nichts mehr
+// zu tun; sie soll es sagen und ruhen, nicht am Katalog schrauben.
+//
+// Gefragt wird der Weg bis zum Grund: fuehrt er auf `HANDARBEIT` oder
+// `BEDINGT`, ist es Handarbeit; kommt man auf dem Weg an einer Story vorbei,
+// die schon auf dem Stapel liegt, ist es wirklich ein Ring.
+const grundVon = (id, stapel = new Set()) => {
+  if (stapel.has(id)) return 'ring';
+  const z = zustandVon.get(id);
+  if (z === 'HANDARBEIT' || z === 'BEDINGT') return 'handarbeit';
+  if (z === 'zu') return null;
+  stapel.add(id);
+  let gefunden = null;
+  for (const v of haengtAn(abschnitte.find((a) => a.id === id))) {
+    const g = grundVon(v, stapel);
+    if (g === 'ring') { stapel.delete(id); return 'ring'; }
+    if (g) gefunden = g;
+  }
+  stapel.delete(id);
+  // Eine offene Story ohne offenen Grund ist selbst der Grund: sie waere
+  // fahrbar. Dann liegt sie nicht in `wartend`, und wir kommen hier nicht her.
+  return gefunden;
+};
+
 if (!offen && wartend.length) {
-  console.error('NAECHSTE: jede offene Story wartet auf eine andere - die Kette steht.');
-  for (const w of wartend) console.error(`  ${w.id} wartet auf ${w.warten.join(', ')}`);
-  console.error('Das ist ein Ring in den Abhaengigkeiten oder eine falsche Zeile');
-  console.error('"Haengt an" - beides gehoert im Katalog gerichtet, nicht hier.');
-  process.exit(1);
+  const gruende = wartend.map((w) => ({ ...w, grund: grundVon(w.id) }));
+  const ring = gruende.filter((g) => g.grund === 'ring');
+  if (ring.length) {
+    console.error('NAECHSTE: die offenen Stories warten im Kreis - die Kette steht.');
+    for (const w of ring) console.error(`  ${w.id} wartet auf ${w.warten.join(', ')}`);
+    console.error('Das ist ein Ring in den Abhaengigkeiten oder eine falsche Zeile');
+    console.error('"Haengt an" - beides gehoert im Katalog gerichtet, nicht hier.');
+    process.exit(1);
+  }
+  console.log('NAECHSTE: keine Story ist ohne den Nutzer zu fahren.');
+  console.log('Jede offene wartet - ueber die Kette ihrer Abhaengigkeiten - auf');
+  console.log('HANDARBEIT: ein Bild, einen Blick oder eine Entscheidung.\n');
+  for (const w of gruende) {
+    console.log(`  ${w.id} wartet auf ${w.warten.join(', ')}`);
+  }
+  console.log('\nDas ist kein Fehler im Katalog und nichts, was sich hier richten');
+  console.log('laesst. Was ansteht, steht in `npm run naechste -- --alle`.');
+  process.exit(0);
 }
 
 if (!offen) {

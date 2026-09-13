@@ -1,6 +1,22 @@
 # Towerfront — Art Bible
 
-Stand: v344 · 11.09.2026
+Stand: v351 · 13.09.2026
+
+**Nachgesehen in v351 — gemessen mit `npm run bildtor`, nicht abgeschrieben.**
+Der Vorrat ist unverändert: **vier von 22** Bildern fehlen, und es sind
+dieselben vier wie seit v330 — Förderer (`turm: foerderer_1_1`), Werft
+(`turm: werft_1_1`), Sanitäter (`gegner: heiler`) und Hetzer
+(`gegner: hetzer`). Die sieben Runden v345 bis v351 haben **keine** neue
+Bestellung erzeugt; sie haben ausnahmslos am Messgerät gearbeitet — am
+Inspektor (v345, v348, v349), an der Weichenmessung (v343, v346, v347), an der
+Standregel (v350) und an der Schließbedingung (v351).
+
+**Die eine Zahl dieses Dokuments, die sich messen lässt und heute etwas sagt:**
+der Platzhalter trägt auf **83 %** seiner deckenden Punkte die Marke #FF00E5
+(10048 von 12137), und zwei Platzhalter unterscheiden sich untereinander um
+**20 %** ihrer Punkte. Das zweite ist die wichtigere Zusage: ohne sie sähen
+Förderer und Werft in der Bauleiste gleich aus, und „hier fehlt ein Bild"
+würde zu „hier fehlen zwei gleiche Bilder".
 
 **Nachgesehen in v344 — der Vorrat ist unverändert, und zum ersten Mal seit
 Langem hat ein BLICK etwas darüber gesagt.**

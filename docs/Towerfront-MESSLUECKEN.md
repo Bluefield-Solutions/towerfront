@@ -1,6 +1,6 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v350 · 12.09.2026
+Stand: v351 · 13.09.2026
 
 **Nachgesehen in v322 — und die sieben Runden v316 bis v322 haben die
 Sammlung in eine Richtung erweitert, die hier bisher fehlte: das
@@ -59,7 +59,7 @@ unten als **M24**.
 **Die Klasse heisst: eine Prüfung, die den ersten von mehreren Treffern nimmt,
 prüft eine Stichprobe und meldet ein Urteil.** Sie ist gefährlicher als eine
 fehlende Prüfung, weil sie grün aussieht — und sie ist in diesem Baum nicht
-selten: `npm run muster` zählt **22 von 419 Gegenproben**, die auf den ersten
+selten: `npm run muster` zählt **23 von 421 Gegenproben**, die auf den ersten
 von mehreren Treffern greifen, und nennt das als Hinweis. Vor dieser Runde
 waren es 23 — und die eine, die dabei wegfällt, ist genau die, die am 12.09.
 nichts mehr bewiesen hat. Der Hinweis stand also über ihr, jeden Lauf.
@@ -1088,8 +1088,50 @@ erzwingen, wo der Gegenstand eine Liste mit bekannter Länge ist — so wie es
 kein billiges Verfahren, und deshalb steht es hier statt als Tor.
 
 **Behelf bis dahin, gemessen wirksam:** der Musterlauf DRUCKT die Zahl schon
-(„22 davon auf den ersten von mehreren Treffern"). Wer eine Probe anfasst,
+(„23 davon auf den ersten von mehreren Treffern"). Wer eine Probe anfasst,
 liest ihre Zeile — das ist eine Gewohnheit, kein Tor.
+
+**Die Zahl ist in v351 um eins gestiegen, und zwar mit Absicht.** Die neue
+Gegenprobe zu M25 setzt die Marke „Entscheidung des Nutzers" in die erste
+Story mit mechanischer Bedingung — sie trifft sieben und will genau eine.
+Pinnte sie stattdessen eine bestimmte Story an, hinge sie an deren Fortschritt,
+und das ist die Todesart aus v341. Der erste Treffer ist hier also das
+robustere Verfahren, nicht das nachlässigere.
+
+---
+
+## M25 · Eine Schliessbedingung ist ein Stellvertreter, und niemand prüft, ob er noch die Sache meint
+
+**Was fehlt.** Jede offene Zeile des Rückstandsverzeichnisses und jede Story
+trägt eine Schließbedingung der Form `text <Datei> "<Wort>" >= n`. Das ist ein
+**Stellvertreter** für die Abnahme, nicht die Abnahme. Es gibt kein Verfahren,
+das sagt, ob der Stellvertreter noch dasselbe meint wie der Text darüber.
+
+**Der gemessene Fall (v351).** S-N1-07 schloss auf
+`text tools/sim.ts "stapelKurve" >= 2`. Erfüllt hat diese Bedingung das
+**Messgerät**, das in v339 gebaut wurde, um genau die Frage der Story zu
+beantworten — nicht die Sache. Ihre eigene Abnahme lautet *„`npm run sim`
+gewinnt jede Karte mit jedem der drei Spielstile"* und ist messbar offen:
+`Breite` bringt 0 von 9 Läufen durch (N7B).
+
+**Der Schaden war nicht die falsche Zahl, sondern die unsichtbare Blockade.**
+S-N1-05 hängt an S-N1-07; `npm run naechste` hielt die Vorbedingung für
+erfüllt und bot eine Story an, die ohne die Entscheidung des Nutzers niemand
+fahren kann. Die Kette stand einen Tag lang vor ihr, und der Grund stand in
+**keiner Werkzeugausgabe** — er stand nur in einem Kopf, und genau das soll
+dieser Katalog ausschließen.
+
+**Was in v351 erzwungen ist, und was nicht.** Erzwungen ist der Sonderfall,
+der sich mechanisch fassen lässt: wer die Entscheidung im Text dem Nutzer
+zuschreibt, darf nicht mechanisch schließen (gemessen trifft die Regel heute
+genau eine Story von 53). Nicht erzwungen ist der allgemeine Fall — dass ein
+Wort in einer Datei etwas anderes belegt als der Abnahmesatz daneben. Dafür
+müsste ein Werkzeug den Abnahmesatz VERSTEHEN, und das kann keines.
+
+**Woran man ihn von Hand erkennt**, aus diesem Fall abgelesen: die
+Zieldatei der Bedingung liegt in `tools/`, während die Abnahme von einer
+Wirkung im SPIEL spricht. Für Paket N7 ist genau das richtig — dort ist das
+Messgerät die Sache. Überall sonst ist es ein Verdacht.
 
 ---
 

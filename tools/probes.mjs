@@ -737,9 +737,23 @@ export const PROBEN = [
     // Und die Zeile ohne Bedingung - die Form, in der die drei Punkte
     // tatsaechlich stehen geblieben sind. Ohne diese Probe waere die
     // Pflichtangabe eine Bitte.
+    //
+    // **Sie hing bis v352 an C23** (`liste src/data/difficulty.ts
+    // DIFFICULTY_ORDER >= 4`) und hat ihren Gegenstand in dem Augenblick
+    // verloren, in dem C23 gestrichen wurde - die Grade sind seit v314
+    // ausgebaut, der Punkt forderte einen Rueckschritt. Dieselbe Klasse wie
+    // v341 und v350: ein Eingriff, der sich einen VORHANDENEN Gegenstand
+    // borgt, stirbt an dessen Fortschritt. Umgebaut, nicht stummgeschaltet
+    // (K1).
+    //
+    // Gegriffen wird jetzt die erste offene Zeile mit irgendeiner Bedingung -
+    // welcher Punkt es ist, darf der Fortschritt aendern, DASS es einen gibt,
+    // nicht. Die Offen-Tabellen stehen vor der Erledigt-Tabelle, der erste
+    // Treffer ist also immer ein offener Punkt. Erster von mehreren Treffern
+    // mit Absicht (M24).
     name: 'Offener Punkt ohne Schliessbedingung',
     datei: 'docs/Towerfront-BACKLOG.md',
-    regel: / · \*\*Schliesst, wenn:\*\* `liste src\/data\/difficulty\.ts DIFFICULTY_ORDER >= 4`/,
+    regel: / · \*\*Schliesst, wenn:\*\* `[^`]+`/,
     ersatz: '',
     tor: 'doku',
     meldet: 'keine Schliessbedingung',
@@ -3427,6 +3441,45 @@ export const PROBEN = [
     ersatz: '/^### (S-[A-Z0-9-]+) · (.+)$/gm',
     tor: 'doku',
     meldet: 'lesbare Kennungen',
+  },
+  {
+    // **Eine Schliessbedingung zeigt auf eine Datei, in der ihr Wort nicht
+    // lebt - im STORYKATALOG** (v352).
+    //
+    // F8 hat die Klasse geliefert: `text src/data/waves.ts
+    // "ENDLOS_STEIGERUNG" >= 1`, waehrend das Wort in
+    // `src/data/difficulty.ts` deklariert wird. Achtzehn Fassungen lang stand
+    // der Punkt offen da, obwohl v333 die Arbeit getan hatte - die Bedingung
+    // war nicht schwer zu erfuellen, sondern unerfuellbar.
+    //
+    // Der Eingriff greift NICHT an F8: der Punkt ist in dieser Runde
+    // geschlossen worden, und eine Probe, die sich ihren Gegenstand von einer
+    // erledigten Zeile borgt, stirbt an deren Fortschritt (v341, v350). Er
+    // lenkt stattdessen eine ZUGEFALLENE Story um - `WEGNETZ` ist der Kern
+    // des Neubaus und wird in `src/data/wegnetz.ts` deklariert, in
+    // `src/data/towers.ts` steht es nicht.
+    name: 'Storybedingung zeigt auf die falsche Datei',
+    datei: 'docs/Towerfront-STORIES.md',
+    suche: 'text src/data/wegnetz.ts "WEGNETZ" >= 2',
+    ersatz: 'text src/data/towers.ts "WEGNETZ" >= 2',
+    tor: 'doku',
+    meldet: 'zeigt auf eine Datei, in der ihr Wort nicht steht',
+  },
+  {
+    // Dieselbe Frage im RUECKSTANDSVERZEICHNIS - eine zweite Aufrufstelle ist
+    // eine zweite Zusage (Regel 5).
+    //
+    // Gegriffen wird die erste offene Zeile mit einer `text src/`-Bedingung,
+    // nicht ein bestimmter Punkt: welcher es ist, darf der Fortschritt
+    // aendern, DASS es einen gibt, nicht. Die Offen-Tabellen stehen im
+    // Dokument vor der Erledigt-Tabelle, der erste Treffer ist also immer ein
+    // offener Punkt. Erster von mehreren Treffern mit Absicht (M24).
+    name: 'Verzeichnisbedingung zeigt auf die falsche Datei',
+    datei: 'docs/Towerfront-BACKLOG.md',
+    regel: /\*\*Schliesst, wenn:\*\* `text src\/[^`]+`/,
+    ersatz: '**Schliesst, wenn:** `text src/data/towers.ts "WEGNETZ" >= 1`',
+    tor: 'doku',
+    meldet: 'zeigt auf eine Datei, in der ihr Wort nicht steht',
   },
   {
     // **Und die Gegenrichtung, ohne die die Probe darueber nichts beweist:**

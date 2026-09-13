@@ -1,6 +1,50 @@
 # Towerfront — die Kette
 
-Stand: v345 · 11.09.2026
+Stand: v352 · 13.09.2026
+
+**Nachgesehen in v352 — die sieben Runden v346 bis v352 haben am Ablauf nichts
+geändert und an Schritt 3 alles.** Heute sind es **423 Proben** (413 in v345);
+gezählt wird sie weiter in 0,4 s mit `npm run muster`.
+
+**Schritt 3 — `npm run naechste` — hat in dieser Woche zweimal etwas
+Falsches gesagt, und beide Male in dieselbe Richtung: es behauptete Arbeit,
+wo keine war.**
+
+* **v351: eine Nutzerentscheidung stand als „zu" da, weil jemand das
+  Messgerät gebaut hatte.** S-N1-07 sagt in ihrem eigenen Text *„Was gebaut
+  wird, ist eine Entscheidung des Nutzers"* und schloss auf
+  `text tools/sim.ts "stapelKurve" >= 2` — erfüllt hat das `stapelKurve`
+  selbst, in v339 gebaut, um genau diese Frage zu beantworten. Die Kette bot
+  daraufhin S-N1-05 an, eine Story, die ohne die Entscheidung niemand fahren
+  kann, und **der Grund stand in keiner Werkzeugausgabe**.
+* **v352: zwei Rückstandspunkte standen offen, während ihr Gegenstand längst
+  weg war.** F8 schloss auf ein Wort, das in der genannten Datei nie gestanden
+  hat — achtzehn Fassungen lang zugefallen und unfähig, es zu melden. C23
+  forderte einen vierten Schwierigkeitsgrad in einem Spiel, das seit v314
+  keine Grade mehr hat.
+
+**Die gemeinsame Form ist die Lehre für diesen Ablauf: eine Schließbedingung
+ist ein STELLVERTRETER der Abnahme, nicht die Abnahme.** Sie kann von etwas
+anderem erfüllt werden als der Sache, und sie kann auf einen Ort zeigen, an
+dem die Sache nie entsteht. Beide Fälle sehen von außen wie ein ordentlich
+geführter Katalog aus; `npm run doku` fährt die Bedingung, sie antwortet
+sauber, und niemand merkt etwas. Erzwungen ist seitdem, was sich mechanisch
+fassen lässt — wer die Entscheidung dem Nutzer zuschreibt, darf nicht
+mechanisch schließen (v351), und eine Bedingung, deren Wort im selben Bereich
+in einer ANDEREN Datei deklariert wird, wird gemeldet (v352). Der allgemeine
+Fall bleibt Handarbeit und steht als **M25** in den Messlücken.
+
+**Und Schritt 3 sagt jetzt selbst, wenn er nichts mehr zu geben hat.** Mit
+S-N1-07 auf `nutzer:` warten beide offenen Stories auf HANDARBEIT — und das
+Werkzeug nannte das bis v351 *„ein Ring in den Abhängigkeiten oder eine
+falsche Zeile Hängt an"*, also einen Fehler im Katalog. Gefragt wird jetzt der
+Weg bis zum Grund: endet er auf HANDARBEIT oder BEDINGT, ist es kein Fehler
+(Ausgang 0); kommt man an einer Story vorbei, die schon auf dem Stapel liegt,
+ist es wirklich ein Ring (Ausgang 1).
+
+**Damit ist die Kette an ihrem Ende, und zwar sichtbar statt stillschweigend.**
+Was bleibt, sind zwei Handarbeiten des Nutzers: die Entscheidung über die
+Machtkurve (S-N1-07) und ein Bild im neuen Stil (S-N5-01b).
 
 **Nachgesehen in v345 — und die sieben Runden v339 bis v345 haben am Ablauf
 eine Sache geändert, dafür an Schritt 8: dem BEWEISMITTEL des Inspektors.**

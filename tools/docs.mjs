@@ -17,7 +17,30 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ausDatei, gestellt, werte } from './schliessbedingung.mjs';
+import { ausDatei, gestellt, werte, zeigtAufFalscheDatei } from './schliessbedingung.mjs';
+
+/** **Der Quelltextbaum, einmal gelesen** - Eingang fuer
+ *  `zeigtAufFalscheDatei`. Zwischengespeichert, weil die Regel ueber jede
+ *  offene Bedingung laeuft und der Baum sich waehrend eines Laufs nicht
+ *  aendert. */
+let baumSpeicher = null;
+const quellbaum = () => {
+  if (baumSpeicher) return baumSpeicher;
+  baumSpeicher = [];
+  const sammle = (rel) => {
+    let eintraege;
+    try { eintraege = readdirSync(join(ROOT, rel), { withFileTypes: true }); }
+    catch { return; }
+    for (const e of eintraege) {
+      const p = `${rel}/${e.name}`;
+      if (e.isDirectory()) { sammle(p); continue; }
+      if (!/\.(ts|tsx|mjs|js|json)$/.test(e.name)) continue;
+      try { baumSpeicher.push([p, readFileSync(join(ROOT, p), 'utf8')]); } catch { /* egal */ }
+    }
+  };
+  sammle('src'); sammle('tools');
+  return baumSpeicher;
+};
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DOCS = join(ROOT, 'docs');
@@ -581,6 +604,25 @@ const offeneIds = new Set();
               }
             }
           }
+          // **Und die groessere Schwester derselben Frage** (v352): das Wort
+          // steht nicht in der genannten Datei, aber gleich nebenan.
+          //
+          // F8 schloss auf `text src/data/waves.ts "ENDLOS_STEIGERUNG" >= 1`.
+          // Dort hat es nie gestanden - deklariert wird es in
+          // `src/data/difficulty.ts`, und v333 hat den Endlosmodus dort zum
+          // Schwanz des Laufs umgebaut. Achtzehn Fassungen lang stand der
+          // Punkt offen da, waehrend die Arbeit getan war, und die Bedingung
+          // war nicht schwer zu erfuellen, sondern UNERFUELLBAR.
+          //
+          // Schlimmer als die zu hohe Schwelle aus S129: dort fehlt die
+          // Arbeit, hier fehlt nur der Zeiger darauf.
+          const woanders = zeigtAufFalscheDatei(bed, quellbaum);
+          if (woanders) {
+            fail(`Backlog ${id}: die Bedingung \`${bed}\` zeigt auf eine Datei, `
+              + `in der ihr Wort nicht steht - deklariert wird es in ${woanders}. `
+              + 'So kann der Punkt nie zufallen, auch wenn die Arbeit getan ist. '
+              + 'Genau so stand F8 achtzehn Fassungen lang offen da.');
+          }
         }
         // Und gegen die zwei gestellten Texte (Regel 5 und 13).
         const g = gestellt(bed);
@@ -773,6 +815,16 @@ const NUTZERSACHE = /Entscheidung des Nutzers|geh(?:ö|oe)rt dem Nutzer|entschei
       if (!g) {
         fail(`Story ${id}: die Form \`${bed}\` kennt der Waechter nicht.`);
         continue;
+      }
+      // Dieselbe Frage wie im Verzeichnis (v352), und sie gilt hier genauso:
+      // eine Story, deren Bedingung auf die falsche Datei zeigt, bleibt fuer
+      // `npm run naechste` fuer immer offen und blockiert alles, was an ihr
+      // haengt.
+      const anderswo = zeigtAufFalscheDatei(bed, quellbaum);
+      if (anderswo) {
+        fail(`Story ${id}: die Bedingung \`${bed}\` zeigt auf eine Datei, in der `
+          + `ihr Wort nicht steht - deklariert wird es in ${anderswo}. Die Story `
+          + 'kann damit nie zufallen.');
       }
       const ja = werte(bed, () => g.ja);
       const nein = werte(bed, () => g.nein);

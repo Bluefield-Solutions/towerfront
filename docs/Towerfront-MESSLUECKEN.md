@@ -1,6 +1,6 @@
 # Towerfront — was wir noch nicht messen können
 
-Stand: v351 · 13.09.2026
+Stand: v352 · 13.09.2026
 
 **Nachgesehen in v322 — und die sieben Runden v316 bis v322 haben die
 Sammlung in eine Richtung erweitert, die hier bisher fehlte: das
@@ -1132,6 +1132,24 @@ müsste ein Werkzeug den Abnahmesatz VERSTEHEN, und das kann keines.
 Zieldatei der Bedingung liegt in `tools/`, während die Abnahme von einer
 Wirkung im SPIEL spricht. Für Paket N7 ist genau das richtig — dort ist das
 Messgerät die Sache. Überall sonst ist es ein Verdacht.
+
+**In v352 einmal durchgezählt, und der Verdacht trägt heute nichts mehr.**
+Vierzehn Schließbedingungen zeigen in `tools/`; **dreizehn davon zu Recht** —
+es sind Messgerät-Stories (Paket N0 und N7, die Wächter), oder ihre Zusage ist
+zusätzlich als Tor gebaut und wird gefahren. `S-N2-06` etwa schließt auf
+`text tools/sim.ts "weichenStil" >= 2`, und ihre Abnahme („mindestens ein
+Weichenstil gewinnt irgendwo allein") steht daneben als `errors.push` —
+`npm run sim` meldet selbst, wenn ein Stil „in keiner Welle auf keiner Karte
+vorn" liegt. Die vierzehnte war S-N1-07, und die ist in v351 gerichtet.
+
+**Dieselbe Durchzählung hat dafür eine ANDERE Lücke gefunden, und die ist
+erzwingbar** — sie steht seit v352 als Regel in `npm run doku`: eine Bedingung
+kann auf eine Datei zeigen, in der ihr Wort gar nicht lebt. **F8** schloss auf
+`text src/data/waves.ts "ENDLOS_STEIGERUNG" >= 1`; deklariert wird das Wort in
+`src/data/difficulty.ts`, und v333 hatte die Arbeit achtzehn Fassungen zuvor
+getan. Die Bedingung war nicht schwer zu erfüllen, sondern **unerfüllbar** —
+und das ist schlimmer als die zu hohe Schwelle aus S129: dort fehlt die
+Arbeit, hier fehlt nur der Zeiger darauf.
 
 ---
 

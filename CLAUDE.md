@@ -85,7 +85,7 @@ Auslieferung aus, aber **nur bei grüner Torkette**
 
 **Seit v269 ist es eine ZEITratsche, keine Fassungsratsche.** `npm run muster`
 liest `tools/proben-stand.txt` und bricht ab, wenn der letzte volle Lauf älter
-als **24 Stunden** ist. Vorher waren es drei Fassungen; das trug, solange eine
+als **36 Stunden** ist. Vorher waren es drei Fassungen; das trug, solange eine
 Fassung ungefähr ein Tag war, und blockierte die Kette, sobald sie schneller
 wurde — sechs Runden in einer Nacht hätten sie zweimal für je 50 Minuten
 angehalten. Wovor die Ratsche schützt (eine Probe hört leise auf zu beweisen),
@@ -104,6 +104,29 @@ beweist und auf dem anderen nicht, ist keine.
 gemacht statt still: mit der Vorgabe „unbekannt ist frisch" hätte die Ratsche
 vom ersten Tag an geschwiegen. Der Stand von v265 hat seine Zeit einmalig von
 Hand bekommen; ab dem nächsten Nachtlauf schreibt der Runner sie selbst.
+
+**Seit v355 sind es 36 Stunden, und die 24 waren der Fehler: eine Schranke, so
+groß wie der Takt, den sie überwacht, hat null Spielraum.** Die Frist eines
+Tages ist das ENDE des vorigen Laufs; startet der nächste auch nur eine Minute
+später, fällt sein Ende dahinter. Gemessen am 14.09.2026 lagen zwischen zwei
+geschriebenen Ständen **24,432 h** bei erlaubten 24 — die Ratsche stand
+**25 Minuten** offen, ohne dass irgendetwas faul war. Der Planer von GitHub
+staut die Zeitpunkte, und der Verzug gegen `15 2 * * *` wuchs an drei Tagen von
+**4,89** über **5,20** auf **5,63 h**.
+
+**Damit war sie rot aus dem falschen Grund.** Eine Schranke, die jeden Tag
+anschlägt, sagt nichts mehr über den Tag, an dem wirklich ein Lauf fehlt — sie
+ist dann kein Alarm, sondern ein Hintergrundgeräusch, und Hintergrundgeräusche
+werden abgeschaltet.
+
+Der neue Wert ist nicht gewählt, sondern die **Mitte eines Fensters, dessen
+beide Ränder aus dem Takt folgen** (v210: die Mitte, nicht der Rand): größer
+als der Takt, sonst schlägt sie bei jedem Schwanken an; kleiner als sein
+Doppeltes, sonst verschläft sie eine ganze ausgefallene Nacht. Bei 24 h Takt
+ist das `24 < 36 < 48`. **Gehalten wird es nicht von diesem Absatz**, sondern
+von `standSelbsttest`: er liest den Takt aus dem PLAN statt ihn danebenzuschreiben
+(Regel 15) und prüft beide Ränder. Ein Takt, den er nicht lesen kann, bricht
+ab — dieselbe Vorgabe wie „unbekanntes Alter zählt als zu alt".
 
 Erzwungen, nicht aufgeschrieben — eine Regel, die nur in einem Dokument steht,
 wird gebrochen; das hat dieses Projekt sechsmal gekostet.
@@ -2280,7 +2303,7 @@ Turmsorte, Abstand zum Weg und unwegsames Gelände.
 
 ## Stand
 
-Stand: v354. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
+Stand: v355. Feld 1920 × 1080 (16:9). **Vier** Karten (Spiralhain,
 Ascheschlucht, Frostspalte, Farnkessel), vier Türme mit je zwei Zweigen und sechs Stufen, dazu der Förderer (Einkommen, schiesst nicht), vier
 Fähigkeiten (eine von Anfang an, drei über gewonnene Karten), neun Gegnerarten in den Wellen plus den Span, in den der
 Spalter zerfällt, **ein** Grad, der Lauf als Bogen. Genre-Abgleich 30 von 30,

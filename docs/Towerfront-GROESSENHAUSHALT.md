@@ -1,6 +1,33 @@
 # Towerfront — der Größenhaushalt der ausgelieferten Datei
 
-Stand: v348 · 11.09.2026
+Stand: v355 · 14.09.2026
+
+**Nachgesehen in v355 — und zum zweiten Mal nach v341 hat sich kein einziger
+Wert bewegt.** Gemessen mit `npm run build`, `npm run art` und
+`npm run autarkie`:
+
+| | v348 | **v355** |
+|---|---|---|
+| gegner | 71 KB von 80 | **71 KB von 80** über 8 Einträge |
+| objekte | 192 KB von 250 | **192 KB von 250** über 14 Einträge |
+| tuerme | 302 KB von 400 | **302 KB von 400** über 18 Einträge |
+| untergrund | 256 KB von 300 | **256 KB von 300** über 4 Einträge |
+| **zusammen** | **821 KB von 1030** | **821 KB von 1030** |
+| erlaubt | 1065 | **1065** |
+| Abstand | 35,4 KB | **35,4 KB** |
+| ausgelieferte Datei | 1475 KB | **1475 KB** von 1800 |
+
+**Und das ist die Auskunft, nicht die Beruhigung.** Die sieben Runden v349 bis
+v355 haben `src/` außer der Fassungsnummer nicht angefasst: v349 und v355 sind
+Selbsttests an Werkzeugen, v350 bis v353 sind Regeln im Doku-Wächter, v354 ist
+ein Absatz in dieser Datei. Was dort wächst, wächst in `tools/` und `docs/` —
+und beides geht nicht ins Bündel.
+
+Dieselbe Ablesung wie in v341, und sie sagt dasselbe: **der Abstand von
+35,4 KB ist eine Verbrauchsangabe und keine Zeitangabe.** Sieben Runden am
+Messgerät kosten null; eine einzige Runde am Spiel kostet mehr als diese
+sieben zusammen. Wer aus „seit vierzehn Fassungen unverändert" auf „wir haben
+Luft" schließt, liest die Zahl falsch herum.
 
 **Nachgesehen in v348 — die Zahlen sind gemessen, nicht abgeschrieben**
 (`npm run art` und `npm run autarkie`, beide auf dem gebauten Bündel):

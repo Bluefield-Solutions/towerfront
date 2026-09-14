@@ -6524,8 +6524,59 @@ const STAND_ABSTAND = 3;
  *  denn nachts faehrt der Runner den vollen Lauf.
  *
  *  Die Fassungszahl bleibt daneben stehen und wird gemeldet. Sie urteilt
- *  nur nicht mehr. */
-const STAND_HOECHSTALTER_H = 24;
+ *  nur nicht mehr.
+ *
+ *  **Seit v355 sind es 36 statt 24, und der Grund ist gemessen.** Bis dahin
+ *  war die Schranke so gross wie der TAKT, den sie ueberwacht - und damit
+ *  hatte sie null Spielraum. Die Frist eines Tages ist das ENDE des vorigen
+ *  Laufs; startet der naechste auch nur eine Minute spaeter, faellt sein
+ *  Ende hinter die Frist.
+ *
+ *  Gemessen am 14.09.2026: zwischen zwei geschriebenen Staenden lagen
+ *  **24,432 h** bei erlaubten 24. Die Ratsche stand 25 Minuten und 54
+ *  Sekunden offen, ohne dass irgendetwas faul war. Der Planer von GitHub
+ *  staut die Zeitpunkte, und der Verzug gegen `15 2 * * *` wuchs an drei
+ *  Tagen von **4,89** ueber **5,20** auf **5,63 h** - jeden Tag spaeter,
+ *  jeden Tag eine neue Luecke.
+ *
+ *  **Eine Schranke, die jeden Tag anschlaegt, sagt nichts mehr ueber den
+ *  Tag, an dem wirklich ein Lauf fehlt.** Sie war rot aus dem falschen
+ *  Grund - dieselbe Klasse wie v337, nur andersherum.
+ *
+ *  Der Wert ist nicht gewaehlt, sondern die MITTE eines Fensters, dessen
+ *  beide Raender aus dem Takt folgen (v210: die Mitte, nicht der Rand):
+ *
+ *    - groesser als der Takt, sonst schlaegt sie bei jedem Schwanken an;
+ *    - kleiner als das Doppelte, sonst verschlaeft sie eine ganze Nacht.
+ *
+ *  Bei einem Takt von 24 h ist das `24 < 36 < 48`. Gehalten wird es nicht
+ *  von diesem Kasten, sondern von `standSelbsttest` - erzwungen statt
+ *  aufgeschrieben. */
+const STAND_HOECHSTALTER_H = 36;
+
+/** **Wie oft der Nachtlauf planmaessig wiederkommt, in Stunden.**
+ *
+ *  Gelesen aus dem Plan selbst (`.github/workflows/proben.yml`), nicht
+ *  danebengeschrieben: der Takt steht EINMAL, und zwar dort, wo er wirkt.
+ *  Eine zweite Zahl hier waere genau die, die beim naechsten `cron:` veraltet
+ *  (Regel 15) - und sie wuerde ausgerechnet die Pruefung veralten lassen, die
+ *  den Abstand zwischen Takt und Schranke haelt.
+ *
+ *  Gelesen wird nur die EINE Form, die hier vorkommt: jeden Tag zur selben
+ *  Zeit. Fuer alles andere gibt es `null`, und **ein unbekannter Takt ist
+ *  kein Freibrief** - der Aufrufer bricht ab, aus demselben Grund, aus dem
+ *  ein unbekanntes Alter als zu alt zaehlt. Einen Cron-Leser fuer alle Formen
+ *  zu schreiben, waere ein zweites Werkzeug mit eigenen Fehlern; hier wird
+ *  eine Zahl gebraucht, keine Bibliothek. */
+const nachtlaufTaktH = () => {
+  const plan = join(ROOT, '.github/workflows/proben.yml');
+  if (!existsSync(plan)) return null;
+  const treffer = readFileSync(plan, 'utf8').match(/^\s*-\s*cron:\s*'([^']+)'/m);
+  if (!treffer) return null;
+  const [minute, stunde, tag, monat, wochentag] = treffer[1].trim().split(/\s+/);
+  if (!/^\d+$/.test(minute) || !/^\d+$/.test(stunde)) return null;
+  return tag === '*' && monat === '*' && wochentag === '*' ? 24 : null;
+};
 
 /** Ist der Abstand zum letzten vollen Lauf zu gross - und was ist zu sagen?
  *
@@ -6627,6 +6678,42 @@ const standSelbsttest = () => {
   }
   console.log(`  Selbsttest: die Zeitratsche schlaegt bei ${STAND_HOECHSTALTER_H + 1} h `
     + `an, schweigt bei ${STAND_HOECHSTALTER_H} und wertet ein unbekanntes Alter als zu alt.`);
+  // **Und die Schranke gegen den TAKT, den sie ueberwacht.**
+  //
+  // Bis v354 waren beide 24 - eine Schranke so gross wie ihr eigener Takt,
+  // also ohne jeden Spielraum. Die Frist eines Tages ist das ENDE des
+  // vorigen Laufs; startet der naechste spaeter als der vorige, faellt sein
+  // Ende dahinter. Gemessen am 14.09.2026: 24,432 h zwischen zwei Staenden,
+  // die Ratsche 25 Minuten offen, und nichts daran war faul.
+  //
+  // Gehalten werden BEIDE Raender, denn beide folgen aus dem Takt und keiner
+  // aus dem Geschmack: groesser als der Takt, sonst schlaegt sie bei jedem
+  // Schwanken des Planers an; kleiner als sein Doppeltes, sonst verschlaeft
+  // sie eine ganze ausgefallene Nacht. Eine Pruefung nur nach unten liesse
+  // 72 h durchgehen, und dann waere die Ratsche zwar nie zu Unrecht rot -
+  // aber auch nie zu Recht.
+  const takt = nachtlaufTaktH();
+  if (takt === null) {
+    console.error('PROBEN: der Takt des Nachtlaufs laesst sich nicht lesen - '
+      + '.github/workflows/proben.yml traegt keinen taeglichen `cron:` in der '
+      + 'bekannten Form. Ein unbekannter Takt ist kein Freibrief: ohne ihn ist '
+      + 'nicht zu pruefen, ob die Zeitratsche ueberhaupt Spielraum hat.');
+    process.exit(1);
+  }
+  if (STAND_HOECHSTALTER_H <= takt || STAND_HOECHSTALTER_H >= 2 * takt) {
+    console.error('PROBEN: die Zeitratsche passt nicht zu ihrem Takt - '
+      + `erlaubt sind ${STAND_HOECHSTALTER_H} h bei einem Takt von ${takt} h. `
+      + `Noetig ist ${takt} < ${STAND_HOECHSTALTER_H} < ${2 * takt}: `
+      + (STAND_HOECHSTALTER_H <= takt
+        ? 'so gross wie der Takt heisst kein Spielraum - sie schlaegt an, '
+          + 'sooft der Planer schwankt, und sagt damit nichts mehr ueber den '
+          + 'Tag, an dem wirklich ein Lauf fehlt.'
+        : 'so gross wie zwei Takte heisst, dass eine ganze ausgefallene Nacht '
+          + 'durchgeht, ohne dass etwas rot wird.'));
+    process.exit(1);
+  }
+  console.log(`  Selbsttest: die Zeitratsche liegt mit ${STAND_HOECHSTALTER_H} h `
+    + `im Fenster ${takt} < x < ${2 * takt}, das ihr Takt von ${takt} h aufspannt.`);
   console.log(`  Selbsttest: die Standregel schlaegt bei ${STAND_ABSTAND + 1} Fassungen `
     + `Abstand an und schweigt bei ${STAND_ABSTAND}.`);
 

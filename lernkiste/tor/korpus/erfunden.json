@@ -1,0 +1,36 @@
+{
+  "_hinweis": "Die ERFUNDENE Haelfte. Sie dient dem EINSTELLEN des Abgleichs, nicht dem Beweis. Wer den Korpus schreibt und den Abgleich einstellt, ist Pruefling und Pruefer zugleich - deshalb zaehlt erst die eingefrorene Haelfte aus echten Aufnahmen (M4).",
+  "treffer": [
+    ["australien", ["australien","austraaljen","austraalien","australiä","aus straßen","australjen"]],
+    ["afrika",     ["afrika","afrikaa","afika","affrika","affrikka"]],
+    ["europa",     ["europa","euopa","oiropa","eropa","eu ropa"]],
+    ["asien",      ["asien","asjen","aasien","ahsien"]],
+    ["suedamerika",["südamerika","süd amerika","suedamerika","südamerka","süd ameriker"]],
+    ["nordamerika",["nordamerika","nord amerika","nordamerka","nord ameriker"]],
+    ["antarktika", ["antarktika","antarktis","antaktika","antaktis"]],
+    ["DEU",        ["deutschland","doitschland","deutsch land"]],
+    ["FRA",        ["frankreich","frangreich","frankraich"]],
+    ["ITA",        ["italien","italjen","itallien"]],
+    ["CHN",        ["china","kina","schina","chiena"]],
+    ["EGY",        ["ägypten","ägüpten","egypten","aegypten"]],
+    ["BRA",        ["brasilien","brasiljen","brasillien"]],
+    ["DE-BY",      ["bayern","baiern","bayren"]],
+    ["DE-HE",      ["hessen","hessn","hesen"]],
+    ["DE-MV",      ["mecklenburg-vorpommern","mecklenburg vorpommern","meklenburg vorpommern"]],
+    ["DE-BW",      ["baden-württemberg","baden württemberg","baden wuerttemberg"]]
+  ],
+  "nichttreffer": [
+    ["australien", ["afrika","asien","österreich","auto","apfel","amerika"]],
+    ["afrika",     ["amerika","asien","europa","afrikaner"]],
+    ["europa",     ["afrika","asien","euro","eule"]],
+    ["asien",      ["afrika","australien","assel","aussen"]],
+    ["nordamerika",["südamerika","afrika","norden"]],
+    ["suedamerika",["nordamerika","afrika","süden"]],
+    ["DEU",        ["dänemark","deutsch","niederlande"]],
+    ["ITA",        ["indien","irland","island"]],
+    ["CHN",        ["chile","japan","korea"]],
+    ["DE-BY",      ["bremen","berlin","hessen","bayer"]],
+    ["DE-HE",      ["hamburg","bremen","essen"]],
+    ["DE-BW",      ["brandenburg","bremen","baden"]]
+  ]
+}

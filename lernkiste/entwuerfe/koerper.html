@@ -1,0 +1,178 @@
+<header class="kopf">
+  <div class="rahmen">
+    <div class="marke">Meilenstein MG · Gestaltung · Lernkiste</div>
+    <h1>Drei Bildschirme</h1>
+    <p class="unterzeile">Das Gestaltungssystem, die Schriftentscheidung und drei Entwürfe — gebaut auf der echten Kartengeometrie, nicht auf Platzhaltern.</p>
+    <div class="steuer">
+      <span class="hinweis">Oberflächenschrift:</span>
+      <button class="knopf" data-schrift="Plus Jakarta Sans" aria-pressed="true">Plus Jakarta Sans</button>
+      <button class="knopf" data-schrift="Nunito" aria-pressed="false">Nunito</button>
+      <span class="hinweis" style="margin-left:8px">— wirkt sofort auf alle drei Entwürfe</span>
+    </div>
+    <div class="steuer">
+      <span class="hinweis">Modus:</span>
+      <button class="knopf" data-abend="aus" aria-pressed="true">Tag</button>
+      <button class="knopf" data-abend="an" aria-pressed="false">Abend</button>
+    </div>
+  </div>
+</header>
+
+<div class="rahmen">
+
+<section id="schrift">
+  <div class="eyebrow"><em>01</em> Aufgabe 4</div>
+  <h2>Die Schriftentscheidung</h2>
+  <p>K2 setzte <em>alles</em> in Andika. Andika ist hervorragend für das, wofür sie gemacht ist — einzelne Wörter, die eine Leseanfängerin entziffert. Für Knöpfe, Überschriften und Zahlen ist sie schwach. Deshalb zwei Schriften mit klar getrennten Aufgaben.</p>
+
+  <div class="probe">
+    <div>
+      <h4>Andika — was das Kind liest</h4>
+      <p class="zeile and">Australien<br>Baden-Württemberg</p>
+      <p class="klein and">Einstöckiges a und g, offene Formen, große Punzen. Genau die Buchstaben, die Fiona in der ersten Klasse schreiben lernt — <strong>a</strong>, <strong>g</strong>, <strong>ß</strong>, <strong>ä ö ü</strong>.</p>
+    </div>
+    <div>
+      <h4>Zum Vergleich: dieselben Wörter in der Oberflächenschrift</h4>
+      <p class="zeile" style="font-family:var(--ui-probe,'Plus Jakarta Sans'),sans-serif">Australien<br>Baden-Württemberg</p>
+      <p class="klein">Zweistöckiges <strong>a</strong>, <strong>g</strong> mit Unterschlinge. Schöner gesetzt — aber nicht die Formen, die sie gerade lernt.</p>
+    </div>
+  </div>
+
+  <h3>Und die Oberflächenschrift selbst</h3>
+  <div class="probe">
+    <div>
+      <h4>Plus Jakarta Sans</h4>
+      <p class="zeile jak">Wie heißt dieses Land?</p>
+      <p class="klein jak" style="font-size:20px">Weiter · Nochmal · 3 von 8 · Elternbereich</p>
+      <p class="klein">Geometrisch-humanistisch, eng gesetzt, acht Schnitte, sehr saubere Ziffern. Wirkt erwachsen und ruhig — die Wärme muss dann aus Farbe und Bewegung kommen.</p>
+    </div>
+    <div>
+      <h4>Nunito</h4>
+      <p class="zeile nun">Wie heißt dieses Land?</p>
+      <p class="klein nun" style="font-size:20px">Weiter · Nochmal · 3 von 8 · Elternbereich</p>
+      <p class="klein">Gerundete Enden, weicher Duktus. Freundlicher auf den ersten Blick — und in Kinder-Apps so verbreitet, dass sie fast unsichtbar geworden ist.</p>
+    </div>
+  </div>
+
+  <p class="merksatz">Meine Empfehlung: Plus Jakarta Sans.
+    <small>Die Wärme dieser App soll aus der Palette, den Formen und der Bewegung kommen — nicht aus runden Schriftenden. Nunito nimmt die Entscheidung vorweg und macht sie beliebig. Aber die Entscheidung ist eure: der Umschalter oben wirkt auf alle drei Entwürfe.</small>
+  </p>
+</section>
+
+<section id="marken">
+  <div class="eyebrow"><em>02</em> Aufgabe 3</div>
+  <h2>Die Merkmale</h2>
+  <p>Eine Datei, <code>src/marken/marken.css</code>. Sie ist die einzige Stelle im ganzen Programm, an der ein Zahlenwert für Farbe, Abstand, Radius oder Dauer steht. Das Tor <code>marken</code> setzt das durch.</p>
+
+  <h3>Typoskala — Grundgröße 20, Verhältnis 1,25</h3>
+  <div class="skala">
+    <span style="font-size:20px">20</span><span style="font-size:25px">25</span>
+    <span style="font-size:31px">31</span><span style="font-size:39px">39</span>
+    <span style="font-size:49px">49</span><span style="font-size:61px">61</span>
+    <span style="font-size:16px;color:var(--tinte-leise)">16 — nur Elternbereich</span>
+  </div>
+
+  <h3>Die sieben Flächenfarben — gerechnet, nicht gemischt</h3>
+  <div class="streifen" id="s-ok"></div>
+  <div class="streifen grau" id="s-ok-g" style="border-top:0"></div>
+  <p style="font-size:15px;color:var(--tinte-weich)">Alle sieben mit <code>L = 0.88</code> und <code>C = 0.055</code> in OKLCH. Die Graustufenzeile darunter ist der Beweis: sie ist flach. <strong>Weil alle Flächen gleich hell sind, ist derselbe Textton auf allen sieben lesbar</strong> — der Kontrast muss nicht siebenmal einzeln geprüft werden.</p>
+
+  <div class="raster">
+    <div><b>raster</b><span>4 pt. Alle Abstände sind Vielfache: 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 · 96</span></div>
+    <div><b>radien</b><span>8 klein · 16 Karten · 24 Flächen · voll für Knöpfe</span></div>
+    <div><b>strich</b><span>0,75 fein · 1,5 Grenze · 3 Küste — mit <code>non-scaling-stroke</code></span></div>
+    <div><b>tiefe</b><span>2 · 4 · 6 px als <strong>versetzte Fläche</strong>, nie als Filter</span></div>
+    <div><b>dauer</b><span>120 Tippantwort · 200 Zustand · 320 Bildschirm · 500 Belohnung</span></div>
+    <div><b>kurve</b><span>standard <code>cubic-bezier(.2,0,0,1)</code> · feder <code>linear(…)</code></span></div>
+  </div>
+</section>
+
+<section id="schirm1">
+  <div class="eyebrow"><em>03</em> Entwurf 1</div>
+  <h2>Fiona · Kontinente</h2>
+  <p>Runde 1 mit vier Kandidaten. Kein geschriebener Name ohne hörbaren Namen — deshalb der Mikrofonknopf, und deshalb liest jedes Antippen vor. Das Etikett „Europa“ ist gerade aufgenommen: es ist auf 1,06 gewachsen und seine Schattenfläche von 2 auf 6 Punkt gerutscht. Es <em>hebt ab</em>.</p>
+  <p class="geraet-marke"><span>iPhone quer · 844 × 390 pt</span><em>echte Kontinentgeometrie, grobe Stufe · 39,9 KB gzip</em></p>
+  <div class="geraet" data-breite="844" data-hoehe="390"><div class="schirm app" id="schirm-1"></div></div>
+  <div class="notiz" style="margin-top:20px">
+    <b>Was der Entwurf selbst gefunden hat</b>
+    <strong>Antarktika sieht in jeder Weltprojektion wie ein Sockel aus.</strong> Unten am Bildrand liegt es als breites Band — breiter als Afrika. Das ist genau Befund F4 aus dem Prüfbericht, diesmal am eigenen Werk: der Umriss ist dort nicht formtypisch, sondern verzerrt.<br><br>
+    Für Fionas Runden 1 und 2 stört das nicht, dort ist es kein Kandidat. Für <strong>Runde 3 braucht es eine eigene Ansicht</strong> — eine polare Aufsicht, auf der Antarktika rund ist. Das ist ein neuer offener Punkt, keine Kleinigkeit: eine zweite Projektion für einen einzigen Kontinent.<br><br>
+    <em>Der erste Anlauf war übrigens noch schlechter: er nahm geoEquirectangular, mit der Begründung, d3-geo kenne geoNaturalEarth1 nicht. Das war falsch — sie steht dort. Gesehen hat man es erst am Bild.</em>
+  </div>
+</section>
+
+<section id="schirm2">
+  <div class="eyebrow"><em>04</em> Entwurf 2</div>
+  <h2>Lea · Deutschland</h2>
+  <p>Hessen ist gefragt — und die Rückmeldung ist auf die Falle vorbereitet, die fast jeder Erwachsene teilt. Die sechzehn Länder tragen <strong>vier Farben</strong>, aus der echten Nachbarschaft gerechnet: kein Nachbarpaar trägt dieselbe. Berlin liegt als Loch in Brandenburg, Bremen als Loch in Niedersachsen — beides aus den Daten, nicht gemalt.</p>
+  <p class="geraet-marke"><span>iPad quer · 1180 × 820 pt</span><em>echte Bundesländergeometrie, feine Stufe · 57,5 KB gzip · Hausdorff 0,52 px</em></p>
+  <div class="geraet" data-breite="1180" data-hoehe="820"><div class="schirm app" id="schirm-2"></div></div>
+</section>
+
+<section id="schirm3">
+  <div class="eyebrow"><em>05</em> Entwurf 3</div>
+  <h2>Der Belohnungsmoment</h2>
+  <p>Der Moment, an dem sich entscheidet, ob es Freude macht. Der Umriss zeichnet sich in 400 ms selbst nach, dann läuft die Farbe vom Ablegepunkt aus ein, dann federt der Stern auf — zusammen unter 900 ms.</p>
+  <p class="merksatz">Der Belohnungsmoment wiederholt den Lerninhalt.
+    <small>Das Nachzeichnen ist eine Animation von <code>stroke-dashoffset</code> auf einem Pfad, den es ohnehin gibt. Das Kind sieht die Form, die es gerade benannt hat, noch einmal entstehen — fast umsonst zu haben.</small>
+  </p>
+  <p class="geraet-marke"><span>iPhone quer · 844 × 390 pt</span><em>läuft wirklich</em></p>
+  <div class="geraet" data-breite="844" data-hoehe="390"><div class="schirm app" id="schirm-3"></div></div>
+  <div class="steuer"><button class="knopf" id="abspielen">noch einmal abspielen</button>
+    <span class="hinweis">Umriss 400 ms · Füllung 400 ms · Stern 260 ms</span></div>
+</section>
+
+<section id="tor">
+  <div class="eyebrow"><em>06</em> Aufgabe 2</div>
+  <h2>Das Tor <code>ansicht</code></h2>
+  <p>Kein Tor kann sagen, ob etwas schön ist. Aber jedes Tor kann sagen, ob sich etwas <strong>verändert</strong> hat — und das ist bei Gestaltung fast dasselbe wert, weil Verfall dort schleichend passiert.</p>
+  <p>Fünf Aufnahmen, deterministisch: feste Punktdichte, feste Fenstergröße, Bewegung aus, Zeitzone und Sprache fest, <code>Math.random</code> festgenagelt, und <code>document.fonts.ready</code> abgewartet — ohne das wandert der Text zwischen zwei Läufen.</p>
+  <div class="tabelle">
+    <table>
+      <thead><tr><th>Gegenprobe</th><th class="num">Ergebnis</th></tr></thead>
+      <tbody>
+        <tr><td>Vorbilder angelegt</td><td class="num">5 Aufnahmen</td></tr>
+        <tr><td><strong>Akzentfarbe absichtlich von Blau auf Grün gedreht</strong></td><td class="num" style="color:var(--warn)"><strong>3 rot</strong> — 2,5 % · 0,9 % · 0,3 % der Bildpunkte</td></tr>
+        <tr><td>Die zwei unbeteiligten Aufnahmen</td><td class="num" style="color:var(--gut)">blieben grün — kein Pauschalalarm</td></tr>
+        <tr><td>Rückgabewert bei Rot</td><td class="num">1 — bricht die Kette</td></tr>
+        <tr><td>Nach dem Rückbau</td><td class="num" style="color:var(--gut)">5 grün, 0 rot</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Das ist die Probe, die zählt: <em>eine Prüfung, die nie etwas meldet, ist kein Beweis.</em> Sie hat gemeldet, und sie hat nicht zu viel gemeldet.</p>
+  <div class="notiz">
+    <b>Ehrlich dazu</b>
+    Die Vorbilder entstehen in <strong>Chromium</strong>. Das Tor findet <strong>Veränderungen</strong>, nicht <strong>iOS-Richtigkeit</strong> — dieselbe Einschränkung wie beim Browsertor. Kein Tor läuft je auf dem Gerät, auf dem geurteilt wird.
+  </div>
+</section>
+
+<section id="abnahme">
+  <div class="eyebrow"><em>07</em> Abnahme</div>
+  <h2>Was davon geprüft ist — und was nicht</h2>
+  <div class="tabelle">
+    <table>
+      <thead><tr><th>Punkt aus MG</th><th>Stand</th></tr></thead>
+      <tbody>
+        <tr><td>Drei Entwürfe liegen nebeneinander</td><td class="id">liegt vor — <strong>noch nicht auf dem iPad angesehen</strong></td></tr>
+        <tr><td>Die sieben Flächenfarben sind gleich hell</td><td class="id">gerechnet, L = 0,88 ± 0</td></tr>
+        <tr><td>Vierfärbung ohne Nachbarkonflikt</td><td class="id">4 Farben, 0 Konflikte</td></tr>
+        <tr><td>Belohnungsmoment unter 900 ms</td><td class="id">660 ms bis zum Stern, 920 ms bis Ruhe</td></tr>
+        <tr><td>Die acht Prüfformen angesehen</td><td class="id">Deutschland ja — <strong>Norwegen, Griechenland, Chile offen</strong></td></tr>
+        <tr><td>Tor <code>ansicht</code> mit ersten Vorbildern</td><td class="id">steht, siehe <code>tor/ansicht.mjs</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="notiz">
+    <b>Die ehrliche Bedingung</b>
+    Überzeugt ein Entwurf beim Ansehen nicht, wird er <strong>verworfen und neu gemacht</strong> — nicht verbessert. Das ist der Meilenstein, an dem das erlaubt ist, und der einzige. Und: kein Tor läuft auf iOS. Was Sie hier sehen, ist Chromium.
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <div class="rahmen">
+    <strong>Lernkiste · MG</strong> — Entwürfe auf echter Geometrie. Kartendaten: Natural Earth (Public Domain).
+    Die Bundesländer stehen noch auf Natural Earth 1:10m; BKG VG250 ist in dieser Sitzung durch die Netzrichtlinie gesperrt.<br>
+    Quellen im Repository unter <code>lernkiste/</code>, Zweig <code>claude/educational-game-concept-cgsash</code>.
+  </div>
+</footer>

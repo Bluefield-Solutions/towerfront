@@ -1,1 +1,4 @@
-sauber 2026-09-21 737f8a20
+BEFUND vom 2026-09-22T08:52Z auf 94e9b2a0:
+PROBEN: 2 Tor(e) sind schon OHNE eingebauten Fehler rot: uxaudittor, uxtor.
+  Eine Gegenprobe an einem roten Tor beweist nichts - sie schlaegt an,
+  gleich was man einbaut. Erst die Kette gruen bekommen.

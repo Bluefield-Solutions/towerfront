@@ -1,0 +1,178 @@
+{
+  "ebene": "laender",
+  "quelle": "Natural Earth 1:10m admin_0",
+  "standJahr": 2025,
+  "grenze": 0.75,
+  "kontinente": [
+    {
+      "id": "asien",
+      "name": "Asien",
+      "ziele": [
+        "Indien",
+        "China",
+        "Indonesien",
+        "Pakistan",
+        "Bangladesch"
+      ],
+      "stufen": [
+        {
+          "stufe": "grob",
+          "laender": 49,
+          "hausdorffPx": 0.685,
+          "punkte": 24701,
+          "gzip": 98145
+        },
+        {
+          "stufe": "mittel",
+          "laender": 54,
+          "hausdorffPx": 0.658,
+          "punkte": 56190,
+          "gzip": 198923
+        },
+        {
+          "stufe": "fein",
+          "laender": 56,
+          "hausdorffPx": 0.663,
+          "punkte": 86256,
+          "gzip": 274508
+        }
+      ]
+    },
+    {
+      "id": "afrika",
+      "name": "Afrika",
+      "ziele": [
+        "Nigeria",
+        "Äthiopien",
+        "Ägypten",
+        "DR Kongo",
+        "Tansania"
+      ],
+      "stufen": [
+        {
+          "stufe": "grob",
+          "laender": 50,
+          "hausdorffPx": 0.66,
+          "punkte": 16101,
+          "gzip": 67771
+        },
+        {
+          "stufe": "mittel",
+          "laender": 55,
+          "hausdorffPx": 0.691,
+          "punkte": 35529,
+          "gzip": 135181
+        },
+        {
+          "stufe": "fein",
+          "laender": 55,
+          "hausdorffPx": 0.628,
+          "punkte": 43806,
+          "gzip": 158564
+        }
+      ]
+    },
+    {
+      "id": "europa",
+      "name": "Europa",
+      "ziele": [
+        "Russland",
+        "Deutschland",
+        "Vereinigtes Königreich",
+        "Frankreich",
+        "Italien"
+      ],
+      "stufen": [
+        {
+          "stufe": "grob",
+          "laender": 40,
+          "hausdorffPx": 0.68,
+          "punkte": 26799,
+          "gzip": 108084
+        },
+        {
+          "stufe": "mittel",
+          "laender": 43,
+          "hausdorffPx": 0.728,
+          "punkte": 51979,
+          "gzip": 190976
+        },
+        {
+          "stufe": "fein",
+          "laender": 45,
+          "hausdorffPx": 0.65,
+          "punkte": 68489,
+          "gzip": 225807
+        }
+      ]
+    },
+    {
+      "id": "nordamerika",
+      "name": "Nordamerika",
+      "ziele": [
+        "USA",
+        "Mexiko",
+        "Kanada",
+        "Guatemala",
+        "Haiti"
+      ],
+      "stufen": [
+        {
+          "stufe": "grob",
+          "laender": 29,
+          "hausdorffPx": 0.633,
+          "punkte": 19646,
+          "gzip": 75953
+        },
+        {
+          "stufe": "mittel",
+          "laender": 30,
+          "hausdorffPx": 0.74,
+          "punkte": 60012,
+          "gzip": 193415
+        },
+        {
+          "stufe": "fein",
+          "laender": 31,
+          "hausdorffPx": 0.698,
+          "punkte": 88465,
+          "gzip": 259474
+        }
+      ]
+    },
+    {
+      "id": "suedamerika",
+      "name": "Südamerika",
+      "ziele": [
+        "Brasilien",
+        "Kolumbien",
+        "Argentinien",
+        "Peru",
+        "Venezuela"
+      ],
+      "stufen": [
+        {
+          "stufe": "grob",
+          "laender": 13,
+          "hausdorffPx": 0.738,
+          "punkte": 14771,
+          "gzip": 63483
+        },
+        {
+          "stufe": "mittel",
+          "laender": 13,
+          "hausdorffPx": 0.592,
+          "punkte": 29365,
+          "gzip": 111278
+        },
+        {
+          "stufe": "fein",
+          "laender": 14,
+          "hausdorffPx": 0.743,
+          "punkte": 39190,
+          "gzip": 141207
+        }
+      ]
+    }
+  ]
+}

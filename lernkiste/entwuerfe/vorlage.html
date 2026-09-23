@@ -1,0 +1,154 @@
+<title>Lernkiste Entwürfe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&family=Andika:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap">
+
+<style>
+/* ---------- Seitenrahmen: dieselbe Familie wie Konzept und Audit ------- */
+:root{
+  --papier:#F0F2EE;--flaeche:#FFF;--flaeche-2:#E7EBE6;--tinte:#15242C;
+  --tinte-weich:#4C5F68;--tinte-leise:#77878D;--linie:#CBD3D1;--linie-fein:#DDE3E0;
+  --see:#1F5C7A;--see-hell:#E2EDF2;--ocker:#9A6D18;--gut:#2E6B4F;--warn:#A23B22;
+  --f-display:"Newsreader",Georgia,serif;--f-text:"Atkinson Hyperlegible",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;--spalte:68ch;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --papier:#0D1720;--flaeche:#132029;--flaeche-2:#182833;--tinte:#DFE7EA;
+  --tinte-weich:#A2B2BA;--tinte-leise:#74868F;--linie:#2A3B46;--linie-fein:#1E2D37;
+  --see:#7FBCD8;--see-hell:#16303E;--ocker:#DCAC58;--gut:#6FBF95;--warn:#E5866B;}}
+:root[data-theme="dark"]{
+  --papier:#0D1720;--flaeche:#132029;--flaeche-2:#182833;--tinte:#DFE7EA;
+  --tinte-weich:#A2B2BA;--tinte-leise:#74868F;--linie:#2A3B46;--linie-fein:#1E2D37;
+  --see:#7FBCD8;--see-hell:#16303E;--ocker:#DCAC58;--gut:#6FBF95;--warn:#E5866B;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--papier);color:var(--tinte);font-family:var(--f-text);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--f-display);font-weight:500;text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+:focus-visible{outline:2px solid var(--see);outline-offset:3px}
+.rahmen{max-width:1180px;margin:0 auto;padding:0 24px}
+section{padding:56px 0 0}section>*+*{margin-top:20px}
+section h2{font-size:clamp(28px,3.6vw,38px);letter-spacing:-.016em}
+section h3{font-size:21px;margin-top:34px}
+section p,section ul{max-width:var(--spalte)}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--tinte-leise);display:flex;gap:12px;align-items:baseline}
+.eyebrow em{font-style:normal;color:var(--see)}
+.kopf{border-bottom:1px solid var(--linie);background:var(--flaeche);padding:64px 0 44px}
+.kopf h1{font-size:clamp(46px,8vw,78px);letter-spacing:-.022em;margin:16px 0 0}
+.unterzeile{font-family:var(--f-display);font-size:clamp(19px,2.4vw,25px);line-height:1.42;
+  color:var(--tinte-weich);max-width:44ch;margin-top:16px}
+.marke{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--see)}
+code{font-family:var(--f-mono);font-size:.87em;background:var(--flaeche-2);padding:.12em .38em;border-radius:3px}
+.merksatz{font-family:var(--f-display);font-size:clamp(20px,2.5vw,25px);line-height:1.36;
+  border-left:3px solid var(--see);padding:4px 0 4px 22px;max-width:46ch}
+.merksatz small{display:block;font-family:var(--f-mono);font-size:11.5px;color:var(--tinte-leise);
+  margin-top:12px;line-height:1.5;letter-spacing:.04em}
+.notiz{background:var(--flaeche);border:1px solid var(--linie);border-left:3px solid var(--ocker);
+  padding:18px 20px;max-width:var(--spalte);font-size:15.5px;line-height:1.58}
+.notiz b{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ocker);display:block;margin-bottom:6px}
+.tabelle{overflow-x:auto;border:1px solid var(--linie);background:var(--flaeche)}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:440px}
+th,td{text-align:left;padding:11px 16px;border-bottom:1px solid var(--linie-fein);vertical-align:top}
+thead th{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--tinte-leise);font-weight:500;border-bottom:1px solid var(--linie);white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td.id{font-family:var(--f-mono);font-size:12.5px;color:var(--see);white-space:nowrap;font-weight:500}
+td.num,th.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.knopf{font-family:var(--f-mono);font-size:12px;letter-spacing:.05em;padding:8px 15px;
+  border:1px solid var(--linie);background:var(--flaeche);color:var(--tinte);cursor:pointer;border-radius:3px}
+.knopf:hover{border-color:var(--see);color:var(--see)}
+.knopf[aria-pressed="true"]{background:var(--see-hell);border-color:var(--see);color:var(--see)}
+.steuer{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
+.steuer .hinweis{font-family:var(--f-mono);font-size:12px;color:var(--tinte-leise)}
+footer{border-top:1px solid var(--linie);margin-top:80px;padding:32px 0 60px;
+  font-family:var(--f-mono);font-size:12px;color:var(--tinte-leise);line-height:1.7}
+
+/* ---------- Geraeterahmen ---------------------------------------------- */
+.geraet{position:relative;width:100%;border-radius:22px;overflow:hidden;
+  border:1px solid var(--linie);background:#000;box-shadow:0 1px 2px rgba(0,0,0,.06),0 18px 44px -22px rgba(0,0,0,.35)}
+.geraet .schirm{position:absolute;top:0;left:0;transform-origin:0 0}
+.geraet-marke{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--tinte-leise);margin:0 0 10px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.geraet-marke em{font-style:normal;color:var(--see)}
+
+/* ---------- Die Marken der App (Konzept K3, Kapitel 10) ---------------- */
+.app{
+  --r1:4px;--r2:8px;--r3:12px;--r4:16px;--r6:24px;--r8:32px;--r12:48px;
+  --rund-klein:8px;--rund-karte:16px;--rund-flaeche:24px;--rund-voll:999px;
+  --s-klein:16px;--s0:20px;--s1:25px;--s2:31px;--s3:39px;--s4:49px;--s5:61px;
+  --f-lesen:"Andika","Comic Sans MS",sans-serif;
+  --f-ui:var(--ui-schrift,"Plus Jakarta Sans"),system-ui,sans-serif;
+  --strich-fein:.75px;--strich:1.5px;--strich-kueste:3px;
+  --f1:oklch(.88 .055 25);--f2:oklch(.88 .055 75);--f3:oklch(.88 .055 130);
+  --f4:oklch(.88 .055 175);--f5:oklch(.88 .055 230);--f6:oklch(.88 .055 285);
+  --f7:oklch(.88 .055 330);--auf-flaeche:oklch(.25 .03 250);
+  --grund:oklch(.965 .008 85);--app-papier:oklch(1 0 0);--app-tinte:oklch(.27 .03 250);
+  --app-tinte2:oklch(.5 .025 250);--app-tinte3:oklch(.68 .02 250);
+  --app-linie:oklch(.88 .01 250);--akzent:oklch(.55 .15 250);--akzent-h:oklch(.94 .035 250);
+  --app-gut:oklch(.62 .14 155);--gut-h:oklch(.93 .055 155);--app-warn:oklch(.65 .13 40);
+  --tiefe-farbe:oklch(.80 .02 250);
+  --d-tipp:120ms;--d-zustand:200ms;--d-schirm:320ms;--d-belohnung:500ms;
+  --k-standard:cubic-bezier(.2,0,0,1);
+  --k-feder:linear(0,.006,.025 2.8%,.101 6.1%,.539 18.9%,.721 25.3%,.849 31.5%,.937 38.1%,.968 41.8%,.991 45.7%,1.006 50.1%,1.015 55%,1.017 63.9%,1.001 82.4%,1);
+  background:var(--grund);color:var(--app-tinte);font-family:var(--f-ui);
+  line-height:1.3;   /* NICHT vom Seitenrahmen erben - 1.62 sprengte den Schirm */
+  -webkit-font-smoothing:antialiased;overflow:hidden;
+}
+.app *{box-sizing:border-box}
+.kopfleiste{display:flex;align-items:center;justify-content:space-between;
+  padding:var(--r3) var(--r6);gap:var(--r4)}
+.zurueck{display:flex;align-items:center;gap:var(--r2);font-size:var(--s0);font-weight:600;
+  color:var(--app-tinte2);background:var(--app-papier);border:1px solid var(--app-linie);
+  border-radius:var(--rund-voll);padding:var(--r2) var(--r4) var(--r2) var(--r3);min-height:44px}
+.sterne{display:flex;gap:var(--r1)}
+.frage{font-family:var(--f-ui);font-size:var(--s1);font-weight:700;color:var(--app-tinte)}
+.karte-flaeche{fill:var(--f5);stroke:none}
+.etiketten{display:flex;flex-direction:column;gap:var(--r3);justify-content:center}
+.etikett{position:relative;font-family:var(--f-lesen);font-size:var(--s1);font-weight:700;
+  color:var(--auf-flaeche);background:var(--app-papier);border:none;border-radius:var(--rund-karte);
+  padding:var(--r3) var(--r6);min-height:60px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 0 var(--tiefe-farbe);transition:transform var(--d-tipp) var(--k-standard),
+  box-shadow var(--d-tipp) var(--k-standard)}
+.etikett.gehoben{transform:scale(1.06) rotate(-1.5deg);box-shadow:0 6px 0 var(--tiefe-farbe)}
+.mikro{width:96px;height:96px;border-radius:var(--rund-voll);background:var(--akzent);
+  display:flex;align-items:center;justify-content:center;position:relative;border:none;flex:none}
+.mikro::after{content:"";position:absolute;inset:-10px;border-radius:var(--rund-voll);
+  border:3px solid var(--akzent);opacity:.35;animation:atmen 2.4s ease-in-out infinite}
+@keyframes atmen{0%,100%{transform:scale(1);opacity:.35}50%{transform:scale(1.09);opacity:.12}}
+.feld{font-family:var(--f-lesen);font-size:var(--s2);font-weight:700;background:var(--app-papier);
+  border:2px solid var(--akzent);border-radius:var(--rund-karte);padding:var(--r3) var(--r4);
+  min-height:64px;display:flex;align-items:center;color:var(--auf-flaeche);box-shadow:0 2px 0 var(--tiefe-farbe)}
+.karett{display:inline-block;width:3px;height:1.05em;background:var(--akzent);margin-left:2px;
+  animation:blink 1.05s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.tipp{font-family:var(--f-ui);font-size:var(--s0);color:var(--app-tinte2)}
+@media (prefers-reduced-motion:reduce){.app *{animation-duration:1ms!important;transition-duration:1ms!important}}
+
+/* ---------- Schriftvergleich ------------------------------------------- */
+.probe{display:grid;gap:1px;background:var(--linie);border:1px solid var(--linie)}
+@media(min-width:760px){.probe{grid-template-columns:1fr 1fr}}
+.probe>div{background:var(--flaeche);padding:22px 24px}
+.probe h4{margin:0 0 14px;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--see)}
+.probe .zeile{font-size:34px;line-height:1.25;letter-spacing:-.01em;color:var(--tinte)}
+.probe .klein{font-size:16px;color:var(--tinte-weich);margin-top:10px}
+.jak{font-family:"Plus Jakarta Sans",sans-serif}
+.nun{font-family:"Nunito",sans-serif}
+.and{font-family:"Andika",sans-serif}
+
+/* ---------- Marken zeigen ---------------------------------------------- */
+.skala{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;background:var(--flaeche);
+  border:1px solid var(--linie);padding:20px 22px}
+.skala span{font-family:"Plus Jakarta Sans",sans-serif;color:var(--tinte);line-height:1}
+.streifen{display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--linie)}
+.streifen div{aspect-ratio:2/1;display:flex;align-items:center;justify-content:center;
+  font-family:var(--f-mono);font-size:11px;color:oklch(.25 .03 250)}
+.grau{filter:grayscale(1)}
+.raster{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
+  background:var(--linie);border:1px solid var(--linie)}
+.raster>div{background:var(--flaeche);padding:16px 18px}
+.raster b{display:block;font-family:var(--f-mono);font-size:12px;color:var(--see);margin-bottom:6px}
+.raster span{font-size:14.5px;color:var(--tinte-weich);line-height:1.5}
+</style>

@@ -1,0 +1,71 @@
+/* Gestaltungssystem der Lernkiste.
+ *
+ * Die EINZIGE Stelle im ganzen Programm, an der ein Zahlenwert fuer Farbe,
+ * Abstand, Radius oder Dauer steht. Das Tor `marken` setzt das durch.
+ * Grundlage: Konzept K3, Kapitel 10.
+ */
+:root {
+  /* --- Raster. Alle Abstaende sind Vielfache von 4. ------------------- */
+  --r1: 4px;   --r2: 8px;   --r3: 12px;  --r4: 16px;
+  --r6: 24px;  --r8: 32px;  --r12: 48px; --r16: 64px; --r24: 96px;
+
+  /* --- Radien --------------------------------------------------------- */
+  --rund-klein: 8px; --rund-karte: 16px; --rund-flaeche: 24px; --rund-voll: 999px;
+
+  /* --- Schrift. Grundgroesse 20, Verhaeltnis 1,25. --------------------- */
+  --s-klein: 16px;   /* nur Elternbereich */
+  --s0: 20px; --s1: 25px; --s2: 31px; --s3: 39px; --s4: 49px; --s5: 61px;
+  --f-lesen: "Andika", "Comic Sans MS", sans-serif;   /* was das Kind liest */
+  --f-ui: "Plus Jakarta Sans", system-ui, sans-serif; /* alles andere */
+
+  /* --- Strich --------------------------------------------------------- */
+  --strich-fein: 0.75px; --strich: 1.5px; --strich-kueste: 3px;
+
+  /* --- Farbe. OKLCH, weil L dort der wahrgenommenen Helligkeit
+         entspricht. Alle sieben Flaechen sind exakt gleich hell -
+         deshalb ist derselbe Textton auf allen sieben lesbar. ---------- */
+  --flaeche-l: 0.88; --flaeche-c: 0.055;
+  --f1: oklch(0.88 0.055  25);  --f2: oklch(0.88 0.055  75);
+  --f3: oklch(0.88 0.055 130);  --f4: oklch(0.88 0.055 175);
+  --f5: oklch(0.88 0.055 230);  --f6: oklch(0.88 0.055 285);
+  --f7: oklch(0.88 0.055 330);
+  --auf-flaeche: oklch(0.25 0.03 250);   /* auf allen sieben lesbar */
+
+  --grund:    oklch(0.965 0.008  85);
+  --papier:   oklch(1     0      0);
+  --tinte:    oklch(0.27  0.030 250);
+  --tinte-2:  oklch(0.50  0.025 250);
+  --tinte-3:  oklch(0.68  0.020 250);
+  --linie:    oklch(0.88  0.010 250);
+  --akzent:   oklch(0.55  0.150 250);
+  --akzent-h: oklch(0.94  0.035 250);
+  --gut:      oklch(0.62  0.140 155);
+  --gut-h:    oklch(0.93  0.055 155);
+  --warn:     oklch(0.65  0.130  40);
+
+  /* --- Tiefe. Als VERSETZTE FLAECHE, nie als Filter. ------------------ */
+  --tiefe-1: 2px; --tiefe-2: 4px; --tiefe-3: 6px;
+  --tiefe-farbe: oklch(0.80 0.020 250);
+
+  /* --- Bewegung ------------------------------------------------------- */
+  --d-tipp: 120ms; --d-zustand: 200ms; --d-schirm: 320ms; --d-belohnung: 500ms;
+  --k-standard: cubic-bezier(.2, 0, 0, 1);
+  --k-feder: linear(0,.006,.025 2.8%,.101 6.1%,.539 18.9%,.721 25.3%,.849 31.5%,
+             .937 38.1%,.968 41.8%,.991 45.7%,1.006 50.1%,1.015 55%,1.017 63.9%,
+             1.001 82.4%,1);
+}
+
+/* Abendmodus: nicht umkehren, sondern die Gesamthelligkeit senken.
+   In OKLCH ist das ein Griff. */
+:root[data-abend="an"] {
+  --grund:  oklch(0.86 0.010  85);
+  --papier: oklch(0.90 0.006  85);
+  --f1: oklch(0.78 0.050  25); --f2: oklch(0.78 0.050  75);
+  --f3: oklch(0.78 0.050 130); --f4: oklch(0.78 0.050 175);
+  --f5: oklch(0.78 0.050 230); --f6: oklch(0.78 0.050 285);
+  --f7: oklch(0.78 0.050 330);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --d-tipp: 1ms; --d-zustand: 1ms; --d-schirm: 1ms; --d-belohnung: 1ms; }
+}
